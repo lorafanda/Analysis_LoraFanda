@@ -1,0 +1,177 @@
+# functions/config.py — Central settings for the ERSP pipeline
+
+# ---------------------------
+# Patients & blocks
+# ---------------------------
+patient_ids = [2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, "B-01","G-01", "G-02", "G-03", "G-04", 3780, "G-05"]
+patient_ids = [3301, "B-01","G-01", "G-02", "G-03", "G-04", 3780, "G-05"]
+# patient_ids = [3975,3780,2868,3301,  3066, 3390, 3415, 3455 ]
+# patient_ids = [3415, 3455, 3975, 3301]
+# patient_ids = [3415]
+# patient_ids = [2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
+patient_ids = ["EL030","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045",2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
+patient_ids = ["EL034","EL035","EL036","EL037","EL038","EL040","EL042"]
+patient_ids = [2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975,
+               "EL030","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045"
+               "B-01","G-01", "G-02", "G-03", "G-04", "G-05"
+              ]
+# patient_ids = ["EL044"]
+# patient_ids = ["EL03","EL043","EL044","EL045"]
+
+
+block_name  = "LM"
+conditions_expected = ("picture", "audio", "reading")
+
+# ---------------------------
+# Referencing and Bad channels
+# ---------------------------
+reref_type = "WM"   # "WM" or "None"
+
+# ---- Bad channels curation ----
+
+EL_GRID_PATIENTS = {"EL044"}
+EL_GRID_KEEP_PREFIXES = {"EL044": ("Pa", "postP", "T")}
+
+bad_channels_manual = {
+    # "PAT_3415": ["WM1", "WM3"],  # example; fill after visual/clinical review
+    "PAT_3780": ["FAP9"],  # example; fill after visual/clinical review
+    "PAT_3975": ["TPG1"],  # example; fill after visual/clinical review
+    "PAT_3965": ["cmd11"],  # example; fill after visual/clinical review
+    "EL030": ["EntG_R18"],  # example; fill after visual/clinical review
+    "EL037": ["pH_R7","aH_R1","A_R12","CinG_L12","CinG_L13"],  # example; fill after visual/clinical review
+    "EL038": ["pH_R7","aH_L3","STO_R1","A_L7"],  # example; fill after visual/clinical review
+}
+
+# Placeholder for PSD suggestions you accept (copy printed line from driver here)
+bad_channels_auto = {
+    # "PAT_3415": ["WM2", "IPG4"],  # example; you paste/curate
+}
+
+# Line-noise / PSD heuristics
+line_z = 3.0              # z-score cutoff for line/harmonic ratio
+total_power_z = 3.5       # z-score cutoff for total power
+flat_var_thresh = 1e-10   # near-flatline variance threshold
+
+# WM reference building
+wm_ref_method = "mean"  # robust median (or "mean")
+wm_min_contacts = 3       # require at least this many clean WM contacts
+
+
+# ---------------------------
+# ERSP windows & warping
+# ---------------------------
+# Baseline in seconds (relative to onset)
+baseline_w       = (-0.4, 0.0)
+# If None -> use baseline_w; otherwise compute baseline stats in this tighter window
+baseline_calc_w  = (-0.4, -0.1)
+
+# Time-normalized proportions: (baseline, stim, post). Must sum to 1.
+proportions = (0.0, 0.50, 0.50)
+# proportions = (0.1, 0.45, 0.45)
+
+# Real-time window (used only if mode="RT")
+time_window = (-1.0, 7.0)
+
+# Mode: "TN" (time-normalized) or "RT" (real time)
+mode = "TN"
+
+
+
+# Smoothing (use box; keep gaussian sigmas at 0)
+smooth_kind   = "box"                   # <-- add this
+box_kernel    = (3, 3)                  # <-- add this (try 3x3; adjust to taste)
+smooth_passes = 1                       # <-- add this
+
+# ---------------------------
+# ERSP STFT params
+# ---------------------------
+nperseg    = 128
+nfft       = nperseg * 2
+noverlap   = int(0.85 * nperseg)  # ~75% (friendly default for Hann)
+n_time_bins = 300                 # for TN
+fmax       = 500.0                # plot y-limit
+vmin, vmax = -6.0, 6.0            # dB display range
+
+# ---------------------------
+# Thresholding / clustering (used by driver via getattr)
+# ---------------------------
+# Detect on Z; display in dB
+z_thresh          = 2.5                 # |Z| cutoff (two-sided)
+thresh_mode       = "two-sided"         # "two-sided" | "pos" | "neg"
+
+# Bin-based cluster filters
+min_time_bins = 3     # e.g., 3–5 to enforce temporal extent
+min_freq_bins = 3     # e.g., 4–8 depending on your df
+
+# # Mild smoothing before thresholding (in bin units)
+# sigma_t_bins      = 0
+# sigma_f_bins      = 0
+
+# # Cluster size filters (real units)
+# min_duration_s    = 0.10                # minimum duration per blob
+# min_bandwidth_hz  = 8.0                 # minimum bandwidth per blob
+
+# # Channel-level summary flag (what fraction of bins must be significant)
+# cluster_signif_min_frac = 0.01
+
+# # ---------------------------
+# # Trial filtering (if your collector uses these)
+# # ---------------------------
+# p_low      = 0.0       # percentile low for POST duration filter
+# p_high     = 90.0      # percentile high
+# min_stim_s = 0.5
+
+# ---------------------------
+# Outputs
+# ---------------------------
+outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs"
+# script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
+
+notch_patients  = ["EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045"]   # IDs or substrings to match
+# notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
+mains_base      = 50.0       # 50 or 60
+notch_Q         = 50         # 40–60 typical
+notch_repeats   = 1          # 1 is usually enough
+
+## PATIENT CONFIGS ##
+
+PAT_PATIENTS = [2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
+
+PAT_PRESETS = {
+    2868: dict(trig="PHOTO",  flip=False, time_range=(140, 1500), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    3066: dict(trig="Xe1",   flip=False, time_range=(260, 1900), invalid_trials=[0,1,2,54,55,56,104,105,106,112], trial_ids=["picture"]*54 + ["auditory"]*50 + ["reading"]*53, fake_trials=[155], manual_trig=None),
+    3301: dict(trig="PHOTO",  flip=False, time_range=(0, 1900),   invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig="PAT_3301__FLM_picture__triggerPD.tsv"),
+    3390: dict(trig="PHOTO",  flip=False, time_range=(170, 1222), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    3415: dict(trig="photo",  flip=False, time_range=(30, 1500),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    3455: dict(trig="photo",  flip=False, time_range=(250, 1836), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    3965: dict(trig="x1",    flip=False, time_range=(40, 1295),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    3975: dict(trig="E2",    flip=False, time_range=(200, 1550), invalid_trials=[], trial_ids=["picture"]*50 + ["auditory"]*50 + ["reading"]*51, fake_trials=[], manual_trig="PAT_3975__FLM_all.tsv"),
+    3780: dict(trig="X2",    flip=False, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig="PAT_3780_FLM_all.tsv"),
+}
+
+EL_PATIENTS = ["EL030","EL034","EL035","EL036","EL037","EL038","EL039","EL040","EL042","EL043","EL044","EL045"]
+
+EL_PRESETS = {
+    "EL030": dict(trig="DC6", flip=True, time_range=(250, 1600), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="sub-EL030_task-LanguageMapping_timestamp-20-2-2024(13h57m48s)_lang-GER_events.tsv"),
+    "EL034": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[53,54,55,56,57,58,158], manual_trig=None),
+    "EL035": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL036": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160,161], manual_trig=None),
+    "EL037": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL038": dict(trig="DC6", flip=True, time_range=(130, -1),   invalid_trials=[51,52,53,104,105,106], trial_ids=["picture"]*51 + ["auditory"]*56 + ["reading"]*53, fake_trials=[77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93], manual_trig="EL038_20241112_HUG_20250207_onsets_offsets_FBM_all_LM_.tsv"),
+    "EL039": dict(trig="DC6", flip=True, time_range=(1000, 1500),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL040": dict(trig="DC6", flip=True, time_range=(100, 1900), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL042": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*55 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL043": dict(trig="DC6", flip=True, time_range=(260, 3710), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "EL044": dict(trig="DC6", flip=False, time_range=(2478, 3290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
+    "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+}
+
+MICROEPI_PATIENTS = ["G-01","G-02","G-03","G-04","G-05"]
+
+MICROEPI_PRESETS = {
+    "G-01": dict(trig="ainp3", flip=False, time_range=(100, 1300), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "G-02": dict(trig="ainp3", flip=False, time_range=(100, 1300), invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "G-03": dict(trig="PHOTO", flip=False, time_range=(100, 1300), invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "G-04": dict(trig="X2",    flip=False, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig="PAT_3780_FLM_all.tsv"),
+    "G-05": dict(trig="ainp3", flip=False, time_range=(100, 1300), invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig=None),
+}
