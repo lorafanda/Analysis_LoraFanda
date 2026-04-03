@@ -8,7 +8,7 @@ Thumbs.db
 # Output folders
 output/
 *.tif
-
+archives/
 # But keep EL030 (except tif files)
 !**/output/
 !**/output/**/EL030/
@@ -34,4 +34,6 @@ venv/
 
 
 # Jupyter
-.jupyter/
+.jupyter/02_FBM_Clustering/scripts/archives/
+02_FBM_Clustering/scripts/*-Copy*.ipynb
+02_FBM_Clustering/scripts/*-SAFE*.ipynb
