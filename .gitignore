@@ -1,0 +1,37 @@
+# Mac system files
+.pptx
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Output folders
+output/
+*.tif
+
+# But keep EL030 (except tif files)
+!**/output/
+!**/output/**/EL030/
+!**/output/**/EL030/**
+**/output/**/EL030/**/*.tif
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+.env
+venv/
+.venv/
+
+# Data files (optional - add if you don't want raw data on GitHub)
+*.npy
+*.xlsx
+*.xls
+*.parquet
+
+
+# Jupyter
+.jupyter/
