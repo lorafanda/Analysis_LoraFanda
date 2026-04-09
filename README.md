@@ -144,10 +144,3 @@ Raw data (ns6 / h5 / mat)
         ↓
 241_atlas_activity_plots → dynamic brain activity videos
 ```
-
----
-
-If you want next step, I can:
-
-* compress this into a **very short GitHub README (10–15 lines)**
-* or make a **“clean vs legacy” version** that explicitly marks what should be kept vs removed for refactoring
