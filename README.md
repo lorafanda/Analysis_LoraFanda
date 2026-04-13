@@ -56,19 +56,18 @@ Transforms raw electrophysiology recordings into structured ERSP outputs and ana
 │
 └── outputs/
     ├── 04_ersp_LM/
-    ├── Paper1_recons/
-    └── 07_ClusteringOutput/
+    ├── 04_ersp_LM_RAW/
 ```
 
 ## Key idea
 
-This stage standardizes heterogeneous raw data into:
+This stage standardizes heterogeneous raw data into
 
 * **trial-aligned signals**
 * **ERSP representations (time × frequency)**
 * **anatomical electrode mappings**
 
-These outputs form the input to clustering.
+These outputs both images and .npy files form the input to clustering (Part 2 below).
 
 ---
 
@@ -76,7 +75,7 @@ These outputs form the input to clustering.
 
 ## Purpose
 
-Transforms ERSP outputs into structured features, identifies clusters, and maps them onto a shared anatomical space for interpretation.
+Transforms ERSP outputs into structured features, identifies clusters, and maps them onto a shared anatomical space for interpretation/guidance when stimulation mapping.
 
 ## Structure
 
@@ -118,7 +117,7 @@ This stage converts ERSP data into:
 
 * **feature vectors (blob representations)**
 * **cluster assignments**
-* **atlas-level interpretations**
+* **atlas-level interpretations of chanells**
 
 and enables both:
 
