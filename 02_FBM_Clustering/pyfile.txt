@@ -1,0 +1,1847 @@
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.cluster import KMeans
+from sklearn.mixture import GaussianMixture
+from sklearn.metrics import silhouette_score
+
+# Optional (only if you use HDBSCAN in this notebook)
+try:
+    import hdbscan
+    _HDBSCAN_AVAILABLE = True
+except Exception:
+    _HDBSCAN_AVAILABLE = False
+
+from functions.lf_blob_clustering_config import (
+    VALLEY_PARAMS,
+    MAX_BLOBS,
+    FEATURES_PER_BLOB,
+    FEATURE_NAMES,
+    FEATURE_TYPE_WEIGHTS,
+    BLOB_SCORE_QUANTILE,
+    RANDOM_STATE,
+    KMEANS_K_RANGE,
+    GMM_K_RANGE,
+    HDBSCAN_PARAM_GRID,
+)
+
+from functions.lf_blob_metrics import (
+    s22_build_blob_feature_matrix,
+    # Optional QC:
+    # q35_plot_valley_segmentation_4panel,
+)
+
+from functions.lf_blob_clustering import (
+    s30_gate_by_blob_score,
+    q31_plot_score_histograms,
+    q33_plot_valley_overlay_grid,
+)
+
+from functions.lf_clustering import (
+    s10_load_ersps,
+    s40_umap_embed_and_plot,
+    s60_save_cluster_cards_with_blob_features,
+    s70_save_cluster_members,
+    s71_save_run_metadata,
+)
+
+INPUT_DIR = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY")
+OUT_ROOT  = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora\02_FBM_Clustering\outputs\230_blob_clustering_runs")
+
+TASK = "LM"
+ALLOWED_CONDS = ("audio", "picture", "reading")
+
+# Expected ERSP shape
+N_FREQ, N_TIME = 129, 300
+
+RUN_ID = pd.Timestamp.now().strftime("%Y%m%d_%H%M%S")
+OUT_DIR = OUT_ROOT / RUN_ID
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+print("OUT_DIR:", OUT_DIR)
+df_meta, ersp_list = s10_load_ersps(
+    input_dir=INPUT_DIR,
+    task=TASK,
+    allowed_conditions=ALLOWED_CONDS,
+    n_freq=N_FREQ,
+    n_time=N_TIME,
+)
+
+print("Loaded samples:", len(ersp_list))
+display(df_meta.head())
+%reload_ext autoreload
+%autoreload 2
+
+X_blob, max_scores, blobs_per_sample = s22_build_blob_feature_matrix(
+    ersp_list,
+    **VALLEY_PARAMS,
+    score_min=0.0,  # keep as you were using; change only if you intend to
+)
+
+print("X_blob:", X_blob.shape)
+print("max_scores:", max_scores.shape, "min/max:", float(np.min(max_scores)), float(np.max(max_scores)))
+
+print("X_blob finite:", np.isfinite(X_blob).mean())
+print("X_blob any NaN:", np.isnan(X_blob).any())
+print("X_blob any Inf:", np.isinf(X_blob).any())
+
+print(blobs_per_sample)
+from functions.lf_blob_clustering_config import VALLEY_PARAMS
+VALLEY_PARAMS=VALLEY_PARAMS
+
+from functions.lf_blob_clustering import s30_gate_by_blob_score
+from functions.lf_blob_clustering_config import BLOB_SCORE_QUANTILE
+print(BLOB_SCORE_QUANTILE)
+
+# Use quantile-based gating (recommended)
+# BLOB_SCORE_QUANTILE = BLOB_SCORE_QUANTILE
+BLOB_SCORE_QUANTILE = 0.8
+
+df_keep, ersp_keep, gate,keep_idx,score_thr,keep_mask,drop_idx = s30_gate_by_blob_score(
+    df_meta=df_meta,
+    ersp_list=ersp_list,
+    X_blob=X_blob,
+    max_scores=max_scores,
+    quantile=BLOB_SCORE_QUANTILE,  # from config
+)
+
+keep_idx = keep_idx
+X_blob_keep = X_blob[keep_idx]
+
+print(f"Kept {len(df_keep)} / {len(df_meta)} samples")
+print("Score threshold:", score_thr)
+
+# Original histogram logic (now under new name)
+q31_plot_score_histograms(
+    max_scores=max_scores,
+    score_thresh=score_thr,
+    quantile=BLOB_SCORE_QUANTILE,
+)
+
+# %load_ext autoreload
+# %autoreload 2
+from functions.lf_blob_clustering_config import VALLEY_PARAMS
+VALLEY_PARAMS=VALLEY_PARAMS
+# Uncomment if you implemented/imported q35_plot_valley_segmentation_4panel in lf_blob_metrics.py
+from functions.lf_blob_metrics import q35_plot_valley_segmentation_4panel
+
+
+save_ranked_blobs = True
+
+SAVE_DIR_02 = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora\02_FBM_Clustering\outputs"
+
+
+for i in range(0,len(ersp_keep)):
+    row = df_keep.iloc[i]
+    save_stem = f"{row['patient_id']}_{row['condition']}_{row['task']}_{row['electrode']}".replace(" ", "_")
+
+    q35_plot_valley_segmentation_4panel(
+        ersp_keep[i],
+        **VALLEY_PARAMS,
+        score_min=score_thr,
+        vmin=-6, vmax=6,
+        title=f"{save_stem}",
+        save_ranked_blobs=save_ranked_blobs,
+        save_dir=SAVE_DIR_02,
+        save_stem=save_stem,
+    )
+    
+    # ===== Cell 1: SAVE gated blob run (X_blob_keep + companions + ersp_keep) =====
+import os, json, platform, getpass, subprocess
+from pathlib import Path
+from datetime import datetime
+
+import numpy as np
+import pandas as pd
+
+# -------------------------
+# REQUIRED IN-MEMORY OBJECTS
+# -------------------------
+# X_blob_keep : np.ndarray
+# df_keep     : pd.DataFrame
+# keep_idx    : np.ndarray or list
+# drop_idx    : np.ndarray or list
+# score_thr   : float
+# BLOB_SCORE_QUANTILE : float
+# VALLEY_PARAMS : dict
+#
+# Optional (recommended if you have them):
+# max_scores  : np.ndarray         # length = len(df_meta)
+# feature_schema : dict            # {"feature_names":[...], ...}
+# run_metadata_extra : dict        # any extra info you want
+#
+# NEW (optional but recommended):
+# ersp_keep   : list[np.ndarray] or np.ndarray  # each (n_freq, n_time)
+
+# -------------------------
+# OUTPUT LOCATION
+# -------------------------
+BASE_RUNS_DIR = Path(r"//nasac-m2.unige.ch/m-HumanNeuronLab/ANALYSIS/FLM/Analysis_Lora/02_FBM_Clustering/outputs/230_blob_clustering_runs")
+
+# Create a unique run directory automatically
+RUN_ID = datetime.now().strftime("%Y%m%d_%H%M%S")
+run_dir = BASE_RUNS_DIR / RUN_ID
+run_dir.mkdir(parents=True, exist_ok=False)
+print(run_dir)
+# -------------------------
+# Helpers
+# -------------------------
+def _json_default(o):
+    # Make numpy types JSON serializable
+    if isinstance(o, (np.integer,)):
+        return int(o)
+    if isinstance(o, (np.floating,)):
+        return float(o)
+    if isinstance(o, (np.ndarray,)):
+        return o.tolist()
+    return str(o)
+
+def _safe_git_info():
+    try:
+        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.STDOUT).decode().strip()
+    except Exception:
+        commit = None
+    try:
+        status = subprocess.check_output(["git", "status", "--porcelain"], stderr=subprocess.STDOUT).decode().strip()
+        dirty = bool(status)
+    except Exception:
+        dirty = None
+    return {"git_commit": commit, "git_dirty": dirty}
+
+def _save_json(path: Path, obj: dict):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=2, default=_json_default)
+
+def _try_stack_ersps(ersp_list):
+    """
+    Try to stack list of (nF,nT) into (n,nF,nT). If shapes differ, return None.
+    """
+    if not isinstance(ersp_list, (list, tuple)) or len(ersp_list) == 0:
+        return None
+    shapes = [np.asarray(e).shape for e in ersp_list]
+    if len(set(shapes)) != 1:
+        return None
+    return np.stack([np.asarray(e, dtype=np.float32) for e in ersp_list], axis=0)
+
+# -------------------------
+# Core filenames
+# -------------------------
+f_X_keep          = run_dir / "X_blob_keep.npy"
+f_df_keep         = run_dir / "df_keep.parquet"
+f_keep_idx        = run_dir / "keep_idx.npy"
+f_drop_idx        = run_dir / "drop_idx.npy"
+f_gate_info       = run_dir / "gating_info.json"
+f_config          = run_dir / "config_blob.json"
+f_schema          = run_dir / "feature_schema.json"        # optional
+f_scores_full     = run_dir / "max_scores_full.npy"        # optional
+f_scores_keep     = run_dir / "max_scores_keep.npy"        # optional
+f_run_metadata    = run_dir / "run_metadata.json"
+
+# NEW: ERSP artifacts
+f_ersp_keep_npy   = run_dir / "ersp_keep.npy"              # preferred if stackable: (n,nF,nT)
+f_ersp_keep_npz   = run_dir / "ersp_keep.npz"              # fallback if variable shapes
+
+# -------------------------
+# Save core artifacts
+# -------------------------
+np.save(f_X_keep, np.asarray(X_blob_keep))
+
+df_keep.to_parquet(f_df_keep, index=False)
+
+keep_idx = np.asarray(keep_idx, dtype=int)
+drop_idx = np.asarray(drop_idx, dtype=int)
+
+np.save(f_keep_idx, keep_idx)
+np.save(f_drop_idx, drop_idx)
+
+# Gating summary (small + explicit)
+gating_info = {
+    "quantile": float(BLOB_SCORE_QUANTILE),
+    "score_threshold": float(score_thr),
+    "n_kept": int(len(keep_idx)),
+    "n_dropped": int(len(drop_idx)),
+}
+_save_json(f_gate_info, gating_info)
+
+# Save blob config used (VALLEY_PARAMS snapshot)
+_save_json(f_config, VALLEY_PARAMS)
+
+# Optional: feature schema
+if "feature_schema" in globals() and feature_schema is not None:
+    _save_json(f_schema, feature_schema)
+
+# Optional: max_scores (full + kept)
+if "max_scores" in globals() and max_scores is not None:
+    max_scores = np.asarray(max_scores)
+    np.save(f_scores_full, max_scores)
+    np.save(f_scores_keep, max_scores[keep_idx])
+
+# -------------------------
+# NEW: Save ersp_keep (aligned with df_keep / X_blob_keep)
+# -------------------------
+ersp_saved = False
+ersp_format = None
+ersp_shape = None
+
+if "ersp_keep" in globals() and ersp_keep is not None:
+    try:
+        # Try to stack to a dense array first (most convenient later)
+        stacked = _try_stack_ersps(ersp_keep)
+        if stacked is not None:
+            np.save(f_ersp_keep_npy, stacked.astype(np.float32, copy=False))
+            ersp_saved = True
+            ersp_format = "npy_stacked"
+            ersp_shape = list(map(int, stacked.shape))
+        else:
+            # Variable shapes fallback: store each ERSP under a key in NPZ
+            # Note: NPZ will store arrays individually; loading returns a dict-like object.
+            arr_dict = {f"ersp_{i:06d}": np.asarray(e, dtype=np.float32) for i, e in enumerate(ersp_keep)}
+            np.savez_compressed(f_ersp_keep_npz, **arr_dict)
+            ersp_saved = True
+            ersp_format = "npz_per_sample"
+            ersp_shape = {"n_samples": int(len(ersp_keep))}
+    except Exception as e:
+        print("[WARN] Failed to save ersp_keep:", repr(e))
+
+# -------------------------
+# Run provenance metadata
+# -------------------------
+run_metadata = {
+    "run_id": RUN_ID,
+    "run_dir": str(run_dir),
+    "user": getpass.getuser(),
+    "host": platform.node(),
+    "platform": platform.platform(),
+    "python_version": platform.python_version(),
+
+    "X_blob_keep_shape": list(map(int, np.asarray(X_blob_keep).shape)),
+    "df_keep_rows": int(len(df_keep)),
+    "df_keep_cols": int(df_keep.shape[1]),
+
+    "gating": gating_info,
+    "valley_params": VALLEY_PARAMS,  # included for convenience
+
+    # NEW: ERSP save info
+    "ersp_keep_saved": bool(ersp_saved),
+    "ersp_keep_format": ersp_format,
+    "ersp_keep_shape": ersp_shape,
+
+    **_safe_git_info(),
+}
+
+if "run_metadata_extra" in globals() and run_metadata_extra is not None:
+    run_metadata.update(run_metadata_extra)
+
+_save_json(f_run_metadata, run_metadata)
+
+print("Saved gated blob run to:")
+print(run_dir)
+print("Files:", len([p for p in run_dir.glob("*") if p.is_file()]))
+if ersp_saved:
+    print("ERSP saved as:", ersp_format, "| shape:", ersp_shape)
+else:
+    print("ERSP not saved (ersp_keep missing or save failed).")
+
+
+# ===== Cell 2 (v2): INSPECT saved run + QC artifacts (PDF + images) =====
+from pathlib import Path
+import re, json
+import numpy as np
+import pandas as pd
+from IPython.display import display, Markdown, Image, IFrame
+
+# -------------------------
+# BASE DIR (contains run folders like 20260103_122326/)
+# -------------------------
+BASE_RUNS_DIR = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora\02_FBM_Clustering\outputs\230_blob_clustering_runs")
+
+# Pick latest run folder matching YYYYMMDD_HHMMSS
+run_re = re.compile(r"^\d{8}_\d{6}$")
+run_dirs = sorted([p for p in BASE_RUNS_DIR.iterdir() if p.is_dir() and run_re.match(p.name)], key=lambda p: p.name)
+run_dir = run_dirs[-2] if run_dirs else BASE_RUNS_DIR
+
+display(Markdown(f"## Inspecting run: `{run_dir}`"))
+
+def _mb(p: Path) -> float:
+    return p.stat().st_size / (1024**2)
+
+# -------------------------
+# 1) List files in THIS run folder (non-recursive)
+# -------------------------
+files = sorted([p for p in run_dir.iterdir() if p.is_file()])
+df_files = pd.DataFrame({
+    "file": [p.name for p in files],
+    "size_mb": [round(_mb(p), 3) for p in files],
+})
+display(df_files)
+
+# Convenience paths
+f_X_keep       = run_dir / "X_blob_keep.npy"
+f_df_keep      = run_dir / "df_keep.parquet"
+f_keep_idx     = run_dir / "keep_idx.npy"
+f_drop_idx     = run_dir / "drop_idx.npy"
+f_gate_info    = run_dir / "gating_info.json"
+f_config       = run_dir / "config_blob.json"
+f_schema       = run_dir / "feature_schema.json"
+f_scores_full  = run_dir / "max_scores_full.npy"
+f_scores_keep  = run_dir / "max_scores_keep.npy"
+f_run_metadata = run_dir / "run_metadata.json"
+
+# NEW: ERSP artifacts
+f_ersp_keep_npy = run_dir / "ersp_keep.npy"
+f_ersp_keep_npz = run_dir / "ersp_keep.npz"
+
+# -------------------------
+# 2) Load + preview X_blob_keep
+# -------------------------
+if f_X_keep.exists():
+    Xk = np.load(f_X_keep, allow_pickle=False)
+    display(Markdown("### X_blob_keep.npy"))
+    display(Markdown(f"- Shape: **{Xk.shape}**  |  Dtype: **{Xk.dtype}**"))
+    display(pd.DataFrame(Xk[:5, :min(12, Xk.shape[1])]))
+else:
+    display(Markdown("### X_blob_keep.npy\nNot found in this run folder."))
+
+# -------------------------
+# 3) Load + preview df_keep
+# -------------------------
+if f_df_keep.exists():
+    dfk = pd.read_parquet(f_df_keep)
+    display(Markdown("### df_keep.parquet"))
+    display(Markdown(f"- Rows × Cols: **{dfk.shape}**"))
+    display(dfk.head(10))
+else:
+    display(Markdown("### df_keep.parquet\nNot found in this run folder."))
+
+# -------------------------
+# 4) Indices
+# -------------------------
+if f_keep_idx.exists():
+    keep_idx_loaded = np.load(f_keep_idx, allow_pickle=False)
+    display(Markdown("### keep_idx.npy"))
+    display(Markdown(f"- Count: **{keep_idx_loaded.size}**"))
+    display(pd.DataFrame({"keep_idx_preview": keep_idx_loaded[:20]}))
+
+if f_drop_idx.exists():
+    drop_idx_loaded = np.load(f_drop_idx, allow_pickle=False)
+    display(Markdown("### drop_idx.npy"))
+    display(Markdown(f"- Count: **{drop_idx_loaded.size}**"))
+    display(pd.DataFrame({"drop_idx_preview": drop_idx_loaded[:20]}))
+
+# -------------------------
+# 5) Gating info
+# -------------------------
+if f_gate_info.exists():
+    with open(f_gate_info, "r", encoding="utf-8") as f:
+        ginfo = json.load(f)
+    display(Markdown("### gating_info.json"))
+    display(pd.json_normalize(ginfo))
+
+# -------------------------
+# 6) Config + schema
+# -------------------------
+if f_config.exists():
+    with open(f_config, "r", encoding="utf-8") as f:
+        cfg = json.load(f)
+    display(Markdown("### config_blob.json"))
+    display(pd.json_normalize(cfg))
+
+if f_schema.exists():
+    with open(f_schema, "r", encoding="utf-8") as f:
+        schema = json.load(f)
+    display(Markdown("### feature_schema.json"))
+    display(Markdown(f"- Keys: **{list(schema.keys())}**"))
+    if "feature_names" in schema:
+        display(Markdown(f"- #features: **{len(schema['feature_names'])}**"))
+        display(pd.DataFrame({"feature_names": schema["feature_names"]}).head(30))
+    else:
+        display(pd.json_normalize(schema))
+
+# -------------------------
+# 7) Scores
+# -------------------------
+if f_scores_full.exists():
+    ms = np.load(f_scores_full, allow_pickle=False)
+    display(Markdown("### max_scores_full.npy"))
+    display(Markdown(f"- Shape: **{ms.shape}**  |  min/median/max: **{ms.min():.3f} / {np.median(ms):.3f} / {ms.max():.3f}**"))
+
+if f_scores_keep.exists():
+    msk = np.load(f_scores_keep, allow_pickle=False)
+    display(Markdown("### max_scores_keep.npy"))
+    display(Markdown(f"- Shape: **{msk.shape}**  |  min/median/max: **{msk.min():.3f} / {np.median(msk):.3f} / {msk.max():.3f}**"))
+
+# -------------------------
+# 8) Run metadata
+# -------------------------
+if f_run_metadata.exists():
+    with open(f_run_metadata, "r", encoding="utf-8") as f:
+        md = json.load(f)
+    display(Markdown("### run_metadata.json"))
+    focus_keys = ["run_id", "user", "host", "python_version", "git_commit", "git_dirty",
+                  "X_blob_keep_shape", "df_keep_rows", "ersp_keep_saved", "ersp_keep_format", "ersp_keep_shape"]
+    display(pd.json_normalize({k: md.get(k) for k in focus_keys}))
+
+# -------------------------
+# 9) NEW: ERSP presence + lazy load into memory (ersp_keep)
+# -------------------------
+display(Markdown("### ERSP artifacts"))
+if f_ersp_keep_npy.exists() or f_ersp_keep_npz.exists():
+    display(Markdown(f"- Found: `{f_ersp_keep_npy.name}`={f_ersp_keep_npy.exists()} | `{f_ersp_keep_npz.name}`={f_ersp_keep_npz.exists()}"))
+    # Lazy-load into memory for later cells
+    if "ersp_keep" not in globals() or ersp_keep is None:
+        ersp_keep, ersp_info = load_ersp_keep_from_run(run_dir)
+        display(Markdown(f"- Loaded `ersp_keep`: **{len(ersp_keep) if ersp_keep is not None else 'None'}** | info: **{ersp_info}**"))
+        if ersp_keep is not None and len(ersp_keep) > 0:
+            display(Markdown(f"- Example ERSP shape: **{np.asarray(ersp_keep[0]).shape}**  dtype: **{np.asarray(ersp_keep[0]).dtype}**"))
+else:
+    display(Markdown("- No `ersp_keep.npy` or `ersp_keep.npz` found in this run folder."))
+
+# ==========================================================
+# QC ARTIFACTS (Suggestion #6)
+# ==========================================================
+display(Markdown("## QC artifacts"))
+
+# A) qc_report.pdf (if you saved one in the run folder)
+f_qc_pdf = run_dir / "qc_report.pdf"
+if f_qc_pdf.exists():
+    display(Markdown("### qc_report.pdf"))
+    display(IFrame(src=str(f_qc_pdf), width="100%", height=650))
+else:
+    display(Markdown("- No `qc_report.pdf` found in the run folder (optional)."))
+
+# B) Find QC image directories (including validate_blobs_per_electrode)
+QC_DIR_CANDIDATES = [
+    run_dir / "qc",
+    run_dir / "validate_blobs_per_electrode",
+    run_dir.parent / "validate_blobs_per_electrode",
+    run_dir.parent.parent / "validate_blobs_per_electrode",
+]
+
+existing_qc_dirs = [p for p in QC_DIR_CANDIDATES if p.exists() and p.is_dir()]
+if not existing_qc_dirs:
+    display(Markdown("- No QC image directory found in common locations."))
+else:
+    display(Markdown("### Found QC directories"))
+    display(pd.DataFrame({"qc_dir": [str(p) for p in existing_qc_dirs]}))
+
+    IMG_EXTS = (".png", ".jpg", ".jpeg", ".webp")
+    MAX_THUMBS_PER_DIR = 12
+
+    for qc_dir in existing_qc_dirs:
+        imgs = []
+        for ext in IMG_EXTS:
+            imgs.extend(sorted(qc_dir.rglob(f"*{ext}")))
+        imgs = sorted(imgs)
+
+        display(Markdown(f"#### {qc_dir}"))
+        display(Markdown(f"- Images found: **{len(imgs)}**"))
+        for p in imgs[:MAX_THUMBS_PER_DIR]:
+            display(Markdown(f"`{p.relative_to(qc_dir)}`"))
+            display(Image(filename=str(p)))
+
+        if len(imgs) > MAX_THUMBS_PER_DIR:
+            display(Markdown(f"- (Showing first {MAX_THUMBS_PER_DIR} thumbnails)"))
+
+
+
+# --------------------------
+# Helper: load ersp_keep from run_dir (saved by Cell 1)
+# --------------------------
+import numpy as np
+from pathlib import Path
+
+def load_ersp_keep_from_run(run_dir: Path):
+    f_npy = Path(run_dir) / "ersp_keep.npy"
+    f_npz = Path(run_dir) / "ersp_keep.npz"
+
+    if f_npy.exists():
+        arr = np.load(f_npy, allow_pickle=False)  # expected (n, nF, nT)
+        ersp_keep = [arr[i] for i in range(arr.shape[0])]
+        return ersp_keep, {"format": "npy_stacked", "shape": arr.shape}
+
+    if f_npz.exists():
+        z = np.load(f_npz, allow_pickle=False)
+        # keys are ersp_000000, ersp_000001, ... -> sort to preserve sample order
+        keys = sorted(z.files)
+        ersp_keep = [z[k] for k in keys]
+        return ersp_keep, {"format": "npz_per_sample", "n_samples": len(keys)}
+
+    return None, {"format": None}
+
+# ===== New Cell: "-101" blob feature set + assignment distance + dendrograms (no UMAP) =====
+import numpy as np
+import matplotlib.pyplot as plt
+
+from scipy.ndimage import label
+from scipy.spatial.distance import squareform
+from scipy.cluster.hierarchy import linkage, dendrogram, cophenet, fcluster
+
+# ------------------------------------------------------------
+# NEW: Ensure ersp_keep is loaded (from run_dir) if not in memory
+# ------------------------------------------------------------
+if "ersp_keep" not in globals() or ersp_keep is None:
+    ersp_keep, ersp_info = load_ersp_keep_from_run(run_dir)
+    print("[INFO] Loaded ersp_keep:", (len(ersp_keep) if ersp_keep is not None else None), "|", ersp_info)
+
+# ------------------------------------------------------------
+# Inputs expected to exist from your pipeline
+# ------------------------------------------------------------
+# ersp_keep : list[np.ndarray]   each is (n_freq, n_time)
+# VALLEY_PARAMS : dict with thr_pos, thr_neg
+# MAX_BLOBS : int
+
+thr_pos = float(VALLEY_PARAMS["thr_pos"])
+thr_neg = float(VALLEY_PARAMS["thr_neg"])
+MAXB = int(MAX_BLOBS)
+
+# Connectivity for connected components: 8-connect in 2D
+STRUCT = np.ones((3, 3), dtype=np.int8)
+
+# ------------------------------------------------------------
+# Step 1) Build "-101" segmentation maps
+#   +1 where ERSP >= thr_pos
+#   -1 where ERSP <= thr_neg
+#    0 otherwise
+# ------------------------------------------------------------
+def ersp_to_minus101(ersp, thr_pos, thr_neg):
+    pos = (ersp >= thr_pos)
+    neg = (ersp <= thr_neg)
+    seg = np.zeros_like(ersp, dtype=np.int8)
+    seg[pos] = 1
+    seg[neg] = -1
+    return seg
+
+# ------------------------------------------------------------
+# Step 2) Extract geometry-only blob descriptors from segmentation
+# Each blob described by normalized geometry features (no intensity):
+#   sign ∈ {+1,-1}
+#   t_center, f_center  (centroid, normalized to [0,1])
+#   t_span, f_span      (extent, normalized)
+#   area_frac           (#pixels / total pixels)
+# ------------------------------------------------------------
+def extract_blobs_minus101(seg):
+    nF, nT = seg.shape
+    blobs = []
+
+    for sign in (1, -1):
+        mask = (seg == sign)
+        lab, nlab = label(mask, structure=STRUCT)
+        if nlab == 0:
+            continue
+
+        for lab_id in range(1, nlab + 1):
+            coords = np.argwhere(lab == lab_id)   # rows are [f, t]
+            if coords.size == 0:
+                continue
+
+            f = coords[:, 0].astype(np.float32)
+            t = coords[:, 1].astype(np.float32)
+
+            # Geometry
+            f0, f1 = float(f.min()), float(f.max())
+            t0, t1 = float(t.min()), float(t.max())
+
+            f_center = float(f.mean())
+            t_center = float(t.mean())
+
+            f_span = (f1 - f0 + 1.0)
+            t_span = (t1 - t0 + 1.0)
+
+            area = float(coords.shape[0])
+
+            # Normalize to be invariant to n_freq/n_time
+            blob = {
+                "sign": int(sign),
+                "t_center": t_center / max(1.0, (nT - 1.0)),
+                "f_center": f_center / max(1.0, (nF - 1.0)),
+                "t_span":   t_span   / max(1.0, nT),
+                "f_span":   f_span   / max(1.0, nF),
+                "area_frac": area / float(nF * nT),
+            }
+            blobs.append(blob)
+
+    # Rank blobs by area (largest first); keep top MAXB
+    blobs.sort(key=lambda b: b["area_frac"], reverse=True)
+    return blobs[:MAXB]
+
+# ------------------------------------------------------------
+# Step 3) Blob-to-blob distance (geometry + sign)
+# We intentionally ignore intensity; this is strictly "-101" geometry.
+# ------------------------------------------------------------
+def blob_dist(b1, b2, w=None, sign_mismatch_penalty=0.5):
+    # Feature vector order
+    v1 = np.array([b1["t_center"], b1["f_center"], b1["t_span"], b1["f_span"], b1["area_frac"]], dtype=np.float32)
+    v2 = np.array([b2["t_center"], b2["f_center"], b2["t_span"], b2["f_span"], b2["area_frac"]], dtype=np.float32)
+
+    if w is None:
+        w = np.ones_like(v1)
+
+    d = (v1 - v2) * w
+    base = float(np.sqrt(np.sum(d * d)))
+
+    # Penalize matching a positive blob to a negative blob (optional, but usually desirable)
+    if b1["sign"] != b2["sign"]:
+        base += float(sign_mismatch_penalty)
+
+    return base
+
+# ------------------------------------------------------------
+# Step 4) Sample-to-sample distance via optimal assignment (Hungarian)
+# Here we do a simple min-cost matching between blob sets.
+# Unmatched blobs get a penalty (because "extra blobs" should matter).
+# ------------------------------------------------------------
+from scipy.optimize import linear_sum_assignment
+
+def sample_dist(blobsA, blobsB, w=None, unmatched_penalty=0.5, sign_mismatch_penalty=0.5, normalize_by="max"):
+    nA, nB = len(blobsA), len(blobsB)
+
+    if nA == 0 and nB == 0:
+        return 0.0
+    if nA == 0 or nB == 0:
+        base = unmatched_penalty * abs(nA - nB)
+        denom = max(nA, nB) if normalize_by == "max" else max(1, int(np.round((nA + nB) / 2.0)))
+        return float(base / denom)
+
+    # Cost matrix
+    C = np.zeros((nA, nB), dtype=np.float32)
+    for i in range(nA):
+        for j in range(nB):
+            C[i, j] = blob_dist(blobsA[i], blobsB[j], w=w, sign_mismatch_penalty=sign_mismatch_penalty)
+
+    # Optimal assignment
+    ri, ci = linear_sum_assignment(C)
+    match_cost = float(C[ri, ci].sum())
+
+    # Unmatched penalty
+    unmatched = abs(nA - nB)
+    total = match_cost + unmatched_penalty * unmatched
+
+    # Normalize
+    if normalize_by == "max":
+        denom = max(nA, nB)
+    elif normalize_by == "mean":
+        denom = max(1, int(np.round((nA + nB) / 2.0)))
+    else:
+        denom = 1
+    return float(total / denom)
+
+# ------------------------------------------------------------
+# Parameters you may tune for dendrogram separation
+# ------------------------------------------------------------
+W_FEAT = np.array([1.0, 1.0, 0.7, 0.7, 0.5], dtype=np.float32)  # time/freq centers most important
+UNMATCHED_PENALTY = 0.4
+SIGN_MISMATCH_PENALTY = 0.6
+NORMALIZE_BY = "max"
+
+LINKAGE_METHOD = "complete"   # "average" or "complete" are appropriate for arbitrary distances
+
+# ------------------------------------------------------------
+# Build blob sets per sample (the "-101 feature set")
+# ------------------------------------------------------------
+blob_sets = []
+for ersp in ersp_keep:
+    seg = ersp_to_minus101(ersp, thr_pos=thr_pos, thr_neg=thr_neg)
+    blobs = extract_blobs_minus101(seg)
+    blob_sets.append(blobs)
+
+print(f"[INFO] Built -101 blob sets for n={len(blob_sets)} samples (max {MAXB} blobs each).")
+
+# Quick QC: how many blobs per sample?
+n_blobs = np.array([len(b) for b in blob_sets], dtype=int)
+print("[QC] blobs/sample: min/median/max =", int(n_blobs.min()), float(np.median(n_blobs)), int(n_blobs.max()))
+
+# ------------------------------------------------------------
+# Build pairwise distance matrix D
+# ------------------------------------------------------------
+n = len(blob_sets)
+D = np.zeros((n, n), dtype=np.float32)
+
+print(f"[INFO] Computing pairwise assignment distances (O(n^2)) for n={n}...")
+for i in range(n):
+    if i % 50 == 0:
+        print(f"  row {i}/{n}")
+    for j in range(i + 1, n):
+        dij = sample_dist(
+            blob_sets[i], blob_sets[j],
+            w=W_FEAT,
+            unmatched_penalty=UNMATCHED_PENALTY,
+            sign_mismatch_penalty=SIGN_MISMATCH_PENALTY,
+            normalize_by=NORMALIZE_BY,
+        )
+        D[i, j] = dij
+        D[j, i] = dij
+
+print("[QC] D finite:", np.isfinite(D).mean(),
+      "| min/median/max:", float(D.min()), float(np.median(D)), float(D.max()))
+
+# ------------------------------------------------------------
+# Hierarchical clustering + dendrogram
+# ------------------------------------------------------------
+condensed = squareform(D, checks=False)
+Z = linkage(condensed, method=LINKAGE_METHOD)
+
+# Cophenetic correlation: how well dendrogram preserves distances
+coph_corr, _ = cophenet(Z, condensed)
+print(f"[QC] Cophenetic correlation ({LINKAGE_METHOD} linkage): {float(coph_corr):.3f}")
+
+plt.figure(figsize=(14, 6))
+dendrogram(Z, no_labels=True, color_threshold=None)
+plt.title(f"Dendrogram (-101 blob-set assignment distance, linkage={LINKAGE_METHOD})")
+plt.xlabel("Samples")
+plt.ylabel("Linkage distance")
+plt.tight_layout()
+plt.show()
+
+# ------------------------------------------------------------
+# Optional: cut dendrogram into k clusters and report sizes
+# (useful for sanity-checking separation)
+# ------------------------------------------------------------
+K_CUT = 20 if n >= 10 else max(5, n)
+K_CUT = 20 if n >= 10 else max(5, n)
+print(K_CUT)
+labels_hc = fcluster(Z, t=K_CUT, criterion="maxclust")
+uniq, counts = np.unique(labels_hc, return_counts=True)
+print(f"[INFO] Example cut into K={K_CUT} clusters -> sizes:", dict(zip(uniq.tolist(), counts.tolist())))
+
+# ===== New Cell: Cluster report statistics (distance + prototype consensus + metadata) =====
+import numpy as np
+import pandas as pd
+
+# ------------------------------------------------------------
+# NEW: Ensure df_keep is loaded (from run_dir) if not in memory
+# ------------------------------------------------------------
+if "df_keep" not in globals() or df_keep is None:
+    df_keep = pd.read_parquet(Path(run_dir) / "df_keep.parquet")
+
+# NEW: Ensure ersp_keep is loaded (from run_dir) if not in memory
+if "ersp_keep" not in globals() or ersp_keep is None:
+    ersp_keep, ersp_info = load_ersp_keep_from_run(run_dir)
+    print("[INFO] Loaded ersp_keep:", (len(ersp_keep) if ersp_keep is not None else None), "|", ersp_info)
+
+# Requires:
+# D          : (n,n) distance matrix
+# labels_hc  : (n,) dendrogram cluster labels
+# ersp_keep  : list[np.ndarray]
+# thr_pos, thr_neg
+# df_keep_with_clusters or df_keep (optional)
+
+df_meta_plot = df_keep_with_clusters if "df_keep_with_clusters" in globals() else df_keep
+
+HARD_THR = 0.2  # same as used for hard prototype consensus (adjust if needed)
+
+def ersp_to_minus101(ersp, thr_pos, thr_neg):
+    seg = np.zeros_like(ersp, dtype=np.int8)
+    seg[ersp >= thr_pos] = 1
+    seg[ersp <= thr_neg] = -1
+    return seg
+
+def cluster_prototype_mean(indices):
+    segs = np.stack([ersp_to_minus101(ersp_keep[i], thr_pos, thr_neg) for i in indices], axis=0)
+    return segs.mean(axis=0).astype(np.float32)  # [-1,1]
+
+def compute_medoid(D, idx):
+    Dc = D[np.ix_(idx, idx)]
+    mean_dist = Dc.mean(axis=1)
+    j = int(np.argmin(mean_dist))
+    return int(idx[j]), float(mean_dist[j])
+
+clusters = np.unique(labels_hc)
+
+rows = []
+for c in clusters:
+    idx = np.where(labels_hc == c)[0]
+    k = int(len(idx))
+    if k == 0:
+        continue
+
+    # --- Intra-cluster distances
+    Dc = D[np.ix_(idx, idx)]
+    # exclude diagonal for summary stats
+    if k >= 2:
+        tri = Dc[np.triu_indices(k, k=1)]
+        intra_mean = float(np.mean(tri))
+        intra_median = float(np.median(tri))
+        intra_q90 = float(np.quantile(tri, 0.90))
+    else:
+        intra_mean = 0.0
+        intra_median = 0.0
+        intra_q90 = 0.0
+
+    # --- Medoid
+    medoid_idx, medoid_mean_intra = compute_medoid(D, idx)
+
+    # --- Separation: distance to nearest other cluster (mean distance)
+    other_clusters = [cc for cc in clusters if cc != c]
+    nearest_other_mean = np.nan
+    nearest_other_cluster = None
+    if len(other_clusters) > 0:
+        best = (np.inf, None)
+        for cc in other_clusters:
+            jdx = np.where(labels_hc == cc)[0]
+            if len(jdx) == 0:
+                continue
+            # mean cross-distance between clusters
+            Dcross = D[np.ix_(idx, jdx)]
+            m = float(np.mean(Dcross))
+            if m < best[0]:
+                best = (m, int(cc))
+        nearest_other_mean, nearest_other_cluster = best[0], best[1]
+
+    # --- Simple separation ratio (higher is better)
+    sep_ratio = float(nearest_other_mean / (intra_mean + 1e-9)) if np.isfinite(nearest_other_mean) else np.nan
+
+    # --- Prototype consensus stats (-101)
+    mean_map = cluster_prototype_mean(idx)
+    abs_mean = np.abs(mean_map)
+
+    consensus_frac = float(np.mean(abs_mean >= HARD_THR))
+    pos_cons_frac = float(np.mean(mean_map >= HARD_THR))
+    neg_cons_frac = float(np.mean(mean_map <= -HARD_THR))
+
+    # dominance: + means more positive consensus, - means more negative consensus
+    dominance = float(pos_cons_frac - neg_cons_frac)
+
+    # --- Metadata summaries (top 3) if columns exist
+    def top_counts(col, n=3):
+        if col not in df_meta_plot.columns:
+            return None
+        s = df_meta_plot.iloc[idx][col].astype(str).fillna("NA")
+        vc = s.value_counts().head(n)
+        return "; ".join([f"{k}:{int(v)}" for k, v in vc.items()])
+
+    row = {
+        "cluster": int(c),
+        "size": k,
+        "medoid_idx": medoid_idx,
+        "medoid_mean_intra": float(medoid_mean_intra),
+        "intra_mean": intra_mean,
+        "intra_median": intra_median,
+        "intra_q90": intra_q90,
+        "nearest_other_cluster": nearest_other_cluster,
+        "nearest_other_mean": float(nearest_other_mean) if np.isfinite(nearest_other_mean) else np.nan,
+        "sep_ratio": sep_ratio,
+        "consensus_frac_|mean|>=thr": consensus_frac,
+        "pos_consensus_frac": pos_cons_frac,
+        "neg_consensus_frac": neg_cons_frac,
+        "dominance_pos_minus_neg": dominance,
+        "top_condition": top_counts("condition"),
+        "top_task": top_counts("task"),
+        "top_patient": top_counts("patient_id"),
+    }
+
+    # Optionally attach medoid metadata
+    for col in ["patient_id", "electrode", "condition", "task", "sample_idx", "file_path"]:
+        if col in df_meta_plot.columns:
+            row[f"medoid_{col}"] = df_meta_plot.iloc[medoid_idx][col]
+
+    rows.append(row)
+
+df_cluster_report = pd.DataFrame(rows)
+
+# Sort suggestion: large clusters first, then best-separated
+df_cluster_report = df_cluster_report.sort_values(
+    by=["size", "sep_ratio"],
+    ascending=[False, False],
+).reset_index(drop=True)
+
+display(df_cluster_report)
+
+print("[INFO] Interpretation tips:")
+print("- intra_mean/median/q90: compactness within the cluster (lower is tighter).")
+print("- nearest_other_mean: how far the cluster is from its closest neighbor cluster (higher is better separated).")
+print("- sep_ratio: separation relative to compactness (higher is better).")
+print("- consensus_frac: how consistent the -101 prototype is (higher means a clearer shared motif).")
+
+# ===== New Cell: Recompute D/Z for a patient subset (for -101 assignment distance dendrogram) =====
+import numpy as np
+from scipy.spatial.distance import squareform
+from scipy.cluster.hierarchy import linkage, fcluster
+
+# Requires: df_keep_with_clusters or df_keep, blob_sets, sample_dist, W_FEAT, UNMATCHED_PENALTY, SIGN_MISMATCH_PENALTY, NORMALIZE_BY, LINKAGE_METHOD
+
+df_meta_full = df_keep_with_clusters if "df_keep_with_clusters" in globals() else df_keep
+
+PATIENT_SUBSET = ["PAT_2868"]  # change as needed
+subset_idx = np.where(df_meta_full["patient_id"].astype(str).isin(set(PATIENT_SUBSET)).to_numpy())[0]
+print("[INFO] Subset n =", len(subset_idx))
+
+if len(subset_idx) < 2:
+    raise ValueError("Need at least 2 samples in subset for dendrogram.")
+
+# subset metadata and blob sets (keep consistent ordering)
+df_meta_plot = df_meta_full.iloc[subset_idx].reset_index(drop=True)
+blob_sets_sub = [blob_sets[i] for i in subset_idx]
+
+# recompute D on subset
+n = len(blob_sets_sub)
+D_sub = np.zeros((n, n), dtype=np.float32)
+
+for i in range(n):
+    for j in range(i + 1, n):
+        dij = sample_dist(
+            blob_sets_sub[i], blob_sets_sub[j],
+            w=W_FEAT,
+            unmatched_penalty=UNMATCHED_PENALTY,
+            sign_mismatch_penalty=SIGN_MISMATCH_PENALTY,
+            normalize_by=NORMALIZE_BY,
+        )
+        D_sub[i, j] = dij
+        D_sub[j, i] = dij
+
+# linkage on subset
+Z_sub = linkage(squareform(D_sub, checks=False), method=LINKAGE_METHOD)
+
+# choose cut height or K cut (example: keep your CUT_HEIGHT if you want)
+labels_hc_dist = fcluster(Z_sub, t=CUT_HEIGHT, criterion="distance")
+
+print("[INFO] Ready: df_meta_plot (subset), D_sub, Z_sub, labels_hc_dist (subset)")
+
+# sil_by_k = {}
+# labels_by_k = {}
+
+# for k in KMEANS_K_RANGE:
+#     km = KMeans(n_clusters=int(k), random_state=RANDOM_STATE, n_init=5)
+#     lab = km.fit_predict(Xw)
+#     labels_by_k[int(k)] = lab
+
+#     if len(np.unique(lab)) > 1:
+#         sil_by_k[int(k)] = float(silhouette_score(Xw, lab))
+#     else:
+#         sil_by_k[int(k)] = float("nan")
+
+# best_k = max(sil_by_k.keys(), key=lambda kk: np.nan_to_num(sil_by_k[kk], nan=-1e9))
+# print("Best K:", best_k, "silhouette:", sil_by_k[best_k])
+
+# kmeans_final = KMeans(n_clusters=int(best_k), random_state=RANDOM_STATE, n_init=5)
+# labels_final = kmeans_final.fit_predict(Xw)
+
+# ALGO_TAG = "kmeans_blob"
+# PARAM_TAG = f"k{best_k}_q{BLOB_SCORE_QUANTILE}"
+# print("PARAM_TAG:", PARAM_TAG)
+
+
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+
+# Use X_blob_keep directly (loaded earlier as Xk)
+X = Xk
+
+# Standardize features (fit on X_blob_keep)
+scaler = StandardScaler(with_mean=True, with_std=True)
+Xz = scaler.fit_transform(X)
+
+sil_by_k = {}
+labels_by_k = {}
+
+for k in KMEANS_K_RANGE:
+    k_int = int(k)
+    km = KMeans(n_clusters=k_int, random_state=RANDOM_STATE, n_init=5)
+    lab = km.fit_predict(Xz)
+    labels_by_k[k_int] = lab
+
+    # silhouette requires at least 2 clusters and n_samples > n_clusters
+    if len(np.unique(lab)) > 1 and Xz.shape[0] > k_int:
+        sil_by_k[k_int] = float(silhouette_score(Xz, lab))
+    else:
+        sil_by_k[k_int] = float("nan")
+
+best_k = max(sil_by_k.keys(), key=lambda kk: np.nan_to_num(sil_by_k[kk], nan=-1e9))
+print("Best K:", best_k, "silhouette:", sil_by_k[best_k])
+
+kmeans_final = KMeans(n_clusters=int(best_k), random_state=RANDOM_STATE, n_init=5)
+labels_final = kmeans_final.fit_predict(Xz)
+
+ALGO_TAG = "kmeans_blob_raw_std"
+PARAM_TAG = f"k{best_k}_q{BLOB_SCORE_QUANTILE}"
+print("PARAM_TAG:", PARAM_TAG)
+
+# Optional: keep these if you want to reuse later (e.g., for centroids in original space)
+# centers_z = kmeans_final.cluster_centers_
+# centers_raw = scaler.inverse_transform(centers_z)
+print("sil_by_k ",sil_by_k)
+
+# # ===== New Cell: Color dendrogram branches by clusters (distance cut) =====
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from scipy.cluster.hierarchy import dendrogram, fcluster
+
+# # Requires:
+# # Z : linkage matrix
+
+# FIGSIZE = (18, 6)
+# DPI = 120
+
+# # -------------------------
+# # Choose a CUT HEIGHT
+# # -------------------------
+# # Option 1 (manual): choose a meaningful height and keep it fixed across experiments
+# CUT_HEIGHT = 5   # adjust; should be on the same scale as your dendrogram y-axis
+
+# # Option 2 (auto): pick a height that yields ~K clusters (roughly)
+# TARGET_K = 10
+# heights = np.unique(Z[:, 2])
+# best_h = None
+# best_diff = 1e9
+# for h in heights:
+#     labs = fcluster(Z, t=h, criterion="distance")
+#     k = len(np.unique(labs))
+#     diff = abs(k - TARGET_K)
+#     if diff < best_diff:
+#         best_diff = diff
+#         best_h = float(h)
+# # Uncomment to use auto cut:
+# # CUT_HEIGHT = best_h
+# print("[INFO] Using CUT_HEIGHT:", CUT_HEIGHT, "| approx K:", len(np.unique(fcluster(Z, t=CUT_HEIGHT, criterion="distance"))))
+
+# # -------------------------
+# # Plot dendrogram with colored branches
+# # -------------------------
+# fig, ax = plt.subplots(figsize=FIGSIZE, dpi=DPI)
+
+# dendrogram(
+#     Z,
+#     ax=ax,
+#     no_labels=True,                 # keep clean; can set False if you want leaf labels
+#     color_threshold=CUT_HEIGHT,     # THIS is what colors branches
+#     above_threshold_color="black",  # branches above cut are black
+# )
+
+# ax.axhline(CUT_HEIGHT, color="black", linewidth=1.5, linestyle="--")
+# ax.set_title(f"Dendrogram with colored branches (cut height = {CUT_HEIGHT:.3f})")
+# ax.set_xlabel("Samples")
+# ax.set_ylabel("Linkage distance")
+# plt.tight_layout()
+# plt.show()
+
+# # Also compute labels corresponding to this cut height (for downstream medoids/prototypes)
+# labels_hc_dist = fcluster(Z, t=CUT_HEIGHT, criterion="distance")
+# uniq, counts = np.unique(labels_hc_dist, return_counts=True)
+# print("[INFO] Cluster sizes:", dict(zip(uniq.tolist(), counts.tolist())))
+
+
+
+# # ===== New Cell: Dendrogram with branch coloring via DISTANCE CUT (Option A) =====
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from scipy.cluster.hierarchy import dendrogram, fcluster
+
+# # Requires from previous cells:
+# # Z : linkage matrix (built from your -101 assignment distance)
+# # Optional: D for later medoids/prototypes, but not required for this plot
+
+# # -------------------------
+# # Visual policy
+# # -------------------------
+# FIGSIZE = (18, 6)
+# DPI = 120
+
+# # -------------------------
+# # Pick a CUT_HEIGHT strategy
+# # -------------------------
+# # Option A1 (recommended): choose a fixed height for comparability across runs
+# CUT_HEIGHT = 5   # <-- adjust once, then keep fixed across experiments
+
+# # Option A2 (optional): automatically choose a height that yields ~TARGET_K clusters
+# AUTO_PICK_HEIGHT = False
+# TARGET_K = 10
+
+# if AUTO_PICK_HEIGHT:
+#     heights = np.unique(Z[:, 2])
+#     best_h, best_diff = None, 1e9
+#     for h in heights:
+#         labs = fcluster(Z, t=h, criterion="distance")
+#         k = len(np.unique(labs))
+#         diff = abs(k - TARGET_K)
+#         # tie-break: prefer a slightly higher cut (more stable, less fragmentation)
+#         if diff < best_diff or (diff == best_diff and (best_h is None or h > best_h)):
+#             best_diff = diff
+#             best_h = float(h)
+#     CUT_HEIGHT = best_h
+#     print(f"[INFO] AUTO cut picked CUT_HEIGHT={CUT_HEIGHT:.4f} (closest to K={TARGET_K}, diff={best_diff})")
+
+# # -------------------------
+# # Plot dendrogram with colored branches
+# # -------------------------
+# fig, ax = plt.subplots(figsize=FIGSIZE, dpi=DPI)
+
+# dinfo = dendrogram(
+#     Z,
+#     ax=ax,
+#     no_labels=True,                 # keep clean; change to False if you want leaf labels
+#     color_threshold=CUT_HEIGHT,     # <-- colors branches below this height
+#     above_threshold_color="black",  # merges above the cut stay black
+# )
+
+# ax.axhline(CUT_HEIGHT, color="black", linewidth=1.5, linestyle="--")
+# ax.set_title(f"Dendrogram with colored branches (distance cut = {CUT_HEIGHT:.3f})")
+# ax.set_xlabel("Samples")
+# ax.set_ylabel("Linkage distance")
+# plt.tight_layout()
+# plt.show()
+
+# # -------------------------
+# # Get cluster labels from the SAME cut (for medoids/prototypes/stats downstream)
+# # -------------------------
+# labels_hc_dist = fcluster(Z, t=CUT_HEIGHT, criterion="distance")
+# uniq, counts = np.unique(labels_hc_dist, return_counts=True)
+# print("[INFO] #clusters:", len(uniq))
+# print("[INFO] Cluster sizes:", dict(zip(uniq.tolist(), counts.tolist())))
+
+# # OPTIONAL: assign these labels back into your df
+# if "df_keep_with_clusters" in globals():
+#     df_keep_with_clusters["cluster_hc_distcut"] = labels_hc_dist.astype(np.int32)
+# elif "df_keep" in globals():
+#     df_keep["cluster_hc_distcut"] = labels_hc_dist.astype(np.int32)
+    
+    
+# # ===== New Cell: Dendrogram + 3 metadata bars (patient/condition/region) + optional patient subset =====
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from matplotlib import gridspec
+# from scipy.cluster.hierarchy import dendrogram, fcluster
+
+# # -------------------------
+# # Inputs expected:
+# # Z : linkage matrix
+# # labels_hc_dist : cluster labels from fcluster(Z, t=CUT_HEIGHT, criterion="distance")
+# # df_keep_with_clusters or df_keep : metadata rows aligned with the samples used to build Z/D
+# # -------------------------
+# df_meta_plot = df_keep_with_clusters if "df_keep_with_clusters" in globals() else df_keep
+
+# # -------------------------
+# # Choose metadata columns
+# # -------------------------
+# PATIENT_COL = "patient_id"
+# COND_COL    = "condition"
+# REGION_COL  = "brain_region"   # <-- CHANGE THIS to your actual region column name
+
+# # If REGION_COL doesn't exist, you can set REGION_COL=None to skip the region bar.
+# if REGION_COL not in df_meta_plot.columns:
+#     print(f"[WARN] REGION_COL='{REGION_COL}' not found. Set REGION_COL to your actual column or None.")
+#     REGION_COL = None
+
+# # -------------------------
+# # Optional: subset to selected patients
+# # IMPORTANT: This should be done BEFORE building D/Z ideally.
+# # If you already built Z on all patients, you cannot truly subset the tree without recomputing Z.
+# # However, you CAN re-run your distance-matrix + linkage steps on a filtered set.
+# # Here we implement the filtering assuming you will recompute Z upstream when needed.
+# # -------------------------
+# USE_PATIENT_SUBSET = True # False
+# PATIENT_SUBSET = ["PAT_2868"]#,"PAT_3066","PAT_3301","PAT_3390","PAT_3415","PAT_3455","PAT_3965","PAT_3975","PAT_3780"]  # <-- edit
+
+# # If you already recomputed Z on subset, keep USE_PATIENT_SUBSET=False here.
+# # If you want this cell to filter df/meta + labels for visualization only, it will not match Z leaf order.
+# if USE_PATIENT_SUBSET:
+#     keep_mask = df_meta_plot[PATIENT_COL].astype(str).isin(set(PATIENT_SUBSET)).to_numpy()
+#     df_meta_plot = df_meta_plot.loc[keep_mask].reset_index(drop=True)
+
+#     # In this visualization cell, we assume you also recomputed labels_hc_dist accordingly.
+#     # If not, stop here to avoid mismatch.
+#     raise RuntimeError(
+#         "You enabled USE_PATIENT_SUBSET, but this cell cannot safely subset an existing Z.\n"
+#         "Please rebuild D and Z on the filtered samples, then re-run the dendrogram+bars cell."
+#     )
+
+# # -------------------------
+# # Dendrogram settings
+# # -------------------------
+# FIGSIZE = (25, 8)
+# DPI = 120
+
+# # Use the same CUT_HEIGHT you used to compute labels_hc_dist
+# # (redefine here only if needed)
+# # CUT_HEIGHT = 0.68
+
+# # -------------------------
+# # Helper: map categorical series to integer codes for imshow stripe
+# # -------------------------
+# def cat_to_codes(series):
+#     s = series.astype(str).fillna("NA")
+#     cats = sorted(s.unique().tolist())
+#     mapping = {c: i + 1 for i, c in enumerate(cats)}  # codes start at 1
+#     codes = s.map(mapping).to_numpy(dtype=np.int32)
+#     return codes, mapping
+
+# # -------------------------
+# # Plot dendrogram + 4 stripes
+# # -------------------------
+# fig = plt.figure(figsize=FIGSIZE, dpi=DPI)
+# gs = gridspec.GridSpec(5, 1, height_ratios=[9, 0.7, 0.7, 0.7, 0.7], hspace=0.06)
+
+# ax_d = fig.add_subplot(gs[0])
+# ax_c = fig.add_subplot(gs[1], sharex=ax_d)  # cluster stripe
+# ax_p = fig.add_subplot(gs[2], sharex=ax_d)  # patient stripe
+# ax_k = fig.add_subplot(gs[3], sharex=ax_d)  # condition stripe
+# ax_r = fig.add_subplot(gs[4], sharex=ax_d)  # region stripe (optional)
+
+# # Dendrogram (captures leaf order)
+# dinfo = dendrogram(
+#     Z,
+#     ax=ax_d,
+#     no_labels=True,
+#     color_threshold=CUT_HEIGHT,
+#     above_threshold_color="black",
+# )
+
+# ax_d.axhline(CUT_HEIGHT, color="black", linewidth=1.5, linestyle="--")
+# ax_d.set_title(f"Dendrogram + metadata bars (distance cut = {CUT_HEIGHT:.3f})")
+# ax_d.set_ylabel("Linkage distance")
+# plt.setp(ax_d.get_xticklabels(), visible=False)
+
+# # Leaves (order of sample indices used in Z)
+# leaves = np.asarray(dinfo["leaves"], dtype=int)
+# n_leaves = len(leaves)
+# extent = (0, 10 * n_leaves, 0, 1)
+
+# # Cluster stripe
+# cl_leaf = np.asarray(labels_hc_dist)[leaves]
+# cl_stripe = cl_leaf[np.newaxis, :]
+# ax_c.imshow(cl_stripe, aspect="auto", origin="lower", vmin=cl_leaf.min(), vmax=cl_leaf.max(), extent=extent)
+# ax_c.set_yticks([])
+# ax_c.set_ylabel("cl", rotation=0, labelpad=15, va="center")
+# plt.setp(ax_c.get_xticklabels(), visible=False)
+
+# # Patient stripe
+# pid_codes, pid_map = cat_to_codes(df_meta_plot.iloc[leaves][PATIENT_COL])
+# ax_p.imshow(pid_codes[np.newaxis, :], aspect="auto", origin="lower",
+#             vmin=1, vmax=max(1, len(pid_map)), extent=extent)
+# ax_p.set_yticks([])
+# ax_p.set_ylabel("pt", rotation=0, labelpad=15, va="center")
+# plt.setp(ax_p.get_xticklabels(), visible=False)
+
+# # Condition stripe
+# cond_codes, cond_map = cat_to_codes(df_meta_plot.iloc[leaves][COND_COL]) if COND_COL in df_meta_plot.columns else (None, {})
+# if cond_codes is not None:
+#     ax_k.imshow(cond_codes[np.newaxis, :], aspect="auto", origin="lower",
+#                 vmin=1, vmax=max(1, len(cond_map)), extent=extent)
+# ax_k.set_yticks([])
+# ax_k.set_ylabel("cond", rotation=0, labelpad=15, va="center")
+# plt.setp(ax_k.get_xticklabels(), visible=False)
+
+# # Region stripe (optional)
+# if REGION_COL is not None:
+#     reg_codes, reg_map = cat_to_codes(df_meta_plot.iloc[leaves][REGION_COL])
+#     ax_r.imshow(reg_codes[np.newaxis, :], aspect="auto", origin="lower",
+#                 vmin=1, vmax=max(1, len(reg_map)), extent=extent)
+#     ax_r.set_ylabel("roi", rotation=0, labelpad=15, va="center")
+# else:
+#     ax_r.axis("off")
+
+# ax_r.set_yticks([])
+# ax_r.set_xlabel("Samples (leaf order)")
+
+# plt.tight_layout()
+# plt.show()
+
+# print("[INFO] Category counts:")
+# print("  patients:", len(pid_map))
+# print("  conditions:", len(cond_map))
+# if REGION_COL is not None:
+#     print("  regions:", len(reg_map))
+
+# ===== New Cell: Attach brain region labels (from recon) to df_keep_with_clusters for dendrogram bars =====
+from pathlib import Path
+import pandas as pd
+import numpy as np
+
+# ---- Inputs you should set ----
+RUN240_DIR = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora\02_FBM_Clustering\outputs\240_blob_cluster_recon\20260103_122347")
+RUN240_DIR = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora\02_FBM_Clustering\outputs\240_blob_cluster_recon\20260108_233820")
+
+# ---- NEW: ensure df_keep exists (load from run_dir if missing) ----
+if "df_keep" not in globals() or df_keep is None:
+    df_keep = pd.read_parquet(Path(run_dir) / "df_keep.parquet")
+
+# Pick your sample-level dataframe
+df_samples = df_keep_with_clusters if "df_keep_with_clusters" in globals() else df_keep
+df_samples = df_samples.copy()
+
+# ---- 1) Find a likely contact-level metadata / atlas cache file in recon outputs ----
+candidates = []
+
+# common locations
+candidates += list((RUN240_DIR / "atlas_cache").rglob("*.parquet"))
+candidates += list((RUN240_DIR / "atlas_cache").rglob("*.tsv"))
+candidates += list((RUN240_DIR / "atlas_cache").rglob("*.csv"))
+
+# also check top-level for contact-level meta naming
+candidates += list(RUN240_DIR.rglob("df_meta_contact_level.*"))
+candidates += list(RUN240_DIR.rglob("*contact_level*.*"))
+candidates += list(RUN240_DIR.rglob("*atlas*labels*.*"))
+
+# de-duplicate
+candidates = sorted({p for p in candidates if p.is_file()})
+
+print(f"[INFO] Found {len(candidates)} candidate recon files.")
+for p in candidates[:10]:
+    print("  -", p)
+
+if not candidates:
+    raise FileNotFoundError(
+        f"No atlas/contact-level table found under {RUN240_DIR}. "
+        "Expected something like atlas_cache/*.parquet or df_meta_contact_level.tsv"
+    )
+
+# ---- 2) Load the first file that contains patient_id + electrode + a region-like column ----
+REGION_COL_CANDIDATES = [
+    "brain_region", "region", "roi", "aparc_region", "aparc_label", "aparc",
+    "fs_region", "atlas_region", "label_name", "region_name",
+    "aparc_name", "desikan_killiany", "dk_region",
+]
+KEYS_REQUIRED = {"patient_id", "electrode"}
+
+def _load_table(path: Path) -> pd.DataFrame:
+    suf = path.suffix.lower()
+    if suf == ".parquet":
+        return pd.read_parquet(path)
+    if suf == ".tsv":
+        return pd.read_csv(path, sep="\t")
+    if suf == ".csv":
+        return pd.read_csv(path)
+    return None
+
+chosen_path = None
+df_contact = None
+chosen_region_col = None
+
+for p in candidates:
+    try:
+        df0 = _load_table(p)
+        if df0 is None or not isinstance(df0, pd.DataFrame):
+            continue
+        cols = set(df0.columns)
+        if not KEYS_REQUIRED.issubset(cols):
+            continue
+        # find a region-like column
+        for rc in REGION_COL_CANDIDATES:
+            if rc in cols:
+                chosen_path = p
+                df_contact = df0
+                chosen_region_col = rc
+                break
+        if df_contact is not None:
+            break
+    except Exception:
+        continue
+
+if df_contact is None:
+    # fallback: pick the first file with patient_id/electrode and print its columns for you
+    for p in candidates:
+        df0 = _load_table(p)
+        if df0 is None:
+            continue
+        if KEYS_REQUIRED.issubset(set(df0.columns)):
+            print("[WARN] Found patient_id+electrode table but no recognized region column.")
+            print("File:", p)
+            print("Columns:", list(df0.columns))
+            raise ValueError("Set REGION_COL_CANDIDATES to match your actual region column name.")
+    raise ValueError("No table with patient_id+electrode found.")
+
+print("[INFO] Using contact-level table:", chosen_path)
+print("[INFO] Using region column:", chosen_region_col)
+
+# ---- 3) Reduce to unique contact-level mapping and merge onto sample-level df ----
+df_map = df_contact[["patient_id", "electrode", chosen_region_col]].copy()
+
+# enforce types
+df_map["patient_id"] = df_map["patient_id"].astype(str)
+df_map["electrode"]  = df_map["electrode"].astype(str)
+df_map[chosen_region_col] = df_map[chosen_region_col].astype(str)
+
+# if duplicates exist, keep the most frequent label per (patient_id, electrode)
+df_map = (
+    df_map.groupby(["patient_id", "electrode"])[chosen_region_col]
+          .agg(lambda s: s.value_counts().index[0])
+          .reset_index()
+)
+
+# merge
+df_samples["patient_id"] = df_samples["patient_id"].astype(str)
+df_samples["electrode"]  = df_samples["electrode"].astype(str)
+
+df_samples = df_samples.merge(df_map, on=["patient_id", "electrode"], how="left")
+
+# rename to your preferred standard column name for plotting bars
+df_samples = df_samples.rename(columns={chosen_region_col: "brain_region"})
+
+# QC
+print("[QC] brain_region missing:", int(df_samples["brain_region"].isna().sum()), "/", len(df_samples))
+print(df_samples[["patient_id", "electrode", "brain_region"]].head(10))
+
+# Write back into the notebook namespace if you want:
+if "df_keep_with_clusters" in globals():
+    df_keep_with_clusters = df_samples
+else:
+    df_keep = df_samples
+
+print("[INFO] Done. Use REGION_COL='brain_region' in the dendrogram bars cell.")
+
+# ===== New Cell: Color dendrogram branches by clusters (distance cut) =====
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import dendrogram, fcluster
+
+# Requires:
+# Z : linkage matrix
+
+# ---- NEW: ensure df_keep exists (only needed if showing leaf labels) ----
+import pandas as pd
+from pathlib import Path
+if "df_keep" not in globals() or df_keep is None:
+    df_keep = pd.read_parquet(Path(run_dir) / "df_keep.parquet")
+
+df_meta_plot = df_keep_with_clusters if "df_keep_with_clusters" in globals() else df_keep
+
+# ---- NEW: patient-coded sample labels (optional display) ----
+def cond_letter(c):
+    c = str(c).strip().lower()
+    if c.startswith("a"): return "a"
+    if c.startswith("p"): return "p"
+    if c.startswith("r"): return "r"
+    return c[:1] if c else "u"
+
+def elec_code(e):
+    return str(e).strip().lower().replace(" ", "")
+
+def patient_code(p):
+    p = str(p).strip()
+    return p if p else "UNK"
+
+SAMPLE_LABELS = [
+    f"{patient_code(r.get('patient_id'))}_{elec_code(r.get('electrode'))}_{cond_letter(r.get('condition'))}"
+    for _, r in df_meta_plot.iterrows()
+]
+
+SHOW_LEAF_LABELS = True  # <-- set False if too dense
+
+FIGSIZE = (100, 6)
+DPI = 120
+
+# -------------------------
+# Choose a CUT HEIGHT
+# -------------------------
+CUT_HEIGHT = 0.63   # adjust; should be on the same scale as your dendrogram y-axis
+
+# Option 2 (auto): pick a height that yields ~K clusters (roughly)
+TARGET_K = 10
+heights = np.unique(Z[:, 2])
+best_h = None
+best_diff = 1e9
+for h in heights:
+    labs = fcluster(Z, t=h, criterion="distance")
+    k = len(np.unique(labs))
+    diff = abs(k - TARGET_K)
+    if diff < best_diff:
+        best_diff = diff
+        best_h = float(h)
+# Uncomment to use auto cut:
+# CUT_HEIGHT = best_h
+print("[INFO] Using CUT_HEIGHT:", CUT_HEIGHT, "| approx K:", len(np.unique(fcluster(Z, t=CUT_HEIGHT, criterion="distance"))))
+
+# -------------------------
+# Plot dendrogram with colored branches
+# -------------------------
+fig, ax = plt.subplots(figsize=FIGSIZE, dpi=DPI)
+
+dendrogram(
+    Z,
+    ax=ax,
+    no_labels=(not SHOW_LEAF_LABELS),
+    labels=(SAMPLE_LABELS if SHOW_LEAF_LABELS else None),
+    leaf_rotation=90 if SHOW_LEAF_LABELS else 0,
+    leaf_font_size=7 if SHOW_LEAF_LABELS else 10,
+    color_threshold=CUT_HEIGHT,
+    above_threshold_color="black",
+)
+
+ax.axhline(CUT_HEIGHT, color="black", linewidth=1.5, linestyle="--")
+ax.set_title(f"Dendrogram with colored branches (cut height = {CUT_HEIGHT:.3f})")
+ax.set_xlabel("Samples")
+ax.set_ylabel("Linkage distance")
+plt.tight_layout()
+plt.show()
+
+# Also compute labels corresponding to this cut height (for downstream medoids/prototypes)
+labels_hc_dist = fcluster(Z, t=CUT_HEIGHT, criterion="distance")
+uniq, counts = np.unique(labels_hc_dist, return_counts=True)
+print("[INFO] Cluster sizes:", dict(zip(uniq.tolist(), counts.tolist())))
+
+# ===== New Cell: Dendrogram + 3 metadata bars (patient/condition/region) + optional patient subset =====
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
+from scipy.cluster.hierarchy import dendrogram, fcluster
+
+import pandas as pd
+from pathlib import Path
+
+# ---- NEW: ensure df_keep exists ----
+if "df_keep" not in globals() or df_keep is None:
+    df_keep = pd.read_parquet(Path(run_dir) / "df_keep.parquet")
+
+df_meta_plot = df_keep_with_clusters if "df_keep_with_clusters" in globals() else df_keep
+
+# -------------------------
+# Choose metadata columns
+# -------------------------
+PATIENT_COL = "patient_id"
+COND_COL    = "condition"
+REGION_COL  = "brain_region"   # <-- CHANGE THIS to your actual region column name
+
+if REGION_COL not in df_meta_plot.columns:
+    print(f"[WARN] REGION_COL='{REGION_COL}' not found. Set REGION_COL to your actual column or None.")
+    REGION_COL = None
+
+# -------------------------
+# Optional: subset to selected patients
+# -------------------------
+USE_PATIENT_SUBSET = True # False
+PATIENT_SUBSET = ["PAT_2868"]
+
+if USE_PATIENT_SUBSET:
+    keep_mask = df_meta_plot[PATIENT_COL].astype(str).isin(set(PATIENT_SUBSET)).to_numpy()
+    df_meta_plot = df_meta_plot.loc[keep_mask].reset_index(drop=True)
+    raise RuntimeError(
+        "You enabled USE_PATIENT_SUBSET, but this cell cannot safely subset an existing Z.\n"
+        "Please rebuild D and Z on the filtered samples, then re-run the dendrogram+bars cell."
+    )
+
+# -------------------------
+# Dendrogram settings
+# -------------------------
+FIGSIZE = (25, 8)
+DPI = 120
+
+# -------------------------
+# NEW: patient-coded sample labels (optional display)
+# -------------------------
+def cond_letter(c):
+    c = str(c).strip().lower()
+    if c.startswith("a"): return "a"
+    if c.startswith("p"): return "p"
+    if c.startswith("r"): return "r"
+    return c[:1] if c else "u"
+
+def elec_code(e):
+    return str(e).strip().lower().replace(" ", "")
+
+def patient_code(p):
+    p = str(p).strip()
+    return p if p else "UNK"
+
+SAMPLE_LABELS = [
+    f"{patient_code(r.get('patient_id'))}_{elec_code(r.get('electrode'))}_{cond_letter(r.get('condition'))}"
+    for _, r in df_meta_plot.iterrows()
+]
+
+SHOW_LEAF_LABELS = True  # set False if too dense
+
+# -------------------------
+# Helper: map categorical series to integer codes for imshow stripe
+# -------------------------
+def cat_to_codes(series):
+    s = series.astype(str).fillna("NA")
+    cats = sorted(s.unique().tolist())
+    mapping = {c: i + 1 for i, c in enumerate(cats)}
+    codes = s.map(mapping).to_numpy(dtype=np.int32)
+    return codes, mapping
+
+# -------------------------
+# Plot dendrogram + 4 stripes
+# -------------------------
+fig = plt.figure(figsize=FIGSIZE, dpi=DPI)
+gs = gridspec.GridSpec(5, 1, height_ratios=[9, 0.7, 0.7, 0.7, 0.7], hspace=0.06)
+
+ax_d = fig.add_subplot(gs[0])
+ax_c = fig.add_subplot(gs[1], sharex=ax_d)  # cluster stripe
+ax_p = fig.add_subplot(gs[2], sharex=ax_d)  # patient stripe
+ax_k = fig.add_subplot(gs[3], sharex=ax_d)  # condition stripe
+ax_r = fig.add_subplot(gs[4], sharex=ax_d)  # region stripe (optional)
+
+# Dendrogram (captures leaf order)
+dinfo = dendrogram(
+    Z,
+    ax=ax_d,
+    no_labels=(not SHOW_LEAF_LABELS),
+    labels=(SAMPLE_LABELS if SHOW_LEAF_LABELS else None),
+    leaf_rotation=90 if SHOW_LEAF_LABELS else 0,
+    leaf_font_size=7 if SHOW_LEAF_LABELS else 10,
+    color_threshold=CUT_HEIGHT,
+    above_threshold_color="black",
+)
+
+ax_d.axhline(CUT_HEIGHT, color="black", linewidth=1.5, linestyle="--")
+ax_d.set_title(f"Dendrogram + metadata bars (distance cut = {CUT_HEIGHT:.3f})")
+ax_d.set_ylabel("Linkage distance")
+plt.setp(ax_d.get_xticklabels(), visible=SHOW_LEAF_LABELS)  # show only if labels enabled
+
+# Leaves
+leaves = np.asarray(dinfo["leaves"], dtype=int)
+n_leaves = len(leaves)
+extent = (0, 10 * n_leaves, 0, 1)
+
+# Cluster stripe
+cl_leaf = np.asarray(labels_hc_dist)[leaves]
+cl_stripe = cl_leaf[np.newaxis, :]
+ax_c.imshow(cl_stripe, aspect="auto", origin="lower", vmin=cl_leaf.min(), vmax=cl_leaf.max(), extent=extent)
+ax_c.set_yticks([])
+ax_c.set_ylabel("cl", rotation=0, labelpad=15, va="center")
+plt.setp(ax_c.get_xticklabels(), visible=False)
+
+# Patient stripe
+pid_codes, pid_map = cat_to_codes(df_meta_plot.iloc[leaves][PATIENT_COL])
+ax_p.imshow(pid_codes[np.newaxis, :], aspect="auto", origin="lower",
+            vmin=1, vmax=max(1, len(pid_map)), extent=extent)
+ax_p.set_yticks([])
+ax_p.set_ylabel("pt", rotation=0, labelpad=15, va="center")
+plt.setp(ax_p.get_xticklabels(), visible=False)
+
+# Condition stripe
+cond_codes, cond_map = cat_to_codes(df_meta_plot.iloc[leaves][COND_COL]) if COND_COL in df_meta_plot.columns else (None, {})
+if cond_codes is not None:
+    ax_k.imshow(cond_codes[np.newaxis, :], aspect="auto", origin="lower",
+                vmin=1, vmax=max(1, len(cond_map)), extent=extent)
+ax_k.set_yticks([])
+ax_k.set_ylabel("cond", rotation=0, labelpad=15, va="center")
+plt.setp(ax_k.get_xticklabels(), visible=False)
+
+# Region stripe (optional)
+if REGION_COL is not None:
+    reg_codes, reg_map = cat_to_codes(df_meta_plot.iloc[leaves][REGION_COL])
+    ax_r.imshow(reg_codes[np.newaxis, :], aspect="auto", origin="lower",
+                vmin=1, vmax=max(1, len(reg_map)), extent=extent)
+    ax_r.set_ylabel("roi", rotation=0, labelpad=15, va="center")
+else:
+    ax_r.axis("off")
+
+ax_r.set_yticks([])
+ax_r.set_xlabel("Samples (leaf order)")
+
+plt.tight_layout()
+plt.show()
+
+print("[INFO] Category counts:")
+print("  patients:", len(pid_map))
+print("  conditions:", len(cond_map))
+if REGION_COL is not None:
+    print("  regions:", len(reg_map))
+
+# ===== New Cell: Centroids (medoids) + prototypes for DISTANCE-CUT clusters =====
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Requires from previous cells:
+# labels_hc_dist : cluster labels from fcluster(Z, t=CUT_HEIGHT, criterion="distance")
+# D              : (n,n) distance matrix (assignment distance)
+# ersp_keep      : list[np.ndarray] raw ERSPs (n_freq, n_time)
+# thr_pos, thr_neg
+# Optional: df_keep_with_clusters or df_keep (metadata)
+
+df_meta_plot = df_keep_with_clusters if "df_keep_with_clusters" in globals() else df_keep
+
+# Visual policy (you requested)
+CMAP = "bwr"
+ERSP_VMIN, ERSP_VMAX = -6, 6
+SEG_VMIN, SEG_VMAX   = -1, 1
+
+def ersp_to_minus101(ersp, thr_pos, thr_neg):
+    seg = np.zeros_like(ersp, dtype=np.int8)
+    seg[ersp >= thr_pos] = 1
+    seg[ersp <= thr_neg] = -1
+    return seg
+
+def compute_cluster_medoids(D, labels):
+    clusters = np.unique(labels)
+    medoid_by_cluster = {}
+    medoid_mean_intra = {}
+    for c in clusters:
+        idx = np.where(labels == c)[0]
+        if len(idx) == 0:
+            continue
+        Dc = D[np.ix_(idx, idx)]
+        mean_dist = Dc.mean(axis=1)
+        j = int(np.argmin(mean_dist))
+        medoid_idx = int(idx[j])
+        medoid_by_cluster[int(c)] = medoid_idx
+        medoid_mean_intra[int(c)] = float(mean_dist[j])
+    return medoid_by_cluster, medoid_mean_intra
+
+# ---- 1) Medoids for this distance cut
+medoid_by_cluster, medoid_mean_intra = compute_cluster_medoids(D, labels_hc_dist)
+
+# ---- 2) Prototype maps (mean -101 segmentation) per cluster
+proto_mean = {}
+cluster_sizes = {}
+for c in np.unique(labels_hc_dist):
+    idx = np.where(labels_hc_dist == c)[0]
+    cluster_sizes[int(c)] = int(len(idx))
+    segs = np.stack([ersp_to_minus101(ersp_keep[i], thr_pos, thr_neg) for i in idx], axis=0)
+    proto_mean[int(c)] = segs.mean(axis=0).astype(np.float32)  # [-1,1]
+
+# ---- 3) Summary table (centroid/medoid info)
+rows = []
+for c in sorted(medoid_by_cluster.keys()):
+    midx = medoid_by_cluster[c]
+    row = {
+        "cluster": int(c),
+        "size": int(cluster_sizes[c]),
+        "medoid_idx": int(midx),
+        "medoid_mean_intra": float(medoid_mean_intra[c]),
+    }
+    for col in ["patient_id", "electrode", "condition", "task", "sample_idx", "file_path"]:
+        if col in df_meta_plot.columns:
+            row[col] = df_meta_plot.iloc[midx][col]
+    rows.append(row)
+
+df_centroids = pd.DataFrame(rows).sort_values("size", ascending=False).reset_index(drop=True)
+display(df_centroids)
+
+# ---- 4) Visualization: grid of medoid ERSPs + prototype maps (side-by-side)
+# Sort clusters by size (largest first)
+order = df_centroids["cluster"].tolist()
+
+N_SHOW = min(len(order), 20)  # cap; increase if you want
+order = order[:N_SHOW]
+
+ncols = 4  # each cluster uses 2 panels -> 2 clusters per row if ncols=4
+nrows = int(np.ceil((2 * len(order)) / ncols))
+
+fig, axes = plt.subplots(nrows, ncols, figsize=(4*ncols, 3.2*nrows), dpi=120)
+axes = np.atleast_2d(axes)
+
+panel = 0
+for c in order:
+    c = int(c)
+    midx = int(medoid_by_cluster[c])
+
+    # Medoid ERSP (intensity view)
+    r, col = divmod(panel, ncols)
+    ax = axes[r, col]
+    ax.imshow(ersp_keep[midx], aspect="auto", origin="lower", cmap=CMAP, vmin=ERSP_VMIN, vmax=ERSP_VMAX)
+    ax.set_title(f"C{c} medoid ERSP\n(n={cluster_sizes[c]}, idx={midx})")
+    ax.set_xlabel("time"); ax.set_ylabel("freq")
+    panel += 1
+
+    # Prototype mean -101 map
+    r, col = divmod(panel, ncols)
+    ax = axes[r, col]
+    ax.imshow(proto_mean[c], aspect="auto", origin="lower", cmap=CMAP, vmin=SEG_VMIN, vmax=SEG_VMAX)
+    ax.set_title(f"C{c} proto mean -101")
+    ax.set_xlabel("time"); ax.set_ylabel("freq")
+    panel += 1
+
+# Turn off unused subplots
+for k in range(panel, nrows*ncols):
+    r, col = divmod(k, ncols)
+    axes[r, col].axis("off")
+
+plt.suptitle(f"Distance-cut clusters (cut height) — medoid ERSP + prototype -101 map (top {N_SHOW} clusters by size)", y=1.02)
+plt.tight_layout()
+plt.show()
+
