@@ -13,6 +13,8 @@ archives/
 !**/output/
 !**/output/**/EL030/
 !**/output/**/EL030/**
+!**/output/250_recon
+!**/output/250_recon/**
 **/output/**/EL030/**/*.tif
 
 # Python
@@ -34,6 +36,6 @@ venv/
 
 
 # Jupyter
-.jupyter/02_FBM_Clustering/scripts/archives/
-02_FBM_Clustering/scripts/*-Copy*.ipynb
-02_FBM_Clustering/scripts/*-SAFE*.ipynb
+.jupyter/02_FBM_Clustering/archives/
+02_FBM_Clustering/*-Copy*.ipynb
+02_FBM_Clustering/*-SAFE*.ipynb
