@@ -1,21 +1,37 @@
 {
   "script_name": "310_kmeans_clustering.ipynb",
   "algo_tag": "kmeans_raw",
-  "run_id": "20260417_072327",
-  "n_clusters": 3,
+  "run_id": "20260417_075743",
+  "n_clusters": 11,
   "n_samples": 1410,
   "n_features": 38700,
-  "inertia": 40739132.619126916,
-  "silhouette": 0.15815013469513778,
+  "inertia": 34298404.13009286,
+  "silhouette": 0.056269437295402264,
   "silhouette_per_cluster": {
-    "0": 0.030663801525297324,
-    "1": 0.16739005159038417,
-    "2": 0.2703697265675518
+    "0": 0.07934086772380342,
+    "1": 0.22293518451430508,
+    "2": 0.02262034056244091,
+    "3": 0.12117067847809895,
+    "4": -0.03819288931988517,
+    "5": 0.08108149797993609,
+    "6": -0.02539033019372669,
+    "7": 0.17583698096119474,
+    "8": 0.0934349822332906,
+    "9": 0.34595021702216266,
+    "10": -0.014105477666013501
   },
   "cluster_counts": [
-    264,
-    922,
-    224
+    61,
+    99,
+    169,
+    83,
+    402,
+    37,
+    175,
+    27,
+    139,
+    113,
+    105
   ],
   "input_root": "\\\\nasac-m2.unige.ch\\m-HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda\\01_FBM_Analysis\\outputs\\04_ersp_LM_RAWONLY",
   "patients": [
@@ -40,5 +56,5 @@
   ],
   "task": "LM",
   "random_state": 42,
-  "note": "Clustering on raw flattened ERSP (300x128) without PCA. K=3."
+  "note": "Clustering on raw flattened ERSP (300x128) without PCA. K=11."
 }
