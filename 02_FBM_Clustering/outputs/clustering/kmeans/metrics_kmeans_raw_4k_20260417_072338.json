@@ -1,11 +1,11 @@
 {
   "script_name": "310_kmeans_clustering.ipynb",
   "algo_tag": "kmeans_raw",
-  "run_id": "20260417_062810",
+  "run_id": "20260417_072338",
   "n_clusters": 4,
   "n_samples": 1410,
   "n_features": 38700,
-  "inertia": 39534609.15888264,
+  "inertia": 39534609.15888263,
   "silhouette": 0.08190820215549671,
   "silhouette_per_cluster": {
     "0": 0.25879020202667313,

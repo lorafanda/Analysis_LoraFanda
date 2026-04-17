@@ -1,7 +1,7 @@
 {
   "script_name": "310_kmeans_clustering.ipynb",
   "algo_tag": "kmeans_raw",
-  "run_id": "20260417_063236",
+  "run_id": "20260417_072755",
   "n_clusters": 16,
   "n_samples": 1410,
   "n_features": 38700,
