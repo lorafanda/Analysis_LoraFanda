@@ -7,14 +7,16 @@ Thumbs.db
 
 # Output folders
 output/
+outputs/
 *.tif
 archives/
 # But keep EL030 (except tif files)
 !**/output/
 !**/output/**/EL030/
 !**/output/**/EL030/**
-!**/output/250_recon
-!**/output/250_recon/**
+!**/outputs/
+!**/outputs/**/250_recon
+!**/outputs/**/250_recon/**
 **/output/**/EL030/**/*.tif
 
 # Python

@@ -14,7 +14,7 @@ SHARED_RECON_ROOT = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\#SHARE\To_send_c
 BASE_DIR_OVERRIDE = None
 
 OUTPUTS_ROOT = Path(
-    r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora\02_FBM_Clustering\outputs"
+    r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\02_FBM_Clustering\outputs"
 )
 
 RUN230_ROOT = OUTPUTS_ROOT / "230_blob_clustering_runs"      # contains <RUN_ID_230>/

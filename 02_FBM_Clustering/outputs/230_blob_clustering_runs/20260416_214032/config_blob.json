@@ -1,0 +1,9 @@
+{
+  "thr_pos": 2.5,
+  "thr_neg": -3.5,
+  "delta_valley": 1.5,
+  "min_mean_pos": 1.75,
+  "max_mean_neg": -2.8000000000000003,
+  "max_blobs": 6,
+  "sign_mode": "both"
+}
