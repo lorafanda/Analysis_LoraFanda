@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import os, numpy as np
 from fractions import Fraction
 import matplotlib.pyplot as plt
-from scipy.signal import spectrogram, welch
+from scipy.signal import spectrogram, welch, iirnotch, filtfilt
 from scipy.ndimage import (gaussian_filter, label, generate_binary_structure,
                            binary_closing, uniform_filter)
 
@@ -111,6 +111,134 @@ def suggest_bad_channels_by_psd(
                                    flat_var_thresh=flat_var_thresh)
     )
     return bad_list, info
+
+# ----------------------------
+# Mains notch filtering
+# ----------------------------
+def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
+                           peak_z_thresh=3.0, Q_min=10.0, Q_max=400.0):
+    """Adaptive notch: only notches a harmonic if a real peak is detected;
+    Q is set automatically based on peak sharpness."""
+    X = np.asarray(X, float); was_1d = (X.ndim == 1)
+    if was_1d: X = X[:, None]
+    nyq = 0.5 * fs
+    lim = min(0.98 * nyq, max_hz or 0.98 * nyq)
+    harms = [h * base for h in range(1, int(lim // base) + 1)]
+
+    nper = int(2.0 * fs)
+    f_psd, P_med = welch(X[:, 0].astype(float), fs=fs, nperseg=nper, detrend=False)
+    if X.shape[1] > 1:
+        P_all = [welch(X[:, ci].astype(float), fs=fs, nperseg=nper, detrend=False)[1]
+                 for ci in range(X.shape[1])]
+        P_med = np.median(np.vstack(P_all), axis=0)
+    P_db = 10 * np.log10(P_med + 1e-30)
+
+    Y = X.copy()
+    for f0 in harms:
+        if f0 >= 0.95 * nyq: continue
+        local = (f_psd >= f0 - 5) & (f_psd <= f0 + 5)
+        peak  = (f_psd >= f0 - 1) & (f_psd <= f0 + 1)
+        bg    = local & ~peak
+        if not np.any(bg): continue
+        bg_mean  = np.mean(P_db[bg])
+        bg_std   = np.std(P_db[bg])
+        peak_val = np.max(P_db[peak]) if np.any(peak) else bg_mean
+        z = (peak_val - bg_mean) / (bg_std + 1e-6)
+        if z < peak_z_thresh:
+            print(f"  [notch] {f0:.0f} Hz: z={z:.1f} — no significant peak, skipping")
+            continue
+        Q = float(np.clip(f0 / (bg_std + 1.0) * 2, Q_min, Q_max))
+        print(f"  [notch] {f0:.0f} Hz: z={z:.1f}, Q={Q:.1f} — notching")
+        b, a = iirnotch(w0=f0, Q=Q, fs=fs)
+        for _ in range(int(repeats)):
+            Y = filtfilt(b, a, Y, axis=0, method="gust")
+
+    return Y.squeeze() if was_1d else Y
+
+
+def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
+                            notch_patients=(), mains_base=50.0, fmax=500.0, repeats=1):
+    if not any(s in str(pid_raw) or s in str(patient_id) for s in notch_patients):
+        return signals
+    print(f"[notch] {patient_id}")
+    return notch_mains_harmonics(signals, fs, base=mains_base,
+                                  max_hz=min(fmax, 0.5 * fs), repeats=repeats)
+
+
+# ----------------------------
+# ERSP output utilities
+# ----------------------------
+def fill_nans_nearest(A):
+    """In-place nearest-neighbour NaN fill along time then freq axes."""
+    F, T = A.shape; nan = np.isnan(A)
+    for t in range(1, T):
+        m = nan[:, t] & ~nan[:, t-1]; A[m, t] = A[m, t-1]; nan = np.isnan(A)
+    for t in range(T-2, -1, -1):
+        m = nan[:, t] & ~nan[:, t+1]; A[m, t] = A[m, t+1]; nan = np.isnan(A)
+    for f in range(1, F):
+        m = nan[f, :] & ~nan[f-1, :]; A[f, m] = A[f-1, m]; nan = np.isnan(A)
+    for f in range(F-2, -1, -1):
+        m = nan[f, :] & ~nan[f+1, :]; A[f, m] = A[f+1, m]; nan = np.isnan(A)
+    return A
+
+
+def save_clean_png(A, vmin, vmax, path_png):
+    plt.figure(figsize=(4, 4), dpi=300)
+    ax = plt.axes([0, 0, 1, 1])
+    ax.imshow(A, origin="lower", aspect="auto", cmap="bwr",
+              vmin=vmin, vmax=vmax, interpolation="none")
+    ax.set_axis_off()
+    plt.savefig(path_png, dpi=300, bbox_inches='tight', pad_inches=0, transparent=True)
+    plt.close()
+
+
+def plot_psd_overview(signals, fs, names, *, save_root, patient_id="", block_name="",
+                      fmax=400.0, nperseg_sec=2.0, noverlap=0.5, show_sample_channels=5,
+                      mains_base=50.0, bands=((0.5,4),(4,8),(8,12),(12,30),(30,70),(70,150)), dpi=600):
+    import csv
+    out_dir = os.path.join(save_root, "PSD")
+    os.makedirs(out_dir, exist_ok=True)
+    nper = int(max(8, nperseg_sec * fs))
+    nov  = int(noverlap * nper)
+    P_all = []
+    for ci in range(signals.shape[1]):
+        f, Pxx = welch(signals[:, ci].astype(float), fs=fs, nperseg=nper, noverlap=nov, detrend=False)
+        m = f <= fmax
+        P_all.append(10 * np.log10(Pxx[m] + 1e-30))
+    f = f[m]; P = np.vstack(P_all)
+    P_med = np.nanmedian(P, axis=0)
+    P_q1  = np.nanpercentile(P, 25, axis=0)
+    P_q3  = np.nanpercentile(P, 75, axis=0)
+    fig = plt.figure(figsize=(10, 5))
+    ax  = plt.gca()
+    ax.plot(f, P_med, lw=2.0, label="Median")
+    ax.fill_between(f, P_q1, P_q3, alpha=0.2, label="IQR")
+    if show_sample_channels > 0:
+        rng  = np.random.default_rng(0)
+        samp = rng.choice(P.shape[0], size=min(show_sample_channels, P.shape[0]), replace=False)
+        ax.plot(f, P[samp, :].T, lw=0.5, alpha=0.4)
+    if mains_base:
+        for k in range(1, int(fmax // mains_base) + 1):
+            ax.axvline(k * mains_base, color='r', ls='--', lw=0.8, alpha=0.4)
+    ax.set_xlabel("Frequency (Hz)"); ax.set_ylabel("PSD (dB/Hz)")
+    ax.set_title(f"{patient_id} – {block_name} – PSD overview")
+    ax.grid(True, ls='--', alpha=0.3); ax.set_xlim([0, fmax])
+    plt.tight_layout()
+    p_tif = os.path.join(out_dir, "psd_allch_full.tif")
+    p_pdf = os.path.join(out_dir, "psd_allch_full.pdf")
+    fig.savefig(p_tif, dpi=dpi); fig.savefig(p_pdf); plt.close(fig)
+    csv_path = os.path.join(out_dir, "psd_summary.csv")
+    with open(csv_path, "w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["channel"] + [f"{lo:.1f}-{hi:.1f}Hz_dB" for (lo, hi) in bands])
+        for ci, nm in enumerate(names):
+            row = [nm]
+            for (lo, hi) in bands:
+                mask = (f >= lo) & (f < hi)
+                row.append(float(np.nanmean(P[ci, mask])) if np.any(mask) else np.nan)
+            w.writerow(row)
+    return [p_tif, p_pdf, csv_path]
+
 
 # ----------------------------
 # Apply WM reference excluding bad contacts

@@ -22,6 +22,16 @@ patient_ids = [2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975,
 block_name  = "LM"
 conditions_expected = ("picture", "audio", "reading")
 
+COND_ALIAS = {
+    "picture_naming":      "pict",
+    "auditory_naming_ger": "audi",
+    "auditory_naming_fre": "audi",
+    "reading_completion":  "read",
+    "picture":             "pict",
+    "auditory":            "audi",
+    "reading":             "read",
+}
+
 # ---------------------------
 # Referencing and Bad channels
 # ---------------------------
@@ -132,6 +142,17 @@ notch_patients  = ["EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL04
 mains_base      = 50.0       # 50 or 60
 notch_Q         = 50         # 40–60 typical
 notch_repeats   = 1          # 1 is usually enough
+
+# ---------------------------
+# Trial filtering & HG plot defaults
+# ---------------------------
+min_stim_s   = 0.5
+max_post_s   = 10.0
+iqr_k        = 1.5
+hg_band      = (70.0, 150.0)
+hg_smooth_ms = 25
+hg_vmin      = -6.5
+hg_vmax      = 6.5
 
 ## PATIENT CONFIGS ##
 

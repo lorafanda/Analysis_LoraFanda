@@ -24,8 +24,7 @@ def log(msg: str):
         ts = datetime.now().strftime("%H:%M:%S")
         print(f"[LF {ts}] {msg}")
 
-# ---- AUX removal (bug-fixed) ----
-AUX_DROP_PREFIXES = ("MRK", "MKR", "X", "ECG", "PHOTO", "AUDIO")
+# ---- AUX removal ----
 AUX_DROP_PREFIXES = ("MRK", "MKR", "X", "ECG", "EX", "AUDIO")
 # AUX_DROP_PREFIXES = ("MRK", "MKR", "X", "ECG", "EX", "AUDIO","POP","IDM","IDP","SMA","PRS","PRI","POS","POM","PPI","POP","PPS")
 
@@ -115,7 +114,6 @@ WHITE_MATTER_REFS_NUMS = {
 def _expand_labels(prefix: str, nums): return [f"{prefix}{int(n)}" for n in nums]
 WHITE_MATTER_REFS_LABELS = {pid:{lead:_expand_labels(lead, nums) for lead,nums in leads.items()}
                             for pid, leads in WHITE_MATTER_REFS_NUMS.items()}
-import re
 
 
 def canonicalize_labels(labels: list[str], patient_id_hint: str | None = None) -> tuple[list[str], dict]:
@@ -315,3 +313,16 @@ def patient_output_dir(run_root, patient_id, block_name, product):
     path = os.path.join(run_root, patient_id, block_name, product)
     os.makedirs(path, exist_ok=True)
     return path
+
+def ensure_dir(p: str) -> str:
+    os.makedirs(p, exist_ok=True)
+    return p
+
+_non_neural_pat = re.compile(r"^(PHOTO|MRK|MKR|ECG|AUDIO)$|^[XE][1-8]$|^[X]$", re.I)
+
+def _is_non_neural(label: str) -> bool:
+    if not label: return False
+    s = str(label).strip().upper()
+    return ("+" in s) or ("-" in s) or bool(_non_neural_pat.match(s)) or \
+           any(t in s for t in ("PHOTO", "MRK", "MKR", "ECG", "AUDIO"))
+

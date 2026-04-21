@@ -4,6 +4,7 @@
 .AppleDouble
 .LSOverride
 Thumbs.db
+.claude 
 
 # Output folders
 output/

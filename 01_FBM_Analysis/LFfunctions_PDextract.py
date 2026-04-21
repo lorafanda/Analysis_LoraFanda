@@ -1356,3 +1356,43 @@ def save_onsets_offsets_by_condition(
         "reading": _write_cond("read"),
     }
     return {"n_pairs": int(n_pairs), "files": files}
+
+
+def parse_and_save(pid, patient_id, on_abs, off_abs, metrics,
+                   sampling_rate, save_path, block_name, exp_file, trial_ids, trig_label,
+                   *, cond_alias=None):
+    """Parse PD extraction results and save per-condition TSV files."""
+    cond_alias = cond_alias or {}
+    if exp_file and os.path.exists(exp_file):
+        extra = _read_trial_table(exp_file)
+        dfl   = extra["raw_df"].rename(columns=str.lower)
+    else:
+        dfl = None
+
+    def _pick(cols):
+        for c in cols:
+            if dfl is not None and c in dfl:
+                return dfl[c].astype(str).to_numpy()
+        return None
+
+    condition_name = _pick(["category", "blockname"])
+    resp_accuracy  = _pick(["response_type", "responseaccuracy"])
+    trial_idx_col  = _pick(["exemplar", "stimnumber"])
+    trial_ids_for_save = (
+        trial_ids if (trial_ids and len(trial_ids))
+        else ([cond_alias.get(str(x).lower(), str(x).lower()) for x in condition_name]
+              if condition_name is not None else [])
+    )
+    trial_end_abs = metrics.get("duration_end_abs", None) if isinstance(metrics, dict) else None
+
+    save_res = save_onsets_offsets_by_condition(
+        patient_id=patient_id, block_name=block_name,
+        onsets=on_abs, offsets=off_abs, sampling_rate=sampling_rate,
+        trial_ids=trial_ids_for_save,
+        out_dir=os.path.join(save_path, "prep0"),
+        include_invalid=True, cond_alias=cond_alias,
+        trigger_label=str(trig_label), trial_end_abs=trial_end_abs,
+        condition_name=condition_name, resp_accuracy=resp_accuracy,
+        trial_idx=trial_idx_col,
+    )
+    print(f"  Saved: {save_res}")
