@@ -5,6 +5,8 @@
 .LSOverride
 Thumbs.db
 .claude 
+x_archive
+*.h5
 
 # Output folders
 output/
@@ -41,4 +43,5 @@ venv/
 # Jupyter
 .jupyter/02_FBM_Clustering/archives/
 02_FBM_Clustering/*-Copy*.ipynb
+02_FBM_Clustering/outputs/*Copy
 02_FBM_Clustering/*-SAFE*.ipynb

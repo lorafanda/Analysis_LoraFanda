@@ -52,7 +52,7 @@ QC_OUT_NAME     = "transform_qc_summary.tsv"
 # Recon artifact root (derived outputs)
 # -------------------------
 # Canonical location for recon artifacts (replaces legacy "Paper1_recons")
-RECON250_ROOT = OUTPUTS_ROOT / "250_recon"
+RECON250_ROOT = OUTPUTS_ROOT / "251_recon"
 
 # Backwards-compatible name used throughout the codebase.
 # DO NOT change downstream logic; only change this root.
@@ -66,7 +66,7 @@ CONTACTS_CSV_SUFFIX = "_contacts_tkrRAS.csv"  # expects {pid}{suffix}
 # -------------------------
 ROOT_PAT   = SHARED_RECON_ROOT
 ROOT_MICRO = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\MICROEPI")
-ROOT_BERN_FS = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\FreesurferResults")
+ROOT_BERN_FS = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\Reconstruction")
 
 # Search root for EL Lookups (Lead-DBS-style)
 BERN_EL_PROJECT_ROOT = ROOT_BERN_FS.parent  # \\...\\SEEG_EXPERIMENTS_BERN
@@ -143,7 +143,7 @@ PATIENT_COVERAGE_CACHE_DIRNAME = "_patient_coverage_cache"
 # -------------------------
 # Colors (CSS4 names) — as requested
 # -------------------------
-EL_COLOR_NAMES = ["blue","deepskyblue","cyan","teal","green","lime","powderblue","forestgreen","lightcyan"]
+EL_COLOR_NAMES = ["blue","deepskyblue","cyan","teal","green","lime","powderblue","forestgreen","lightcyan","olivegreen"]
 PAT_COLOR_NAMES = ["blueviolet","fuchsia","deeppink","crimson","pink","red","chocolate","gold","purple","saddlebrown","lemonchiffon","lavenderblush","lime","powderblue","forestgreen","lightcyan"]
 MICRO_COLOR_NAMES = ["navy","darkslategray","black","darkred","darkolivegreen"]
 
