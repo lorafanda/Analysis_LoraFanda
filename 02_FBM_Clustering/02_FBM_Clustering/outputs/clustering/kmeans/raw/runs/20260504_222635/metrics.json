@@ -1,0 +1,49 @@
+{
+  "n_samples": 1410,
+  "n_clusters": 3,
+  "silhouette_overall": 0.15815013469513778,
+  "calinski_harabasz": 238.78526804659992,
+  "davies_bouldin": 2.3253295298456704,
+  "per_cluster": {
+    "0": {
+      "size": 264,
+      "silhouette_mean": 0.030663801525297324,
+      "within_dist_mean": 264.48116530397203,
+      "within_dist_std": 44.98007767329659
+    },
+    "1": {
+      "size": 922,
+      "silhouette_mean": 0.16739005159038417,
+      "within_dist_mean": 230.69440612356536,
+      "within_dist_std": 31.116960777936647
+    },
+    "2": {
+      "size": 224,
+      "silhouette_mean": 0.2703697265675518,
+      "within_dist_mean": 234.89175517811634,
+      "within_dist_std": 38.93741649045556
+    }
+  },
+  "centroid_distance_matrix": [
+    [
+      0.0,
+      128.9605096600345,
+      224.49748565399477
+    ],
+    [
+      128.9605096600345,
+      0.0,
+      245.7101895563813
+    ],
+    [
+      224.49748565399477,
+      245.7101895563813,
+      0.0
+    ]
+  ],
+  "cluster_ids": [
+    0,
+    1,
+    2
+  ]
+}
