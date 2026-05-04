@@ -57,7 +57,12 @@ from functions.lf_clustering_methods import (
 # ============================================================
 
 SCHEMA_VERSION = 1
-DEFAULT_OUTPUTS_ROOT = Path("02_FBM_Clustering/outputs/clustering")
+
+# Anchor the default outputs root to this module's location so the runs land at
+# `<repo>/02_FBM_Clustering/outputs/clustering/` regardless of the notebook's
+# working directory. (Previously this was a relative path which double-nested
+# when the notebook ran from inside 02_FBM_Clustering/.)
+DEFAULT_OUTPUTS_ROOT = (Path(__file__).resolve().parent.parent / "outputs" / "clustering")
 
 METHOD_LABELS = {
     "kmeans": "K-Means",

@@ -1,7 +1,8 @@
 # lf_io_utils.py
 from __future__ import annotations
-import os, json, h5py
+import os, json, glob, h5py
 import numpy as np
+import pandas as pd
 import re
 import mne
 
@@ -72,48 +73,54 @@ def drop_aux_from_names(channel_names):
     dropped_names = [channel_names[i] for i in dropped_idx]
     return filt_names, kept_idx, dropped_idx, dropped_names
 
-# ---- WM reference maps (unchanged data, compact helpers) ----
-WHITE_MATTER_REFS_NUMS = {
-    "PAT_3066": {"FIG":[6,5], "FOG":[15], "FOD":[12], "CAG":[11,10,9,8,7], "CAD":[8,6,5,3,2],
-                 "IAG":[18,11,9,3,2], "IMG":[18,9,8,7,6,3], "AG":[3,2,1], "HAG":[1], "HPG":[7,2],
-                 "PPG":[6,5,4,2], "TIG":[3], "AD":[8,6,4,3,2,1], "HAD":[3,2,1], "HPD":[2,1], "PPD":[6,5,4,3]},
-    "PAT_3975": {"FOG":[15,10,8,3,1], "CPG":[10,6,5,4,3], "AG":[12], "HAG":[5,2,1], "PHG":[6,4],
-                 "IAG":[8,6,4,3,2,1], "IMG":[13,12,11,6,3], "FOD":[14,13,12,11,9,6,5,3],
-                 "CPD":[15,8,6,2], "AD":[7,4,3,2,1], "HAD":[3,2,1], "PHD":[11,7], "IAD":[10],
-                 "IMD":[17,16,15,14,12,10,9,7]},
-    "PAT_3415": {"IMG":[16,15,12,11,8,6,5,4,3,2], "IPG":[12,10,8,3,2,1], "HLG":[17,16,3,2]},
-    "PAT_3965": {"ag":[3,4,5,6], "hpg":[8,9,10,11], "imd":[6,7,8,9,10,11,12]},
-    "PAT_2868": {"POP":[3], "IDM":[4,1], "SMA":[2,1], "PPS":[3,2,1], "PRI":[3,2,1], "POM":[4,1],
-                 "PPI":[2], "POI":[3,2,1]},
-    "PAT_3455": {"AD":[2,1], "HAD":[2,1], "TOD":[6], "CPD":[12,11,10,9,6,5,2], "OPD":[5,4,3,2],
-                 "PHD":[5], "OTD":[8], "TSP":[8,6,5,4], "IMD":[11,5,4,3], "IPD":[14,11]},
-    "PAT_3390": {"IAG":[18,17,16,9,1], "CAG":[8,6,5,4,2], "CPG":[15,13,10,9,1], "HPG":[10,9,8],
-                 "AG":[12,11], "HAG":[12,11,10,9], "FOG":[9,4,3,2,1]},
-    "MicroEPI-B-01": {"pI_L":[8,9,10,11,12,13,14], "A_L":[4,5],"ITG_L":[6,9],"sSMG_L":[2,3,5,6],"IOG_L":[4,5,7],"LinG_L":[4,5]},
-    "EL042": {"OF_R":[10,11],"aI_R":[1,2,3,4,5,6,7,10,11,12,13,14,17],"A_R":[5,6,7],"aH_R":[7],"pH_R":[7,8],"STG_R":[3],
-             "A_L":[6,7,8,9]},
-    "EL043": {"Hip_L":[5], "ITG_L":[6], "sSMG_L":[2,3,5,6], "IOG_L":[1,4,5], "LinG_L":[4,5], "pI_L":[7,8,9,10,11,12,13,14,15]},
-    "EL045": {"A_R":[5,6,7], "aH_R":[8], "A_L":[5,6,7], "pH_L":[8,9,10], "TTG_L":[6], "STG_L":[1,2]},
-    "EL040":{"FP_R":[8],"OF_R":[4,5,9,10,11,12,13,14,15],"CinG_R":[5,6,7,8,9,10,11,12],"aI_R":[9,10,11,12,13,14,15],
-             "A_R":[8,9],"EntG_R":[5,6,8],"aH_R":[8],"PHG_R":[5,6,7],"pH_R":[4,5,6,7,8,9],"STG_R":[1,8],"iNH_R":[13,14,15],
-             "CinG_L":[5,6,7,8,9,10],"pPVH_L":[7,8,9]},
-    "EL039":{"OF_R":[10,11,12,13],"pSTG_R":[2],"CinG_R":[2,3,4,5,6],"pH_L":[6,7],"LinG_R":[9],
-             "STO_R":[6,7,8,9],"aSTG_R":[2],"A_L":[4,5,6]},
-    "EL038":{"OF_R":[10,11,12],"CinG_R":[2,3,4,5,6],"aSTG_R":[2],"pSTG_R":[2],"STO_R":[6,7,8,9],"A_L":[4,5,6],"pH_L":[6,7]},
-    "EL037":{"A_L":[5],"EntG_L":[7],"pH_L":[6],"CinG_L":[3,4,5,6,7,8,9,10,11],"aI_L":[12,13,14,15],"pI_L":[11,12],"A_R":[7,8]},
-    "EL036":{"A_R":[4,5,6,7],"aH_R":[5,6],"mH_R":[10],"PfC_R":[5]},
-    "EL035":{"A_L":[8],"aH_L":[7],"A_R":[6,7,8],"aH_R":[7,8],"pH_R":[4,5,6,7],"ParaHG_R":[7,8,9],"OF_R":[4,5,6,7,8,9,10],"CinG_R":[4,5,6],"aI_R":[8,9,10,11],"pI_R":[11,12,13]},
-    "EL034":{"CinG_R":[4,5,6,8,9],"OFG_L":[4,5],"pSFG_L":[4],"aH_L":[6,7],"MFG_L":[3]},
-    "EL030":{"A-L":[6,7,8],"aH-L":[6,7],"A-R":[7,8],"aH-R":[6,7],"pH-R":[3,4,5]},
-    # "MicroEPI": {"ag":[3,4,5,6], "hpg":[8,9,10,11], "imd":[6,7,8,9,10,11,12]},
+# ---- WM reference: derive from BIDS electrodes TSV (no hardcoded lists) ----
+#
+# WM channels are read from `*_electrodes.tsv` per patient. Rule:
+#     tissueWeights_1 == 1.0  AND  first token of tissueLabel starts with "wm-"
+#
+# Path patterns (UNC) per cohort:
+#     EL:        ...\DATARAW\SEEG_EXPERIMENTS_BERN\Reconstruction\<pid>\BIDS\ieeg\sub-<pid>_electrodes.tsv
+#     PAT:       ...\#SHARE\To_send_collaborators\PAT_<num>\BIDS\ieeg\sub-<num>_electrodes.tsv
+#     MicroEPI:  ...\DATARAW\BIDS_elec\MICROEPI\sub-<full_id>\ieeg\*_electrodes.tsv
+#
+# `electrodes_tsv_path_for_patient` returns a glob pattern; the helper
+# resolves it against the filesystem.
 
-    # "PAT_3965": {"CAD": [7],"CAG": [8, 2],"CMD": [12, 7, 6, 3],"CMG": [9, 8, 7, 6, 4],"CPD": [15, 14, 5],
-    #              "CPG": [10, 9],"HAD": [7],"HAG": [7],"HPD": [5],"HPG": [12, 5],"IAD": [16, 15, 10, 9, 8, 7, 6, 5, 1],
-    #              "IAG": [13, 10, 7],"IMD": [4],"IMG": [18, 16, 13, 12, 11, 9, 8, 3],"POD": [1],"POG": [3]},
-}
-def _expand_labels(prefix: str, nums): return [f"{prefix}{int(n)}" for n in nums]
-WHITE_MATTER_REFS_LABELS = {pid:{lead:_expand_labels(lead, nums) for lead,nums in leads.items()}
-                            for pid, leads in WHITE_MATTER_REFS_NUMS.items()}
+NASAC_ROOT = r"\\nasac-m2.unige.ch\m-HumanNeuronLab"
+
+def electrodes_tsv_path_for_patient(patient_id) -> str:
+    """Return a BIDS electrodes-TSV path pattern for the given patient id."""
+    pid = str(patient_id).strip()
+    if pid.startswith(("MicroEPI", "G-", "B-")):
+        sub = pid if pid.startswith("MicroEPI") else f"MicroEPI-{pid}"
+        return fr"{NASAC_ROOT}\DATARAW\BIDS_elec\MICROEPI\sub-{sub}\ieeg\*_electrodes.tsv"
+    if pid.startswith("EL"):
+        return fr"{NASAC_ROOT}\DATARAW\SEEG_EXPERIMENTS_BERN\Reconstruction\{pid}\BIDS\ieeg\sub-{pid}_electrodes.tsv"
+    num = pid.replace("PAT_", "")
+    return fr"{NASAC_ROOT}\#SHARE\To_send_collaborators\PAT_{num}\BIDS\ieeg\sub-{num}_electrodes.tsv"
+
+
+def derive_wm_channels_from_electrodes_tsv(tsv_path_pattern: str) -> list[str]:
+    """
+    Read a BIDS electrodes TSV and return the names of channels flagged as WM.
+
+    Rule: `tissueWeights_1 == 1.0` and first token of `tissueLabel` starts with `wm-`.
+    Accepts a literal path or a glob pattern; the first match is used.
+    """
+    matches = glob.glob(tsv_path_pattern)
+    if not matches:
+        raise FileNotFoundError(f"No electrodes TSV matching: {tsv_path_pattern}")
+    df = pd.read_csv(matches[0], sep="\t")
+
+    def _is_wm(row) -> bool:
+        try:
+            w1 = float(row.get("tissueWeights_1", np.nan))
+        except (TypeError, ValueError):
+            return False
+        tokens = str(row.get("tissueLabel", "")).strip().split()
+        return np.isclose(w1, 1.0) and bool(tokens) and tokens[0].startswith("wm-")
+
+    return [str(r["name"]) for r in df.to_dict("records") if _is_wm(r)]
 
 
 def canonicalize_labels(labels: list[str], patient_id_hint: str | None = None) -> tuple[list[str], dict]:
@@ -152,18 +159,32 @@ def normalize_label(s: str) -> str:
 def normalize_names(names: list[str]) -> list[str]:
     return [normalize_label(nm) for nm in names]
 
-# Replace the two WM helpers with normalized versions
-def wm_labels_for_patient(patient_id: str):
-    leads = WHITE_MATTER_REFS_LABELS.get(patient_id, {})
-    # normalize the expanded labels
-    labs = []
-    for _, lablist in leads.items():
-        labs.extend([normalize_label(l) for l in lablist])
-    return set(labs)
+def wm_labels_for_patient(patient_id: str, *,
+                          electrodes_tsv_pattern: str | None = None) -> set[str]:
+    """
+    Return WM channel names for a patient, derived from the BIDS electrodes TSV.
 
-def wm_indices_for_patient(patient_id: str, channel_names):
-    want = wm_labels_for_patient(patient_id)
-    # compare on normalized names
+    Names are normalized (case-folded, separators stripped) so that downstream
+    matching against raw channel labels is robust to small spelling variants.
+    If `electrodes_tsv_pattern` is given, it overrides the auto-resolved path
+    (used for MicroEPI .mat patients whose TSV lives outside the standard
+    cohort layout). Returns an empty set if the TSV cannot be located.
+    """
+    pattern = electrodes_tsv_pattern or electrodes_tsv_path_for_patient(patient_id)
+    try:
+        names = derive_wm_channels_from_electrodes_tsv(pattern)
+    except FileNotFoundError as e:
+        log(f"[WM] {e}")
+        return set()
+    return {normalize_label(n) for n in names}
+
+
+def wm_indices_for_patient(patient_id: str, channel_names, *,
+                           electrodes_tsv_pattern: str | None = None) -> list[int]:
+    """Return indices of WM channels in `channel_names` for the given patient."""
+    want = wm_labels_for_patient(patient_id, electrodes_tsv_pattern=electrodes_tsv_pattern)
+    if not want:
+        return []
     lookup = {normalize_label(nm): i for i, nm in enumerate(channel_names)}
     return sorted([lookup[l] for l in want if l in lookup])
 

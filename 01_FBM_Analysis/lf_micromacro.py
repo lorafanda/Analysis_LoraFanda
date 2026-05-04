@@ -90,28 +90,10 @@ def load_and_concatenate_mats(data_dir, mat_files):
 
 
 # -----------------------------------------------------------------------------
-# WM channel derivation from BIDS electrodes TSV
+# WM channel derivation from BIDS electrodes TSV (canonical home: lf_io_utils)
+# Re-exported here so notebook 11 keeps working (it calls `mm.derive_...`).
 # -----------------------------------------------------------------------------
-def derive_wm_channels_from_electrodes_tsv(tsv_path_pattern):
-    """
-    Derive WM channel names from a BIDS electrodes TSV.
-
-    Rule: tissueWeights_1 == 1 AND first token of tissueLabel starts with 'wm-'.
-    """
-    matches = glob.glob(tsv_path_pattern)
-    if not matches:
-        raise FileNotFoundError(f"No electrodes TSV matching: {tsv_path_pattern}")
-    df = pd.read_csv(matches[0], sep="\t")
-
-    def _is_wm(row):
-        try:
-            w1 = float(row.get("tissueWeights_1", np.nan))
-        except (TypeError, ValueError):
-            return False
-        tokens = str(row.get("tissueLabel", "")).strip().split()
-        return np.isclose(w1, 1.0) and bool(tokens) and tokens[0].startswith("wm-")
-
-    return [str(r["name"]) for r in df.to_dict("records") if _is_wm(r)]
+from lf_io_utils import derive_wm_channels_from_electrodes_tsv  # noqa: F401
 
 
 # -----------------------------------------------------------------------------
@@ -180,6 +162,70 @@ def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode", **
     )
     on_abs, off_abs = out[0], out[1]
     return np.asarray(on_abs, dtype=np.int64), np.asarray(off_abs, dtype=np.int64)
+
+
+# -----------------------------------------------------------------------------
+# 140-pipeline integration: load only the macro signals from a MicroEPI .mat
+# preset, in the same shape that `lf_io_utils.load_first_raw_in_dir` returns.
+# Used by 140 for G-04 / G-05 / G-06 (PAT_6704 / PAT_6684 / PAT_6854).
+# -----------------------------------------------------------------------------
+def load_microepi_macros_for_pipeline(pid_raw, presets):
+    """
+    Load only macro (`dataEcog`) signals for one MicroEPI .mat-pipeline patient.
+
+    Returns
+    -------
+    signals    : (n_samples, n_macro) float32
+    names      : list[str]
+    fs         : float
+    photodiode : (n_samples,) float32   — same length as signals; useful for QC
+    """
+    cfg = presets[pid_raw]
+    d = load_and_concatenate_mats(cfg["data_dir"], cfg["mat_files"])
+    return d["data_ecog"], list(d["chans_ecog"]), d["fs"], d["photodiode"]
+
+
+def extract_microepi_pd_to_prep0(pid_raw, presets, prep_dir):
+    """
+    Run photodiode event extraction on a MicroEPI .mat preset and write
+    per-condition timing TSVs into `prep_dir` (same format that
+    `lf_trials.collect_trials` expects).
+
+    Returns (prep_dir, fs).
+    """
+    from LFfunctions_PDextract import _read_trial_table, save_onsets_offsets_by_condition
+
+    cfg = presets[pid_raw]
+    pat_id = cfg.get("pat_name", pid_raw)
+
+    d = load_and_concatenate_mats(cfg["data_dir"], cfg["mat_files"])
+    fs = d["fs"]
+
+    on_abs, off_abs = extract_events_from_photodiode(d["photodiode"], fs)
+
+    beh_path = os.path.join(cfg["data_dir"], cfg["tsv_file"])
+    beh = _read_trial_table(beh_path)
+    dfl = beh["raw_df"].rename(columns=str.lower)
+
+    def _pick(cols):
+        return next((dfl[c].astype(str).to_numpy() for c in cols if c in dfl), None)
+
+    condition_name = _pick(["category", "blockname"])
+    resp_accuracy  = _pick(["response_type", "responseaccuracy"])
+    trial_idx_col  = _pick(["exemplar", "stimnumber"])
+
+    short = {"picture": "pict", "auditory": "audi", "reading": "read"}
+    trial_ids = [short.get(str(x).lower().split("_")[0], str(x).lower())
+                 for x in (condition_name if condition_name is not None else [])]
+
+    os.makedirs(prep_dir, exist_ok=True)
+    save_onsets_offsets_by_condition(
+        patient_id=pat_id, block_name="LM",
+        onsets=on_abs, offsets=off_abs, sampling_rate=fs,
+        trial_ids=trial_ids, out_dir=str(prep_dir),
+        condition_name=condition_name, resp_accuracy=resp_accuracy, trial_idx=trial_idx_col,
+    )
+    return prep_dir, fs
 
 
 # -----------------------------------------------------------------------------

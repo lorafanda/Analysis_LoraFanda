@@ -157,12 +157,21 @@ def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
 
 
 def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
-                            notch_patients=(), mains_base=50.0, fmax=500.0, repeats=1):
+                            notch_patients=(), mains_base=50.0, fmax=500.0,
+                            repeats=1, peak_z_thresh=3.0):
+    """
+    Adaptive mains-harmonic notch with per-patient gating.
+
+    `peak_z_thresh` controls how strict the "is this a real peak?" test is
+    inside `notch_mains_harmonics`. Higher values = fewer harmonics are
+    notched (more conservative, less risk of removing real signal).
+    """
     if not any(s in str(pid_raw) or s in str(patient_id) for s in notch_patients):
         return signals
-    print(f"[notch] {patient_id}")
+    print(f"[notch] {patient_id}  (z>={peak_z_thresh})")
     return notch_mains_harmonics(signals, fs, base=mains_base,
-                                  max_hz=min(fmax, 0.5 * fs), repeats=repeats)
+                                  max_hz=min(fmax, 0.5 * fs), repeats=repeats,
+                                  peak_z_thresh=peak_z_thresh)
 
 
 # ----------------------------

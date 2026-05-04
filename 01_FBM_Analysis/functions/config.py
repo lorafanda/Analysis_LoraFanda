@@ -46,9 +46,12 @@ bad_channels_manual = {
     # "PAT_3415": ["WM1", "WM3"],  # example; fill after visual/clinical review
     "PAT_3780": ["FAP9"],  # example; fill after visual/clinical review
     "PAT_3975": ["TPG1"],  # example; fill after visual/clinical review
-    "PAT_3965": ["cmd11"],  # example; fill after visual/clinical review
+    "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
     "EL030": ["EntG_R18"],  # example; fill after visual/clinical review
-    "EL037": ["pH_R7","aH_R1","A_R12","CinG_L12","CinG_L13"],  # example; fill after visual/clinical review
+    "EL036": [f"pHG_R{i}" for i in range(1, 13)],
+    "EL037": ["pH_R7","aH_R1","A_R12","CinG_L12","CinG_L13"]
+              + [f"pI_L{i}" for i in range(1, 17)]
+              + [f"pI_R{i}" for i in range(1, 17)],
     "EL038": ["pH_R7","aH_L3","STO_R1","A_L7"],  # example; fill after visual/clinical review
 }
 
@@ -137,11 +140,16 @@ min_freq_bins = 3     # e.g., 4–8 depending on your df
 outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs"
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
-notch_patients  = ["EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045"]   # IDs or substrings to match
+notch_patients  = ["EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045","PAT_3455"]   # IDs or substrings to match
 # notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
 mains_base      = 50.0       # 50 or 60
-notch_Q         = 50         # 40–60 typical
+notch_Q         = 50         # 40–60 typical (only used if a non-adaptive notch path is wired in)
 notch_repeats   = 1          # 1 is usually enough
+
+# Adaptive notch: only apply notch at a harmonic if its z-score over the local
+# spectrum background is at or above this threshold. Higher = more conservative
+# (fewer harmonics notched, less risk of removing real signal).
+notch_peak_z_thresh = 3.0
 
 # ---------------------------
 # Trial filtering & HG plot defaults
@@ -195,4 +203,46 @@ MICROEPI_PRESETS = {
     "G-03": dict(trig="PHOTO", flip=False, time_range=(100, 1300), invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     "G-04": dict(trig="X2",    flip=False, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig="PAT_3780_FLM_all.tsv"),
     "G-05": dict(trig="ainp3", flip=False, time_range=(100, 1300), invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig=None),
+}
+
+
+# ---------------------------------------------------------------------------
+# MicroEPI .mat → macro-only pipeline (G-04 / G-05 / G-06)
+# ---------------------------------------------------------------------------
+# These patients are processed in 140 via the MicroEPI .mat loader from
+# `lf_micromacro.load_microepi_macros_for_pipeline`. Only macro channels
+# (`dataEcog`) are used; micros are ignored. Outputs are saved under the
+# `pat_name` (PAT_<bids_num>) so they sit alongside the regular PAT cohort
+# downstream — same procedure, same output sizes.
+
+MICROEPI_MAT_PATIENTS = ["G-04", "G-05", "G-06"]
+
+_NASAC = r"\\nasac-m2.unige.ch\m-HumanNeuronLab"
+_BIDS_ELEC_MICROEPI = _NASAC + r"\DATARAW\BIDS_elec\MICROEPI"
+
+MICROEPI_MAT_PRESETS = {
+    "G-04": {
+        "pat_name":       "PAT_6704",
+        "data_dir":       _NASAC + r"\DATARAW\MICROEPI\MicroEPI-G-04\task_FBM\data_LM\exp4_Lora",
+        "mat_files":      ["f0001_export_Labs_ph.mat",
+                           "f0002_export_Labs_ph.mat"],
+        "tsv_file":       "sub-MicroEpi-G-04_task-LanguageMapping_timestamp-7-4-2025(14h55m53s)_lang-ENG_events.tsv",
+        "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6704\ieeg\*_electrodes.tsv",
+    },
+    "G-05": {
+        "pat_name":       "PAT_6684",
+        "data_dir":       _NASAC + r"\DATARAW\MICROEPI\MicroEPI-G-05\tasks\exp9_JonathanFLM_2025_06_18",
+        "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
+                           "f0002_export_Labs_phmicrodown.mat"],
+        "tsv_file":       "sub-microepi-g-05_task-LanguageMapping_datetime-18-6-2025(15h39m19s)_language-FRE_events.tsv",
+        "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6684\ieeg\*_electrodes.tsv",
+    },
+    "G-06": {
+        "pat_name":       "PAT_6854",
+        "data_dir":       _NASAC + r"\DATARAW\MICROEPI\MicroEPI-G-06\tasks\exp1_lora_2026_01_29_withmicro",
+        "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
+                           "f0002_export_Labs_phmicrodown.mat"],
+        "tsv_file":       "sub-6854_task-LanguageMapping_datetime-29-1-2026(17h33m57s)_language-FRE_events.tsv",
+        "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6854\ieeg\*_electrodes.tsv",
+    },
 }
