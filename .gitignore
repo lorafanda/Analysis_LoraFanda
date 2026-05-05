@@ -48,3 +48,11 @@ venv/
 02_FBM_Clustering/*-SAFE*.ipynb
 
 **/<offending-file-name>
+
+# Allow ERSP outputs to be pushed (large but needed for clustering input)
+!**/outputs/**/04_ersp_LM_RAWONLY
+!**/outputs/**/04_ersp_LM_RAWONLY/**
+
+# Allow ERSP outputs to be pushed (large but needed for clustering input)
+!**/outputs/**/04_ersp_LM_RAWONLY
+!**/outputs/**/04_ersp_LM_RAWONLY/**
