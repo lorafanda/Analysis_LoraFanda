@@ -186,17 +186,26 @@ def fit_and_save(
     _write_json(run_dir / "feature_schema.json", feature_schema)
     artifacts["feature_schema"] = "feature_schema.json"
 
-    pd.DataFrame({"sample_idx": np.arange(len(labels)), "cluster": labels.astype(np.int32)}) \
-        .to_csv(run_dir / "labels.csv", index=False)
+    # `labels.csv` is the website's primary data source — when df_keep is
+    # provided, embed all sample-level metadata so the per-cluster patient /
+    # condition histograms can render without a parquet reader in the browser.
+    cluster_col = f"cluster_{method}_{feature_set}"
+    if df_keep is not None:
+        df_out = _attach_labels(df_keep, labels, method=method, feature_set=feature_set)
+        if "sample_idx" not in df_out.columns:
+            df_out.insert(0, "sample_idx", np.arange(len(df_out), dtype=np.int64))
+        df_out.to_csv(run_dir / "labels.csv", index=False)
+        df_out.to_parquet(run_dir / "df_keep_with_clusters.parquet", index=False)
+        artifacts["df_keep_with_clusters"] = "df_keep_with_clusters.parquet"
+    else:
+        pd.DataFrame({
+            "sample_idx": np.arange(len(labels)),
+            cluster_col: labels.astype(np.int32),
+        }).to_csv(run_dir / "labels.csv", index=False)
     artifacts["labels"] = "labels.csv"
 
     _write_json(run_dir / "metrics.json", metrics)
     artifacts["metrics"] = "metrics.json"
-
-    if df_keep is not None:
-        df_out = _attach_labels(df_keep, labels, method=method, feature_set=feature_set)
-        df_out.to_parquet(run_dir / "df_keep_with_clusters.parquet", index=False)
-        artifacts["df_keep_with_clusters"] = "df_keep_with_clusters.parquet"
 
     artifacts.update(figures)
 
