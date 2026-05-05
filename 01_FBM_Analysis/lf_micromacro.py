@@ -40,27 +40,37 @@ def load_microepi_mat(path):
     """
     Load one MicroEPI export .mat (v7.3 / HDF5).
 
+    Some exports (`*_export_Labs_ph.mat` — no `microdown` suffix) only contain
+    macros + photodiode and have no `dataMicroDown` / `chansMicro` fields.
+    In that case `data_micro` is returned as a (n_samples, 0) array and
+    `chans_micro` as an empty list, so the rest of the pipeline can still
+    process the macros uniformly.
+
     Returns
     -------
     dict with:
         'data_ecog'   : (n_samples, n_macro) float32
-        'data_micro'  : (n_samples, n_micro) float32
+        'data_micro'  : (n_samples, n_micro) float32   — may be (N, 0) if absent
         'chans_ecog'  : list[str]
-        'chans_micro' : list[str]
+        'chans_micro' : list[str]                       — may be []
         'photodiode'  : (n_samples,) float32
         'fs'          : 2048.0
     """
     with h5py.File(path, "r") as f:
-        data_ecog  = np.asarray(f["dataEcog"][()],      dtype=np.float32)
-        data_micro = np.asarray(f["dataMicroDown"][()], dtype=np.float32)
-        photodiode = np.asarray(f["photodiode"][()],    dtype=np.float32).ravel()
+        data_ecog  = np.asarray(f["dataEcog"][()],   dtype=np.float32)
+        photodiode = np.asarray(f["photodiode"][()], dtype=np.float32).ravel()
+        if data_ecog.shape[0] < data_ecog.shape[1]:
+            data_ecog = data_ecog.T
+        chans_ecog = _read_channel_struct_names(f, "chansEcog")
 
-        # Normalize to (samples, channels)
-        if data_ecog.shape[0]  < data_ecog.shape[1]:  data_ecog  = data_ecog.T
-        if data_micro.shape[0] < data_micro.shape[1]: data_micro = data_micro.T
-
-        chans_ecog  = _read_channel_struct_names(f, "chansEcog")
-        chans_micro = _read_channel_struct_names(f, "chansMicro")
+        if "dataMicroDown" in f and "chansMicro" in f:
+            data_micro = np.asarray(f["dataMicroDown"][()], dtype=np.float32)
+            if data_micro.shape[0] < data_micro.shape[1]:
+                data_micro = data_micro.T
+            chans_micro = _read_channel_struct_names(f, "chansMicro")
+        else:
+            data_micro  = np.zeros((data_ecog.shape[0], 0), dtype=np.float32)
+            chans_micro = []
 
     return dict(
         data_ecog=data_ecog, data_micro=data_micro,
