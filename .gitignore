@@ -46,3 +46,5 @@ venv/
 02_FBM_Clustering/*-Copy*.ipynb
 02_FBM_Clustering/outputs/*Copy
 02_FBM_Clustering/*-SAFE*.ipynb
+
+**/<offending-file-name>
