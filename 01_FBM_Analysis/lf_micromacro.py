@@ -29,20 +29,75 @@ import matplotlib.pyplot as plt
 # -----------------------------------------------------------------------------
 # .mat loader (h5py — MATLAB v7.3 files are large)
 # -----------------------------------------------------------------------------
+_CHAN_NAME_FIELDS = ("name", "label", "Name", "Label")  # tried in order
+
+
+def _h5_refs_to_strings(f, refs_dataset):
+    """Convert an HDF5 dataset of object refs (each ref -> char-array) to a list[str]."""
+    refs = refs_dataset[()].ravel()
+    out = []
+    for r in refs:
+        chars = f[r][()].ravel()
+        out.append("".join(chr(int(c)) for c in chars if int(c) != 0))
+    return out
+
+
 def _read_channel_struct_names(f, struct_key):
-    """Extract the 'name' field from a MATLAB struct array stored in HDF5."""
-    name_refs = f[struct_key]["name"][()].ravel()
-    return ["".join(chr(int(c)) for c in f[r][()].ravel() if int(c) != 0)
-            for r in name_refs]
+    """
+    Extract channel names from a MATLAB struct array saved as HDF5.
+
+    Tries the common field names in order ('name', 'label', then capitalized
+    variants). Different MicroEPI export scripts use different conventions:
+    older exports use `name`, newer ones use `label`. Raises a clear error
+    listing the available fields if none of them work.
+    """
+    grp = f[struct_key]
+    available = list(grp.keys()) if hasattr(grp, "keys") else []
+    for field in _CHAN_NAME_FIELDS:
+        if field in available:
+            try:
+                return _h5_refs_to_strings(f, grp[field])
+            except Exception:
+                continue
+    raise KeyError(
+        f"Could not extract channel names from '{struct_key}': none of "
+        f"{_CHAN_NAME_FIELDS} found. Available fields: {available}"
+    )
+
+
+def _scipy_struct_names(struct_array, fields=_CHAN_NAME_FIELDS):
+    """
+    Extract channel names from a scipy.io.loadmat struct array (non-HDF5 .mat).
+
+    scipy returns MATLAB structs as numpy structured arrays of shape (1, N) or
+    (N, 1). Names are nested one or two levels deep depending on save options.
+    """
+    s = struct_array
+    if hasattr(s, "dtype") and s.dtype.names:
+        for field in fields:
+            if field in s.dtype.names:
+                vals = s[field].ravel()
+                names = []
+                for v in vals:
+                    # Could be a 1-element array containing a string, or directly a string
+                    if hasattr(v, "ravel") and v.size:
+                        v = v.ravel()[0]
+                    if isinstance(v, bytes):
+                        v = v.decode()
+                    names.append(str(v))
+                return names
+        raise KeyError(f"scipy struct fields {s.dtype.names} contain none of {fields}")
+    raise TypeError(f"scipy struct has no named fields (dtype={getattr(s, 'dtype', '?')})")
 
 
 def load_microepi_mat(path):
     """
-    Load one MicroEPI export .mat (v7.3 / HDF5).
+    Load one MicroEPI export .mat — handles both v7.3 (HDF5) and v7-or-earlier
+    (legacy MATLAB binary) formats.
 
     Some exports (`*_export_Labs_ph.mat` — no `microdown` suffix) only contain
-    macros + photodiode and have no `dataMicroDown` / `chansMicro` fields.
-    In that case `data_micro` is returned as a (n_samples, 0) array and
+    macros + photodiode and have no `dataMicroDown` / `chansMicro` fields. In
+    that case `data_micro` is returned as a (n_samples, 0) array and
     `chans_micro` as an empty list, so the rest of the pipeline can still
     process the macros uniformly.
 
@@ -56,6 +111,17 @@ def load_microepi_mat(path):
         'photodiode'  : (n_samples,) float32
         'fs'          : 2048.0
     """
+    # Try v7.3 (HDF5) first; fall back to v7-or-earlier via scipy.io
+    try:
+        return _load_microepi_mat_v73(path)
+    except OSError as e:
+        if "file signature not found" not in str(e):
+            raise  # different OSError, don't mask it
+        return _load_microepi_mat_v7(path)
+
+
+def _load_microepi_mat_v73(path):
+    """v7.3 (HDF5) MicroEPI MAT loader."""
     with h5py.File(path, "r") as f:
         data_ecog  = np.asarray(f["dataEcog"][()],   dtype=np.float32)
         photodiode = np.asarray(f["photodiode"][()], dtype=np.float32).ravel()
@@ -71,6 +137,33 @@ def load_microepi_mat(path):
         else:
             data_micro  = np.zeros((data_ecog.shape[0], 0), dtype=np.float32)
             chans_micro = []
+
+    return dict(
+        data_ecog=data_ecog, data_micro=data_micro,
+        chans_ecog=chans_ecog, chans_micro=chans_micro,
+        photodiode=photodiode, fs=2048.0,
+    )
+
+
+def _load_microepi_mat_v7(path):
+    """Legacy v7 / v6 / v4 MicroEPI MAT loader via scipy.io.loadmat."""
+    from scipy.io import loadmat
+    md = loadmat(path, squeeze_me=False, struct_as_record=True)
+
+    data_ecog  = np.asarray(md["dataEcog"],   dtype=np.float32)
+    photodiode = np.asarray(md["photodiode"], dtype=np.float32).ravel()
+    if data_ecog.shape[0] < data_ecog.shape[1]:
+        data_ecog = data_ecog.T
+    chans_ecog = _scipy_struct_names(md["chansEcog"])
+
+    if "dataMicroDown" in md and "chansMicro" in md:
+        data_micro = np.asarray(md["dataMicroDown"], dtype=np.float32)
+        if data_micro.shape[0] < data_micro.shape[1]:
+            data_micro = data_micro.T
+        chans_micro = _scipy_struct_names(md["chansMicro"])
+    else:
+        data_micro  = np.zeros((data_ecog.shape[0], 0), dtype=np.float32)
+        chans_micro = []
 
     return dict(
         data_ecog=data_ecog, data_micro=data_micro,
