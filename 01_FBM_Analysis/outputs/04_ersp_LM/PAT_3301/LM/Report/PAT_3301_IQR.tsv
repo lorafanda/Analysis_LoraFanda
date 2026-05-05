@@ -1,0 +1,2 @@
+patient_id	condition	n_in	n_kept	stim_min	stim_med	stim_max	post_min	post_med	post_max	outlier_method	max_post_s	z_low	z_high	pct_low	pct_high	legacy_p_low	legacy_p_high	iqr_k	post_lo	post_hi
+PAT_3301	picture	43	40	0.89501953125	0.9912109375	1.05517578125	0.97998046875	1.4208984375	8.29443359375	IQR	10.0					-3.0	3.0	1.5	0.45068359375	2.55224609375

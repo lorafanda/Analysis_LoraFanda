@@ -93,7 +93,7 @@ def load_and_concatenate_mats(data_dir, mat_files):
 # WM channel derivation from BIDS electrodes TSV (canonical home: lf_io_utils)
 # Re-exported here so notebook 11 keeps working (it calls `mm.derive_...`).
 # -----------------------------------------------------------------------------
-from lf_io_utils import derive_wm_channels_from_electrodes_tsv  # noqa: F401
+# from lf_io_utils import derive_wm_channels_from_electrodes_tsv  # noqa: F401
 
 
 # -----------------------------------------------------------------------------
