@@ -153,7 +153,12 @@ def fit_and_save(
     predictor_type = "centroid" if method == "kmeans" else "1-NN"
 
     # ---- metrics + figures ----
-    metrics = _compute_metrics(X, labels)
+    # Compute per-sample silhouette once and reuse for both metrics and labels.csv.
+    if len(np.unique(labels)) > 1:
+        sil_per_point = silhouette_samples(X, labels)
+    else:
+        sil_per_point = np.full(len(labels), float("nan"))
+    metrics = _compute_metrics(X, labels, df_keep=df_keep, sil_per_point=sil_per_point)
     figures = _save_figures(
         X, labels, metrics, run_dir,
         method=method, feature_set=feature_set,
@@ -194,13 +199,17 @@ def fit_and_save(
         df_out = _attach_labels(df_keep, labels, method=method, feature_set=feature_set)
         if "sample_idx" not in df_out.columns:
             df_out.insert(0, "sample_idx", np.arange(len(df_out), dtype=np.int64))
+        # P2: per-sample silhouette in labels.csv — the website sorts cluster
+        # thumbnails by this and shows the value as a confidence badge.
+        df_out["silhouette"] = sil_per_point.astype(np.float32)
         df_out.to_csv(run_dir / "labels.csv", index=False)
         df_out.to_parquet(run_dir / "df_keep_with_clusters.parquet", index=False)
         artifacts["df_keep_with_clusters"] = "df_keep_with_clusters.parquet"
     else:
         pd.DataFrame({
-            "sample_idx": np.arange(len(labels)),
-            cluster_col: labels.astype(np.int32),
+            "sample_idx":   np.arange(len(labels)),
+            cluster_col:    labels.astype(np.int32),
+            "silhouette":   sil_per_point.astype(np.float32),
         }).to_csv(run_dir / "labels.csv", index=False)
     artifacts["labels"] = "labels.csv"
 
@@ -447,12 +456,27 @@ def _fit_hierarchical(X: np.ndarray, params: Dict[str, Any], *, verbose: bool) -
 # Internals: metrics
 # ============================================================
 
-def _compute_metrics(X: np.ndarray, labels: np.ndarray) -> Dict[str, Any]:
-    """
-    Per-run metrics: overall + per-cluster cohesion / separation.
+def _patient_cohort(pid: Any) -> str:
+    """Classify a patient ID into a recording center / cohort."""
+    s = str(pid).strip().upper()
+    if s.startswith("EL"):                                    return "EL"
+    if s.startswith("PAT"):                                   return "PAT"
+    if s.startswith("MICRO") or s.startswith(("G-", "B-")):   return "MICRO"
+    return "OTHER"
 
-    Within-cluster: mean / std pairwise distance among members.
-    Between-cluster: pairwise centroid distance matrix.
+
+def _compute_metrics(X: np.ndarray, labels: np.ndarray,
+                      df_keep: Optional[pd.DataFrame] = None,
+                      sil_per_point: Optional[np.ndarray] = None) -> Dict[str, Any]:
+    """
+    Per-run metrics: overall + per-cluster cohesion / separation / diversity.
+
+    Within-cluster:  mean / std pairwise distance among members (cohesion).
+    Between-cluster: pairwise centroid distance matrix (separation).
+    Diversity:       n_patients, n_centers per cluster (when df_keep is given) —
+                     a single-patient cluster of 30 is far more suspect than a
+                     6-patient cluster of 6, so this is the headline diagnostic
+                     for "is this cluster real or a patient artifact?"
     """
     labels = np.asarray(labels).astype(np.int32)
     uniq = np.unique(labels)
@@ -461,7 +485,8 @@ def _compute_metrics(X: np.ndarray, labels: np.ndarray) -> Dict[str, Any]:
     # Overall scores
     if n_clusters > 1:
         sil = float(silhouette_score(X, labels))
-        sil_per_point = silhouette_samples(X, labels)
+        if sil_per_point is None:
+            sil_per_point = silhouette_samples(X, labels)
         ch = float(calinski_harabasz_score(X, labels))
         db = float(davies_bouldin_score(X, labels))
     else:
@@ -474,7 +499,12 @@ def _compute_metrics(X: np.ndarray, labels: np.ndarray) -> Dict[str, Any]:
     centroids = np.stack([X[labels == c].mean(axis=0) for c in uniq], axis=0)
     centroid_dist = squareform(pdist(centroids, metric="euclidean"))
 
-    # Per-cluster cohesion
+    # Per-cluster patient diversity (when metadata is available)
+    have_pid = df_keep is not None and "patient_id" in df_keep.columns and len(df_keep) == len(labels)
+    pid_arr = df_keep["patient_id"].astype(str).to_numpy() if have_pid else None
+    cohort_arr = (np.array([_patient_cohort(p) for p in pid_arr])
+                  if pid_arr is not None else None)
+
     per_cluster: Dict[str, Dict[str, float]] = {}
     for c in uniq:
         idx = np.where(labels == c)[0]
@@ -487,12 +517,18 @@ def _compute_metrics(X: np.ndarray, labels: np.ndarray) -> Dict[str, Any]:
             within_mean = 0.0
             within_std = 0.0
         sil_c = float(np.nanmean(sil_per_point[idx])) if size and n_clusters > 1 else float("nan")
-        per_cluster[str(int(c))] = {
+        entry: Dict[str, Any] = {
             "size": size,
             "silhouette_mean": sil_c,
             "within_dist_mean": within_mean,
             "within_dist_std": within_std,
         }
+        if pid_arr is not None:
+            pids_in_cluster = pid_arr[idx]
+            entry["n_patients"] = int(len(set(pids_in_cluster)))
+            entry["n_centers"]  = int(len(set(cohort_arr[idx])))
+            entry["patients"]   = sorted(set(pids_in_cluster.tolist()))
+        per_cluster[str(int(c))] = entry
 
     return {
         "n_samples": int(len(labels)),
