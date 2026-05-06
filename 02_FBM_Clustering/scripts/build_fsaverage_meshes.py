@@ -27,8 +27,12 @@ Once the .mz3 files exist, commit them to the repo:
     git add 02_FBM_Clustering/outputs/250_recon/fsaverage/meshes
     git commit -m "fsaverage meshes for MOBA 3D brain viewer"
     git push
+
+Tip: run with your analysis conda env's Python (the one that has nibabel).
+On Lora's machine that's the same Python you use for the clustering notebooks
+(NOT C:\\...\\Python36\\python.exe — that one's too old and likely missing
+nibabel). Activate the env first, e.g. `conda activate LORA_FLM_env1`.
 """
-from __future__ import annotations
 
 import gzip
 import os
