@@ -3,7 +3,7 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-Thumbs.db
+*Thumbs.db
 .claude 
 x_archive
 *.h5

@@ -250,7 +250,7 @@ def group_into_tetrodes(micro_list):
 # -----------------------------------------------------------------------------
 # Photodiode event extraction (wraps LFfunctions_PDextract)
 # -----------------------------------------------------------------------------
-def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode", **pd_kwargs):
+def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode",time_range=(0, -1), **pd_kwargs):
     """
     Run square-wave photodiode detection from a 1-D photodiode trace.
     Wraps LFfunctions_PDextract.get_trigger_indexes_photodiode.
@@ -261,7 +261,7 @@ def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode", **
     out = get_trigger_indexes_photodiode(
         raw_signals=pd_2d, sampling_rate=float(fs),
         channel_names=[trig_name], trig_name=trig_name,
-        time_range=(0, -1), do_plot=False, **pd_kwargs,
+        time_range=time_range, do_plot=True, **pd_kwargs,
     )
     on_abs, off_abs = out[0], out[1]
     return np.asarray(on_abs, dtype=np.int64), np.asarray(off_abs, dtype=np.int64)
