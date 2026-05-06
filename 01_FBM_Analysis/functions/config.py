@@ -12,9 +12,9 @@ patient_ids = [3301, "B-01","G-01", "G-02", "G-03", "G-04", 3780, "G-05"]
 patient_ids = ["EL030","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045",2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 patient_ids = ["EL034","EL035","EL036","EL037","EL038","EL040","EL042"]
 patient_ids = [
-               "EL034","G-06", "G-04", "G-05"
+               "EL030","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","G-06", "G-04", "G-05"
               ]
-# patient_ids = ["EL044"]
+patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
 # patient_ids = ["EL03","EL043","EL044","EL045"]
 
 
@@ -42,7 +42,8 @@ EL_GRID_PATIENTS = {"EL044"}
 EL_GRID_KEEP_PREFIXES = {"EL044": ("Pa", "postP", "T")}
 
 bad_channels_manual = {
-    # "PAT_3415": ["WM1", "WM3"],  # example; fill after visual/clinical review
+    "EL040": [ f"PlaT_L{i}" for i in range(1, 4)],  # example; fill after visual/clinical review
+    "PAT_3415": [ f"HLG{i}" for i in range(1, 18)],  # example; fill after visual/clinical review
     "PAT_3780": ["FAP9"],  # example; fill after visual/clinical review
     "PAT_3975": ["TPG1"],  # example; fill after visual/clinical review
     "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
@@ -163,7 +164,7 @@ hg_vmax      = 6.5
 
 ## PATIENT CONFIGS ##
 
-PAT_PATIENTS = [2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
+PAT_PATIENTS = [] #[2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 
 PAT_PRESETS = {
     2868: dict(trig="PHOTO",  flip=False, time_range=(140, 1500), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
@@ -223,8 +224,8 @@ MICROEPI_MAT_PRESETS = {
     "G-04": {
         "pat_name":       "PAT_6704",
         "data_dir":       _NASAC + r"\DATARAW\MICROEPI\MicroEPI-G-04\task_FBM\data_LM\exp4_Lora",
-        "mat_files":      ["f0001_export_Labs_ph.mat",
-                           "f0002_export_Labs_ph.mat"],
+        "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
+                           "f0002_export_Labs_phmicrodown.mat"],
         "tsv_file":       "sub-MicroEpi-G-04_task-LanguageMapping_timestamp-7-4-2025(14h55m53s)_lang-ENG_events.tsv",
         "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6704\ieeg\*_electrodes.tsv",
     },
