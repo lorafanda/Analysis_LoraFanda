@@ -1,0 +1,151 @@
+"""
+build_fsaverage_meshes.py — one-time prep for the MOBA 3D brain viewer.
+
+Reads FreeSurfer's fsaverage `lh.pial` and `rh.pial` surface files, converts
+them to Niivue's compact .mz3 format, and writes them to:
+
+    02_FBM_Clustering/outputs/250_recon/fsaverage/meshes/
+        fsaverage_lh.mz3
+        fsaverage_rh.mz3
+
+Why .mz3: ~5–10x smaller than .gii, single-file per hemisphere, and Niivue
+loads it natively in the browser. We also write .gii alongside as a fallback
+(some Niivue versions handle .gii better; either format will work in the page).
+
+Usage on the server:
+
+    cd S:\\HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda
+    python 02_FBM_Clustering/scripts/build_fsaverage_meshes.py
+
+If your fsaverage subjects directory is somewhere unusual, edit the
+`FSAVERAGE_DIR` constant below before running.
+
+Dependencies: nibabel (install with `pip install nibabel` if missing).
+
+Once the .mz3 files exist, commit them to the repo:
+
+    git add 02_FBM_Clustering/outputs/250_recon/fsaverage/meshes
+    git commit -m "fsaverage meshes for MOBA 3D brain viewer"
+    git push
+"""
+from __future__ import annotations
+
+import gzip
+import os
+import struct
+import sys
+from pathlib import Path
+
+import numpy as np
+
+try:
+    import nibabel as nib
+except ImportError:
+    print("ERROR: nibabel is required. Install with `pip install nibabel`.")
+    sys.exit(1)
+
+# --------------------------------------------------------------------------
+# Paths — edit if your FreeSurfer fsaverage lives somewhere else
+# --------------------------------------------------------------------------
+NASAC = r"\\nasac-m2.unige.ch\m-HumanNeuronLab"
+
+# Try the standard places where Lora's fsaverage might live; first hit wins.
+FSAVERAGE_CANDIDATES = [
+    Path(NASAC) / "DATARAW" / "SEEG_EXPERIMENTS_BERN" / "Reconstruction" / "fsaverage" / "surf",
+    # Common FreeSurfer install path on Windows under conda/MNE-Python
+    Path(os.environ.get("FREESURFER_HOME", "")) / "subjects" / "fsaverage" / "surf",
+    Path(os.environ.get("SUBJECTS_DIR", "")) / "fsaverage" / "surf",
+]
+
+# Output destination
+OUT_DIR = Path("02_FBM_Clustering/outputs/250_recon/fsaverage/meshes")
+
+
+# --------------------------------------------------------------------------
+# .mz3 writer (compact format used natively by Niivue)
+# --------------------------------------------------------------------------
+# Format reference: https://github.com/neurolabusc/MZ3
+# Header (gzipped): magic 0x6d23 (uint16), attr (uint16, 1 = vertices+faces),
+# nface (uint32), nvert (uint32), nskip (uint32, 0).
+# Body: faces (nface × 3 × uint32), vertices (nvert × 3 × float32).
+def write_mz3(path: Path, verts: np.ndarray, faces: np.ndarray) -> None:
+    verts = np.asarray(verts, dtype=np.float32)
+    faces = np.asarray(faces, dtype=np.uint32)
+    if verts.ndim != 2 or verts.shape[1] != 3:
+        raise ValueError(f"verts must be (N, 3); got {verts.shape}")
+    if faces.ndim != 2 or faces.shape[1] != 3:
+        raise ValueError(f"faces must be (M, 3); got {faces.shape}")
+
+    n_face = int(faces.shape[0])
+    n_vert = int(verts.shape[0])
+    header = struct.pack(
+        "<HHIII",
+        0x6D23,    # magic
+        1,         # attr: vertices + faces present
+        n_face,
+        n_vert,
+        0,         # nskip
+    )
+    body = faces.tobytes() + verts.tobytes()
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(path, "wb") as f:
+        f.write(header)
+        f.write(body)
+
+
+# --------------------------------------------------------------------------
+# .gii writer (fallback, native nibabel)
+# --------------------------------------------------------------------------
+def write_gii(path: Path, verts: np.ndarray, faces: np.ndarray) -> None:
+    verts = np.asarray(verts, dtype=np.float32)
+    faces = np.asarray(faces, dtype=np.int32)
+    g = nib.gifti.GiftiImage()
+    g.add_gifti_data_array(nib.gifti.GiftiDataArray(verts, intent="NIFTI_INTENT_POINTSET"))
+    g.add_gifti_data_array(nib.gifti.GiftiDataArray(faces, intent="NIFTI_INTENT_TRIANGLE"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    nib.save(g, str(path))
+
+
+# --------------------------------------------------------------------------
+# Driver
+# --------------------------------------------------------------------------
+def find_fsaverage_surf_dir() -> Path:
+    for cand in FSAVERAGE_CANDIDATES:
+        if cand and cand.exists() and (cand / "lh.pial").exists():
+            return cand
+    raise FileNotFoundError(
+        "Could not locate fsaverage/surf with lh.pial. Tried:\n  "
+        + "\n  ".join(str(c) for c in FSAVERAGE_CANDIDATES)
+        + "\n\nEdit FSAVERAGE_CANDIDATES in this script to point at your fsaverage."
+    )
+
+
+def main() -> None:
+    surf_dir = find_fsaverage_surf_dir()
+    print(f"[fsaverage] Reading surfaces from {surf_dir}")
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    for hemi in ("lh", "rh"):
+        pial = surf_dir / f"{hemi}.pial"
+        verts, faces = nib.freesurfer.read_geometry(str(pial))
+        print(f"  {hemi}.pial : {verts.shape[0]:>7d} verts, {faces.shape[0]:>7d} faces")
+
+        mz3_path = OUT_DIR / f"fsaverage_{hemi}.mz3"
+        gii_path = OUT_DIR / f"fsaverage_{hemi}.gii"
+
+        write_mz3(mz3_path, verts, faces)
+        write_gii(gii_path, verts, faces)
+
+        print(f"    -> {mz3_path}  ({mz3_path.stat().st_size/1024:.0f} KB)")
+        print(f"    -> {gii_path}  ({gii_path.stat().st_size/1024:.0f} KB)")
+
+    print("\nDone. Commit the new mesh files:")
+    print("  git add 02_FBM_Clustering/outputs/250_recon/fsaverage/meshes")
+    print("  git commit -m 'fsaverage meshes for MOBA 3D brain viewer'")
+    print("  git push")
+
+
+if __name__ == "__main__":
+    main()
