@@ -250,7 +250,9 @@ def group_into_tetrodes(micro_list):
 # -----------------------------------------------------------------------------
 # Photodiode event extraction (wraps LFfunctions_PDextract)
 # -----------------------------------------------------------------------------
-def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode",time_range=(0, -1), **pd_kwargs):
+def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode", time_range=(0, -1),
+                                    do_plot=True, trial_ids=None, invalid_trials=None,
+                                    fake_trials=None, extra_table_path=None, **pd_kwargs):
     """
     Run square-wave photodiode detection from a 1-D photodiode trace.
     Wraps LFfunctions_PDextract.get_trigger_indexes_photodiode.
@@ -261,7 +263,12 @@ def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode",tim
     out = get_trigger_indexes_photodiode(
         raw_signals=pd_2d, sampling_rate=float(fs),
         channel_names=[trig_name], trig_name=trig_name,
-        time_range=time_range, do_plot=True, **pd_kwargs,
+        time_range=time_range, do_plot=do_plot,
+        trial_ids=trial_ids,
+        invalid_trials=invalid_trials if invalid_trials is not None else [],
+        fake_trials=fake_trials if fake_trials is not None else [],
+        extra_table_path=extra_table_path,
+        **pd_kwargs,
     )
     on_abs, off_abs = out[0], out[1]
     return np.asarray(on_abs, dtype=np.int64), np.asarray(off_abs, dtype=np.int64)
@@ -275,58 +282,87 @@ def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode",tim
 def load_microepi_macros_for_pipeline(pid_raw, presets):
     """
     Load only macro (`dataEcog`) signals for one MicroEPI .mat-pipeline patient.
-
-    Returns
-    -------
-    signals    : (n_samples, n_macro) float32
-    names      : list[str]
-    fs         : float
-    photodiode : (n_samples,) float32   — same length as signals; useful for QC
+    If micro data is absent (e.g. G-01/02/03 plain .mat exports), that is
+    silently ignored — only macros are needed for the 140 pipeline.
     """
     cfg = presets[pid_raw]
     d = load_and_concatenate_mats(cfg["data_dir"], cfg["mat_files"])
     return d["data_ecog"], list(d["chans_ecog"]), d["fs"], d["photodiode"]
 
-
-def extract_microepi_pd_to_prep0(pid_raw, presets, prep_dir):
+def extract_microepi_pd_to_prep0(pid_raw, presets, prep_dir, *, do_plot=True):
     """
     Run photodiode event extraction on a MicroEPI .mat preset and write
     per-condition timing TSVs into `prep_dir` (same format that
     `lf_trials.collect_trials` expects).
 
+    Now reads flip, time_range, and trial_ids from the preset dict.
+    Pass do_plot=False to suppress the photodiode figure.
+
     Returns (prep_dir, fs).
     """
     from LFfunctions_PDextract import _read_trial_table, save_onsets_offsets_by_condition
 
-    cfg = presets[pid_raw]
-    pat_id = cfg.get("pat_name", pid_raw)
+    cfg     = presets[pid_raw]
+    pat_id  = cfg.get("pat_name", pid_raw)
 
-    d = load_and_concatenate_mats(cfg["data_dir"], cfg["mat_files"])
+    d  = load_and_concatenate_mats(cfg["data_dir"], cfg["mat_files"])
     fs = d["fs"]
 
-    on_abs, off_abs = extract_events_from_photodiode(d["photodiode"], fs)
+    # --- photodiode extraction with per-patient params ---
+    on_abs, off_abs = extract_events_from_photodiode(
+        d["photodiode"], fs,
+        trig_name         = cfg.get("trig", "photodiode"),
+        time_range        = cfg.get("time_range", (0, -1)),
+        flip_trigs        = cfg.get("flip", False),
+        do_plot           = do_plot,
+        trial_ids         = cfg.get("trial_ids", None),
+        invalid_trials    = cfg.get("invalid_trials", []),
+        fake_trials       = cfg.get("fake_trials", []),
+        extra_table_path  = os.path.join(cfg["data_dir"], cfg["tsv_file"]) if cfg.get("tsv_file") else None,
+    )
+    print(f"  [{pat_id}] photodiode: {len(on_abs)} onsets, {len(off_abs)} offsets")
 
+    # --- behavioural TSV ---
     beh_path = os.path.join(cfg["data_dir"], cfg["tsv_file"])
-    beh = _read_trial_table(beh_path)
-    dfl = beh["raw_df"].rename(columns=str.lower)
+    beh  = _read_trial_table(beh_path)
+    dfl  = beh["raw_df"].rename(columns=str.lower)
 
     def _pick(cols):
         return next((dfl[c].astype(str).to_numpy() for c in cols if c in dfl), None)
 
-    condition_name = _pick(["category", "blockname"])
-    resp_accuracy  = _pick(["response_type", "responseaccuracy"])
-    trial_idx_col  = _pick(["exemplar", "stimnumber"])
+    condition_name  = _pick(["category", "blockname"])
+    resp_accuracy   = _pick(["response_type", "responseaccuracy"])
+    trial_idx_col   = _pick(["exemplar", "stimnumber"])
 
-    short = {"picture": "pict", "auditory": "audi", "reading": "read"}
-    trial_ids = [short.get(str(x).lower().split("_")[0], str(x).lower())
-                 for x in (condition_name if condition_name is not None else [])]
+    # Use preset trial_ids if provided, otherwise derive from TSV
+    preset_trial_ids = cfg.get("trial_ids", None)
+    if preset_trial_ids is not None:
+        trial_ids = preset_trial_ids
+    else:
+        short = {"picture": "pict", "auditory": "audi", "reading": "read"}
+        trial_ids = [short.get(str(x).lower().split("_")[0], str(x).lower())
+                     for x in (condition_name if condition_name is not None else [])]
+
+    # # honour invalid_trials by zeroing those entries (same convention as PAT loop)
+    # invalid = cfg.get("invalid_trials", [])
+    # if invalid and len(trial_ids) > 0:
+    #     trial_ids = list(trial_ids)
+    #     for idx in invalid:
+    #         if idx < len(trial_ids):
+    #             trial_ids[idx] = "invalid"
 
     os.makedirs(prep_dir, exist_ok=True)
     save_onsets_offsets_by_condition(
-        patient_id=pat_id, block_name="LM",
-        onsets=on_abs, offsets=off_abs, sampling_rate=fs,
-        trial_ids=trial_ids, out_dir=str(prep_dir),
-        condition_name=condition_name, resp_accuracy=resp_accuracy, trial_idx=trial_idx_col,
+        patient_id      = pat_id,
+        block_name      = "LM",
+        onsets          = on_abs,
+        offsets         = off_abs,
+        sampling_rate   = fs,
+        trial_ids       = trial_ids,
+        out_dir         = str(prep_dir),
+        condition_name  = condition_name,
+        resp_accuracy   = resp_accuracy,
+        trial_idx       = trial_idx_col,
     )
     return prep_dir, fs
 

@@ -527,14 +527,14 @@ def _read_trial_table(path):
     df.columns = [str(c).strip() for c in df.columns]
     dfl = df.rename(columns={c: c.lower() for c in df.columns})
 
-    # duration: prefer 'duration', fallback 'responsetime'/'response_time'
+# duration: prefer 'response_time'/'responsetime', fallback 'duration'
     dur_col = None
     for c in dfl.columns:
-        if c == "duration":
+        if c in ("response_time", "responsetime"):
             dur_col = c; break
     if dur_col is None:
         for c in dfl.columns:
-            if c in ("responsetime", "response_time"):
+            if c == "duration":
                 dur_col = c; break
 
     duration_sec = None

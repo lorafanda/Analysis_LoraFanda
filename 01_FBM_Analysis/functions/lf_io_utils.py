@@ -95,9 +95,9 @@ def electrodes_tsv_path_for_patient(patient_id) -> str:
         sub = pid if pid.startswith("MicroEPI") else f"MicroEPI-{pid}"
         return fr"{NASAC_ROOT}\DATARAW\BIDS_elec\MICROEPI\sub-{sub}\ieeg\*_electrodes.tsv"
     if pid.startswith("EL"):
-        return fr"{NASAC_ROOT}\DATARAW\SEEG_EXPERIMENTS_BERN\Reconstruction\{pid}\BIDS\ieeg\sub-{pid}_electrodes.tsv"
+        return fr"{NASAC_ROOT}\DATARAW\BIDS_elec\SEEG-BERN\sub-{pid}\ieeg\*_electrodes.tsv"
     num = pid.replace("PAT_", "")
-    return fr"{NASAC_ROOT}\#SHARE\To_send_collaborators\PAT_{num}\BIDS\ieeg\sub-{num}_electrodes.tsv"
+    return fr"{NASAC_ROOT}\DATARAW\BIDS_elec\SEEG-HUG\sub-{pid}\ieeg\*_electrodes.tsv"
 
 
 def derive_wm_channels_from_electrodes_tsv(tsv_path_pattern: str) -> list[str]:
@@ -118,8 +118,7 @@ def derive_wm_channels_from_electrodes_tsv(tsv_path_pattern: str) -> list[str]:
         except (TypeError, ValueError):
             return False
         tokens = str(row.get("tissueLabel", "")).strip().split()
-        return np.isclose(w1, 1.0) and bool(tokens) and tokens[0].startswith("wm-")
-
+        return (w1 > 0.97) and bool(tokens) and tokens[0].startswith("wm-")
     return [str(r["name"]) for r in df.to_dict("records") if _is_wm(r)]
 
 
