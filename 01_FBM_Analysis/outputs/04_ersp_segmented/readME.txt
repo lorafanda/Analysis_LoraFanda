@@ -1,1 +1,0 @@
-the output here hsould be the samples that have passed the threshold both HG and ERSP plots. 

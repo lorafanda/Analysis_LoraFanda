@@ -11,10 +11,10 @@ patient_ids = [3301, "B-01","G-01", "G-02", "G-03", "G-04", 3780, "G-05"]
 # patient_ids = [2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 patient_ids = ["EL030","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045",2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 patient_ids = ["EL034","EL035","EL036","EL037","EL038","EL040","EL042"]
-patient_ids = [
-               "EL030","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","G-06", "G-04", "G-05"
-              ]
-patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
+patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL035","EL036","EL037","EL038","EL040" ,"EL042","EL043","EL044","EL045",2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
+
+patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
+# patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
 # patient_ids = ["EL03","EL043","EL044","EL045"]
 
 
@@ -74,9 +74,9 @@ wm_min_contacts = 3       # require at least this many clean WM contacts
 # ERSP windows & warping
 # ---------------------------
 # Baseline in seconds (relative to onset)
-baseline_w       = (-0.4, 0.0)
+baseline_w       = (-0.6, -0.1)
 # If None -> use baseline_w; otherwise compute baseline stats in this tighter window
-baseline_calc_w  = (-0.4, -0.1)
+baseline_calc_w  = (-0.5, -0.1)
 
 # Time-normalized proportions: (baseline, stim, post). Must sum to 1.
 proportions = (0.0, 0.50, 0.50)
@@ -87,8 +87,6 @@ time_window = (-1.0, 7.0)
 
 # Mode: "TN" (time-normalized) or "RT" (real time)
 mode = "TN"
-
-
 
 # Smoothing (use box; keep gaussian sigmas at 0)
 smooth_kind   = "box"                   # <-- add this
@@ -102,7 +100,7 @@ nperseg    = 128
 nfft       = nperseg * 2
 noverlap   = int(0.85 * nperseg)  # ~75% (friendly default for Hann)
 n_time_bins = 300                 # for TN
-fmax       = 500.0                # plot y-limit
+fmax       = 400.0                # plot y-limit
 vmin, vmax = -6.0, 6.0            # dB display range
 
 # ---------------------------
@@ -140,7 +138,11 @@ min_freq_bins = 3     # e.g., 4–8 depending on your df
 outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs"
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
-notch_patients  = ["EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045","PAT_3455"]   # IDs or substrings to match
+notch_patients  = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03",
+                   "EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045",
+                   "PAT_3455","PAT_2868", "PAT_3066", "PAT_3301", "PAT_3390", "PAT_3415", "PAT_3965", "PAT_3975", "PAT_3780"]   
+                    # IDs or substrings to match
+    
 # notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
 mains_base      = 50.0       # 50 or 60
 notch_Q         = 50         # 40–60 typical (only used if a non-adaptive notch path is wired in)
@@ -223,6 +225,7 @@ EL_PRESETS = {
 # ---------------------------------------------------------------------------
 
 MICROEPI_MAT_PATIENTS = ["G-01", "G-02","G-03","G-04", "G-05", "G-06"] #"G-01", "G-02", "G-03",
+# MICROEPI_MAT_PATIENTS = [ "G-04",] #"G-01", "G-02", "G-03",
 
 _NASAC           = r"\\nasac-m2.unige.ch\m-HumanNeuronLab"
 _BIDS_ELEC_MICROEPI = _NASAC + r"\DATARAW\BIDS_elec\MICROEPI"
@@ -231,7 +234,7 @@ _MICROEPI_RAW    = _NASAC + r"\DATARAW\MICROEPI"
 MICROEPI_MAT_PRESETS = {
     "G-01": {
         "pat_name":       "PAT_5515",      # adjust BIDS num if different
-        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-01\task_otherlabs\exp_Lora1FLM_all",
+        "data_dir":       _MICROEPI_RAW+ r"\MicroEPI-G-01\task_otherlabs\exp_Lora1FLM_all\prep",
         "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
                            "f0002_export_Labs_phmicrodown.mat"],
         "tsv_file":       "sub-MicroEpiG01_task-LanguageMapping_timestamp-28-11-2024(15h52m8s)_lang-FRE_events.tsv",
@@ -245,21 +248,21 @@ MICROEPI_MAT_PRESETS = {
     },
     "G-02": {
         "pat_name":       "PAT_5533",
-        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-02\task_otherlabs\Lora_FLM",
+        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-02\task_otherlabs\Lora_FLM\prep",
         "mat_files":      ["f0001_export_Labs_ph.mat",
                            "f0002_export_Labs_ph.mat"],
-        "tsv_file":       "MicroEpi-G-02_sync_micromedBlackrock_20250416_onsets_offsets_FLM_v2.tsv",
+        "tsv_file":       "sub-Microepi02_task-LanguageMapping_timestamp-16-1-2025(13h56m0s)_lang-FRE_events.tsv",
         "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-5533\ieeg\*_electrodes.tsv",
         "trig":           "photodiode",
         "flip":           True,
-        "time_range":     (10, 1500),
-        "invalid_trials": [],
+        "time_range":     (10, 1295),
+        "invalid_trials": [0,1,2,54,55,56,107,108,109],
         "trial_ids":      ["picture"]*54 + ["auditory"]*53 + ["reading"]*53,
         "fake_trials":    [],
     },
     "G-03": {
         "pat_name":       "PAT_6619",
-        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-03\task_FBM\exp3_Lora1_LM_CLA_CLV",
+        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-03\task_FBM\exp3_Lora1_LM_CLA_CLV\prep",
         "mat_files":      ["f0001_export_Labs_ph.mat",
                            "f0002_export_Labs_ph.mat",
                            "f0003_export_Labs_ph.mat"],
@@ -267,28 +270,28 @@ MICROEPI_MAT_PRESETS = {
         "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6619\ieeg\*_electrodes.tsv",
         "trig":           "photodiode",
         "flip":           True,
-        "time_range":     (200, 792),
-        "invalid_trials": [],
+        "time_range":     (1690, 290),
+        "invalid_trials": [0,1,2,54,55,56,107,108,109],
         "trial_ids":      ["picture"]*54 + ["auditory"]*53 + ["reading"]*53,
         "fake_trials":    [],
     },
     "G-04": {
         "pat_name":       "PAT_6704",
-        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-04\task_FBM\data_LM\exp4_Lora",
+        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-04\task_FBM\data_LM\exp4_Lora\prep",
         "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
                            "f0002_export_Labs_phmicrodown.mat"],
         "tsv_file":       "sub-MicroEpi-G-04_task-LanguageMapping_timestamp-7-4-2025(14h55m53s)_lang-FRE_events.tsv",
         "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6704\ieeg\*_electrodes.tsv",
         "trig":           "photodiode",
-        "flip":           True,
-        "time_range":     (100, 1700),
-        "invalid_trials": [],
-        "trial_ids":      ["picture"]*51 + ["auditory"]*50 + ["reading"]*50,
-        "fake_trials":    [],
+        "flip":           False,
+        "time_range":     (540, 1840),
+        "invalid_trials": [0,1,2,54,55,56,107,108,109],
+        "trial_ids":      ["picture"]*51 + ["auditory"]*50 + ["reading"]*59,
+        "fake_trials":    [107,108,109,110,111,112,113,114,115,116],
     },
     "G-05": {
         "pat_name":       "PAT_6684",
-        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-05\tasks\exp9_JonathanFLM_2025_06_18",
+        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-05\tasks\exp9_JonathanFLM_2025_06_18\prep",
         "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
                            "f0002_export_Labs_phmicrodown.mat"],
         "tsv_file":       "sub-microepi-g-05_task-LanguageMapping_datetime-18-6-2025(15h39m19s)_language-FRE_events.tsv",
@@ -296,21 +299,22 @@ MICROEPI_MAT_PRESETS = {
         "trig":           "photodiode",
         "flip":           True,
         "time_range":     (100, 1700),
-        "invalid_trials": [],
+        "invalid_trials": [0,1,2,54,55,56,107,108,109],
         "trial_ids":      ["picture"]*51 + ["auditory"]*50 + ["reading"]*50,
         "fake_trials":    [],
     },
     "G-06": {
         "pat_name":       "PAT_6854",
-        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-06\tasks\exp1_lora_2026_01_29_withmicro",
+        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-06\tasks\exp1_lora_2026_01_29_withmicro\prep",
         "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
                            "f0002_export_Labs_phmicrodown.mat"],
         "tsv_file":       "sub-6854_task-LanguageMapping_datetime-29-1-2026(17h33m57s)_language-FRE_events.tsv",
         "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6854\ieeg\*_electrodes.tsv",
         "trig":           "photodiode",
         "flip":           True,
+        "threshold":      0.75,
         "time_range":     (700, 2080),
-        "invalid_trials": [],
+        "invalid_trials": [0,1,2,54,55,56,107,108,109],
         "trial_ids":      ["picture"]*54 + ["auditory"]*53 + ["reading"]*53,  # adjust if needed
         "fake_trials":    [],
     },

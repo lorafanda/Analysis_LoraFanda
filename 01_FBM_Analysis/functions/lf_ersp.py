@@ -1,7 +1,7 @@
 # lf_ersp.py — lean edition + PSD bad-channel suggestion + WM ref helper
 from __future__ import annotations
 from dataclasses import dataclass
-import os, numpy as np
+import os, sys, numpy as np
 from fractions import Fraction
 import matplotlib.pyplot as plt
 from scipy.signal import spectrogram, welch, iirnotch, filtfilt
@@ -356,7 +356,7 @@ def compute_ersp(
         else:
             offset_marker = (time_window[1] - time_window[0]) * 0.5
 
-        print(f"[ERSP RT] matrix size: time_bins={x.size}, freq_bins={f_first.size}  ->  {x.size}×{f_first.size}")
+        sys.stdout.write("*"); sys.stdout.flush()
 
         return dict(
             avg_db=avg_db, avg_z=avg_z, f=f_first, x=x,
@@ -447,7 +447,7 @@ def compute_ersp(
         avg_db = np.nanmean(warped_db, 0)
         avg_z  = np.nanmean(warped_z,  0)
 
-    print(f"[ERSP TN] matrix size: time_bins={x.size}, freq_bins={f_common.size}  ->  {x.size}×{f_common.size}")
+    sys.stdout.write("*"); sys.stdout.flush()
 
     return dict(
         avg_db=avg_db, avg_z=avg_z, f=f_common, x=x,

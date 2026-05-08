@@ -351,6 +351,15 @@ def extract_microepi_pd_to_prep0(pid_raw, presets, prep_dir, *, do_plot=True):
     #         if idx < len(trial_ids):
     #             trial_ids[idx] = "invalid"
 
+    # --- compute trial_end_abs from response_time in behavioral TSV ---
+    _rt_col = next((c for c in dfl.columns if c in ("response_time", "responsetime", "rt")), None)
+    if _rt_col is not None:
+        _rt = pd.to_numeric(dfl[_rt_col], errors="coerce").fillna(0.0).to_numpy(dtype=float)
+        _trial_end_abs = (off_abs + (_rt[:len(off_abs)] * fs)).astype(np.int64)
+        _trial_end_abs = np.maximum(_trial_end_abs, off_abs + 1)
+    else:
+        _trial_end_abs = (off_abs + int(fs * 2.0)).astype(np.int64)  # 2 s fallback
+
     os.makedirs(prep_dir, exist_ok=True)
     save_onsets_offsets_by_condition(
         patient_id      = pat_id,
@@ -363,6 +372,7 @@ def extract_microepi_pd_to_prep0(pid_raw, presets, prep_dir, *, do_plot=True):
         condition_name  = condition_name,
         resp_accuracy   = resp_accuracy,
         trial_idx       = trial_idx_col,
+        trial_end_abs   = _trial_end_abs,
     )
     return prep_dir, fs
 
