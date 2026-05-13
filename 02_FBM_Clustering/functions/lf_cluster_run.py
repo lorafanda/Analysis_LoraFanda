@@ -227,11 +227,24 @@ def fit_and_save(
             np.save(run_dir / "distance_D.npy", extras["D"].astype(np.float32))
             artifacts["distance_D"] = "distance_D.npy"
 
-    # KMeans sweep: silhouette by k
+    # K-sweep: silhouette by k (kmeans + hierarchical when k_range was supplied)
     if "sweep" in fit and fit["sweep"]:
         _write_json(run_dir / "silhouette_by_k.json",
                     {str(k): v for k, v in fit["sweep"]["sil_by_k"].items()})
         artifacts["silhouette_sweep"] = "silhouette_by_k.json"
+
+    # Per-K labels: when present (k_range was used), write a wide-format CSV
+    # so MOBA's K slider can scrub across cuts without re-fitting.
+    # Columns: sample_idx, k_5, k_6, ..., k_15
+    if extras.get("labels_by_k"):
+        lbk = extras["labels_by_k"]
+        ks_sorted = sorted(int(k) for k in lbk.keys())
+        n = int(X.shape[0])
+        labels_by_k_df = pd.DataFrame({"sample_idx": np.arange(n, dtype=np.int64)})
+        for k in ks_sorted:
+            labels_by_k_df[f"k_{k}"] = np.asarray(lbk[k]).astype(np.int32)
+        labels_by_k_df.to_csv(run_dir / "cluster_labels_by_k.csv", index=False)
+        artifacts["labels_by_k"] = "cluster_labels_by_k.csv"
 
     # ---- manifest ----
     manifest = {
@@ -251,6 +264,7 @@ def fit_and_save(
             "calinski_harabasz": metrics["calinski_harabasz"],
             "davies_bouldin": metrics["davies_bouldin"],
             **({"best_k": fit["sweep"]["best_k"]} if fit.get("sweep") else {}),
+            **({"k_range": fit["sweep"]["k_range"]} if fit.get("sweep") else {}),
         },
         "predictor_type": predictor_type,
         "artifacts": artifacts,
@@ -395,7 +409,7 @@ def _fit_kmeans(X: np.ndarray, params: Dict[str, Any], *, verbose: bool) -> Dict
       - {"k": int, "random_state": int, "n_init": int}             single fit
       - {"k_range": [..], "random_state": int, "n_init": int}      sweep + best K
 
-    Returns dict with: model, labels, sweep (or None).
+    Returns dict with: model, labels, sweep (or None), extras={labels_by_k} when sweeping.
     """
     rs = int(params.get("random_state", 42))
     n_init = int(params.get("n_init", 10))
@@ -407,10 +421,14 @@ def _fit_kmeans(X: np.ndarray, params: Dict[str, Any], *, verbose: bool) -> Dict
         )
         # refit at best_k to get a fitted estimator (s50 returns labels only)
         model = KMeans(n_clusters=int(best_k), random_state=rs, n_init=n_init).fit(X)
+        # Normalize labels_by_k so int-keys land alongside the labels.csv labels.
+        labels_by_k_norm = {int(k): np.asarray(v).astype(np.int32)
+                            for k, v in (labels_by_k or {}).items()}
         return {
             "model": model,
             "labels": labels.astype(np.int32),
             "sweep": {"best_k": int(best_k), "sil_by_k": sil_by_k, "k_range": k_range},
+            "extras": {"labels_by_k": labels_by_k_norm},
         }
     else:
         k = int(params["k"])
@@ -422,21 +440,48 @@ def _fit_hierarchical(X: np.ndarray, params: Dict[str, Any], *, verbose: bool) -
     """
     Accepts:
       - {"linkage": "ward"|"average"|"complete", "metric": "euclidean"|...,
-         "n_clusters": int  OR  "cut_height": float}
+         "n_clusters": int  OR  "cut_height": float}     single cut
+      - {"linkage": ..., "metric": ..., "k_range": [..]}  K-sweep: linkage computed
+         once, then cut at every K. Best K picked by silhouette. Labels at every K
+         are persisted to cluster_labels_by_k.csv so the website can scrub.
 
     Returns dict with: model (the linkage matrix Z packaged with metadata),
-    labels, extras={Z, D}.
+    labels (best K when sweeping, else the single cut), sweep (or None when
+    a single n_clusters was requested), extras={Z, D, labels_by_k? }.
     """
     linkage_method = str(params.get("linkage", "ward"))
     metric = str(params.get("metric", "euclidean"))
-    n_clusters = params.get("n_clusters")
     cut_height = params.get("cut_height")
+    n_clusters = params.get("n_clusters")
+    k_range = params.get("k_range")
 
     Z, D = s51_run_hc(X, method=linkage_method, metric=metric, verbose=verbose)
-    labels = s52_cut_hc(Z, n_clusters=n_clusters, cut_height=cut_height)
 
-    # Make labels 0-based to match KMeans convention
-    labels = (labels - labels.min()).astype(np.int32)
+    if k_range:
+        # K-sweep: cut at every K, score silhouette, pick best.
+        k_range = [int(k) for k in k_range]
+        sil_by_k: Dict[int, float] = {}
+        labels_by_k: Dict[int, np.ndarray] = {}
+        for k in k_range:
+            lbl = s52_cut_hc(Z, n_clusters=k)
+            lbl = (lbl - lbl.min()).astype(np.int32)
+            labels_by_k[int(k)] = lbl
+            if len(np.unique(lbl)) > 1:
+                sil_by_k[int(k)] = float(silhouette_score(X, lbl))
+            else:
+                sil_by_k[int(k)] = float("nan")
+            if verbose:
+                print(f"  HC sweep k={k}: silhouette={sil_by_k[int(k)]:.3f}")
+        # Best K = max silhouette (ignore NaN)
+        finite = {k: v for k, v in sil_by_k.items() if not np.isnan(v)}
+        best_k = max(finite, key=finite.get) if finite else int(k_range[0])
+        labels = labels_by_k[int(best_k)]
+        sweep = {"best_k": int(best_k), "sil_by_k": sil_by_k, "k_range": k_range}
+    else:
+        labels = s52_cut_hc(Z, n_clusters=n_clusters, cut_height=cut_height)
+        labels = (labels - labels.min()).astype(np.int32)
+        sweep = None
+        labels_by_k = None
 
     model = {
         "kind": "hierarchical",
@@ -445,10 +490,14 @@ def _fit_hierarchical(X: np.ndarray, params: Dict[str, Any], *, verbose: bool) -
         "n_clusters": int(len(np.unique(labels))),
         "Z": Z,
     }
+    extras: Dict[str, Any] = {"Z": Z, "D": D}
+    if labels_by_k is not None:
+        extras["labels_by_k"] = labels_by_k
     return {
         "model": model,
         "labels": labels,
-        "extras": {"Z": Z, "D": D},
+        "sweep": sweep,
+        "extras": extras,
     }
 
 
