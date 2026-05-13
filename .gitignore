@@ -35,8 +35,10 @@ x_archive/
 **/x_archive/**
 *_to_delete*
 **/*_to_delete*
-*-Copy*
+*Copy*
+**/*Copy*
 *-SAFE*
+**/*-SAFE*
 archives/
 .jupyter/
 
@@ -70,7 +72,17 @@ outputs/
 01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/Report/
 01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/manifest/
 
-# Inside the clustering tree, re-deny per-run heavy local artifacts
+# Inside the clustering tree, re-deny per-run heavy local artifacts.
+# The earlier `*.npy / *.joblib / *.parquet` ignores get overridden by the
+# broad `!02_FBM_Clustering/outputs/clustering/**` re-include above, so we
+# have to name the offenders explicitly inside the clustering allowlist.
+02_FBM_Clustering/outputs/clustering/**/X_train.npy
+02_FBM_Clustering/outputs/clustering/**/linkage_Z.npy
+02_FBM_Clustering/outputs/clustering/**/distance_D.npy
+02_FBM_Clustering/outputs/clustering/**/model.joblib
+02_FBM_Clustering/outputs/clustering/**/predictor.joblib
+02_FBM_Clustering/outputs/clustering/**/scaler.joblib
+02_FBM_Clustering/outputs/clustering/**/df_keep_with_clusters.parquet
 02_FBM_Clustering/outputs/clustering/**/blob_artifacts/keep_idx.npy
 02_FBM_Clustering/outputs/clustering/**/blob_artifacts/blobs_per_sample.joblib
 02_FBM_Clustering/outputs/clustering/**/blob_artifacts/ersp_keep.npy
@@ -87,3 +99,7 @@ outputs/
 02_FBM_Clustering/outputs/250_recon/talairach/
 02_FBM_Clustering/outputs/250_recon/PAT_*/
 02_FBM_Clustering/outputs/250_recon/EL*/
+
+# === Last-line catch-all: Thumbs.db anywhere, even inside allowlisted trees ===
+# (the ERSP_clean re-include otherwise un-ignores Windows shell preview turds)
+**/Thumbs.db
