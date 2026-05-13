@@ -1,31 +1,14 @@
-# Mac system files
-.pptx
+# === System / editor noise ===
 .DS_Store
 .AppleDouble
 .LSOverride
+Thumbs.db
 *Thumbs.db
-.claude 
-x_archive
-*.h5
-*.joblib
-
-# Output folders
-output/
-outputs/
 *.tif
-archives/
-# But keep EL030 (except tif files)
-!**/output/
-!**/output/**/EL030/
-!**/output/**/EL030/**
-!**/outputs/
-!**/outputs/**/250_recon
-!**/outputs/**/250_recon/**
-**/output/**/EL030/**/*.tif
+*.pptx
+.claude/
 
- 02_FBM_Clustering/outputs/250_recon/clustering_recon/
-
-# Python
+# === Python ===
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
@@ -36,25 +19,71 @@ build/
 venv/
 .venv/
 
-# Data files (optional - add if you don't want raw data on GitHub)
+# === Heavy local artifacts (never push) ===
+*.h5
+*.joblib
 *.npy
 *.xlsx
 *.xls
 *.parquet
+*.db
+*.pkl
 
+# === Archived / deprecated stuff (never push) ===
+x_archive/
+**/x_archive/
+**/x_archive/**
+*_to_delete*
+**/*_to_delete*
+*-Copy*
+*-SAFE*
+archives/
+.jupyter/
 
-# Jupyter
-.jupyter/02_FBM_Clustering/archives/
-02_FBM_Clustering/*-Copy*.ipynb
-02_FBM_Clustering/outputs/*Copy
-02_FBM_Clustering/*-SAFE*.ipynb
+# === Outputs: default-deny, allowlist only what MOBA reads ===
+output/
+outputs/
 
-**/<offending-file-name>
+# Allow the clustering manifest tree (per-run figures, manifests, labels, recon CSVs/PNGs)
+!02_FBM_Clustering/outputs/
+!02_FBM_Clustering/outputs/clustering/
+!02_FBM_Clustering/outputs/clustering/**
+!02_FBM_Clustering/outputs/colors_config.json
+!02_FBM_Clustering/outputs/ReadME.txt
 
-# Allow ERSP outputs to be pushed (large but needed for clustering input)
-!**/outputs/**/04_ersp_LM_RAWONLY
-!**/outputs/**/04_ersp_LM_RAWONLY/**
+# Allow the fsaverage meshes (and only those, not the rest of 250_recon)
+!02_FBM_Clustering/outputs/250_recon/
+!02_FBM_Clustering/outputs/250_recon/fsaverage/
+!02_FBM_Clustering/outputs/250_recon/fsaverage/**
 
-# Allow ERSP outputs to be pushed (large but needed for clustering input)
-!**/outputs/**/04_ersp_LM_RAWONLY
-!**/outputs/**/04_ersp_LM_RAWONLY/**
+# Allow the live ERSP_clean PNGs only
+!01_FBM_Analysis/outputs/
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_clean/
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_clean/**
+
+# Inside the live ERSP tree, re-deny the heavy / unused siblings
+01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_matrix/
+01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/PSD_raw/
+01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/PSD_clean/
+01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/Report/
+01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/manifest/
+
+# Inside the clustering tree, re-deny per-run heavy local artifacts
+02_FBM_Clustering/outputs/clustering/**/blob_artifacts/keep_idx.npy
+02_FBM_Clustering/outputs/clustering/**/blob_artifacts/blobs_per_sample.joblib
+02_FBM_Clustering/outputs/clustering/**/blob_artifacts/ersp_keep.npy
+
+# Re-deny legacy / old ERSP siblings + clustering siblings if anyone tries to re-add them
+01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY_old/
+01_FBM_Analysis/outputs/04_ersp_LM/
+01_FBM_Analysis/outputs/04_ersp_segmented/
+01_FBM_Analysis/outputs/11_MicroMacro_results/
+02_FBM_Clustering/outputs/logs/
+02_FBM_Clustering/outputs/230_blob_clustering_runs/
+02_FBM_Clustering/outputs/231_minus101_clustering_runs/
+02_FBM_Clustering/outputs/250_recon/clustering_recon/
+02_FBM_Clustering/outputs/250_recon/talairach/
+02_FBM_Clustering/outputs/250_recon/PAT_*/
+02_FBM_Clustering/outputs/250_recon/EL*/

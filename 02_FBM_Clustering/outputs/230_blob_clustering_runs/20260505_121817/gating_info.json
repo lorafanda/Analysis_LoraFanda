@@ -1,6 +1,0 @@
-{
-  "quantile": 0.9,
-  "score_threshold": 6200.008300781252,
-  "n_kept": 361,
-  "n_dropped": 3241
-}

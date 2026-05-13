@@ -1,4 +1,0 @@
-patient_id	condition	n_in	n_kept	stim_min	stim_med	stim_max	post_min	post_med	post_max	outlier_method	max_post_s	z_low	z_high	pct_low	pct_high	legacy_p_low	legacy_p_high	iqr_k	post_lo	post_hi
-PAT_5533	audio	53	53	2.013671875	3.0947265625	4.41357421875	2.0	2.0	2.0	IQR	10.0					-3.0	3.0	1.5	2.0	2.0
-PAT_5533	picture	54	54	0.9912109375	0.999755859375	1.02880859375	2.0	2.0	2.0	IQR	10.0					-3.0	3.0	1.5	2.0	2.0
-PAT_5533	reading	53	53	3.46142578125	3.50537109375	3.54345703125	2.0	2.0	2.0	IQR	10.0					-3.0	3.0	1.5	2.0	2.0
