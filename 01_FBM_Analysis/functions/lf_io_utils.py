@@ -188,6 +188,68 @@ def wm_indices_for_patient(patient_id: str, channel_names, *,
     return sorted([lookup[l] for l in want if l in lookup])
 
 
+# ---- "Unknown" parcellation: drop electrodes that have no anatomical label ----
+#
+# Rule (mirrors the WM derivation but on the negated side):
+#   An electrode is considered "Unknown" if its `tissueLabel` is empty/NaN OR
+#   starts with "Unknown"/"unknown" (case-insensitive) once the leading whitespace
+#   is stripped. WM channels are NOT counted as Unknown (they have a wm-* label).
+#
+# This is conservative: ambiguous parcellations (e.g. `ctx-lh-bankssts` with
+# low tissueWeights_1) stay in. Only truly unlabelled or explicitly-Unknown
+# electrodes are dropped — same source TSV as the WM derivation, so the two
+# rules don't need to disagree.
+
+def derive_unknown_channels_from_electrodes_tsv(tsv_path_pattern: str) -> list[str]:
+    """
+    Read a BIDS electrodes TSV and return the names of channels whose `tissueLabel`
+    is empty / NaN / starts with 'Unknown' (case-insensitive). Used to drop
+    unparcellated electrodes before ERSP compute so they never enter clustering.
+    """
+    matches = glob.glob(tsv_path_pattern)
+    if not matches:
+        raise FileNotFoundError(f"No electrodes TSV matching: {tsv_path_pattern}")
+    df = pd.read_csv(matches[0], sep="\t")
+
+    def _is_unknown(row) -> bool:
+        raw = row.get("tissueLabel", "")
+        if raw is None:
+            return True
+        s = str(raw).strip()
+        if not s or s.lower() in ("nan", "none"):
+            return True
+        return s.lower().startswith("unknown")
+
+    return [str(r["name"]) for r in df.to_dict("records") if _is_unknown(r)]
+
+
+def unknown_labels_for_patient(patient_id: str, *,
+                               electrodes_tsv_pattern: str | None = None) -> set[str]:
+    """
+    Return normalized names of unparcellated ("Unknown") electrodes for a patient.
+    Returns an empty set if the electrodes TSV cannot be located — silently
+    keeping all channels rather than blocking the pipeline. Pair with the
+    debug report at end of 140 to spot patients where this happened.
+    """
+    pattern = electrodes_tsv_pattern or electrodes_tsv_path_for_patient(patient_id)
+    try:
+        names = derive_unknown_channels_from_electrodes_tsv(pattern)
+    except FileNotFoundError as e:
+        log(f"[Unknown] {e}")
+        return set()
+    return {normalize_label(n) for n in names}
+
+
+def unknown_indices_for_patient(patient_id: str, channel_names, *,
+                                electrodes_tsv_pattern: str | None = None) -> list[int]:
+    """Return indices of unparcellated channels in `channel_names` for the patient."""
+    want = unknown_labels_for_patient(patient_id, electrodes_tsv_pattern=electrodes_tsv_pattern)
+    if not want:
+        return []
+    lookup = {normalize_label(nm): i for i, nm in enumerate(channel_names)}
+    return sorted([lookup[l] for l in want if l in lookup])
+
+
 # ---- Loaders (normalize to (n_samples, n_channels)) ----
 def load_ns6(file_path):
     if neo is None:
