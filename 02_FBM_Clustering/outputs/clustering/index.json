@@ -46,46 +46,6 @@
       "path": "hierarchical/minus101/runs/20260513_123058"
     },
     {
-      "method": "hierarchical",
-      "feature_set": "raw",
-      "run_id": "20260505_134820",
-      "created_at": "2026-05-05T11:49:04Z",
-      "n_samples": 1319,
-      "n_clusters": 19,
-      "silhouette": 0.1283916935979522,
-      "path": "hierarchical/raw/runs/20260505_134820"
-    },
-    {
-      "method": "hierarchical",
-      "feature_set": "raw",
-      "run_id": "20260512_184308",
-      "created_at": "2026-05-12T16:43:50Z",
-      "n_samples": 1060,
-      "n_clusters": 13,
-      "silhouette": 0.21478133983293907,
-      "path": "hierarchical/raw/runs/20260512_184308"
-    },
-    {
-      "method": "hierarchical",
-      "feature_set": "raw",
-      "run_id": "20260512_184352",
-      "created_at": "2026-05-12T16:44:31Z",
-      "n_samples": 1060,
-      "n_clusters": 14,
-      "silhouette": 0.2160494701484118,
-      "path": "hierarchical/raw/runs/20260512_184352"
-    },
-    {
-      "method": "hierarchical",
-      "feature_set": "raw",
-      "run_id": "20260512_184435",
-      "created_at": "2026-05-12T16:45:14Z",
-      "n_samples": 1060,
-      "n_clusters": 15,
-      "silhouette": 0.21703958589489963,
-      "path": "hierarchical/raw/runs/20260512_184435"
-    },
-    {
       "method": "kmeans",
       "feature_set": "blob",
       "run_id": "20260513_002450",
@@ -104,36 +64,6 @@
       "n_clusters": 5,
       "silhouette": 0.5570170879364014,
       "path": "kmeans/minus101/runs/20260513_123048"
-    },
-    {
-      "method": "kmeans",
-      "feature_set": "raw",
-      "run_id": "20260505_120718",
-      "created_at": "2026-05-05T10:11:39Z",
-      "n_samples": 1005,
-      "n_clusters": 28,
-      "silhouette": 0.1304053554933005,
-      "path": "kmeans/raw/runs/20260505_120718"
-    },
-    {
-      "method": "kmeans",
-      "feature_set": "raw",
-      "run_id": "20260505_134130",
-      "created_at": "2026-05-05T11:47:56Z",
-      "n_samples": 1319,
-      "n_clusters": 19,
-      "silhouette": 0.12824828522965742,
-      "path": "kmeans/raw/runs/20260505_134130"
-    },
-    {
-      "method": "kmeans",
-      "feature_set": "raw",
-      "run_id": "20260512_184848",
-      "created_at": "2026-05-12T16:53:36Z",
-      "n_samples": 1060,
-      "n_clusters": 21,
-      "silhouette": 0.08761893248512681,
-      "path": "kmeans/raw/runs/20260512_184848"
     }
   ],
   "latest": {
