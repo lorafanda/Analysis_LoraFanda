@@ -58,12 +58,16 @@ outputs/
 !02_FBM_Clustering/outputs/250_recon/fsaverage/
 !02_FBM_Clustering/outputs/250_recon/fsaverage/**
 
-# Allow the live ERSP_clean PNGs only
+# Allow the live ERSP_clean + alternate view PNGs (ERSP_blob, ERSP_minus101)
 !01_FBM_Analysis/outputs/
 !01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/
 !01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/
 !01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_clean/
 !01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_clean/**
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_blob/
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_blob/**
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_minus101/
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_minus101/**
 
 # Inside the live ERSP tree, re-deny the heavy / unused siblings
 01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_matrix/

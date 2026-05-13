@@ -881,6 +881,116 @@ def s22_build_blob_feature_matrix(
 # 4. Overlay visualization (now also score-gated)
 # ============================================================
 
+def render_blob_overlay(
+    ax,
+    ersp,
+    blobs,
+    *,
+    ersp_alpha: float = 0.45,
+    vmin: float = -5.0,
+    vmax: float = 5.0,
+    linewidth: float = 1.6,
+    marker_size: float = 28.0,
+    show_axes: bool = False,
+):
+    """
+    Draw the blob-overlay representation onto an existing matplotlib axis.
+
+    Style: transparent ERSP heatmap as background; for each blob a thick
+    cross of error bars (vertical = freq spread, horizontal = time spread)
+    with a center dot. Red = positive blob, blue = negative blob.
+
+    Reusable for:
+      * per-sample BLOB PNG (one ERSP + its own blobs)
+      * cluster-centroid BLOB chip (mean ERSP + blobs segmented from that mean)
+    """
+    ersp = np.asarray(ersp)
+    n_freq, n_time = ersp.shape
+
+    ax.imshow(
+        ersp,
+        aspect="auto", origin="lower",
+        cmap="bwr", vmin=vmin, vmax=vmax,
+        interpolation="nearest",
+        alpha=ersp_alpha,
+    )
+
+    for b in blobs or []:
+        mask = b.get("mask")
+        w    = b.get("weights")
+        fi   = b.get("freqs_idx")
+        ti   = b.get("times_idx")
+        sign = b.get("sign", 1)
+        if mask is None or w is None or fi is None or ti is None:
+            continue
+        total_w = float(np.asarray(w).sum())
+        if total_w <= 0:
+            continue
+
+        fi = np.asarray(fi); ti = np.asarray(ti); wA = np.asarray(w).astype(float)
+        cf = float((fi * wA).sum() / total_w)
+        ct = float((ti * wA).sum() / total_w)
+        df_ = fi - cf
+        dt  = ti - ct
+        sf  = float(np.sqrt((wA * df_ * df_).sum() / total_w))
+        st  = float(np.sqrt((wA * dt  * dt ).sum() / total_w))
+
+        color = "#cc0033" if (sign > 0 if isinstance(sign, (int, float, np.integer, np.floating))
+                              else str(sign).lower().startswith(("pos", "+", "p", "1"))) \
+                else "#0033cc"
+
+        # Vertical bar (freq spread at center time)
+        f_low  = max(0,            cf - 2 * sf)
+        f_high = min(n_freq - 1,   cf + 2 * sf)
+        ax.plot([ct, ct], [f_low, f_high], color=color, lw=linewidth,
+                alpha=0.95, solid_capstyle="round", zorder=3)
+        # caps
+        cap = max(2.0, st * 0.25)
+        ax.plot([ct - cap, ct + cap], [f_low,  f_low ], color=color, lw=linewidth, zorder=3)
+        ax.plot([ct - cap, ct + cap], [f_high, f_high], color=color, lw=linewidth, zorder=3)
+
+        # Horizontal bar (time spread at center freq) — slightly dashed
+        t_low  = max(0,           ct - 2 * st)
+        t_high = min(n_time - 1,  ct + 2 * st)
+        ax.plot([t_low, t_high], [cf, cf], color=color, lw=linewidth,
+                alpha=0.85, ls=(0, (4, 2)), zorder=3)
+        # caps
+        cap_v = max(1.5, sf * 0.25)
+        ax.plot([t_low,  t_low ], [cf - cap_v, cf + cap_v], color=color, lw=linewidth, zorder=3)
+        ax.plot([t_high, t_high], [cf - cap_v, cf + cap_v], color=color, lw=linewidth, zorder=3)
+
+        # Center marker
+        ax.scatter([ct], [cf], s=marker_size, c=color,
+                   edgecolor="black", linewidths=0.6, zorder=4)
+
+    if not show_axes:
+        ax.set_xticks([]); ax.set_yticks([])
+        for s in ax.spines.values(): s.set_visible(False)
+    ax.set_xlim(-0.5, n_time - 0.5)
+    ax.set_ylim(-0.5, n_freq - 0.5)
+
+
+def save_sample_blob_png(
+    ersp,
+    blobs,
+    path,
+    *,
+    figsize=(3, 1.5),
+    dpi: int = 100,
+    **render_kw,
+):
+    """Write a single-sample ERSP+blob-overlay PNG (no axes, no title)."""
+    import matplotlib.pyplot as plt
+    from pathlib import Path as _Path
+    p = _Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=figsize)
+    render_blob_overlay(ax, ersp, blobs, **render_kw)
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    fig.savefig(p, dpi=dpi, bbox_inches="tight", pad_inches=0)
+    plt.close(fig)
+
+
 def q34_plot_valley_blob_overlays(
     indices,
     df_meta,

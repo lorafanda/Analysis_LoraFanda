@@ -209,6 +209,60 @@ def s23_build_minus101_feature_matrix(
 
 
 # ============================================================
+# Per-sample / per-cluster -101 PNG render
+# ============================================================
+
+def render_minus101(
+    ax,
+    ersp,
+    blobs,
+    *,
+    score_min=None,
+    show_axes: bool = False,
+):
+    """
+    Render a -101 painted map onto an existing matplotlib axis.
+
+    Positive-blob pixels → red, negative-blob pixels → blue, rest → white.
+    Used both by per-sample PNG export and by cluster-centroid chip rendering.
+    """
+    seg = paint_minus101_map(ersp, blobs, score_min=score_min)
+    n_freq, n_time = seg.shape
+    ax.imshow(
+        seg,
+        aspect="auto", origin="lower",
+        cmap="bwr", vmin=-1, vmax=1,
+        interpolation="nearest",
+    )
+    if not show_axes:
+        ax.set_xticks([]); ax.set_yticks([])
+        for s in ax.spines.values(): s.set_visible(False)
+    ax.set_xlim(-0.5, n_time - 0.5)
+    ax.set_ylim(-0.5, n_freq - 0.5)
+
+
+def save_sample_minus101_png(
+    ersp,
+    blobs,
+    path,
+    *,
+    figsize=(3, 1.5),
+    dpi: int = 100,
+    score_min=None,
+):
+    """Write a single-sample painted -101 PNG (no axes, no title)."""
+    import matplotlib.pyplot as plt
+    from pathlib import Path as _Path
+    p = _Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=figsize)
+    render_minus101(ax, ersp, blobs, score_min=score_min)
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    fig.savefig(p, dpi=dpi, bbox_inches="tight", pad_inches=0)
+    plt.close(fig)
+
+
+# ============================================================
 # QC visualisation
 # ============================================================
 
