@@ -73,6 +73,7 @@ FEATURE_SET_LABELS = {
     "raw": "Raw ERSP",
     "blob": "Blob Features",
     "minus101": "−1 / 0 / +1 Segmentation",
+    "hg": "High-Gamma Time Series",
 }
 
 

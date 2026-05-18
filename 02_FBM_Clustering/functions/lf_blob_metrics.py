@@ -970,6 +970,89 @@ def render_blob_overlay(
     ax.set_ylim(-0.5, n_freq - 0.5)
 
 
+def render_cluster_blob_density(
+    ax,
+    mean_ersp,
+    member_blobs,
+    *,
+    ersp_alpha: float = 0.30,
+    vmin: float = -5.0,
+    vmax: float = 5.0,
+    show_axes: bool = False,
+):
+    """
+    Cluster-centroid representation for blob feature_set: transparent mean
+    ERSP + the UNION of every member's individual blobs overlaid at low
+    alpha so dense regions (= characteristic blob locations of the cluster)
+    visibly accumulate. Robust to mean-ERSP segmentation failure that
+    happens when averaging dilutes peaks below threshold.
+
+    member_blobs : list of blob lists (one entry per cluster member)
+    """
+    ersp = np.asarray(mean_ersp)
+    n_freq, n_time = ersp.shape
+
+    ax.imshow(
+        ersp,
+        aspect="auto", origin="lower",
+        cmap="bwr", vmin=vmin, vmax=vmax,
+        interpolation="nearest",
+        alpha=ersp_alpha,
+    )
+
+    # Per-blob alpha — denser clusters get more transparent dots so the
+    # density visibly stacks. Keep a floor (0.18) so even tiny clusters
+    # still show.
+    n_members = max(1, len(member_blobs))
+    blob_alpha = max(0.18, min(0.55, 2.0 / np.sqrt(n_members)))
+
+    for blobs in member_blobs:
+        if not blobs:
+            continue
+        for b in blobs:
+            mask = b.get("mask")
+            w    = b.get("weights")
+            fi   = b.get("freqs_idx")
+            ti   = b.get("times_idx")
+            sign = b.get("sign", 1)
+            if mask is None or w is None or fi is None or ti is None:
+                continue
+            total_w = float(np.asarray(w).sum())
+            if total_w <= 0:
+                continue
+            fi = np.asarray(fi); ti = np.asarray(ti); wA = np.asarray(w).astype(float)
+            cf = float((fi * wA).sum() / total_w)
+            ct = float((ti * wA).sum() / total_w)
+            df_ = fi - cf
+            dt  = ti - ct
+            sf  = float(np.sqrt((wA * df_ * df_).sum() / total_w))
+            st  = float(np.sqrt((wA * dt  * dt ).sum() / total_w))
+
+            color = "#cc0033" if (sign > 0 if isinstance(sign, (int, float, np.integer, np.floating))
+                                  else str(sign).lower().startswith(("pos", "+", "p", "1"))) \
+                    else "#0033cc"
+
+            # Vertical bar (freq spread) — thin
+            f_low  = max(0,            cf - 2 * sf)
+            f_high = min(n_freq - 1,   cf + 2 * sf)
+            ax.plot([ct, ct], [f_low, f_high], color=color, lw=0.6,
+                    alpha=blob_alpha, zorder=3)
+            # Horizontal bar (time spread) — thin
+            t_low  = max(0,           ct - 2 * st)
+            t_high = min(n_time - 1,  ct + 2 * st)
+            ax.plot([t_low, t_high], [cf, cf], color=color, lw=0.6,
+                    alpha=blob_alpha, zorder=3)
+            # Center dot
+            ax.scatter([ct], [cf], s=10, c=color,
+                       edgecolor="none", alpha=blob_alpha, zorder=4)
+
+    if not show_axes:
+        ax.set_xticks([]); ax.set_yticks([])
+        for s in ax.spines.values(): s.set_visible(False)
+    ax.set_xlim(-0.5, n_time - 0.5)
+    ax.set_ylim(-0.5, n_freq - 0.5)
+
+
 def save_sample_blob_png(
     ersp,
     blobs,
