@@ -15,7 +15,7 @@ patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL
 
 patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
-# patient_ids = ["EL03","EL043","EL044","EL045"]
+patient_ids = ["EL044"]
 
 
 block_name  = "LM"
@@ -24,6 +24,7 @@ conditions_expected = ("picture", "audio", "reading")
 COND_ALIAS = {
     "picture_naming":      "pict",
     "auditory_naming_ger": "audi",
+    "auditory_naming_eng": "audi",
     "auditory_naming_fre": "audi",
     "reading_completion":  "read",
     "picture":             "pict",
@@ -35,6 +36,7 @@ COND_ALIAS = {
 # Referencing and Bad channels
 # ---------------------------
 reref_type = "WM"   # "WM" or "None"
+reref_type = "None"   # "WM" or "None"
 
 # ---- Bad channels curation ----
 
@@ -49,7 +51,7 @@ bad_channels_manual = {
     "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
     "EL030": ["EntG_R18"],  # example; fill after visual/clinical review
     "EL036": [f"pHG_R{i}" for i in range(1, 13)],
-    "EL037": ["pH_R7","aH_R1","A_R12","CinG_L12","CinG_L13"]
+    "EL037": ["pH_R7","aH_R1","A_R10","A_R12","CinG_L12","CinG_L13","aI_L18"]
               + [f"pI_L{i}" for i in range(1, 17)]
               + [f"pI_R{i}" for i in range(1, 17)],
     "EL038": ["pH_R7","aH_L3","STO_R1","A_L7"],  # example; fill after visual/clinical review
@@ -100,7 +102,7 @@ nperseg    = 128
 nfft       = nperseg * 2
 noverlap   = int(0.85 * nperseg)  # ~75% (friendly default for Hann)
 n_time_bins = 300                 # for TN
-fmax       = 400.0                # plot y-limit
+fmax       = 500.0                # plot y-limit
 vmin, vmax = -6.0, 6.0            # dB display range
 
 # ---------------------------
@@ -190,7 +192,7 @@ EL_PRESETS = {
     "EL036": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160,161], manual_trig=None),
     "EL037": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL038": dict(trig="DC6", flip=True, time_range=(130, -1),   invalid_trials=[51,52,53,104,105,106], trial_ids=["picture"]*51 + ["auditory"]*56 + ["reading"]*53, fake_trials=[77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93], manual_trig="EL038_20241112_HUG_20250207_onsets_offsets_FBM_all_LM_.tsv"),
-    "EL039": dict(trig="DC6", flip=True, time_range=(1000, 1500),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL039": dict(trig="TRIG", flip=True, time_range=(0, -1),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL040": dict(trig="DC6", flip=True, time_range=(100, 1900), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL042": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*55 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL043": dict(trig="DC6", flip=True, time_range=(260, 3710), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
@@ -225,7 +227,7 @@ EL_PRESETS = {
 # ---------------------------------------------------------------------------
 
 MICROEPI_MAT_PATIENTS = ["G-01", "G-02","G-03","G-04", "G-05", "G-06"] #"G-01", "G-02", "G-03",
-# MICROEPI_MAT_PATIENTS = [ "G-04",] #"G-01", "G-02", "G-03",
+MICROEPI_MAT_PATIENTS = [ ] #"G-01", "G-02", "G-03",
 
 _NASAC           = r"\\nasac-m2.unige.ch\m-HumanNeuronLab"
 _BIDS_ELEC_MICROEPI = _NASAC + r"\DATARAW\BIDS_elec\MICROEPI"

@@ -1,0 +1,2 @@
+pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
+EL044	EL044	ok	161	131	115	16	0			
