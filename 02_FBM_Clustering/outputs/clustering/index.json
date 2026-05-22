@@ -22,9 +22,43 @@
     {
       "id": "minus101",
       "label": "\u22121 / 0 / +1 Segmentation"
+    },
+    {
+      "id": "hg",
+      "label": "High-Gamma Time Series"
     }
   ],
   "runs": [
+    {
+      "method": "hierarchical",
+      "feature_set": "blob",
+      "run_id": "20260521_163124",
+      "created_at": "2026-05-21T14:31:26Z",
+      "n_samples": 727,
+      "n_clusters": 20,
+      "silhouette": 0.12663239240646362,
+      "path": "hierarchical/blob/runs/20260521_163124"
+    },
+    {
+      "method": "hierarchical",
+      "feature_set": "hg",
+      "run_id": "20260521_160447",
+      "created_at": "2026-05-21T14:05:08Z",
+      "n_samples": 7268,
+      "n_clusters": 12,
+      "silhouette": 0.05856560915708542,
+      "path": "hierarchical/hg/runs/20260521_160447"
+    },
+    {
+      "method": "hierarchical",
+      "feature_set": "minus101",
+      "run_id": "20260521_164647",
+      "created_at": "2026-05-21T14:47:23Z",
+      "n_samples": 727,
+      "n_clusters": 10,
+      "silhouette": 0.19882509112358093,
+      "path": "hierarchical/minus101/runs/20260521_164647"
+    },
     {
       "method": "hierarchical",
       "feature_set": "raw",
@@ -34,6 +68,36 @@
       "n_clusters": 20,
       "silhouette": 0.051723709331943035,
       "path": "hierarchical/raw/runs/20260521_151543"
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "blob",
+      "run_id": "20260521_163117",
+      "created_at": "2026-05-21T14:31:24Z",
+      "n_samples": 727,
+      "n_clusters": 19,
+      "silhouette": 0.17104721069335938,
+      "path": "kmeans/blob/runs/20260521_163117"
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "hg",
+      "run_id": "20260521_160345",
+      "created_at": "2026-05-21T14:04:47Z",
+      "n_samples": 7268,
+      "n_clusters": 10,
+      "silhouette": 0.08919356018304825,
+      "path": "kmeans/hg/runs/20260521_160345"
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "minus101",
+      "run_id": "20260521_163821",
+      "created_at": "2026-05-21T14:46:47Z",
+      "n_samples": 727,
+      "n_clusters": 11,
+      "silhouette": 0.10905775427818298,
+      "path": "kmeans/minus101/runs/20260521_163821"
     },
     {
       "method": "kmeans",
