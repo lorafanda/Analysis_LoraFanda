@@ -15,7 +15,7 @@ patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL
 
 patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
-patient_ids = ["EL044"]
+# patient_ids = ["EL044"]
 
 
 block_name  = "LM"
@@ -55,6 +55,7 @@ bad_channels_manual = {
               + [f"pI_L{i}" for i in range(1, 17)]
               + [f"pI_R{i}" for i in range(1, 17)],
     "EL038": ["pH_R7","aH_L3","STO_R1","A_L7"],  # example; fill after visual/clinical review
+    "EL044": ["T57"]
 }
 
 # Placeholder for PSD suggestions you accept (copy printed line from driver here)
