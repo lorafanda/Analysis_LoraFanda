@@ -41,6 +41,16 @@
     },
     {
       "method": "hierarchical",
+      "feature_set": "blob",
+      "run_id": "20260522_205440",
+      "created_at": "2026-05-22T18:54:42Z",
+      "n_samples": 727,
+      "n_clusters": 20,
+      "silhouette": 0.12663239240646362,
+      "path": "hierarchical/blob/runs/20260522_205440"
+    },
+    {
+      "method": "hierarchical",
       "feature_set": "hg",
       "run_id": "20260521_160447",
       "created_at": "2026-05-21T14:05:08Z",
@@ -48,6 +58,16 @@
       "n_clusters": 12,
       "silhouette": 0.05856560915708542,
       "path": "hierarchical/hg/runs/20260521_160447"
+    },
+    {
+      "method": "hierarchical",
+      "feature_set": "hg",
+      "run_id": "20260522_205603",
+      "created_at": "2026-05-22T18:56:25Z",
+      "n_samples": 7268,
+      "n_clusters": 12,
+      "silhouette": 0.05856560915708542,
+      "path": "hierarchical/hg/runs/20260522_205603"
     },
     {
       "method": "hierarchical",
@@ -91,6 +111,16 @@
     },
     {
       "method": "kmeans",
+      "feature_set": "blob",
+      "run_id": "20260522_205434",
+      "created_at": "2026-05-22T18:54:40Z",
+      "n_samples": 727,
+      "n_clusters": 19,
+      "silhouette": 0.17104721069335938,
+      "path": "kmeans/blob/runs/20260522_205434"
+    },
+    {
+      "method": "kmeans",
       "feature_set": "hg",
       "run_id": "20260521_160345",
       "created_at": "2026-05-21T14:04:47Z",
@@ -98,6 +128,16 @@
       "n_clusters": 10,
       "silhouette": 0.08919356018304825,
       "path": "kmeans/hg/runs/20260521_160345"
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "hg",
+      "run_id": "20260522_205451",
+      "created_at": "2026-05-22T18:56:03Z",
+      "n_samples": 7268,
+      "n_clusters": 10,
+      "silhouette": 0.08919356018304825,
+      "path": "kmeans/hg/runs/20260522_205451"
     },
     {
       "method": "kmeans",
@@ -133,14 +173,16 @@
   "latest": {
     "kmeans": {
       "raw": "20260522_202441",
-      "blob": "20260513_002450",
-      "minus101": "20260513_123048"
+      "blob": "20260522_205434",
+      "minus101": "20260513_123048",
+      "hg": "20260522_205451"
     },
     "hierarchical": {
       "raw": "20260522_202937",
-      "blob": "20260513_002455",
-      "minus101": "20260513_123058"
+      "blob": "20260522_205440",
+      "minus101": "20260513_123058",
+      "hg": "20260522_205603"
     }
   },
-  "updated_at": "2026-05-22T18:30:44Z"
+  "updated_at": "2026-05-22T18:56:25Z"
 }
