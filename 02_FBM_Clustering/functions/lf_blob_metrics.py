@@ -886,11 +886,11 @@ def render_blob_overlay(
     ersp,
     blobs,
     *,
-    ersp_alpha: float = 0.45,
+    ersp_alpha: float = 0.25,
     vmin: float = -5.0,
     vmax: float = 5.0,
-    linewidth: float = 1.6,
-    marker_size: float = 28.0,
+    linewidth: float = 2.4,
+    marker_size: float = 56.0,
     show_axes: bool = False,
 ):
     """
@@ -935,33 +935,39 @@ def render_blob_overlay(
         sf  = float(np.sqrt((wA * df_ * df_).sum() / total_w))
         st  = float(np.sqrt((wA * dt  * dt ).sum() / total_w))
 
-        color = "#cc0033" if (sign > 0 if isinstance(sign, (int, float, np.integer, np.floating))
-                              else str(sign).lower().startswith(("pos", "+", "p", "1"))) \
-                else "#0033cc"
+        positive = (sign > 0 if isinstance(sign, (int, float, np.integer, np.floating))
+                    else str(sign).lower().startswith(("pos", "+", "p", "1")))
+        color  = "#cc0033" if positive else "#0033cc"
+        marker = "o"       if positive else "s"
 
-        # Vertical bar (freq spread at center time)
+        # --- q34-style overlay ---
+        # 1) Solid vertical bar (freq spread ±2σ at center time)
         f_low  = max(0,            cf - 2 * sf)
         f_high = min(n_freq - 1,   cf + 2 * sf)
         ax.plot([ct, ct], [f_low, f_high], color=color, lw=linewidth,
                 alpha=0.95, solid_capstyle="round", zorder=3)
-        # caps
-        cap = max(2.0, st * 0.25)
-        ax.plot([ct - cap, ct + cap], [f_low,  f_low ], color=color, lw=linewidth, zorder=3)
-        ax.plot([ct - cap, ct + cap], [f_high, f_high], color=color, lw=linewidth, zorder=3)
 
-        # Horizontal bar (time spread at center freq) — slightly dashed
+        # 2) Solid horizontal bar (time spread ±2σ at center freq)
         t_low  = max(0,           ct - 2 * st)
         t_high = min(n_time - 1,  ct + 2 * st)
         ax.plot([t_low, t_high], [cf, cf], color=color, lw=linewidth,
-                alpha=0.85, ls=(0, (4, 2)), zorder=3)
-        # caps
-        cap_v = max(1.5, sf * 0.25)
-        ax.plot([t_low,  t_low ], [cf - cap_v, cf + cap_v], color=color, lw=linewidth, zorder=3)
-        ax.plot([t_high, t_high], [cf - cap_v, cf + cap_v], color=color, lw=linewidth, zorder=3)
+                alpha=0.95, solid_capstyle="round", zorder=3)
 
-        # Center marker
-        ax.scatter([ct], [cf], s=marker_size, c=color,
-                   edgecolor="black", linewidths=0.6, zorder=4)
+        # 3) Dashed FULL-HEIGHT vertical lines at the blob's actual time extent
+        #    (mask t_min and t_max — shows where the blob begins/ends in time
+        #    independent of the spread-bar above).
+        t_mask_min = float(np.min(ti))
+        t_mask_max = float(np.max(ti))
+        for tedge in (t_mask_min, t_mask_max):
+            ax.plot([tedge, tedge], [0, n_freq - 1], color=color,
+                    lw=max(1.0, linewidth * 0.5), alpha=0.55,
+                    linestyle=(0, (3, 3)), zorder=2)
+
+        # 4) Center marker — circle for positive, square for negative.
+        #    2x size vs the previous version, black outline so it pops on
+        #    both white and saturated ERSP backgrounds.
+        ax.scatter([ct], [cf], s=marker_size, c=color, marker=marker,
+                   edgecolor="black", linewidths=0.9, zorder=4)
 
     if not show_axes:
         ax.set_xticks([]); ax.set_yticks([])
