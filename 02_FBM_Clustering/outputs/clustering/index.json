@@ -51,6 +51,16 @@
     },
     {
       "method": "hierarchical",
+      "feature_set": "blob",
+      "run_id": "20260522_213636",
+      "created_at": "2026-05-22T19:36:39Z",
+      "n_samples": 727,
+      "n_clusters": 20,
+      "silhouette": 0.12663239240646362,
+      "path": "hierarchical/blob/runs/20260522_213636"
+    },
+    {
+      "method": "hierarchical",
       "feature_set": "hg",
       "run_id": "20260521_160447",
       "created_at": "2026-05-21T14:05:08Z",
@@ -131,6 +141,16 @@
     },
     {
       "method": "kmeans",
+      "feature_set": "blob",
+      "run_id": "20260522_213631",
+      "created_at": "2026-05-22T19:36:36Z",
+      "n_samples": 727,
+      "n_clusters": 19,
+      "silhouette": 0.17104721069335938,
+      "path": "kmeans/blob/runs/20260522_213631"
+    },
+    {
+      "method": "kmeans",
       "feature_set": "hg",
       "run_id": "20260521_160345",
       "created_at": "2026-05-21T14:04:47Z",
@@ -193,16 +213,16 @@
   "latest": {
     "kmeans": {
       "raw": "20260522_202441",
-      "blob": "20260522_205434",
+      "blob": "20260522_213631",
       "minus101": "20260522_205443",
       "hg": "20260522_205451"
     },
     "hierarchical": {
       "raw": "20260522_202937",
-      "blob": "20260522_205440",
+      "blob": "20260522_213636",
       "minus101": "20260522_210327",
       "hg": "20260522_205603"
     }
   },
-  "updated_at": "2026-05-22T19:04:03Z"
+  "updated_at": "2026-05-22T19:36:39Z"
 }
