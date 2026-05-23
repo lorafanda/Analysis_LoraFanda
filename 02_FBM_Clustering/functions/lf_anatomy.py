@@ -75,7 +75,6 @@ def build_aparc_cache(
     laptop. Cache is written once, then loaded as a flat CSV from then on.
     """
     import mne
-    from mne.surface import _read_surface_meas as _maybe_unused  # noqa: F401
 
     # Resolve subjects_dir
     if subjects_dir is None:

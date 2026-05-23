@@ -70,10 +70,11 @@ METHOD_LABELS = {
 }
 
 FEATURE_SET_LABELS = {
-    "raw": "Raw ERSP",
-    "blob": "Blob Features",
+    "raw":      "Raw ERSP",
+    "rawds":    "Raw ERSP (band-aware downsampled 15×30)",
+    "blob":     "Blob Features",
     "minus101": "−1 / 0 / +1 Segmentation",
-    "hg": "High-Gamma Time Series",
+    "hg":       "High-Gamma Time Series",
 }
 
 
