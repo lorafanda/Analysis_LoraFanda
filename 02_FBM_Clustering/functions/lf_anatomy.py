@@ -79,7 +79,7 @@ def build_aparc_cache(
     # Resolve subjects_dir
     if subjects_dir is None:
         try:
-            subjects_dir = mne.datasets.fetch_fsaverage(verbose=False).parent
+            subjects_dir = Path(mne.datasets.fetch_fsaverage(verbose=False)).parent
         except Exception as e:
             raise RuntimeError(
                 "Couldn't locate or fetch fsaverage. "

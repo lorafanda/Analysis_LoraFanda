@@ -1,0 +1,11 @@
+cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean
+0,4,3,0.0,1.0,rostralmiddlefrontal,1.0,"[[""rostralmiddlefrontal"", 1.0]]",0.0,1.8082255624891828
+1,3,1,0.0,1.0,parsopercularis,1.0,"[[""parsopercularis"", 1.0]]",0.002,1.4377925757197136
+2,95,43,3.5506761416187422,0.17307692307692307,middletemporal,0.173,"[[""middletemporal"", 0.173], [""precentral"", 0.115], [""superiorfrontal"", 0.115]]",0.0,4.0342651399176255
+3,2,0,0.0,1.0,parsorbitalis,1.0,"[[""parsorbitalis"", 1.0]]",0.066,0.934
+4,1,1,,,unknown,1.0,"[[""unknown"", 1.0]]",,
+5,1,0,0.0,1.0,temporalpole,1.0,"[[""temporalpole"", 1.0]]",1.0,0.0
+6,6,0,1.4591479170272448,0.5,precentral,0.5,"[[""precentral"", 0.5], [""rostralmiddlefrontal"", 0.333], [""superiorfrontal"", 0.167]]",0.02,2.301115674702994
+7,1415,774,4.183754928654906,0.13416536661466458,middletemporal,0.134,"[[""middletemporal"", 0.134], [""inferiortemporal"", 0.106], [""insula"", 0.097]]",,
+8,10,10,,,unknown,1.0,"[[""unknown"", 1.0]]",,
+9,1,0,0.0,1.0,lateraloccipital,1.0,"[[""lateraloccipital"", 1.0]]",1.0,0.0

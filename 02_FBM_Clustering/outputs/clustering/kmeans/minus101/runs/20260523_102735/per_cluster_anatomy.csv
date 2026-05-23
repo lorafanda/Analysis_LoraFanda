@@ -1,0 +1,14 @@
+cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean
+0,539,329,4.222539565340473,0.1380952380952381,middletemporal,0.138,"[[""middletemporal"", 0.138], [""lateralorbitofrontal"", 0.095], [""inferiortemporal"", 0.09]]",0.636,4.214334266943712
+1,45,10,3.6011703467917076,0.14285714285714285,precentral,0.143,"[[""precentral"", 0.143], [""superiorfrontal"", 0.143], [""superiortemporal"", 0.114]]",0.126,3.8049297808432385
+2,261,150,3.192755999202174,0.21621621621621623,insula,0.216,"[[""insula"", 0.216], [""postcentral"", 0.18], [""inferiortemporal"", 0.144]]",0.0,4.171013719030925
+3,103,8,4.014990143199903,0.11578947368421053,postcentral,0.116,"[[""postcentral"", 0.116], [""supramarginal"", 0.105], [""middletemporal"", 0.095]]",0.386,4.04590242190973
+4,108,12,4.021190326537131,0.11458333333333333,postcentral,0.115,"[[""postcentral"", 0.115], [""inferiortemporal"", 0.104], [""precentral"", 0.094]]",0.358,4.061233626519681
+5,52,35,3.1751231351134614,0.17647058823529413,middletemporal,0.176,"[[""middletemporal"", 0.176], [""postcentral"", 0.176], [""superiortemporal"", 0.118]]",0.0,3.849618141161821
+6,95,79,1.936278124459133,0.375,inferiortemporal,0.375,"[[""inferiortemporal"", 0.375], [""middletemporal"", 0.375], [""fusiform"", 0.125]]",0.0,4.03886032133016
+7,11,1,2.1709505944546685,0.3,parsorbitalis,0.3,"[[""parsorbitalis"", 0.3], [""parstriangularis"", 0.3], [""lateraloccipital"", 0.2]]",0.012,2.892953607412024
+8,73,55,2.4387439204017474,0.3888888888888889,middletemporal,0.389,"[[""middletemporal"", 0.389], [""precentral"", 0.167], [""supramarginal"", 0.167]]",0.0,3.9616878950218415
+9,19,18,0.0,1.0,middletemporal,1.0,"[[""middletemporal"", 1.0]]",0.0,3.334494303940314
+10,144,84,3.842052005409673,0.13333333333333333,lateraloccipital,0.133,"[[""lateraloccipital"", 0.133], [""insula"", 0.117], [""postcentral"", 0.1]]",0.006,4.109973380454065
+11,63,35,2.0703891595999253,0.4642857142857143,middletemporal,0.464,"[[""middletemporal"", 0.464], [""inferiortemporal"", 0.321], [""fusiform"", 0.036]]",0.0,3.9255606077529444
+12,25,16,1.5304930567574826,0.4444444444444444,precentral,0.444,"[[""precentral"", 0.444], [""rostralmiddlefrontal"", 0.333], [""superiorfrontal"", 0.222]]",0.0,3.4947461220258766
