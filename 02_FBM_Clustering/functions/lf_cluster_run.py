@@ -95,6 +95,8 @@ def fit_and_save(
     notebook: Optional[str] = None,
     outputs_root: Optional[Union[str, Path]] = None,
     run_id: Optional[str] = None,
+    compute_gap: bool = False,
+    gap_n_refs: int = 10,
     verbose: bool = True,
 ) -> Dict[str, Any]:
     """
@@ -233,6 +235,21 @@ def fit_and_save(
         _write_json(run_dir / "silhouette_by_k.json",
                     {str(k): v for k, v in fit["sweep"]["sil_by_k"].items()})
         artifacts["silhouette_sweep"] = "silhouette_by_k.json"
+
+    # K-sweep: Tibshirani 2001 gap statistic (optional — slow because it
+    # fits KMeans gap_n_refs extra times per K on uniform-bounding-box null
+    # data). Only computed when compute_gap=True AND a k_range was used.
+    if compute_gap and "sweep" in fit and fit["sweep"]:
+        ks = sorted(int(k) for k in fit["sweep"]["sil_by_k"].keys())
+        if verbose:
+            print(f"[fit_and_save] computing gap statistic over K={ks} with {gap_n_refs} null refs each")
+        gap_by_k = _compute_gap_statistic(X, ks, n_refs=int(gap_n_refs), verbose=verbose)
+        _write_json(run_dir / "gap_by_k.json",
+                    {str(k): v for k, v in gap_by_k.items()})
+        artifacts["gap_sweep"] = "gap_by_k.json"
+        _save_gap_curve(run_dir / "gap_by_k.png", gap_by_k,
+                        title_prefix=f"{method_label or method} · {feature_set_label or feature_set}")
+        artifacts["gap_curve_figure"] = "gap_by_k.png"
 
     # Per-K labels: when present (k_range was used), write a wide-format CSV
     # so MOBA's K slider can scrub across cuts without re-fitting.
@@ -881,3 +898,102 @@ def _update_index(outputs_root: Path, manifest: Dict[str, Any]) -> None:
     idx["updated_at"] = _dt.datetime.utcnow().isoformat(timespec="seconds") + "Z"
 
     _write_json(index_path, idx)
+
+
+# ============================================================
+# Gap statistic (Tibshirani 2001) — optional K-selection diagnostic
+# ============================================================
+# References:
+#   Tibshirani, R., Walther, G. & Hastie, T. (2001).
+#       Estimating the number of clusters in a data set via the gap statistic.
+#       JRSSB 63(2), 411–423.
+#
+# Idea: compare the observed within-cluster dispersion W_k (sum of pairwise
+# distances within clusters / 2N_c, or equivalently KMeans inertia / 2N_c)
+# to the expected W_k under a null distribution of uniform samples in the
+# data's bounding box. The gap is log(E[W_k*]) − log(W_k_obs). Best K is
+# the smallest K such that Gap(K) >= Gap(K+1) − s_{K+1}.
+
+def _compute_gap_statistic(
+    X: np.ndarray,
+    k_range,
+    *,
+    n_refs: int = 10,
+    random_state: int = 42,
+    n_init: int = 10,
+    verbose: bool = True,
+) -> Dict[int, Dict[str, float]]:
+    """
+    Compute Tibshirani gap statistic across k_range.
+
+    Returns
+    -------
+    Dict[k -> {gap, sk, w_obs, w_ref_mean}]
+        gap     : log(E[W_k_ref]) − log(W_k_obs)
+        sk      : std of log(W_k_ref) × sqrt(1 + 1/n_refs)
+        w_obs   : observed KMeans inertia at k (proxy for W_k)
+        w_ref_mean : geometric mean of reference inertias
+    """
+    rng = np.random.default_rng(random_state)
+    n, d = X.shape
+    mins = X.min(axis=0)
+    spans = X.max(axis=0) - mins
+
+    out: Dict[int, Dict[str, float]] = {}
+    for k in k_range:
+        k = int(k)
+        # Observed
+        km = KMeans(n_clusters=k, random_state=random_state, n_init=n_init).fit(X)
+        w_obs = float(max(km.inertia_, 1e-12))
+
+        # Reference (uniform over bounding box, same shape)
+        log_w_refs = np.empty(n_refs, dtype=np.float64)
+        for b in range(n_refs):
+            X_ref = mins + rng.uniform(size=(n, d)) * spans
+            km_ref = KMeans(n_clusters=k, random_state=random_state + b + 1, n_init=max(3, n_init // 2)).fit(X_ref)
+            log_w_refs[b] = np.log(max(km_ref.inertia_, 1e-12))
+
+        gap = float(log_w_refs.mean() - np.log(w_obs))
+        sk = float(log_w_refs.std() * np.sqrt(1.0 + 1.0 / n_refs))
+
+        out[k] = {
+            "gap":        gap,
+            "sk":         sk,
+            "w_obs":      float(w_obs),
+            "w_ref_mean": float(np.exp(log_w_refs.mean())),
+        }
+        if verbose:
+            print(f"  gap stat k={k:>3d}: gap={gap:+.3f}  sk={sk:.3f}")
+
+    return out
+
+
+def _save_gap_curve(path: Path, gap_by_k: Dict[int, Dict[str, float]],
+                     *, title_prefix: str = ""):
+    """Plot Gap(K) ± s_k as a line with error bars. The Tibshirani rule:
+    best K = smallest K such that Gap(K) >= Gap(K+1) − s_{K+1}."""
+    ks  = sorted(int(k) for k in gap_by_k.keys())
+    gap = np.array([gap_by_k[k]["gap"] for k in ks])
+    sk  = np.array([gap_by_k[k]["sk"]  for k in ks])
+
+    # Best K by Tibshirani rule
+    best_k = ks[-1]
+    for i in range(len(ks) - 1):
+        if gap[i] >= gap[i + 1] - sk[i + 1]:
+            best_k = ks[i]
+            break
+
+    fig, ax = plt.subplots(figsize=(max(6, 0.4 * len(ks) + 4), 4))
+    ax.errorbar(ks, gap, yerr=sk, fmt="o-", color="#3a72b8", ecolor="#9ab8d6",
+                capsize=3, lw=1.5, ms=6, label="Gap(k) ± s_k")
+    ax.axvline(best_k, color="black", ls="--", lw=1,
+               label=f"best k = {best_k} (Tibshirani rule)")
+    ax.set_xlabel("k")
+    ax.set_ylabel("Gap statistic (higher = better)")
+    ax.set_title(f"{title_prefix} — gap statistic" if title_prefix else "Gap statistic")
+    ax.set_xticks(ks)
+    ax.grid(axis="y", alpha=0.3)
+    ax.legend(loc="best", fontsize=8)
+    fig.tight_layout()
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
