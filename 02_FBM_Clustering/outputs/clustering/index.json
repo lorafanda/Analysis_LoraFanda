@@ -26,6 +26,10 @@
     {
       "id": "hg",
       "label": "High-Gamma Time Series"
+    },
+    {
+      "id": "rawds",
+      "label": "Raw ERSP (band-aware downsampled 15\u00d730)"
     }
   ],
   "runs": [
@@ -180,6 +184,16 @@
       "path": "hierarchical/raw/runs/20260523_000404"
     },
     {
+      "method": "hierarchical",
+      "feature_set": "rawds",
+      "run_id": "20260523_223119",
+      "created_at": "2026-05-23T20:31:22Z",
+      "n_samples": 1538,
+      "n_clusters": 12,
+      "silhouette": 0.07307783514261246,
+      "path": "hierarchical/rawds/runs/20260523_223119"
+    },
+    {
       "method": "kmeans",
       "feature_set": "blob",
       "run_id": "20260521_163117",
@@ -328,6 +342,16 @@
       "n_clusters": 19,
       "silhouette": 0.05854298174381256,
       "path": "kmeans/raw/runs/20260522_234711"
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "rawds",
+      "run_id": "20260523_223100",
+      "created_at": "2026-05-23T20:31:19Z",
+      "n_samples": 1538,
+      "n_clusters": 20,
+      "silhouette": 0.07711143046617508,
+      "path": "kmeans/rawds/runs/20260523_223100"
     }
   ],
   "latest": {
@@ -335,14 +359,16 @@
       "raw": "20260522_234711",
       "blob": "20260523_104429",
       "minus101": "20260523_102735",
-      "hg": "20260523_110652"
+      "hg": "20260523_110652",
+      "rawds": "20260523_223100"
     },
     "hierarchical": {
       "raw": "20260523_000404",
       "blob": "20260523_104436",
       "minus101": "20260523_104339",
-      "hg": "20260523_110707"
+      "hg": "20260523_110707",
+      "rawds": "20260523_223119"
     }
   },
-  "updated_at": "2026-05-23T09:07:10Z"
+  "updated_at": "2026-05-23T20:31:23Z"
 }
