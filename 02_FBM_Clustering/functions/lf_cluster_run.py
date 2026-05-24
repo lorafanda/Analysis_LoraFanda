@@ -295,6 +295,18 @@ def fit_and_save(
     }
     _write_json(run_dir / "manifest.json", manifest)
 
+    # ---- pre-flight: validate every artifact actually landed on disk ----
+    # Catches partial writes (disk full, permissions, OS hiccup) BEFORE we
+    # update index.json. If anything's missing or zero-size: write an
+    # ".invalid" marker into the run dir, do NOT touch index.json (so MOBA
+    # never sees the corrupted run), and re-raise so the notebook surfaces
+    # the failure.
+    _validate_run_artifacts(
+        run_dir, method=method,
+        has_k_range=bool(fit.get("sweep")),
+        gap_saved=(compute_gap and bool(fit.get("sweep"))),
+    )
+
     # ---- update index ----
     _update_index(outputs_root, manifest)
 
@@ -820,6 +832,86 @@ def _write_json(path: Path, obj: Any) -> None:
         return str(o)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(obj, f, indent=2, default=_default)
+
+
+def _validate_run_artifacts(
+    run_dir: Path,
+    *,
+    method: str,
+    has_k_range: bool,
+    gap_saved: bool,
+) -> None:
+    """
+    Pre-flight check called from fit_and_save right before _update_index.
+
+    Verifies every artifact MOBA + load_run + the validation pipeline
+    actually need is present on disk and non-empty. On failure:
+      - writes a `.invalid` marker file (json) into the run dir describing
+        what's missing
+      - raises RuntimeError so the notebook fails loudly (and the index
+        is NOT updated by the calling code)
+
+    The marker means: "this run dir exists on disk but should not be
+    consumed by anything downstream." MOBA never sees it because
+    _update_index is skipped via the raised exception.
+    """
+    # Always-required artifacts (every method × every feature_set writes these)
+    required = [
+        "manifest.json",
+        "metrics.json",
+        "labels.csv",
+        "feature_schema.json",
+        "model.joblib",
+        "predictor.joblib",
+        "X_train.npy",
+        "centroids.png",
+        "silhouette_per_cluster.png",
+        "centroid_distance_heatmap.png",
+        "similarity_heatmap.png",
+    ]
+    # Hierarchical also persists the linkage matrix (useful for re-cuts)
+    if method == "hierarchical":
+        required.append("linkage_Z.npy")
+    # K-sweep runs (kmeans or hierarchical with k_range) write the per-K labels
+    if has_k_range:
+        required += ["cluster_labels_by_k.csv", "silhouette_by_k.json", "silhouette_by_k.png"]
+    # Gap stat is opt-in
+    if gap_saved:
+        required += ["gap_by_k.json", "gap_by_k.png"]
+
+    missing = []
+    empty = []
+    for name in required:
+        p = run_dir / name
+        if not p.exists():
+            missing.append(name)
+        elif p.stat().st_size == 0:
+            empty.append(name)
+
+    if missing or empty:
+        marker = {
+            "run_dir": str(run_dir),
+            "method": method,
+            "missing_artifacts": missing,
+            "empty_artifacts": empty,
+            "ts": _dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        }
+        # Write the marker so post-mortem inspection is easy
+        try:
+            with open(run_dir / ".invalid", "w", encoding="utf-8") as f:
+                json.dump(marker, f, indent=2)
+        except OSError:
+            pass  # disk full or read-only — already in a bad state, fall through
+
+        bits = []
+        if missing:
+            bits.append(f"missing: {missing}")
+        if empty:
+            bits.append(f"empty: {empty}")
+        raise RuntimeError(
+            f"fit_and_save: run dir {run_dir.name} is incomplete ({'; '.join(bits)}). "
+            f"index.json NOT updated. See {run_dir / '.invalid'} for details."
+        )
 
 
 def _safe_git_info() -> Dict[str, Any]:
