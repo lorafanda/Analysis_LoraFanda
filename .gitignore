@@ -73,6 +73,8 @@ outputs/
 !01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_minus101/**
 !01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_hg/
 !01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_hg/**
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_rawds/
+!01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_rawds/**
 
 # Inside the live ERSP tree, re-deny the heavy / unused siblings
 01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/**/ERSP_matrix/
