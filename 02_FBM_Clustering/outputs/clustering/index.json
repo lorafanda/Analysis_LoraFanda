@@ -83,7 +83,9 @@
       "n_samples": 1538,
       "n_clusters": 18,
       "silhouette": 0.0963575467467308,
-      "path": "hierarchical/blob/runs/20260523_104436"
+      "path": "hierarchical/blob/runs/20260523_104436",
+      "has_ranking": true,
+      "n_clusters_ranked": 18
     },
     {
       "method": "hierarchical",
@@ -113,7 +115,9 @@
       "n_samples": 1538,
       "n_clusters": 20,
       "silhouette": 0.09164629131555557,
-      "path": "hierarchical/hg/runs/20260523_110707"
+      "path": "hierarchical/hg/runs/20260523_110707",
+      "has_ranking": true,
+      "n_clusters_ranked": 18
     },
     {
       "method": "hierarchical",
@@ -123,7 +127,9 @@
       "n_samples": 1538,
       "n_clusters": 5,
       "silhouette": 0.15869863331317902,
-      "path": "hierarchical/hg/runs/20260528_182149"
+      "path": "hierarchical/hg/runs/20260528_182149",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "hierarchical",
@@ -442,5 +448,5 @@
       "rawds": "20260528_181931"
     }
   },
-  "updated_at": "2026-05-28T16:22:06Z"
+  "updated_at": "2026-05-28T16:23:18Z"
 }
