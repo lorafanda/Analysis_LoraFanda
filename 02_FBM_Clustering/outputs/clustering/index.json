@@ -225,7 +225,9 @@
       "n_samples": 1538,
       "n_clusters": 12,
       "silhouette": 0.07307783514261246,
-      "path": "hierarchical/rawds/runs/20260525_171743"
+      "path": "hierarchical/rawds/runs/20260525_171743",
+      "has_ranking": true,
+      "n_clusters_ranked": 12
     },
     {
       "method": "hierarchical",
@@ -235,7 +237,9 @@
       "n_samples": 1538,
       "n_clusters": 12,
       "silhouette": 0.07307783514261246,
-      "path": "hierarchical/rawds/runs/20260528_181931"
+      "path": "hierarchical/rawds/runs/20260528_181931",
+      "has_ranking": true,
+      "n_clusters_ranked": 12
     },
     {
       "method": "kmeans",
@@ -275,7 +279,9 @@
       "n_samples": 1538,
       "n_clusters": 20,
       "silhouette": 0.1622072011232376,
-      "path": "kmeans/blob/runs/20260523_102735"
+      "path": "kmeans/blob/runs/20260523_102735",
+      "has_ranking": true,
+      "n_clusters_ranked": 20
     },
     {
       "method": "kmeans",
@@ -285,7 +291,9 @@
       "n_samples": 1538,
       "n_clusters": 20,
       "silhouette": 0.1622072011232376,
-      "path": "kmeans/blob/runs/20260523_104429"
+      "path": "kmeans/blob/runs/20260523_104429",
+      "has_ranking": true,
+      "n_clusters_ranked": 20
     },
     {
       "method": "kmeans",
@@ -315,7 +323,9 @@
       "n_samples": 1538,
       "n_clusters": 11,
       "silhouette": 0.13140739500522614,
-      "path": "kmeans/hg/runs/20260523_110652"
+      "path": "kmeans/hg/runs/20260523_110652",
+      "has_ranking": true,
+      "n_clusters_ranked": 11
     },
     {
       "method": "kmeans",
@@ -325,7 +335,9 @@
       "n_samples": 1538,
       "n_clusters": 11,
       "silhouette": 0.13140739500522614,
-      "path": "kmeans/hg/runs/20260528_182052"
+      "path": "kmeans/hg/runs/20260528_182052",
+      "has_ranking": true,
+      "n_clusters_ranked": 11
     },
     {
       "method": "kmeans",
@@ -335,7 +347,9 @@
       "n_samples": 1538,
       "n_clusters": 5,
       "silhouette": 0.18620052933692932,
-      "path": "kmeans/hg/runs/20260528_182133"
+      "path": "kmeans/hg/runs/20260528_182133",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "kmeans",
@@ -454,5 +468,5 @@
       "rawds": "20260528_181931"
     }
   },
-  "updated_at": "2026-05-29T14:01:47Z"
+  "updated_at": "2026-05-29T14:03:56Z"
 }
