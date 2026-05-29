@@ -379,7 +379,9 @@
       "n_samples": 1538,
       "n_clusters": 13,
       "silhouette": 0.11859436333179474,
-      "path": "kmeans/minus101/runs/20260523_102735"
+      "path": "kmeans/minus101/runs/20260523_102735",
+      "has_ranking": true,
+      "n_clusters_ranked": 12
     },
     {
       "method": "kmeans",
@@ -429,7 +431,9 @@
       "n_samples": 1538,
       "n_clusters": 20,
       "silhouette": 0.07711143046617508,
-      "path": "kmeans/rawds/runs/20260523_223100"
+      "path": "kmeans/rawds/runs/20260523_223100",
+      "has_ranking": true,
+      "n_clusters_ranked": 19
     },
     {
       "method": "kmeans",
@@ -439,7 +443,9 @@
       "n_samples": 1538,
       "n_clusters": 20,
       "silhouette": 0.07711143046617508,
-      "path": "kmeans/rawds/runs/20260525_171725"
+      "path": "kmeans/rawds/runs/20260525_171725",
+      "has_ranking": true,
+      "n_clusters_ranked": 19
     },
     {
       "method": "kmeans",
@@ -449,7 +455,9 @@
       "n_samples": 1538,
       "n_clusters": 20,
       "silhouette": 0.07711143046617508,
-      "path": "kmeans/rawds/runs/20260528_181913"
+      "path": "kmeans/rawds/runs/20260528_181913",
+      "has_ranking": true,
+      "n_clusters_ranked": 19
     }
   ],
   "latest": {
@@ -468,5 +476,5 @@
       "rawds": "20260528_181931"
     }
   },
-  "updated_at": "2026-05-29T14:03:56Z"
+  "updated_at": "2026-05-29T14:52:25Z"
 }
