@@ -213,7 +213,9 @@
       "n_samples": 1538,
       "n_clusters": 12,
       "silhouette": 0.07307783514261246,
-      "path": "hierarchical/rawds/runs/20260523_223119"
+      "path": "hierarchical/rawds/runs/20260523_223119",
+      "has_ranking": true,
+      "n_clusters_ranked": 12
     },
     {
       "method": "hierarchical",
@@ -452,5 +454,5 @@
       "rawds": "20260528_181931"
     }
   },
-  "updated_at": "2026-05-28T17:44:06Z"
+  "updated_at": "2026-05-29T14:01:47Z"
 }

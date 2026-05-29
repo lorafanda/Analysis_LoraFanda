@@ -21,7 +21,7 @@
   "gap_at_k_final": {
     "18": {
       "gap": -0.06713387343426547,
-      "sk": 0.010148941959584264,
+      "sk": 0.010148941959584374,
       "w_obs": 806982.4375,
       "w_ref_mean": 754585.0774551164
     }
@@ -817,5 +817,5 @@
     }
   ],
   "cluster_col_ranked": "cluster_hierarchical_blob_ranked",
-  "created_at": "2026-05-28T16:22:16Z"
+  "created_at": "2026-05-29T13:43:21Z"
 }
