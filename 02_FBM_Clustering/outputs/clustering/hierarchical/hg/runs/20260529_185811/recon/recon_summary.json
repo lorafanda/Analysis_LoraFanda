@@ -1,0 +1,23 @@
+{
+  "method": "hierarchical",
+  "feature_set": "hg",
+  "run_id": "20260529_185811",
+  "modes": [
+    "by_patient",
+    "by_condition"
+  ],
+  "views": [
+    "lateral_L",
+    "lateral_R",
+    "dorsal",
+    "frontal"
+  ],
+  "clusters": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "cluster_dir_format": "cluster_{:02d}"
+}
