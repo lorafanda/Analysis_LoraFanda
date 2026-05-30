@@ -97,7 +97,7 @@ def electrodes_tsv_path_for_patient(patient_id) -> str:
     if pid.startswith("EL"):
         return fr"{NASAC_ROOT}\DATARAW\BIDS_elec\SEEG-BERN\sub-{pid}\ieeg\*_electrodes.tsv"
     num = pid.replace("PAT_", "")
-    return fr"{NASAC_ROOT}\DATARAW\BIDS_elec\SEEG-HUG\sub-{pid}\ieeg\*_electrodes.tsv"
+    return fr"{NASAC_ROOT}\DATARAW\BIDS_elec\SEEG-HUG\sub-{num}\ieeg\*_electrodes.tsv"
 
 
 def derive_wm_channels_from_electrodes_tsv(tsv_path_pattern: str) -> list[str]:

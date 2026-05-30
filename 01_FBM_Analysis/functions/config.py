@@ -13,9 +13,9 @@ patient_ids = ["EL030","EL034","EL035","EL036","EL037","EL038","EL040","EL042","
 patient_ids = ["EL034","EL035","EL036","EL037","EL038","EL040","EL042"]
 patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL035","EL036","EL037","EL038","EL040" ,"EL042","EL043","EL044","EL045",2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 
-patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
+patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL034","EL035","EL036","EL037","EL038","EL039","EL040","EL042","EL043","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
-patient_ids = ["EL043"]
+patient_ids = ["EL036","EL038","EL039"]
 
 
 block_name  = "LM"
@@ -42,6 +42,21 @@ reref_type = "WM"   # "WM" or "None"
 
 EL_GRID_PATIENTS = {"EL044"}
 EL_GRID_KEEP_PREFIXES = {"EL044": ("Pa", "postP", "T")}
+# Patients with BOTH grid (ECoG) and depth (SEEG) electrodes. For these:
+#   * WM reref still runs (uses depth-electrode WM contacts as usual)
+#   * Channels with empty / "Unknown" tissueLabel that match one of these
+#     prefixes are PROTECTED from the "drop Unknown" step — grid contacts
+#     are legitimately unparcellated because BIDS parcellation only covers
+#     channels that pierce cortex.
+# bad_channels_manual still applies independently for excluding truly bad
+# contacts (e.g. PAT_3415's HLG1-17 already in that list).
+MIXED_GRID_DEPTH_PATIENTS = {"PAT_3415"}
+MIXED_GRID_KEEP_PREFIXES = {
+    # PAT_3415: 64 grid contacts GA1-GH8 (8x8 grid), 18 temporal strips
+    # (TA/TM/TP × 1-6), 12 occipital strips (OI/OS × 1-6). G/T/O cover
+    # all 94 surface contacts without matching HLG/IPG depth contacts.
+    "PAT_3415": ("G", "T", "O"),
+}
 
 # ---- Channel-name hemisphere-strip override (EL043 etc.) ----
 # Patients listed here have raw EDF channel names of the form
@@ -74,7 +89,7 @@ bad_channels_manual = {
     "EL037": ["pH_R7","aH_R1","A_R10","A_R12","CinG_L12","CinG_L13","aI_L18"]
               + [f"pI_L{i}" for i in range(1, 17)]
               + [f"pI_R{i}" for i in range(1, 17)],
-    "EL038": ["pH_R7","aH_L3","STO_R1","A_L7"],  # example; fill after visual/clinical review
+    "EL038": ["pH_R7","aH_L3","STO_R1","A_L7", "CinG_R2"],  # example; fill after visual/clinical review
     "EL044": ["T57"]
 }
 

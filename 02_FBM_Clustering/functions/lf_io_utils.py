@@ -299,6 +299,7 @@ def build_paths_for_patient(pid_raw, block_name):
         base_root  = fr"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\{patient_id}\task_FBM"
     else:
         patient_id = f"PAT_{pid_raw}"
+        
         base_root  = fr"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_HUG\{patient_id}\task_FBM"
 
     raw_dir  = os.path.join(base_root, f"data_{block_name}", "raw")

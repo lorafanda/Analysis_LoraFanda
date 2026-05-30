@@ -1,2 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-3415	PAT_3415	error-reref	171	149	0	149	0			no WM channels available for PAT_3415 (not a grid patient)
+3415	PAT_3415	ok	171	149	2	0	9	HLG18|IMG15|IMG16|IMG17|IMG8|IPG10|IPG12|IPG13|IPG15	HLG17	
