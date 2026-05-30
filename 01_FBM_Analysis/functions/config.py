@@ -228,11 +228,11 @@ EL_PRESETS = {
     "EL036": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160,161], manual_trig=None),
     "EL037": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL038": dict(trig="DC6", flip=True, time_range=(130, -1),   invalid_trials=[51,52,53,104,105,106], trial_ids=["picture"]*51 + ["auditory"]*56 + ["reading"]*53, fake_trials=[77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93], manual_trig="EL038_20241112_HUG_20250207_onsets_offsets_FBM_all_LM_.tsv"),
-    "EL039": dict(trig="TRIG", flip=True, time_range=(0, -1),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL039": dict(trig="DC6", flip=True, time_range=(0, -1),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL040": dict(trig="DC6", flip=True, time_range=(100, 1900), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL042": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*55 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL043": dict(trig="DC6", flip=True, time_range=(260, 3710), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
-    "EL043": dict(trig="DC6", flip=True, time_range=(31, 863), invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig=None),
+    # "EL043": dict(trig="DC6", flip=True, time_range=(31, 863), invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig=None),
     "EL044": dict(trig="DC6", flip=False, time_range=(2478, 3290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
     "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 }
