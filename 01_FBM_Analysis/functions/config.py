@@ -15,7 +15,7 @@ patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL
 
 patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
-# patient_ids = ["EL044"]
+patient_ids = ["EL043"]
 
 
 block_name  = "LM"
@@ -197,6 +197,7 @@ EL_PRESETS = {
     "EL040": dict(trig="DC6", flip=True, time_range=(100, 1900), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL042": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*55 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL043": dict(trig="DC6", flip=True, time_range=(260, 3710), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "EL043": dict(trig="DC6", flip=True, time_range=(0, 863), invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig=None),
     "EL044": dict(trig="DC6", flip=False, time_range=(2478, 3290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
     "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 }
