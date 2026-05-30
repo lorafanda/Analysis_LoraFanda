@@ -110,7 +110,7 @@ def render_hg_sparkline(
     *,
     color: str = "#cc0033",
     show_axes: bool = False,
-    ylim: Optional[Tuple[float, float]] = (-6.0, 6.0),
+    ylim: Optional[Tuple[float, float]] = (-6.5, 6.5),  # match cfg.hg_vmin/vmax + the ERSP_clean cmap scale
     zero_line: bool = True,
 ):
     """
@@ -146,7 +146,7 @@ def save_sample_hg_png(
     dpi: int = 100,
     hg_band: Tuple[float, float] = HG_BAND_DEFAULT,
     fmax: float = FMAX_DEFAULT,
-    ylim: Optional[Tuple[float, float]] = (-6.0, 6.0),
+    ylim: Optional[Tuple[float, float]] = (-6.5, 6.5),  # match render_hg_sparkline + cfg.hg_vmin/vmax
 ):
     """Write a single-sample HG-sparkline PNG (no axes, no title)."""
     import matplotlib.pyplot as plt
