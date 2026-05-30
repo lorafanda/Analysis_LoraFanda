@@ -309,3 +309,212 @@ def save_anatomy_artifacts(
         print(df_out[["cluster_id", "n_total", "purity", "entropy_bits", "top_region", "top_proportion"]].to_string(index=False))
 
     return df_out, res
+
+
+# ============================================================
+# Spatial compactness (mirrored-XYZ pairwise distance)
+# ============================================================
+# Used by 213_cluster_ranking.ipynb as the "anatomy" axis instead of purity.
+# Rationale: in iEEG/SEEG, functionally related responses typically come from
+# physically nearby brain regions. The aparc-label purity score is one proxy
+# (same Desikan parcel) but it's coarse: two contacts in the same parcel might
+# be 30 mm apart, and two contacts in adjacent parcels might be 5 mm apart.
+# A direct Euclidean distance in fsaverage space is sharper.
+#
+# Bilateral homology: language / sensorimotor / memory networks span both
+# hemispheres in roughly mirror-symmetric layouts. So an iEEG cluster that
+# bridges left/right STG with no contralateral surprise should be just as
+# "compact" as a unilateral one. We mirror every contact to one hemisphere
+# (default: left, via x_new = -|x|) before computing distance, which folds
+# bilateral homotopic contacts onto each other.
+
+def cluster_spatial_compactness(
+    df_labels: pd.DataFrame,
+    df_coords: pd.DataFrame,
+    *,
+    cluster_col:   str = "cluster",
+    patient_col:   str = "patient_id",
+    electrode_col: str = "electrode",
+    mirror_to:     str = "left",
+    metric:        str = "mean_pairwise",
+    verbose:       bool = False,
+) -> Dict[int, Dict]:
+    """
+    Per-cluster spatial compactness in fsaverage / MNI mm.
+
+    Parameters
+    ----------
+    df_labels : DataFrame with patient_col + electrode_col + cluster_col
+        (e.g. labels.csv from a clustering run).
+    df_coords : DataFrame with 'patient' + ('electrode' or 'name') + 'x','y','z'
+        columns. The aparc cache (`aparc_lookup.csv`) is a fine input — it
+        already carries the per-contact fsaverage coords.
+    mirror_to : 'left' (x_new = -|x|, default), 'right' (x_new = |x|),
+        or 'none' (no mirror — for sanity checks).
+    metric :
+        'mean_pairwise'   — mean Euclidean distance over all (i, j) pairs.
+                            Canonical compactness measure. Default.
+        'median_pairwise' — robust to one or two outliers.
+        'max_pairwise'    — diameter of the cluster.
+        'mean_centroid'   — radius-of-gyration: mean distance from centroid.
+
+    Returns
+    -------
+    Dict[int cluster_id, {
+        "cluster_id":    int
+        "n_total":       int    samples in the cluster
+        "n_with_coords": int    samples successfully joined to df_coords
+        "n_missing":     int    samples whose electrode wasn't in df_coords
+        "metric":        str
+        "mirror_to":     str
+        "distance_mm":   float  the compactness value (LOWER = tighter)
+        "centroid_xyz":  [x, y, z]  centroid AFTER mirroring
+        "spread_xyz":    [std_x, std_y, std_z]  per-axis std after mirroring
+    }]
+
+    NaN distance is used when a cluster has fewer than 2 coord-resolved
+    members (the metric is undefined there).
+    """
+    from scipy.spatial.distance import pdist
+
+    df_l = df_labels.copy()
+    df_l[patient_col]   = df_l[patient_col].astype(str)
+    df_l[electrode_col] = df_l[electrode_col].astype(str)
+
+    # Build (patient, electrode-or-name) -> (x, y, z) lookup
+    df_c = df_coords.copy()
+    pat_c  = "patient" if "patient" in df_c.columns else patient_col
+    name_c = "electrode" if "electrode" in df_c.columns else ("name" if "name" in df_c.columns else None)
+    if name_c is None:
+        raise ValueError("df_coords must have 'electrode' or 'name' column")
+    df_c[pat_c]  = df_c[pat_c].astype(str)
+    df_c[name_c] = df_c[name_c].astype(str)
+    coord_lookup = {}
+    for p, n, x, y, z in zip(df_c[pat_c], df_c[name_c], df_c["x"], df_c["y"], df_c["z"]):
+        try:
+            coord_lookup[(str(p), str(n))] = (float(x), float(y), float(z))
+        except (TypeError, ValueError):
+            continue
+
+    def _mirror(xyz):
+        x, y, z = float(xyz[0]), float(xyz[1]), float(xyz[2])
+        if mirror_to == "left":   return (-abs(x), y, z)
+        if mirror_to == "right":  return ( abs(x), y, z)
+        return (x, y, z)
+
+    out: Dict[int, Dict] = {}
+    for c in sorted(df_l[cluster_col].unique()):
+        sub = df_l[df_l[cluster_col] == c]
+        n_total = int(len(sub))
+        coords = []
+        for pid, elec in zip(sub[patient_col], sub[electrode_col]):
+            xyz = coord_lookup.get((str(pid), str(elec)))
+            if xyz is not None:
+                coords.append(_mirror(xyz))
+        n_with    = len(coords)
+        n_missing = n_total - n_with
+
+        entry = {
+            "cluster_id":    int(c),
+            "n_total":       n_total,
+            "n_with_coords": n_with,
+            "n_missing":     n_missing,
+            "metric":        metric,
+            "mirror_to":     mirror_to,
+            "distance_mm":   float("nan"),
+            "centroid_xyz":  [float("nan")] * 3,
+            "spread_xyz":    [float("nan")] * 3,
+        }
+
+        if n_with >= 2:
+            P = np.asarray(coords, dtype=np.float64)        # (n, 3)
+            entry["centroid_xyz"] = P.mean(axis=0).tolist()
+            entry["spread_xyz"]   = P.std(axis=0).tolist()
+
+            if metric in ("mean_pairwise", "median_pairwise", "max_pairwise"):
+                d = pdist(P, metric="euclidean")
+                if metric == "mean_pairwise":
+                    entry["distance_mm"] = float(d.mean())
+                elif metric == "median_pairwise":
+                    entry["distance_mm"] = float(np.median(d))
+                elif metric == "max_pairwise":
+                    entry["distance_mm"] = float(d.max())
+            elif metric == "mean_centroid":
+                centroid = np.array(entry["centroid_xyz"])
+                d_centroid = np.linalg.norm(P - centroid, axis=1)
+                entry["distance_mm"] = float(d_centroid.mean())
+            else:
+                raise ValueError(f"unknown metric: {metric}")
+        elif n_with == 1:
+            entry["centroid_xyz"] = list(coords[0])
+
+        if verbose:
+            print(f"  cluster {c}: n={n_total} with_coords={n_with} "
+                  f"distance={entry['distance_mm']:.2f}mm")
+        out[int(c)] = entry
+
+    return out
+
+
+def save_spatial_compactness_artifacts(
+    run_dir,
+    df_labels:   pd.DataFrame,
+    df_coords:   pd.DataFrame,
+    *,
+    cluster_col: str = "cluster",
+    mirror_to:   str = "left",
+    metric:      str = "mean_pairwise",
+    verbose:     bool = True,
+):
+    """
+    Compute + save per-cluster spatial compactness for a clustering run.
+
+    Writes:
+        per_cluster_spatial_compactness.csv    (cluster_id, n_total,
+            n_with_coords, n_missing, distance_mm, centroid_{x,y,z},
+            spread_{x,y,z}, metric, mirror_to)
+        per_cluster_spatial_compactness.json   (full dict, mirrors the
+            CSV but keeps numpy-list fields as lists for downstream JS)
+
+    Returns (df, full_dict).
+    """
+    run_dir = Path(run_dir)
+    res = cluster_spatial_compactness(
+        df_labels, df_coords,
+        cluster_col=cluster_col,
+        mirror_to=mirror_to,
+        metric=metric,
+        verbose=verbose,
+    )
+
+    rows = []
+    for c, entry in res.items():
+        cx, cy, cz = entry["centroid_xyz"]
+        sx, sy, sz = entry["spread_xyz"]
+        rows.append({
+            "cluster_id":    entry["cluster_id"],
+            "n_total":       entry["n_total"],
+            "n_with_coords": entry["n_with_coords"],
+            "n_missing":     entry["n_missing"],
+            "distance_mm":   entry["distance_mm"],
+            "centroid_x":    cx, "centroid_y": cy, "centroid_z": cz,
+            "spread_x":      sx, "spread_y":   sy, "spread_z":   sz,
+            "metric":        entry["metric"],
+            "mirror_to":     entry["mirror_to"],
+        })
+    df_out = pd.DataFrame(rows).sort_values("cluster_id")
+    df_out.to_csv(run_dir / "per_cluster_spatial_compactness.csv", index=False)
+    (run_dir / "per_cluster_spatial_compactness.json").write_text(
+        json.dumps(res, indent=2, default=str)
+    )
+
+    if verbose:
+        finite = df_out["distance_mm"].dropna()
+        if len(finite):
+            print(f"[spatial] {len(df_out)} clusters · metric={metric} · mirror={mirror_to} · "
+                  f"median {finite.median():.1f}mm  min {finite.min():.1f}  max {finite.max():.1f}")
+        else:
+            print(f"[spatial] {len(df_out)} clusters · no finite distances")
+        print(df_out[["cluster_id", "n_total", "n_with_coords", "distance_mm"]].to_string(index=False))
+
+    return df_out, res
