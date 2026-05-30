@@ -1,2 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-EL043	EL043	error-reref	140	106	0	106	0			no WM channels available for EL043 (not a grid patient)
+EL043	EL043	error-other	140	106	11	95	21	A5|A6|HIP4|HIP5|HIP6|ISMG4|ISMG6|ISMG7|ITG5|ITG6|LING1|LING2|LING3|LING4|SSMG13|SSMG2|SSMG3|SSMG5|SSMG6|STG1|STG5		tuple index out of range
