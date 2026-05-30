@@ -43,6 +43,26 @@ reref_type = "None"   # "WM" or "None"
 EL_GRID_PATIENTS = {"EL044"}
 EL_GRID_KEEP_PREFIXES = {"EL044": ("Pa", "postP", "T")}
 
+# ---- Channel-name hemisphere-strip override (EL043 etc.) ----
+# Patients listed here have raw EDF channel names of the form
+#   <electrode>_<L|R><number>     e.g. "A_L1", "A_L5", "A_L18"
+# but their fsaverage coord CSV (e.g. EL043_contacts_fsaverage.csv) uses the
+# BARE convention
+#   name="A1", "A5", "A18"   +   hemi="L" tracked in its own column
+# 140 normally keeps the underscore form (so "A_L1" → ERSP filename
+# "..._A_L1_TN.tif" → labels.electrode = "A_L1" → 252 normalizes to "AL1"),
+# which never matches the coord side "A1". For patients in this set, 140's
+# channel iteration strips the `_<L|R>(?=\d)` infix early so:
+#   * the WM marker can match TSV "A5" to EDF "A_L5" → "A5"
+#   * ERSP filenames become "EL043_..._ERSP_A1_TN.tif"
+#   * labels.csv electrode = "A1"
+#   * 252's contact-name join matches "A1" ↔ coord "A1"
+#
+# DO NOT add patients whose coord CSV already bakes the hemisphere into the
+# name (EL037/EL038/EL040/EL045 → "AL1", "aHR1", "OFR1", "AR1") — for them
+# the current behaviour is already correct.
+STRIP_HEMI_PATIENTS = {"EL043"}
+
 bad_channels_manual = {
     "EL040": [ f"PlaT_L{i}" for i in range(1, 4)],  # example; fill after visual/clinical review
     "PAT_3415": [ f"HLG{i}" for i in range(1, 18)],  # example; fill after visual/clinical review
