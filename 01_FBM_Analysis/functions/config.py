@@ -92,7 +92,8 @@ bad_channels_manual = {
               + [f"pI_L{i}" for i in range(1, 17)]
               + [f"pI_R{i}" for i in range(1, 17)],
     "EL038": ["pH_R7","aH_L3","STO_R1","A_L7", "CinG_R2"],  # example; fill after visual/clinical review
-    "EL044": ["T57"]
+    "EL044": ["T57"],
+    "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"]
 }
 
 # Placeholder for PSD suggestions you accept (copy printed line from driver here)

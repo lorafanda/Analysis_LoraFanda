@@ -1,2 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-EL042	EL042	ok	153	117	2	0	9	AHL5|OFR6|PHR1|PHR2|PHR6|STGR1|STGR3|STGR7|STGR8		
+EL044	EL044	ok-no-wm-grid	161	137	0	0	0			
