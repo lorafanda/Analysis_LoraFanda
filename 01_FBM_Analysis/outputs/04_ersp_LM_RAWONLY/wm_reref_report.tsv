@@ -1,4 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-EL036	EL036	error-reref	108	71	10	0	0			[reref] EL036: WM channels were found but none were used after exclusions — cannot guarantee WM rereferencing. Check bad_channels_manual and available WM channels.
-EL038	EL038	ok	148	91	6	0	9	CINGR2|LINGR2|LINGR9|OFR4|OFR5|PHL5|PHL6|PHL7|PHL8	STOR1	
-EL039	EL039	ok-no-trials	153	107	7	0	8	AHL7|AL6|AR10|OFL12|OFL6|OFL9|PHGL5|PHGL9		
+EL042	EL042	ok	153	117	2	0	9	AHL5|OFR6|PHR1|PHR2|PHR6|STGR1|STGR3|STGR7|STGR8		

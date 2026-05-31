@@ -116,7 +116,7 @@ def suggest_bad_channels_by_psd(
 # Mains notch filtering
 # ----------------------------
 def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
-                           peak_z_thresh=3.0, Q_min=10.0, Q_max=400.0):
+                           peak_z_thresh=3.0, Q_min=10.0, Q_max=500.0):
     """Adaptive notch: only notches a harmonic if a real peak is detected;
     Q is set automatically based on peak sharpness."""
     X = np.asarray(X, float); was_1d = (X.ndim == 1)

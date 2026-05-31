@@ -13,9 +13,9 @@ patient_ids = ["EL030","EL034","EL035","EL036","EL037","EL038","EL040","EL042","
 patient_ids = ["EL034","EL035","EL036","EL037","EL038","EL040","EL042"]
 patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL035","EL036","EL037","EL038","EL040" ,"EL042","EL043","EL044","EL045",2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 
-patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL034","EL035","EL036","EL037","EL038","EL039","EL040","EL042","EL043","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
+patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780] #,"EL043"
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
-patient_ids = ["EL036","EL038","EL039"]
+# patient_ids = ["EL036","EL038","EL039"]
 
 
 block_name  = "LM"
@@ -41,7 +41,7 @@ reref_type = "WM"   # "WM" or "None"
 # ---- Bad channels curation ----
 
 EL_GRID_PATIENTS = {"EL044"}
-EL_GRID_KEEP_PREFIXES = {"EL044": ("Pa", "postP", "T")}
+EL_GRID_KEEP_PREFIXES = {"EL044": ("P", "p", "T")}
 # Patients with BOTH grid (ECoG) and depth (SEEG) electrodes. For these:
 #   * WM reref still runs (uses depth-electrode WM contacts as usual)
 #   * Channels with empty / "Unknown" tissueLabel that match one of these
@@ -50,12 +50,13 @@ EL_GRID_KEEP_PREFIXES = {"EL044": ("Pa", "postP", "T")}
 #     channels that pierce cortex.
 # bad_channels_manual still applies independently for excluding truly bad
 # contacts (e.g. PAT_3415's HLG1-17 already in that list).
-MIXED_GRID_DEPTH_PATIENTS = {"PAT_3415"}
+MIXED_GRID_DEPTH_PATIENTS = {"PAT_3415","EL044"}
 MIXED_GRID_KEEP_PREFIXES = {
     # PAT_3415: 64 grid contacts GA1-GH8 (8x8 grid), 18 temporal strips
     # (TA/TM/TP × 1-6), 12 occipital strips (OI/OS × 1-6). G/T/O cover
     # all 94 surface contacts without matching HLG/IPG depth contacts.
     "PAT_3415": ("G", "T", "O"),
+    "EL044": ("P", "p", "T"),
 }
 
 # ---- Channel-name hemisphere-strip override (EL043 etc.) ----
@@ -85,7 +86,8 @@ bad_channels_manual = {
     "PAT_3975": ["TPG1"],  # example; fill after visual/clinical review
     "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
     "EL030": ["EntG_R18"],  # example; fill after visual/clinical review
-    "EL036": [f"pHG_R{i}" for i in range(1, 13)],
+    "EL035":[f"EntG_R{i}" for i in range(7,12)]+[f"Fopc_R{i}" for i in range(1,6)]+[f"pHG_R{i}" for i in range(10, 13)],
+    "EL036": [f"pHG_R{i}" for i in range(1, 5)]+[f"pHG_R{i}" for i in range(8, 13)],
     "EL037": ["pH_R7","aH_R1","A_R10","A_R12","CinG_L12","CinG_L13","aI_L18"]
               + [f"pI_L{i}" for i in range(1, 17)]
               + [f"pI_R{i}" for i in range(1, 17)],
@@ -222,19 +224,24 @@ PAT_PRESETS = {
 EL_PATIENTS = ["EL034","EL036","EL039","EL040","EL041","EL043","EL044","EL045"]
 
 EL_PRESETS = {
-    "EL030": dict(trig="DC6", flip=True, time_range=(250, 1600), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="sub-EL030_task-LanguageMapping_timestamp-20-2-2024(13h57m48s)_lang-GER_events.tsv"),
-    "EL034": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[53,54,55,56,57,58,158], manual_trig=None),
-    "EL035": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
-    "EL036": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160,161], manual_trig=None),
-    "EL037": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
-    "EL038": dict(trig="DC6", flip=True, time_range=(130, -1),   invalid_trials=[51,52,53,104,105,106], trial_ids=["picture"]*51 + ["auditory"]*56 + ["reading"]*53, fake_trials=[77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93], manual_trig="EL038_20241112_HUG_20250207_onsets_offsets_FBM_all_LM_.tsv"),
-    "EL039": dict(trig="DC6", flip=True, time_range=(0, -1),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL030": dict(trig="DC6", flip=False, time_range=(280, 1600), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="sub-EL030_task-LanguageMapping_timestamp-20-2-2024(13h57m48s)_lang-GER_events.tsv"),
+    "EL033": dict(trig="DC6", flip=False, time_range=(280, 1782), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="EL033_20240524_HUG_20250206_onsets_offsets_FBM_all_LM_.tsv"),
+    "EL034": dict(trig="DC6", flip=False, time_range=(24, -1),     invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[54,55,56,57,58,59,158], manual_trig=None),
+    "EL035": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL036": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160,161], manual_trig=None),
+    "EL037": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    "EL038": dict(trig="DC6", flip=False, time_range=(130, -1),   invalid_trials=[51,52,53,104,105,106], trial_ids=["picture"]*51 + ["auditory"]*56 + ["reading"]*53, fake_trials=[77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93], manual_trig="EL038_20241112_HUG_20250207_onsets_offsets_FBM_all_LM_.tsv"),
+    "EL039": dict(trig="DC6", flip=True, time_range=(0, 1458),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL040": dict(trig="DC6", flip=True, time_range=(100, 1900), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL042": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*55 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL043": dict(trig="DC6", flip=True, time_range=(260, 3710), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     # "EL043": dict(trig="DC6", flip=True, time_range=(31, 863), invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig=None),
-    "EL044": dict(trig="DC6", flip=False, time_range=(2478, 3290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
-    "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "EL044": dict(trig="DC6", flip=False, time_range=(2478, 4290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
+    "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    
+    
+    "EL046": dict(trig="DC6", flip=False, time_range=(0, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "EL048": dict(trig="DC6", flip=False, time_range=(0, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 }
 
 # MICROEPI_PATIENTS = ["G-01","G-02","G-03","G-04","G-05"]

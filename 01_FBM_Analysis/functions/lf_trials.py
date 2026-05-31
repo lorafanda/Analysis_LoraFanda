@@ -17,7 +17,8 @@ def collect_trials(
     max_post_s=5.0,
     condition_aliases=None,
     z_low=None, z_high=None,
-    pct_low=None, pct_high=None
+    pct_low=None, pct_high=None,
+    keep_resp_accuracy=("correct",),   # case-insensitive; None to keep all
 ):
     """
     Collect trial onset/offset/end indices from *.tsv files in `prep_dir`, normalize condition
@@ -78,11 +79,22 @@ def collect_trials(
         for c in ["trial_idx","trial_id","index"]:
             if c in df.columns:
                 order = df[c].to_numpy(); break
-
+                
+        # resp_accuracy column (written by LFfunctions_PDextract.save_onsets_offsets_by_condition).
+        # Missing column or blank cells → treated as Unknown and dropped when filter is active.
+        ra_col = None
+        for c in ["resp_accuracy", "response_type", "responseaccuracy"]:
+            if c in df.columns:
+                ra_col = df[c].astype(str).str.strip().str.lower().values
+                break
+        if ra_col is None:
+            ra_col = np.array([""] * len(on), dtype=object)
+            
         for i in range(len(on)):
             rows.append(dict(
                 sample=int(on[i]), sample_offsets=int(off[i]), trial_end=int(tend[i]),
                 condition=str(cond[i]), order=(None if order is None else order[i]),
+                resp_accuracy=str(ra_col[i]),
                 source=os.path.basename(path)
             ))
 
@@ -114,13 +126,22 @@ def collect_trials(
         if bad1.any() or bad2.any():
             raise ValueError(f"[{patient_id or 'patient'} | {cond}] annotation error: "
                              f"{bad1.sum()} rows offset<=onset; {bad2.sum()} rows trial_end<offset")
-
+        # Drop trials whose resp_accuracy isn't in the allowed set
+        # (default keeps only 'correct'; "wrong" and blank/no-response are dropped).
+        ra = np.array([str(r.get("resp_accuracy","")).strip().lower() for r in seq], dtype=object)
+        if keep_resp_accuracy is not None:
+            allowed = {str(s).strip().lower() for s in keep_resp_accuracy}
+            ra_keep = np.array([v in allowed for v in ra], dtype=bool)
+        else:
+            ra_keep = np.ones(len(ra), dtype=bool)
+            
         stim_s = (off - on) / float(fs_hz)
         post_s = (tend - off) / float(fs_hz)
 
         # 1) min stimulus + max post-stimulus duration filters
-        keep = (stim_s >= float(min_stim_s)) & (post_s <= float(max_post_s))
-
+        # 1) min stimulus + max post-stimulus duration filters
+        keep = (stim_s >= float(min_stim_s)) & (post_s <= float(max_post_s)) & ra_keep
+        
         # 2) outlier filter on post durations (applied after hard limits)
         lo = hi = np.nan
         z_low_used = z_high_used = np.nan
@@ -208,6 +229,7 @@ def collect_trials(
             iqr_k=float(iqr_k),
             post_lo=float(lo) if np.isfinite(lo) else np.nan,
             post_hi=float(hi) if np.isfinite(hi) else np.nan,
+            n_dropped_accuracy=int((~ra_keep).sum()),
         ))
 
     if report_path and stats:

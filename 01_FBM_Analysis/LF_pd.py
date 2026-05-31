@@ -38,10 +38,10 @@ def _paths_for_patient(patient_item: Any, block_name: str) -> Tuple[str, str, st
     """
     if isinstance(patient_item, str) and patient_item.upper().startswith("EL"):
         patient_id = patient_item  # e.g., 'EL033'
-        base_path = rf"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\{patient_id}\{block_name}_data"
-        save_path = rf"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora\BernDataAnalysis\Outputs\SavedResults\{patient_id}"
+        base_path = rf"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\{patient_id}\task_FBM\data_{block_name}\raw"
+        save_path = os.path.dirname(base_path)   # ".../task_FBM/data_LM" — parse_and_save appends "prep0"
         return patient_id, base_path, save_path
-
+    
     if isinstance(patient_item, str):  # MicroEpi 'G-01', 'G-02', ...
         patient_id = f"MicroEPI-{patient_item}"
         base_path = rf"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\MICROEPI\{patient_id}\task_FBM\data_{block_name}\raw"
