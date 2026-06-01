@@ -18,7 +18,7 @@ def collect_trials(
     condition_aliases=None,
     z_low=None, z_high=None,
     pct_low=None, pct_high=None,
-    keep_resp_accuracy=("correct",),   # case-insensitive; None to keep all
+    keep_resp_accuracy=("correct","valid","1"),   # case-insensitive; None to keep all
 ):
     """
     Collect trial onset/offset/end indices from *.tsv files in `prep_dir`, normalize condition

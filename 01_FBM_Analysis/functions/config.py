@@ -17,7 +17,6 @@ patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","E
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
 # patient_ids = ["EL036","EL038","EL039"]
 
-
 block_name  = "LM"
 conditions_expected = ("picture", "audio", "reading")
 
@@ -92,8 +91,13 @@ bad_channels_manual = {
               + [f"pI_L{i}" for i in range(1, 17)]
               + [f"pI_R{i}" for i in range(1, 17)],
     "EL038": ["pH_R7","aH_L3","STO_R1","A_L7", "CinG_R2"],  # example; fill after visual/clinical review
-    "EL044": ["T57"],
-    "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"]
+    "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1"],
+    "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"],
+    "PAT_2868": ["IDM3"],
+    "": [""],
+    "": [""],
+    "": [""],
+    "": [""],
 }
 
 # Placeholder for PSD suggestions you accept (copy printed line from driver here)
@@ -211,7 +215,7 @@ PAT_PATIENTS = [] #[2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 
 PAT_PRESETS = {
     2868: dict(trig="PHOTO",  flip=False, time_range=(140, 1500), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
-    3066: dict(trig="Xe1",   flip=False, time_range=(260, 1900), invalid_trials=[0,1,2,54,55,56,104,105,106,112], trial_ids=["picture"]*54 + ["auditory"]*50 + ["reading"]*53, fake_trials=[155], manual_trig=None),
+    3066: dict(trig="Xe1",   flip=False, time_range=(260, 1900), invalid_trials=[0,1,2,53,54,55,104,105,106,112], trial_ids=["picture"]*54 + ["auditory"]*50 + ["reading"]*53, fake_trials=[155], manual_trig=None),
     3301: dict(trig="PHOTO",  flip=False, time_range=(0, 1900),   invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig="PAT_3301__FLM_picture__triggerPD.tsv"),
     3390: dict(trig="PHOTO",  flip=False, time_range=(170, 1222), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3415: dict(trig="photo",  flip=False, time_range=(30, 1500),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
@@ -226,7 +230,7 @@ EL_PATIENTS = ["EL034","EL036","EL039","EL040","EL041","EL043","EL044","EL045"]
 
 EL_PRESETS = {
     "EL030": dict(trig="DC6", flip=False, time_range=(280, 1600), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="sub-EL030_task-LanguageMapping_timestamp-20-2-2024(13h57m48s)_lang-GER_events.tsv"),
-    "EL033": dict(trig="DC6", flip=False, time_range=(280, 1782), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="EL033_20240524_HUG_20250206_onsets_offsets_FBM_all_LM_.tsv"),
+    "EL033": dict(trig="DC6", flip=False, time_range=(280, 1782), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*53 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="EL033_20240524_HUG_20250206_onsets_offsets_FBM_all_LM_.tsv"),
     "EL034": dict(trig="DC6", flip=False, time_range=(24, -1),     invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[54,55,56,57,58,59,158], manual_trig=None),
     "EL035": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL036": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160,161], manual_trig=None),
