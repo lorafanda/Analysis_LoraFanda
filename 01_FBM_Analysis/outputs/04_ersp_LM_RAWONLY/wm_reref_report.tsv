@@ -1,2 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-G-03	PAT_6619	error-reref	158	144	0	0	0			No module named 'lf_ersp'
+G-03	PAT_6619	ok	158	144	0	0	16	CAD2|CAD9|FOD14|FOD2|FPD3|FPD5|IAD1|IAD10|IAD11|IAD7|IAD8|IAD9|IMD10|IMD5|IPD8|PHD7		
