@@ -163,7 +163,9 @@
       "n_samples": 1538,
       "n_clusters": 5,
       "silhouette": 0.15869863331317902,
-      "path": "hierarchical/hg/runs/20260530_151854"
+      "path": "hierarchical/hg/runs/20260530_151854",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "hierarchical",
@@ -173,7 +175,9 @@
       "n_samples": 1538,
       "n_clusters": 5,
       "silhouette": 0.15869863331317902,
-      "path": "hierarchical/hg/runs/20260602_101606"
+      "path": "hierarchical/hg/runs/20260602_101606",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "hierarchical",
@@ -303,7 +307,9 @@
       "n_samples": 1538,
       "n_clusters": 12,
       "silhouette": 0.07307783514261246,
-      "path": "hierarchical/rawds/runs/20260602_101304"
+      "path": "hierarchical/rawds/runs/20260602_101304",
+      "has_ranking": true,
+      "n_clusters_ranked": 12
     },
     {
       "method": "kmeans",
@@ -447,7 +453,9 @@
       "n_samples": 1538,
       "n_clusters": 5,
       "silhouette": 0.18620052933692932,
-      "path": "kmeans/hg/runs/20260530_151837"
+      "path": "kmeans/hg/runs/20260530_151837",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "kmeans",
@@ -457,7 +465,9 @@
       "n_samples": 1538,
       "n_clusters": 5,
       "silhouette": 0.18620052933692932,
-      "path": "kmeans/hg/runs/20260602_101549"
+      "path": "kmeans/hg/runs/20260602_101549",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "kmeans",
@@ -585,7 +595,9 @@
       "n_samples": 1538,
       "n_clusters": 20,
       "silhouette": 0.07711143046617508,
-      "path": "kmeans/rawds/runs/20260602_101246"
+      "path": "kmeans/rawds/runs/20260602_101246",
+      "has_ranking": true,
+      "n_clusters_ranked": 19
     }
   ],
   "latest": {
@@ -604,5 +616,5 @@
       "rawds": "20260602_101304"
     }
   },
-  "updated_at": "2026-06-02T08:16:09Z"
+  "updated_at": "2026-06-02T08:23:28Z"
 }
