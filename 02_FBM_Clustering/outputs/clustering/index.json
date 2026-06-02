@@ -167,6 +167,16 @@
     },
     {
       "method": "hierarchical",
+      "feature_set": "hg",
+      "run_id": "20260602_101606",
+      "created_at": "2026-06-02T08:16:09Z",
+      "n_samples": 1538,
+      "n_clusters": 5,
+      "silhouette": 0.15869863331317902,
+      "path": "hierarchical/hg/runs/20260602_101606"
+    },
+    {
+      "method": "hierarchical",
       "feature_set": "minus101",
       "run_id": "20260521_164647",
       "created_at": "2026-05-21T14:47:23Z",
@@ -241,6 +251,16 @@
     },
     {
       "method": "hierarchical",
+      "feature_set": "raw",
+      "run_id": "20260602_095216",
+      "created_at": "2026-06-02T07:53:49Z",
+      "n_samples": 1538,
+      "n_clusters": 20,
+      "silhouette": 0.05172370746731758,
+      "path": "hierarchical/raw/runs/20260602_095216"
+    },
+    {
+      "method": "hierarchical",
       "feature_set": "rawds",
       "run_id": "20260523_223119",
       "created_at": "2026-05-23T20:31:22Z",
@@ -274,6 +294,16 @@
       "path": "hierarchical/rawds/runs/20260528_181931",
       "has_ranking": true,
       "n_clusters_ranked": 12
+    },
+    {
+      "method": "hierarchical",
+      "feature_set": "rawds",
+      "run_id": "20260602_101304",
+      "created_at": "2026-06-02T08:13:08Z",
+      "n_samples": 1538,
+      "n_clusters": 12,
+      "silhouette": 0.07307783514261246,
+      "path": "hierarchical/rawds/runs/20260602_101304"
     },
     {
       "method": "kmeans",
@@ -421,6 +451,16 @@
     },
     {
       "method": "kmeans",
+      "feature_set": "hg",
+      "run_id": "20260602_101549",
+      "created_at": "2026-06-02T08:16:05Z",
+      "n_samples": 1538,
+      "n_clusters": 5,
+      "silhouette": 0.18620052933692932,
+      "path": "kmeans/hg/runs/20260602_101549"
+    },
+    {
+      "method": "kmeans",
       "feature_set": "minus101",
       "run_id": "20260521_163821",
       "created_at": "2026-05-21T14:46:47Z",
@@ -493,6 +533,16 @@
     },
     {
       "method": "kmeans",
+      "feature_set": "raw",
+      "run_id": "20260602_093347",
+      "created_at": "2026-06-02T07:52:16Z",
+      "n_samples": 1538,
+      "n_clusters": 19,
+      "silhouette": 0.05854298174381256,
+      "path": "kmeans/raw/runs/20260602_093347"
+    },
+    {
+      "method": "kmeans",
       "feature_set": "rawds",
       "run_id": "20260523_223100",
       "created_at": "2026-05-23T20:31:19Z",
@@ -526,23 +576,33 @@
       "path": "kmeans/rawds/runs/20260528_181913",
       "has_ranking": true,
       "n_clusters_ranked": 19
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "rawds",
+      "run_id": "20260602_101246",
+      "created_at": "2026-06-02T08:13:04Z",
+      "n_samples": 1538,
+      "n_clusters": 20,
+      "silhouette": 0.07711143046617508,
+      "path": "kmeans/rawds/runs/20260602_101246"
     }
   ],
   "latest": {
     "kmeans": {
-      "raw": "20260522_234711",
+      "raw": "20260602_093347",
       "blob": "20260523_104429",
       "minus101": "20260523_102735",
-      "hg": "20260530_151837",
-      "rawds": "20260528_181913"
+      "hg": "20260602_101549",
+      "rawds": "20260602_101246"
     },
     "hierarchical": {
-      "raw": "20260523_000404",
+      "raw": "20260602_095216",
       "blob": "20260523_104436",
       "minus101": "20260523_104339",
-      "hg": "20260530_151854",
-      "rawds": "20260528_181931"
+      "hg": "20260602_101606",
+      "rawds": "20260602_101304"
     }
   },
-  "updated_at": "2026-05-30T13:18:58Z"
+  "updated_at": "2026-06-02T08:16:09Z"
 }

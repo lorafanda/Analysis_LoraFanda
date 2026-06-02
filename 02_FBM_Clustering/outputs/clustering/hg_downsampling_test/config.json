@@ -2,7 +2,7 @@
   "reference_run": {
     "method": "kmeans",
     "feature_set": "hg",
-    "run_id": "20260529_185754",
+    "run_id": "20260530_151837",
     "n_clusters": 5,
     "n_full": 300
   },
