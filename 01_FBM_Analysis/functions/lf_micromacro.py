@@ -196,8 +196,7 @@ def load_and_concatenate_mats(data_dir, mat_files):
 # WM channel derivation from BIDS electrodes TSV (canonical home: lf_io_utils)
 # Re-exported here so notebook 11 keeps working (it calls `mm.derive_...`).
 # -----------------------------------------------------------------------------
-# from lf_io_utils import derive_wm_channels_from_electrodes_tsv  # noqa: F401
-
+from .lf_io_utils import derive_wm_channels_from_electrodes_tsv  # noqa: F401
 
 # -----------------------------------------------------------------------------
 # Channel pairing: micro shaft -> first macro contact
@@ -401,7 +400,7 @@ def apply_wm_reref_selective(signals, names, wm_names, is_micro, *,
 
     If apply_wm_to_micros=False (default): only macros are rereferenced; micros pass through.
     """
-    from lf_ersp import apply_wm_reference_with_exclusions
+    from .lf_ersp import apply_wm_reference_with_exclusions
 
     wm_set = set(wm_names)
     wm_idx = [i for i, nm in enumerate(names) if nm in wm_set]
@@ -471,7 +470,7 @@ def apply_micro_anchor_reref(signals, names, is_micro, anchor_name):
 # -----------------------------------------------------------------------------
 def plot_macro_ersp(ersp, *, save_path, patient_id, condition, chan_name, params):
     """Thin wrapper around lf_ersp.plot_ersp for a single macro channel."""
-    from lf_ersp import plot_ersp
+    from .lf_ersp import plot_ersp
     save_dir = os.path.dirname(save_path) or None
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
@@ -491,7 +490,7 @@ def plot_tetrode_ersp_2x2(ersps, *, save_path, patient_id, condition,
     tetrode_names : list[str] of length 4
     tetrode_idx : int  — 1-based index used in title/filename
     """
-    from lf_ersp import _centers_to_edges
+    from .lf_ersp import _centers_to_edges
 
     fig, axes = plt.subplots(2, 2, figsize=(10, 6), sharex=True, sharey=True)
     mode = ersps[0]["meta"]["mode"]

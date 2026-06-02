@@ -1,2 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-G-03		error-other	0	0	0	0	0			No supported raw file (.TRC/.edf/.h5) in: \\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\MICROEPI\MicroEPI-G-03\task\FBM\data_LM\raw
+G-03	PAT_6619	error-reref	158	144	0	0	0			No module named 'lf_ersp'

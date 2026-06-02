@@ -183,10 +183,8 @@ min_freq_bins = 3     # e.g., 4–8 depending on your df
 outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs"
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
-notch_patients  = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03",
-                   "EL030","EL033","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045",
-                   "PAT_3455","PAT_2868", "PAT_3066", "PAT_3301", "PAT_3390", "PAT_3415", "PAT_3965", "PAT_3975", "PAT_3780"]   
-                    # IDs or substrings to match
+notch_patients  = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780"]   
+# IDs or substrings to match
     
 # notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
 mains_base      = 50.0       # 50 or 60
