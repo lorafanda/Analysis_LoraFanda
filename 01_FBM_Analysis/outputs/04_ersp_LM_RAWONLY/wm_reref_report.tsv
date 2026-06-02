@@ -1,4 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-EL044	EL044	ok-no-wm-grid	161	137	0	0	0			
-EL033	EL033	error-other	124	93	8	0	10	AHR4|AL10|AL7|AR6|ENTGR4|PHGR4|PHGR7|PHR6|PHR8|STGR2		[EL033 | nan] annotation error: 0 rows offset<=onset; 159 rows trial_end<offset
-EL048	EL048	error-reref	111	79	0	0	0			no WM channels available for EL048 (not a grid patient)
+G-03		error-other	0	0	0	0	0			No supported raw file (.TRC/.edf/.h5) in: \\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\MICROEPI\MicroEPI-G-03\task\FBM\data_LM\raw

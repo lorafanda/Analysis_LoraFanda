@@ -184,7 +184,7 @@ outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
 notch_patients  = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03",
-                   "EL030","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045",
+                   "EL030","EL033","EL034","EL035","EL036","EL040","EL042","EL043","EL044","EL045",
                    "PAT_3455","PAT_2868", "PAT_3066", "PAT_3301", "PAT_3390", "PAT_3415", "PAT_3965", "PAT_3975", "PAT_3780"]   
                     # IDs or substrings to match
     
@@ -226,11 +226,12 @@ PAT_PRESETS = {
 }
 
 # EL_PATIENTS = ["EL030","EL034","EL035","EL036","EL037","EL038","EL039","EL040","EL042","EL043","EL044","EL045"]
-EL_PATIENTS = ["EL034","EL036","EL039","EL040","EL041","EL043","EL044","EL045"]
+EL_PATIENTS = ["EL033","EL034","EL036","EL039","EL040","EL041","EL043","EL044","EL045"]
 
 EL_PRESETS = {
     "EL030": dict(trig="DC6", flip=False, time_range=(280, 1600), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="sub-EL030_task-LanguageMapping_timestamp-20-2-2024(13h57m48s)_lang-GER_events.tsv"),
-    "EL033": dict(trig="DC6", flip=False, time_range=(280, 1782), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*53 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="EL033_20240524_HUG_20250206_onsets_offsets_FBM_all_LM_.tsv"),
+    "EL033": dict(trig="DC6", flip=False, time_range=(280, 1782), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*53 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None) #"EL033_20240524_HUG_20250206_onsets_offsets_FBM_all_LM_.tsv"
+    ,
     "EL034": dict(trig="DC6", flip=False, time_range=(24, -1),     invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[54,55,56,57,58,59,158], manual_trig=None),
     "EL035": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL036": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160,161], manual_trig=None),
@@ -243,8 +244,7 @@ EL_PRESETS = {
     # "EL043": dict(trig="DC6", flip=True, time_range=(31, 863), invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig=None),
     "EL044": dict(trig="DC6", flip=False, time_range=(2478, 4290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
     "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
-    
-    
+
     "EL046": dict(trig="DC6", flip=False, time_range=(0, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     "EL048": dict(trig="DC6", flip=False, time_range=(0, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 }
