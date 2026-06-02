@@ -269,14 +269,28 @@ EL_PRESETS = {
 # `pat_name` (PAT_<bids_num>) so they sit alongside the regular PAT cohort
 # downstream — same procedure, same output sizes.
 # ---------------------------------------------------------------------------
-# MicroEPI .mat → macro-only pipeline (G-01 through G-06)
-# These patients are processed in 140 via the MicroEPI .mat loader from
-# `lf_micromacro.load_microepi_macros_for_pipeline`. Only macro channels
-# (`dataEcog`) are used; micros are ignored.
+# MicroEPI .mat pipeline (G-01 through G-06, Geneva microEPI cohort)
+#
+# 140 loads these via `lf_micromacro.load_and_concatenate_mats` → builds a
+# combined (macros + micros) signal matrix → WM-rereferences macros only →
+# optionally subtracts a single anchor electrode from micros → runs the
+# standard notch / ERSP / HG / cluster-export downstream.
+#
+# Per-preset keys
+#   pat_name            : str — output dir name (e.g. "PAT_5515"); matches BIDS sub-XXXX
+#   data_dir            : abs path to the folder containing the .mat exports
+#   mat_files           : list[str] — per-block .mat filenames inside data_dir
+#   tsv_file            : str — behavioral events TSV filename (in data_dir)
+#   electrodes_tsv      : glob pattern to the BIDS electrodes.tsv (for WM derivation)
+#   trig, flip, time_range, invalid_trials, trial_ids, fake_trials, manual_trig
+#                       : same semantics as PAT_PRESETS / EL_PRESETS
+#   micro_reref_anchor  : OPTIONAL str — channel name to subtract from every
+#                         micro (e.g. a quiet macro contact like "G2"). If
+#                         absent or None, micros stay raw. WM reref always
+#                         skips micros (no exception to this rule for now).
 # ---------------------------------------------------------------------------
 
-MICROEPI_MAT_PATIENTS = ["G-01", "G-02","G-03","G-04", "G-05", "G-06"] #"G-01", "G-02", "G-03",
-MICROEPI_MAT_PATIENTS = [ ] #"G-01", "G-02", "G-03",
+MICROEPI_MAT_PATIENTS = ["G-01", "G-02", "G-03", "G-04", "G-05", "G-06"]
 
 _NASAC           = r"\\nasac-m2.unige.ch\m-HumanNeuronLab"
 _BIDS_ELEC_MICROEPI = _NASAC + r"\DATARAW\BIDS_elec\MICROEPI"

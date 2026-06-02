@@ -425,6 +425,48 @@ def apply_wm_reref_selective(signals, names, wm_names, is_micro, *,
 
 
 # -----------------------------------------------------------------------------
+# Micro-only rereferencing to a single anchor electrode
+# -----------------------------------------------------------------------------
+def apply_micro_anchor_reref(signals, names, is_micro, anchor_name):
+    """
+    Re-reference micro channels to a single anchor electrode (e.g. a quiet
+    macro contact). Macros are left untouched.
+
+    Parameters
+    ----------
+    signals     : (n_samples, n_channels) float32 array
+    names       : list[str] aligned with the columns of `signals`
+    is_micro    : (n_channels,) bool array; True where the channel is a micro
+    anchor_name : str or None. Channel name to subtract from every micro.
+                  If None, micros are left raw and the input is returned unchanged.
+
+    Returns
+    -------
+    out, anchor_used : (signals, anchor_name) — anchor_used is None if no
+                       reref was applied (anchor_name was None) or the raw
+                       anchor label if it was.
+    """
+    if anchor_name is None:
+        return signals, None
+    name_str = str(anchor_name)
+    try:
+        anchor_idx = names.index(name_str)
+    except ValueError:
+        raise ValueError(
+            f"[apply_micro_anchor_reref] anchor '{name_str}' not in channel "
+            f"names (have {len(names)} channels; first few: {names[:6]})"
+        )
+    micro_mask = np.asarray(is_micro, dtype=bool)
+    if not micro_mask.any():
+        # No micros to reref — pass through.
+        return signals, None
+    anchor_sig = signals[:, anchor_idx:anchor_idx + 1].astype(np.float32)
+    out = signals.copy()
+    out[:, micro_mask] = signals[:, micro_mask] - anchor_sig
+    return out, name_str
+
+
+# -----------------------------------------------------------------------------
 # Plotting
 # -----------------------------------------------------------------------------
 def plot_macro_ersp(ersp, *, save_path, patient_id, condition, chan_name, params):
