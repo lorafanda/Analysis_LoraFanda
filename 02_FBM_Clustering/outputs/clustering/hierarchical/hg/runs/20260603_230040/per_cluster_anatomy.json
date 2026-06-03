@@ -1,0 +1,109 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 267,
+    "n_unknown": 111,
+    "top_3": [
+      [
+        "middletemporal",
+        0.186
+      ],
+      [
+        "inferiortemporal",
+        0.147
+      ],
+      [
+        "superiortemporal",
+        0.096
+      ]
+    ],
+    "entropy_bits": 3.8808661120303225,
+    "purity": 0.1858974358974359,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.17427519991713
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 197,
+    "n_unknown": 91,
+    "top_3": [
+      [
+        "insula",
+        0.104
+      ],
+      [
+        "rostralmiddlefrontal",
+        0.094
+      ],
+      [
+        "postcentral",
+        0.085
+      ]
+    ],
+    "entropy_bits": 4.164413197996188,
+    "purity": 0.10377358490566038,
+    "p_entropy_lower_tail": 0.552,
+    "null_entropy_mean": 4.150412551999827
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 19,
+    "n_unknown": 13,
+    "top_3": [
+      [
+        "lateraloccipital",
+        1.0
+      ]
+    ],
+    "entropy_bits": 0.0,
+    "purity": 1.0,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 3.328637135638987
+  },
+  "3": {
+    "cluster_id": 3,
+    "n_total": 513,
+    "n_unknown": 329,
+    "top_3": [
+      [
+        "insula",
+        0.109
+      ],
+      [
+        "middletemporal",
+        0.092
+      ],
+      [
+        "lateralorbitofrontal",
+        0.092
+      ]
+    ],
+    "entropy_bits": 4.1789940052877705,
+    "purity": 0.10869565217391304,
+    "p_entropy_lower_tail": 0.124,
+    "null_entropy_mean": 4.211674022848935
+  },
+  "4": {
+    "cluster_id": 4,
+    "n_total": 542,
+    "n_unknown": 288,
+    "top_3": [
+      [
+        "middletemporal",
+        0.161
+      ],
+      [
+        "postcentral",
+        0.118
+      ],
+      [
+        "inferiortemporal",
+        0.118
+      ]
+    ],
+    "entropy_bits": 3.739002117483096,
+    "purity": 0.16141732283464566,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.21522990728111
+  }
+}
