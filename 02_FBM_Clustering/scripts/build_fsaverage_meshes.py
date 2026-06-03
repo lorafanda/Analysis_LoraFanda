@@ -125,29 +125,62 @@ def find_fsaverage_surf_dir() -> Path:
     )
 
 
+def export_surface(surf_dir: Path, hemi: str, kind: str) -> None:
+    """
+    kind = "pial" -> reads {hemi}.pial   -> fsaverage_{hemi}.mz3
+    kind = "inflated" -> reads {hemi}.inflated -> fsaverage_{hemi}.inflated.mz3
+    """
+    src = surf_dir / f"{hemi}.{kind}"
+    if not src.exists():
+        print(f"  [skip] {src} not found")
+        return
+    verts, faces = nib.freesurfer.read_geometry(str(src))
+    print(f"  {hemi}.{kind:<10s} : {verts.shape[0]:>7d} verts, {faces.shape[0]:>7d} faces")
+
+    name_kind = "" if kind == "pial" else f".{kind}"
+    mz3_path = OUT_DIR / f"fsaverage_{hemi}{name_kind}.mz3"
+    gii_path = OUT_DIR / f"fsaverage_{hemi}{name_kind}.gii"
+
+    write_mz3(mz3_path, verts, faces)
+    write_gii(gii_path, verts, faces)
+
+    print(f"    -> {mz3_path.name}  ({mz3_path.stat().st_size/1024:.0f} KB)")
+    print(f"    -> {gii_path.name}  ({gii_path.stat().st_size/1024:.0f} KB)")
+
+
+def export_volume_t1(fsaverage_mri_dir: Path) -> None:
+    """Convert fsaverage T1.mgz -> fsaverage_T1.nii.gz for MOBA's volume layer."""
+    mgz = fsaverage_mri_dir / "T1.mgz"
+    if not mgz.exists():
+        print(f"  [skip] {mgz} not found — volume overlay will be unavailable in MOBA")
+        return
+    img = nib.load(str(mgz))
+    out = OUT_DIR / "fsaverage_T1.nii.gz"
+    nib.save(img, str(out))
+    sz_mb = out.stat().st_size / (1024*1024)
+    print(f"  T1.mgz -> {out.name}  ({sz_mb:.1f} MB)")
+    if sz_mb > 25:
+        print(f"  [warn] {out.name} is large; consider mri_convert with -odt uchar to shrink.")
+
+
 def main() -> None:
     surf_dir = find_fsaverage_surf_dir()
-    print(f"[fsaverage] Reading surfaces from {surf_dir}")
+    fsaverage_root = surf_dir.parent  # parent of surf/
+    print(f"[fsaverage] Reading from {fsaverage_root}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Surfaces: pial (existing behaviour) + inflated (new, for MOBA inflated toggle)
     for hemi in ("lh", "rh"):
-        pial = surf_dir / f"{hemi}.pial"
-        verts, faces = nib.freesurfer.read_geometry(str(pial))
-        print(f"  {hemi}.pial : {verts.shape[0]:>7d} verts, {faces.shape[0]:>7d} faces")
+        export_surface(surf_dir, hemi, "pial")
+        export_surface(surf_dir, hemi, "inflated")
 
-        mz3_path = OUT_DIR / f"fsaverage_{hemi}.mz3"
-        gii_path = OUT_DIR / f"fsaverage_{hemi}.gii"
+    # Volume: T1 for the MOBA volume overlay
+    export_volume_t1(fsaverage_root / "mri")
 
-        write_mz3(mz3_path, verts, faces)
-        write_gii(gii_path, verts, faces)
-
-        print(f"    -> {mz3_path}  ({mz3_path.stat().st_size/1024:.0f} KB)")
-        print(f"    -> {gii_path}  ({gii_path.stat().st_size/1024:.0f} KB)")
-
-    print("\nDone. Commit the new mesh files:")
+    print("\nDone. Commit the new mesh + volume files:")
     print("  git add 02_FBM_Clustering/outputs/250_recon/fsaverage/meshes")
-    print("  git commit -m 'fsaverage meshes for MOBA 3D brain viewer'")
+    print("  git commit -m 'fsaverage meshes + T1 for MOBA 3D brain viewer'")
     print("  git push")
 
 
