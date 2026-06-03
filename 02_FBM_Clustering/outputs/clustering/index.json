@@ -197,7 +197,9 @@
       "n_samples": 1538,
       "n_clusters": 5,
       "silhouette": 0.15869863331317902,
-      "path": "hierarchical/hg/runs/20260603_230040"
+      "path": "hierarchical/hg/runs/20260603_230040",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "hierarchical",
@@ -339,7 +341,9 @@
       "n_samples": 1538,
       "n_clusters": 12,
       "silhouette": 0.07307783514261246,
-      "path": "hierarchical/rawds/runs/20260603_230829"
+      "path": "hierarchical/rawds/runs/20260603_230829",
+      "has_ranking": true,
+      "n_clusters_ranked": 12
     },
     {
       "method": "kmeans",
@@ -517,7 +521,9 @@
       "n_samples": 1538,
       "n_clusters": 5,
       "silhouette": 0.18620052933692932,
-      "path": "kmeans/hg/runs/20260603_230017"
+      "path": "kmeans/hg/runs/20260603_230017",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "kmeans",
@@ -657,7 +663,9 @@
       "n_samples": 1538,
       "n_clusters": 20,
       "silhouette": 0.07711143046617508,
-      "path": "kmeans/rawds/runs/20260603_230810"
+      "path": "kmeans/rawds/runs/20260603_230810",
+      "has_ranking": true,
+      "n_clusters_ranked": 19
     }
   ],
   "latest": {
@@ -676,5 +684,5 @@
       "rawds": "20260603_230829"
     }
   },
-  "updated_at": "2026-06-03T21:08:32Z"
+  "updated_at": "2026-06-03T22:48:55Z"
 }
