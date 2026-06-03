@@ -165,6 +165,181 @@ def build_aparc_cache(
 
 
 # ============================================================
+# Yeo functional-network cache (one-time precompute)
+# ============================================================
+def _find_yeo_annot(fsaverage_dir: Path, n_networks: int) -> Tuple[Path, Path]:
+    """
+    Locate Yeo2011 7/17-network annot files for fsaverage.
+
+    Looks in (in order):
+      1. <fsaverage_dir>/label/
+      2. $FREESURFER_HOME/subjects/fsaverage/label/
+      3. <mne-fsaverage>/fsaverage/label/
+
+    Raises FileNotFoundError with download instructions if not found.
+    """
+    import os
+    suffix = f"Yeo2011_{n_networks}Networks_N1000.annot"
+    candidates = [Path(fsaverage_dir) / "label"]
+    fs_home = os.environ.get("FREESURFER_HOME")
+    if fs_home:
+        candidates.append(Path(fs_home) / "subjects" / "fsaverage" / "label")
+    try:
+        import mne
+        mne_fs = Path(mne.datasets.fetch_fsaverage(verbose=False)).parent
+        candidates.append(mne_fs / "fsaverage" / "label")
+    except Exception:
+        pass
+
+    for cand in candidates:
+        lh_p = cand / f"lh.{suffix}"
+        rh_p = cand / f"rh.{suffix}"
+        if lh_p.exists() and rh_p.exists():
+            return lh_p, rh_p
+
+    raise FileNotFoundError(
+        f"Yeo2011_{n_networks}Networks annot files not found. Searched:\n"
+        + "\n".join(f"  {c}" for c in candidates)
+        + "\nDownload from https://www.freesurfer.net/fswiki/CorticalParcellation_Yeo2011 "
+          "and place lh./rh.Yeo2011_{N}Networks_N1000.annot in any of the searched "
+          "directories. They also ship with FreeSurfer under "
+          "$FREESURFER_HOME/subjects/fsaverage/label/."
+    )
+
+
+def build_yeo_cache(
+    coords_csv_glob,
+    output_csv,
+    *,
+    n_networks: int = 17,
+    fsaverage_dir: Optional[Path] = None,
+    subjects_dir: Optional[Path] = None,
+    verbose: bool = True,
+) -> pd.DataFrame:
+    """
+    Per-electrode Yeo 2011 functional-network labels (7 or 17 networks).
+
+    For each electrode in *_contacts_fsaverage.csv files:
+      - is_wm == 1 → labeled "WhiteMatter" (no cortical lookup performed;
+                     Yeo is a cortical parcellation and depth contacts
+                     genuinely aren't in any network).
+      - is_wm == 0 → nearest fsaverage *pial* vertex, read the Yeo label
+                     from the annot file at that vertex.
+
+    Schema:
+        patient, electrode, hemi, yeo_label, network_id, vertex_idx, x, y, z
+
+    yeo_label is the human-readable name from the annot's color table
+    (e.g. "17Networks_1" or named regions if the file embeds them).
+    network_id is the integer label in the annot (0 = medial wall / no
+    network for cortical contacts; -1 = WhiteMatter for depth).
+
+    `fsaverage_dir` overrides the default fsaverage lookup; useful when
+    the Yeo annot files live alongside SHARED_RECON_ROOT/fsaverage/label/
+    rather than under MNE's installation.
+    """
+    import nibabel.freesurfer.io as fsio
+    from scipy.spatial import cKDTree
+
+    # Resolve fsaverage dir for surfaces + annots
+    if fsaverage_dir is None:
+        if subjects_dir is None:
+            try:
+                import mne
+                subjects_dir = Path(mne.datasets.fetch_fsaverage(verbose=False)).parent
+            except Exception as e:
+                raise RuntimeError(
+                    "Couldn't locate fsaverage. Pass fsaverage_dir explicitly "
+                    "or set up MNE / SUBJECTS_DIR."
+                ) from e
+        fsaverage_dir = Path(subjects_dir) / "fsaverage"
+    fsaverage_dir = Path(fsaverage_dir)
+
+    lh_annot_p, rh_annot_p = _find_yeo_annot(fsaverage_dir, n_networks)
+    if verbose:
+        print(f"[yeo{n_networks}_cache] lh annot: {lh_annot_p}")
+        print(f"[yeo{n_networks}_cache] rh annot: {rh_annot_p}")
+
+    lh_lbl, _lh_ctab, lh_names = fsio.read_annot(str(lh_annot_p))
+    rh_lbl, _rh_ctab, rh_names = fsio.read_annot(str(rh_annot_p))
+
+    def _decode(names):
+        return [n.decode("utf-8") if isinstance(n, (bytes, bytearray)) else str(n)
+                for n in names]
+    lh_names = _decode(lh_names)
+    rh_names = _decode(rh_names)
+
+    # Pial vertices for nearest-vertex lookup (Yeo is per-vertex on the pial)
+    lh_pial_v, _ = fsio.read_geometry(str(fsaverage_dir / "surf" / "lh.pial"))
+    rh_pial_v, _ = fsio.read_geometry(str(fsaverage_dir / "surf" / "rh.pial"))
+    lh_kd = cKDTree(lh_pial_v)
+    rh_kd = cKDTree(rh_pial_v)
+
+    coords_dir = Path(coords_csv_glob).parent
+    pattern = Path(coords_csv_glob).name
+    files = sorted(coords_dir.glob(pattern))
+    if not files:
+        raise FileNotFoundError(f"No coords CSV matched {coords_csv_glob}")
+    if verbose:
+        print(f"[yeo{n_networks}_cache] found {len(files)} coord CSV files")
+
+    rows = []
+    for f in files:
+        if "ALL_PATIENTS" in f.name.upper():
+            continue
+        df = pd.read_csv(f)
+        if not {"patient", "name", "x", "y", "z"}.issubset(df.columns):
+            if verbose:
+                print(f"  [skip] {f.name}: missing required columns")
+            continue
+        for _, r in df.iterrows():
+            is_wm = int(r.get("is_wm", 0)) == 1
+            x, y, z = float(r["x"]), float(r["y"]), float(r["z"])
+            hemi = str(r.get("hemi", "L" if x < 0 else "R")).upper()
+            hemi_norm = "lh" if hemi.startswith("L") else "rh"
+
+            if is_wm:
+                rows.append({
+                    "patient":   r["patient"],
+                    "electrode": r["name"],
+                    "hemi":      hemi_norm,
+                    "yeo_label": "WhiteMatter",
+                    "network_id": -1,
+                    "vertex_idx": -1,
+                    "x": x, "y": y, "z": z,
+                })
+                continue
+
+            if hemi_norm == "lh":
+                _, v = lh_kd.query([x, y, z])
+                lbl_id = int(lh_lbl[v])
+                lbl_name = lh_names[lbl_id] if 0 <= lbl_id < len(lh_names) else "unknown"
+            else:
+                _, v = rh_kd.query([x, y, z])
+                lbl_id = int(rh_lbl[v])
+                lbl_name = rh_names[lbl_id] if 0 <= lbl_id < len(rh_names) else "unknown"
+
+            rows.append({
+                "patient":    r["patient"],
+                "electrode":  r["name"],
+                "hemi":       hemi_norm,
+                "yeo_label":  str(lbl_name),
+                "network_id": lbl_id,
+                "vertex_idx": int(v),
+                "x": x, "y": y, "z": z,
+            })
+
+    df_out = pd.DataFrame(rows)
+    output_csv = Path(output_csv)
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
+    df_out.to_csv(output_csv, index=False)
+    if verbose:
+        print(f"[yeo{n_networks}_cache] wrote {len(df_out)} rows -> {output_csv}")
+        print(df_out["yeo_label"].value_counts().head(20))
+    return df_out
+
+
+# ============================================================
 # Per-cluster anatomy purity + permutation test
 # ============================================================
 def _entropy(counts):
