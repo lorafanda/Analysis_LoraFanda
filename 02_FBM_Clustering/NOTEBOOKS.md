@@ -1,3 +1,13 @@
+How to run this notebook:
+
+
+1. 140 (preprocess)
+2. 251 cell 2 + cell 4 (recon)
+3. 210 (one clustering)
+4. 213 (cluster ranking)
+5. 252 (recon join)
+6. git push + hard-refresh MOBA
+
 # Clustering pipeline — what each notebook does
 
 This document explains the role of every notebook in the FBM clustering pipeline,
