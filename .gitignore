@@ -56,6 +56,13 @@ outputs/
 # Canonical dataset cache is large + machine-local — never push
 02_FBM_Clustering/outputs/_dataset/
 
+# Allow the classification manifest tree (per-run figures, metrics, confusion matrices)
+!03_FBM_Classifying/outputs/
+!03_FBM_Classifying/outputs/classification/
+!03_FBM_Classifying/outputs/classification/**
+# Classification dataset/feature cache is large + machine-local — never push
+03_FBM_Classifying/outputs/_dataset/
+
 # Allow the fsaverage meshes (and only those, not the rest of 250_recon)
 !02_FBM_Clustering/outputs/250_recon/
 !02_FBM_Clustering/outputs/250_recon/fsaverage/
