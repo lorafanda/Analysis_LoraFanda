@@ -46,6 +46,26 @@
       "n_clusters_ranked": 8
     },
     {
+      "method": "hierarchical",
+      "feature_set": "raw",
+      "run_id": "20260605_185134",
+      "created_at": "2026-06-05T16:53:25Z",
+      "n_samples": 2095,
+      "n_clusters": 20,
+      "silhouette": 0.03906197100877762,
+      "path": "hierarchical/raw/runs/20260605_185134"
+    },
+    {
+      "method": "hierarchical",
+      "feature_set": "rawds",
+      "run_id": "20260605_185323",
+      "created_at": "2026-06-05T16:53:28Z",
+      "n_samples": 2095,
+      "n_clusters": 16,
+      "silhouette": 0.06623523682355881,
+      "path": "hierarchical/rawds/runs/20260605_185323"
+    },
+    {
       "method": "kmeans",
       "feature_set": "hg",
       "run_id": "20260605_183018",
@@ -153,6 +173,16 @@
     },
     {
       "method": "kmeans",
+      "feature_set": "raw",
+      "run_id": "20260605_182806",
+      "created_at": "2026-06-05T16:51:33Z",
+      "n_samples": 2095,
+      "n_clusters": 20,
+      "silhouette": 0.045097850263118744,
+      "path": "kmeans/raw/runs/20260605_182806"
+    },
+    {
+      "method": "kmeans",
       "feature_set": "rawds",
       "run_id": "20260523_223100",
       "created_at": "2026-05-23T20:31:19Z",
@@ -234,23 +264,33 @@
       "path": "kmeans/rawds/runs/20260605_112054",
       "has_ranking": true,
       "n_clusters_ranked": 10
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "rawds",
+      "run_id": "20260605_185259",
+      "created_at": "2026-06-05T16:53:23Z",
+      "n_samples": 2095,
+      "n_clusters": 10,
+      "silhouette": 0.0829964205622673,
+      "path": "kmeans/rawds/runs/20260605_185259"
     }
   ],
   "latest": {
     "kmeans": {
-      "raw": "20260602_093347",
+      "raw": "20260605_182806",
       "blob": "20260603_230453",
       "minus101": "20260523_102735",
       "hg": "20260605_183250",
-      "rawds": "20260605_112054"
+      "rawds": "20260605_185259"
     },
     "hierarchical": {
-      "raw": "20260602_095216",
+      "raw": "20260605_185134",
       "blob": "20260603_230501",
       "minus101": "20260523_104339",
       "hg": "20260605_183314",
-      "rawds": "20260605_112125"
+      "rawds": "20260605_185323"
     }
   },
-  "updated_at": "2026-06-05T16:40:18Z"
+  "updated_at": "2026-06-05T16:53:28Z"
 }

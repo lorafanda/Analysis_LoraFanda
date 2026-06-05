@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "method": "kmeans",
+  "method_label": "K-Means",
+  "feature_set": "raw",
+  "feature_set_label": "Raw ERSP",
+  "run_id": "20260605_182806",
+  "created_at": "2026-06-05T16:51:33Z",
+  "params": {
+    "k_range": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "random_state": 42,
+    "n_init": 20
+  },
+  "summary": {
+    "n_samples": 2095,
+    "n_features": 38700,
+    "n_clusters": 20,
+    "silhouette_overall": 0.045097850263118744,
+    "calinski_harabasz": 49.220703250720405,
+    "davies_bouldin": 3.3132151836492354,
+    "best_k": 20,
+    "k_range": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ]
+  },
+  "predictor_type": "centroid",
+  "artifacts": {
+    "model": "model.joblib",
+    "predictor": "predictor.joblib",
+    "scaler": "scaler.joblib",
+    "X_train": "X_train.npy",
+    "feature_schema": "feature_schema.json",
+    "df_keep_with_clusters": "df_keep_with_clusters.parquet",
+    "labels": "labels.csv",
+    "metrics": "metrics.json",
+    "centroids_figure": "centroids.png",
+    "silhouette_per_cluster_figure": "silhouette_per_cluster.png",
+    "similarity_heatmap_figure": "similarity_heatmap.png",
+    "centroid_distance_heatmap_figure": "centroid_distance_heatmap.png",
+    "silhouette_sweep_figure": "silhouette_by_k.png",
+    "silhouette_sweep": "silhouette_by_k.json",
+    "labels_by_k": "cluster_labels_by_k.csv"
+  },
+  "notebook": "210_raw_clustering.ipynb",
+  "git_commit": null,
+  "git_dirty": null,
+  "user": "artoni",
+  "host": "wmedapp772",
+  "python_version": "3.10.13"
+}
