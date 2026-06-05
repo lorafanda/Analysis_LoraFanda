@@ -404,7 +404,9 @@ _non_neural_pat = re.compile(r"^(PHOTO|MRK|MKR|ECG|AUDIO)$|^[XE][1-8]$|^[X]$", r
 
 def _is_non_neural(label: str) -> bool:
     if not label: return False
-    s = str(label).strip().upper()
-    return ("+" in s) or ("-" in s) or bool(_non_neural_pat.match(s)) or \
+    # Treat '-' like '_' before the heuristic checks — dash-separated names
+    # (Cing-L1, OFG-L15, aH-L12, ...) are legitimate neural channels in some
+    # cohorts (EL034 dykstra recon style), not bipolar markers.
+    s = str(label).strip().upper().replace("-", "_")
+    return ("+" in s) or bool(_non_neural_pat.match(s)) or \
            any(t in s for t in ("PHOTO", "MRK", "MKR", "ECG", "AUDIO"))
-
