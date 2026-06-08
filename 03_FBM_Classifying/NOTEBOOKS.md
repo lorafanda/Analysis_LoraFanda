@@ -16,8 +16,8 @@ classes separate.
 03_FBM_Classifying/310 → assemble + cache classification features
                           │           (reuses lf_dataset / lf_features / lf_hg from 02)
               ┌───────────┴────────────┐
-              ▼                         ▼
-            320                        330
+              ▼                        ▼
+            320                       330
    condition decoding         parcellation decoding
    (audio/picture/reading)    (Yeo-7 & Yeo-17)
               └───────────┬────────────┘
