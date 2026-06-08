@@ -20,10 +20,16 @@ canonical loader (lf_dataset.prepare_dataset) and the feature builders
 02_FBM_Clustering/functions so the feature definitions stay identical across
 the two stages.
 
-Three feature variants per experiment (mirrors the clustering feature sets):
-  - 'rawds'  : band-aware downsampled ERSP, 15 freq bands x 30 time = 450 dims
-  - 'hg'     : high-gamma (70-150 Hz) band-mean time series, 300 dims
-  - 'hg_ds'  : the HG series downsampled to 30 time bins
+Feature variants form a NESTED, TIME-MATCHED family so "full spectrum vs high-
+gamma" is a fair test (HG and FULL share a time grid; only frequency changes):
+  - 'full_300' : 15 band-aware ERSP rows x 300 time  (the full spectrum)
+  - 'hg_300'   : single 70-150 Hz band-mean line x 300 time
+  - 'full_30'  : 15 bands x 30 time
+  - 'hg_30'    : single HG line x 30 time
+Valid contrasts are the matched pairs (full_300 vs hg_300) and (full_30 vs
+hg_30); full_300 vs full_30 isolates time resolution. NOTE: the STFT couples
+time and frequency resolution, so even matched grids aren't a perfectly clean
+separation -- stated as a caveat, not hidden.
 
 Design decisions (locked with Lora, 2026-06):
   - Patients: only those with ALL THREE conditions computed enter either task.
@@ -115,15 +121,35 @@ N_FREQ = 129
 N_TIME = 300
 FMAX_HZ = 500.0                                  # original ERSP freq ceiling
 HG_BAND = (70.0, 150.0)
-TIME_BINS_RAWDS = 30
-TIME_BINS_HG_DS = 30
-VARIANTS = ("rawds", "hg", "hg_ds")
+# ── Feature variants: a NESTED, TIME-MATCHED family ─────────────────────────
+# The scientific question is "does the full spectrum beat high-gamma alone?".
+# For that to be a fair test, HG and FULL must sit on the SAME time grid, so
+# the only thing that changes between a matched pair is the frequency content.
+# Hence two matched pairs: (full_300 vs hg_300) and (full_30 vs hg_30).
+#   - 'full' = the 15 band-aware ERSP rows (1..400 Hz)   -> a band x time map
+#   - 'hg'   = the single 70-150 Hz band-mean line        -> a 1-D time series
+# CAVEAT (frequency and time go hand in hand): the underlying STFT has a fixed
+# time-frequency resolution trade-off, so HG-with-fine-time vs full-with-coarse-
+# time can never be a perfectly clean separation. Matching the time grid removes
+# the gross confound; the residual coupling is stated in the narrative.
+STIM_FRAC = 0.5     # ERSPs are warped 50% stimulus (sensing) / 50% response.
+
+VARIANT_SPEC = {
+    "full_300": {"bands": "full", "n_time": 300},
+    "hg_300":   {"bands": "hg",   "n_time": 300},
+    "full_30":  {"bands": "full", "n_time": 30},
+    "hg_30":    {"bands": "hg",   "n_time": 30},
+}
+VARIANTS = tuple(VARIANT_SPEC.keys())
 
 VARIANT_LABELS = {
-    "rawds": "Downsampled ERSP (15x30)",
-    "hg":    "High-Gamma series (300)",
-    "hg_ds": "High-Gamma downsampled (30)",
+    "full_300": "Full spectrum (15 bands x 300 time)",
+    "hg_300":   "High-gamma line (70-150 Hz, 300 time)",
+    "full_30":  "Full spectrum (15 bands x 30 time)",
+    "hg_30":    "High-gamma line (70-150 Hz, 30 time)",
 }
+# Matched pairs (full, hg) at equal time resolution — the only valid contrasts.
+MATCHED_PAIRS = (("full_300", "hg_300"), ("full_30", "hg_30"))
 
 # Anything in this set is NOT a real Yeo network -> dropped from task B.
 _YEO_NON_NETWORK = {
@@ -177,24 +203,35 @@ def _freqs_axis(n_freq: int = N_FREQ, fmax: float = FMAX_HZ) -> np.ndarray:
     return np.linspace(0.0, float(fmax), n_freq)
 
 
+def _resize_time(arr2d: np.ndarray, n_time: int) -> np.ndarray:
+    """Anti-aliased resize of a (n_rows, n_time_orig) array to n_time columns."""
+    if arr2d.shape[1] == n_time:
+        return arr2d
+    if _sk_resize is None:
+        raise ImportError("scikit-image required for time downsampling.")
+    return _sk_resize(arr2d, (arr2d.shape[0], int(n_time)),
+                      anti_aliasing=True, preserve_range=True).astype(np.float32)
+
+
 def ersp_to_feature(ersp: np.ndarray, variant: str) -> np.ndarray:
-    """Map one (n_freq, n_time) ERSP to a flat 1-D feature vector."""
-    if variant == "rawds":
+    """Map one (n_freq, n_time) ERSP to a flat 1-D feature vector for `variant`.
+
+    'full' variants -> 15 band rows x n_time (a band x time map, row-major
+    flatten = band outer, time inner). 'hg' variants -> the single 70-150 Hz
+    band-mean line at n_time. The two share a time grid within a matched pair.
+    """
+    spec = VARIANT_SPEC.get(variant)
+    if spec is None:
+        raise ValueError(f"unknown variant {variant!r}; expected one of {VARIANTS}")
+    n_time = int(spec["n_time"])
+    if spec["bands"] == "full":
         ds = _lf_features.downsample_ersp_to_bands(
-            ersp, FREQ_BANDS, fmax_hz=FMAX_HZ, time_bins_out=TIME_BINS_RAWDS,
-        )
-        return ds.ravel().astype(np.float32)        # 15*30 = 450
-    if variant == "hg":
-        return _lf_hg.extract_hg_time_series(
-            ersp, hg_band=HG_BAND, fmax=FMAX_HZ).astype(np.float32)   # 300
-    if variant == "hg_ds":
-        hg = _lf_hg.extract_hg_time_series(ersp, hg_band=HG_BAND, fmax=FMAX_HZ)
-        if _sk_resize is None:
-            raise ImportError("scikit-image required for the 'hg_ds' variant.")
-        out = _sk_resize(hg.reshape(1, -1), (1, TIME_BINS_HG_DS),
-                         anti_aliasing=True, preserve_range=True)
-        return out.ravel().astype(np.float32)        # 30
-    raise ValueError(f"unknown variant {variant!r}; expected one of {VARIANTS}")
+            ersp, FREQ_BANDS, fmax_hz=FMAX_HZ, time_bins_out=n_time)
+        return ds.ravel().astype(np.float32)          # 15 * n_time
+    # single HG band-mean line, resized to the variant's time grid
+    hg = _lf_hg.extract_hg_time_series(ersp, hg_band=HG_BAND, fmax=FMAX_HZ)
+    hg = _resize_time(hg.reshape(1, -1), n_time)
+    return hg.ravel().astype(np.float32)              # n_time
 
 
 def build_feature_matrix(X_3d: np.ndarray, variant: str, verbose: bool = True
@@ -216,23 +253,21 @@ def build_feature_matrix(X_3d: np.ndarray, variant: str, verbose: bool = True
 def feature_columns(variant: str, condition: Optional[str] = None) -> pd.DataFrame:
     """One row per feature column, describing what it means. Powers the
     feature-importance interpretation (which condition / band / time drove it)."""
+    spec = VARIANT_SPEC.get(variant)
+    if spec is None:
+        raise ValueError(variant)
+    n_time = int(spec["n_time"])
     rows = []
-    if variant == "rawds":
+    if spec["bands"] == "full":
         for bi, (lo, hi) in enumerate(FREQ_BANDS):
-            for ti in range(TIME_BINS_RAWDS):
+            for ti in range(n_time):
                 rows.append({"band_idx": bi, "band_lo": lo, "band_hi": hi,
                              "band": f"{lo:.0f}-{hi:.0f}Hz", "time_bin": ti,
                              "kind": "ersp"})
-    elif variant == "hg":
-        for ti in range(N_TIME):
+    else:   # single HG line
+        for ti in range(n_time):
             rows.append({"band_idx": -1, "band_lo": HG_BAND[0], "band_hi": HG_BAND[1],
                          "band": "HG 70-150Hz", "time_bin": ti, "kind": "hg"})
-    elif variant == "hg_ds":
-        for ti in range(TIME_BINS_HG_DS):
-            rows.append({"band_idx": -1, "band_lo": HG_BAND[0], "band_hi": HG_BAND[1],
-                         "band": "HG 70-150Hz", "time_bin": ti, "kind": "hg_ds"})
-    else:
-        raise ValueError(variant)
     df = pd.DataFrame(rows)
     if condition is not None:
         df.insert(0, "condition", condition)
@@ -642,12 +677,24 @@ def feature_importance(estimator_name, X, y, groups, cols, classes, *,
         pf["importance"] = np.abs(coef).mean(axis=0)
     else:
         pf["impurity_importance"] = clf.feature_importances_
-        perm = permutation_importance(best, X, y, n_repeats=n_repeats,
-                                      random_state=random_state, n_jobs=-1,
-                                      scoring="balanced_accuracy")
-        pf["perm_importance"] = perm.importances_mean
-        pf["perm_importance_std"] = perm.importances_std
-        pf["importance"] = pf["perm_importance"].clip(lower=0)
+        # Per-feature permutation importance is O(n_features * n_repeats) model
+        # evals — intractable for the high-dim 'full_*' variants (4500-13500
+        # features). Run it only when the feature count is modest; otherwise fall
+        # back to impurity importance (still mapped to band/condition/time).
+        PERM_IMP_MAX_FEATURES = 1200
+        if X.shape[1] <= PERM_IMP_MAX_FEATURES:
+            perm = permutation_importance(best, X, y, n_repeats=n_repeats,
+                                          random_state=random_state, n_jobs=-1,
+                                          scoring="balanced_accuracy")
+            pf["perm_importance"] = perm.importances_mean
+            pf["perm_importance_std"] = perm.importances_std
+            pf["importance"] = pf["perm_importance"].clip(lower=0)
+        else:
+            if verbose:
+                print(f"  [feature_importance] {X.shape[1]} features > "
+                      f"{PERM_IMP_MAX_FEATURES}: using impurity importance "
+                      f"(skipping slow per-feature permutation importance)")
+            pf["importance"] = pf["impurity_importance"]
 
     agg = {}
     if "band" in pf.columns:
@@ -773,11 +820,12 @@ def _col_group_labels(cols: pd.DataFrame, variant: str, n_time_buckets: int = 30
                       ) -> List[str]:
     """Compact, ordered column-group label per feature column for the
     class x feature heatmap.
-      rawds      -> (cond|)band            (15 or 45 groups)
-      hg / hg_ds -> (cond|)t{bucket}        (<=30 or <=90 groups)
+      full_* -> (cond|)band            (15 or 45 groups)
+      hg_*   -> (cond|)t{bucket}        (<=30 or <=90 groups)
     """
     has_cond = "condition" in cols.columns
-    if variant == "rawds":
+    is_full = VARIANT_SPEC.get(variant, {}).get("bands") == "full"
+    if is_full:
         keyer = lambda r: str(r["band"])
     else:
         tb = cols["time_bin"].to_numpy()
@@ -856,47 +904,71 @@ def plot_class_heatmap(mat: pd.DataFrame, out_png, title="", cmap="RdBu_r",
     plt.close(fig)
 
 
-def plot_discriminative_maps(X, y, classes, cols, out_png, title=""):
-    """Per-class band x time mean z-scored ERSP (rawds variant only). For the
-    concatenated parcellation features, averages across the 3 conditions so each
-    class gets one spectro-temporal signature panel."""
+def plot_class_ersp_profiles(X_full, y, classes, out_png, *, n_time, n_cond,
+                             cond_names=None, title="", zscore=False,
+                             stim_frac=STIM_FRAC):
+    """Per-class mean FULL-spectrum ERSP (15 bands x n_time), with the n_cond
+    condition blocks concatenated along time.
+
+    This is the per-class *response profile* the comparison actually needs: a
+    real spectro-temporal map (not a collapsed line). A dashed gray line marks
+    the stimulus->response boundary (`stim_frac`) inside EACH condition block --
+    first half = stimulus sensing (viewing / hearing), second half = response.
+    Solid lines separate the conditions.
+
+    X_full must be the 'full' feature matrix: 15*n_time per condition block,
+    concatenated in CONDITIONS order (n_cond=1 for the condition task, where each
+    class IS a condition; n_cond=3 for the parcellation task).
+    """
     import matplotlib.pyplot as plt
-    Xz = _zscore_cols(X)
-    nb, nt = len(FREQ_BANDS), TIME_BINS_RAWDS
-    has_cond = "condition" in cols.columns
-    n_cond = len(CONDITIONS) if has_cond else 1
-    if Xz.shape[1] != n_cond * nb * nt:
-        return  # only well-defined for rawds-shaped features
+    if X_full is None or len(X_full) == 0:
+        return
+    X = np.asarray(X_full, dtype=float)
+    nb = len(FREQ_BANDS)
+    if X.shape[1] != n_cond * nb * n_time:
+        return  # not the full-spectrum layout — skip rather than mislabel
+    if zscore:
+        X = _zscore_cols(X)
     band_lbls = [f"{lo:.0f}-{hi:.0f}" for lo, hi in FREQ_BANDS]
     y = np.asarray(y)
-    maps, vmax = [], 0.0
+    imgs, vmax = [], 0.0
     for c in classes:
         m = y == c
-        v = Xz[m].mean(axis=0) if m.any() else np.zeros(Xz.shape[1])
-        block = v.reshape(n_cond, nb, nt).mean(axis=0)   # (nb, nt)
-        maps.append(block); vmax = max(vmax, np.nanmax(np.abs(block)))
+        v = X[m].mean(axis=0) if m.any() else np.zeros(X.shape[1])
+        blocks = v.reshape(n_cond, nb, n_time)
+        wide = np.concatenate([blocks[ci] for ci in range(n_cond)], axis=1)
+        imgs.append(wide); vmax = max(vmax, float(np.nanmax(np.abs(wide))))
     vmax = vmax or 1.0
     n = len(classes)
-    ncols = min(4, n); nrows = int(np.ceil(n / ncols))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(3.2 * ncols, 2.6 * nrows),
-                             squeeze=False)
+    sep = n_cond * n_time
+    fig, axes = plt.subplots(n, 1, squeeze=False,
+                             figsize=(max(5.0, 1.9 * n_cond + 1.6),
+                                      max(2.0, 0.85 * n + 1.0)))
     im = None
-    for k, (c, block) in enumerate(zip(classes, maps)):
-        ax = axes[k // ncols][k % ncols]
-        im = ax.imshow(block, aspect="auto", origin="lower", cmap="RdBu_r",
-                       vmin=-vmax, vmax=vmax)
-        ax.set_title(str(c), fontsize=8)
-        ax.set_yticks(range(nb)); ax.set_yticklabels(band_lbls, fontsize=5)
-        ax.set_xticks([0, nt - 1]); ax.set_xticklabels(["stim on", "stim off"],
-                                                       fontsize=6)
-    for k in range(n, nrows * ncols):
-        axes[k // ncols][k % ncols].axis("off")
-    fig.suptitle((title + "  — per-class mean spectro-temporal signature"),
-                 fontsize=10)
+    for k, (c, wide) in enumerate(zip(classes, imgs)):
+        ax = axes[k][0]
+        im = ax.imshow(wide, aspect="auto", origin="lower", cmap="RdBu_r",
+                       vmin=-vmax, vmax=vmax, extent=[0, sep, 0, nb])
+        for ci in range(n_cond):
+            x0 = ci * n_time
+            ax.axvline(x0 + stim_frac * n_time, color="0.35", lw=1.0, ls="--")
+            if ci > 0:
+                ax.axvline(x0, color="black", lw=1.4)
+        ax.set_title(str(c), fontsize=7, loc="left", pad=1)
+        ax.set_yticks(np.arange(nb) + 0.5)
+        ax.set_yticklabels(band_lbls, fontsize=3.4)
+        if k < n - 1:
+            ax.set_xticks([])
+        else:
+            ax.set_xticks([(ci + 0.5) * n_time for ci in range(n_cond)])
+            ax.set_xticklabels(list(cond_names) if cond_names else [""] * n_cond,
+                               fontsize=8)
+    fig.suptitle(title + "  — per-class ERSP   (dashed grey = stim→response, "
+                 "left half = sensing · right half = response)", fontsize=8)
     if im is not None:
-        fig.colorbar(im, ax=axes, fraction=0.02, pad=0.02,
-                     label="mean z-scored response")
-    fig.savefig(out_png, dpi=140, bbox_inches="tight")
+        fig.colorbar(im, ax=axes.ravel().tolist(), fraction=0.015, pad=0.02,
+                     label=("z-scored" if zscore else "mean dB") + " response")
+    fig.savefig(out_png, dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -915,7 +987,8 @@ def _write_json(path: Path, obj):
 def run_experiment(task, variant, classifier, X, y, groups, cols, meta, *,
                    n_networks=None, outputs_root: Path = OUTPUTS_ROOT,
                    outer_splits=5, inner_splits=3, n_perm=200, n_boot=1000,
-                   random_state=42, do_importance=True, verbose=True) -> dict:
+                   random_state=42, do_importance=True, profile=None,
+                   verbose=True) -> dict:
     """Run ONE experiment end-to-end and persist a run dir mirroring the
     clustering layout: outputs/classification/<task>/<variant>/<classifier>/runs/<id>/.
 
@@ -996,9 +1069,12 @@ def run_experiment(task, variant, classifier, X, y, groups, cols, meta, *,
         cfmat.to_csv(run_dir / "class_feature_heatmap.csv")
         plot_class_heatmap(cfmat, run_dir / "class_feature_heatmap.png",
                            title=title + " — per-class response profile")
-        if variant == "rawds":
-            plot_discriminative_maps(X, y, classes, cols,
-                                     run_dir / "discriminative_maps.png", title=title)
+        # full-spectrum, concatenated, stim-aware per-class ERSP profile
+        if profile is not None:
+            plot_class_ersp_profiles(
+                profile["X"], y, classes, run_dir / "class_ersp_profile.png",
+                n_time=profile["n_time"], n_cond=profile["n_cond"],
+                cond_names=profile.get("cond_names"), title=title)
         if imp is not None:
             cmat = coef_heatmap_matrix(imp, cols, variant)
             if cmat is not None:

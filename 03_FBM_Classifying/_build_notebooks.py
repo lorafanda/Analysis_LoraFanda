@@ -48,12 +48,19 @@ experiment notebooks (`320`, `330`) load instantly and never re-walk the ERSP tr
 **Source** — the same per-electrode ERSP `.npy` files the clustering pipeline uses:
 `01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/<pid>/LM/ERSP_matrix/<cond>/`.
 
-**Three feature variants** (identical definitions to 02's feature sets):
-| variant | what | dims |
-|---|---|---|
-| `rawds` | band-aware downsampled ERSP (15 bands × 30 time) | 450 |
-| `hg` | high-gamma 70–150 Hz band-mean time series | 300 |
-| `hg_ds` | the HG series downsampled to 30 time bins | 30 |
+**Four feature variants — a nested, time-matched family** so "full spectrum vs
+high-gamma" is a *fair* test (HG and full share a time grid; only frequency changes):
+| variant | what | freq × time | dims |
+|---|---|---|---|
+| `full_300` | full spectrum, 15 bands | 15 × 300 | 4500 |
+| `hg_300` | single 70–150 Hz line | 1 × 300 | 300 |
+| `full_30` | full spectrum, downsampled time | 15 × 30 | 450 |
+| `hg_30` | single HG line, downsampled time | 1 × 30 | 30 |
+
+Valid contrasts are the **matched pairs**: `full_300 vs hg_300` and `full_30 vs hg_30`
+(frequency content, time held fixed); `full_300 vs full_30` isolates time resolution.
+⚠️ Frequency and time go hand in hand — the STFT couples their resolution, so even
+matched grids aren't a perfectly clean separation (stated, not hidden).
 
 **What it caches**
 - **Condition task** (gated): one sample per high-activity electrode × condition.
@@ -94,7 +101,7 @@ print('patients:', sorted(df_meta.patient_id.unique()))
 df_meta.head()
 """),
 cell("markdown", r"""
-## 2 — Condition task — cache the 3 feature variants
+## 2 — Condition task — cache the 4 feature variants
 Gated electrode × condition samples, labelled by condition.
 """),
 cell("code", r"""
@@ -104,7 +111,7 @@ for v in C.VARIANTS:
     print('  saved ->', d)
 """),
 cell("markdown", r"""
-## 3 — Parcellation task — cache 3 variants × {Yeo-7, Yeo-17}
+## 3 — Parcellation task — cache 4 variants × {Yeo-7, Yeo-17}
 One sample per electrode; features = the three conditions concatenated in fixed order
 `[audio, picture, reading]`. Label = the electrode's Yeo network.
 """),
@@ -143,8 +150,9 @@ cell("markdown", r"""
 # 320 — Condition classification (audio / picture / reading)
 
 Decodes the **stimulus condition** from a single electrode's spectro-temporal response.
-3 classes, one sample per high-activity electrode × condition, run for **each feature
-variant × each classifier** (logistic regression + random forest) = 6 experiments.
+3 classes, one sample per high-activity electrode × condition, run for **each of the 4
+feature variants × each classifier** (logistic regression + random forest) = 8 experiments.
+Compare the **matched pairs** `full_300 vs hg_300` and `full_30 vs hg_30` (see 390).
 
 Every metric below comes from **nested GroupKFold by patient** — the outer fold holds out
 whole patients for testing, the inner fold tunes hyper-parameters, and no patient ever
@@ -177,15 +185,22 @@ print('classifiers:', CLASSIFIERS, '| outer/inner:', OUTER_SPLITS, INNER_SPLITS,
 """),
 cell("markdown", r"""
 ## Run all condition experiments
-3 variants × 2 classifiers = 6 runs, each saved under
+4 variants × 2 classifiers = 8 runs, each saved under
 `outputs/classification/condition/<variant>/<classifier>/runs/<id>/`.
 """),
 cell("code", r"""
+# Full-spectrum (15 bands x 300 time) drives the per-class ERSP *response profile*
+# shown for every run, regardless of which variant the classifier used — so HG runs
+# still show the full spectrogram they are a slice of. n_cond=1 (class == condition).
+Xf, yf, gf, mf, cf = C.load_arrays('condition', None, 'full_300')
+profile = {'X': Xf, 'n_time': 300, 'n_cond': 1}
+
 manifests = []
 for v in C.VARIANTS:
     X, y, groups, meta, cols = C.load_arrays('condition', None, v)
     for clf in CLASSIFIERS:
         m = C.run_experiment('condition', v, clf, X, y, groups, cols, meta,
+                             profile=profile,
                              outer_splits=OUTER_SPLITS, inner_splits=INNER_SPLITS,
                              n_perm=N_PERM, n_boot=N_BOOT, random_state=RANDOM_STATE)
         manifests.append(m)
@@ -210,8 +225,8 @@ cell("markdown", r"""
 # 330 — Anatomical parcellation classification (Yeo-7 & Yeo-17)
 
 Decodes **which Yeo functional network** an electrode sits in, from its response profile
-**concatenated across all three conditions** (`audio ⊕ picture ⊕ reading`). Run for each
-feature variant × {Yeo-7, Yeo-17} × each classifier = 12 experiments.
+**concatenated across all three conditions** (`audio ⊕ picture ⊕ reading`). Run for each of
+the 4 feature variants × {Yeo-7, Yeo-17} × each classifier = 16 experiments.
 
 The classes are imbalanced (some networks have far more electrodes than others), so
 **balanced accuracy** and **macro-F1** are the headline metrics and `class_weight='balanced'`
@@ -239,18 +254,25 @@ print('yeo:', YEO_NETWORKS, '| classifiers:', CLASSIFIERS, '| n_perm:', N_PERM)
 """),
 cell("markdown", r"""
 ## Run all parcellation experiments
-2 Yeo granularities × 3 variants × 2 classifiers = 12 runs, saved under
+2 Yeo granularities × 4 variants × 2 classifiers = 16 runs, saved under
 `outputs/classification/parcellation_yeo{7,17}/<variant>/<classifier>/runs/<id>/`.
+
+The per-class **response profile** is the full ERSP of each network, **concatenated
+across audio+picture+reading** (a spectrogram triptych, not a single line), with a
+grey stim→response boundary per condition.
 """),
 cell("code", r"""
 manifests = []
 for n_net in YEO_NETWORKS:
     key = f'yeo{n_net}'
+    # full-spectrum, 3 conditions concatenated -> the per-class ERSP triptych
+    Xf, yf, gf, mf, cf = C.load_arrays('parcellation', key, 'full_300')
+    profile = {'X': Xf, 'n_time': 300, 'n_cond': 3, 'cond_names': list(C.CONDITIONS)}
     for v in C.VARIANTS:
         X, y, groups, meta, cols = C.load_arrays('parcellation', key, v)
         for clf in CLASSIFIERS:
             m = C.run_experiment(f'parcellation_{key}', v, clf, X, y, groups, cols, meta,
-                                 n_networks=n_net,
+                                 n_networks=n_net, profile=profile,
                                  outer_splits=OUTER_SPLITS, inner_splits=INNER_SPLITS,
                                  n_perm=N_PERM, n_boot=N_BOOT, random_state=RANDOM_STATE)
             manifests.append(m)
@@ -291,9 +313,28 @@ Two supervised questions, both built on the per-electrode ERSPs from `01_FBM_Ana
    concatenated**, can we tell which **Yeo network** it sits in? *(7- or 17-class; one
    sample per electrode.)*
 
-Each question is answered with three feature representations — **downsampled ERSP** (`rawds`),
-**high-gamma series** (`hg`), and **high-gamma downsampled** (`hg_ds`) — and two classifiers,
-**logistic regression** (linear, interpretable) and **random forest** (non-linear).
+## The comparison is built to be *fair* — matched, nested feature variants
+
+The point is to ask **"does the full spectrum beat high-gamma alone?"** For that to mean
+anything, HG and full-spectrum must differ **only** in frequency content — same time grid,
+same electrodes, same pipeline. So the four variants form two **matched pairs**:
+
+| pair | full spectrum | high-gamma | what it isolates |
+|---|---|---|---|
+| 300-time | `full_300` (15 bands × 300) | `hg_300` (1 line × 300) | frequency content, time fixed |
+| 30-time | `full_30` (15 bands × 30) | `hg_30` (1 line × 30) | frequency content, time fixed |
+
+Read **`full_* vs hg_*` at the *same* time length** — never `hg_300` (fine time) against
+`full_30` (coarse time), which is what an earlier version did and which tangles frequency
+with time. `full_300 vs full_30` (or `hg_300 vs hg_30`) isolates the time-resolution effect.
+
+> ⚠️ **Frequency and time go hand in hand.** The STFT has a fixed time–frequency resolution
+> trade-off, so HG-with-fine-time vs full-with-coarse-time can never be a *perfectly* clean
+> separation. Matching the time grid removes the gross confound; the residual coupling is a
+> genuine caveat — treat differences between the 300 and 30 families as suggestive, not proof.
+
+Two classifiers per variant: **logistic regression** (linear, interpretable) and **random
+forest** (non-linear).
 
 ## How it was validated — nested GroupKFold by patient
 
@@ -313,7 +354,13 @@ which is why **balanced accuracy** (not raw accuracy) is the headline.
 | **Per-class strength** | recall ± bootstrap CI per class | bars above the dashed chance line with `*` (FDR-corrected) are the classes that genuinely separate; `ns` = not distinguishable |
 | **Feature importance** | what drove the model | which **condition** (Task B), **frequency band**, and **time bin** carried the signal |
 | **Class × feature heatmap** | rows = classes (regions / conditions), cols = frequency bands × condition; colour = per-class mean response | read **down a column** to see which classes light up in a band; **across a row** to see a class's spectral fingerprint. Red = above-average, blue = below |
-| **Discriminative maps** (rawds) | one **band × time** panel per class — its average spectro-temporal signature, in the same layout as the ERSPs | a warm patch at high-gamma early = that class is driven by an early HG burst; compare panels to see what separates two classes |
+| **Per-class ERSP profile** | the **full-spectrum** ERSP of each class, **concatenated across audio+picture+reading** (a spectrogram triptych — *not* a single line) | this is the real response signature; for parcellation each Yeo network gets `[audio｜picture｜reading]` side by side. **Always full-spectrum**, even on HG runs, so you see the whole map HG is a slice of |
+
+**Reading the ERSP profile — the stim→response structure.** Each ERSP is time-warped so the
+**first half is the stimulus** (viewing / hearing) and the **second half is the response**.
+The **dashed grey line at 50%** of every condition block marks that boundary: left of it =
+sensing, right of it = response/production. So "an early-vs-late patch" literally means
+"during perception vs during the response."
 | **Coefficient heatmap** (LR) | rows = classes, cols = bands; colour = signed linear weight | what the model *uses* (vs the raw profile above): which band pushes an electrode **toward** (red) or **away from** (blue) each class |
 
 `*** p<.001 · ** p<.01 · * p<.05 · ns = not significant` (FDR-corrected across classes).
@@ -344,8 +391,8 @@ def show_run(task, variant, classifier):
          f"- macro-F1 {o['macro_f1']:.3f} · accuracy {o['accuracy']:.3f}"
          + (f" · **permutation p = {p:.4f}**" if p is not None else "")
          + f" · n={o['n_samples']} over {o['n_patients']} patients")
-    for stem in ('confusion_matrix', 'per_class_strength', 'class_feature_heatmap',
-                 'discriminative_maps', 'coef_heatmap', 'permutation_null',
+    for stem in ('confusion_matrix', 'per_class_strength', 'class_ersp_profile',
+                 'class_feature_heatmap', 'coef_heatmap', 'permutation_null',
                  'feature_importance'):
         if stem in r['figures']:
             display(Image(filename=str(r['figures'][stem])))

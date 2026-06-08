@@ -16,8 +16,8 @@ classes separate.
 03_FBM_Classifying/310 → assemble + cache classification features
                           │           (reuses lf_dataset / lf_features / lf_hg from 02)
               ┌───────────┴────────────┐
-              ▼                        ▼
-            320                       330
+              ▼                         ▼
+            320                        330
    condition decoding         parcellation decoding
    (audio/picture/reading)    (Yeo-7 & Yeo-17)
               └───────────┬────────────┘
@@ -27,13 +27,20 @@ classes separate.
 
 Everything is decoded with **nested GroupKFold by patient** (outer = held-out test
 patients, inner = hyper-parameter tuning), **two classifiers** (logistic regression +
-random forest), and **three feature variants**:
+random forest), and a **nested, time-matched family of four feature variants** so
+"full spectrum vs high-gamma" is a fair test:
 
-| variant | what | dims |
+| variant | freq × time | dims |
 |---|---|---|
-| `rawds` | band-aware downsampled ERSP (15 bands × 30 time) | 450 |
-| `hg` | high-gamma 70–150 Hz band-mean time series | 300 |
-| `hg_ds` | the HG series downsampled to 30 time bins | 30 |
+| `full_300` | 15 bands × 300 time | 4500 |
+| `hg_300` | 1 line (70–150 Hz) × 300 time | 300 |
+| `full_30` | 15 bands × 30 time | 450 |
+| `hg_30` | 1 HG line × 30 time | 30 |
+
+**Only matched pairs are valid contrasts:** `full_300 vs hg_300` and `full_30 vs hg_30`
+isolate frequency content (time held fixed); `full_300 vs full_30` isolates time
+resolution. ⚠️ Frequency and time are coupled by the STFT, so even matched grids aren't a
+perfectly clean separation — a caveat stated in 390, not hidden.
 
 ---
 
@@ -100,7 +107,7 @@ Each run lands in
 | `permutation_null.{json,png}` | grouped label-permutation null for balanced accuracy + per class |
 | `feature_importance.{csv,png}` (+ `_by_band/_by_condition/_by_time.csv`) | what drove separation: LR signed per-class coefficients, or RF impurity + permutation importance, aggregated by condition / band / time |
 | `class_feature_heatmap.{csv,png}` | **heatmap** rows = classes (regions/conditions), cols = frequency band × condition, colour = per-class mean response |
-| `discriminative_maps.png` (rawds) | per-class **band × time** signature panels, in the same layout as the ERSPs |
+| `class_ersp_profile.png` | per-class **full-spectrum ERSP**, conditions **concatenated** (`[audio｜picture｜reading]`); dashed grey line at 50% of each block = stim→response boundary (first half = sensing, second half = response). Always full-spectrum, even on HG runs |
 | `coef_heatmap.{csv,png}` (LR) | **heatmap** of class × band signed linear weights — what the model uses |
 | `predictions.csv` | out-of-fold `y_true / y_pred / fold` per sample |
 
