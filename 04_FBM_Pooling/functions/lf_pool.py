@@ -991,6 +991,165 @@ def render_zone_brains(df_qual: pd.DataFrame, run_dir, *, condition: str, zone: 
 
 
 # ============================================================
+# 7b — Region x time cascade raster (thesis figure)
+# ============================================================
+def region_labels(df_meta: pd.DataFrame, coords: pd.DataFrame,
+                  aparc: Optional[pd.DataFrame] = None, *, scheme: str = "yeo7"
+                  ) -> pd.Series:
+    """Per-contact region label, index-aligned to df_meta. scheme:
+    'yeo7' | 'yeo17' (from the coords CSVs) | 'aparc' (Desikan-Killiany gyrus,
+    from the aparc cache). Non-real networks / unknown / unmatched -> NaN
+    (dropped from the cascade)."""
+    key = ["patient_id", "contact_norm"]
+    if scheme in ("yeo7", "yeo17"):
+        col = "yeo7_network" if scheme == "yeo7" else "yeo17_network"
+        lut = (coords[key + [col]].drop_duplicates(key).rename(columns={col: "region"}))
+        lut["region"] = lut["region"].where(lut["region"].map(is_real_network))
+    elif scheme == "aparc":
+        if aparc is None:
+            raise ValueError("scheme='aparc' needs the aparc cache (ensure_aparc_cache)")
+        lut = pd.DataFrame({
+            "patient_id": aparc["patient"].astype(str),
+            "contact_norm": aparc["electrode"].map(normalize_label),
+            "region": aparc["aparc_label"].astype(str),
+        }).drop_duplicates(key)
+        bad = {"unknown", "nan", "", "none"}
+        lut["region"] = lut["region"].where(~lut["region"].str.lower().isin(bad))
+    else:
+        raise ValueError("scheme must be 'yeo7', 'yeo17', or 'aparc'")
+    merged = df_meta[key].merge(lut, on=key, how="left")
+    return merged["region"]
+
+
+def responsive_contacts(df_pool: pd.DataFrame) -> set:
+    """Set of (patient_id, contact_norm) qualifying in >=1 zone (any shape)."""
+    q = df_pool[df_pool["qualifies"]]
+    return set(zip(q["patient_id"].astype(str), q["contact_norm"].astype(str)))
+
+
+def build_cascade(df_meta: pd.DataFrame, X: np.ndarray, region_series: pd.Series, *,
+                  grid: str = "full", feature: str = "hg",
+                  conditions: Sequence[str] = CONDITIONS, min_contacts: int = 5,
+                  qualifies: Optional[set] = None, sort_by: Optional[str] = None) -> dict:
+    """Mean `feature` time-course per anatomical region (rows) x warped time (cols),
+    one matrix per condition, with rows ordered by peak latency so the cascade
+    reads top (early) -> bottom (late). No spatial interpolation — each row is a
+    real average over that region's contacts. `feature`='hg' (the HG line) by
+    default; `qualifies` restricts to the responsive set."""
+    n_time = int(X.shape[2])
+    time_pct = np.linspace(0, 100, n_time)
+    reg = region_series.to_numpy()
+    cond_arr = df_meta["condition"].to_numpy()
+    pid = df_meta["patient_id"].astype(str).to_numpy()
+    con = df_meta["contact_norm"].astype(str).to_numpy()
+
+    acc: Dict[str, Dict[str, list]] = {c: {} for c in conditions}
+    seen: Dict[str, set] = {}                       # region -> unique (pid, contact)
+    for i in range(len(df_meta)):
+        r = reg[i]
+        if r is None or (isinstance(r, float) and np.isnan(r)):
+            continue
+        c = cond_arr[i]
+        if c not in acc:
+            continue
+        if qualifies is not None and (pid[i], con[i]) not in qualifies:
+            continue
+        trace = feature_vector(X[i], feature, grid=grid)[0]          # (n_time,)
+        d = acc[c].setdefault(r, [np.zeros(n_time), 0])
+        d[0] += trace
+        d[1] += 1
+        seen.setdefault(r, set()).add((pid[i], con[i]))
+
+    region_ok = sorted({r for c in conditions for r, (s, n) in acc[c].items()
+                        if n >= min_contacts})
+    matrices, counts = {}, {}
+    for c in conditions:
+        M = np.full((len(region_ok), n_time), np.nan)
+        for j, r in enumerate(region_ok):
+            if r in acc[c] and acc[c][r][1] >= min_contacts:
+                M[j] = acc[c][r][0] / acc[c][r][1]
+        matrices[c] = M
+        counts[c] = {r: (acc[c][r][1] if r in acc[c] else 0) for r in region_ok}
+
+    # order rows by peak latency (reference condition if given, else mean across conds)
+    lat = []
+    for j in range(len(region_ok)):
+        tr = (matrices[sort_by][j] if sort_by in conditions
+              else np.nanmean(np.vstack([matrices[c][j] for c in conditions]), axis=0))
+        lat.append(np.inf if np.all(np.isnan(tr))
+                   else time_pct[int(np.nanargmax(np.where(np.isnan(tr), -np.inf, tr)))])
+    order = np.argsort(lat)
+    region_order = [region_ok[k] for k in order]
+    return {
+        "conditions": list(conditions),
+        "time_pct": time_pct,
+        "regions": region_order,
+        "peak_latency_pct": [float(lat[k]) for k in order],
+        "n_total": {r: len(seen.get(r, ())) for r in region_order},
+        "matrices": {c: matrices[c][order] for c in conditions},
+        "counts": {c: counts[c] for c in conditions},
+        "grid": grid, "feature": feature,
+    }
+
+
+def cascade_table(cascade: dict) -> pd.DataFrame:
+    """Tidy companion table: region, n_total, peak-latency (%) per condition."""
+    rows = []
+    for j, r in enumerate(cascade["regions"]):
+        rec = {"region": r, "n_total": cascade["n_total"][r],
+               "peak_latency_pct": round(cascade["peak_latency_pct"][j], 1)}
+        for c in cascade["conditions"]:
+            tr = cascade["matrices"][c][j]
+            rec[f"peak_{c}_pct"] = (float("nan") if np.all(np.isnan(tr))
+                                    else round(float(cascade["time_pct"][
+                                        int(np.nanargmax(np.where(np.isnan(tr), -np.inf, tr)))]), 1))
+        rows.append(rec)
+    return pd.DataFrame(rows)
+
+
+def plot_cascade(cascade: dict, out_png, *, cfg: Optional[dict] = None,
+                 vlim: Optional[Tuple[float, float]] = None, dpi: int = 150) -> Path:
+    """Render the region x time cascade: one heatmap panel per condition, rows
+    shared + sorted by peak latency, RdBu_r centred at 0, response-onset line at
+    50%, and (if cfg given) the a-priori zones shaded behind it."""
+    import matplotlib.pyplot as plt
+    conds, regions, t = cascade["conditions"], cascade["regions"], cascade["time_pct"]
+    mats, n_total = cascade["matrices"], cascade["n_total"]
+    if not regions:
+        raise ValueError("no regions met min_contacts — lower min_contacts or check the join")
+    allv = np.concatenate([m[~np.isnan(m)].ravel() for m in mats.values() if m.size]) \
+        if any(m.size for m in mats.values()) else np.array([1.0])
+    if vlim is None:
+        a = float(np.nanpercentile(np.abs(allv), 99)) or 1.0
+        vlim = (-a, a)
+    fig, axes = plt.subplots(1, len(conds), squeeze=False, sharey=True,
+                             figsize=(3.8 * len(conds) + 0.5, 0.34 * len(regions) + 1.6))
+    im = None
+    for ax, c in zip(axes[0], conds):
+        if cfg:
+            for spec in cfg["zones"].values():
+                b = spec["boxcar"]
+                ax.axvspan(b["t_lo_pct"], b["t_hi_pct"], color="0.5", alpha=0.10, zorder=0)
+        im = ax.imshow(mats[c], aspect="auto", origin="upper", cmap="RdBu_r",
+                       vmin=vlim[0], vmax=vlim[1], extent=[0, 100, len(regions), 0],
+                       interpolation="nearest", zorder=1)
+        ax.axvline(STIM_FRAC * 100, color="k", lw=1.0, ls="--", zorder=2)
+        ax.set_title(c)
+        ax.set_xlabel("warped time (%)  (50 = response onset)")
+    axes[0][0].set_yticks(np.arange(len(regions)) + 0.5)
+    axes[0][0].set_yticklabels([f"{r}  (n={n_total[r]})" for r in regions], fontsize=7)
+    fig.colorbar(im, ax=axes[0].tolist(), label=f"mean {cascade['feature']} power (dB)",
+                 fraction=0.025, pad=0.02)
+    fig.suptitle(f"Region × time cascade — {cascade['feature']} "
+                 f"(rows sorted by peak latency · grid={cascade['grid']})")
+    out_png = Path(out_png)
+    out_png.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+    plt.close(fig)
+    return out_png
+
+
+# ============================================================
 # 8 — Run-dir / index plumbing (mirrors lf_classify)
 # ============================================================
 def _now_id() -> str:

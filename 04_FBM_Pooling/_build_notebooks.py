@@ -511,8 +511,86 @@ averaging · time–frequency ROI · tapering / apodization · matched filter ·
 ]
 
 
+# ============================================================
+# 440 — region × time cascade (thesis figure)
+# ============================================================
+nb440 = [
+cell("markdown", r"""
+# 440 — Region × time cascade (thesis figure)
+
+The confirmatory result as a **publication figure**: for each anatomical region, the **mean
+high-gamma time-course** across its responsive contacts, drawn as a band on a region × warped-time
+heatmap. Rows are **sorted by peak latency**, so the **perception → pre-articulation → audio**
+cascade reads top (early) → bottom (late). One panel per condition (audio / picture / reading),
+with the a-priori zones shaded behind.
+
+**Why this rather than a surface video:** every row is a *real average over that region's
+contacts* — no spatial interpolation, no implied coverage. It shows *timing across regions* (what
+the pooling analysis is actually about) in a way that holds up to review.
+
+Run `420` first (it defines the responsive set). Default regions = **Yeo-7** (no MNE needed);
+switch `REGION_SCHEME` to `'yeo17'` or `'aparc'` (the latter reuses the aparc cache from `430`).
+"""),
+cell("code", SETUP),
+cell("code", r"""
+# ---- knobs ----
+USE_DS          = True                # must match what you ran in 420
+GRID            = 'ds' if USE_DS else 'full'
+DS_TIME_BINS    = 30
+REGION_SCHEME   = 'yeo7'              # 'yeo7' | 'yeo17' | 'aparc' (aparc needs 430's cache)
+MIN_CONTACTS    = 5                   # drop regions with fewer responsive contacts
+RESPONSIVE_ONLY = True                # restrict to contacts qualifying in >=1 zone (from 420)
+SORT_BY         = None                # None: sort rows by mean peak latency; or a condition name
+FEATURE         = 'hg'
+print('grid:', GRID, '| regions:', REGION_SCHEME, '| min_contacts:', MIN_CONTACTS,
+      '| responsive_only:', RESPONSIVE_ONLY)
+"""),
+cell("markdown", r"""
+## 1 — Load the pool table, anatomy and the ERSPs
+"""),
+cell("code", r"""
+df_pool = P.load_pool_table(grid=GRID)
+coords  = P.load_coords()
+aparc   = P.ensure_aparc_cache() if REGION_SCHEME == 'aparc' else None
+df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
+X = P.downsample_dataset(X_full, time_bins=DS_TIME_BINS) if USE_DS else X_full
+print('pool rows:', len(df_pool), '| samples:', len(df_meta), '| X:', X.shape)
+"""),
+cell("markdown", r"""
+## 2 — Build the cascade
+Mean `FEATURE` time-course per region across its (responsive) contacts, one matrix per condition,
+rows ordered by peak latency. The companion table lists each region's contact count and per-
+condition peak latency (%).
+"""),
+cell("code", r"""
+region_series = P.region_labels(df_meta, coords, aparc, scheme=REGION_SCHEME)
+qualifies = P.responsive_contacts(df_pool) if RESPONSIVE_ONLY else None
+cascade = P.build_cascade(df_meta, X, region_series, grid=GRID, feature=FEATURE,
+                          conditions=P.CONDITIONS, min_contacts=MIN_CONTACTS,
+                          qualifies=qualifies, sort_by=SORT_BY)
+print('regions kept:', len(cascade['regions']))
+display(P.cascade_table(cascade))
+"""),
+cell("markdown", r"""
+## 3 — The figure
+RdBu_r centred at 0 (red = power increase, blue = decrease), dashed line = response onset (50%),
+shaded bands = the a-priori zones. The top-to-bottom progression of the warm patches *is* the
+cascade. Saved (PNG + CSV) under `outputs/pooling/cascade/<scheme>/runs/<id>/`.
+"""),
+cell("code", r"""
+cfg = P.load_window_config(P.OUTPUTS_ROOT / 'window_config.json')
+run_dir = P.new_run_dir('cascade', REGION_SCHEME)
+png = P.plot_cascade(cascade, run_dir / f'cascade_{REGION_SCHEME}.png', cfg=cfg)
+P.cascade_table(cascade).to_csv(run_dir / f'cascade_{REGION_SCHEME}.csv', index=False)
+print('saved ->', run_dir)
+display(Image(filename=str(png)))
+"""),
+]
+
+
 write_nb("410_zone_discovery.ipynb", nb410)
 write_nb("420_pool_and_qualify.ipynb", nb420)
 write_nb("430_anatomy_mapping.ipynb", nb430)
+write_nb("440_cascade.ipynb", nb440)
 write_nb("490_results.ipynb", nb490)
 print("all notebooks written.")

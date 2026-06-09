@@ -31,6 +31,8 @@ high-activity gate.
               430   → map qualifiers to Yeo-7/17 + Desikan-Killiany gyri,
                        purity / compactness, fsaverage renders
                           ▼
+              440   → region × time cascade raster (thesis figure)
+                          ▼
               490   → results narrative (boxcar vs gaussian robustness)
 ```
 
@@ -98,6 +100,23 @@ Two axes of comparison run throughout:
 
 ---
 
+## 440 — `440_cascade.ipynb`
+
+**Role**: the confirmatory result as a **publication figure** — a region × warped-time **cascade
+raster**.
+
+- For each anatomical region (`region_labels`: Yeo-7 default, or Yeo-17 / Desikan-Killiany),
+  averages the **high-gamma time-course** across its **responsive** contacts (`responsive_contacts`
+  from the `420` pool table), one matrix per condition (`build_cascade`).
+- Rows are **sorted by peak latency**, so the perception → pre-articulation → audio cascade reads
+  top → bottom; the a-priori zones are shaded behind (`plot_cascade`). A companion table
+  (`cascade_table`) gives per-region contact counts + peak latencies.
+- **No spatial interpolation** — every row is a real average over real contacts (the honest,
+  review-proof alternative to a smoothed surface video). Saved under
+  `outputs/pooling/cascade/<scheme>/runs/<id>/`. Honours the same `USE_DS` toggle.
+
+---
+
 ## 490 — `490_results.ipynb`
 
 **Role**: the **results page**. Pulls the artifacts 410/420/430 wrote, lays them out with the
@@ -140,6 +159,8 @@ outputs/_anatomy/aparc_lookup.csv   one-time MNE build                    (gitig
 | `ensure_aparc_cache` / `load_coords` / `attach_anatomy` | the anatomy joins (Yeo from coords, DK from `lf_anatomy.build_aparc_cache`) |
 | `zone_to_cluster_id` / `summarize_anatomy` | per-zone purity + compactness (reuses `lf_anatomy.save_*_artifacts`) |
 | `render_zone_brains` | self-contained fsaverage PyVista render of qualifiers |
+| `region_labels` / `responsive_contacts` | per-contact region (Yeo/aparc) + the responsive-contact set (440) |
+| `build_cascade` / `cascade_table` / `plot_cascade` | the 440 region × time cascade raster + its companion table |
 | `new_run_dir` / `update_index` / `list_runs` / `latest_run` | run-dir + index plumbing (mirrors `lf_classify`) |
 
 `_build_notebooks.py` regenerates the four notebooks from source (stdlib only); safe to
