@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "task": "condition",
+  "variant": "hg_30",
+  "classifier": "rf",
+  "n_networks": null,
+  "run_id": "20260608_203308",
+  "created_at": "2026-06-08T20:38:57",
+  "host": "wmedapp772",
+  "user": "artoni",
+  "feature_dim": 30,
+  "classes": [
+    "audio",
+    "picture",
+    "reading"
+  ],
+  "cv": {
+    "scheme": "nested GroupKFold (by patient)",
+    "outer_splits": 5,
+    "inner_splits": 3,
+    "best_params_per_fold": [
+      {
+        "clf__max_depth": 16,
+        "clf__min_samples_leaf": 3
+      },
+      {
+        "clf__max_depth": 8,
+        "clf__min_samples_leaf": 3
+      },
+      {
+        "clf__max_depth": 16,
+        "clf__min_samples_leaf": 1
+      },
+      {
+        "clf__max_depth": null,
+        "clf__min_samples_leaf": 3
+      },
+      {
+        "clf__max_depth": 8,
+        "clf__min_samples_leaf": 3
+      }
+    ]
+  },
+  "n_permutations": 200,
+  "n_bootstrap": 1000,
+  "summary": {
+    "balanced_accuracy": 0.5286062928355892,
+    "balanced_accuracy_ci": [
+      0.48158369842682336,
+      0.5809076888778774
+    ],
+    "macro_f1": 0.532349824562739,
+    "accuracy": 0.5349794238683128,
+    "chance_level": 0.3333333333333333,
+    "n_samples": 1944,
+    "n_classes": 3,
+    "n_patients": 24,
+    "permutation_p": 0.004975124378109453
+  },
+  "path": "condition\\hg_30\\rf\\runs\\20260608_203308"
+}

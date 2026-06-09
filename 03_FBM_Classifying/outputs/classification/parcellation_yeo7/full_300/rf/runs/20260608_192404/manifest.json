@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "task": "parcellation_yeo7",
+  "variant": "full_300",
+  "classifier": "rf",
+  "n_networks": 7,
+  "run_id": "20260608_192404",
+  "created_at": "2026-06-08T20:04:39",
+  "host": "wmedapp772",
+  "user": "artoni",
+  "feature_dim": 13500,
+  "classes": [
+    "7Networks_1",
+    "7Networks_2",
+    "7Networks_3",
+    "7Networks_4",
+    "7Networks_5",
+    "7Networks_6",
+    "7Networks_7"
+  ],
+  "cv": {
+    "scheme": "nested GroupKFold (by patient)",
+    "outer_splits": 5,
+    "inner_splits": 3,
+    "best_params_per_fold": [
+      {
+        "clf__max_depth": 8,
+        "clf__min_samples_leaf": 3
+      },
+      {
+        "clf__max_depth": 8,
+        "clf__min_samples_leaf": 3
+      },
+      {
+        "clf__max_depth": 8,
+        "clf__min_samples_leaf": 3
+      },
+      {
+        "clf__max_depth": 8,
+        "clf__min_samples_leaf": 3
+      },
+      {
+        "clf__max_depth": 8,
+        "clf__min_samples_leaf": 3
+      }
+    ]
+  },
+  "n_permutations": 200,
+  "n_bootstrap": 1000,
+  "summary": {
+    "balanced_accuracy": 0.2837522970697716,
+    "balanced_accuracy_ci": [
+      0.2383073835811137,
+      0.3339639027856334
+    ],
+    "macro_f1": 0.2872825101090211,
+    "accuracy": 0.4091858037578288,
+    "chance_level": 0.14285714285714285,
+    "n_samples": 958,
+    "n_classes": 7,
+    "n_patients": 24,
+    "permutation_p": 0.004975124378109453
+  },
+  "path": "parcellation_yeo7\\full_300\\rf\\runs\\20260608_192404"
+}
