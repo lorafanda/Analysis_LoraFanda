@@ -767,6 +767,32 @@
       "macro_f1": 0.532349824562739,
       "chance_level": 0.3333333333333333,
       "permutation_p": 0.004975124378109453
+    },
+    {
+      "task": "parcellation_yeo7",
+      "variant": "full_30",
+      "classifier": "rf",
+      "n_networks": 7,
+      "run_id": "20260609_141540",
+      "created_at": "2026-06-09T14:28:00",
+      "path": "parcellation_yeo7\\full_30\\rf\\runs\\20260609_141540",
+      "balanced_accuracy": 0.2892652363811908,
+      "macro_f1": 0.29343762980849186,
+      "chance_level": 0.14285714285714285,
+      "permutation_p": 0.004975124378109453
+    },
+    {
+      "task": "parcellation_yeo7",
+      "variant": "hg_30",
+      "classifier": "logreg",
+      "n_networks": 7,
+      "run_id": "20260609_142800",
+      "created_at": "2026-06-09T14:28:24",
+      "path": "parcellation_yeo7\\hg_30\\logreg\\runs\\20260609_142800",
+      "balanced_accuracy": 0.33703880687990406,
+      "macro_f1": 0.2983143117411932,
+      "chance_level": 0.14285714285714285,
+      "permutation_p": 0.004975124378109453
     }
   ]
 }
