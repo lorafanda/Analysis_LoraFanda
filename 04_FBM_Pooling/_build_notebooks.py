@@ -432,6 +432,42 @@ cell("markdown", r"""
 _To refresh: re-run 420 / 430 (writes new runs), then re-run this notebook — it always reads the
 latest run per (stage · target · shape)._
 """),
+cell("markdown", r"""
+# Methods rationale & key references
+
+**What this analysis is called.** Per contact we pool baseline-normalized **event-related
+spectral perturbation (ERSP)** power within *a-priori, hypothesis-driven time windows* — a
+**confirmatory time–frequency region-of-interest (ROI) analysis**, the counterpart to the
+data-driven **cluster-based permutation test** (Maris & Oostenveld 2007). Thresholding each
+contact's windowed power against baseline to label it "responsive" is standard intracranial-EEG
+practice; high-gamma (70–150 Hz) is the canonical task-response marker
+(see also ERD/ERS, Pfurtscheller & Lopes da Silva 1999).
+
+**Why two window shapes.** Pooling power over a window is a weighted temporal average — i.e.
+convolving the signal with a kernel, where the window is a *taper* / *apodization* function.
+The **boxcar** (rectangular) window weights the zone equally — the straight hypothesis test —
+but its hard edges cause spectral leakage / edge sensitivity. The **Gaussian** taper down-weights
+the edges, suppressing edge artefacts and tolerating trial-to-trial latency jitter; close
+**boxcar ≈ Gaussian** agreement is the robustness signal (Harris 1978). In machine-learning terms
+this is **temporal average pooling** (uniform vs Gaussian pooling kernel); the principled
+generalization is **multitaper** estimation (Slepian/DPSS tapers; Thomson 1982).
+
+**References**
+- Pfurtscheller G & Lopes da Silva FH (1999). Event-related EEG/MEG synchronization and
+  desynchronization: basic principles. *Clin. Neurophysiol.* 110(11):1842–1857.
+- Maris E & Oostenveld R (2007). Nonparametric statistical testing of EEG- and MEG-data.
+  *J. Neurosci. Methods* 164(1):177–190.  *(the data-driven alternative to a-priori windows)*
+- Harris FJ (1978). On the use of windows for harmonic analysis with the discrete Fourier
+  transform. *Proc. IEEE* 66(1):51–83.  *(boxcar vs Gaussian vs other tapers)*
+- Hamilton LS, Edwards E & Chang EF (2018). A spatial map of onset and sustained responses to
+  speech in the human superior temporal gyrus. *Curr. Biol.* 28(12):1860–1871.
+  *(per-electrode time-window response typing + anatomical mapping — closest iEEG analogue)*
+- Forseth KJ et al. (2018). A lexical semantic hub for heteromodal naming in middle fusiform
+  gyrus. *Brain* 141(7):2112–2126.  *(a-priori windows + electrode responsiveness)*
+
+*Related terms:* ERD/ERS · high-gamma / high-frequency broadband (HFB) · windowed band-power
+averaging · time–frequency ROI · tapering / apodization · matched filter · temporal pooling.
+"""),
 ]
 
 
