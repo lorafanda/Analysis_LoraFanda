@@ -5,6 +5,9 @@ clustering stage (`02_FBM_Clustering`) uses. Where clustering asked *"what struc
 in the data?"*, classification asks two specific questions and reports how well the
 classes separate.
 
+> 📖 **How to read every plot/metric** (definitions, equations, what to look for):
+> [`READING_GUIDE.md`](READING_GUIDE.md).
+
 ---
 
 ## Pipeline overview
