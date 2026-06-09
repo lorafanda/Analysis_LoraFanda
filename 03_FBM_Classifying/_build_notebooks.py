@@ -318,6 +318,9 @@ This is the **results page** for `03_FBM_Classifying`. It doesn't compute anythi
 it pulls the artifacts that 320 and 330 wrote and lays them out with the story and a guide
 to reading each figure. Run 310 → 320 → 330 first, then run this top-to-bottom.
 
+> 📖 **Full reference — definitions, equations, and what to look for for every plot/metric:
+> [`READING_GUIDE.md`](READING_GUIDE.md).** The summaries below are the short version.
+
 ---
 
 ## What was asked
