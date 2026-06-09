@@ -78,44 +78,71 @@ outline**, its shade scaled by the blob's mean dB. Stacked across all contacts, 
 outlines reveal the time regions where the dataset reliably responds — the candidate **pooling
 zones**. The time-marginal plot underneath quantifies the same thing (contacts active per bin).
 
+**Two resolutions (`USE_DS`).** Default `USE_DS=True` explores the fast **15×30 band-downsampled**
+grid via per-condition mean band×time heatmaps; `USE_DS=False` runs the full-res **129×300** blob
+overlays, thinned by a tunable **`SCORE_PCT`** blob-score gate so they stay readable. See §1.
+
 **The goal:** read these, then in the final cell type the boxcar + Gaussian windows for the
 three zones — **perception**, **pre_articulation**, **audio** — saved to
 `outputs/pooling/window_config.json` for `420` to pool over.
 """),
 cell("code", SETUP),
 cell("markdown", r"""
-## 1 — Load the canonical dataset (identical to clustering)
-Ungated: every electrode × condition ERSP for patients with all three conditions. Windowed
-gating happens later in `420`, so we keep everything here. The heavy walk is cached.
+## 1 — Load the canonical dataset (+ choose resolution)
+Ungated: every electrode × condition ERSP for patients with all three conditions (windowed
+gating happens in `420`). The heavy walk is cached.
+
+**Resolution toggle.** `USE_DS=True` works on the fast **15×30 band-downsampled** grid (the
+clustering "rawds" rep — good for preliminary iteration); set it `False` for the full-res
+**129×300** ERSPs (the real run). The blob overlays only make sense at full res, so in ds mode
+they're replaced by per-condition mean band×time **heatmaps** (§2) and a power time-marginal (§3).
+
+**Score gate (full-res only).** When `USE_DS=False`, `SCORE_PCT` drops the weakest blobs from the
+overlays so they aren't an unreadable mess — slide it up to show only stronger blobs.
 """),
 cell("code", r"""
-df_meta, X_3d = P.prepare_pooling_dataset(INPUT_DIR)
-print('samples:', len(df_meta), '| X_3d:', X_3d.shape)
-print('patients:', sorted(df_meta.patient_id.unique()))
+# ---- knobs ----
+USE_DS       = True     # True: fast 15x30 band-downsampled grid · False: full-res 129x300
+SCORE_PCT    = 33.0     # full-res overlays only: drop blobs below this score percentile
+DS_TIME_BINS = 30
+
+df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
+X = P.downsample_dataset(X_full, time_bins=DS_TIME_BINS) if USE_DS else X_full
+score_min = None if USE_DS else P.resolve_score_gate(X_full, pct=SCORE_PCT)
+print('samples:', len(df_meta), '| grid:', 'ds' if USE_DS else 'full', '| X:', X.shape)
 df_meta.head()
 """),
 cell("markdown", r"""
-## 2 — Blob overlays per condition
-Red = positive (activation), blue = negative (suppression); outline shade ∝ |mean dB|. Dense
-vertical bands = candidate pooling zones. ⚠️ Blobs are arbitrary shapes — the ellipse is a
-moment-matched approximation (centre = centroid, axes = 2·std), so treat it as a *summary*
-of each blob's extent, not its exact outline. (Segmenting every contact is the slow step.)
+## 2 — Activity per condition
+**ds mode** (`USE_DS=True`): per-condition **mean band×time heatmap** — bright patches = where
+the dataset reliably responds. **full-res mode**: blob **overlays**, red = positive / blue =
+negative, outline shade ∝ |mean dB|, thinned by the `SCORE_PCT` gate. Dense bands → candidate
+pooling zones. (⚠️ overlay ellipses are moment-matched approximations of each blob's extent.)
 """),
 cell("code", r"""
 disc = P.new_run_dir('discovery')
 print('discovery run:', disc)
 for cond in P.CONDITIONS:
-    png = P.plot_blob_overlay(X_3d, df_meta, cond, disc / f'overlay_{cond}.png')
+    if USE_DS:
+        png = P.plot_ds_heatmap(X, df_meta, cond, disc / f'ds_heatmap_{cond}.png')
+    else:
+        png = P.plot_blob_overlay(X_full, df_meta, cond, disc / f'overlay_{cond}.png',
+                                  score_min=score_min)
     display(Image(filename=str(png)))
 """),
 cell("markdown", r"""
-## 3 — Time-marginal blob density
-The quantitative read-off: how many contacts have a positive (up, red) or negative (down, blue)
-blob active at each time bin. Peaks/plateaus here are exactly the windows worth pooling.
+## 3 — Time-marginal
+The quantitative read-off for choosing windows. **ds mode**: mean positive / negative band power
+across contacts × bands at each time. **full-res**: count of contacts with a positive/negative
+blob active at each bin. Peaks/plateaus = the windows worth pooling.
 """),
 cell("code", r"""
 for cond in P.CONDITIONS:
-    png = P.plot_time_marginal(X_3d, df_meta, cond, disc / f'time_marginal_{cond}.png')
+    if USE_DS:
+        png = P.plot_ds_time_marginal(X, df_meta, cond, disc / f'ds_time_marginal_{cond}.png')
+    else:
+        png = P.plot_time_marginal(X_full, df_meta, cond, disc / f'time_marginal_{cond}.png',
+                                   score_min=score_min)
     display(Image(filename=str(png)))
 """),
 cell("markdown", r"""
@@ -181,27 +208,35 @@ cell("code", SETUP),
 cell("code", r"""
 # ---------------- config knobs ----------------
 cfg = P.load_window_config(P.OUTPUTS_ROOT / 'window_config.json')
+USE_DS        = True                 # True: fast 15x30 ds grid · False: full-res 129x300
+GRID          = 'ds' if USE_DS else 'full'
+DS_TIME_BINS  = 30
 FEATURE_SETS  = P.FEATURE_SETS       # ('hg', 'bands15')
 WINDOW_SHAPES = P.WINDOW_SHAPES      # ('boxcar', 'gaussian')
 N_PERM        = 0                    # >0 adds the circular-shift temporal-null p (slow)
 SEED          = 42
-print('zones:', list(cfg['zones']), '| feature sets:', FEATURE_SETS,
+print('grid:', GRID, '| zones:', list(cfg['zones']), '| feature sets:', FEATURE_SETS,
       '| shapes:', WINDOW_SHAPES, '| n_perm:', N_PERM)
 """),
 cell("code", r"""
-df_meta, X_3d = P.prepare_pooling_dataset(INPUT_DIR)
-print('samples:', len(df_meta), '| X_3d:', X_3d.shape)
+df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
+X = P.downsample_dataset(X_full, time_bins=DS_TIME_BINS) if USE_DS else X_full
+print('samples:', len(df_meta), '| grid:', GRID, '| X:', X.shape)
 """),
 cell("markdown", r"""
-## Pool & gate (the heavy step — cached to `outputs/_dataset/pooling/pool_table.parquet`)
+## Pool & gate (the heavy step — cached to `outputs/_dataset/pooling/pool_table_<grid>.parquet`)
 One row per contact × condition × zone × window shape × feature. Re-run only when the windows
 or the upstream ERSPs change.
+
+> ⚠️ **ds caveat:** on the 15×30 grid the σ/proportion qualification gate runs on the *smoothed*
+> band-mean map — a coarse proxy for the full-res clustering gate. Use `USE_DS=False` for the
+> final qualification numbers; `ds` is for fast preliminary exploration.
 """),
 cell("code", r"""
-df_pool = P.build_pool_table(df_meta, X_3d, cfg,
+df_pool = P.build_pool_table(df_meta, X, cfg, grid=GRID,
                              feature_sets=FEATURE_SETS, window_shapes=WINDOW_SHAPES,
                              n_perm=N_PERM, seed=SEED)
-print('pool table:', df_pool.shape)
+print('pool table:', df_pool.shape, '| grid:', GRID)
 df_pool.head()
 """),
 cell("markdown", r"""
@@ -252,10 +287,13 @@ os.environ.setdefault('PYVISTA_OFF_SCREEN', 'true')
 os.environ.setdefault('MPLBACKEND', 'Agg')
 """ + SETUP),
 cell("code", r"""
-df_pool = P.load_pool_table()
+USE_DS = True                              # must match what you ran in 420
+GRID   = 'ds' if USE_DS else 'full'
+df_pool = P.load_pool_table(grid=GRID)
 aparc   = P.ensure_aparc_cache()          # builds once (MNE), then cached
 coords  = P.load_coords()
-print('pool rows:', len(df_pool), '| aparc contacts:', len(aparc), '| coords contacts:', len(coords))
+print('grid:', GRID, '| pool rows:', len(df_pool), '| aparc contacts:', len(aparc),
+      '| coords contacts:', len(coords))
 """),
 cell("markdown", r"""
 ## 1 — Attach anatomy to the qualifiers
@@ -367,8 +405,10 @@ cell("markdown", r"""
 """),
 cell("code", r"""
 import matplotlib.pyplot as plt
+USE_DS = True                       # must match what you ran in 420
+GRID   = 'ds' if USE_DS else 'full'
 try:
-    df_pool = P.load_pool_table()
+    df_pool = P.load_pool_table(grid=GRID)
     summ = P.qualifier_summary(df_pool)
     display(summ)
     piv = summ.pivot_table(index=['condition', 'zone', 'sign'], columns='window_shape',

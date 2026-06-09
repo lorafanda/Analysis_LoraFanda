@@ -132,6 +132,13 @@ WINDOW_SHAPES = ("boxcar", "gaussian")
 DEFAULT_ZONES = ("perception", "pre_articulation", "audio")
 GAUSS_SUPPORT_SIGMA = 2.0             # gate support = center +/- this many sigma
 
+# 410 overlay blob-score gate: drop blobs below this percentile of the dataset's
+# blob scores (same idea as clustering/classification's M101_SCORE_PCT). Tunable.
+SCORE_PCT = 33.0
+# 'ds' (downsampled) grid — the clustering "rawds" representation: 15 freq bands
+# x DS_TIME_BINS time bins, via lf_features.build_X_3d_downsampled.
+DS_TIME_BINS = 30
+
 COORDS_DIR = (_REPO_ROOT / "02_FBM_Clustering" / "outputs" / "250_recon"
               / "fsaverage" / "coords")
 OUTPUTS_ROOT = _HERE.parents[1] / "outputs" / "pooling"
@@ -212,6 +219,18 @@ def prepare_pooling_dataset(input_dir, cache_dir: Path = DATASET_CACHE,
         print(f"[lf_pool] {len(df_meta)} samples, {n_match} with a contact key, "
               f"X_3d={X_3d.shape}")
     return df_meta, X_3d
+
+
+def downsample_dataset(X_3d: np.ndarray, *, time_bins: int = DS_TIME_BINS,
+                       verbose: bool = True) -> np.ndarray:
+    """Band-aware downsample the full (N,129,300) ERSPs to the clustering
+    'rawds' grid (N, 15 bands, `time_bins`). Reuses
+    lf_features.build_X_3d_downsampled with the canonical 15-band edges. Used
+    for the preliminary `USE_DS` mode (faster; matches 212's representation)."""
+    ds = _lf_features.build_X_3d_downsampled(
+        list(X_3d), freq_band_edges=FREQ_BANDS, fmax_hz=FMAX_HZ,
+        time_bins_out=int(time_bins), verbose=verbose)
+    return ds
 
 
 # ============================================================
@@ -311,12 +330,37 @@ def window_support(zone_spec: dict, shape: str, n_time: int = N_TIME) -> np.ndar
 # ============================================================
 # 5 — Blob segmentation + ellipse geometry (410 overlays)
 # ============================================================
-def segment_contact_blobs(ersp: np.ndarray) -> List[dict]:
+def segment_contact_blobs(ersp: np.ndarray, score_min: Optional[float] = None) -> List[dict]:
     """Score-sorted valley blobs (both signs) for one ERSP. Reuses
     lf_blob_metrics.s21_segment_valley_blobs — the SAME segmentation the
-    clustering -1/0/+1 path uses."""
+    clustering -1/0/+1 path uses. If `score_min` is given, blobs below that
+    score are dropped (thins the 410 overlays)."""
     blob = _ensure_blob()
-    return blob.s21_segment_valley_blobs(ersp, sign_mode="both", fmax=FMAX_HZ)
+    blobs = blob.s21_segment_valley_blobs(ersp, sign_mode="both", fmax=FMAX_HZ)
+    if score_min is not None:
+        blobs = [b for b in blobs if float(b.get("score", 0.0)) >= score_min]
+    return blobs
+
+
+def resolve_score_gate(X_3d: np.ndarray, *, pct: float = SCORE_PCT,
+                       sample_cap: int = 3000, verbose: bool = True) -> float:
+    """Blob-score gate = the `pct`-th percentile of blob scores over a subsample
+    of the (full-res) dataset. Pass the result as `score_min` to the 410 plots so
+    only the stronger blobs are drawn. Mirrors lf_classify.resolve_m101_score_min."""
+    n = int(X_3d.shape[0])
+    if n == 0:
+        return 0.0
+    step = max(1, n // int(sample_cap))
+    scores: List[float] = []
+    n_sampled = 0
+    for i in range(0, n, step):
+        scores += [float(b["score"]) for b in segment_contact_blobs(X_3d[i])]
+        n_sampled += 1
+    gate = float(np.percentile(scores, pct)) if scores else 0.0
+    if verbose:
+        print(f"[lf_pool] blob-score gate = {pct:.0f}th pct = {gate:.4g} "
+              f"({len(scores)} blobs over {n_sampled} sampled contacts)")
+    return gate
 
 
 def blob_ellipse(blob: dict) -> Tuple[float, float, float, float, int, float]:
@@ -343,12 +387,13 @@ def _condition_indices(df_meta: pd.DataFrame, condition: str) -> np.ndarray:
 
 
 def plot_blob_overlay(X_3d: np.ndarray, df_meta: pd.DataFrame, condition: str,
-                      out_png, *, db_norm=(2.0, 8.0), alpha: float = 0.18,
+                      out_png, *, score_min: Optional[float] = None,
+                      db_norm=(2.0, 8.0), alpha: float = 0.18,
                       dpi: int = 150, blobs_per_sample: Optional[List] = None) -> Path:
     """Overlay every contact's blobs (this condition) as RED(+)/BLUE(-) ellipse
     OUTLINES in the freq x time plane; outline shade scales with |mean dB|.
     Dense time regions reveal candidate pooling zones. Vertical line at the
-    50% mark = response onset.
+    50% mark = response onset. `score_min` drops weak blobs (see resolve_score_gate).
     """
     import matplotlib.colors as mcolors
     import matplotlib.pyplot as plt
@@ -364,6 +409,8 @@ def plot_blob_overlay(X_3d: np.ndarray, df_meta: pd.DataFrame, condition: str,
     n_blobs = 0
     for i in idx:
         bl = blobs_per_sample[i] if blobs_per_sample is not None else segment_contact_blobs(X_3d[i])
+        if score_min is not None:
+            bl = [b for b in bl if float(b.get("score", 0.0)) >= score_min]
         for b in bl:
             tc, fc, th, fh, sign, mean = blob_ellipse(b)
             patches.append(Ellipse((tc, fc), width=2 * th, height=2 * fh))
@@ -384,8 +431,9 @@ def plot_blob_overlay(X_3d: np.ndarray, df_meta: pd.DataFrame, condition: str,
     ax.set_ylim(0, FMAX_HZ)
     ax.set_xlabel("warped time bin  (0–300; 150 = 50% = response onset)")
     ax.set_ylabel("frequency (Hz)")
+    gate_txt = "" if score_min is None else f" · score≥{score_min:.3g}"
     ax.set_title(f"{condition} — blob overlay  "
-                 f"(n={len(idx)} contacts · {n_blobs} blobs · red=+ blue=−, shade=|dB|)")
+                 f"(n={len(idx)} contacts · {n_blobs} blobs{gate_txt} · red=+ blue=−, shade=|dB|)")
     out_png = Path(out_png)
     out_png.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
@@ -395,15 +443,18 @@ def plot_blob_overlay(X_3d: np.ndarray, df_meta: pd.DataFrame, condition: str,
 
 
 def compute_time_marginal(X_3d: np.ndarray, df_meta: pd.DataFrame, condition: str,
+                          *, score_min: Optional[float] = None,
                           blobs_per_sample: Optional[List] = None
                           ) -> Tuple[np.ndarray, np.ndarray]:
     """Per-time-bin count of active blobs (this condition), split by sign.
-    Returns (pos_counts, neg_counts), each shape (N_TIME,)."""
+    Returns (pos_counts, neg_counts), each shape (N_TIME,). `score_min` drops weak blobs."""
     idx = _condition_indices(df_meta, condition)
     pos = np.zeros(N_TIME, dtype=float)
     neg = np.zeros(N_TIME, dtype=float)
     for i in idx:
         bl = blobs_per_sample[i] if blobs_per_sample is not None else segment_contact_blobs(X_3d[i])
+        if score_min is not None:
+            bl = [b for b in bl if float(b.get("score", 0.0)) >= score_min]
         for b in bl:
             tcols = np.unique(np.asarray(b["times_idx"], dtype=int))
             tcols = tcols[(tcols >= 0) & (tcols < N_TIME)]
@@ -415,12 +466,12 @@ def compute_time_marginal(X_3d: np.ndarray, df_meta: pd.DataFrame, condition: st
 
 
 def plot_time_marginal(X_3d: np.ndarray, df_meta: pd.DataFrame, condition: str,
-                       out_png, *, dpi: int = 150,
+                       out_png, *, score_min: Optional[float] = None, dpi: int = 150,
                        blobs_per_sample: Optional[List] = None) -> Path:
     """Time-marginal blob density (the quantitative aid for choosing windows):
     contacts with a positive (red) / negative (blue) blob active at each bin."""
     import matplotlib.pyplot as plt
-    pos, neg = compute_time_marginal(X_3d, df_meta, condition,
+    pos, neg = compute_time_marginal(X_3d, df_meta, condition, score_min=score_min,
                                      blobs_per_sample=blobs_per_sample)
     t = np.arange(N_TIME)
     fig, ax = plt.subplots(figsize=(9, 3.2))
@@ -432,6 +483,70 @@ def plot_time_marginal(X_3d: np.ndarray, df_meta: pd.DataFrame, condition: str,
     ax.set_xlabel("warped time bin  (150 = response onset)")
     ax.set_ylabel("# contacts active  (+ up / − down)")
     ax.set_title(f"{condition} — time-marginal blob density")
+    ax.legend(loc="upper right", fontsize=8)
+    out_png = Path(out_png)
+    out_png.parent.mkdir(parents=True, exist_ok=True)
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+    plt.close(fig)
+    return out_png
+
+
+def _band_labels() -> List[str]:
+    return [f"{int(lo)}-{int(hi)}" for lo, hi in FREQ_BANDS]
+
+
+def plot_ds_heatmap(X_ds: np.ndarray, df_meta: pd.DataFrame, condition: str,
+                    out_png, *, dpi: int = 150, vlim: Optional[Tuple[float, float]] = None) -> Path:
+    """`USE_DS` mode 410 view: per-condition MEAN downsampled ERSP (15 bands x
+    n_time_ds) as a band×time heatmap. Dense / strong patches reveal candidate
+    pooling zones (blob outlines don't survive downsampling, so this replaces
+    them). Vertical line at the 50% mark = response onset."""
+    import matplotlib.pyplot as plt
+    idx = _condition_indices(df_meta, condition)
+    M = X_ds[idx].mean(axis=0)                       # (15, n_time_ds)
+    n_band, n_t = M.shape
+    if vlim is None:
+        a = float(np.nanpercentile(np.abs(M), 99)) or 1.0
+        vlim = (-a, a)
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    im = ax.imshow(M, aspect="auto", origin="lower", cmap="RdBu_r",
+                   vmin=vlim[0], vmax=vlim[1], interpolation="nearest",
+                   extent=[0, 100, 0, n_band])
+    ax.axvline(STIM_FRAC * 100, color="0.2", lw=1.2, ls="--")
+    ax.set_yticks(np.arange(n_band) + 0.5)
+    ax.set_yticklabels(_band_labels(), fontsize=7)
+    ax.set_xlabel("warped time (%)  (50 = response onset)")
+    ax.set_ylabel("frequency band (Hz)")
+    ax.set_title(f"{condition} — mean downsampled ERSP  (n={len(idx)} contacts)")
+    fig.colorbar(im, ax=ax, label="mean power (dB)")
+    out_png = Path(out_png)
+    out_png.parent.mkdir(parents=True, exist_ok=True)
+    fig.tight_layout()
+    fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+    plt.close(fig)
+    return out_png
+
+
+def plot_ds_time_marginal(X_ds: np.ndarray, df_meta: pd.DataFrame, condition: str,
+                          out_png, *, dpi: int = 150) -> Path:
+    """`USE_DS` mode time-marginal: mean positive / negative band power across
+    contacts × bands at each time bin — the read-off for choosing windows."""
+    import matplotlib.pyplot as plt
+    idx = _condition_indices(df_meta, condition)
+    M = X_ds[idx]                                    # (n, 15, n_time_ds)
+    pos = np.clip(M, 0, None).mean(axis=(0, 1))
+    neg = np.clip(M, None, 0).mean(axis=(0, 1))
+    t_pct = np.linspace(0, 100, M.shape[2])
+    fig, ax = plt.subplots(figsize=(8, 3.2))
+    ax.fill_between(t_pct, 0, pos, color="#cc0033", alpha=0.5, label="mean +power")
+    ax.fill_between(t_pct, 0, neg, color="#0033cc", alpha=0.5, label="mean −power")
+    ax.axvline(STIM_FRAC * 100, color="0.2", lw=1.2, ls="--")
+    ax.axhline(0, color="0.6", lw=0.6)
+    ax.set_xlim(0, 100)
+    ax.set_xlabel("warped time (%)  (50 = response onset)")
+    ax.set_ylabel("mean band power (dB)")
+    ax.set_title(f"{condition} — ds time-marginal (mean ± power)")
     ax.legend(loc="upper right", fontsize=8)
     out_png = Path(out_png)
     out_png.parent.mkdir(parents=True, exist_ok=True)
@@ -476,25 +591,41 @@ def feature_label(feature_set: str, i: int) -> Tuple[str, int, float, float]:
     return (f"{int(lo)}-{int(hi)}Hz", i, float(lo), float(hi))
 
 
-def feature_vector(ersp: np.ndarray, feature_set: str) -> np.ndarray:
+def _hg_ds_rows() -> List[int]:
+    """Indices of the 15 downsampled bands overlapping the HG band (≈70–170 Hz)."""
+    return [i for i, (lo, hi) in enumerate(FREQ_BANDS)
+            if hi > HG_BAND[0] and lo < HG_BAND[1]]
+
+
+def feature_vector(ersp: np.ndarray, feature_set: str, grid: str = "full") -> np.ndarray:
     """The per-time feature representation for one ERSP.
     'hg'      -> (1, n_time) single HG band-mean line.
-    'bands15' -> (15, n_time) band-means on the NATIVE time axis."""
+    'bands15' -> (15, n_time) band-means.
+    grid='full' (129 freq x n_time): collapse the raw freq axis to bands / HG line.
+    grid='ds'   (15 bands x n_time): rows ARE the bands already, so use directly;
+                HG = mean of the bands overlapping 70–150 Hz (≈70–170)."""
+    if grid == "ds":
+        if feature_set == "hg":
+            return np.asarray(ersp, dtype=np.float32)[_hg_ds_rows(), :].mean(axis=0, keepdims=True)
+        if feature_set == "bands15":
+            return np.asarray(ersp, dtype=np.float32)
+        raise ValueError(f"unknown feature_set: {feature_set}")
     if feature_set == "hg":
         ts = _lf_hg.extract_hg_time_series(ersp, hg_band=HG_BAND, fmax=FMAX_HZ)
         return ts[None, :]
     if feature_set == "bands15":
-        # time_bins_out == N_TIME triggers lf_features' no-resize short-circuit,
-        # so this stays on the native 300-bin axis (no skimage needed).
+        # time_bins_out == n_time triggers lf_features' no-resize short-circuit,
+        # so this stays on the native time axis (no skimage needed).
         return _lf_features.downsample_ersp_to_bands(
-            ersp, FREQ_BANDS, fmax_hz=FMAX_HZ, time_bins_out=N_TIME)
+            ersp, FREQ_BANDS, fmax_hz=FMAX_HZ, time_bins_out=ersp.shape[1])
     raise ValueError(f"unknown feature_set: {feature_set}")
 
 
-def pooled_power(ersp: np.ndarray, weights: np.ndarray, feature_set: str) -> np.ndarray:
+def pooled_power(ersp: np.ndarray, weights: np.ndarray, feature_set: str,
+                 grid: str = "full") -> np.ndarray:
     """Time-weighted mean power inside the window, per feature.
     Returns (1,) for 'hg', (15,) for 'bands15'."""
-    feat = feature_vector(ersp, feature_set)              # (n_feat, n_time)
+    feat = feature_vector(ersp, feature_set, grid=grid)   # (n_feat, n_time)
     w = weights / (weights.sum() + 1e-12)
     return (feat * w[None, :]).sum(axis=1)
 
@@ -522,23 +653,25 @@ def _sign_of(prop_pos, prop_neg, qpos, qneg) -> int:
 
 
 def temporal_null_p(ersp: np.ndarray, weights: np.ndarray, feature_set: str,
-                    observed_vec: np.ndarray, *, n_perm: int = 500, seed: int = 0
-                    ) -> np.ndarray:
+                    observed_vec: np.ndarray, *, grid: str = "full",
+                    n_perm: int = 500, seed: int = 0) -> np.ndarray:
     """Per-feature circular-time-shift null p-value (secondary robustness).
     p = P(|pooled(rolled)| >= |observed|), +1 smoothing. NaN when n_perm<=0."""
     if n_perm <= 0:
         return np.full(observed_vec.shape, np.nan)
     rng = np.random.default_rng(seed)
+    n_time = ersp.shape[1]
     obs = np.abs(observed_vec)
     ge = np.zeros(observed_vec.shape, dtype=float)
     for _ in range(n_perm):
-        shift = int(rng.integers(1, N_TIME))
-        null_vec = pooled_power(np.roll(ersp, shift, axis=1), weights, feature_set)
+        shift = int(rng.integers(1, n_time))
+        null_vec = pooled_power(np.roll(ersp, shift, axis=1), weights, feature_set, grid=grid)
         ge += (np.abs(null_vec) >= obs).astype(float)
     return (ge + 1.0) / (n_perm + 1.0)
 
 
 def build_pool_table(df_meta: pd.DataFrame, X_3d: np.ndarray, cfg: dict, *,
+                     grid: str = "full",
                      feature_sets: Sequence[str] = FEATURE_SETS,
                      window_shapes: Sequence[str] = WINDOW_SHAPES,
                      n_perm: int = 0, seed: int = 0,
@@ -547,19 +680,26 @@ def build_pool_table(df_meta: pd.DataFrame, X_3d: np.ndarray, cfg: dict, *,
     """Pool power + qualify every contact, for each condition x zone x window
     shape x feature set x feature. Returns the tidy table (one row per
     contact·condition·zone·shape·feature) and caches it to parquet.
+
+    grid='full' -> 129x300 ERSPs (the real run). grid='ds' -> 15x30 band-
+    downsampled (preliminary/fast). The window weights + gate are built on the
+    array's own time axis (300 or 30). NOTE: on 'ds' the sigma/proportion gate
+    runs on the smoothed band-mean map — a coarse proxy for the full-res
+    clustering gate; use grid='full' for final qualification.
     """
     zones = cfg["zones"]
-    # Precompute weights + support per (zone, shape) — they don't depend on data.
-    weights = {(z, s): make_window_weights(spec, s) for z, spec in zones.items()
+    n_time = int(X_3d.shape[2])
+    # Precompute weights + support per (zone, shape) on THIS grid's time axis.
+    weights = {(z, s): make_window_weights(spec, s, n_time) for z, spec in zones.items()
                for s in window_shapes}
-    support = {(z, s): window_support(spec, s) for z, spec in zones.items()
+    support = {(z, s): window_support(spec, s, n_time) for z, spec in zones.items()
                for s in window_shapes}
 
     rows: List[dict] = []
     n = len(df_meta)
     for pos_i, row in enumerate(df_meta.itertuples()):
         ersp = X_3d[row.Index]
-        feats = {fs: feature_vector(ersp, fs) for fs in feature_sets}   # once per contact
+        feats = {fs: feature_vector(ersp, fs, grid=grid) for fs in feature_sets}  # once per contact
         for z in zones:
             for shape in window_shapes:
                 w = weights[(z, shape)]
@@ -569,7 +709,7 @@ def build_pool_table(df_meta: pd.DataFrame, X_3d: np.ndarray, cfg: dict, *,
                 qualifies = bool(qpos or qneg)
                 for fs in feature_sets:
                     vec = (feats[fs] * wn[None, :]).sum(axis=1)
-                    pvals = temporal_null_p(ersp, w, fs, vec, n_perm=n_perm, seed=seed)
+                    pvals = temporal_null_p(ersp, w, fs, vec, grid=grid, n_perm=n_perm, seed=seed)
                     for k in range(vec.shape[0]):
                         lbl, bidx, blo, bhi = feature_label(fs, k)
                         rows.append({
@@ -578,6 +718,7 @@ def build_pool_table(df_meta: pd.DataFrame, X_3d: np.ndarray, cfg: dict, *,
                             "contact_norm": row.contact_norm,
                             "file_path": row.file_path,
                             "condition": row.condition,
+                            "grid": grid,
                             "zone": z,
                             "window_shape": shape,
                             "feature_set": fs,
@@ -600,18 +741,18 @@ def build_pool_table(df_meta: pd.DataFrame, X_3d: np.ndarray, cfg: dict, *,
     df_pool = pd.DataFrame(rows)
     if cache:
         DATASET_CACHE.mkdir(parents=True, exist_ok=True)
-        df_pool.to_parquet(DATASET_CACHE / "pool_table.parquet", index=False)
+        df_pool.to_parquet(DATASET_CACHE / f"pool_table_{grid}.parquet", index=False)
     if write_run:
-        run_dir = new_run_dir("pool")
+        run_dir = new_run_dir("pool", grid)
         df_pool.to_parquet(run_dir / "pool_table.parquet", index=False)
         summ = qualifier_summary(df_pool)
         summ.to_csv(run_dir / "qualifier_summary.csv", index=False)
         manifest = {
-            "schema_version": SCHEMA_VERSION, "stage": "pool",
+            "schema_version": SCHEMA_VERSION, "stage": "pool", "grid": grid,
             "run_id": run_dir.name,
             "created_at": _dt.datetime.now().isoformat(timespec="seconds"),
             "host": platform.node(), "user": _safe_user(),
-            "n_rows": int(len(df_pool)),
+            "n_rows": int(len(df_pool)), "n_time": n_time,
             "n_contacts": int(df_meta.shape[0]),
             "feature_sets": list(feature_sets), "window_shapes": list(window_shapes),
             "zones": list(zones), "n_perm": int(n_perm),
@@ -637,9 +778,9 @@ def qualifier_summary(df_pool: pd.DataFrame) -> pd.DataFrame:
     return out.sort_values(["condition", "zone", "window_shape", "sign"]).reset_index(drop=True)
 
 
-def load_pool_table(path: Optional[Path] = None) -> pd.DataFrame:
-    """Read the cached pool table (default: the DATASET_CACHE copy)."""
-    p = Path(path) if path is not None else DATASET_CACHE / "pool_table.parquet"
+def load_pool_table(grid: str = "full", path: Optional[Path] = None) -> pd.DataFrame:
+    """Read the cached pool table for a grid ('full' or 'ds'), or an explicit path."""
+    p = Path(path) if path is not None else DATASET_CACHE / f"pool_table_{grid}.parquet"
     return pd.read_parquet(p)
 
 
@@ -740,22 +881,33 @@ def summarize_anatomy(df_qual: pd.DataFrame, aparc: pd.DataFrame, coords: pd.Dat
 
     df_lab, id2name = zone_to_cluster_id(df_qual.dropna(subset=["zone"]), by=by)
     # One row per (patient, contact, cluster) — collapse the per-feature rows.
-    df_lab = df_lab.drop_duplicates(["patient_id", "contact_norm", "cluster"]).copy()
-    df_lab = df_lab.rename(columns={"contact_norm": "electrode"})   # electrode_col
-
-    ap = aparc.copy()
-    ap["patient"] = ap["patient"].astype(str)
-    ap["electrode"] = ap["electrode"].map(normalize_label)
-    ap = ap[["patient", "electrode", "aparc_label"]]
-
-    co = coords.copy()
-    co = co.rename(columns={"patient_id": "patient", "contact_norm": "electrode"})
-    co = co[["patient", "electrode", "x", "y", "z"]]
+    df_lab = df_lab.drop_duplicates(["patient_id", "contact_norm", "cluster"])
+    # Build minimal frames with NO duplicate column labels. df_qual already carries
+    # its own 'electrode' column (and coords its own 'patient'), so renaming
+    # contact_norm->electrode / patient_id->patient in place would create DUPLICATE
+    # labels -> df[col] then returns a DataFrame (not a Series), which breaks the
+    # anatomy helpers. The anatomy fns default to patient_col='patient_id',
+    # electrode_col='electrode'; the contact key is the normalized contact name.
+    labels = pd.DataFrame({
+        "patient_id": df_lab["patient_id"].astype(str),
+        "electrode":  df_lab["contact_norm"].astype(str),
+        "cluster":    df_lab["cluster"].astype(int),
+    })
+    ap = pd.DataFrame({
+        "patient":     aparc["patient"].astype(str),
+        "electrode":   aparc["electrode"].map(normalize_label),
+        "aparc_label": aparc["aparc_label"].astype(str),
+    })
+    co = pd.DataFrame({
+        "patient":   coords["patient_id"].astype(str),
+        "electrode": coords["contact_norm"].astype(str),
+        "x": coords["x"], "y": coords["y"], "z": coords["z"],
+    })
 
     anat_df, _ = _lf_anatomy.save_anatomy_artifacts(
-        run_dir, df_lab, ap, cluster_col="cluster", n_perm=n_perm, verbose=verbose)
+        run_dir, labels, ap, cluster_col="cluster", n_perm=n_perm, verbose=verbose)
     comp_df, _ = _lf_anatomy.save_spatial_compactness_artifacts(
-        run_dir, df_lab, co, cluster_col="cluster", verbose=verbose)
+        run_dir, labels, co, cluster_col="cluster", verbose=verbose)
 
     # Attach the readable zone name back onto the integer cluster_id.
     anat_df = anat_df.copy(); anat_df["zone"] = anat_df["cluster_id"].map(id2name)

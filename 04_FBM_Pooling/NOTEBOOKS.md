@@ -47,12 +47,16 @@ Two axes of comparison run throughout:
 
 - Loads the canonical, **ungated** dataset (`prepare_pooling_dataset`, wraps
   `lf_dataset.prepare_dataset` with `apply_high_activity=False`).
-- For each condition, overlays **every contact's blobs** as **red(+) / blue(−) ellipse
-  outlines** in the freq × time plane (shade ∝ |mean dB|), plus a **time-marginal** density
-  (contacts active per bin, split by sign). The dashed line at bin 150 = response onset.
+- **Resolution toggle `USE_DS`** (top of the notebook): `True` (default) works on the fast
+  **15×30 band-downsampled** grid (`downsample_dataset`); `False` uses the full-res 129×300.
+  - **full-res:** overlays **every contact's blobs** as **red(+) / blue(−) ellipse outlines**
+    (shade ∝ |mean dB|), thinned by a tunable **`SCORE_PCT`** blob-score gate
+    (`resolve_score_gate`), plus a **time-marginal** (contacts active per bin, split by sign).
+  - **ds:** per-condition **mean band×time heatmap** (`plot_ds_heatmap`) + a mean ±power
+    **time-marginal** (`plot_ds_time_marginal`), since blobs don't survive downsampling.
 - Final cell: **you edit** the three zones — `perception`, `pre_articulation`, `audio` —
   each with a `boxcar` (`t_lo_pct`/`t_hi_pct`) and a `gaussian` (`center_pct`/`sigma_pct`),
-  all in **% of the 0–300 axis**. Saved to `outputs/pooling/window_config.json`.
+  all in **% of the axis**. Saved to `outputs/pooling/window_config.json`.
 
 **Run this first; everything downstream reads the window config it writes.**
 
@@ -62,6 +66,9 @@ Two axes of comparison run throughout:
 
 **Role**: pool power inside each window and qualify each contact.
 
+- Honours the same **`USE_DS`** toggle (`grid='ds'|'full'`); ds caches to
+  `pool_table_ds.parquet`, full to `pool_table_full.parquet`. ⚠️ On `ds` the σ-gate runs on the
+  smoothed band-mean map (a coarse proxy) — use `USE_DS=False` for final qualification numbers.
 - **Pooling** = a **time-weighted average** of the contact's power over the window. Two
   feature sets, run identically: `hg` (1 line) and `bands15` (15 bands, native time axis).
 - **Qualification** = clustering's gate (`prop(>2.2σ) ≥ 0.02` **OR** `prop(<−3.0σ) ≥ 0.04`)
@@ -121,8 +128,10 @@ outputs/_anatomy/aparc_lookup.csv   one-time MNE build                    (gitig
 | Piece | Role |
 |---|---|
 | `prepare_pooling_dataset` | load the canonical (df_meta, X_3d), ungated, + a `contact_norm` join key (reuses `lf_dataset.prepare_dataset`) |
+| `downsample_dataset` | band-downsample the full ERSPs to the 15×`DS_TIME_BINS` `ds` grid (reuses `lf_features.build_X_3d_downsampled`) |
 | `default_window_config` / `save_window_config` / `load_window_config` / `validate_window_config` | the window-config JSON written by 410, read by 420 |
-| `segment_contact_blobs` / `blob_ellipse` / `plot_blob_overlay` / `plot_time_marginal` | the 410 overlays (reuses `lf_blob_metrics.s21_segment_valley_blobs`) |
+| `segment_contact_blobs` / `resolve_score_gate` / `blob_ellipse` / `plot_blob_overlay` / `plot_time_marginal` | full-res 410 overlays + the tunable blob-score gate (reuses `lf_blob_metrics.s21_segment_valley_blobs`) |
+| `plot_ds_heatmap` / `plot_ds_time_marginal` | the `USE_DS` 410 views (mean band×time heatmap + power time-marginal) |
 | `make_window_weights` / `window_support` | boxcar / gaussian time-weight vectors + the gate support mask |
 | `feature_vector` / `pooled_power` | the two feature sets (`hg` via `lf_hg`, `bands15` via `lf_features`) + time-weighted pooling |
 | `windowed_gate` | clustering's σ/proportion gate, restricted to the window |
