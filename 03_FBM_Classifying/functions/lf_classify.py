@@ -65,11 +65,18 @@ import json
 import platform
 import re
 import sys
+import warnings
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
+
+# Benign + very chatty under imbalanced Yeo classes with grouped CV / bootstrap:
+# a resample/fold's y_true may lack a rare class the model still predicts. The
+# metric just averages over present classes, so the numbers are correct — we
+# silence only this one specific message (fires up to n_boot times per run).
+warnings.filterwarnings("ignore", message="y_pred contains classes not in y_true")
 
 
 # ============================================================
@@ -577,9 +584,10 @@ def make_estimator(name: str, random_state: int = 42):
         pipe = Pipeline([
             ("scaler", StandardScaler()),
             ("clf", LogisticRegression(
+                # multinomial is the default for multiclass + lbfgs (sklearn >=1.5);
+                # passing multi_class explicitly is deprecated, so we leave it off.
                 penalty="l2", solver="lbfgs", max_iter=2000,
-                class_weight="balanced", multi_class="multinomial",
-                random_state=random_state)),
+                class_weight="balanced", random_state=random_state)),
         ])
         grid = {"clf__C": [0.01, 0.1, 1.0, 10.0]}
         return pipe, grid
