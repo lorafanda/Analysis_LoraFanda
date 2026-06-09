@@ -102,6 +102,21 @@ _lf_features = _load_clustering_module("lf_features")
 _lf_hg = _load_clustering_module("lf_hg")
 _lf_dataset = _load_clustering_module("lf_dataset")
 
+# Blob segmentation + -1/0/+1 painting are only needed for the discretized
+# ('m101') variants, and pull heavier deps (scipy.ndimage, imageio), so load
+# them lazily on first use.
+_lf_blob = None
+_lf_minus101 = None
+
+
+def _ensure_blob_modules():
+    global _lf_blob, _lf_minus101
+    if _lf_blob is None:
+        _lf_blob = _load_clustering_module("lf_blob_metrics")
+    if _lf_minus101 is None:
+        _lf_minus101 = _load_clustering_module("lf_minus101")
+    return _lf_blob, _lf_minus101
+
 # Re-export the canonical band edges so notebooks + cache params can show them.
 FREQ_BANDS = list(_lf_features.FREQ_BANDS_15_TO_400HZ)
 prepare_dataset = _lf_dataset.prepare_dataset
@@ -134,22 +149,56 @@ HG_BAND = (70.0, 150.0)
 # the gross confound; the residual coupling is stated in the narrative.
 STIM_FRAC = 0.5     # ERSPs are warped 50% stimulus (sensing) / 50% response.
 
+# ── The AMPLITUDE-CONFOUND triad ────────────────────────────────────────────
+# Per-feature z-scoring (StandardScaler) makes each band x time CELL comparable
+# across electrodes, but it cannot remove a sample's overall MAGNITUDE: a strong
+# visually-evoked electrode is "high across many cells at once", so the model can
+# decode on "how strong" instead of "what shape". To bracket that confound we run
+# three representations of the same full-spectrum grid:
+#   - continuous  (full_*)      : the raw band x time values  (amplitude intact)
+#   - row-normed  (full_*_rn)   : each sample L2-normalised   (magnitude removed,
+#                                  graded shape kept)
+#   - discretized (m101_*)      : score-gated -1/0/+1 blob map (amplitude fully
+#                                  discarded; ONLY significant, high-score
+#                                  segments are painted — low-score blobs stay 0)
+# Each at matched time grids {300, 30}. HG line is the continuous-only baseline.
 VARIANT_SPEC = {
-    "full_300": {"bands": "full", "n_time": 300},
-    "hg_300":   {"bands": "hg",   "n_time": 300},
-    "full_30":  {"bands": "full", "n_time": 30},
-    "hg_30":    {"bands": "hg",   "n_time": 30},
+    "full_300":    {"bands": "full", "n_time": 300, "disc": False, "rownorm": False},
+    "hg_300":      {"bands": "hg",   "n_time": 300, "disc": False, "rownorm": False},
+    "full_30":     {"bands": "full", "n_time": 30,  "disc": False, "rownorm": False},
+    "hg_30":       {"bands": "hg",   "n_time": 30,  "disc": False, "rownorm": False},
+    "m101_300":    {"bands": "full", "n_time": 300, "disc": True,  "rownorm": False},
+    "m101_30":     {"bands": "full", "n_time": 30,  "disc": True,  "rownorm": False},
+    "full_300_rn": {"bands": "full", "n_time": 300, "disc": False, "rownorm": True},
+    "full_30_rn":  {"bands": "full", "n_time": 30,  "disc": False, "rownorm": True},
 }
 VARIANTS = tuple(VARIANT_SPEC.keys())
 
 VARIANT_LABELS = {
-    "full_300": "Full spectrum (15 bands x 300 time)",
-    "hg_300":   "High-gamma line (70-150 Hz, 300 time)",
-    "full_30":  "Full spectrum (15 bands x 30 time)",
-    "hg_30":    "High-gamma line (70-150 Hz, 30 time)",
+    "full_300":    "Full spectrum (15 bands x 300 time)",
+    "hg_300":      "High-gamma line (70-150 Hz, 300 time)",
+    "full_30":     "Full spectrum (15 bands x 30 time)",
+    "hg_30":       "High-gamma line (70-150 Hz, 30 time)",
+    "m101_300":    "Discretized -1/0/+1 (score-gated, 15 x 300)",
+    "m101_30":     "Discretized -1/0/+1 (score-gated, 15 x 30)",
+    "full_300_rn": "Full spectrum, row-normalised (15 x 300)",
+    "full_30_rn":  "Full spectrum, row-normalised (15 x 30)",
 }
-# Matched pairs (full, hg) at equal time resolution — the only valid contrasts.
+# Amplitude triad per time grid — continuous vs row-normed vs discretized.
+AMPLITUDE_TRIADS = (
+    ("full_300", "full_300_rn", "m101_300"),
+    ("full_30",  "full_30_rn",  "m101_30"),
+)
+# Full-vs-HG matched pairs (time held fixed) — the frequency-content contrast.
 MATCHED_PAIRS = (("full_300", "hg_300"), ("full_30", "hg_30"))
+
+# ── Discretization (-1/0/+1) parameters ─────────────────────────────────────
+M101_MAX_BLOBS = 6          # top-N blobs per ERSP (by score) considered
+M101_SIGN_MODE = "both"     # paint both positive (+1) and negative (-1) blobs
+M101_SCORE_PCT = 33.0       # GATE: drop blobs below this global score percentile
+M101_DEADZONE = 0.15        # |band-mean of painted map| below this -> 0 (mixed/weak)
+M101_SAMPLE_CAP = 3000      # subsample size for estimating the score percentile
+_M101_SCORE_MIN = None      # resolved global score gate (set by resolve_*)
 
 # Anything in this set is NOT a real Yeo network -> dropped from task B.
 _YEO_NON_NETWORK = {
@@ -213,17 +262,68 @@ def _resize_time(arr2d: np.ndarray, n_time: int) -> np.ndarray:
                       anti_aliasing=True, preserve_range=True).astype(np.float32)
 
 
+def _segment_blobs(ersp: np.ndarray):
+    """Score-sorted blobs for one ERSP (top M101_MAX_BLOBS)."""
+    blob, _ = _ensure_blob_modules()
+    return blob.s21_segment_valley_blobs(
+        ersp, max_blobs=M101_MAX_BLOBS, sign_mode=M101_SIGN_MODE, fmax=FMAX_HZ)
+
+
+def resolve_m101_score_min(X_3d: np.ndarray, *, pct: float = M101_SCORE_PCT,
+                           sample_cap: int = M101_SAMPLE_CAP, verbose: bool = True
+                           ) -> float:
+    """Estimate + set the global blob-score gate as the `pct`-th percentile of
+    blob scores over (a subsample of) the dataset. Low-score blobs (< this) are
+    never painted, so noise/weak segments don't get discretized into +/-1."""
+    global _M101_SCORE_MIN
+    n = X_3d.shape[0]
+    if n == 0:
+        _M101_SCORE_MIN = 0.0
+        return 0.0
+    step = max(1, n // int(sample_cap))
+    scores = []
+    for i in range(0, n, step):
+        scores += [float(b["score"]) for b in _segment_blobs(X_3d[i])]
+    _M101_SCORE_MIN = float(np.percentile(scores, pct)) if scores else 0.0
+    if verbose:
+        print(f"[m101] score gate = {pct:.0f}th pct = {_M101_SCORE_MIN:.4g} "
+              f"({len(scores)} blobs over {len(range(0, n, step))} sampled ERSPs)")
+    return _M101_SCORE_MIN
+
+
+def ersp_to_minus101(ersp: np.ndarray, n_time: int) -> np.ndarray:
+    """Score-gated -1/0/+1 map on the 15-band x n_time grid (amplitude-free).
+
+    Paints only high-score blobs (>= the resolved global gate), band-averages
+    onto the same grid as the 'full' variant, then re-discretizes with a
+    deadzone so weak/mixed cells stay 0.
+    """
+    _, m101 = _ensure_blob_modules()
+    score_min = _M101_SCORE_MIN if _M101_SCORE_MIN is not None else 0.0
+    blobs = _segment_blobs(ersp)
+    painted = m101.paint_minus101_map(ersp, blobs, score_min=score_min)   # 129x300, {-1,0,1}
+    grid = _lf_features.downsample_ersp_to_bands(
+        painted.astype(np.float32), FREQ_BANDS, fmax_hz=FMAX_HZ, time_bins_out=n_time)
+    out = np.zeros_like(grid, dtype=np.float32)
+    out[grid > M101_DEADZONE] = 1.0
+    out[grid < -M101_DEADZONE] = -1.0
+    return out.ravel().astype(np.float32)             # 15 * n_time, in {-1,0,1}
+
+
 def ersp_to_feature(ersp: np.ndarray, variant: str) -> np.ndarray:
     """Map one (n_freq, n_time) ERSP to a flat 1-D feature vector for `variant`.
 
-    'full' variants -> 15 band rows x n_time (a band x time map, row-major
-    flatten = band outer, time inner). 'hg' variants -> the single 70-150 Hz
-    band-mean line at n_time. The two share a time grid within a matched pair.
+    'full' -> 15 band rows x n_time (band x time map, row-major = band outer,
+    time inner). 'hg' -> single 70-150 Hz band-mean line at n_time. 'disc' ->
+    score-gated -1/0/+1 map on the full grid. Row-normalisation is applied to
+    the assembled matrix later (build_*_arrays), not per-ERSP.
     """
     spec = VARIANT_SPEC.get(variant)
     if spec is None:
         raise ValueError(f"unknown variant {variant!r}; expected one of {VARIANTS}")
     n_time = int(spec["n_time"])
+    if spec.get("disc"):
+        return ersp_to_minus101(ersp, n_time)         # 15 * n_time, {-1,0,1}
     if spec["bands"] == "full":
         ds = _lf_features.downsample_ersp_to_bands(
             ersp, FREQ_BANDS, fmax_hz=FMAX_HZ, time_bins_out=n_time)
@@ -232,6 +332,15 @@ def ersp_to_feature(ersp: np.ndarray, variant: str) -> np.ndarray:
     hg = _lf_hg.extract_hg_time_series(ersp, hg_band=HG_BAND, fmax=FMAX_HZ)
     hg = _resize_time(hg.reshape(1, -1), n_time)
     return hg.ravel().astype(np.float32)              # n_time
+
+
+def _l2_normalize_rows(X: np.ndarray) -> np.ndarray:
+    """Unit-L2-normalise each row (sample). Removes overall magnitude, keeps
+    graded shape. Zero rows are left as zeros."""
+    X = np.asarray(X, dtype=np.float32)
+    norm = np.linalg.norm(X, axis=1, keepdims=True)
+    norm[norm == 0] = 1.0
+    return (X / norm).astype(np.float32)
 
 
 def build_feature_matrix(X_3d: np.ndarray, variant: str, verbose: bool = True
@@ -359,6 +468,17 @@ def prepare_full_dataset(input_dir, cache_dir: Path = DATASET_CACHE,
     return df_meta, X_3d
 
 
+def _ensure_m101_ready(X_3d: np.ndarray, variant: str):
+    """Resolve the global blob-score gate before building any 'm101' variant."""
+    if VARIANT_SPEC[variant].get("disc") and _M101_SCORE_MIN is None:
+        resolve_m101_score_min(X_3d)
+
+
+def _apply_rownorm(X: np.ndarray, variant: str) -> np.ndarray:
+    """L2-normalise each (possibly concatenated) sample for '_rn' variants."""
+    return _l2_normalize_rows(X) if VARIANT_SPEC[variant].get("rownorm") else X
+
+
 def build_condition_arrays(df_meta: pd.DataFrame, X_3d: np.ndarray, variant: str,
                            verbose: bool = True):
     """Task A arrays. One sample per high-activity electrode x condition.
@@ -366,9 +486,11 @@ def build_condition_arrays(df_meta: pd.DataFrame, X_3d: np.ndarray, variant: str
     Returns X (n,d), y (condition strings), groups (patient_id), meta DataFrame,
     cols (feature_columns metadata).
     """
+    _ensure_m101_ready(X_3d, variant)
     mask = df_meta["high_activity"].to_numpy().astype(bool)
     meta = df_meta[mask].reset_index(drop=True)
     X = build_feature_matrix(X_3d[mask], variant, verbose=verbose)
+    X = _apply_rownorm(X, variant)
     y = meta["condition"].to_numpy()
     groups = meta["patient_id"].to_numpy()
     cols = feature_columns(variant)
@@ -389,6 +511,7 @@ def build_parcellation_arrays(df_meta: pd.DataFrame, X_3d: np.ndarray,
     Returns X (n, 3*d), y (yeo labels), groups (patient_id), meta DataFrame,
     cols (concat_feature_columns metadata).
     """
+    _ensure_m101_ready(X_3d, variant)
     df = df_meta.copy()
     df["sample_pos"] = np.arange(len(df))          # row index into X_3d
 
@@ -425,6 +548,7 @@ def build_parcellation_arrays(df_meta: pd.DataFrame, X_3d: np.ndarray,
                           "yeo_label": lab})
 
     X = np.vstack(feats) if feats else np.zeros((0, 0), np.float32)
+    X = _apply_rownorm(X, variant)          # normalise the CONCATENATED vector
     y = np.asarray(labels)
     groups = np.asarray(groups)
     meta = pd.DataFrame(meta_rows)

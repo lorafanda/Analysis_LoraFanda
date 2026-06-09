@@ -101,8 +101,21 @@ print('patients:', sorted(df_meta.patient_id.unique()))
 df_meta.head()
 """),
 cell("markdown", r"""
-## 2 — Condition task — cache the 4 feature variants
-Gated electrode × condition samples, labelled by condition.
+## 1b — Resolve the discretization score gate (once, on the full dataset)
+The discretized `m101_*` variants paint a −1/0/+1 map from **scored** blobs, and we drop
+the low-score ones so noise/weak segments never get discretized. The gate is the
+`M101_SCORE_PCT`-th percentile of blob scores over the whole dataset — resolved **once here**
+so it means the same thing across every task and variant.
+"""),
+cell("code", r"""
+gate = C.resolve_m101_score_min(X_3d)   # sets the global blob-score gate
+print(f'm101 score gate = {gate:.4g}  (drop blobs below the '
+      f'{C.M101_SCORE_PCT:.0f}th score percentile)')
+"""),
+cell("markdown", r"""
+## 2 — Condition task — cache the 8 feature variants
+Gated electrode × condition samples, labelled by condition. The 8 variants are the
+amplitude triad (continuous / row-normed / discretized) at two time grids, plus the HG lines.
 """),
 cell("code", r"""
 for v in C.VARIANTS:
@@ -180,13 +193,15 @@ INNER_SPLITS = 3      # inner GroupKFold (hyper-parameter tuning)
 N_PERM       = 200    # label-permutation null reps (set 0 to skip; rf is the slow part)
 N_BOOT       = 1000   # bootstrap reps for per-class CIs (cheap)
 RANDOM_STATE = 42
-print('classifiers:', CLASSIFIERS, '| outer/inner:', OUTER_SPLITS, INNER_SPLITS,
-      '| n_perm:', N_PERM)
+# All 8 variants. full_300 is the heavy one; subset for a fast first pass, e.g.
+#   VARIANTS_TO_RUN = ('full_300', 'full_300_rn', 'm101_300', 'hg_300')
+VARIANTS_TO_RUN = C.VARIANTS
+print('classifiers:', CLASSIFIERS, '| variants:', VARIANTS_TO_RUN, '| n_perm:', N_PERM)
 """),
 cell("markdown", r"""
 ## Run all condition experiments
-4 variants × 2 classifiers = 8 runs, each saved under
-`outputs/classification/condition/<variant>/<classifier>/runs/<id>/`.
+8 variants × 2 classifiers = 16 runs (fewer if you subset `VARIANTS_TO_RUN`), each saved
+under `outputs/classification/condition/<variant>/<classifier>/runs/<id>/`.
 """),
 cell("code", r"""
 # Full-spectrum (15 bands x 300 time) drives the per-class ERSP *response profile*
@@ -196,7 +211,7 @@ Xf, yf, gf, mf, cf = C.load_arrays('condition', None, 'full_300')
 profile = {'X': Xf, 'n_time': 300, 'n_cond': 1}
 
 manifests = []
-for v in C.VARIANTS:
+for v in VARIANTS_TO_RUN:
     X, y, groups, meta, cols = C.load_arrays('condition', None, v)
     for clf in CLASSIFIERS:
         m = C.run_experiment('condition', v, clf, X, y, groups, cols, meta,
@@ -250,11 +265,14 @@ INNER_SPLITS = 3
 N_PERM       = 200
 N_BOOT       = 1000
 RANDOM_STATE = 42
-print('yeo:', YEO_NETWORKS, '| classifiers:', CLASSIFIERS, '| n_perm:', N_PERM)
+VARIANTS_TO_RUN = C.VARIANTS   # subset for a fast pass (see 320)
+print('yeo:', YEO_NETWORKS, '| classifiers:', CLASSIFIERS,
+      '| variants:', VARIANTS_TO_RUN, '| n_perm:', N_PERM)
 """),
 cell("markdown", r"""
 ## Run all parcellation experiments
-2 Yeo granularities × 4 variants × 2 classifiers = 16 runs, saved under
+2 Yeo granularities × 8 variants × 2 classifiers = 32 runs (fewer if you subset
+`VARIANTS_TO_RUN`), saved under
 `outputs/classification/parcellation_yeo{7,17}/<variant>/<classifier>/runs/<id>/`.
 
 The per-class **response profile** is the full ERSP of each network, **concatenated
@@ -268,7 +286,7 @@ for n_net in YEO_NETWORKS:
     # full-spectrum, 3 conditions concatenated -> the per-class ERSP triptych
     Xf, yf, gf, mf, cf = C.load_arrays('parcellation', key, 'full_300')
     profile = {'X': Xf, 'n_time': 300, 'n_cond': 3, 'cond_names': list(C.CONDITIONS)}
-    for v in C.VARIANTS:
+    for v in VARIANTS_TO_RUN:
         X, y, groups, meta, cols = C.load_arrays('parcellation', key, v)
         for clf in CLASSIFIERS:
             m = C.run_experiment(f'parcellation_{key}', v, clf, X, y, groups, cols, meta,
@@ -335,6 +353,41 @@ with time. `full_300 vs full_30` (or `hg_300 vs hg_30`) isolates the time-resolu
 
 Two classifiers per variant: **logistic regression** (linear, interpretable) and **random
 forest** (non-linear).
+
+## The amplitude confound — why we also run row-normed and discretized variants
+
+A strong visually-evoked electrode is "high across many band×time cells at once," so after
+column z-scoring its feature vector still has a large norm pointing in a consistent
+direction. Both linear models and trees can then separate classes on "how strongly does
+this electrode respond" instead of "what shape is its response."
+
+That's especially corrosive for your two tasks:
+
+- **Condition decoding:** picture/reading evoke far larger responses than audio, so the
+  model can score well on raw amplitude and tell you nothing about whether the
+  spectro-temporal pattern differs.
+- **Parcellation:** sensory networks (visual/auditory cortex) are simply louder, so "which
+  Yeo network" partly collapses to "how strong is this site."
+
+Per-feature normalization (`StandardScaler`) **cannot** fix this — it rescales each *column*
+across electrodes, but the confound lives in the *row* (the sample's overall magnitude). So
+for the full-spectrum grid we run an **amplitude triad** at each time resolution:
+
+| representation | variant | amplitude | keeps |
+|---|---|---|---|
+| **continuous** | `full_300`, `full_30` | intact | everything (incl. magnitude) |
+| **row-normalised** | `full_300_rn`, `full_30_rn` | overall magnitude removed (each sample unit-L2) | graded *shape* |
+| **discretized** | `m101_300`, `m101_30` | fully discarded | only **sign** of *score-gated* significant blobs (−1/0/+1) |
+
+**The discretized map is score-gated on purpose:** only blobs whose significance score
+clears the `M101_SCORE_PCT` percentile are painted ±1 — low-score / weak / noisy segments
+stay 0, so we never discretize noise into a confident sign.
+
+**Reading the triad:** if `full ≈ rn ≈ m101`, the *pattern* carries the signal and amplitude
+wasn't doing the work (reassuring). If `full ≫ rn ≳ m101`, a lot of the continuous result
+was the amplitude confound — the row-normed / discretized numbers are the honest ones. If
+`m101 > full`, amplitude was actually a distraction and sign is cleaner. (Caveat: if the
+real signal is genuinely *graded*, `m101` will underperform — that's an answer, not a bug.)
 
 ## How it was validated — nested GroupKFold by patient
 
@@ -425,12 +478,41 @@ else:
     plt.tight_layout(); plt.show()
 """),
 cell("markdown", r"""
+## Amplitude triad — is the decoding pattern or just power?
+
+For each task / classifier / time grid, compare the full-spectrum representation against its
+**row-normalised** and **discretized** counterparts. Within a row the task (and therefore
+chance) is fixed, so the three numbers are directly comparable:
+**continuous ≈ row-normed ≈ discretized** → pattern carries it; **continuous ≫ the other two**
+→ the result was riding on response *amplitude* (the strong-visual-electrode confound).
+"""),
+cell("code", r"""
+runs = C.list_runs()
+if not len(runs):
+    show('> _no runs yet._')
+else:
+    triad = {'full_300': ('continuous', 300), 'full_30': ('continuous', 30),
+             'full_300_rn': ('row-normed', 300), 'full_30_rn': ('row-normed', 30),
+             'm101_300': ('discretized', 300), 'm101_30': ('discretized', 30)}
+    t = runs[runs.variant.isin(triad)].copy()
+    if len(t):
+        t['rep'] = t.variant.map(lambda v: triad[v][0])
+        t['time'] = t.variant.map(lambda v: triad[v][1])
+        piv = t.pivot_table(index=['task', 'classifier', 'time'], columns='rep',
+                            values='balanced_accuracy')
+        piv = piv.reindex(columns=['continuous', 'row-normed', 'discretized'])
+        display(piv.round(3))
+    else:
+        show('> _amplitude-triad variants not run yet._')
+"""),
+cell("markdown", r"""
 # Task A — Condition decoding (audio / picture / reading)
 
 Chance = 0.333. A high diagonal here means the spectro-temporal response itself carries
 *which modality* the electrode was engaged by. Watch the confusion matrix for the
 audio↔reading vs picture structure, and the feature-importance panel for whether high-gamma
-or lower bands carry the signal.
+or lower bands carry the signal. **Cross-check the amplitude triad above** — if `picture`/
+`reading` only separate in the continuous variant, the model was decoding loudness.
 """),
 cell("code", r"""
 for v in C.VARIANTS:
