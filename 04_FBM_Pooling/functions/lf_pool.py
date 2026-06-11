@@ -1538,12 +1538,16 @@ def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
     """Write the data the POOL web page reads: contacts_pool.csv (xyz + role +
     colour) + pool_index.json. Reuses the MOBA fsaverage meshes."""
     colors = role_colors(grid)
-    c = (coords[["patient_id", "contact_norm", "name", "hemi", "x", "y", "z"]]
-         .drop_duplicates(["patient_id", "contact_norm"]))
+    cols = ["patient_id", "contact_norm", "name", "hemi", "x", "y", "z"]
+    if "is_cortical" in coords.columns:
+        cols.append("is_cortical")
+    c = coords[cols].drop_duplicates(["patient_id", "contact_norm"])
     m = df_role.merge(c, on=["patient_id", "contact_norm"], how="left").dropna(subset=["x", "y", "z"])
     m["color"] = m["role"].map(colors).fillna("#cccccc")
+    if "is_cortical" not in m.columns:
+        m["is_cortical"] = 1                       # cortical/depth radius split (page)
     out = (m[["patient_id", "contact_norm", "name", "hemi", "x", "y", "z",
-              "role", "roles_matched", "color"]]
+              "is_cortical", "role", "roles_matched", "color"]]
            .rename(columns={"patient_id": "patient", "contact_norm": "contact"}))
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
