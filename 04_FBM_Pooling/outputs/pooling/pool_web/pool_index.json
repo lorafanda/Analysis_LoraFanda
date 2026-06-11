@@ -1,0 +1,32 @@
+{
+  "grid": "full",
+  "n_contacts": 2644,
+  "csv": "contacts_pool.csv",
+  "roles": [
+    {
+      "role": "auditory",
+      "color": "#1f77b4",
+      "n": 16
+    },
+    {
+      "role": "visual",
+      "color": "#2ca02c",
+      "n": 24
+    },
+    {
+      "role": "motor",
+      "color": "#d62728",
+      "n": 48
+    },
+    {
+      "role": "multimodal_sensory",
+      "color": "#9467bd",
+      "n": 5
+    },
+    {
+      "role": "none",
+      "color": "#cccccc",
+      "n": 2551
+    }
+  ]
+}
