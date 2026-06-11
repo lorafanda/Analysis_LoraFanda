@@ -143,3 +143,7 @@ outputs/
 # (the !.../outputs/**/** allows would otherwise force-include these)
 **/.ipynb_checkpoints/
 **/.ipynb_checkpoints/**
+
+# No HTML in the analysis repo — web pages live in the lorafanda.github.io repo.
+# The pipeline only EXPORTS data (pool_web/*.csv,*.json) that those pages fetch.
+*.html
