@@ -1,43 +1,46 @@
 <!DOCTYPE html>
 <!--
-  POOL — Pooling Of Lateralized (functional-role) activity.
-  Sibling of MOBA (moba.html). Renders contacts on an fsaverage brain coloured by
-  their assigned functional role (auditory / visual / motor / multimodal / none),
-  with per-role filters. Drop this into the lorafanda.github.io repo next to moba.html.
+  POOL — functional-role brain map. Sibling of MOBA (moba.html / moba.js).
+  Mirrors MOBA's working renderer EXACTLY: Niivue UMD 0.69, fsaverage .mz3 meshes,
+  and electrodes BAKED INTO OBJ sphere meshes (one mesh per colour group) — MOBA
+  avoids Niivue connectomes because they render nothing on the ANGLE/Metal GPU.
 
-  DATA CONTRACT (produced by 04_FBM_Pooling/460 -> lf_pool.export_pool_web):
+  Colour groups here = functional ROLES (auditory/visual/motor/multimodal/none).
+
+  DATA (produced by 04_FBM_Pooling/460 -> lf_pool.export_pool_web, committed under
+  04_FBM_Pooling/outputs/pooling/pool_web/):
     - contacts_pool.csv : patient,contact,name,hemi,x,y,z,role,roles_matched,color
     - pool_index.json   : { grid, n_contacts, csv, roles:[{role,color,n}] }
-  MESHES (shared with MOBA): fsaverage_{lh,rh}.mz3
+  Meshes shared with MOBA at 02_FBM_Clustering/outputs/250_recon/fsaverage/meshes/.
 
-  ⚠️ Set the three URLs in CONFIG below to wherever your repo serves these files
-  (same scheme MOBA uses — match moba.html's fetch paths). This page uses Niivue's
-  connectome node API with a per-role categorical colormap.
+  Drop this into the lorafanda.github.io repo next to moba.html. Only REPO_RAW/branch
+  below may need adjusting to match moba.js.
 -->
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>POOL — functional-role brain map</title>
+<script src="https://unpkg.com/@niivue/niivue@0.69.0/dist/niivue.umd.js"></script>
 <style>
-  :root { --bg:#0e1116; --panel:#171c24; --fg:#e6e6e6; --muted:#9aa4b2; }
+  :root { --bg:#ffffff; --panel:#f4f5f7; --fg:#1c2330; --muted:#6b7280; --line:#e3e6eb; }
   html,body { margin:0; height:100%; background:var(--bg); color:var(--fg);
               font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
-  #wrap { display:grid; grid-template-columns: 260px 1fr; height:100vh; }
-  #side { background:var(--panel); padding:14px 16px; overflow:auto; border-right:1px solid #222; }
-  #side h1 { font-size:18px; margin:0 0 2px; }
+  #wrap { display:grid; grid-template-columns:268px 1fr; height:100vh; }
+  #side { background:var(--panel); padding:14px 16px; overflow:auto; border-right:1px solid var(--line); }
+  #side h1 { font-size:19px; margin:0 0 2px; }
   #side .sub { color:var(--muted); font-size:12px; margin-bottom:14px; }
-  #side h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+  #side h2 { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
              margin:16px 0 6px; }
-  .role { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:14px; cursor:pointer; }
-  .role input { accent-color:#4d8; }
-  .swatch { width:14px; height:14px; border-radius:3px; flex:0 0 auto; }
+  .role { display:flex; align-items:center; gap:8px; padding:5px 0; font-size:14px; cursor:pointer; }
+  .role input { accent-color:#2563eb; }
+  .swatch { width:14px; height:14px; border-radius:3px; flex:0 0 auto; border:1px solid #0002; }
   .count { margin-left:auto; color:var(--muted); font-size:12px; }
   #status { color:var(--muted); font-size:12px; margin-top:14px; line-height:1.5; }
   #gl { width:100%; height:100%; display:block; }
-  button { background:#222b38; color:var(--fg); border:1px solid #324; border-radius:6px;
-           padding:6px 10px; font-size:13px; cursor:pointer; margin:2px 2px 0 0; }
-  button:hover { background:#2c3a4c; }
+  button { background:#fff; color:var(--fg); border:1px solid var(--line); border-radius:6px;
+           padding:5px 10px; font-size:13px; cursor:pointer; margin:2px 4px 0 0; }
+  button:hover { background:#eef1f5; }
 </style>
 </head>
 <body>
@@ -45,10 +48,7 @@
   <aside id="side">
     <h1>POOL</h1>
     <div class="sub">Functional-role activity on fsaverage</div>
-    <div>
-      <button id="allBtn">All</button>
-      <button id="noneBtn">None</button>
-    </div>
+    <div><button id="allBtn">All</button><button id="noneBtn">None</button></div>
     <h2>Roles</h2>
     <div id="roles"></div>
     <div id="status">loading…</div>
@@ -56,132 +56,157 @@
   <canvas id="gl"></canvas>
 </div>
 
-<script type="module">
-import { Niivue } from "https://unpkg.com/@niivue/niivue@0.44.0/dist/index.js";
-
-// ============================ CONFIG — set these ============================
-// Point these at wherever your site serves the files (match moba.html's paths).
-const CONFIG = {
-  meshLH: "./meshes/fsaverage_lh.mz3",
-  meshRH: "./meshes/fsaverage_rh.mz3",
-  index:  "./pool/pool_index.json",     // pool_index.json (lists roles + the csv name)
-  csvDir: "./pool/",                    // dir that contains contacts_pool.csv
-  nodeScale: 2.0,
-  brainOpacity: 0.30,
-};
-// ===========================================================================
+<script>
+// ============================ CONFIG — match moba.js ============================
+const BRANCH   = "main";
+const REPO_RAW = `https://raw.githubusercontent.com/lorafanda/Analysis_LoraFanda/${BRANCH}`;
+const FSAV_MESH_BASE = `${REPO_RAW}/02_FBM_Clustering/outputs/250_recon/fsaverage/meshes`;
+const POOL_BASE      = `${REPO_RAW}/04_FBM_Pooling/outputs/pooling/pool_web`;
+const POOL_INDEX = `${POOL_BASE}/pool_index.json`;
+const POOL_CSV   = `${POOL_BASE}/contacts_pool.csv`;
+const MESH_RGBA  = [205, 198, 190, 30];   // bone, translucent (MOBA value)
+const RADIUS_MM  = 2.2;                    // electrode sphere radius
+// ===============================================================================
 
 const statusEl = document.getElementById("status");
 const rolesEl  = document.getElementById("roles");
 const setStatus = (m) => (statusEl.textContent = m);
-
-const nv = new Niivue({ show3Dcrosshair:false, backColor:[0.055,0.067,0.086,1], isColorbar:false });
-await nv.attachTo("gl");
-
-// ---- helpers ----
-const hexToRgb = (h) => { const n = parseInt(h.replace("#",""),16);
+const hexToRgb = (h) => { const n = parseInt(String(h).replace("#",""),16);
   return [ (n>>16)&255, (n>>8)&255, n&255 ]; };
 
-async function fetchText(u){ const r = await fetch(u); if(!r.ok) throw new Error(`${r.status} ${u}`); return r.text(); }
-async function fetchJSON(u){ const r = await fetch(u); if(!r.ok) throw new Error(`${r.status} ${u}`); return r.json(); }
+// ---------- icosphere (12-vert icosahedron + 1 Loop subdivision = 42v / 80f) ----------
+function buildIcosphere() {
+  const t = (1 + Math.sqrt(5)) / 2;
+  let verts = [
+    [-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],[0,-1,t],[0,1,t],
+    [0,-1,-t],[0,1,-t],[t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1],
+  ].map(v => { const L = Math.hypot(...v); return [v[0]/L, v[1]/L, v[2]/L]; });
+  let faces = [
+    [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+    [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1],
+  ];
+  const mid = new Map();
+  const midpoint = (a,b) => {
+    const key = a < b ? `${a}_${b}` : `${b}_${a}`;
+    if (mid.has(key)) return mid.get(key);
+    const va = verts[a], vb = verts[b];
+    let m = [(va[0]+vb[0])/2,(va[1]+vb[1])/2,(va[2]+vb[2])/2];
+    const L = Math.hypot(...m); m = [m[0]/L,m[1]/L,m[2]/L];
+    const idx = verts.push(m) - 1; mid.set(key, idx); return idx;
+  };
+  const f2 = [];
+  for (const [a,b,c] of faces) {
+    const ab = midpoint(a,b), bc = midpoint(b,c), ca = midpoint(c,a);
+    f2.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);
+  }
+  return { verts, faces: f2 };   // 42 verts, 80 faces (1-based written in OBJ)
+}
+const SPHERE = buildIcosphere();
 
-function parseCSV(text){
+function buildSpheresOBJ(pts, radius) {
+  const out = [`# POOL · ${pts.length} spheres · r=${radius}mm`];
+  for (const e of pts)
+    for (const v of SPHERE.verts)
+      out.push(`v ${(e.x+v[0]*radius).toFixed(3)} ${(e.y+v[1]*radius).toFixed(3)} ${(e.z+v[2]*radius).toFixed(3)}`);
+  out.push("vn 0 0 1");
+  for (let i = 0; i < pts.length; i++) {
+    const off = i * SPHERE.verts.length + 1;
+    for (const f of SPHERE.faces)
+      out.push(`f ${f[0]+off}//1 ${f[1]+off}//1 ${f[2]+off}//1`);
+  }
+  return out.join("\n") + "\n";
+}
+
+// ---------- data ----------
+function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
-  const head = lines[0].split(",");
+  const head = lines[0].split(",").map(h => h.trim());
   return lines.slice(1).map(line => {
-    const cells = line.split(",");
-    const o = {}; head.forEach((h,i)=> o[h.trim()] = (cells[i]??"").trim()); return o;
+    const c = line.split(","); const o = {};
+    head.forEach((h,i) => o[h] = (c[i] ?? "").trim()); return o;
   });
 }
 
-let CONTACTS = [];      // {x,y,z,role,color,name,patient,contact}
-let ROLES = [];         // [{role,color,n}]
+let CONTACTS = [], ROLES = [];
 const enabled = new Set();
+let nv = null, _timer = null;
 
-// Build the connectome object for the currently-enabled roles, with a per-role
-// categorical colormap (role index -> its hex). Niivue maps node Color (a scalar)
-// through nodeColormap; we register a discrete LUT so index i -> ROLES[i].color.
-function registerRoleColormap(){
-  const R=[],G=[],B=[],A=[],I=[];
-  ROLES.forEach((r,i)=>{ const [cr,cg,cb]=hexToRgb(r.color); R.push(cr);G.push(cg);B.push(cb);A.push(255);I.push(i); });
-  nv.addColormap("poolroles", { R, G, B, A, I });
+async function renderElectrodes() {
+  // remove prior electrode meshes (brain meshes persist)
+  for (const m of [...nv.meshes]) if (String(m.name||"").startsWith("electrodes_")) nv.removeMesh(m);
+  const byRole = new Map();
+  for (const c of CONTACTS) {
+    if (!enabled.has(c.role)) continue;
+    if (!byRole.has(c.role)) byRole.set(c.role, []);
+    byRole.get(c.role).push({ x:+c.x, y:+c.y, z:+c.z });
+  }
+  let shown = 0;
+  for (const [role, pts] of byRole) {
+    if (!pts.length) continue;
+    const color = (ROLES.find(r => r.role === role)?.color) || "#888888";
+    const [r,g,b] = hexToRgb(color);
+    const blob = new Blob([buildSpheresOBJ(pts, RADIUS_MM)], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const mesh = await nv.addMeshFromUrl({ url, name: `electrodes_${role}.obj`, rgba255:[r,g,b,255] });
+    try { nv.setMeshShader(mesh.id, "Flat"); } catch(e) {}
+    URL.revokeObjectURL(url);
+    shown += pts.length;
+  }
+  nv.drawScene();
+  setStatus(`${shown} / ${CONTACTS.length} contacts shown`);
 }
 
-function roleIndex(role){ const i = ROLES.findIndex(r=>r.role===role); return i<0?0:i; }
+function rerender() { clearTimeout(_timer); _timer = setTimeout(renderElectrodes, 30); }
 
-function drawNodes(){
-  const sel = CONTACTS.filter(c => enabled.has(c.role));
-  const conn = {
-    name: "pool",
-    nodeColormap: "poolroles",
-    nodeColormapNegative: "poolroles",
-    nodeMinColor: 0,
-    nodeMaxColor: Math.max(1, ROLES.length - 1),
-    nodeScale: CONFIG.nodeScale,
-    edgeColormap: "poolroles", edgeColormapNegative:"poolroles",
-    edgeMin: 0, edgeMax: 1, edgeScale: 1,
-    nodes: {
-      names: sel.map(c => `${c.patient} ${c.contact} · ${c.role}`),
-      X: sel.map(c => +c.x), Y: sel.map(c => +c.y), Z: sel.map(c => +c.z),
-      Color: sel.map(c => roleIndex(c.role)),
-      Size: sel.map(() => CONFIG.nodeScale),
-    },
-    edges: [],
-  };
-  // remove any prior connectome mesh, then load
-  nv.meshes.filter(m => m.name === "pool").forEach(m => nv.removeMesh(m));
-  nv.loadConnectome(conn);
-  setStatus(`${sel.length} / ${CONTACTS.length} contacts shown`);
-}
-
-function buildLegend(){
+function buildLegend() {
   rolesEl.innerHTML = "";
-  ROLES.forEach(r => {
+  for (const r of ROLES) {
+    enabled.add(r.role);
     const row = document.createElement("label"); row.className = "role";
     const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = true;
-    cb.onchange = () => { cb.checked ? enabled.add(r.role) : enabled.delete(r.role); drawNodes(); };
+    cb.onchange = () => { cb.checked ? enabled.add(r.role) : enabled.delete(r.role); rerender(); };
     const sw = document.createElement("span"); sw.className = "swatch"; sw.style.background = r.color;
     const tx = document.createElement("span"); tx.textContent = r.role;
     const ct = document.createElement("span"); ct.className = "count"; ct.textContent = r.n ?? "";
     row.append(cb, sw, tx, ct); rolesEl.append(row);
-    enabled.add(r.role);
-  });
-}
-
-document.getElementById("allBtn").onclick = () => {
-  ROLES.forEach(r => enabled.add(r.role));
-  rolesEl.querySelectorAll("input").forEach(c => c.checked = true); drawNodes();
-};
-document.getElementById("noneBtn").onclick = () => {
-  enabled.clear(); rolesEl.querySelectorAll("input").forEach(c => c.checked = false); drawNodes();
-};
-
-// ---- boot ----
-try {
-  setStatus("loading meshes…");
-  await nv.loadMeshes([
-    { url: CONFIG.meshLH, rgba255:[200,200,200,Math.round(CONFIG.brainOpacity*255)] },
-    { url: CONFIG.meshRH, rgba255:[200,200,200,Math.round(CONFIG.brainOpacity*255)] },
-  ]);
-  nv.setMeshShader(nv.meshes[0]?.id, "Matte");
-
-  setStatus("loading pool data…");
-  const idx = await fetchJSON(CONFIG.index);
-  ROLES = idx.roles || [];
-  const csv = await fetchText(CONFIG.csvDir + (idx.csv || "contacts_pool.csv"));
-  CONTACTS = parseCSV(csv).filter(c => c.x && c.y && c.z);
-  if (!ROLES.length) {  // fall back: derive roles from the csv
-    const seen = new Map();
-    CONTACTS.forEach(c => seen.set(c.role, c.color));
-    ROLES = [...seen].map(([role,color]) => ({ role, color, n: CONTACTS.filter(x=>x.role===role).length }));
   }
-  registerRoleColormap();
-  buildLegend();
-  drawNodes();
-} catch (e) {
-  setStatus("⚠️ " + e.message + "  (check the CONFIG URLs / mesh + csv paths)");
-  console.error(e);
 }
+document.getElementById("allBtn").onclick  = () => { ROLES.forEach(r=>enabled.add(r.role));
+  rolesEl.querySelectorAll("input").forEach(c=>c.checked=true); rerender(); };
+document.getElementById("noneBtn").onclick = () => { enabled.clear();
+  rolesEl.querySelectorAll("input").forEach(c=>c.checked=false); rerender(); };
+
+// ---------- boot ----------
+(async () => {
+  try {
+    const supportsWebGPU = !!navigator.gpu;
+    nv = new niivue.Niivue({ backColor:[1,1,1,1], show3Dcrosshair:false, isOrientCube:false,
+                             isResizeCanvas:true, isColorbar:false, meshXRay:0,
+                             isHighResolutionCapable:true, useWebGPU:supportsWebGPU });
+    await nv.attachToCanvas(document.getElementById("gl"));
+
+    setStatus("loading brain meshes…");
+    await nv.loadMeshes([
+      { url:`${FSAV_MESH_BASE}/fsaverage_lh.mz3`, rgba255:MESH_RGBA, visible:true },
+      { url:`${FSAV_MESH_BASE}/fsaverage_rh.mz3`, rgba255:MESH_RGBA, visible:true },
+    ]);
+
+    setStatus("loading pool data…");
+    let idx = {};
+    try { idx = await (await fetch(POOL_INDEX)).json(); } catch(e) {}
+    CONTACTS = parseCSV(await (await fetch(POOL_CSV)).text()).filter(c => c.x && c.y && c.z);
+    ROLES = (idx.roles && idx.roles.length) ? idx.roles : (() => {
+      const seen = new Map();
+      CONTACTS.forEach(c => { if (!seen.has(c.role)) seen.set(c.role, c.color); });
+      return [...seen].map(([role,color]) => ({ role, color, n: CONTACTS.filter(x=>x.role===role).length }));
+    })();
+    buildLegend();
+    await renderElectrodes();
+  } catch (e) {
+    setStatus("⚠️ " + e.message + "  (check REPO_RAW / branch / data paths)");
+    console.error(e);
+  }
+})();
 </script>
 </body>
 </html>

@@ -740,12 +740,14 @@ ax.invert_yaxis(); plt.tight_layout(); plt.show()
 """),
 cell("markdown", r"""
 ## 4 — Export for the POOL web page
-Writes `contacts_pool.csv` (xyz + role + colour) + `pool_index.json` — the data `pool.html`
-(Niivue, in your `lorafanda.github.io` repo) reads. Reuses the MOBA fsaverage meshes.
+Writes `contacts_pool.csv` (xyz + role + colour) + `pool_index.json` to the **stable**
+`outputs/pooling/pool_web/` path that `web/pool.html` (Niivue, in your `lorafanda.github.io`
+repo) reads via raw-GitHub. Reuses the MOBA fsaverage meshes. **Commit + push** that folder so
+the page can fetch it.
 """),
 cell("code", r"""
 coords = P.load_coords()
-web = P.export_pool_web(df_role, coords, P.new_run_dir('roles', GRID + '_web'), grid=GRID)
+web = P.export_pool_web(df_role, coords, P.OUTPUTS_ROOT / 'pool_web', grid=GRID)
 print('POOL web data ->', web)
 """),
 ]
