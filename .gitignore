@@ -63,10 +63,16 @@ outputs/
 # Classification dataset/feature cache is large + machine-local — never push
 03_FBM_Classifying/outputs/_dataset/
 
-# Allow the pooling manifest tree (overlays, pool/anatomy run artifacts, renders)
+# Allow the pooling manifest tree (overlays, pool/anatomy run artifacts) — NOT renders
 !04_FBM_Pooling/outputs/
 !04_FBM_Pooling/outputs/pooling/
 !04_FBM_Pooling/outputs/pooling/**
+# Renders are regenerable + heavy; pool.html plots fsaverage via Niivue from the
+# coord export, so these PNGs are never needed in git. Re-deny after the allow above.
+# Need the /** form (not just the dir): !pooling/** above force-included every file,
+# so a directory-only re-deny is overridden — /** re-denies the files themselves.
+04_FBM_Pooling/outputs/pooling/**/renders/
+04_FBM_Pooling/outputs/pooling/**/renders/**
 # Pooling dataset cache + machine-local MNE aparc build — never push
 04_FBM_Pooling/outputs/_dataset/
 04_FBM_Pooling/outputs/_anatomy/

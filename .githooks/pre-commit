@@ -1,0 +1,33 @@
+#!/bin/sh
+# ──────────────────────────────────────────────────────────────────────────
+# Repo-bloat guard. Blocks a commit that stages a large file OR a large
+# *total* of new files (the renders case: many ~1.3 MB PNGs at once).
+# Enable once per clone:  git config core.hooksPath .githooks
+# Override for a genuine large file:  git commit --no-verify
+# ──────────────────────────────────────────────────────────────────────────
+MAXFILE=$((5 * 1048576))     # 5 MB per single new/modified file
+MAXTOTAL=$((25 * 1048576))   # 25 MB total of newly added files in one commit
+total=0
+status=0
+
+for f in $(git diff --cached --name-only --diff-filter=AM); do
+  sz=$(git cat-file -s ":$f" 2>/dev/null) || sz=0
+  if [ "$sz" -gt "$MAXFILE" ]; then
+    echo "BLOCKED: $f is $((sz / 1048576)) MB (> 5 MB)."
+    status=1
+  fi
+  total=$((total + sz))
+done
+
+if [ "$total" -gt "$MAXTOTAL" ]; then
+  echo "BLOCKED: this commit stages $((total / 1048576)) MB of files (> 25 MB) —"
+  echo "         that usually means output/render bloat slipped past .gitignore."
+  status=1
+fi
+
+if [ "$status" -ne 0 ]; then
+  echo ""
+  echo "Fix: gitignore the heavy outputs, or if this is genuinely intended:"
+  echo "     git commit --no-verify"
+fi
+exit $status
