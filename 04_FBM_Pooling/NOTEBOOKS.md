@@ -34,6 +34,10 @@ high-activity gate.
               440   → region × time cascade raster (thesis figure)
                           ▼
               490   → results narrative (boxcar vs gaussian robustness)
+
+   (parallel path)
+              450   → predefined time-frequency ROI pooling
+                       (cluster/condition-blind; 11 physiology ROIs, both grids)
 ```
 
 Two axes of comparison run throughout:
@@ -117,6 +121,24 @@ raster**.
 
 ---
 
+## 450 — `450_roi_pooling.ipynb` (parallel path)
+
+**Role**: the **cluster-blind, condition-blind** pooling — a fixed, physiology-driven library of
+time-frequency **ROIs** applied to every electrode × condition ERSP.
+
+- ROIs live in `functions/roi_config.py` (`ERSP_POOLING_PARAMS`, both `ds` and `full` grids): each
+  a 2-D box (`f_rows × t_bins`, **1-based inclusive**) + a **sign** hypothesis (`pos`/`neg`/`both`),
+  citation-anchored to a documented marker.
+- §1 draws the **ROI map** (`plot_roi_map`) — labelled `(a)(b)(c)…` boxes coloured by sign, + a
+  `roi_legend` table, + `validate_roi_config` (flags ds↔full Hz / sign mismatches).
+- §2 `build_roi_table` pools (`pool_roi` = box-mean dB) + sign-gates (`roi_gate`) every sample.
+- §3 **option A**: a contact *expresses* an ROI if it qualifies in ≥1 condition (`roi_counts`).
+- §4 `roi_region_crosstab` → ROI × Yeo-7 (no MNE) "where each signature lives."
+- **Additive** — does not touch the zone-based `410–490` path. ⚠️ Reconcile the two flagged
+  predeterminant issues (alpha_beta + broadband ds↔full mismatch; broadband box-mean ≠ Manning index).
+
+---
+
 ## 490 — `490_results.ipynb`
 
 **Role**: the **results page**. Pulls the artifacts 410/420/430 wrote, lays them out with the
@@ -161,6 +183,10 @@ outputs/_anatomy/aparc_lookup.csv   one-time MNE build                    (gitig
 | `render_zone_brains` | self-contained fsaverage PyVista render of qualifiers |
 | `region_labels` / `responsive_contacts` | per-contact region (Yeo/aparc) + the responsive-contact set (440) |
 | `build_cascade` / `cascade_table` / `plot_cascade` | the 440 region × time cascade raster + its companion table |
+| `ROI_PARAMS` / `validate_roi_config` | the predefined ROI library (`roi_config.py`) + ds↔full consistency check (450) |
+| `pool_roi` / `roi_gate` / `build_roi_table` | 2-D box-mean pooling + sign-directional gate, condition/cluster-blind (450) |
+| `roi_contact_summary` / `roi_counts` / `roi_region_crosstab` | option-A expression + per-ROI counts + ROI × region (450) |
+| `plot_roi_map` / `roi_legend` | the labelled ROI-box figure + its legend (450) |
 | `new_run_dir` / `update_index` / `list_runs` / `latest_run` | run-dir + index plumbing (mirrors `lf_classify`) |
 
 `_build_notebooks.py` regenerates the four notebooks from source (stdlib only); safe to

@@ -1150,6 +1150,228 @@ def plot_cascade(cascade: dict, out_png, *, cfg: Optional[dict] = None,
 
 
 # ============================================================
+# 7c — Predefined time-frequency ROI pooling (cluster/condition-blind)
+# ============================================================
+# The same fixed ROI library is applied to EVERY electrode x condition ERSP,
+# independent of the 02 clusters and the condition label. Each ROI is a 2-D box
+# (1-based, inclusive f_rows x t_bins) + a sign hypothesis. Pooling = mean dB in
+# the box; qualification = the box clears the clustering sigma/proportion gate in
+# the ROI's OWN sign. Option A: a contact "expresses" an ROI if it qualifies in
+# >=1 condition. See functions/roi_config.py.
+def _load_roi_config():
+    path = _HERE.parent / "roi_config.py"
+    spec = importlib.util.spec_from_file_location("_pool_roi_config", path)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)               # type: ignore[union-attr]
+    return m.ERSP_POOLING_PARAMS
+
+
+ROI_PARAMS = _load_roi_config()
+_ROI_SIGN_COLOR = {"pos": "#cc0033", "neg": "#1f4fd8", "both": "#7a1fa2"}
+
+
+def roi_tag(i: int) -> str:
+    return f"({chr(97 + i)})"                 # 0 -> (a), 1 -> (b), ...
+
+
+def validate_roi_config(roi_params: Optional[dict] = None) -> pd.DataFrame:
+    """Check ds<->full Hz / time consistency for each ROI and flag mismatches.
+    The ds/full numbers are YOUR predeterminants — this only surfaces where the
+    two grids disagree (e.g. alpha_beta, broadband) so you can reconcile them."""
+    rp = roi_params or ROI_PARAMS
+    ds = {r["label"]: r for r in rp["ds"]}
+    full = {r["label"]: r for r in rp["full"]}
+    rows = []
+    for lab, d in ds.items():
+        d_lo = FREQ_BANDS[d["f_rows"][0] - 1][0]
+        d_hi = FREQ_BANDS[d["f_rows"][1] - 1][1]
+        rec = {"label": lab, "ds_hz": (d_lo, d_hi),
+               "ds_t_pct": (round((d["t_bins"][0] - 1) / 30 * 100), round(d["t_bins"][1] / 30 * 100)),
+               "ds_sign": d["sign"]}
+        f = full.get(lab)
+        if f is not None:
+            f_lo = (f["f_rows"][0] - 1) / (N_FREQ - 1) * FMAX_HZ
+            f_hi = (f["f_rows"][1] - 1) / (N_FREQ - 1) * FMAX_HZ
+            rec.update({"full_hz": (round(f_lo), round(f_hi)),
+                        "full_t_pct": (round((f["t_bins"][0] - 1) / N_TIME * 100),
+                                       round(f["t_bins"][1] / N_TIME * 100)),
+                        "full_sign": f["sign"],
+                        "hz_mismatch": (abs(d_lo - f_lo) > 8) or (abs(d_hi - f_hi) > 8),
+                        "sign_mismatch": d["sign"] != f["sign"]})
+        rows.append(rec)
+    return pd.DataFrame(rows)
+
+
+def _roi_box(ersp: np.ndarray, roi: dict) -> np.ndarray:
+    """The (f_rows x t_bins) sub-block. 1-based inclusive -> 0-based slice."""
+    f0, f1 = roi["f_rows"]
+    t0, t1 = roi["t_bins"]
+    return ersp[f0 - 1:f1, t0 - 1:t1]
+
+
+def pool_roi(ersp: np.ndarray, roi: dict) -> float:
+    """Mean dB inside the ROI box."""
+    box = _roi_box(ersp, roi)
+    return float(box.mean()) if box.size else float("nan")
+
+
+def roi_gate(ersp: np.ndarray, roi: dict) -> Tuple[float, float, bool]:
+    """Sign-directional windowed gate over the box. Returns
+    (prop_pos, prop_neg, qualifies) using the SAME sigma thresholds as clustering."""
+    box = _roi_box(ersp, roi)
+    if box.size == 0:
+        return 0.0, 0.0, False
+    prop_pos = float((box > THR_POS).mean())
+    prop_neg = float((box < THR_NEG).mean())
+    s = roi.get("sign", "both")
+    if s == "pos":
+        q = prop_pos >= MIN_PROP_POS
+    elif s == "neg":
+        q = prop_neg >= MIN_PROP_NEG
+    else:
+        q = (prop_pos >= MIN_PROP_POS) or (prop_neg >= MIN_PROP_NEG)
+    return prop_pos, prop_neg, bool(q)
+
+
+def build_roi_table(df_meta: pd.DataFrame, X: np.ndarray, *, grid: str = "full",
+                    roi_params: Optional[dict] = None, cache: bool = True,
+                    write_run: bool = True, verbose: bool = True) -> pd.DataFrame:
+    """Pool + sign-gate every electrode x condition ERSP against every ROI
+    (condition-blind, cluster-blind). One row per (contact, condition, ROI)."""
+    rp = roi_params or ROI_PARAMS
+    rois = rp[grid]
+    rows = []
+    for row in df_meta.itertuples():
+        ersp = X[row.Index]
+        for i, roi in enumerate(rois):
+            pp, pn, q = roi_gate(ersp, roi)
+            rows.append({
+                "patient_id": row.patient_id, "electrode": row.electrode,
+                "contact_norm": row.contact_norm, "condition": row.condition,
+                "grid": grid, "roi_tag": roi_tag(i), "roi_label": roi["label"],
+                "sign": roi["sign"],
+                "f_lo_row": roi["f_rows"][0], "f_hi_row": roi["f_rows"][1],
+                "t_lo_bin": roi["t_bins"][0], "t_hi_bin": roi["t_bins"][1],
+                "pooled_db": pool_roi(ersp, roi),
+                "prop_pos": pp, "prop_neg": pn, "qualifies": q,
+            })
+    df = pd.DataFrame(rows)
+    if cache:
+        DATASET_CACHE.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(DATASET_CACHE / f"roi_table_{grid}.parquet", index=False)
+    if write_run:
+        run_dir = new_run_dir("roi", grid)
+        df.to_parquet(run_dir / "roi_table.parquet", index=False)
+        roi_counts(df).to_csv(run_dir / "roi_counts.csv", index=False)
+        manifest = {
+            "schema_version": SCHEMA_VERSION, "stage": "roi", "grid": grid,
+            "run_id": run_dir.name,
+            "created_at": _dt.datetime.now().isoformat(timespec="seconds"),
+            "host": platform.node(), "user": _safe_user(),
+            "n_rows": int(len(df)), "n_contacts": int(df_meta.shape[0]),
+            "n_rois": len(rois), "path": str(run_dir.relative_to(OUTPUTS_ROOT)),
+        }
+        write_json(run_dir / "manifest.json", manifest)
+        update_index(manifest)
+        if verbose:
+            print(f"[lf_pool] roi run -> {run_dir}")
+    if verbose:
+        print(f"[lf_pool] roi table: {df.shape}  ({len(rois)} ROIs x {df_meta.shape[0]} samples)")
+    return df
+
+
+def load_roi_table(grid: str = "full", path: Optional[Path] = None) -> pd.DataFrame:
+    p = Path(path) if path is not None else DATASET_CACHE / f"roi_table_{grid}.parquet"
+    return pd.read_parquet(p)
+
+
+def roi_contact_summary(df_roi: pd.DataFrame) -> pd.DataFrame:
+    """Option A: a contact 'expresses' an ROI if it qualifies in >=1 condition.
+    One row per (contact, ROI)."""
+    return (df_roi.groupby(["patient_id", "contact_norm", "roi_tag", "roi_label", "sign"],
+                           as_index=False)
+            .agg(expresses=("qualifies", "any"),
+                 n_cond_qual=("qualifies", "sum"),
+                 pooled_db_mean=("pooled_db", "mean")))
+
+
+def roi_counts(df_roi: pd.DataFrame) -> pd.DataFrame:
+    """Distinct contacts expressing each ROI (option A)."""
+    s = roi_contact_summary(df_roi)
+    s = s[s["expresses"]]
+    out = (s.groupby(["roi_tag", "roi_label", "sign"]).size()
+           .reset_index(name="n_contacts"))
+    return out.sort_values("roi_tag").reset_index(drop=True)
+
+
+def roi_region_crosstab(df_roi: pd.DataFrame, coords: pd.DataFrame, *,
+                        scheme: str = "yeo7") -> pd.DataFrame:
+    """ROI (rows) x anatomical region (cols) counts of expressing contacts."""
+    s = roi_contact_summary(df_roi)
+    s = s[s["expresses"]]
+    col = "yeo7_network" if scheme == "yeo7" else "yeo17_network"
+    lut = (coords[["patient_id", "contact_norm", col]]
+           .drop_duplicates(["patient_id", "contact_norm"]).rename(columns={col: "region"}))
+    lut = lut[lut["region"].map(is_real_network)]
+    m = s.merge(lut, on=["patient_id", "contact_norm"], how="left").dropna(subset=["region"])
+    m["roi"] = m["roi_tag"] + " " + m["roi_label"]
+    return pd.crosstab(m["roi"], m["region"])
+
+
+def roi_legend(roi_params: Optional[dict] = None, *, grid: str = "ds") -> pd.DataFrame:
+    """Letter -> ROI legend table for the figure."""
+    rp = roi_params or ROI_PARAMS
+    return pd.DataFrame([
+        {"tag": roi_tag(i), "label": r["label"], "sign": r["sign"],
+         "t_bins": tuple(r["t_bins"]), "f_rows": tuple(r["f_rows"]),
+         "description": r["description"]}
+        for i, r in enumerate(rp[grid])])
+
+
+def plot_roi_map(roi_params: Optional[dict] = None, *, grid: str = "ds",
+                 background: Optional[np.ndarray] = None,
+                 signs: Sequence[str] = ("pos", "neg", "both"),
+                 out_png=None, dpi: int = 150, ax=None):
+    """Draw each ROI as a labelled (a)/(b)/... box on the time-frequency plane,
+    coloured by sign (red=pos, blue=neg, purple=both). Optional `background` =
+    a (n_freq, n_time) mean ERSP to lay the boxes over. Plot pos / neg on separate
+    panels (via `signs`) to separate same-box opposite-sign ROIs."""
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
+    rp = roi_params or ROI_PARAMS
+    rois = rp[grid]
+    n_freq, n_time, stim = (15, 30, 15) if grid == "ds" else (N_FREQ, N_TIME, int(STIM_FRAC * N_TIME))
+    if ax is None:
+        _, ax = plt.subplots(figsize=(11, 6))
+    if background is not None:
+        a = float(np.nanpercentile(np.abs(background), 99)) or 1.0
+        ax.imshow(background, aspect="auto", origin="lower", cmap="RdBu_r", vmin=-a, vmax=a,
+                  extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5], alpha=0.55)
+    for i, r in enumerate(rois):
+        if r["sign"] not in signs:
+            continue
+        t0, t1 = r["t_bins"]; f0, f1 = r["f_rows"]; c = _ROI_SIGN_COLOR.get(r["sign"], "#444")
+        ax.add_patch(Rectangle((t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
+                     fill=True, facecolor=c, alpha=0.15, edgecolor=c, lw=1.8))
+        ax.text((t0 + t1) / 2, (f0 + f1) / 2, roi_tag(i), ha="center", va="center",
+                fontsize=11, fontweight="bold", color=c)
+    ax.axvline(stim + 0.5, color="k", ls="--", lw=1.0)
+    ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
+    ax.set_xlabel(f"time bin (1..{n_time};  {stim} = response onset)")
+    if grid == "ds":
+        ax.set_yticks(np.arange(1, n_freq + 1))
+        ax.set_yticklabels([f"{int(lo)}-{int(hi)}" for lo, hi in FREQ_BANDS], fontsize=6)
+        ax.set_ylabel("freq band (Hz)")
+    else:
+        ax.set_ylabel("freq row (1..129, 0-500 Hz)")
+    ax.set_title(f"Predefined time-frequency ROIs — {grid}   (red=pos · blue=neg · purple=both)")
+    if out_png is not None:
+        out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
+        ax.get_figure().savefig(out_png, dpi=dpi, bbox_inches="tight")
+    return ax
+
+
+# ============================================================
 # 8 — Run-dir / index plumbing (mirrors lf_classify)
 # ============================================================
 def _now_id() -> str:

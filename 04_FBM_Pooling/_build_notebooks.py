@@ -588,9 +588,97 @@ display(Image(filename=str(png)))
 ]
 
 
+# ============================================================
+# 450 — predefined time-frequency ROI pooling (condition/cluster-blind)
+# ============================================================
+nb450 = [
+cell("markdown", r"""
+# 450 — Predefined time-frequency ROI pooling
+
+The **cluster-blind, condition-blind** pooling path. A fixed, physiology-driven library of
+time-frequency **ROIs** (`functions/roi_config.py`) is applied to **every** electrode × condition
+ERSP — independent of the 02 clusters and of audio/picture/reading. Each ROI is a 2-D box
+(`f_rows × t_bins`, 1-based inclusive) + a **sign** hypothesis, encoding a documented marker
+(sensory-onset HGA, sustained processing, pre-response planning, motor execution, alpha/beta ERD,
+theta retrieval, …). Pooling turns each ERSP into a small citation-anchored feature vector.
+
+- **Pool** = mean dB in the box. **Qualify** = the box clears the clustering σ/proportion gate in
+  the ROI's **own sign** (`pos`/`neg`/`both`).
+- **Option A aggregation:** a contact **expresses** an ROI if it qualifies in **≥1 condition**.
+- This is **additive** — the zone-based `410–490` path is untouched.
+
+> ⚠️ Two predeterminant issues to reconcile (see the validation table in §1): the **ds vs full**
+> Hz ranges disagree for `alpha_beta_suppression` and `broadband_activation_index`; and the
+> `broadband_activation_index` box-mean is **not** Manning's broadband index (a slope/offset
+> measure) — treat it cautiously or redefine it.
+"""),
+cell("code", SETUP),
+cell("code", r"""
+# ---- knobs ----
+USE_DS       = True                  # True: 15x30 ds grid · False: full 129x300
+GRID         = 'ds' if USE_DS else 'full'
+DS_TIME_BINS = 30
+print('grid:', GRID, '| n ROIs:', len(P.ROI_PARAMS[GRID]))
+"""),
+cell("markdown", r"""
+## 1 — The ROI map (with legend) + consistency check
+Each box labelled `(a) (b) (c) …`, coloured red = positive / blue = negative / purple = both.
+Same-box opposite-sign ROIs overlap, so positive and negative signs are also drawn separately.
+The validation table flags any ds↔full Hz / sign mismatches.
+"""),
+cell("code", r"""
+import matplotlib.pyplot as plt
+disc = P.new_run_dir('roi', GRID + '_map')
+for g in ('ds', 'full'):
+    P.plot_roi_map(grid=g, out_png=disc / f'roi_map_{g}.png'); plt.show()
+# pos / neg separated (so the early-onset vs early-suppression twins don't overlap)
+P.plot_roi_map(grid=GRID, signs=('pos', 'both')); plt.title('positive / both'); plt.show()
+P.plot_roi_map(grid=GRID, signs=('neg',));         plt.title('negative');       plt.show()
+display(P.roi_legend(grid=GRID))
+print('\nds <-> full consistency (hz_mismatch / sign_mismatch = reconcile):')
+display(P.validate_roi_config())
+"""),
+cell("markdown", r"""
+## 2 — Pool every contact against every ROI
+Condition-blind: one row per (contact, condition, ROI). Cached to
+`outputs/_dataset/pooling/roi_table_<grid>.parquet`.
+"""),
+cell("code", r"""
+df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
+X = P.downsample_dataset(X_full, time_bins=DS_TIME_BINS) if USE_DS else X_full
+df_roi = P.build_roi_table(df_meta, X, grid=GRID)
+print('roi table:', df_roi.shape)
+df_roi.head()
+"""),
+cell("markdown", r"""
+## 3 — Per-ROI qualifier counts (option A)
+Distinct contacts expressing each ROI in ≥1 condition.
+"""),
+cell("code", r"""
+counts = P.roi_counts(df_roi)
+display(counts)
+ax = counts.set_index('roi_tag')['n_contacts'].plot.barh(
+    figsize=(8, 0.4 * len(counts) + 1))
+ax.set_xlabel('# contacts expressing'); ax.set_title('ROI expression (option A: ≥1 condition)')
+ax.invert_yaxis(); plt.tight_layout(); plt.show()
+"""),
+cell("markdown", r"""
+## 4 — Where do they map? (ROI × Yeo-7)
+Crosstab of expressing contacts by anatomical network — the condition-blind "where each signature
+lives" map. (Yeo from the coords CSVs; no MNE needed.)
+"""),
+cell("code", r"""
+coords = P.load_coords()
+ct = P.roi_region_crosstab(df_roi, coords, scheme='yeo7')
+display(ct)
+"""),
+]
+
+
 write_nb("410_zone_discovery.ipynb", nb410)
 write_nb("420_pool_and_qualify.ipynb", nb420)
 write_nb("430_anatomy_mapping.ipynb", nb430)
 write_nb("440_cascade.ipynb", nb440)
+write_nb("450_roi_pooling.ipynb", nb450)
 write_nb("490_results.ipynb", nb490)
 print("all notebooks written.")
