@@ -675,10 +675,87 @@ display(ct)
 ]
 
 
+# ============================================================
+# 460 — concatenated [audio|picture|reading] functional-role matching
+# ============================================================
+nb460 = [
+cell("markdown", r"""
+# 460 — Functional-role matching (concatenated, conjunction)
+
+The **condition-structured** path. Each contact is the three conditions stitched in time,
+`[audio | picture | reading]`. We **discretize** to a score-gated −1/0/+1 map and assign a
+**functional role** only if the contact expresses **every** box of that role's conjunction
+template (strict AND) — a box expresses its sign via the clustering **proportion gate** on the
+−1/+1 cells. Roles live in `functions/roi_config_concatenated.py` (auditory / visual / motor /
+multimodal — **draft, edit them**).
+
+- **Auditory** = HGA in the audio **stimulus** + the **response** of all three (hears stimulus +
+  hears own voice ×3). **Motor** = HGA in all three responses. **Visual** = HGA in the picture &
+  reading stimuli. The discriminator is the *stimulus* boxes (response is shared motor/feedback —
+  only **anatomy** separates those, which is what the POOL map shows).
+- One sample per contact; **only contacts with all three conditions** enter.
+- `role` = the **most specific** matching template (most boxes); `roles_matched` lists all.
+
+> Discretization needs blob resolution, so `USE_DS=False` (full 129×300) is the faithful baseline;
+> `USE_DS=True` downsamples the painted map (faster, coarser).
+"""),
+cell("code", SETUP),
+cell("code", r"""
+# ---- knobs ----
+USE_DS    = False                    # False: full-res discretized baseline (recommended) · True: ds
+GRID      = 'ds' if USE_DS else 'full'
+SCORE_PCT = 33.0                     # blob-score gate for the -1/0/+1 discretization
+print('grid:', GRID, '| roles:', [r['role'] for r in P.ROLE_PARAMS[GRID]['roles']])
+"""),
+cell("markdown", r"""
+## 1 — Load + resolve the discretization score gate
+"""),
+cell("code", r"""
+df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
+score_min = P.resolve_score_gate(X_full, pct=SCORE_PCT)
+print('score gate:', score_min)
+"""),
+cell("markdown", r"""
+## 2 — Concatenate + score-gated discretize (one map per all-3-condition contact)
+"""),
+cell("code", r"""
+df_contacts, X_disc = P.build_concat_discretized(df_meta, X_full, score_min=score_min, grid=GRID)
+print('contacts:', len(df_contacts), '| X_disc:', X_disc.shape)
+df_contacts.head()
+"""),
+cell("markdown", r"""
+## 3 — Conjunction role matching
+A contact gets a role only if **all** that role's boxes clear the proportion gate in the expected
+sign. `role` = most-specific match.
+"""),
+cell("code", r"""
+import matplotlib.pyplot as plt
+df_role = P.build_role_table(df_contacts, X_disc, grid=GRID)
+counts = P.role_counts(df_role)
+display(counts)
+ax = counts.set_index('role')['n_contacts'].plot.barh(figsize=(7, 0.5 * len(counts) + 1),
+        color=[P.role_colors(GRID).get(r, '#888') for r in counts['role']])
+ax.set_xlabel('# contacts'); ax.set_title('Functional-role assignment (strict conjunction)')
+ax.invert_yaxis(); plt.tight_layout(); plt.show()
+"""),
+cell("markdown", r"""
+## 4 — Export for the POOL web page
+Writes `contacts_pool.csv` (xyz + role + colour) + `pool_index.json` — the data `pool.html`
+(Niivue, in your `lorafanda.github.io` repo) reads. Reuses the MOBA fsaverage meshes.
+"""),
+cell("code", r"""
+coords = P.load_coords()
+web = P.export_pool_web(df_role, coords, P.new_run_dir('roles', GRID + '_web'), grid=GRID)
+print('POOL web data ->', web)
+"""),
+]
+
+
 write_nb("410_zone_discovery.ipynb", nb410)
 write_nb("420_pool_and_qualify.ipynb", nb420)
 write_nb("430_anatomy_mapping.ipynb", nb430)
 write_nb("440_cascade.ipynb", nb440)
 write_nb("450_roi_pooling.ipynb", nb450)
+write_nb("460_role_matching.ipynb", nb460)
 write_nb("490_results.ipynb", nb490)
 print("all notebooks written.")

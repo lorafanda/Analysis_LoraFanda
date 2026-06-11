@@ -38,6 +38,11 @@ high-activity gate.
    (parallel path)
               450   → predefined time-frequency ROI pooling
                        (cluster/condition-blind; 11 physiology ROIs, both grids)
+                          ▼
+              460   → concatenated [audio|picture|reading] functional-role matching
+                       (condition-structured; strict conjunction on score-gated −1/0/+1)
+                          ▼
+              web/pool.html  → POOL brain page (Niivue, colour-by-role) for lorafanda.github.io
 ```
 
 Two axes of comparison run throughout:
@@ -139,6 +144,26 @@ time-frequency **ROIs** applied to every electrode × condition ERSP.
 
 ---
 
+## 460 — `460_role_matching.ipynb` (condition-structured)
+
+**Role**: assign each contact a **functional role** from its `[audio|picture|reading]` pattern.
+
+- Concatenates the three conditions per contact (only contacts with **all three**), **score-gated
+  discretizes** to −1/0/+1 (`discretize_ersp`, reuses `lf_minus101` + the `SCORE_PCT` blob gate),
+  and assigns a role by **strict conjunction** (`build_role_table`): every box of a role's template
+  (`functions/roi_config_concatenated.py`) must clear the **proportion gate** in its sign.
+- Roles (draft): **auditory** (audio-stim + all 3 responses), **visual** (picture+reading stim),
+  **motor** (all 3 responses), **multimodal** (all 3 stim). `role` = most-specific match.
+- §4 `export_pool_web` writes `contacts_pool.csv` + `pool_index.json` (xyz + role + colour) — the
+  data the **POOL** page reads. Reuses the MOBA fsaverage meshes.
+
+### `web/pool.html` — the POOL brain page
+Niivue page (sibling of MOBA's `moba.html`) that renders contacts on fsaverage **coloured by role**
+with per-role filters. Drop it into the `lorafanda.github.io` repo; set the three URLs in its
+`CONFIG` block to match how MOBA serves meshes + per-run CSVs.
+
+---
+
 ## 490 — `490_results.ipynb`
 
 **Role**: the **results page**. Pulls the artifacts 410/420/430 wrote, lays them out with the
@@ -187,6 +212,9 @@ outputs/_anatomy/aparc_lookup.csv   one-time MNE build                    (gitig
 | `pool_roi` / `roi_gate` / `build_roi_table` | 2-D box-mean pooling + sign-directional gate, condition/cluster-blind (450) |
 | `roi_contact_summary` / `roi_counts` / `roi_region_crosstab` | option-A expression + per-ROI counts + ROI × region (450) |
 | `plot_roi_map` / `roi_legend` | the labelled ROI-box figure + its legend (450) |
+| `ROLE_PARAMS` / `discretize_ersp` / `build_concat_discretized` | concatenated-role config + score-gated −1/0/+1 + per-contact concat (460) |
+| `box_expresses` / `role_matches` / `build_role_table` / `role_counts` | strict-conjunction matching + role assignment (460) |
+| `export_pool_web` / `role_colors` | POOL web data export (`contacts_pool.csv` + `pool_index.json`) feeding `web/pool.html` |
 | `new_run_dir` / `update_index` / `list_runs` / `latest_run` | run-dir + index plumbing (mirrors `lf_classify`) |
 
 `_build_notebooks.py` regenerates the four notebooks from source (stdlib only); safe to

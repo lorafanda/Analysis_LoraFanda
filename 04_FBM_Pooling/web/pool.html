@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<!--
+  POOL — Pooling Of Lateralized (functional-role) activity.
+  Sibling of MOBA (moba.html). Renders contacts on an fsaverage brain coloured by
+  their assigned functional role (auditory / visual / motor / multimodal / none),
+  with per-role filters. Drop this into the lorafanda.github.io repo next to moba.html.
+
+  DATA CONTRACT (produced by 04_FBM_Pooling/460 -> lf_pool.export_pool_web):
+    - contacts_pool.csv : patient,contact,name,hemi,x,y,z,role,roles_matched,color
+    - pool_index.json   : { grid, n_contacts, csv, roles:[{role,color,n}] }
+  MESHES (shared with MOBA): fsaverage_{lh,rh}.mz3
+
+  ⚠️ Set the three URLs in CONFIG below to wherever your repo serves these files
+  (same scheme MOBA uses — match moba.html's fetch paths). This page uses Niivue's
+  connectome node API with a per-role categorical colormap.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>POOL — functional-role brain map</title>
+<style>
+  :root { --bg:#0e1116; --panel:#171c24; --fg:#e6e6e6; --muted:#9aa4b2; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg);
+              font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  #wrap { display:grid; grid-template-columns: 260px 1fr; height:100vh; }
+  #side { background:var(--panel); padding:14px 16px; overflow:auto; border-right:1px solid #222; }
+  #side h1 { font-size:18px; margin:0 0 2px; }
+  #side .sub { color:var(--muted); font-size:12px; margin-bottom:14px; }
+  #side h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+             margin:16px 0 6px; }
+  .role { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:14px; cursor:pointer; }
+  .role input { accent-color:#4d8; }
+  .swatch { width:14px; height:14px; border-radius:3px; flex:0 0 auto; }
+  .count { margin-left:auto; color:var(--muted); font-size:12px; }
+  #status { color:var(--muted); font-size:12px; margin-top:14px; line-height:1.5; }
+  #gl { width:100%; height:100%; display:block; }
+  button { background:#222b38; color:var(--fg); border:1px solid #324; border-radius:6px;
+           padding:6px 10px; font-size:13px; cursor:pointer; margin:2px 2px 0 0; }
+  button:hover { background:#2c3a4c; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <aside id="side">
+    <h1>POOL</h1>
+    <div class="sub">Functional-role activity on fsaverage</div>
+    <div>
+      <button id="allBtn">All</button>
+      <button id="noneBtn">None</button>
+    </div>
+    <h2>Roles</h2>
+    <div id="roles"></div>
+    <div id="status">loading…</div>
+  </aside>
+  <canvas id="gl"></canvas>
+</div>
+
+<script type="module">
+import { Niivue } from "https://unpkg.com/@niivue/niivue@0.44.0/dist/index.js";
+
+// ============================ CONFIG — set these ============================
+// Point these at wherever your site serves the files (match moba.html's paths).
+const CONFIG = {
+  meshLH: "./meshes/fsaverage_lh.mz3",
+  meshRH: "./meshes/fsaverage_rh.mz3",
+  index:  "./pool/pool_index.json",     // pool_index.json (lists roles + the csv name)
+  csvDir: "./pool/",                    // dir that contains contacts_pool.csv
+  nodeScale: 2.0,
+  brainOpacity: 0.30,
+};
+// ===========================================================================
+
+const statusEl = document.getElementById("status");
+const rolesEl  = document.getElementById("roles");
+const setStatus = (m) => (statusEl.textContent = m);
+
+const nv = new Niivue({ show3Dcrosshair:false, backColor:[0.055,0.067,0.086,1], isColorbar:false });
+await nv.attachTo("gl");
+
+// ---- helpers ----
+const hexToRgb = (h) => { const n = parseInt(h.replace("#",""),16);
+  return [ (n>>16)&255, (n>>8)&255, n&255 ]; };
+
+async function fetchText(u){ const r = await fetch(u); if(!r.ok) throw new Error(`${r.status} ${u}`); return r.text(); }
+async function fetchJSON(u){ const r = await fetch(u); if(!r.ok) throw new Error(`${r.status} ${u}`); return r.json(); }
+
+function parseCSV(text){
+  const lines = text.trim().split(/\r?\n/);
+  const head = lines[0].split(",");
+  return lines.slice(1).map(line => {
+    const cells = line.split(",");
+    const o = {}; head.forEach((h,i)=> o[h.trim()] = (cells[i]??"").trim()); return o;
+  });
+}
+
+let CONTACTS = [];      // {x,y,z,role,color,name,patient,contact}
+let ROLES = [];         // [{role,color,n}]
+const enabled = new Set();
+
+// Build the connectome object for the currently-enabled roles, with a per-role
+// categorical colormap (role index -> its hex). Niivue maps node Color (a scalar)
+// through nodeColormap; we register a discrete LUT so index i -> ROLES[i].color.
+function registerRoleColormap(){
+  const R=[],G=[],B=[],A=[],I=[];
+  ROLES.forEach((r,i)=>{ const [cr,cg,cb]=hexToRgb(r.color); R.push(cr);G.push(cg);B.push(cb);A.push(255);I.push(i); });
+  nv.addColormap("poolroles", { R, G, B, A, I });
+}
+
+function roleIndex(role){ const i = ROLES.findIndex(r=>r.role===role); return i<0?0:i; }
+
+function drawNodes(){
+  const sel = CONTACTS.filter(c => enabled.has(c.role));
+  const conn = {
+    name: "pool",
+    nodeColormap: "poolroles",
+    nodeColormapNegative: "poolroles",
+    nodeMinColor: 0,
+    nodeMaxColor: Math.max(1, ROLES.length - 1),
+    nodeScale: CONFIG.nodeScale,
+    edgeColormap: "poolroles", edgeColormapNegative:"poolroles",
+    edgeMin: 0, edgeMax: 1, edgeScale: 1,
+    nodes: {
+      names: sel.map(c => `${c.patient} ${c.contact} · ${c.role}`),
+      X: sel.map(c => +c.x), Y: sel.map(c => +c.y), Z: sel.map(c => +c.z),
+      Color: sel.map(c => roleIndex(c.role)),
+      Size: sel.map(() => CONFIG.nodeScale),
+    },
+    edges: [],
+  };
+  // remove any prior connectome mesh, then load
+  nv.meshes.filter(m => m.name === "pool").forEach(m => nv.removeMesh(m));
+  nv.loadConnectome(conn);
+  setStatus(`${sel.length} / ${CONTACTS.length} contacts shown`);
+}
+
+function buildLegend(){
+  rolesEl.innerHTML = "";
+  ROLES.forEach(r => {
+    const row = document.createElement("label"); row.className = "role";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = true;
+    cb.onchange = () => { cb.checked ? enabled.add(r.role) : enabled.delete(r.role); drawNodes(); };
+    const sw = document.createElement("span"); sw.className = "swatch"; sw.style.background = r.color;
+    const tx = document.createElement("span"); tx.textContent = r.role;
+    const ct = document.createElement("span"); ct.className = "count"; ct.textContent = r.n ?? "";
+    row.append(cb, sw, tx, ct); rolesEl.append(row);
+    enabled.add(r.role);
+  });
+}
+
+document.getElementById("allBtn").onclick = () => {
+  ROLES.forEach(r => enabled.add(r.role));
+  rolesEl.querySelectorAll("input").forEach(c => c.checked = true); drawNodes();
+};
+document.getElementById("noneBtn").onclick = () => {
+  enabled.clear(); rolesEl.querySelectorAll("input").forEach(c => c.checked = false); drawNodes();
+};
+
+// ---- boot ----
+try {
+  setStatus("loading meshes…");
+  await nv.loadMeshes([
+    { url: CONFIG.meshLH, rgba255:[200,200,200,Math.round(CONFIG.brainOpacity*255)] },
+    { url: CONFIG.meshRH, rgba255:[200,200,200,Math.round(CONFIG.brainOpacity*255)] },
+  ]);
+  nv.setMeshShader(nv.meshes[0]?.id, "Matte");
+
+  setStatus("loading pool data…");
+  const idx = await fetchJSON(CONFIG.index);
+  ROLES = idx.roles || [];
+  const csv = await fetchText(CONFIG.csvDir + (idx.csv || "contacts_pool.csv"));
+  CONTACTS = parseCSV(csv).filter(c => c.x && c.y && c.z);
+  if (!ROLES.length) {  // fall back: derive roles from the csv
+    const seen = new Map();
+    CONTACTS.forEach(c => seen.set(c.role, c.color));
+    ROLES = [...seen].map(([role,color]) => ({ role, color, n: CONTACTS.filter(x=>x.role===role).length }));
+  }
+  registerRoleColormap();
+  buildLegend();
+  drawNodes();
+} catch (e) {
+  setStatus("⚠️ " + e.message + "  (check the CONFIG URLs / mesh + csv paths)");
+  console.error(e);
+}
+</script>
+</body>
+</html>

@@ -94,6 +94,7 @@ _lf_anatomy = _load_module(_CLUST_FUNCS, "lf_anatomy")
 # Lazy: heavier / optional. Blob segmentation pulls scipy.ndimage; the recon
 # config is only needed for the 430 brain renders.
 _lf_blob = None
+_lf_minus101 = None
 _recon_cfg = None
 
 
@@ -102,6 +103,13 @@ def _ensure_blob():
     if _lf_blob is None:
         _lf_blob = _load_module(_CLUST_FUNCS, "lf_blob_metrics")
     return _lf_blob
+
+
+def _ensure_minus101():
+    global _lf_minus101
+    if _lf_minus101 is None:
+        _lf_minus101 = _load_module(_CLUST_FUNCS, "lf_minus101")
+    return _lf_minus101
 
 
 def _ensure_recon_cfg():
@@ -1369,6 +1377,183 @@ def plot_roi_map(roi_params: Optional[dict] = None, *, grid: str = "ds",
         out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
         ax.get_figure().savefig(out_png, dpi=dpi, bbox_inches="tight")
     return ax
+
+
+# ============================================================
+# 7d — Concatenated [audio|picture|reading] functional-role matching
+# ============================================================
+# Condition-STRUCTURED extension: stitch the three conditions per contact, score-
+# gate-discretize to -1/0/+1, and assign a functional role only if the contact
+# expresses EVERY box of that role's conjunction template (strict AND). A box
+# "expresses" its sign via the clustering proportion gate on the -1/+1 cells.
+# See functions/roi_config_concatenated.py.
+def _load_roles_config():
+    path = _HERE.parent / "roi_config_concatenated.py"
+    spec = importlib.util.spec_from_file_location("_pool_roles", path)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)                # type: ignore[union-attr]
+    return m.ERSP_POOLING_ROLES
+
+
+ROLE_PARAMS = _load_roles_config()
+
+
+def discretize_ersp(ersp: np.ndarray, *, score_min: Optional[float] = None,
+                    grid: str = "full", n_time_ds: int = DS_TIME_BINS) -> np.ndarray:
+    """Score-gated -1/0/+1 map (the m101 representation). Blobs are segmented at
+    full resolution (they need it); `score_min` drops low-score blobs (pass
+    resolve_score_gate(...)). grid='full' -> 129x300 int8; 'ds' -> the painted
+    map downsampled to 15 x n_time_ds and re-thresholded to {-1,0,+1}."""
+    blob = _ensure_blob()
+    m101 = _ensure_minus101()
+    blobs = blob.s21_segment_valley_blobs(ersp, sign_mode="both", fmax=FMAX_HZ)
+    painted = m101.paint_minus101_map(ersp, blobs, score_min=score_min)   # (129,300) int8
+    if grid == "full":
+        return painted.astype(np.int8)
+    ds = m101.downsample_minus101_map(painted, target_shape=(15, int(n_time_ds)))
+    out = np.zeros_like(ds, dtype=np.int8)
+    out[ds > 0.34] = 1
+    out[ds < -0.34] = -1
+    return out
+
+
+def build_concat_discretized(df_meta: pd.DataFrame, X_3d: np.ndarray, *,
+                             score_min: Optional[float] = None, grid: str = "full",
+                             conditions: Sequence[str] = CONDITIONS,
+                             n_time_ds: int = DS_TIME_BINS, verbose: bool = True
+                             ) -> Tuple[pd.DataFrame, np.ndarray]:
+    """One score-gated discretized [audio|picture|reading] map per contact that
+    has ALL conditions. Returns (df_contacts, X_disc) with X_disc int8
+    (n_contacts, n_freq, len(conditions)*n_time_block)."""
+    by_contact: Dict[tuple, dict] = {}
+    for row in df_meta.itertuples():
+        if row.contact_norm is None:
+            continue
+        by_contact.setdefault((row.patient_id, row.contact_norm), {})[row.condition] = \
+            (row.Index, row.electrode)
+    rows, disc_maps = [], []
+    cond = list(conditions)
+    for (pid, contact), cm in by_contact.items():
+        if not all(c in cm for c in cond):
+            continue
+        blocks = [discretize_ersp(X_3d[cm[c][0]], score_min=score_min, grid=grid,
+                                  n_time_ds=n_time_ds) for c in cond]
+        rows.append({"patient_id": pid, "contact_norm": contact, "electrode": cm[cond[0]][1]})
+        disc_maps.append(np.concatenate(blocks, axis=1).astype(np.int8))
+    df_contacts = pd.DataFrame(rows).reset_index(drop=True)
+    X_disc = np.stack(disc_maps, 0) if disc_maps else np.zeros((0, 0, 0), np.int8)
+    if verbose:
+        print(f"[lf_pool] concat-discretized: {len(df_contacts)} contacts with all "
+              f"{len(cond)} conditions · X_disc={X_disc.shape}")
+    return df_contacts, X_disc
+
+
+def _box_slices(box: dict, grid: str) -> Tuple[slice, slice]:
+    nt = ROLE_PARAMS[grid]["n_time_per_block"]
+    bi = ROLE_PARAMS["block_order"].index(box["block"])
+    f0, f1 = box["f_rows"]; t0, t1 = box["t_bins"]
+    return slice(f0 - 1, f1), slice(bi * nt + (t0 - 1), bi * nt + t1)
+
+
+def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
+    """Proportion gate on the -1/+1 cells of one box (clustering min-prop thresholds)."""
+    fs, ts = _box_slices(box, grid)
+    sub = disc_concat[fs, ts]
+    if sub.size == 0:
+        return False
+    pp = float((sub == 1).mean()); pn = float((sub == -1).mean())
+    s = box.get("sign", "both")
+    if s == "pos":
+        return pp >= MIN_PROP_POS
+    if s == "neg":
+        return pn >= MIN_PROP_NEG
+    return (pp >= MIN_PROP_POS) or (pn >= MIN_PROP_NEG)
+
+
+def role_matches(disc_concat: np.ndarray, role: dict, grid: str) -> bool:
+    """Strict conjunction: every box of the role must express its sign."""
+    return all(box_expresses(disc_concat, b, grid) for b in role["boxes"])
+
+
+def role_colors(grid: str = "full", role_params: Optional[dict] = None) -> Dict[str, str]:
+    rp = role_params or ROLE_PARAMS
+    d = {r["role"]: r["color"] for r in rp[grid]["roles"]}
+    d["none"] = "#cccccc"
+    return d
+
+
+def build_role_table(df_contacts: pd.DataFrame, X_disc: np.ndarray, *, grid: str = "full",
+                     role_params: Optional[dict] = None, cache: bool = True,
+                     write_run: bool = True, verbose: bool = True) -> pd.DataFrame:
+    """Assign each contact its matching role(s). `role` = the MOST SPECIFIC match
+    (most boxes); `roles_matched` lists all. One row per contact."""
+    rp = role_params or ROLE_PARAMS
+    roles = rp[grid]["roles"]
+    rows = []
+    for k, row in enumerate(df_contacts.itertuples()):
+        disc = X_disc[k]
+        matched = [r for r in roles if role_matches(disc, r, grid)]
+        best = max(matched, key=lambda r: len(r["boxes"]))["role"] if matched else "none"
+        rows.append({"patient_id": row.patient_id, "contact_norm": row.contact_norm,
+                     "electrode": row.electrode, "grid": grid, "role": best,
+                     "roles_matched": ";".join(r["role"] for r in matched),
+                     "n_roles": len(matched)})
+    df = pd.DataFrame(rows)
+    if cache:
+        DATASET_CACHE.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(DATASET_CACHE / f"role_table_{grid}.parquet", index=False)
+    if write_run:
+        run_dir = new_run_dir("roles", grid)
+        df.to_parquet(run_dir / "role_table.parquet", index=False)
+        role_counts(df).to_csv(run_dir / "role_counts.csv", index=False)
+        manifest = {
+            "schema_version": SCHEMA_VERSION, "stage": "roles", "grid": grid,
+            "run_id": run_dir.name,
+            "created_at": _dt.datetime.now().isoformat(timespec="seconds"),
+            "host": platform.node(), "user": _safe_user(),
+            "n_contacts": int(len(df)), "n_roles": len(roles),
+            "path": str(run_dir.relative_to(OUTPUTS_ROOT)),
+        }
+        write_json(run_dir / "manifest.json", manifest)
+        update_index(manifest)
+        if verbose:
+            print(f"[lf_pool] roles run -> {run_dir}")
+    if verbose:
+        print(f"[lf_pool] role table: {df.shape}")
+    return df
+
+
+def role_counts(df_role: pd.DataFrame) -> pd.DataFrame:
+    return (df_role.groupby("role").size().reset_index(name="n_contacts")
+            .sort_values("n_contacts", ascending=False).reset_index(drop=True))
+
+
+def load_role_table(grid: str = "full", path: Optional[Path] = None) -> pd.DataFrame:
+    p = Path(path) if path is not None else DATASET_CACHE / f"role_table_{grid}.parquet"
+    return pd.read_parquet(p)
+
+
+def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
+                    grid: str = "full") -> Path:
+    """Write the data the POOL web page reads: contacts_pool.csv (xyz + role +
+    colour) + pool_index.json. Reuses the MOBA fsaverage meshes."""
+    colors = role_colors(grid)
+    c = (coords[["patient_id", "contact_norm", "name", "hemi", "x", "y", "z"]]
+         .drop_duplicates(["patient_id", "contact_norm"]))
+    m = df_role.merge(c, on=["patient_id", "contact_norm"], how="left").dropna(subset=["x", "y", "z"])
+    m["color"] = m["role"].map(colors).fillna("#cccccc")
+    out = (m[["patient_id", "contact_norm", "name", "hemi", "x", "y", "z",
+              "role", "roles_matched", "color"]]
+           .rename(columns={"patient_id": "patient", "contact_norm": "contact"}))
+    run_dir = Path(run_dir)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    out.to_csv(run_dir / "contacts_pool.csv", index=False)
+    idx = {"grid": grid, "n_contacts": int(len(out)), "csv": "contacts_pool.csv",
+           "roles": [{"role": r, "color": colors[r],
+                      "n": int((out["role"] == r).sum())} for r in colors]}
+    write_json(run_dir / "pool_index.json", idx)
+    print(f"[lf_pool] POOL web export -> {run_dir}  ({len(out)} contacts)")
+    return run_dir
 
 
 # ============================================================
