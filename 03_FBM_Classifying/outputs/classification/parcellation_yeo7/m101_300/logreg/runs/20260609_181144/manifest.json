@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "task": "parcellation_yeo7",
+  "variant": "m101_300",
+  "classifier": "logreg",
+  "n_networks": 7,
+  "run_id": "20260609_181144",
+  "created_at": "2026-06-09T18:47:52",
+  "host": "wmedapp772",
+  "user": "artoni",
+  "feature_dim": 13500,
+  "classes": [
+    "7Networks_1",
+    "7Networks_2",
+    "7Networks_3",
+    "7Networks_4",
+    "7Networks_5",
+    "7Networks_6",
+    "7Networks_7"
+  ],
+  "cv": {
+    "scheme": "nested GroupKFold (by patient)",
+    "outer_splits": 5,
+    "inner_splits": 3,
+    "best_params_per_fold": [
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 1.0
+      },
+      {
+        "clf__C": 0.1
+      },
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 10.0
+      }
+    ]
+  },
+  "n_permutations": 200,
+  "n_bootstrap": 1000,
+  "summary": {
+    "balanced_accuracy": 0.21324475231658235,
+    "balanced_accuracy_ci": [
+      0.1662326552313752,
+      0.27064811828298413
+    ],
+    "macro_f1": 0.20202416881272955,
+    "accuracy": 0.2630480167014614,
+    "chance_level": 0.14285714285714285,
+    "n_samples": 958,
+    "n_classes": 7,
+    "n_patients": 24,
+    "permutation_p": 0.004975124378109453
+  },
+  "path": "parcellation_yeo7\\m101_300\\logreg\\runs\\20260609_181144"
+}

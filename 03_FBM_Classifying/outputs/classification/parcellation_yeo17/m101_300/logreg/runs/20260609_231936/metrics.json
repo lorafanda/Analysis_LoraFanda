@@ -1,0 +1,222 @@
+{
+  "overall": {
+    "balanced_accuracy": 0.10094700801382321,
+    "balanced_accuracy_ci": [
+      0.07895397844163363,
+      0.12055561908843987
+    ],
+    "macro_f1": 0.09761517041903778,
+    "accuracy": 0.18997912317327767,
+    "chance_level": 0.058823529411764705,
+    "n_samples": 958,
+    "n_classes": 17,
+    "n_patients": 24,
+    "permutation_p": 0.004975124378109453
+  },
+  "per_class": [
+    {
+      "class": "17Networks_1",
+      "support": 26,
+      "precision": 0.2692307692307692,
+      "recall": 0.2692307692307692,
+      "f1": 0.2692307692307692,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.4074786324786324,
+      "roc_auc_ovr": 0.6268983162759987,
+      "perm_p": 0.009950248756218905,
+      "perm_p_fdr": 0.04228855721393035
+    },
+    {
+      "class": "17Networks_10",
+      "support": 23,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.6834224598930483,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_11",
+      "support": 4,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.2555031446540881,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_12",
+      "support": 58,
+      "precision": 0.0425531914893617,
+      "recall": 0.034482758620689655,
+      "f1": 0.0380952380952381,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.10529115341545349,
+      "roc_auc_ovr": 0.5626149425287357,
+      "perm_p": 0.7313432835820896,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_13",
+      "support": 95,
+      "precision": 0.0684931506849315,
+      "recall": 0.05263157894736842,
+      "f1": 0.05952380952380952,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.11208679025149078,
+      "roc_auc_ovr": 0.551064219064463,
+      "perm_p": 0.8905472636815921,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_14",
+      "support": 59,
+      "precision": 0.2608695652173913,
+      "recall": 0.2033898305084746,
+      "f1": 0.22857142857142856,
+      "recall_ci_lo": 0.0967741935483871,
+      "recall_ci_hi": 0.3246979764421625,
+      "roc_auc_ovr": 0.6278162176429554,
+      "perm_p": 0.009950248756218905,
+      "perm_p_fdr": 0.04228855721393035
+    },
+    {
+      "class": "17Networks_15",
+      "support": 25,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.6507609860664524,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_16",
+      "support": 43,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.44701995170923886,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_17",
+      "support": 228,
+      "precision": 0.38461538461538464,
+      "recall": 0.32894736842105265,
+      "f1": 0.3546099290780142,
+      "recall_ci_lo": 0.2064449617559029,
+      "recall_ci_hi": 0.4509179520840171,
+      "roc_auc_ovr": 0.6049297043979812,
+      "perm_p": 0.03980099502487562,
+      "perm_p_fdr": 0.13532338308457711
+    },
+    {
+      "class": "17Networks_2",
+      "support": 3,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.5263525305410122,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_3",
+      "support": 25,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.4010289389067524,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_4",
+      "support": 91,
+      "precision": 0.27835051546391754,
+      "recall": 0.2967032967032967,
+      "f1": 0.2872340425531915,
+      "recall_ci_lo": 0.159061004784689,
+      "recall_ci_hi": 0.437521404109589,
+      "roc_auc_ovr": 0.7058760155645969,
+      "perm_p": 0.009950248756218905,
+      "perm_p_fdr": 0.04228855721393035
+    },
+    {
+      "class": "17Networks_5",
+      "support": 23,
+      "precision": 0.0234375,
+      "recall": 0.13043478260869565,
+      "f1": 0.039735099337748346,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.3001086956521738,
+      "roc_auc_ovr": 0.6460358056265985,
+      "perm_p": 0.07960199004975124,
+      "perm_p_fdr": 0.22553897180762852
+    },
+    {
+      "class": "17Networks_6",
+      "support": 26,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.6118355893034005,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_7",
+      "support": 43,
+      "precision": 0.13333333333333333,
+      "recall": 0.046511627906976744,
+      "f1": 0.06896551724137931,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.11764705882352941,
+      "roc_auc_ovr": 0.5149065955013343,
+      "perm_p": 0.3781094527363184,
+      "perm_p_fdr": 0.9182658137882018
+    },
+    {
+      "class": "17Networks_8",
+      "support": 40,
+      "precision": 0.03125,
+      "recall": 0.025,
+      "f1": 0.027777777777777776,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.125,
+      "roc_auc_ovr": 0.5200980392156862,
+      "perm_p": 0.7014925373134329,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_9",
+      "support": 146,
+      "precision": 0.25263157894736843,
+      "recall": 0.3287671232876712,
+      "f1": 0.2857142857142857,
+      "recall_ci_lo": 0.24601302785265047,
+      "recall_ci_hi": 0.4109697416334316,
+      "roc_auc_ovr": 0.6536498751602672,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.04228855721393035
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "task": "condition",
+  "variant": "full_30",
+  "classifier": "logreg",
+  "n_networks": null,
+  "run_id": "20260609_172515",
+  "created_at": "2026-06-09T17:31:17",
+  "host": "wmedapp772",
+  "user": "artoni",
+  "feature_dim": 450,
+  "classes": [
+    "audio",
+    "picture",
+    "reading"
+  ],
+  "cv": {
+    "scheme": "nested GroupKFold (by patient)",
+    "outer_splits": 5,
+    "inner_splits": 3,
+    "best_params_per_fold": [
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 0.01
+      }
+    ]
+  },
+  "n_permutations": 200,
+  "n_bootstrap": 1000,
+  "summary": {
+    "balanced_accuracy": 0.5607111356759983,
+    "balanced_accuracy_ci": [
+      0.5009347643717471,
+      0.6046603624525172
+    ],
+    "macro_f1": 0.5554937718638785,
+    "accuracy": 0.5524691358024691,
+    "chance_level": 0.3333333333333333,
+    "n_samples": 1944,
+    "n_classes": 3,
+    "n_patients": 24,
+    "permutation_p": 0.004975124378109453
+  },
+  "path": "condition\\full_30\\logreg\\runs\\20260609_172515"
+}

@@ -1,0 +1,222 @@
+{
+  "overall": {
+    "balanced_accuracy": 0.1265063432099209,
+    "balanced_accuracy_ci": [
+      0.10081763731029428,
+      0.15845278987874578
+    ],
+    "macro_f1": 0.1195246561327509,
+    "accuracy": 0.18684759916492694,
+    "chance_level": 0.058823529411764705,
+    "n_samples": 958,
+    "n_classes": 17,
+    "n_patients": 24,
+    "permutation_p": 0.004975124378109453
+  },
+  "per_class": [
+    {
+      "class": "17Networks_1",
+      "support": 26,
+      "precision": 0.40540540540540543,
+      "recall": 0.5769230769230769,
+      "f1": 0.47619047619047616,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.6666666666666666,
+      "roc_auc_ovr": 0.8510647078243645,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.021144278606965175
+    },
+    {
+      "class": "17Networks_10",
+      "support": 23,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.49739595442920254,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_11",
+      "support": 4,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.2028301886792453,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_12",
+      "support": 58,
+      "precision": 0.047619047619047616,
+      "recall": 0.017241379310344827,
+      "f1": 0.02531645569620253,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.037505896226415085,
+      "roc_auc_ovr": 0.6387452107279694,
+      "perm_p": 0.48258706467661694,
+      "perm_p_fdr": 0.6836650082918739
+    },
+    {
+      "class": "17Networks_13",
+      "support": 95,
+      "precision": 0.13846153846153847,
+      "recall": 0.09473684210526316,
+      "f1": 0.1125,
+      "recall_ci_lo": 0.029839771729587357,
+      "recall_ci_hi": 0.2,
+      "roc_auc_ovr": 0.4879124230042081,
+      "perm_p": 0.07462686567164178,
+      "perm_p_fdr": 0.1585820895522388
+    },
+    {
+      "class": "17Networks_14",
+      "support": 59,
+      "precision": 0.3055555555555556,
+      "recall": 0.1864406779661017,
+      "f1": 0.23157894736842105,
+      "recall_ci_lo": 0.07839366515837104,
+      "recall_ci_hi": 0.34893980848153205,
+      "roc_auc_ovr": 0.7059538847306801,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.021144278606965175
+    },
+    {
+      "class": "17Networks_15",
+      "support": 25,
+      "precision": 0.05084745762711865,
+      "recall": 0.12,
+      "f1": 0.07142857142857142,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.21428571428571427,
+      "roc_auc_ovr": 0.5653376205787781,
+      "perm_p": 0.03482587064676617,
+      "perm_p_fdr": 0.08457711442786069
+    },
+    {
+      "class": "17Networks_16",
+      "support": 43,
+      "precision": 0.05405405405405406,
+      "recall": 0.046511627906976744,
+      "f1": 0.05,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.09302325581395349,
+      "roc_auc_ovr": 0.5300165205235735,
+      "perm_p": 0.12935323383084577,
+      "perm_p_fdr": 0.21990049751243781
+    },
+    {
+      "class": "17Networks_17",
+      "support": 228,
+      "precision": 0.38235294117647056,
+      "recall": 0.2850877192982456,
+      "f1": 0.32663316582914576,
+      "recall_ci_lo": 0.1532550745903644,
+      "recall_ci_hi": 0.45787202865516113,
+      "roc_auc_ovr": 0.6339581831290555,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_2",
+      "support": 3,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.193717277486911,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_3",
+      "support": 25,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.3945551982851019,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_4",
+      "support": 91,
+      "precision": 0.22857142857142856,
+      "recall": 0.17582417582417584,
+      "f1": 0.19875776397515527,
+      "recall_ci_lo": 0.07246376811594203,
+      "recall_ci_hi": 0.2889035087719298,
+      "roc_auc_ovr": 0.6515583609009215,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.021144278606965175
+    },
+    {
+      "class": "17Networks_5",
+      "support": 23,
+      "precision": 0.020833333333333332,
+      "recall": 0.13043478260869565,
+      "f1": 0.03592814371257485,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.36363636363636365,
+      "roc_auc_ovr": 0.6524064171122994,
+      "perm_p": 0.014925373134328358,
+      "perm_p_fdr": 0.04228855721393035
+    },
+    {
+      "class": "17Networks_6",
+      "support": 26,
+      "precision": 0.10344827586206896,
+      "recall": 0.11538461538461539,
+      "f1": 0.10909090909090909,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.3001086956521738,
+      "roc_auc_ovr": 0.5886843842852426,
+      "perm_p": 0.009950248756218905,
+      "perm_p_fdr": 0.03383084577114428
+    },
+    {
+      "class": "17Networks_7",
+      "support": 43,
+      "precision": 0.045454545454545456,
+      "recall": 0.023255813953488372,
+      "f1": 0.03076923076923077,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.07501179245283017,
+      "roc_auc_ovr": 0.537107637565129,
+      "perm_p": 0.31840796019900497,
+      "perm_p_fdr": 0.49208502939846227
+    },
+    {
+      "class": "17Networks_8",
+      "support": 40,
+      "precision": 0.05,
+      "recall": 0.05,
+      "f1": 0.05,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.125,
+      "roc_auc_ovr": 0.6464869281045751,
+      "perm_p": 0.09950248756218906,
+      "perm_p_fdr": 0.18794914317302377
+    },
+    {
+      "class": "17Networks_9",
+      "support": 146,
+      "precision": 0.3,
+      "recall": 0.3287671232876712,
+      "f1": 0.3137254901960784,
+      "recall_ci_lo": 0.2356671224197152,
+      "recall_ci_hi": 0.4295258620689655,
+      "roc_auc_ovr": 0.6660537148255619,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.021144278606965175
+    }
+  ]
+}

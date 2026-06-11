@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "n_time": 300,
+  "stim_frac": 0.5,
+  "axis_units": "percent_of_300_warped_axis",
+  "zones": {
+    "perception": {
+      "boxcar": {
+        "t_lo_pct": 0,
+        "t_hi_pct": 10
+      },
+      "gaussian": {
+        "center_pct": 5,
+        "sigma_pct": 2.5
+      }
+    },
+    "pre_articulation": {
+      "boxcar": {
+        "t_lo_pct": 35,
+        "t_hi_pct": 55
+      },
+      "gaussian": {
+        "center_pct": 45,
+        "sigma_pct": 5
+      }
+    },
+    "articulation": {
+      "boxcar": {
+        "t_lo_pct": 55,
+        "t_hi_pct": 100
+      },
+      "gaussian": {
+        "center_pct": 75,
+        "sigma_pct": 12
+      }
+    },
+    "reading": {
+      "boxcar": {
+        "t_lo_pct": 5,
+        "t_hi_pct": 45
+      },
+      "gaussian": {
+        "center_pct": 25,
+        "sigma_pct": 12
+      }
+    }
+  },
+  "created_at": "2026-06-09T16:53:16"
+}
