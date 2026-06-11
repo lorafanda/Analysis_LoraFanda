@@ -1533,10 +1533,24 @@ def load_role_table(grid: str = "full", path: Optional[Path] = None) -> pd.DataF
     return pd.read_parquet(p)
 
 
+def _ersp_png_rel(file_path) -> Optional[str]:
+    """Source ERSP .npy path -> repo-relative ERSP_clean PNG web path, the same
+    swap MOBA's _filepathToSampleViewUrl does (ERSP_matrix->ERSP_clean, .npy->
+    _CLEAN.png), starting at '01_FBM_Analysis/'. Returns None if unmappable."""
+    p = str(file_path).replace("\\", "/")
+    i = p.find("01_FBM_Analysis/")
+    if i < 0:
+        return None
+    p = p[i:].replace("/ERSP_matrix/", "/ERSP_clean/")
+    return re.sub(r"\.npy$", "_CLEAN.png", p, flags=re.IGNORECASE)
+
+
 def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
-                    grid: str = "full") -> Path:
+                    grid: str = "full", df_meta: pd.DataFrame = None) -> Path:
     """Write the data the POOL web page reads: contacts_pool.csv (xyz + role +
-    colour) + pool_index.json. Reuses the MOBA fsaverage meshes."""
+    colour) + pool_index.json. If df_meta is given, also write pool_samples.json
+    mapping 'patient|contact' -> {condition: ERSP_clean PNG path} so the page can
+    show each pooled contact's ERSPs. Reuses the MOBA fsaverage meshes."""
     colors = role_colors(grid)
     cols = ["patient_id", "contact_norm", "name", "hemi", "x", "y", "z"]
     if "is_cortical" in coords.columns:
@@ -1556,6 +1570,21 @@ def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
            "roles": [{"role": r, "color": colors[r],
                       "n": int((out["role"] == r).sum())} for r in colors]}
     write_json(run_dir / "pool_index.json", idx)
+
+    # Per-contact ERSP images for the web page's samples strip (optional).
+    if df_meta is not None and {"patient_id", "contact_norm", "condition",
+                                "file_path"}.issubset(df_meta.columns):
+        keep = set(zip(out["patient"], out["contact"]))
+        samples: dict = {}
+        for r in df_meta.itertuples(index=False):
+            if (r.patient_id, r.contact_norm) not in keep:
+                continue
+            png = _ersp_png_rel(r.file_path)
+            if png:
+                samples.setdefault(f"{r.patient_id}|{r.contact_norm}", {})[r.condition] = png
+        write_json(run_dir / "pool_samples.json", samples)
+        print(f"[lf_pool] POOL samples -> pool_samples.json  ({len(samples)} contacts)")
+
     print(f"[lf_pool] POOL web export -> {run_dir}  ({len(out)} contacts)")
     return run_dir
 

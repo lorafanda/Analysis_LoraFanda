@@ -747,7 +747,9 @@ the page can fetch it.
 """),
 cell("code", r"""
 coords = P.load_coords()
-web = P.export_pool_web(df_role, coords, P.OUTPUTS_ROOT / 'pool_web', grid=GRID)
+# df_meta carries each contact's ERSP file_path per condition -> pool_samples.json
+# so pool.html can show the selected pool's ERSPs (samples strip).
+web = P.export_pool_web(df_role, coords, P.OUTPUTS_ROOT / 'pool_web', grid=GRID, df_meta=df_meta)
 print('POOL web data ->', web)
 """),
 ]
