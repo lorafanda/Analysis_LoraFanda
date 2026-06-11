@@ -882,3 +882,62 @@ def plot_hg_trials(
     _plt.savefig(out_path, dpi=dpi, transparent=True, format="tiff")
     _plt.close()
     return out_path
+
+# ----------------------------
+# Per-grid Common Average Reference (CAR)
+# ----------------------------
+def apply_grid_car(
+    signals: np.ndarray, names: list[str], *,
+    group_prefixes=None, bad_channels=None, min_group: int = 2
+) -> tuple[np.ndarray, dict]:
+    """
+    Common-average reference WITHIN each grid/strip array.
+
+    Channels are grouped by their alphabetic prefix (the array name —
+    'Pa1..Pa64' -> group 'Pa', 'postP1..' -> 'postP', 'T1..T57' -> 'T').
+    Within each group, the mean across that group's GOOD channels is
+    subtracted from every channel in the group. This is the standard ECoG
+    montage: each contact referenced to the average of its own physical
+    array, not a whole-head or white-matter average.
+
+    Parameters
+    ----------
+    signals : (n_samples, n_channels)
+    names   : list[str] aligned with signal columns
+    group_prefixes : optional iterable of allowed startswith-prefixes. Only
+        channels matching one are CAR'd; others pass through unchanged.
+        None -> CAR every alpha-prefix group found.
+    bad_channels : names excluded from each group's MEAN (so a noisy contact
+        doesn't poison the reference) but STILL get the reference subtracted,
+        keeping the whole array on one consistent montage.
+    min_group : groups with fewer than this many good channels pass through
+        unchanged (a 1-contact "group" has no meaningful average).
+
+    Returns
+    -------
+    out         : re-referenced signals (copy)
+    groups_used : dict {group_key: [channel names in that group's CAR mean]}
+    """
+    import re as _re
+    bad = set(bad_channels or [])
+    out = signals.astype(float).copy()
+    rx = _re.compile(r'^([A-Za-z]+)\d+$')
+
+    grp: dict[str, list[int]] = {}
+    for i, nm in enumerate(names):
+        m = rx.match(str(nm))
+        if not m:
+            continue
+        if group_prefixes is not None and not any(str(nm).startswith(p) for p in group_prefixes):
+            continue
+        grp.setdefault(m.group(1), []).append(i)
+
+    groups_used = {}
+    for key, idxs in grp.items():
+        good = [i for i in idxs if names[i] not in bad]
+        if len(good) < int(min_group):
+            continue
+        ref = out[:, good].mean(axis=1, keepdims=True)
+        out[:, idxs] = out[:, idxs] - ref     # subtract from ALL in group, incl bad
+        groups_used[key] = [names[i] for i in good]
+    return out, groups_used

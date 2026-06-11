@@ -1,2 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-EL034	EL034	ok	137	106	23	0	22	AHL7|ASFGL1|ASFGL3|CINGL4|CINGL5|CINGL8|CINGR1|CINGR10|CINGR11|CINGR6|CINGR8|CINGR9|OFGL11|OFGL12|OFGL5|OFGL6|OFGL7|OFGL8|PSFGL3|PSFGL4|PSFGL5|PSFGL6		
+EL044	EL044	ok	161	137	0	0	0	CAR:P(6), Pa(55), T(48), postP(15)	Pa1|Pa37|Pa44|Pa48|Pa51|Pa53|Pa60|Pa63|T10|T39|T57|T9|postP1	

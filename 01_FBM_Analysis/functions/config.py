@@ -40,6 +40,7 @@ reref_type = "WM"   # "WM" or "None"
 # ---- Bad channels curation ----
 
 EL_GRID_PATIENTS = {"EL044"}
+GRID_CAR_PATIENTS = {"EL044"}
 EL_GRID_KEEP_PREFIXES = {"EL044": ("P", "p", "T")}
 # Patients with BOTH grid (ECoG) and depth (SEEG) electrodes. For these:
 #   * WM reref still runs (uses depth-electrode WM contacts as usual)
@@ -91,11 +92,11 @@ bad_channels_manual = {
               + [f"pI_L{i}" for i in range(1, 17)]
               + [f"pI_R{i}" for i in range(1, 17)],
     "EL038": ["pH_R7","aH_L3","STO_R1","A_L7", "CinG_R2"],  # example; fill after visual/clinical review
-    "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1"],
+    # "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44", "Pa52", "Pa54", "Pa62", "Pa36", "Pa61", "Pa45", "Pa59", "Pa38", "Pa30", "Pa50", "Pa35", "Pa58", "Pa46", "Pa27", "Pa43", "Pa29", "Pa28", "Pa42", "Pa34", "Pa31", "Pa55", "Pa10", "Pa33", "Pa19", "Pa57", "Pa39", "Pa22", "Pa20", "Pa47", "Pa14", "Pa4"],
+    "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44"],
     "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"],
     "PAT_2868": ["IDM3"],
-    "": [""],
-    "": [""],
+    "PAT_6704": ["ainp1"],
     "": [""],
     "": [""],
 }

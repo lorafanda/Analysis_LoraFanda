@@ -1,0 +1,12 @@
+roi_tag,roi_label,sign,n_contacts
+(a),early_sensory_onset,pos,151
+(b),sustained_stimulus_processing,pos,134
+(c),pre_response_planning,pos,329
+(d),motor_execution,pos,501
+(e),alpha_beta_suppression,neg,411
+(f),theta_retrieval,pos,1138
+(g),post_response_beta_rebound,pos,106
+(h),narrowband_gamma_stimulus,pos,218
+(i),sustained_delta_engagement,pos,1696
+(j),early_hga_suppression,neg,1
+(k),broadband_activation_index,both,1714

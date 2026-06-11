@@ -1,5 +1,0 @@
-cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean,zone
-0,1022,163,3.9998691352409494,0.220023282887078,middletemporal,0.22,"[[""middletemporal"", 0.22], [""inferiortemporal"", 0.125], [""superiortemporal"", 0.085]]",0.012,4.088715781138909,articulation
-1,887,148,4.0264878672692435,0.2124492557510149,middletemporal,0.212,"[[""middletemporal"", 0.212], [""inferiortemporal"", 0.13], [""superiortemporal"", 0.106]]",0.074,4.085541171421897,perception
-2,1191,235,4.104048219430478,0.22698744769874477,middletemporal,0.227,"[[""middletemporal"", 0.227], [""inferiortemporal"", 0.114], [""rostralmiddlefrontal"", 0.075]]",0.633,4.092365156310538,pre_articulation
-3,1304,217,4.150676702972544,0.20607175712971482,middletemporal,0.206,"[[""middletemporal"", 0.206], [""inferiortemporal"", 0.117], [""rostralmiddlefrontal"", 0.075]]",0.965,4.093561161056945,reading
