@@ -1339,3 +1339,199 @@ def load_run(task, variant, classifier, outputs_root: Path = OUTPUTS_ROOT,
            "confusion": pd.read_csv(rd / "confusion_matrix.csv", index_col=0),
            "figures": {p.stem: p for p in rd.glob("*.png")}}
     return out
+
+
+# ============================================================
+# 13 — Cross-run comparison figures (compare features x tasks)
+# ============================================================
+# Every comparison below is CHANCE-NORMALIZED: chance differs by task (0.33 /
+# 0.14 / 0.06), so raw balanced accuracy is never shared across tasks on one
+# axis. We plot above_chance = (BA - chance) / (1 - chance), or one panel per
+# task each with its own chance line.
+VARIANT_DISPLAY_ORDER = ("full_300", "full_30", "full_300_rn", "full_30_rn",
+                         "m101_300", "m101_30", "hg_300", "hg_30")
+TASK_ORDER = ("condition", "parcellation_yeo7", "parcellation_yeo17")
+TASK_SHORT = {"condition": "Condition", "parcellation_yeo7": "Yeo-7",
+              "parcellation_yeo17": "Yeo-17"}
+FAMILY_COLOR = {"full": "#4363d8", "rn": "#8e44ad", "m101": "#27ae60", "hg": "#16a085"}
+
+
+def _variant_family(v: str) -> str:
+    if v.endswith("_rn"):     return "rn"
+    if v.startswith("m101"):  return "m101"
+    if v.startswith("hg"):    return "hg"
+    return "full"
+
+
+def _above_chance(ba, ch):
+    try:
+        return (float(ba) - float(ch)) / (1.0 - float(ch))
+    except Exception:
+        return float("nan")
+
+
+def compare_table(outputs_root: Path = OUTPUTS_ROOT) -> pd.DataFrame:
+    """One tidy row per (task, variant, classifier) — latest run each — with
+    balanced accuracy, chance, permutation p, bootstrap CI, and above-chance.
+    The single input to all three comparison figures."""
+    runs = list_runs(outputs_root)
+    if not len(runs):
+        return pd.DataFrame()
+    runs = (runs.sort_values("created_at")
+            .drop_duplicates(["task", "variant", "classifier"], keep="last"))
+    rows = []
+    for r in runs.itertuples(index=False):
+        ci = [float("nan"), float("nan")]
+        rd = load_run(r.task, r.variant, r.classifier, outputs_root)
+        if rd:
+            ci = rd["metrics"]["overall"].get("balanced_accuracy_ci", ci) or ci
+        p = getattr(r, "permutation_p", None)
+        rows.append({
+            "task": r.task, "variant": r.variant, "classifier": r.classifier,
+            "balanced_accuracy": float(r.balanced_accuracy),
+            "chance_level": float(r.chance_level),
+            "permutation_p": (None if p is None else float(p)),
+            "macro_f1": float(getattr(r, "macro_f1", float("nan"))),
+            "ci_lo": float(ci[0]) if ci[0] is not None else float("nan"),
+            "ci_hi": float(ci[1]) if ci[1] is not None else float("nan"),
+            "above_chance": _above_chance(r.balanced_accuracy, r.chance_level),
+            "sig": (p is not None and not pd.isna(p) and float(p) < 0.05),
+        })
+    return pd.DataFrame(rows)
+
+
+def _ordered(comp, attr, order):
+    present = set(comp[attr])
+    return [x for x in order if x in present]
+
+
+def plot_compare_heatmap(comp, out_png=None):
+    """FIG 1 — variant x (task x classifier) heatmap. Cell colour = fraction
+    above chance; annotation = balanced accuracy (+ '*' if p<.05)."""
+    import matplotlib.pyplot as plt
+    if not len(comp):
+        return None
+    variants = _ordered(comp, "variant", VARIANT_DISPLAY_ORDER)
+    tasks = _ordered(comp, "task", TASK_ORDER)
+    clfs = sorted(comp["classifier"].unique())
+    cols = [(t, c) for t in tasks for c in clfs]
+    M = np.full((len(variants), len(cols)), np.nan)
+    ann = [["" for _ in cols] for _ in variants]
+    for i, v in enumerate(variants):
+        for j, (t, c) in enumerate(cols):
+            sub = comp[(comp.variant == v) & (comp.task == t) & (comp.classifier == c)]
+            if len(sub):
+                s = sub.iloc[0]
+                M[i, j] = max(0.0, s.above_chance) if np.isfinite(s.above_chance) else np.nan
+                ann[i][j] = f"{s.balanced_accuracy:.2f}" + ("*" if s.sig else "")
+    vmax = np.nanmax(M) if np.isfinite(np.nanmax(M)) else 0.3
+    vmax = max(0.3, vmax)
+    fig, ax = plt.subplots(figsize=(1.5 + 1.05 * len(cols), 1.2 + 0.46 * len(variants)))
+    im = ax.imshow(M, cmap="YlGn", vmin=0, vmax=vmax, aspect="auto")
+    ax.set_xticks(range(len(cols)))
+    ax.set_xticklabels([f"{TASK_SHORT.get(t, t)}\n{c}" for t, c in cols], fontsize=7)
+    ax.set_yticks(range(len(variants)))
+    ax.set_yticklabels(variants, fontsize=8)
+    for i in range(len(variants)):
+        for j in range(len(cols)):
+            if ann[i][j]:
+                light = np.isfinite(M[i, j]) and M[i, j] > 0.55 * vmax
+                ax.text(j, i, ann[i][j], ha="center", va="center", fontsize=7,
+                        color="white" if light else "#3a2e2a")
+    for k in range(1, len(tasks)):
+        ax.axvline(k * len(clfs) - 0.5, color="white", lw=2.5)
+    ax.set_title("Above-chance decoding — variant × task   (cell = balanced acc · * p<.05)",
+                 fontsize=9)
+    fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02, label="fraction above chance")
+    fig.tight_layout()
+    if out_png:
+        fig.savefig(out_png, dpi=140, bbox_inches="tight")
+    return fig
+
+
+def plot_compare_forest(comp, out_png=None):
+    """FIG 2 — one panel per task; balanced accuracy ± 95% CI per variant×clf,
+    own chance line. Filled marker = p<.05, hollow = ns. Colour = family."""
+    import matplotlib.pyplot as plt
+    if not len(comp):
+        return None
+    tasks = _ordered(comp, "task", TASK_ORDER)
+    clfs = sorted(comp["classifier"].unique())
+    variants = _ordered(comp, "variant", VARIANT_DISPLAY_ORDER)
+    fig, axes = plt.subplots(1, len(tasks),
+                             figsize=(4.2 * len(tasks), 0.34 * len(variants) * len(clfs) + 1.6),
+                             squeeze=False)
+    for ti, t in enumerate(tasks):
+        ax = axes[0][ti]
+        chance = comp[comp.task == t].chance_level.iloc[0]
+        ax.axvline(chance, ls="--", color="#b85c6e", lw=1.2, label=f"chance {chance:.2f}")
+        ypos, ylab, y = [], [], 0
+        for v in variants:
+            col = FAMILY_COLOR[_variant_family(v)]
+            for c in clfs:
+                sub = comp[(comp.variant == v) & (comp.task == t) & (comp.classifier == c)]
+                if not len(sub):
+                    continue
+                s = sub.iloc[0]
+                lo = s.ci_lo if np.isfinite(s.ci_lo) else s.balanced_accuracy
+                hi = s.ci_hi if np.isfinite(s.ci_hi) else s.balanced_accuracy
+                xerr = [[max(0, s.balanced_accuracy - lo)], [max(0, hi - s.balanced_accuracy)]]
+                ax.errorbar(s.balanced_accuracy, y, xerr=xerr, fmt="o", color=col,
+                            mfc=col if s.sig else "white", mec=col, ms=6, capsize=2, lw=1)
+                ypos.append(y); ylab.append(f"{v}·{c}"); y += 1
+        ax.set_yticks(ypos); ax.set_yticklabels(ylab, fontsize=6)
+        ax.set_xlim(0, 1); ax.invert_yaxis()
+        ax.set_title(TASK_SHORT.get(t, t), fontsize=9)
+        ax.set_xlabel("balanced accuracy"); ax.legend(fontsize=6, loc="lower right")
+    fig.suptitle("Balanced accuracy ± 95% CI   (filled = p<.05 · hollow = ns)", fontsize=10)
+    fig.tight_layout()
+    if out_png:
+        fig.savefig(out_png, dpi=140, bbox_inches="tight")
+    return fig
+
+
+def plot_paired_contrasts(comp, classifier="logreg", out_png=None):
+    """FIG 3 — paired contrasts, one column per task.
+    Top row: amplitude triad (continuous → row-norm → discretized), a line per
+             time grid. A drop left→right = the power confound.
+    Bottom row: time resolution (●300 vs ○30) for the full and HG families."""
+    import matplotlib.pyplot as plt
+    if not len(comp):
+        return None
+    tasks = _ordered(comp, "task", TASK_ORDER)
+    d = comp[comp.classifier == classifier]
+
+    def ac(v, t):
+        sub = d[(d.variant == v) & (d.task == t)]
+        return float(sub.above_chance.iloc[0]) if len(sub) else float("nan")
+
+    triad = {300: ["full_300", "full_300_rn", "m101_300"],
+             30:  ["full_30", "full_30_rn", "m101_30"]}
+    fig, axes = plt.subplots(2, len(tasks), figsize=(3.6 * len(tasks), 6), squeeze=False)
+    for ti, t in enumerate(tasks):
+        ax = axes[0][ti]
+        for grid, vs in triad.items():
+            ax.plot([0, 1, 2], [ac(v, t) for v in vs], "-o", label=f"{grid}-time")
+        ax.set_xticks([0, 1, 2])
+        ax.set_xticklabels(["cont.", "row-norm", "discret."], fontsize=7)
+        ax.axhline(0, color="#999", lw=0.8)
+        ax.set_title(TASK_SHORT.get(t, t) + " — amplitude", fontsize=9)
+        ax.set_ylabel("above chance"); ax.legend(fontsize=6)
+
+        ax2 = axes[1][ti]
+        for xi, (fam, (v3, v30)) in enumerate([("full", ("full_300", "full_30")),
+                                               ("hg", ("hg_300", "hg_30"))]):
+            col = FAMILY_COLOR[fam]
+            ax2.plot([xi, xi], [ac(v3, t), ac(v30, t)], color=col, lw=1.5)
+            ax2.plot(xi, ac(v3, t), "o", color=col, ms=7)                  # 300 filled
+            ax2.plot(xi, ac(v30, t), "o", mfc="white", mec=col, ms=7)      # 30 hollow
+        ax2.set_xticks([0, 1]); ax2.set_xticklabels(["full", "hg"], fontsize=7)
+        ax2.set_xlim(-0.5, 1.5); ax2.axhline(0, color="#999", lw=0.8)
+        ax2.set_title(TASK_SHORT.get(t, t) + " — time (●300 ○30)", fontsize=9)
+        ax2.set_ylabel("above chance")
+    fig.suptitle(f"Paired contrasts ({classifier}) — amplitude triad (top) · time resolution (bottom)",
+                 fontsize=10)
+    fig.tight_layout()
+    if out_png:
+        fig.savefig(out_png, dpi=140, bbox_inches="tight")
+    return fig

@@ -556,8 +556,71 @@ always loads the latest run per (task · variant · classifier)._
 """),
 ]
 
+# ============================================================
+# 391 — compare features across tasks
+# ============================================================
+nb391 = [
+cell("markdown", r"""
+# 391 — Compare features across class types
+
+Three figures that compare the **8 feature variants** against the **class types**
+(condition / Yeo-7 / Yeo-17) and classifiers. Reads the runs 320/330 wrote — no new
+computation. Run 320 + 330 first, then this.
+
+> **The rule every panel obeys:** chance differs by task (0.33 / 0.14 / 0.06). So balanced
+> accuracy is **never** shared across tasks on one axis. We plot **fraction above chance**
+> = `(BA − chance) / (1 − chance)`, or one panel per task with its own chance line. A taller
+> bar for Yeo-17 than condition would otherwise be a lie.
+"""),
+cell("code", r"""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path('..').resolve()))
+from functions import lf_classify as C
+import matplotlib.pyplot as plt
+from IPython.display import display
+
+comp = C.compare_table()
+outdir = C.OUTPUTS_ROOT / '_compare'; outdir.mkdir(parents=True, exist_ok=True)
+if not len(comp):
+    print('no runs yet — run 320 and 330 first.')
+else:
+    print(f'{len(comp)} runs · {comp.task.nunique()} tasks · {comp.variant.nunique()} variants')
+    display(comp[['task','variant','classifier','balanced_accuracy','chance_level',
+                  'above_chance','permutation_p']].round(3))
+"""),
+cell("markdown", r"""
+## Fig 1 — Master heatmap (the one-glance overview)
+Rows = variant, cols = task × classifier. Cell colour = **fraction above chance**;
+annotation = balanced accuracy (`*` = p<.05). Read across a row to see where a feature wins,
+down a column to see which feature wins for that class type.
+"""),
+cell("code", r"""
+if len(comp): C.plot_compare_heatmap(comp, out_png=outdir/'heatmap.png'); plt.show()
+"""),
+cell("markdown", r"""
+## Fig 2 — Forest plot (effect size + uncertainty)
+One panel per task, own chance line. Balanced accuracy **± 95% CI** per variant×classifier;
+**filled = p<.05, hollow = ns**, colour = family. If two variants' CIs overlap, they're not
+meaningfully different — don't crown one.
+"""),
+cell("code", r"""
+if len(comp): C.plot_compare_forest(comp, out_png=outdir/'forest.png'); plt.show()
+"""),
+cell("markdown", r"""
+## Fig 3 — Paired contrasts (the science)
+**Top:** amplitude triad (continuous → row-norm → discretized), a line per time grid — a drop
+left→right means the decode was riding on power, not pattern. **Bottom:** time resolution
+(●300 vs ○30) for the full and HG families. Paired, so read the *direction*, not the height.
+"""),
+cell("code", r"""
+if len(comp): C.plot_paired_contrasts(comp, classifier='logreg', out_png=outdir/'paired_contrasts.png'); plt.show()
+"""),
+]
+
 write_nb("310_classification_dataprep.ipynb", nb310)
 write_nb("320_condition_classification.ipynb", nb320)
 write_nb("330_parcellation_classification.ipynb", nb330)
 write_nb("390_results.ipynb", nb390)
+write_nb("391_compare_features.ipynb", nb391)
 print("all notebooks written.")

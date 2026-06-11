@@ -25,7 +25,7 @@ classes separate.
    (audio/picture/reading)    (Yeo-7 & Yeo-17)
               └───────────┬────────────┘
                           ▼
-                        390  → results narrative (read me)
+                  390 results (read me) · 391 compare features across tasks
 ```
 
 Everything is decoded with **nested GroupKFold by patient** (outer = held-out test
@@ -98,6 +98,18 @@ and lays them out with the narrative and a guide to reading each figure (confusi
 per-class strength, permutation null, feature importance), plus an at-a-glance comparison
 across all experiments. Re-run after 320/330 to refresh; it always loads the latest run per
 (task · variant · classifier).
+
+## 391 — `391_compare_features.ipynb`
+
+**Role**: **compare the 8 feature variants across class types** (condition / Yeo-7 / Yeo-17).
+Reads the runs 320/330 wrote (`compare_table` → `index.json` + each `metrics.json`); no new
+compute. Three chance-normalized figures, saved to `outputs/classification/_compare/`:
+- **Fig 1 heatmap** — variant × (task × classifier), cell = fraction above chance (+ BA, `*`).
+- **Fig 2 forest** — one panel per task, balanced accuracy ± 95% CI, filled = p<.05.
+- **Fig 3 paired contrasts** — amplitude triad (continuous→row-norm→discretized) + time (300 vs 30).
+
+Every panel plots **fraction above chance** or one panel per task — chance differs by task,
+so raw balanced accuracy is never shared across tasks on one axis.
 
 ---
 
