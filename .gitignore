@@ -138,3 +138,8 @@ outputs/
 # === Last-line catch-all: Thumbs.db anywhere, even inside allowlisted trees ===
 # (the ERSP_clean re-include otherwise un-ignores Windows shell preview turds)
 **/Thumbs.db
+
+# === Jupyter scratch — never track, even inside the allowlisted outputs trees ===
+# (the !.../outputs/**/** allows would otherwise force-include these)
+**/.ipynb_checkpoints/
+**/.ipynb_checkpoints/**
