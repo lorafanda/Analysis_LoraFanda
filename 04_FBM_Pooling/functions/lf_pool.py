@@ -1459,6 +1459,96 @@ def plot_roi_on_ersp(ersp: np.ndarray, *, grid: str = "full", roi_params: Option
     return ax
 
 
+# ---- CONCATENATED [audio|picture|reading] ERSP + the concatenated role ROIs ----
+def _contact_id_from_name(name: str) -> Optional[Tuple[str, str]]:
+    """(pid, mid) from a name like 'EL045_reading_WM_ERSP_pH_L11_TN_CLEAN.png'
+    -> ('EL045', 'WM_ERSP_pH_L11_TN'); the mid is condition-independent."""
+    base = Path(str(name)).name
+    for suf in ("_CLEAN.png", ".png", "_CLEAN.npy", ".npy"):
+        if base.lower().endswith(suf.lower()):
+            base = base[:-len(suf)]
+            break
+    m = re.match(r"^(?P<pid>.+?)_(?P<cond>audio|picture|reading)_(?P<mid>.+)$", base, re.IGNORECASE)
+    return (m.group("pid"), m.group("mid")) if m else None
+
+
+def load_concat_ersp(input_dir, name: str, *, conditions: Sequence[str] = CONDITIONS,
+                     task: str = TASK) -> np.ndarray:
+    """Concatenated [audio|picture|reading] ERSP (n_freq, 3*n_time) for the contact in
+    `name`. Requires ALL conditions to exist for that contact (else FileNotFoundError)."""
+    parsed = _contact_id_from_name(name)
+    if parsed is None:
+        raise ValueError(f"can't parse a contact from '{name}'")
+    pid, mid = parsed
+    blocks = []
+    for cond in conditions:
+        d = Path(input_dir) / pid / task / "ERSP_matrix" / cond
+        p = d / f"{pid}_{cond}_{mid}.npy"
+        if not p.exists() and d.exists():
+            hits = sorted(d.glob(f"*{mid.split('_ERSP_')[-1]}*.npy"))
+            p = hits[0] if hits else p
+        if not p.exists():
+            raise FileNotFoundError(f"{pid} · {cond} · {mid}: no .npy")
+        blocks.append(np.load(p))
+    return np.concatenate(blocks, axis=1)
+
+
+_BAND_COLOR = {"HGA": "#cc0033", "alpha_beta": "#1f4fd8", "theta": "#2ca02c", "narrow_gamma": "#9467bd"}
+
+
+def _band_of(f_rows, grid: str) -> str:
+    lo, hi = f_rows
+    if grid == "ds":
+        return "HGA" if lo >= 8 else ("theta" if hi <= 2 else ("narrow_gamma" if lo >= 6 else "alpha_beta"))
+    return "HGA" if lo >= 19 else ("theta" if hi <= 3 else ("narrow_gamma" if lo >= 9 else "alpha_beta"))
+
+
+def plot_roles_on_concat(concat: np.ndarray, *, grid: str = "full", role_params: Optional[dict] = None,
+                         label: str = "", out_png=None, dpi: int = 150, ax=None):
+    """Overlay the CONCATENATED role ROIs (roi_config_concatenated) on one contact's
+    [audio|picture|reading] triptych ERSP. The unique (block × time × freq) box regions
+    are drawn as outlines coloured by frequency band, with block dividers + per-block
+    response-onset lines."""
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle, Patch
+    rp = role_params or ROLE_PARAMS
+    blocks = rp["block_order"]; nt = rp[grid]["n_time_per_block"]; stim_end = rp[grid]["stim_bins"][1]
+    concat = np.asarray(concat); n_freq, n_time = concat.shape
+    if ax is None:
+        _, ax = plt.subplots(figsize=(14, 5))
+    a = float(np.nanpercentile(np.abs(concat), 99)) or 1.0
+    ax.imshow(concat, aspect="auto", origin="lower", cmap="RdBu_r", vmin=-a, vmax=a,
+              extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
+    seen = set()
+    for role in rp[grid]["roles"]:
+        for b in role["boxes"]:
+            key = (b["block"], tuple(b["t_bins"]), tuple(b["f_rows"]))
+            if key in seen:
+                continue
+            seen.add(key)
+            off = blocks.index(b["block"]) * nt
+            t0, t1 = b["t_bins"]; f0, f1 = b["f_rows"]
+            c = _BAND_COLOR.get(_band_of(b["f_rows"], grid), "#333")
+            ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
+                         fill=False, edgecolor=c, lw=1.6))
+    for i, blk in enumerate(blocks):
+        off = i * nt
+        if i > 0:
+            ax.axvline(off + 0.5, color="k", lw=1.6)
+        ax.axvline(off + stim_end + 0.5, color="0.3", ls="--", lw=1.0)
+        ax.text(off + nt / 2, n_freq + 0.5, blk, ha="center", va="bottom", fontsize=11, fontweight="bold")
+    ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
+    ax.set_xlabel("concatenated time  ([audio | picture | reading];  dashed = response onset)")
+    ax.set_ylabel("freq band (Hz)" if grid == "ds" else "freq row (1..129, 0-500 Hz)")
+    ax.legend(handles=[Patch(edgecolor=v, facecolor="none", label=k) for k, v in _BAND_COLOR.items()],
+              loc="upper right", fontsize=8, framealpha=0.9)
+    ax.set_title(f"{label}   concatenated ROIs on [audio|picture|reading] ERSP")
+    if out_png is not None:
+        out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
+        ax.get_figure().savefig(out_png, dpi=dpi, bbox_inches="tight")
+    return ax
+
+
 # ============================================================
 # 7d — Concatenated [audio|picture|reading] functional-role matching
 # ============================================================

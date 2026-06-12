@@ -760,15 +760,17 @@ print('POOL web data ->', web)
 # ============================================================
 nb470 = [
 cell("markdown", r"""
-# 470 — ROIs on exemplar ERSPs
+# 470 — Concatenated ROIs on exemplar ERSPs
 
-Validation figure: for a hand-picked list of **information-rich** contacts, plot the real ERSP
-and **overlay the `roi_config.py` 2-D ROI boxes** — each as a labelled `(a)/(b)/…` outline coloured
-by sign (red = positive, blue = negative, purple = both). Lets you *see* whether each box lands on
-real activity. These are the physiology building blocks the concatenated roles are made of.
+Validation figure: for a hand-picked list of **information-rich** contacts, build the
+**concatenated `[audio | picture | reading]`** ERSP (the triptych — *not* one map per condition)
+and **overlay the concatenated role ROIs** (`roi_config_concatenated.py`). The unique
+(block × time × frequency) box regions are drawn as outlines coloured by frequency band, with
+block dividers and per-block response-onset lines — so you see exactly where the role templates
+sit on real cross-condition activity.
 
-`GRID='full'` overlays directly on the 129×300 `.npy`; `'ds'` band-downsamples first to 15×30.
-Edit `NAMES` to taste (PNG or contact names both resolve to the matching `ERSP_matrix/*.npy`).
+Each `NAMES` entry identifies a **contact** (pid + electrode); all three conditions are loaded for
+it (contacts missing any condition are skipped). `GRID='full'` uses the native 129×900 triptych.
 """),
 cell("code", SETUP),
 cell("code", r"""
@@ -792,28 +794,31 @@ NAMES = [
     "EL035_audio_WM_ERSP_TTG_R1_TN_CLEAN.png",
     "EL045_audio_WM_ERSP_aH_L12_TN_CLEAN.png",
 ]
-GRID  = 'full'                       # 'full' (129x300, direct) | 'ds' (15x30, downsampled)
-SIGNS = ('pos', 'neg', 'both')       # subset to declutter, e.g. ('pos',)
-print(len(NAMES), 'exemplars · grid:', GRID)
+GRID = 'full'                        # 'full' = native 129x900 triptych
+print(len(NAMES), 'names · grid:', GRID)
 """),
 cell("code", r"""
 import matplotlib.pyplot as plt
 from IPython.display import Image, display
-run_dir = P.new_run_dir('roi_on_ersp')
+run_dir = P.new_run_dir('roi_on_concat')
 ok = miss = 0
+seen = set()
 for name in NAMES:
+    cid = P._contact_id_from_name(name)          # (pid, mid) — condition-independent
+    if cid is None or cid in seen:
+        continue
+    seen.add(cid)
     try:
-        ersp, path = P.load_named_ersp(INPUT_DIR, name)
-    except FileNotFoundError as e:
+        concat = P.load_concat_ersp(INPUT_DIR, name)     # (129, 3*300) [audio|picture|reading]
+    except (FileNotFoundError, ValueError) as e:
         print('  [skip]', e); miss += 1; continue
-    X = ersp if GRID == 'full' else P.downsample_dataset(ersp[None, ...], time_bins=P.DS_TIME_BINS, verbose=False)[0]
-    stem = name.replace('.png', '')
-    P.plot_roi_on_ersp(X, grid=GRID, signs=SIGNS, label=name.replace('_TN_CLEAN.png', ''),
-                       out_png=run_dir / f'{stem}.png')
+    label = f'{cid[0]} {cid[1].split("_ERSP_")[-1]}'
+    stem = f'{cid[0]}_{cid[1]}'.replace('/', '_')
+    P.plot_roles_on_concat(concat, grid=GRID, label=label, out_png=run_dir / f'{stem}.png')
     plt.close('all')
     display(Image(filename=str(run_dir / f'{stem}.png')))
     ok += 1
-print(f'\ndone: {ok} plotted, {miss} not found · saved -> {run_dir}')
+print(f'\ndone: {ok} contacts plotted, {miss} skipped (missing a condition) · saved -> {run_dir}')
 """),
 ]
 
