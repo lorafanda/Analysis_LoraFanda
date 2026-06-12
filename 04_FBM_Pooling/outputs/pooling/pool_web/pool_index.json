@@ -6,17 +6,17 @@
     {
       "role": "auditory",
       "color": "#1f77b4",
-      "n": 3
+      "n": 10
     },
     {
       "role": "visual",
       "color": "#2ca02c",
-      "n": 0
+      "n": 9
     },
     {
       "role": "motor",
       "color": "#d62728",
-      "n": 1
+      "n": 29
     },
     {
       "role": "multimodal_sensory",
@@ -26,12 +26,12 @@
     {
       "role": "language",
       "color": "#ff7f0e",
-      "n": 0
+      "n": 3
     },
     {
       "role": "context_extraction",
       "color": "#8c564b",
-      "n": 4
+      "n": 2
     },
     {
       "role": "word_search",
@@ -46,7 +46,7 @@
     {
       "role": "none",
       "color": "#cccccc",
-      "n": 2578
+      "n": 2533
     }
   ]
 }
