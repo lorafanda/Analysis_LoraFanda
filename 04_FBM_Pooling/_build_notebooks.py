@@ -755,11 +755,75 @@ print('POOL web data ->', web)
 ]
 
 
+# ============================================================
+# 470 — ROI boxes overlaid on named exemplar ERSPs (validation figure)
+# ============================================================
+nb470 = [
+cell("markdown", r"""
+# 470 — ROIs on exemplar ERSPs
+
+Validation figure: for a hand-picked list of **information-rich** contacts, plot the real ERSP
+and **overlay the `roi_config.py` 2-D ROI boxes** — each as a labelled `(a)/(b)/…` outline coloured
+by sign (red = positive, blue = negative, purple = both). Lets you *see* whether each box lands on
+real activity. These are the physiology building blocks the concatenated roles are made of.
+
+`GRID='full'` overlays directly on the 129×300 `.npy`; `'ds'` band-downsamples first to 15×30.
+Edit `NAMES` to taste (PNG or contact names both resolve to the matching `ERSP_matrix/*.npy`).
+"""),
+cell("code", SETUP),
+cell("code", r"""
+NAMES = [
+    "EL045_reading_WM_ERSP_pH_L11_TN_CLEAN.png",
+    "PAT_3415_reading_WM_ERSP_GE4_TN_CLEAN.png",
+    "PAT_6854_reading_WM_ERSP_OPG1_TN_CLEAN.png",
+    "PAT_6704_reading_WM_ERSP_TPD5_TN_CLEAN.png",
+    "PAT_6854_reading_WM_ERSP_IAG7_TN_CLEAN.png",
+    "EL043_reading_WM_ERSP_iSMG3_TN_CLEAN.png",
+    "EL042_reading_WM_ERSP_STG_R4_TN_CLEAN.png",
+    "PAT_3415_reading_WM_ERSP_OS2_TN_CLEAN.png",
+    "EL038_reading_WM_ERSP_aI_R8_TN_CLEAN.png",
+    "EL033_reading_WM_ERSP_PHG_R12_TN_CLEAN.png",
+    "PAT_3390_reading_WM_ERSP_CPG15_TN_CLEAN.png",
+    "PAT_6854_reading_WM_ERSP_IMG9_TN_CLEAN.png",
+    "PAT_6854_reading_WM_ERSP_IAG3_TN_CLEAN.png",
+    "EL030_reading_WM_ERSP_A_L15_TN_CLEAN.png",
+    "PAT_5533_reading_WM_ERSP_OFD5_TN_CLEAN.png",
+    "EL045_reading_WM_ERSP_pH_L15_TN_CLEAN.png",
+    "EL035_audio_WM_ERSP_TTG_R1_TN_CLEAN.png",
+    "EL045_audio_WM_ERSP_aH_L12_TN_CLEAN.png",
+]
+GRID  = 'full'                       # 'full' (129x300, direct) | 'ds' (15x30, downsampled)
+SIGNS = ('pos', 'neg', 'both')       # subset to declutter, e.g. ('pos',)
+print(len(NAMES), 'exemplars · grid:', GRID)
+"""),
+cell("code", r"""
+import matplotlib.pyplot as plt
+from IPython.display import Image, display
+run_dir = P.new_run_dir('roi_on_ersp')
+ok = miss = 0
+for name in NAMES:
+    try:
+        ersp, path = P.load_named_ersp(INPUT_DIR, name)
+    except FileNotFoundError as e:
+        print('  [skip]', e); miss += 1; continue
+    X = ersp if GRID == 'full' else P.downsample_dataset(ersp[None, ...], time_bins=P.DS_TIME_BINS, verbose=False)[0]
+    stem = name.replace('.png', '')
+    P.plot_roi_on_ersp(X, grid=GRID, signs=SIGNS, label=name.replace('_TN_CLEAN.png', ''),
+                       out_png=run_dir / f'{stem}.png')
+    plt.close('all')
+    display(Image(filename=str(run_dir / f'{stem}.png')))
+    ok += 1
+print(f'\ndone: {ok} plotted, {miss} not found · saved -> {run_dir}')
+"""),
+]
+
+
 write_nb("410_zone_discovery.ipynb", nb410)
 write_nb("420_pool_and_qualify.ipynb", nb420)
 write_nb("430_anatomy_mapping.ipynb", nb430)
 write_nb("440_cascade.ipynb", nb440)
 write_nb("450_roi_pooling.ipynb", nb450)
 write_nb("460_role_matching.ipynb", nb460)
+write_nb("470_roi_on_ersp.ipynb", nb470)
 write_nb("490_results.ipynb", nb490)
 print("all notebooks written.")

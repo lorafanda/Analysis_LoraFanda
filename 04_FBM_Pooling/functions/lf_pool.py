@@ -1379,6 +1379,86 @@ def plot_roi_map(roi_params: Optional[dict] = None, *, grid: str = "ds",
     return ax
 
 
+# ---- ROI boxes over ONE real ERSP (validation / figure for named exemplars) ----
+_RX_ERSP_NAME = re.compile(r"^(?P<pid>.+?)_(?P<cond>audio|picture|reading)_", re.IGNORECASE)
+
+
+def resolve_ersp_npy(input_dir, name: str, *, task: str = TASK) -> Optional[Path]:
+    """Resolve a contact's ERSP .npy from a PNG/contact name like
+    'EL045_reading_WM_ERSP_pH_L11_TN_CLEAN.png' ->
+    <input_dir>/EL045/LM/ERSP_matrix/reading/EL045_reading_WM_ERSP_pH_L11_TN.npy.
+    Falls back to a glob on the electrode tail. Returns Path or None."""
+    base = Path(str(name)).name
+    for suf in ("_CLEAN.png", ".png", "_CLEAN.npy", ".npy"):
+        if base.lower().endswith(suf.lower()):
+            base = base[:-len(suf)]
+            break
+    m = _RX_ERSP_NAME.match(base)
+    if not m:
+        return None
+    pid, cond = m.group("pid"), m.group("cond").lower()
+    d = Path(input_dir) / pid / task / "ERSP_matrix" / cond
+    cand = d / f"{base}.npy"
+    if cand.exists():
+        return cand
+    if d.exists():
+        for pat in (f"{base}*.npy", f"*{base.split('_ERSP_')[-1]}*.npy"):
+            hits = sorted(d.glob(pat))
+            if hits:
+                return hits[0]
+    return None
+
+
+def load_named_ersp(input_dir, name: str, *, task: str = TASK) -> Tuple[np.ndarray, Path]:
+    """Load the (n_freq, n_time) ERSP for a named exemplar contact."""
+    p = resolve_ersp_npy(input_dir, name, task=task)
+    if p is None:
+        raise FileNotFoundError(f"no ERSP .npy resolved for '{name}' under {input_dir}")
+    return np.load(p), p
+
+
+def plot_roi_on_ersp(ersp: np.ndarray, *, grid: str = "full", roi_params: Optional[dict] = None,
+                     signs: Sequence[str] = ("pos", "neg", "both"), label: str = "",
+                     vlim: Optional[float] = None, out_png=None, dpi: int = 150, ax=None):
+    """Overlay the roi_config 2-D ROI boxes on ONE real ERSP — the ERSP at full
+    contrast, ROIs as labelled (a)/(b)/... outlines coloured by sign. Validates
+    that each box lands on real activity. grid='full' overlays a 129x300 .npy
+    directly; 'ds' expects a 15x30 band-downsampled map."""
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
+    rp = roi_params or ROI_PARAMS
+    rois = rp[grid]
+    ersp = np.asarray(ersp)
+    if grid == "ds":
+        n_freq, n_time, stim = 15, 30, 15
+    else:
+        n_freq, n_time = ersp.shape
+        stim = int(STIM_FRAC * n_time)
+    if ax is None:
+        _, ax = plt.subplots(figsize=(11, 6))
+    a = float(vlim) if vlim is not None else (float(np.nanpercentile(np.abs(ersp), 99)) or 1.0)
+    ax.imshow(ersp, aspect="auto", origin="lower", cmap="RdBu_r", vmin=-a, vmax=a,
+              extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
+    for i, r in enumerate(rois):
+        if r["sign"] not in signs:
+            continue
+        t0, t1 = r["t_bins"]; f0, f1 = r["f_rows"]; c = _ROI_SIGN_COLOR.get(r["sign"], "#444")
+        ax.add_patch(Rectangle((t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
+                     fill=False, edgecolor=c, lw=2.0))
+        ax.text(t0 - 0.5 + 1, f1 + 0.5 - 1, roi_tag(i), ha="left", va="top",
+                fontsize=9, fontweight="bold", color="white",
+                bbox=dict(boxstyle="round,pad=0.12", fc=c, ec="none", alpha=0.9))
+    ax.axvline(stim + 0.5, color="k", ls="--", lw=1.0)
+    ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
+    ax.set_xlabel(f"time bin (1..{n_time};  {stim} = response onset)")
+    ax.set_ylabel("freq row (1..129, 0-500 Hz)" if grid != "ds" else "freq band (Hz)")
+    ax.set_title(f"{label}   ROIs on ERSP  (red=pos · blue=neg · purple=both)")
+    if out_png is not None:
+        out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
+        ax.get_figure().savefig(out_png, dpi=dpi, bbox_inches="tight")
+    return ax
+
+
 # ============================================================
 # 7d — Concatenated [audio|picture|reading] functional-role matching
 # ============================================================
