@@ -1456,7 +1456,14 @@ def _box_slices(box: dict, grid: str) -> Tuple[slice, slice]:
 
 
 def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
-    """Proportion gate on the -1/+1 cells of one box (clustering min-prop thresholds)."""
+    """Proportion gate on the score-gated -1/+1 cells of one box (clustering min-prop
+    thresholds). sign:
+      'pos'  -> enough +1 cells (activation),
+      'neg'  -> enough -1 cells (suppression),
+      'zero' -> SILENT: NEITHER +1 nor -1 reaches its threshold (no response — this
+                negative constraint is what makes a role discriminating, not just
+                presence-detecting),
+      'both' -> either +1 or -1 reaches threshold."""
     fs, ts = _box_slices(box, grid)
     sub = disc_concat[fs, ts]
     if sub.size == 0:
@@ -1467,6 +1474,8 @@ def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
         return pp >= MIN_PROP_POS
     if s == "neg":
         return pn >= MIN_PROP_NEG
+    if s == "zero":
+        return (pp < MIN_PROP_POS) and (pn < MIN_PROP_NEG)
     return (pp >= MIN_PROP_POS) or (pn >= MIN_PROP_NEG)
 
 
