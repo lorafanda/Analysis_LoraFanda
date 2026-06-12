@@ -1549,6 +1549,83 @@ def plot_roles_on_concat(concat: np.ndarray, *, grid: str = "full", role_params:
     return ax
 
 
+_SIGN3 = {"pos": "#cc0033", "neg": "#1f4fd8", "zero": "#777777", "both": "#7a1fa2"}
+
+
+def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
+                        role_params: Optional[dict] = None, label: str = "",
+                        out_png=None, dpi: int = 150, ax=None):
+    """Overlay ONE role's template on a contact's [audio|picture|reading] triptych:
+    pos boxes red (filled), neg blue (filled), zero grey (dashed = 'must be silent').
+    Used to show a representative ERSP that fits each role."""
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle, Patch
+    rp = role_params or ROLE_PARAMS
+    blocks = rp["block_order"]; nt = rp[grid]["n_time_per_block"]; stim_end = rp[grid]["stim_bins"][1]
+    concat = np.asarray(concat); n_freq, n_time = concat.shape
+    if ax is None:
+        _, ax = plt.subplots(figsize=(14, 5))
+    a = float(np.nanpercentile(np.abs(concat), 99)) or 1.0
+    ax.imshow(concat, aspect="auto", origin="lower", cmap="RdBu_r", vmin=-a, vmax=a,
+              extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
+    for b in role["boxes"]:
+        off = blocks.index(b["block"]) * nt
+        t0, t1 = b["t_bins"]; f0, f1 = b["f_rows"]
+        s = b.get("sign", "pos"); c = _SIGN3.get(s, "#333")
+        ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
+                     fill=(s != "zero"), facecolor=c, alpha=(0.0 if s == "zero" else 0.14),
+                     edgecolor=c, lw=2.0, ls=(":" if s == "zero" else "-")))
+    for i, blk in enumerate(blocks):
+        off = i * nt
+        if i > 0:
+            ax.axvline(off + 0.5, color="k", lw=1.6)
+        ax.axvline(off + stim_end + 0.5, color="0.3", ls="--", lw=1.0)
+        ax.text(off + nt / 2, n_freq + 0.5, blk, ha="center", va="bottom", fontsize=11, fontweight="bold")
+    ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
+    ax.set_xlabel("concatenated time  ([audio | picture | reading];  dashed = response onset)")
+    ax.set_ylabel("freq band (Hz)" if grid == "ds" else "freq row (1..129, 0-500 Hz)")
+    ax.legend(handles=[Patch(facecolor=_SIGN3[s], edgecolor=_SIGN3[s], alpha=0.5, label=s)
+                       for s in ("pos", "neg", "zero")], loc="upper right", fontsize=8, framealpha=0.9)
+    ax.set_title(f"{label}   role '{role['role']}' template  (pos=red · neg=blue · zero=grey)")
+    if out_png is not None:
+        out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
+        ax.get_figure().savefig(out_png, dpi=dpi, bbox_inches="tight")
+    return ax
+
+
+def plot_role_exemplars(input_dir, df_role: pd.DataFrame, *, grid: str = "full",
+                        role_params: Optional[dict] = None, n_per_role: int = 1,
+                        run_dir=None, verbose: bool = True) -> Dict[str, list]:
+    """For each role, pick `n_per_role` contacts ASSIGNED that role (from a 460 role
+    table) and plot their concatenated ERSP with that role's template. One
+    representative ERSP per role. Returns {role: [png paths]}."""
+    rp = role_params or ROLE_PARAMS
+    out: Dict[str, list] = {}
+    for role in rp[grid]["roles"]:
+        rn = role["role"]
+        sub = (df_role[df_role["role"] == rn]
+               .drop_duplicates(["patient_id", "contact_norm"]).head(int(n_per_role)))
+        paths = []
+        for r in sub.itertuples():
+            name = f"{r.patient_id}_reading_WM_ERSP_{r.electrode}_TN.npy"   # cond-independent mid
+            try:
+                concat = load_concat_ersp(input_dir, name)
+            except (FileNotFoundError, ValueError) as e:
+                if verbose:
+                    print(f"    [skip] {rn} · {r.patient_id} {r.electrode}: {e}")
+                continue
+            png = None
+            if run_dir is not None:
+                png = Path(run_dir) / ("exemplar_%s_%s_%s.png" % (rn, r.patient_id, r.electrode)).replace("/", "-")
+            plot_role_on_concat(concat, role, grid=grid,
+                                label=f"{r.patient_id} {r.electrode}", out_png=png)
+            paths.append(png)
+        out[rn] = paths
+        if verbose:
+            print(f"  {rn}: {len(paths)} exemplar(s)")
+    return out
+
+
 # ============================================================
 # 7d — Concatenated [audio|picture|reading] functional-role matching
 # ============================================================

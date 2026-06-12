@@ -820,6 +820,30 @@ for name in NAMES:
     ok += 1
 print(f'\ndone: {ok} contacts plotted, {miss} skipped (missing a condition) · saved -> {run_dir}')
 """),
+cell("markdown", r"""
+## Per-role exemplars — one matching ERSP per role
+For each role, pick a contact that **460 assigned to that role** and show its concatenated ERSP
+with **that role's own template** overlaid (pos = red fill, neg = blue fill, zero = grey dashed =
+"must be silent"). This is the "here's what an *auditory* / *motor* / … contact looks like" panel.
+**Run `460` first** (it writes `role_table_<grid>.parquet`). `GRID_ROLES` must match the grid you
+ran 460 with.
+"""),
+cell("code", r"""
+GRID_ROLES   = 'full'                # must match the grid you ran 460 with ('full' or 'ds')
+N_PER_ROLE   = 1                     # exemplars per role
+try:
+    df_role = P.load_role_table(grid=GRID_ROLES)
+    print('role table:', df_role.shape, '| assigned roles:',
+          df_role[df_role.role != 'none'].role.value_counts().to_dict())
+    ex = P.plot_role_exemplars(INPUT_DIR, df_role, grid=GRID_ROLES,
+                               n_per_role=N_PER_ROLE, run_dir=run_dir)
+    for rn, paths in ex.items():
+        for p in paths:
+            plt.close('all')
+            display(Image(filename=str(p)))
+except FileNotFoundError:
+    print('no role table yet — run 460 first to produce role_table_%s.parquet' % GRID_ROLES)
+"""),
 ]
 
 
