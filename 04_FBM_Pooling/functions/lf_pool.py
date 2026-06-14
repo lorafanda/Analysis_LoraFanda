@@ -1570,7 +1570,7 @@ def plot_roles_on_concat(concat: np.ndarray, *, grid: str = "full", role_params:
     return ax
 
 
-_SIGN3 = {"pos": "#cc0033", "neg": "#1f4fd8", "zero": "#777777", "both": "#7a1fa2"}
+_SIGN3 = {"pos": "#cc0033", "neg": "#1f4fd8", "zero": "#777777", "nonpos": "#1f9e89", "both": "#7a1fa2"}
 
 
 def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
@@ -1593,9 +1593,10 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
         off = blocks.index(b["block"]) * nt
         t0, t1 = b["t_bins"]; f0, f1 = b["f_rows"]
         s = b.get("sign", "pos"); c = _SIGN3.get(s, "#333")
+        filled = s in ("pos", "neg")
         ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
-                     fill=(s != "zero"), facecolor=c, alpha=(0.0 if s == "zero" else 0.14),
-                     edgecolor=c, lw=2.0, ls=(":" if s == "zero" else "-")))
+                     fill=filled, facecolor=c, alpha=(0.14 if filled else 0.0),
+                     edgecolor=c, lw=2.0, ls=("-" if filled else ":")))
     for i, blk in enumerate(blocks):
         off = i * nt
         if i > 0:
@@ -1604,9 +1605,10 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
         ax.text(off + nt / 2, n_freq + 0.5, blk, ha="center", va="bottom", fontsize=11, fontweight="bold")
     ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
     _set_pct_xaxis(ax, nt, len(blocks)); _set_hz_yaxis(ax, n_freq)
-    ax.legend(handles=[Patch(facecolor=_SIGN3[s], edgecolor=_SIGN3[s], alpha=0.5, label=s)
-                       for s in ("pos", "neg", "zero")], loc="upper right", fontsize=8, framealpha=0.9)
-    ax.set_title(f"{label}   role '{role['role']}' template  (pos=red · neg=blue · zero=grey)")
+    signs_used = [s for s in ("pos", "neg", "zero", "nonpos") if any(b.get("sign") == s for b in role["boxes"])]
+    ax.legend(handles=[Patch(facecolor=_SIGN3.get(s, "#333"), edgecolor=_SIGN3.get(s, "#333"), alpha=0.5, label=s)
+                       for s in signs_used], loc="upper right", fontsize=8, framealpha=0.9)
+    ax.set_title(f"{label}   role '{role['role']}' template  (pos=red · neg=blue · zero/nonpos=outline)")
     if out_png is not None:
         out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
         ax.get_figure().savefig(out_png, dpi=dpi, bbox_inches="tight")
@@ -1743,6 +1745,8 @@ def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
         return pn >= MIN_PROP_NEG
     if s == "zero":
         return (pp < MIN_PROP_POS) and (pn < MIN_PROP_NEG)
+    if s == "nonpos":          # "at most zero": must NOT activate (suppression or silence both OK)
+        return pp < MIN_PROP_POS
     return (pp >= MIN_PROP_POS) or (pn >= MIN_PROP_NEG)
 
 

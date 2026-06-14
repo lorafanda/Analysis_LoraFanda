@@ -28,11 +28,12 @@ Frequency band mappings:
 BLOCK_ORDER = ["audio", "picture", "reading"]
 
 
-def _roles(hga, alpha_beta, theta, stim, resp, pre_resp):
+def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
     """
     Build role list for one grid.
     hga, alpha_beta, theta = (f_lo, f_hi) tuples
     stim, resp, pre_resp   = (t_lo, t_hi) tuples
+    motor_win              = (t_lo, t_hi) for the motor role (60-90% of the block)
     pre_resp covers the last 10% of the response window (word search window)
     """
     f   = list(hga)
@@ -41,6 +42,7 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp):
     S   = list(stim)
     R   = list(resp)
     PR  = list(pre_resp)
+    MW  = list(motor_win)
 
     return [
 
@@ -98,24 +100,30 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp):
         {
             "role": "motor",
             "description": (
-                "Speech-motor cortex: fires during articulation in all three "
-                "response windows regardless of input modality. "
-                "Silent during all stimulus windows — discriminates from auditory. "
+                "Speech-motor cortex: HGA during articulation at 60-90% of the block "
+                "(late response) in all three conditions, with beta AT MOST ZERO "
+                "(movement ERD — suppression or flat, never activated). "
+                "Silent during all stimulus windows — discriminates from sensory. "
                 "Citation: Crone et al. 1998 — high-gamma ERS in peri-rolandic "
-                "cortex is somatotopically organized during motor tasks; "
+                "cortex is somatotopically organized during motor tasks, with "
+                "simultaneous alpha/beta ERD; "
                 "Trebuchon et al. 2020 — visual naming elicits HGA in "
                 "peri-rolandic and premotor regions."
             ),
             "color": "#d62728",
             "boxes": [
-                # MUST be on
-                {"block": "audio",   "t_bins": R,  "f_rows": f, "sign": "pos"},
-                {"block": "picture", "t_bins": R,  "f_rows": f, "sign": "pos"},
-                {"block": "reading", "t_bins": R,  "f_rows": f, "sign": "pos"},
+                # MUST be on — HGA articulation, 60-90% of the block
+                {"block": "audio",   "t_bins": MW, "f_rows": f,   "sign": "pos"},
+                {"block": "picture", "t_bins": MW, "f_rows": f,   "sign": "pos"},
+                {"block": "reading", "t_bins": MW, "f_rows": f,   "sign": "pos"},
+                # beta AT MOST ZERO — movement suppression (neg or flat OK, never activated)
+                {"block": "audio",   "t_bins": MW, "f_rows": fab, "sign": "nonpos"},
+                {"block": "picture", "t_bins": MW, "f_rows": fab, "sign": "nonpos"},
+                {"block": "reading", "t_bins": MW, "f_rows": fab, "sign": "nonpos"},
                 # MUST NOT be on — silent during all stimuli
-                {"block": "audio",   "t_bins": S,  "f_rows": f, "sign": "zero"},
-                {"block": "picture", "t_bins": S,  "f_rows": f, "sign": "zero"},
-                {"block": "reading", "t_bins": S,  "f_rows": f, "sign": "zero"},
+                {"block": "audio",   "t_bins": S,  "f_rows": f,   "sign": "zero"},
+                {"block": "picture", "t_bins": S,  "f_rows": f,   "sign": "zero"},
+                {"block": "reading", "t_bins": S,  "f_rows": f,   "sign": "zero"},
             ],
         },
 
@@ -288,6 +296,7 @@ ERSP_POOLING_ROLES = {
             stim       = (1,  15),
             resp       = (16, 30),
             pre_resp   = (28, 30),
+            motor_win  = (18, 27),     # 60-90% of the 30-bin block
         ),
     },
     "full": {
@@ -303,6 +312,7 @@ ERSP_POOLING_ROLES = {
             stim       = (1,  150),
             resp       = (151, 300),
             pre_resp   = (271, 300),
+            motor_win  = (180, 270),   # 60-90% of the 300-bin block
         ),
     },
 }
