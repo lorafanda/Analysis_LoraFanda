@@ -1417,6 +1417,29 @@ def load_named_ersp(input_dir, name: str, *, task: str = TASK) -> Tuple[np.ndarr
     return np.load(p), p
 
 
+ERSP_VLIM = 6.5      # dB display clamp — matches the ERSP_clean PNGs (cmap='bwr', +/-6.5)
+ERSP_CMAP = "bwr"    # blue = negative, red = positive (same as 01's save_clean_png)
+
+
+def _set_hz_yaxis(ax, n_freq, fmax=FMAX_HZ):
+    """Label the y-axis in Hz while the data stays in row coords (boxes stay aligned)."""
+    hzs = [h for h in (0, 100, 200, 300, 400, 500) if h <= fmax]
+    ax.set_yticks([h / fmax * (n_freq - 1) + 1 for h in hzs])
+    ax.set_yticklabels([str(h) for h in hzs])
+    ax.set_ylabel("frequency (Hz)")
+
+
+def _set_pct_xaxis(ax, nt_block, n_blocks=1):
+    """Label the x-axis as % time per block (0–100), with boundaries deduped."""
+    ticks, labels = [], []
+    for i in range(n_blocks):
+        for pct in ((0, 50, 100) if i == 0 else (50, 100)):
+            ticks.append(i * nt_block + pct / 100 * nt_block); labels.append(str(pct))
+    ax.set_xticks(ticks); ax.set_xticklabels(labels, fontsize=8)
+    ax.set_xlabel("% time" + ("  ([audio | picture | reading];  50 = response onset)"
+                              if n_blocks > 1 else "  (50 = response onset)"))
+
+
 def plot_roi_on_ersp(ersp: np.ndarray, *, grid: str = "full", roi_params: Optional[dict] = None,
                      signs: Sequence[str] = ("pos", "neg", "both"), label: str = "",
                      vlim: Optional[float] = None, out_png=None, dpi: int = 150, ax=None):
@@ -1436,8 +1459,8 @@ def plot_roi_on_ersp(ersp: np.ndarray, *, grid: str = "full", roi_params: Option
         stim = int(STIM_FRAC * n_time)
     if ax is None:
         _, ax = plt.subplots(figsize=(11, 6))
-    a = float(vlim) if vlim is not None else (float(np.nanpercentile(np.abs(ersp), 99)) or 1.0)
-    ax.imshow(ersp, aspect="auto", origin="lower", cmap="RdBu_r", vmin=-a, vmax=a,
+    a = float(vlim) if vlim is not None else ERSP_VLIM
+    ax.imshow(ersp, aspect="auto", origin="lower", cmap=ERSP_CMAP, vmin=-a, vmax=a,
               extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
     for i, r in enumerate(rois):
         if r["sign"] not in signs:
@@ -1450,8 +1473,7 @@ def plot_roi_on_ersp(ersp: np.ndarray, *, grid: str = "full", roi_params: Option
                 bbox=dict(boxstyle="round,pad=0.12", fc=c, ec="none", alpha=0.9))
     ax.axvline(stim + 0.5, color="k", ls="--", lw=1.0)
     ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
-    ax.set_xlabel(f"time bin (1..{n_time};  {stim} = response onset)")
-    ax.set_ylabel("freq row (1..129, 0-500 Hz)" if grid != "ds" else "freq band (Hz)")
+    _set_pct_xaxis(ax, n_time, 1); _set_hz_yaxis(ax, n_freq)
     ax.set_title(f"{label}   ROIs on ERSP  (red=pos · blue=neg · purple=both)")
     if out_png is not None:
         out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
@@ -1516,8 +1538,8 @@ def plot_roles_on_concat(concat: np.ndarray, *, grid: str = "full", role_params:
     concat = np.asarray(concat); n_freq, n_time = concat.shape
     if ax is None:
         _, ax = plt.subplots(figsize=(14, 5))
-    a = float(np.nanpercentile(np.abs(concat), 99)) or 1.0
-    ax.imshow(concat, aspect="auto", origin="lower", cmap="RdBu_r", vmin=-a, vmax=a,
+    a = ERSP_VLIM
+    ax.imshow(concat, aspect="auto", origin="lower", cmap=ERSP_CMAP, vmin=-a, vmax=a,
               extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
     seen = set()
     for role in rp[grid]["roles"]:
@@ -1538,8 +1560,7 @@ def plot_roles_on_concat(concat: np.ndarray, *, grid: str = "full", role_params:
         ax.axvline(off + stim_end + 0.5, color="0.3", ls="--", lw=1.0)
         ax.text(off + nt / 2, n_freq + 0.5, blk, ha="center", va="bottom", fontsize=11, fontweight="bold")
     ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
-    ax.set_xlabel("concatenated time  ([audio | picture | reading];  dashed = response onset)")
-    ax.set_ylabel("freq band (Hz)" if grid == "ds" else "freq row (1..129, 0-500 Hz)")
+    _set_pct_xaxis(ax, nt, len(blocks)); _set_hz_yaxis(ax, n_freq)
     ax.legend(handles=[Patch(edgecolor=v, facecolor="none", label=k) for k, v in _BAND_COLOR.items()],
               loc="upper right", fontsize=8, framealpha=0.9)
     ax.set_title(f"{label}   concatenated ROIs on [audio|picture|reading] ERSP")
@@ -1565,8 +1586,8 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
     concat = np.asarray(concat); n_freq, n_time = concat.shape
     if ax is None:
         _, ax = plt.subplots(figsize=(14, 5))
-    a = float(np.nanpercentile(np.abs(concat), 99)) or 1.0
-    ax.imshow(concat, aspect="auto", origin="lower", cmap="RdBu_r", vmin=-a, vmax=a,
+    a = ERSP_VLIM
+    ax.imshow(concat, aspect="auto", origin="lower", cmap=ERSP_CMAP, vmin=-a, vmax=a,
               extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
     for b in role["boxes"]:
         off = blocks.index(b["block"]) * nt
@@ -1582,8 +1603,7 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
         ax.axvline(off + stim_end + 0.5, color="0.3", ls="--", lw=1.0)
         ax.text(off + nt / 2, n_freq + 0.5, blk, ha="center", va="bottom", fontsize=11, fontweight="bold")
     ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
-    ax.set_xlabel("concatenated time  ([audio | picture | reading];  dashed = response onset)")
-    ax.set_ylabel("freq band (Hz)" if grid == "ds" else "freq row (1..129, 0-500 Hz)")
+    _set_pct_xaxis(ax, nt, len(blocks)); _set_hz_yaxis(ax, n_freq)
     ax.legend(handles=[Patch(facecolor=_SIGN3[s], edgecolor=_SIGN3[s], alpha=0.5, label=s)
                        for s in ("pos", "neg", "zero")], loc="upper right", fontsize=8, framealpha=0.9)
     ax.set_title(f"{label}   role '{role['role']}' template  (pos=red · neg=blue · zero=grey)")
