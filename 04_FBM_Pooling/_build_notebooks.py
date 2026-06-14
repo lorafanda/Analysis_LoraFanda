@@ -844,6 +844,39 @@ try:
 except FileNotFoundError:
     print('no role table yet — run 460 first to produce role_table_%s.parquet' % GRID_ROLES)
 """),
+cell("markdown", r"""
+## Discretized −1/0/+1 of each exemplar (what the role matching actually sees)
+Shows the **score-gated discretized** concatenated map (blue = −1, white = 0, red = +1) — the
+representation `box_expresses` runs on. If it looks too sparse, the discretization is too strict:
+**lower `SCORE_PCT_VIZ`** (or set `None` for no score gate) and/or **loosen `SEG_KWARGS`** (e.g.
+`thr_pos` 2.0→1.5, `thr_neg` −4.0→−3.0, `max_blobs` 4→8) and re-run to see more cells survive.
+"""),
+cell("code", r"""
+SCORE_PCT_VIZ = 33.0          # blob-score gate percentile (lower = looser); None = no gate
+SEG_KWARGS    = None          # e.g. {'thr_pos': 1.5, 'thr_neg': -3.0, 'max_blobs': 8} to loosen
+if SCORE_PCT_VIZ is None:
+    score_min = None
+else:
+    dfm, Xf = P.prepare_pooling_dataset(INPUT_DIR)
+    score_min = P.resolve_score_gate(Xf, pct=SCORE_PCT_VIZ)
+print('score gate:', score_min, '| seg overrides:', SEG_KWARGS)
+seen2 = set()
+for name in NAMES:
+    cid = P._contact_id_from_name(name)
+    if cid is None or cid in seen2:
+        continue
+    seen2.add(cid)
+    try:
+        disc = P.load_concat_discretized(INPUT_DIR, name, score_min=score_min, seg_kwargs=SEG_KWARGS)
+    except (FileNotFoundError, ValueError) as e:
+        print('  [skip]', e); continue
+    stem = f'{cid[0]}_{cid[1]}'.replace('/', '-')
+    P.plot_discretized_on_concat(disc, label=f'{cid[0]} {cid[1].split("_ERSP_")[-1]}',
+                                 out_png=run_dir / f'disc_{stem}.png')
+    plt.close('all')
+    display(Image(filename=str(run_dir / f'disc_{stem}.png')))
+print('done')
+"""),
 ]
 
 

@@ -1494,15 +1494,14 @@ def _contact_id_from_name(name: str) -> Optional[Tuple[str, str]]:
     return (m.group("pid"), m.group("mid")) if m else None
 
 
-def load_concat_ersp(input_dir, name: str, *, conditions: Sequence[str] = CONDITIONS,
-                     task: str = TASK) -> np.ndarray:
-    """Concatenated [audio|picture|reading] ERSP (n_freq, 3*n_time) for the contact in
-    `name`. Requires ALL conditions to exist for that contact (else FileNotFoundError)."""
+def _concat_block_paths(input_dir, name: str, *, conditions: Sequence[str] = CONDITIONS,
+                        task: str = TASK) -> list:
+    """The .npy path for each condition of the contact in `name` (all required)."""
     parsed = _contact_id_from_name(name)
     if parsed is None:
         raise ValueError(f"can't parse a contact from '{name}'")
     pid, mid = parsed
-    blocks = []
+    paths = []
     for cond in conditions:
         d = Path(input_dir) / pid / task / "ERSP_matrix" / cond
         p = d / f"{pid}_{cond}_{mid}.npy"
@@ -1511,8 +1510,58 @@ def load_concat_ersp(input_dir, name: str, *, conditions: Sequence[str] = CONDIT
             p = hits[0] if hits else p
         if not p.exists():
             raise FileNotFoundError(f"{pid} · {cond} · {mid}: no .npy")
-        blocks.append(np.load(p))
-    return np.concatenate(blocks, axis=1)
+        paths.append(p)
+    return paths
+
+
+def load_concat_ersp(input_dir, name: str, *, conditions: Sequence[str] = CONDITIONS,
+                     task: str = TASK) -> np.ndarray:
+    """Concatenated [audio|picture|reading] ERSP (n_freq, 3*n_time) for the contact in
+    `name`. Requires ALL conditions to exist for that contact (else FileNotFoundError)."""
+    paths = _concat_block_paths(input_dir, name, conditions=conditions, task=task)
+    return np.concatenate([np.load(p) for p in paths], axis=1)
+
+
+def load_concat_discretized(input_dir, name: str, *, score_min: Optional[float] = None,
+                            grid: str = "full", conditions: Sequence[str] = CONDITIONS,
+                            task: str = TASK, seg_kwargs: Optional[dict] = None) -> np.ndarray:
+    """Concatenated score-gated -1/0/+1 map for a named contact — exactly what the role
+    matching operates on. `seg_kwargs` loosens/tightens the blob segmentation
+    (e.g. {'thr_pos':1.5,'thr_neg':-3.0,'max_blobs':8})."""
+    paths = _concat_block_paths(input_dir, name, conditions=conditions, task=task)
+    blocks = [discretize_ersp(np.load(p), score_min=score_min, grid=grid, seg_kwargs=seg_kwargs)
+              for p in paths]
+    return np.concatenate(blocks, axis=1).astype(np.int8)
+
+
+def plot_discretized_on_concat(disc: np.ndarray, *, grid: str = "full",
+                               role_params: Optional[dict] = None, label: str = "",
+                               out_png=None, dpi: int = 150, ax=None):
+    """Show the score-gated -1/0/+1 concatenated map (blue=-1 · white=0 · red=+1) — exactly
+    what the role matching sees. Block dividers + response lines + Hz/% axes; the title
+    reports how many cells survived as +1 / -1 (a quick read on how strict the gate is)."""
+    import matplotlib.pyplot as plt
+    rp = role_params or ROLE_PARAMS
+    blocks = rp["block_order"]; nt = rp[grid]["n_time_per_block"]; stim_end = rp[grid]["stim_bins"][1]
+    disc = np.asarray(disc); n_freq, n_time = disc.shape
+    if ax is None:
+        _, ax = plt.subplots(figsize=(14, 5))
+    ax.imshow(disc, aspect="auto", origin="lower", cmap=ERSP_CMAP, vmin=-1, vmax=1,
+              extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5], interpolation="nearest")
+    for i, blk in enumerate(blocks):
+        off = i * nt
+        if i > 0:
+            ax.axvline(off + 0.5, color="k", lw=1.6)
+        ax.axvline(off + stim_end + 0.5, color="0.3", ls="--", lw=1.0)
+        ax.text(off + nt / 2, n_freq + 0.5, blk, ha="center", va="bottom", fontsize=11, fontweight="bold")
+    ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
+    _set_pct_xaxis(ax, nt, len(blocks)); _set_hz_yaxis(ax, n_freq)
+    npos = int((disc == 1).sum()); nneg = int((disc == -1).sum())
+    ax.set_title(f"{label}   score-gated -1/0/+1  (blue=-1 · red=+1 · {npos} pos / {nneg} neg cells)")
+    if out_png is not None:
+        out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
+        ax.get_figure().savefig(out_png, dpi=dpi, bbox_inches="tight")
+    return ax
 
 
 _BAND_COLOR = {"HGA": "#cc0033", "alpha_beta": "#1f4fd8", "theta": "#2ca02c", "narrow_gamma": "#9467bd"}
@@ -1668,14 +1717,17 @@ ROLE_PARAMS = _load_roles_config()
 
 
 def discretize_ersp(ersp: np.ndarray, *, score_min: Optional[float] = None,
-                    grid: str = "full", n_time_ds: int = DS_TIME_BINS) -> np.ndarray:
-    """Score-gated -1/0/+1 map (the m101 representation). Blobs are segmented at
-    full resolution (they need it); `score_min` drops low-score blobs (pass
-    resolve_score_gate(...)). grid='full' -> 129x300 int8; 'ds' -> the painted
-    map downsampled to 15 x n_time_ds and re-thresholded to {-1,0,+1}."""
+                    grid: str = "full", n_time_ds: int = DS_TIME_BINS,
+                    seg_kwargs: Optional[dict] = None) -> np.ndarray:
+    """Score-gated -1/0/+1 map (the m101 representation, same machinery as 01's
+    ERSP_minus101). Blobs segmented at full resolution; `score_min` drops low-score
+    blobs (pass resolve_score_gate(...)). `seg_kwargs` overrides the segmentation
+    thresholds to loosen/tighten it, e.g. {'thr_pos':1.5,'thr_neg':-3.0,'max_blobs':8}.
+    grid='full' -> 129x300 int8; 'ds' -> painted map downsampled to 15 x n_time_ds."""
     blob = _ensure_blob()
     m101 = _ensure_minus101()
-    blobs = blob.s21_segment_valley_blobs(ersp, sign_mode="both", fmax=FMAX_HZ)
+    blobs = blob.s21_segment_valley_blobs(ersp, sign_mode="both", fmax=FMAX_HZ,
+                                          **(seg_kwargs or {}))
     painted = m101.paint_minus101_map(ersp, blobs, score_min=score_min)   # (129,300) int8
     if grid == "full":
         return painted.astype(np.int8)
