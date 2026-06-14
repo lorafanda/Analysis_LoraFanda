@@ -1,0 +1,5 @@
+
+# Notebooks are build artifacts (_build_notebooks.py is the source of truth).
+# On merge keep the LOCAL copy so executed outputs never collide. Requires once per clone:
+#   git config merge.ours.driver true
+*.ipynb merge=ours
