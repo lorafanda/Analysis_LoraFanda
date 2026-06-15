@@ -73,6 +73,13 @@ outputs/
 # so a directory-only re-deny is overridden — /** re-denies the files themselves.
 04_FBM_Pooling/outputs/pooling/**/renders/
 04_FBM_Pooling/outputs/pooling/**/renders/**
+# Heavy/regenerable BINARIES inside the pooling allowlist: the !pooling/** above
+# force-includes them, overriding the global *.parquet/*.npy ignores, so re-deny here.
+# (Keeps pool_web/*.csv + *.json — what the website reads — committable.)
+04_FBM_Pooling/outputs/pooling/**/*.parquet
+04_FBM_Pooling/outputs/pooling/**/*.npy
+04_FBM_Pooling/outputs/pooling/**/*.joblib
+04_FBM_Pooling/outputs/pooling/**/*.pkl
 # Pooling dataset cache + machine-local MNE aparc build — never push
 04_FBM_Pooling/outputs/_dataset/
 04_FBM_Pooling/outputs/_anatomy/
