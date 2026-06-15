@@ -143,6 +143,10 @@ GAUSS_SUPPORT_SIGMA = 2.0             # gate support = center +/- this many sigm
 # 410 overlay blob-score gate: drop blobs below this percentile of the dataset's
 # blob scores (same idea as clustering/classification's M101_SCORE_PCT). Tunable.
 SCORE_PCT = 33.0
+# Default blob-segmentation overrides for the -1/0/+1 discretization (used by BOTH
+# the 470 viz and the 460 matching). Looser than s21's stock 2.0/-4.0/4 — this is
+# the setting Lora tuned in 470. Override per-call via seg_kwargs (merged over this).
+DEFAULT_SEG_KWARGS = {"thr_pos": 2.4, "thr_neg": -2.4, "max_blobs": 200}
 # 'ds' (downsampled) grid — the clustering "rawds" representation: 15 freq bands
 # x DS_TIME_BINS time bins, via lf_features.build_X_3d_downsampled.
 DS_TIME_BINS = 30
@@ -1567,11 +1571,41 @@ def plot_discretized_on_concat(disc: np.ndarray, *, grid: str = "full",
 _BAND_COLOR = {"HGA": "#cc0033", "alpha_beta": "#1f4fd8", "theta": "#2ca02c", "narrow_gamma": "#9467bd"}
 
 
-def _band_of(f_rows, grid: str) -> str:
-    lo, hi = f_rows
+def _hz_to_rows(f_hz, grid: str) -> Tuple[int, int]:
+    """(f_lo_row, f_hi_row), 1-based inclusive, for a Hz range on the given grid.
+    full: linear 0..FMAX over N_FREQ rows. ds: the 15 bands overlapping the range."""
+    lo_hz, hi_hz = float(f_hz[0]), float(f_hz[1])
     if grid == "ds":
-        return "HGA" if lo >= 8 else ("theta" if hi <= 2 else ("narrow_gamma" if lo >= 6 else "alpha_beta"))
-    return "HGA" if lo >= 19 else ("theta" if hi <= 3 else ("narrow_gamma" if lo >= 9 else "alpha_beta"))
+        idx = [i + 1 for i, (blo, bhi) in enumerate(FREQ_BANDS) if bhi > lo_hz and blo < hi_hz]
+        return (min(idx), max(idx)) if idx else (1, 1)
+    lo = max(1, int(round(lo_hz / FMAX_HZ * (N_FREQ - 1))) + 1)
+    hi = min(N_FREQ, int(round(hi_hz / FMAX_HZ * (N_FREQ - 1))) + 1)
+    return (lo, hi)
+
+
+def _box_rows(box: dict, grid: str) -> Tuple[int, int]:
+    """1-based inclusive (f_lo, f_hi) ROWS for a box — accepts 'f_hz' (Hz) or legacy 'f_rows'."""
+    if "f_hz" in box:
+        return _hz_to_rows(box["f_hz"], grid)
+    return tuple(box["f_rows"])
+
+
+def _box_hz(box: dict, grid: str) -> Tuple[float, float]:
+    """(f_lo, f_hi) in Hz for a box — from 'f_hz' directly, or converting legacy 'f_rows'."""
+    if "f_hz" in box:
+        return tuple(box["f_hz"])
+    r0, r1 = box["f_rows"]
+    if grid == "ds":
+        return (FREQ_BANDS[r0 - 1][0], FREQ_BANDS[r1 - 1][1])
+    return ((r0 - 1) / (N_FREQ - 1) * FMAX_HZ, (r1 - 1) / (N_FREQ - 1) * FMAX_HZ)
+
+
+def _band_of(f_hz) -> str:
+    lo, hi = float(f_hz[0]), float(f_hz[1])
+    if hi <= 8:   return "theta"
+    if lo >= 50:  return "HGA"
+    if lo >= 30:  return "narrow_gamma"
+    return "alpha_beta"
 
 
 def plot_roles_on_concat(concat: np.ndarray, *, grid: str = "full", role_params: Optional[dict] = None,
@@ -1593,13 +1627,13 @@ def plot_roles_on_concat(concat: np.ndarray, *, grid: str = "full", role_params:
     seen = set()
     for role in rp[grid]["roles"]:
         for b in role["boxes"]:
-            key = (b["block"], tuple(b["t_bins"]), tuple(b["f_rows"]))
+            key = (b["block"], tuple(b["t_bins"]), tuple(b.get("f_hz", b.get("f_rows"))))
             if key in seen:
                 continue
             seen.add(key)
             off = blocks.index(b["block"]) * nt
-            t0, t1 = b["t_bins"]; f0, f1 = b["f_rows"]
-            c = _BAND_COLOR.get(_band_of(b["f_rows"], grid), "#333")
+            t0, t1 = b["t_bins"]; f0, f1 = _box_rows(b, grid)
+            c = _BAND_COLOR.get(_band_of(_box_hz(b, grid)), "#333")
             ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
                          fill=False, edgecolor=c, lw=1.6))
     for i, blk in enumerate(blocks):
@@ -1640,7 +1674,7 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
               extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
     for b in role["boxes"]:
         off = blocks.index(b["block"]) * nt
-        t0, t1 = b["t_bins"]; f0, f1 = b["f_rows"]
+        t0, t1 = b["t_bins"]; f0, f1 = _box_rows(b, grid)
         s = b.get("sign", "pos"); c = _SIGN3.get(s, "#333")
         filled = s in ("pos", "neg")
         ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
@@ -1726,8 +1760,8 @@ def discretize_ersp(ersp: np.ndarray, *, score_min: Optional[float] = None,
     grid='full' -> 129x300 int8; 'ds' -> painted map downsampled to 15 x n_time_ds."""
     blob = _ensure_blob()
     m101 = _ensure_minus101()
-    blobs = blob.s21_segment_valley_blobs(ersp, sign_mode="both", fmax=FMAX_HZ,
-                                          **(seg_kwargs or {}))
+    kw = {**DEFAULT_SEG_KWARGS, **(seg_kwargs or {})}   # default discretization, caller overrides
+    blobs = blob.s21_segment_valley_blobs(ersp, sign_mode="both", fmax=FMAX_HZ, **kw)
     painted = m101.paint_minus101_map(ersp, blobs, score_min=score_min)   # (129,300) int8
     if grid == "full":
         return painted.astype(np.int8)
@@ -1741,11 +1775,14 @@ def discretize_ersp(ersp: np.ndarray, *, score_min: Optional[float] = None,
 def build_concat_discretized(df_meta: pd.DataFrame, X_3d: np.ndarray, *,
                              score_min: Optional[float] = None, grid: str = "full",
                              conditions: Sequence[str] = CONDITIONS,
-                             n_time_ds: int = DS_TIME_BINS, verbose: bool = True
+                             n_time_ds: int = DS_TIME_BINS, seg_kwargs: Optional[dict] = None,
+                             verbose: bool = True
                              ) -> Tuple[pd.DataFrame, np.ndarray]:
     """One score-gated discretized [audio|picture|reading] map per contact that
     has ALL conditions. Returns (df_contacts, X_disc) with X_disc int8
-    (n_contacts, n_freq, len(conditions)*n_time_block)."""
+    (n_contacts, n_freq, len(conditions)*n_time_block). `seg_kwargs` overrides the
+    blob segmentation (defaults to DEFAULT_SEG_KWARGS) so 460 matching uses the same
+    discretization tuned in 470."""
     by_contact: Dict[tuple, dict] = {}
     for row in df_meta.itertuples():
         if row.contact_norm is None:
@@ -1758,7 +1795,7 @@ def build_concat_discretized(df_meta: pd.DataFrame, X_3d: np.ndarray, *,
         if not all(c in cm for c in cond):
             continue
         blocks = [discretize_ersp(X_3d[cm[c][0]], score_min=score_min, grid=grid,
-                                  n_time_ds=n_time_ds) for c in cond]
+                                  n_time_ds=n_time_ds, seg_kwargs=seg_kwargs) for c in cond]
         rows.append({"patient_id": pid, "contact_norm": contact, "electrode": cm[cond[0]][1]})
         disc_maps.append(np.concatenate(blocks, axis=1).astype(np.int8))
     df_contacts = pd.DataFrame(rows).reset_index(drop=True)
@@ -1772,7 +1809,7 @@ def build_concat_discretized(df_meta: pd.DataFrame, X_3d: np.ndarray, *,
 def _box_slices(box: dict, grid: str) -> Tuple[slice, slice]:
     nt = ROLE_PARAMS[grid]["n_time_per_block"]
     bi = ROLE_PARAMS["block_order"].index(box["block"])
-    f0, f1 = box["f_rows"]; t0, t1 = box["t_bins"]
+    f0, f1 = _box_rows(box, grid); t0, t1 = box["t_bins"]
     return slice(f0 - 1, f1), slice(bi * nt + (t0 - 1), bi * nt + t1)
 
 

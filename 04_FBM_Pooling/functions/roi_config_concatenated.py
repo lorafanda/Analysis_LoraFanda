@@ -14,26 +14,38 @@ Block coordinates are PER-BLOCK (1-based, inclusive).
 The engine (lf_pool) adds the block offset when slicing the
 concatenated map. Block order: audio=0, picture=1, reading=2.
 
-Grid specs:
-  ds   : 30 time bins per block (stim 1-15, resp 16-30); 15 freq bands
-  full : 300 time bins per block (stim 1-150, resp 151-300); 129 freq rows
+Box geometry:
+  t_bins = (t_lo, t_hi)  -> TIME, 1-based inclusive, PER BLOCK (grid-dependent).
+  f_hz   = (f_lo, f_hi)  -> FREQUENCY in Hz (grid-INDEPENDENT). The engine (lf_pool)
+           converts Hz -> rows per grid:
+             full : linear 0-500 Hz over 129 rows  (row = round(hz/500*128)+1)
+             ds   : the 15 bands overlapping the Hz range
+  Frequency windows are written ONCE in Hz and work on both grids; only the time
+  windows differ between grids.
 
-Frequency band mappings:
-  ds   : HGA=[8,10] (~70-170Hz), alpha_beta=[3,5] (~8-30Hz),
-         theta=[2,2] (~4-8Hz), narrowband_gamma=[6,7] (~30-70Hz)
-  full : HGA=[19,44] (~70-170Hz), alpha_beta=[3,6] (~8-30Hz),
-         theta=[2,3] (~4-8Hz), narrowband_gamma=[9,19] (~30-70Hz)
+Grid specs (time only):
+  ds   : 30 time bins per block (stim 1-15, resp 16-30)
+  full : 300 time bins per block (stim 1-150, resp 151-300)
 """
 
 BLOCK_ORDER = ["audio", "picture", "reading"]
 
+# Frequency bands in Hz — grid-independent; lf_pool converts Hz -> rows per grid.
+HGA_HZ          = (70, 170)   # high-gamma activity
+ALPHA_BETA_HZ   = (8,  30)    # alpha + beta (movement / engagement ERD)
+THETA_HZ        = (4,  8)     # theta (semantic retrieval)
+BROADBAND_HF_HZ = (70, 400)   # broadband high-freq (HGA + HFO) — negative networks
+LOW_F_HZ        = (0,  40)    # low frequency (delta-beta) — low-f negative network
+AUD_SUPP_HZ     = (20, 45)    # low-gamma/beta band suppressed while hearing
 
-def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
+
+def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win, nt):
     """
     Build role list for one grid.
-    hga, alpha_beta, theta = (f_lo, f_hi) tuples
-    stim, resp, pre_resp   = (t_lo, t_hi) tuples
+    hga, alpha_beta, theta = (f_lo_hz, f_hi_hz) tuples IN HZ (grid-independent)
+    stim, resp, pre_resp   = (t_lo, t_hi) time-bin tuples (grid-dependent)
     motor_win              = (t_lo, t_hi) for the motor role (60-90% of the block)
+    nt                     = n_time_per_block (30 ds / 300 full) — for pct() windows
     pre_resp covers the last 10% of the response window (word search window)
     """
     f   = list(hga)
@@ -43,6 +55,15 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
     R   = list(resp)
     PR  = list(pre_resp)
     MW  = list(motor_win)
+
+    def pct(lo, hi):
+        """[lo%, hi%] of the per-block time range -> 1-based inclusive bins."""
+        return [max(1, round(lo / 100.0 * nt)), min(nt, round(hi / 100.0 * nt))]
+
+    def stim_first(p):
+        """first p% of the STIMULUS window -> 1-based inclusive bins."""
+        s0, s1 = S
+        return [s0, min(s1, s0 - 1 + max(1, round(p / 100.0 * (s1 - s0 + 1))))]
 
     return [
 
@@ -62,13 +83,13 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
             "color": "#1f77b4",
             "boxes": [
                 # MUST be on
-                {"block": "audio",   "t_bins": S,  "f_rows": f, "sign": "pos"},  # hears stimulus
-                {"block": "audio",   "t_bins": R,  "f_rows": f, "sign": "pos"},  # hears self
-                {"block": "picture", "t_bins": R,  "f_rows": f, "sign": "pos"},  # hears self
-                {"block": "reading", "t_bins": R,  "f_rows": f, "sign": "pos"},  # hears self
+                {"block": "audio",   "t_bins": S,  "f_hz": f, "sign": "pos"},  # hears stimulus
+                {"block": "audio",   "t_bins": R,  "f_hz": f, "sign": "pos"},  # hears self
+                {"block": "picture", "t_bins": R,  "f_hz": f, "sign": "pos"},  # hears self
+                {"block": "reading", "t_bins": R,  "f_hz": f, "sign": "pos"},  # hears self
                 # MUST NOT be on
-                {"block": "picture", "t_bins": S,  "f_rows": f, "sign": "zero"}, # not visual input
-                {"block": "reading", "t_bins": S,  "f_rows": f, "sign": "zero"}, # not visual input
+                {"block": "picture", "t_bins": S,  "f_hz": f, "sign": "zero"}, # not visual input
+                {"block": "reading", "t_bins": S,  "f_hz": f, "sign": "zero"}, # not visual input
             ],
         },
 
@@ -76,8 +97,10 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
         {
             "role": "visual",
             "description": (
-                "Visual cortex: responds to picture and reading STIMULI only. "
-                "Silent during audio stimulus and all response windows. "
+                "Visual cortex: fast onset HGA to the VISUAL stimulus — the first 70% "
+                "of the picture stim window and only the first 10% of the reading stim "
+                "window (text drives a briefer early visual response). Silent during "
+                "audio stimulus and all response windows. "
                 "Citation: Crone et al. 1998 — gamma ERS is somatotopically "
                 "organized and spatially focal; "
                 "Ray & Maunsell 2011 — HGA tracks local spiking activity "
@@ -85,14 +108,14 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
             ),
             "color": "#2ca02c",
             "boxes": [
-                # MUST be on
-                {"block": "picture", "t_bins": S,  "f_rows": f, "sign": "pos"},
-                {"block": "reading", "t_bins": S,  "f_rows": f, "sign": "pos"},
+                # MUST be on — early visual onset only (not the whole stim window)
+                {"block": "picture", "t_bins": stim_first(70), "f_hz": f, "sign": "pos"},  # first 70% of picture stim
+                {"block": "reading", "t_bins": stim_first(10), "f_hz": f, "sign": "pos"},  # first 10% of reading stim
                 # MUST NOT be on
-                {"block": "audio",   "t_bins": S,  "f_rows": f, "sign": "zero"}, # no auditory input
-                {"block": "audio",   "t_bins": R,  "f_rows": f, "sign": "zero"}, # no response
-                {"block": "picture", "t_bins": R,  "f_rows": f, "sign": "zero"}, # no response
-                {"block": "reading", "t_bins": R,  "f_rows": f, "sign": "zero"}, # no response
+                {"block": "audio",   "t_bins": S,  "f_hz": f, "sign": "zero"}, # no auditory input
+                {"block": "audio",   "t_bins": R,  "f_hz": f, "sign": "zero"}, # no response
+                {"block": "picture", "t_bins": R,  "f_hz": f, "sign": "zero"}, # no response
+                {"block": "reading", "t_bins": R,  "f_hz": f, "sign": "zero"}, # no response
             ],
         },
 
@@ -113,17 +136,17 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
             "color": "#d62728",
             "boxes": [
                 # MUST be on — HGA articulation, 60-90% of the block
-                {"block": "audio",   "t_bins": MW, "f_rows": f,   "sign": "pos"},
-                {"block": "picture", "t_bins": MW, "f_rows": f,   "sign": "pos"},
-                {"block": "reading", "t_bins": MW, "f_rows": f,   "sign": "pos"},
+                {"block": "audio",   "t_bins": MW, "f_hz": f,   "sign": "pos"},
+                {"block": "picture", "t_bins": MW, "f_hz": f,   "sign": "pos"},
+                {"block": "reading", "t_bins": MW, "f_hz": f,   "sign": "pos"},
                 # beta AT MOST ZERO — movement suppression (neg or flat OK, never activated)
-                {"block": "audio",   "t_bins": MW, "f_rows": fab, "sign": "nonpos"},
-                {"block": "picture", "t_bins": MW, "f_rows": fab, "sign": "nonpos"},
-                {"block": "reading", "t_bins": MW, "f_rows": fab, "sign": "nonpos"},
+                {"block": "audio",   "t_bins": MW, "f_hz": fab, "sign": "nonpos"},
+                {"block": "picture", "t_bins": MW, "f_hz": fab, "sign": "nonpos"},
+                {"block": "reading", "t_bins": MW, "f_hz": fab, "sign": "nonpos"},
                 # MUST NOT be on — silent during all stimuli
-                {"block": "audio",   "t_bins": S,  "f_rows": f,   "sign": "zero"},
-                {"block": "picture", "t_bins": S,  "f_rows": f,   "sign": "zero"},
-                {"block": "reading", "t_bins": S,  "f_rows": f,   "sign": "zero"},
+                {"block": "audio",   "t_bins": S,  "f_hz": f,   "sign": "zero"},
+                {"block": "picture", "t_bins": S,  "f_hz": f,   "sign": "zero"},
+                {"block": "reading", "t_bins": S,  "f_hz": f,   "sign": "zero"},
             ],
         },
 
@@ -141,13 +164,13 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
             "color": "#9467bd",
             "boxes": [
                 # MUST be on
-                {"block": "audio",   "t_bins": S,  "f_rows": f, "sign": "pos"},
-                {"block": "picture", "t_bins": S,  "f_rows": f, "sign": "pos"},
-                {"block": "reading", "t_bins": S,  "f_rows": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": S,  "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": S,  "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": S,  "f_hz": f, "sign": "pos"},
                 # MUST NOT be on
-                {"block": "audio",   "t_bins": R,  "f_rows": f, "sign": "zero"},
-                {"block": "picture", "t_bins": R,  "f_rows": f, "sign": "zero"},
-                {"block": "reading", "t_bins": R,  "f_rows": f, "sign": "zero"},
+                {"block": "audio",   "t_bins": R,  "f_hz": f, "sign": "zero"},
+                {"block": "picture", "t_bins": R,  "f_hz": f, "sign": "zero"},
+                {"block": "reading", "t_bins": R,  "f_hz": f, "sign": "zero"},
             ],
         },
 
@@ -168,12 +191,12 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
             "color": "#ff7f0e",
             "boxes": [
                 # MUST be on — stimulus and response in all three conditions
-                {"block": "audio",   "t_bins": S,  "f_rows": f, "sign": "pos"},
-                {"block": "audio",   "t_bins": R,  "f_rows": f, "sign": "pos"},
-                {"block": "picture", "t_bins": S,  "f_rows": f, "sign": "pos"},
-                {"block": "picture", "t_bins": R,  "f_rows": f, "sign": "pos"},
-                {"block": "reading", "t_bins": S,  "f_rows": f, "sign": "pos"},
-                {"block": "reading", "t_bins": R,  "f_rows": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": S,  "f_hz": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": R,  "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": S,  "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": R,  "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": S,  "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": R,  "f_hz": f, "sign": "pos"},
             ],
         },
 
@@ -201,13 +224,13 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
             "color": "#8c564b",
             "boxes": [
                 # MUST be on — HGA during audio and reading stimulus
-                {"block": "audio",   "t_bins": S,  "f_rows": f,   "sign": "pos"},
-                {"block": "reading", "t_bins": S,  "f_rows": f,   "sign": "pos"},
+                {"block": "audio",   "t_bins": S,  "f_hz": f,   "sign": "pos"},
+                {"block": "reading", "t_bins": S,  "f_hz": f,   "sign": "pos"},
                 # MUST be on — theta during audio and reading stimulus
-                {"block": "audio",   "t_bins": S,  "f_rows": fth, "sign": "pos"},
-                {"block": "reading", "t_bins": S,  "f_rows": fth, "sign": "pos"},
+                {"block": "audio",   "t_bins": S,  "f_hz": fth, "sign": "pos"},
+                {"block": "reading", "t_bins": S,  "f_hz": fth, "sign": "pos"},
                 # MUST NOT be on — picture stimulus should be silent or minimal
-                {"block": "picture", "t_bins": S,  "f_rows": f,   "sign": "zero"},
+                {"block": "picture", "t_bins": S,  "f_hz": f,   "sign": "zero"},
             ],
         },
 
@@ -235,13 +258,13 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
             "color": "#e377c2",
             "boxes": [
                 # MUST be on — brief HGA burst just before response in all conditions
-                {"block": "audio",   "t_bins": PR, "f_rows": f, "sign": "pos"},
-                {"block": "picture", "t_bins": PR, "f_rows": f, "sign": "pos"},
-                {"block": "reading", "t_bins": PR, "f_rows": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": PR, "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": PR, "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": PR, "f_hz": f, "sign": "pos"},
                 # MUST NOT be on — stimulus windows should be quiet for this role
-                {"block": "audio",   "t_bins": S,  "f_rows": f, "sign": "zero"},
-                {"block": "picture", "t_bins": S,  "f_rows": f, "sign": "zero"},
-                {"block": "reading", "t_bins": S,  "f_rows": f, "sign": "zero"},
+                {"block": "audio",   "t_bins": S,  "f_hz": f, "sign": "zero"},
+                {"block": "picture", "t_bins": S,  "f_hz": f, "sign": "zero"},
+                {"block": "reading", "t_bins": S,  "f_hz": f, "sign": "zero"},
             ],
         },
 
@@ -266,9 +289,90 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win):
             "color": "#bcbd22",
             "boxes": [
                 # MUST suppress during all three stimulus windows
-                {"block": "audio",   "t_bins": S, "f_rows": fab, "sign": "neg"},
-                {"block": "picture", "t_bins": S, "f_rows": fab, "sign": "neg"},
-                {"block": "reading", "t_bins": S, "f_rows": fab, "sign": "neg"},
+                {"block": "audio",   "t_bins": S, "f_hz": fab, "sign": "neg"},
+                {"block": "picture", "t_bins": S, "f_hz": fab, "sign": "neg"},
+                {"block": "reading", "t_bins": S, "f_hz": fab, "sign": "neg"},
+            ],
+        },
+
+        # ── 9. AUDITORY SUPPRESSION (20-45 Hz while hearing) ───────────
+        {
+            "role": "auditory_suppression",
+            "description": (
+                "Low-gamma/beta (20-45 Hz) suppression whenever the patient is actively "
+                "hearing — the audio stimulus (hearing the prompt) and all three response "
+                "windows (hearing own voice). Negative activity is particularly strong in "
+                "the audio condition. Separate marker from the HGA-based auditory role. "
+                "Citation: Crone et al. 1998 — beta/low-gamma ERD accompanies auditory "
+                "and speech processing; Ray & Maunsell 2011 — beta suppression is a "
+                "distinct marker from broadband HGA."
+            ),
+            "color": "#17becf",
+            "boxes": [
+                {"block": "audio",   "t_bins": S, "f_hz": list(AUD_SUPP_HZ), "sign": "neg"},  # hears prompt
+                {"block": "audio",   "t_bins": R, "f_hz": list(AUD_SUPP_HZ), "sign": "neg"},  # hears self
+                {"block": "picture", "t_bins": R, "f_hz": list(AUD_SUPP_HZ), "sign": "neg"},  # hears self
+                {"block": "reading", "t_bins": R, "f_hz": list(AUD_SUPP_HZ), "sign": "neg"},  # hears self
+            ],
+        },
+
+        # ── 10. NETWORK NEGATIVE 1 (broadband HF suppression + late silence) ──
+        {
+            "role": "network_negative_1",
+            "description": (
+                "Broadband high-frequency (70-400 Hz) suppression over the early-to-mid "
+                "trial (10-60% of the block) in all three conditions, returning to baseline "
+                "(zero) late (80-100% of the block). A task-negative / deactivation network "
+                "marker. Citation: Raichle 2015 — task-negative deactivation; "
+                "Ossandon et al. 2011 — sustained HGA decreases (deactivation) in "
+                "default-mode regions during effortful tasks."
+            ),
+            "color": "#2b8cbe",
+            "boxes": [
+                # MUST suppress (broadband HF) early-mid in all conditions
+                {"block": "audio",   "t_bins": pct(10, 60), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
+                {"block": "picture", "t_bins": pct(10, 60), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
+                {"block": "reading", "t_bins": pct(10, 60), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
+                # MUST return to ~zero late
+                {"block": "audio",   "t_bins": pct(80, 100), "f_hz": list(BROADBAND_HF_HZ), "sign": "zero"},
+                {"block": "picture", "t_bins": pct(80, 100), "f_hz": list(BROADBAND_HF_HZ), "sign": "zero"},
+                {"block": "reading", "t_bins": pct(80, 100), "f_hz": list(BROADBAND_HF_HZ), "sign": "zero"},
+            ],
+        },
+
+        # ── 11. NETWORK NEGATIVE 2 (sustained broadband HF suppression) ──
+        {
+            "role": "network_negative_2",
+            "description": (
+                "Sustained broadband high-frequency (70-400 Hz) suppression over most of "
+                "the block (10-80%) in all three conditions, with NO late-silence "
+                "constraint. A broader / longer-lasting deactivation than network_negative_1. "
+                "Citation: Raichle 2015 — task-negative deactivation; Ossandon et al. 2011."
+            ),
+            "color": "#045a8d",
+            "boxes": [
+                {"block": "audio",   "t_bins": pct(10, 80), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
+                {"block": "picture", "t_bins": pct(10, 80), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
+                {"block": "reading", "t_bins": pct(10, 80), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
+            ],
+        },
+
+        # ── 12. LOW-F NEGATIVE NETWORK (0-40 Hz mid-trial suppression) ──
+        {
+            "role": "low_f_negative_network",
+            "description": (
+                "Low-frequency (0-40 Hz) suppression in the middle of the block "
+                "(30-70% of the time, spanning the stim->response transition) in all "
+                "three conditions. Low-frequency ERD marker distinct from the broadband "
+                "HF negative networks. Citation: Crone et al. 1998 — alpha/beta ERD "
+                "during active processing; Jia & Kohn 2011 — low-frequency power "
+                "suppression during network engagement."
+            ),
+            "color": "#74a9cf",
+            "boxes": [
+                {"block": "audio",   "t_bins": pct(30, 70), "f_hz": list(LOW_F_HZ), "sign": "neg"},
+                {"block": "picture", "t_bins": pct(30, 70), "f_hz": list(LOW_F_HZ), "sign": "neg"},
+                {"block": "reading", "t_bins": pct(30, 70), "f_hz": list(LOW_F_HZ), "sign": "neg"},
             ],
         },
 
@@ -290,13 +394,14 @@ ERSP_POOLING_ROLES = {
         "resp_bins":     [16, 30],
         "pre_resp_bins": [28, 30],
         "roles": _roles(
-            hga        = (8,  10),
-            alpha_beta = (3,  5),
-            theta      = (2,  2),
+            hga        = HGA_HZ,
+            alpha_beta = ALPHA_BETA_HZ,
+            theta      = THETA_HZ,
             stim       = (1,  15),
             resp       = (16, 30),
             pre_resp   = (28, 30),
             motor_win  = (18, 27),     # 60-90% of the 30-bin block
+            nt         = 30,
         ),
     },
     "full": {
@@ -306,13 +411,14 @@ ERSP_POOLING_ROLES = {
         "resp_bins":     [151, 300],
         "pre_resp_bins": [271, 300],
         "roles": _roles(
-            hga        = (19, 44),
-            alpha_beta = (3,  6),
-            theta      = (2,  3),
+            hga        = HGA_HZ,
+            alpha_beta = ALPHA_BETA_HZ,
+            theta      = THETA_HZ,
             stim       = (1,  150),
             resp       = (151, 300),
             pre_resp   = (271, 300),
             motor_win  = (180, 270),   # 60-90% of the 300-bin block
+            nt         = 300,
         ),
     },
 }
