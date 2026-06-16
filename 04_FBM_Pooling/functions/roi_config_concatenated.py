@@ -238,10 +238,10 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win, nt):
         {
             "role": "word_search",
             "description": (
-                "Lexical retrieval: brief HGA burst in the late pre-response window "
-                "(last 10% of response period, bins ~27-30 in ds / ~270-300 in full) "
-                "across all three conditions. "
-                "Absent or minimal during stimulus and early response. "
+                "Lexical retrieval: brief HGA burst at the END of the STIMULUS window "
+                "(40-50% of the block, the pre-articulation period just before response "
+                "onset) across all three conditions. Quiet at stimulus ONSET (first half "
+                "of stim) — distinguishes it from a fast sensory-onset response. "
                 "Reflects the final lexical selection and phonological encoding "
                 "step before articulation. "
                 "Citation: Sahin et al. 2009 (via Llorens et al. 2011 review) — "
@@ -257,14 +257,14 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win, nt):
             ),
             "color": "#e377c2",
             "boxes": [
-                # MUST be on — brief HGA burst just before response in all conditions
-                {"block": "audio",   "t_bins": PR, "f_hz": f, "sign": "pos"},
-                {"block": "picture", "t_bins": PR, "f_hz": f, "sign": "pos"},
-                {"block": "reading", "t_bins": PR, "f_hz": f, "sign": "pos"},
-                # MUST NOT be on — stimulus windows should be quiet for this role
-                {"block": "audio",   "t_bins": S,  "f_hz": f, "sign": "zero"},
-                {"block": "picture", "t_bins": S,  "f_hz": f, "sign": "zero"},
-                {"block": "reading", "t_bins": S,  "f_hz": f, "sign": "zero"},
+                # MUST be on — brief HGA burst at the END of the stimulus, all conditions
+                {"block": "audio",   "t_bins": pct(40, 50),    "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": pct(40, 50),    "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": pct(40, 50),    "f_hz": f, "sign": "pos"},
+                # MUST NOT be on — quiet at stimulus ONSET (not a sensory-onset cell)
+                {"block": "audio",   "t_bins": stim_first(50), "f_hz": f, "sign": "zero"},
+                {"block": "picture", "t_bins": stim_first(50), "f_hz": f, "sign": "zero"},
+                {"block": "reading", "t_bins": stim_first(50), "f_hz": f, "sign": "zero"},
             ],
         },
 
