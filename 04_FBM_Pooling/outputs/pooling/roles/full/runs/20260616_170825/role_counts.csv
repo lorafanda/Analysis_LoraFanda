@@ -1,0 +1,14 @@
+role,n_contacts
+none,1630
+auditory_suppression,351
+alpha_beta_suppression,321
+network_negative_2,182
+low_f_negative_network,178
+auditory,51
+language,36
+network_negative_1,32
+context_extraction,28
+motor,25
+visual,15
+word_search,5
+multimodal_sensory,2
