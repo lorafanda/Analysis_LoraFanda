@@ -1676,10 +1676,10 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
         off = blocks.index(b["block"]) * nt
         t0, t1 = b["t_bins"]; f0, f1 = _box_rows(b, grid)
         s = b.get("sign", "pos"); c = _SIGN3.get(s, "#333")
-        filled = s in ("pos", "neg")
+        active = s in ("pos", "neg")        # active=solid fill; zero/nonpos=translucent gray dashed
         ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
-                     fill=filled, facecolor=c, alpha=(0.14 if filled else 0.0),
-                     edgecolor=c, lw=2.0, ls=("-" if filled else ":")))
+                     fill=True, facecolor=c, alpha=(0.16 if active else 0.12),
+                     edgecolor=c, lw=2.0, ls=("-" if active else ":")))
     for i, blk in enumerate(blocks):
         off = i * nt
         if i > 0:
