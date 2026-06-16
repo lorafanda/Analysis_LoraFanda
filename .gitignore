@@ -154,3 +154,6 @@ outputs/
 # No HTML in the analysis repo — web pages live in the lorafanda.github.io repo.
 # The pipeline only EXPORTS data (pool_web/*.csv,*.json) that those pages fetch.
 *.html
+
+# Pooling viz PNGs are regenerable + heavy; pool.html renders from contacts_pool.csv, not PNGs.
+04_FBM_Pooling/outputs/pooling/**/*.png

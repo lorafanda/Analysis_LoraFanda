@@ -6,47 +6,67 @@
     {
       "role": "auditory",
       "color": "#1f77b4",
-      "n": 10
+      "n": 48
     },
     {
       "role": "visual",
       "color": "#2ca02c",
-      "n": 13
+      "n": 16
     },
     {
       "role": "motor",
       "color": "#d62728",
-      "n": 4
+      "n": 28
     },
     {
       "role": "multimodal_sensory",
       "color": "#9467bd",
-      "n": 0
+      "n": 1
     },
     {
       "role": "language",
       "color": "#ff7f0e",
-      "n": 4
+      "n": 28
     },
     {
       "role": "context_extraction",
       "color": "#8c564b",
-      "n": 2
+      "n": 18
     },
     {
       "role": "word_search",
       "color": "#e377c2",
-      "n": 7
+      "n": 2
     },
     {
       "role": "alpha_beta_suppression",
       "color": "#bcbd22",
-      "n": 105
+      "n": 292
+    },
+    {
+      "role": "auditory_suppression",
+      "color": "#17becf",
+      "n": 323
+    },
+    {
+      "role": "network_negative_1",
+      "color": "#2b8cbe",
+      "n": 32
+    },
+    {
+      "role": "network_negative_2",
+      "color": "#045a8d",
+      "n": 163
+    },
+    {
+      "role": "low_f_negative_network",
+      "color": "#74a9cf",
+      "n": 148
     },
     {
       "role": "none",
       "color": "#cccccc",
-      "n": 2499
+      "n": 1545
     }
   ]
 }
