@@ -139,7 +139,7 @@ THR_NEG, MIN_PROP_NEG = -3.0, 0.04
 # this fraction of its discretized cells are the expected sign (+1 for pos, -1 for
 # neg). Far stricter than the clustering presence gate above (a handful of cells is
 # not enough). "Silent"/zero boxes still use the strict MIN_PROP_* presence gate.
-ROLE_BOX_MIN_PROP = 0.5
+ROLE_BOX_MIN_PROP = 0.3
 
 FREQ_BANDS = list(_lf_features.FREQ_BANDS_15_TO_400HZ)   # 15 (lo, hi) Hz tuples
 FEATURE_SETS = ("hg", "bands15")

@@ -1,0 +1,16 @@
+role,n_matched,n_primary
+response_active,2590,269
+stimulus_responsive,1987,670
+low_f_negative_network,1316,211
+alpha_beta_suppression,963,314
+auditory_suppression,772,624
+network_negative_2,600,291
+language,218,218
+context_extraction,91,91
+auditory,64,64
+motor,13,13
+network_negative_1,11,11
+word_search,9,7
+visual,8,8
+multimodal_sensory,1,1
+none,0,64

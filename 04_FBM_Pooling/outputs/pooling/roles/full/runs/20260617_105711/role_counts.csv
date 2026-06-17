@@ -1,0 +1,14 @@
+role,n_matched,n_primary
+low_f_negative_network,823,178
+alpha_beta_suppression,638,321
+auditory_suppression,383,351
+network_negative_2,292,182
+auditory,51,51
+language,36,36
+network_negative_1,32,32
+context_extraction,29,28
+motor,25,25
+visual,15,15
+word_search,6,5
+multimodal_sensory,2,2
+none,0,1630

@@ -99,6 +99,62 @@
       "created_at": "2026-06-16T17:08:25",
       "path": "roles\\full\\runs\\20260616_170825",
       "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260617_105711",
+      "created_at": "2026-06-17T10:57:11",
+      "path": "roles\\full\\runs\\20260617_105711",
+      "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260617_110755",
+      "created_at": "2026-06-17T11:07:55",
+      "path": "roles\\full\\runs\\20260617_110755",
+      "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260617_141142",
+      "created_at": "2026-06-17T14:11:42",
+      "path": "roles\\full\\runs\\20260617_141142",
+      "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260617_143016",
+      "created_at": "2026-06-17T14:30:16",
+      "path": "roles\\full\\runs\\20260617_143016",
+      "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260617_172720",
+      "created_at": "2026-06-17T17:27:21",
+      "path": "roles\\full\\runs\\20260617_172720",
+      "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260617_173414",
+      "created_at": "2026-06-17T17:34:14",
+      "path": "roles\\full\\runs\\20260617_173414",
+      "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260617_182319",
+      "created_at": "2026-06-17T18:23:19",
+      "path": "roles\\full\\runs\\20260617_182319",
+      "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260617_184056",
+      "created_at": "2026-06-17T18:40:56",
+      "path": "roles\\full\\runs\\20260617_184056",
+      "n_contacts": 2856
     }
   ]
 }

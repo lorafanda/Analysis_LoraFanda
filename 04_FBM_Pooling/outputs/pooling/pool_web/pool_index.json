@@ -2,71 +2,79 @@
   "grid": "full",
   "n_contacts": 2644,
   "csv": "contacts_pool.csv",
+  "multilabel": true,
   "roles": [
     {
       "role": "auditory",
       "color": "#1f77b4",
-      "n": 47
+      "n": 6,
+      "n_primary": 6
     },
     {
       "role": "visual",
       "color": "#2ca02c",
-      "n": 15
+      "n": 3,
+      "n_primary": 3
     },
     {
       "role": "motor",
       "color": "#d62728",
-      "n": 25
-    },
-    {
-      "role": "multimodal_sensory",
-      "color": "#9467bd",
-      "n": 2
-    },
-    {
-      "role": "language",
-      "color": "#ff7f0e",
-      "n": 31
-    },
-    {
-      "role": "context_extraction",
-      "color": "#8c564b",
-      "n": 24
+      "n": 11,
+      "n_primary": 11
     },
     {
       "role": "word_search",
       "color": "#e377c2",
-      "n": 4
+      "n": 0,
+      "n_primary": 0
     },
     {
       "role": "alpha_beta_suppression",
       "color": "#bcbd22",
-      "n": 297
+      "n": 49,
+      "n_primary": 42
     },
     {
       "role": "auditory_suppression",
       "color": "#17becf",
-      "n": 336
+      "n": 3,
+      "n_primary": 3
     },
     {
       "role": "network_negative_1",
       "color": "#2b8cbe",
-      "n": 31
+      "n": 1,
+      "n_primary": 1
     },
     {
       "role": "network_negative_2",
       "color": "#045a8d",
-      "n": 168
+      "n": 2,
+      "n_primary": 2
     },
     {
       "role": "low_f_negative_network",
       "color": "#74a9cf",
-      "n": 157
+      "n": 54,
+      "n_primary": 23
+    },
+    {
+      "role": "stimulus_responsive",
+      "color": "#aec7e8",
+      "n": 141,
+      "n_primary": 130
+    },
+    {
+      "role": "response_active",
+      "color": "#ffbb78",
+      "n": 416,
+      "n_primary": 329
     },
     {
       "role": "none",
       "color": "#cccccc",
-      "n": 1507
+      "n": 0,
+      "n_primary": 2094
     }
   ]
 }

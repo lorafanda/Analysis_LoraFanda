@@ -1,0 +1,15 @@
+role,n_matched,n_primary
+response_active,1321,684
+stimulus_responsive,827,631
+low_f_negative_network,164,44
+alpha_beta_suppression,130,66
+auditory_suppression,74,63
+auditory,51,51
+motor,35,35
+language,34,34
+visual,27,27
+context_extraction,18,18
+network_negative_2,10,6
+network_negative_1,4,4
+word_search,1,0
+none,0,1193

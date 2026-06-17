@@ -1,0 +1,12 @@
+role,n_matched,n_primary
+response_active,438,347
+stimulus_responsive,151,139
+low_f_negative_network,54,23
+alpha_beta_suppression,49,42
+motor,11,11
+auditory,7,7
+auditory_suppression,3,3
+visual,3,3
+network_negative_2,2,2
+network_negative_1,1,1
+none,0,2278
