@@ -683,7 +683,8 @@ cell("markdown", r"""
 # 460 — Functional-role matching (concatenated, conjunction)
 
 The **condition-structured** path. Each contact is the three conditions stitched in time,
-`[audio | picture | reading]`. We **discretize** to a score-gated −1/0/+1 map and assign a
+`[audio | picture | reading]`. We **discretize** to a clustering-exact −1/0/+1 map (the same
+segmentation 02 uses — `CLUSTERING_SEG_KWARGS`, no score gate) and assign a
 **functional role** only if the contact expresses **every** box of that role's conjunction
 template (strict AND) — a box expresses its sign via the clustering **proportion gate** on the
 −1/+1 cells. Roles live in `functions/roi_config_concatenated.py` (auditory / visual / motor /
@@ -704,11 +705,10 @@ cell("code", r"""
 # ---- knobs ----
 USE_DS    = False                    # False: full-res discretized baseline (recommended) · True: ds
 GRID      = 'ds' if USE_DS else 'full'
-SCORE_PCT = 33.0                     # blob-score gate for the -1/0/+1 discretization
 print('grid:', GRID, '| roles:', [r['role'] for r in P.ROLE_PARAMS[GRID]['roles']])
 """),
 cell("markdown", r"""
-## 1 — Load + resolve the discretization score gate
+## 1 — Load dataset (clustering-exact discretization, no score gate)
 """),
 cell("code", r"""
 df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
@@ -716,7 +716,7 @@ score_min = None        # clustering-exact: the 231 minus101 maps used score_min
 print('score gate:', score_min, '| seg:', P.CLUSTERING_SEG_KWARGS)
 """),
 cell("markdown", r"""
-## 2 — Concatenate + score-gated discretize (one map per all-3-condition contact)
+## 2 — Concatenate + discretize (clustering-exact; one map per all-3-condition contact)
 """),
 cell("code", r"""
 df_contacts, X_disc = P.build_concat_discretized(df_meta, X_full, score_min=score_min, grid=GRID, seg_kwargs=P.CLUSTERING_SEG_KWARGS)
@@ -733,10 +733,38 @@ import matplotlib.pyplot as plt
 df_role = P.build_role_table(df_contacts, X_disc, grid=GRID)
 counts = P.role_counts(df_role)
 display(counts)
-ax = counts.set_index('role')['n_contacts'].plot.barh(figsize=(7, 0.5 * len(counts) + 1),
+# role_counts is multi-label: n_matched = contacts where the role is in roles_matched
+# (a contact counts toward every role it shows); n_primary = most-specific winner.
+ax = counts.set_index('role')['n_matched'].plot.barh(figsize=(7, 0.5 * len(counts) + 1),
         color=[P.role_colors(GRID).get(r, '#888') for r in counts['role']])
-ax.set_xlabel('# contacts'); ax.set_title('Functional-role assignment (strict conjunction)')
+ax.set_xlabel('# contacts (matched)'); ax.set_title('Functional-role response profile (multi-label)')
 ax.invert_yaxis(); plt.tight_layout(); plt.show()
+"""),
+cell("markdown", r"""
+## 3b — Role co-occurrence (multi-label overlap)
+How often each pair of roles is matched by the **same** contact (via `roles_matched`).
+The **diagonal** = total contacts matching that role; **off-diagonal** = the size of each
+pairwise intersection — the "Venn" view across all roles at once (e.g. how many contacts
+are *both* `auditory` and `auditory_suppression`).
+"""),
+cell("code", r"""
+import numpy as np, matplotlib.pyplot as plt
+M = P.role_membership(df_role)                       # one row/contact, bool col per matched role
+role_cols = [c for c in M.columns if c not in ('patient_id', 'contact_norm')]
+B = M[role_cols].to_numpy().astype(int)
+C = B.T @ B                                          # co-occurrence counts; diagonal = n_matched
+fig, ax = plt.subplots(figsize=(0.6 * len(role_cols) + 3, 0.6 * len(role_cols) + 3))
+im = ax.imshow(C, cmap='viridis')
+ax.set_xticks(range(len(role_cols))); ax.set_xticklabels(role_cols, rotation=90)
+ax.set_yticks(range(len(role_cols))); ax.set_yticklabels(role_cols)
+vmax = int(C.max()) if C.size else 1
+for i in range(len(role_cols)):
+    for j in range(len(role_cols)):
+        ax.text(j, i, int(C[i, j]), ha='center', va='center', fontsize=8,
+                color='white' if C[i, j] < vmax * 0.6 else 'black')
+ax.set_title('Role co-occurrence — # contacts sharing each pair of roles (diagonal = total)')
+fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+plt.tight_layout(); plt.show()
 """),
 cell("markdown", r"""
 ## 4 — Export for the POOL web page
@@ -880,11 +908,13 @@ print('done')
 ]
 
 
-write_nb("410_zone_discovery.ipynb", nb410)
-write_nb("420_pool_and_qualify.ipynb", nb420)
-write_nb("430_anatomy_mapping.ipynb", nb430)
-write_nb("440_cascade.ipynb", nb440)
-write_nb("450_roi_pooling.ipynb", nb450)
+# 410–450 archived into archived/ (see git history); generator no longer emits them
+# so a rebuild doesn't resurrect them in the main folder. Cell defs kept above for history.
+# write_nb("410_zone_discovery.ipynb", nb410)
+# write_nb("420_pool_and_qualify.ipynb", nb420)
+# write_nb("430_anatomy_mapping.ipynb", nb430)
+# write_nb("440_cascade.ipynb", nb440)
+# write_nb("450_roi_pooling.ipynb", nb450)
 write_nb("460_role_matching.ipynb", nb460)
 write_nb("470_roi_on_ersp.ipynb", nb470)
 write_nb("490_results.ipynb", nb490)

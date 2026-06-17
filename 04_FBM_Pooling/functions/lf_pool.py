@@ -135,6 +135,12 @@ STIM_FRAC = 0.5                       # bin int(STIM_FRAC*N_TIME)=150 == respons
 THR_POS, MIN_PROP_POS = 2.2, 0.02
 THR_NEG, MIN_PROP_NEG = -3.0, 0.04
 
+# Role-box "on" gate: a role box counts as expressing its sign only if AT LEAST
+# this fraction of its discretized cells are the expected sign (+1 for pos, -1 for
+# neg). Far stricter than the clustering presence gate above (a handful of cells is
+# not enough). "Silent"/zero boxes still use the strict MIN_PROP_* presence gate.
+ROLE_BOX_MIN_PROP = 0.5
+
 FREQ_BANDS = list(_lf_features.FREQ_BANDS_15_TO_400HZ)   # 15 (lo, hi) Hz tuples
 FEATURE_SETS = ("hg", "bands15")
 WINDOW_SHAPES = ("boxcar", "gaussian")
@@ -1823,29 +1829,34 @@ def _box_slices(box: dict, grid: str) -> Tuple[slice, slice]:
 
 
 def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
-    """Proportion gate on the score-gated -1/+1 cells of one box (clustering min-prop
-    thresholds). sign:
-      'pos'  -> enough +1 cells (activation),
-      'neg'  -> enough -1 cells (suppression),
-      'zero' -> SILENT: NEITHER +1 nor -1 reaches its threshold (no response — this
-                negative constraint is what makes a role discriminating, not just
-                presence-detecting),
-      'both' -> either +1 or -1 reaches threshold."""
+    """Proportion gate on the score-gated -1/+1 cells of one box. An "on" box
+    (pos/neg/both) must have at least `ROLE_BOX_MIN_PROP` (default 0.5 → half) of its
+    cells at the expected sign — a handful of cells is not enough. "Silent"
+    constraints (zero/nonpos) stay strict on the clustering presence gate (MIN_PROP_*),
+    so they still demand near-total silence. Per-box override via box['min_prop'].
+      'pos'    -> >=half +1 cells (activation),
+      'neg'    -> >=half -1 cells (suppression),
+      'zero'   -> SILENT: NEITHER +1 nor -1 reaches the strict presence gate (the
+                  negative constraint that makes a role discriminating),
+      'nonpos' -> must NOT activate: +1 below the strict presence gate (suppression
+                  or silence both OK),
+      'both'   -> either +1 or -1 reaches the >=half "on" gate."""
     fs, ts = _box_slices(box, grid)
     sub = disc_concat[fs, ts]
     if sub.size == 0:
         return False
     pp = float((sub == 1).mean()); pn = float((sub == -1).mean())
     s = box.get("sign", "both")
+    on = float(box.get("min_prop", ROLE_BOX_MIN_PROP))   # "on" gate: >=half by default
     if s == "pos":
-        return pp >= MIN_PROP_POS
+        return pp >= on
     if s == "neg":
-        return pn >= MIN_PROP_NEG
-    if s == "zero":
+        return pn >= on
+    if s == "zero":            # strict silence: below the clustering presence gate
         return (pp < MIN_PROP_POS) and (pn < MIN_PROP_NEG)
     if s == "nonpos":          # "at most zero": must NOT activate (suppression or silence both OK)
         return pp < MIN_PROP_POS
-    return (pp >= MIN_PROP_POS) or (pn >= MIN_PROP_NEG)
+    return (pp >= on) or (pn >= on)
 
 
 def role_matches(disc_concat: np.ndarray, role: dict, grid: str) -> bool:
