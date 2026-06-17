@@ -1892,9 +1892,46 @@ def build_role_table(df_contacts: pd.DataFrame, X_disc: np.ndarray, *, grid: str
     return df
 
 
+def _matched_sets(df_role: pd.DataFrame) -> pd.Series:
+    """roles_matched ';'-string -> set of role names, per contact (multi-label)."""
+    return df_role["roles_matched"].fillna("").apply(
+        lambda s: {x.strip() for x in str(s).split(";") if x.strip()})
+
+
 def role_counts(df_role: pd.DataFrame) -> pd.DataFrame:
-    return (df_role.groupby("role").size().reset_index(name="n_contacts")
-            .sort_values("n_contacts", ascending=False).reset_index(drop=True))
+    """MULTI-LABEL role counts. `n_matched` = contacts where the role is in
+    roles_matched (a contact counts toward EVERY role it matches, so the column can
+    sum to more than the contact count); `n_primary` = contacts where it is the
+    most-specific `role`. This is the scientifically standard 'response profile'
+    view — a contact is reported by all the responses it shows, not one winner."""
+    sets = _matched_sets(df_role)
+    prim = df_role.groupby("role").size()
+    matched = pd.Series([r for s in sets for r in s], dtype="object").value_counts()
+    roles = sorted(set(prim.index) | set(matched.index),
+                   key=lambda r: (-int(matched.get(r, 0)), r))
+    out = pd.DataFrame({"role": roles,
+                        "n_matched": [int(matched.get(r, 0)) for r in roles],
+                        "n_primary": [int(prim.get(r, 0)) for r in roles]})
+    return out.sort_values("n_matched", ascending=False).reset_index(drop=True)
+
+
+def role_membership(df_role: pd.DataFrame, roles: Optional[Sequence[str]] = None) -> pd.DataFrame:
+    """One-hot multi-label membership: one row per contact, one bool column per role
+    (from roles_matched). A contact can be True for several roles."""
+    sets = _matched_sets(df_role)
+    all_roles = list(roles) if roles is not None else sorted({r for s in sets for r in s})
+    M = pd.DataFrame({r: sets.apply(lambda s, r=r: r in s) for r in all_roles})
+    base = df_role[["patient_id", "contact_norm"]].reset_index(drop=True)
+    return pd.concat([base, M.reset_index(drop=True)], axis=1)
+
+
+def role_cooccurrence(df_role: pd.DataFrame) -> pd.DataFrame:
+    """Symmetric role x role matrix: how many contacts match BOTH roles (diagonal =
+    total contacts matching that role). Directly answers 'which roles share contacts'."""
+    mem = role_membership(df_role)
+    role_cols = [c for c in mem.columns if c not in ("patient_id", "contact_norm")]
+    M = mem[role_cols].to_numpy(dtype=int)
+    return pd.DataFrame(M.T @ M, index=role_cols, columns=role_cols)
 
 
 def load_role_table(grid: str = "full", path: Optional[Path] = None) -> pd.DataFrame:
@@ -1929,15 +1966,25 @@ def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
     m["color"] = m["role"].map(colors).fillna("#cccccc")
     if "is_cortical" not in m.columns:
         m["is_cortical"] = 1                       # cortical/depth radius split (page)
+    if "n_roles" not in m.columns:
+        m["n_roles"] = m["roles_matched"].fillna("").apply(
+            lambda s: len([x for x in str(s).split(";") if x.strip()]))
     out = (m[["patient_id", "contact_norm", "name", "hemi", "x", "y", "z",
-              "is_cortical", "role", "roles_matched", "color"]]
+              "is_cortical", "role", "roles_matched", "n_roles", "color"]]
            .rename(columns={"patient_id": "patient", "contact_norm": "contact"}))
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
     out.to_csv(run_dir / "contacts_pool.csv", index=False)
+    # MULTI-LABEL counts: a contact counts toward EVERY role in roles_matched.
+    msets = out["roles_matched"].fillna("").apply(
+        lambda s: {x.strip() for x in str(s).split(";") if x.strip()})
+    mcount = pd.Series([r for s in msets for r in s], dtype="object").value_counts()
     idx = {"grid": grid, "n_contacts": int(len(out)), "csv": "contacts_pool.csv",
+           "multilabel": True,
            "roles": [{"role": r, "color": colors[r],
-                      "n": int((out["role"] == r).sum())} for r in colors]}
+                      "n": int(mcount.get(r, 0)),                    # any-match (multi-label)
+                      "n_primary": int((out["role"] == r).sum())}    # most-specific
+                     for r in colors]}
     write_json(run_dir / "pool_index.json", idx)
 
     # Per-contact ERSP images for the web page's samples strip (optional).
