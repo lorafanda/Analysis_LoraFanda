@@ -90,6 +90,7 @@ _lf_dataset = _load_module(_CLUST_FUNCS, "lf_dataset")
 _lf_hg = _load_module(_CLUST_FUNCS, "lf_hg")
 _lf_features = _load_module(_CLUST_FUNCS, "lf_features")
 _lf_anatomy = _load_module(_CLUST_FUNCS, "lf_anatomy")
+_lf_blob_cfg = _load_module(_CLUST_FUNCS, "lf_blob_clustering_config")  # VALLEY_PARAMS source
 
 # Lazy: heavier / optional. Blob segmentation pulls scipy.ndimage; the recon
 # config is only needed for the 430 brain renders.
@@ -143,13 +144,18 @@ GAUSS_SUPPORT_SIGMA = 2.0             # gate support = center +/- this many sigm
 # 410 overlay blob-score gate: drop blobs below this percentile of the dataset's
 # blob scores (same idea as clustering/classification's M101_SCORE_PCT). Tunable.
 SCORE_PCT = 33.0
-# Default blob-segmentation overrides for the -1/0/+1 discretization (used by BOTH
-# the 470 viz and the 460 matching). Looser than s21's stock 2.0/-4.0/4. Override
-# per-call via seg_kwargs (merged over this). min_mean_pos/max_mean_neg lowered from
-# s21's ±2.0 to ±1.0 so weak-but-real blobs survive (the HGA-positive roles were
-# very rare under the 2.0 floor); they were the real strictness lever, not thr_pos.
-DEFAULT_SEG_KWARGS = {"thr_pos": 2.4, "thr_neg": -2.4, "max_blobs": 200,
-                      "min_mean_pos": 1.0, "max_mean_neg": -1.0}
+# EXACT clustering discretization (02's 231 minus101 path): segment with the SAME
+# VALLEY_PARAMS the clustering used, and NO score gate (231 ran score_min=None).
+# Sourced live from lf_blob_clustering_config so it stays in sync with 02. sign_mode
+# is dropped here because discretize_ersp passes sign_mode="both" explicitly.
+# => thr_pos 2.5, thr_neg -3.5, delta_valley 1.5, min_mean_pos 1.75 (0.7*thr),
+#    max_mean_neg -2.8 (0.8*thr), max_blobs 6.
+CLUSTERING_SEG_KWARGS = {k: v for k, v in dict(_lf_blob_cfg.VALLEY_PARAMS).items()
+                         if k != "sign_mode"}
+# Default for BOTH 460 matching and 470 viz = the clustering procedure, so the pooled
+# roles are judged on a clustering-comparable -1/0/+1 map. Override per-call via
+# seg_kwargs (merged over this).
+DEFAULT_SEG_KWARGS = dict(CLUSTERING_SEG_KWARGS)
 # 'ds' (downsampled) grid — the clustering "rawds" representation: 15 freq bands
 # x DS_TIME_BINS time bins, via lf_features.build_X_3d_downsampled.
 DS_TIME_BINS = 30

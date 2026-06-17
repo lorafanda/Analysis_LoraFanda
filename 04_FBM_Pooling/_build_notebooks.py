@@ -712,14 +712,14 @@ cell("markdown", r"""
 """),
 cell("code", r"""
 df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
-score_min = P.resolve_score_gate(X_full, pct=SCORE_PCT)
-print('score gate:', score_min)
+score_min = None        # clustering-exact: the 231 minus101 maps used score_min=None
+print('score gate:', score_min, '| seg:', P.CLUSTERING_SEG_KWARGS)
 """),
 cell("markdown", r"""
 ## 2 — Concatenate + score-gated discretize (one map per all-3-condition contact)
 """),
 cell("code", r"""
-df_contacts, X_disc = P.build_concat_discretized(df_meta, X_full, score_min=score_min, grid=GRID)
+df_contacts, X_disc = P.build_concat_discretized(df_meta, X_full, score_min=score_min, grid=GRID, seg_kwargs=P.CLUSTERING_SEG_KWARGS)
 print('contacts:', len(df_contacts), '| X_disc:', X_disc.shape)
 df_contacts.head()
 """),
@@ -852,8 +852,8 @@ representation `box_expresses` runs on. If it looks too sparse, the discretizati
 `thr_pos` 2.0→1.5, `thr_neg` −4.0→−3.0, `max_blobs` 4→8) and re-run to see more cells survive.
 """),
 cell("code", r"""
-SCORE_PCT_VIZ = 33.0          # blob-score gate percentile (lower = looser); None = no gate
-SEG_KWARGS    = None          # e.g. {'thr_pos': 1.5, 'thr_neg': -3.0, 'max_blobs': 8} to loosen
+SCORE_PCT_VIZ = None          # clustering-exact: 231 minus101 used no score gate
+SEG_KWARGS    = P.CLUSTERING_SEG_KWARGS   # clustering-exact (02 VALLEY_PARAMS); set a dict to override
 if SCORE_PCT_VIZ is None:
     score_min = None
 else:
