@@ -1702,7 +1702,7 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
 
 
 def plot_role_exemplars(input_dir, df_role: pd.DataFrame, *, grid: str = "full",
-                        role_params: Optional[dict] = None, n_per_role: int = 1,
+                        role_params: Optional[dict] = None, n_per_role: int = 2,
                         run_dir=None, verbose: bool = True) -> Dict[str, list]:
     """For each role, pick `n_per_role` contacts ASSIGNED that role (from a 460 role
     table) and plot their concatenated ERSP with that role's template. One
