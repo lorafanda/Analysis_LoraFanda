@@ -144,9 +144,12 @@ GAUSS_SUPPORT_SIGMA = 2.0             # gate support = center +/- this many sigm
 # blob scores (same idea as clustering/classification's M101_SCORE_PCT). Tunable.
 SCORE_PCT = 33.0
 # Default blob-segmentation overrides for the -1/0/+1 discretization (used by BOTH
-# the 470 viz and the 460 matching). Looser than s21's stock 2.0/-4.0/4 — this is
-# the setting Lora tuned in 470. Override per-call via seg_kwargs (merged over this).
-DEFAULT_SEG_KWARGS = {"thr_pos": 2.4, "thr_neg": -2.4, "max_blobs": 200}
+# the 470 viz and the 460 matching). Looser than s21's stock 2.0/-4.0/4. Override
+# per-call via seg_kwargs (merged over this). min_mean_pos/max_mean_neg lowered from
+# s21's ±2.0 to ±1.0 so weak-but-real blobs survive (the HGA-positive roles were
+# very rare under the 2.0 floor); they were the real strictness lever, not thr_pos.
+DEFAULT_SEG_KWARGS = {"thr_pos": 2.4, "thr_neg": -2.4, "max_blobs": 200,
+                      "min_mean_pos": 1.0, "max_mean_neg": -1.0}
 # 'ds' (downsampled) grid — the clustering "rawds" representation: 15 freq bands
 # x DS_TIME_BINS time bins, via lf_features.build_X_3d_downsampled.
 DS_TIME_BINS = 30
@@ -1840,8 +1843,13 @@ def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
 
 
 def role_matches(disc_concat: np.ndarray, role: dict, grid: str) -> bool:
-    """Strict conjunction: every box of the role must express its sign."""
-    return all(box_expresses(disc_concat, b, grid) for b in role["boxes"])
+    """Box reducer. Default `match`='all' -> strict conjunction (every box must
+    express its sign — the selective roles). `match`='any' -> disjunction: the role
+    matches if AT LEAST ONE box expresses (umbrella/general tags like
+    stimulus_responsive: 'HGA in any one stim window'), so it co-occurs with the
+    specific roles instead of excluding them."""
+    reducer = any if role.get("match") == "any" else all
+    return reducer(box_expresses(disc_concat, b, grid) for b in role["boxes"])
 
 
 def role_colors(grid: str = "full", role_params: Optional[dict] = None) -> Dict[str, str]:

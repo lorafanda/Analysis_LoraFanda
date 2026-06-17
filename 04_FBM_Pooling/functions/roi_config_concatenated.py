@@ -376,6 +376,43 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win, nt):
             ],
         },
 
+        # ── 13. STIMULUS RESPONSIVE (umbrella — HGA in ANY stim window) ──
+        {
+            "role": "stimulus_responsive",
+            "match": "any",          # disjunction: matches if >=1 box expresses
+            "description": (
+                "General stimulus-driven HGA: high-gamma activation in the stimulus "
+                "window of AT LEAST ONE condition (audio, picture, or reading). No "
+                "selectivity constraint — an UMBRELLA tag that co-occurs with the "
+                "specific sensory/language roles (an 'auditory' contact is therefore "
+                "also 'stimulus_responsive'), giving a general+specific hierarchy "
+                "rather than one exclusive label."
+            ),
+            "color": "#aec7e8",
+            "boxes": [
+                {"block": "audio",   "t_bins": S, "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": S, "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": S, "f_hz": f, "sign": "pos"},
+            ],
+        },
+
+        # ── 14. RESPONSE ACTIVE (umbrella — HGA in ANY response window) ──
+        {
+            "role": "response_active",
+            "match": "any",          # disjunction: matches if >=1 box expresses
+            "description": (
+                "General response/production-driven HGA: high-gamma activation in the "
+                "response window of AT LEAST ONE condition. UMBRELLA tag (no selectivity) "
+                "that co-occurs with motor / language / word_search etc."
+            ),
+            "color": "#ffbb78",
+            "boxes": [
+                {"block": "audio",   "t_bins": R, "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": R, "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": R, "f_hz": f, "sign": "pos"},
+            ],
+        },
+
     ]
 
 
