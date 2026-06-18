@@ -7,8 +7,8 @@
     {
       "role": "auditory",
       "color": "#1f77b4",
-      "n": 16,
-      "n_primary": 16
+      "n": 18,
+      "n_primary": 18
     },
     {
       "role": "visual",
@@ -19,8 +19,8 @@
     {
       "role": "motor",
       "color": "#d62728",
-      "n": 18,
-      "n_primary": 18
+      "n": 38,
+      "n_primary": 38
     },
     {
       "role": "lexical_semantic",
@@ -31,56 +31,56 @@
     {
       "role": "phonological_encoding",
       "color": "#e377c2",
-      "n": 53,
-      "n_primary": 48
+      "n": 46,
+      "n_primary": 42
     },
     {
       "role": "alpha_beta_suppression",
       "color": "#bcbd22",
-      "n": 49,
-      "n_primary": 44
+      "n": 56,
+      "n_primary": 51
     },
     {
       "role": "auditory_suppression",
       "color": "#17becf",
-      "n": 12,
-      "n_primary": 11
+      "n": 13,
+      "n_primary": 12
     },
     {
       "role": "network_negative_1",
       "color": "#2b8cbe",
-      "n": 1,
-      "n_primary": 1
+      "n": 0,
+      "n_primary": 0
     },
     {
       "role": "network_negative_2",
       "color": "#045a8d",
-      "n": 2,
-      "n_primary": 2
+      "n": 3,
+      "n_primary": 3
     },
     {
       "role": "low_f_negative_network",
       "color": "#74a9cf",
-      "n": 29,
+      "n": 37,
       "n_primary": 17
     },
     {
       "role": "stimulus_responsive",
       "color": "#aec7e8",
-      "n": 175,
-      "n_primary": 134
+      "n": 202,
+      "n_primary": 155
     },
     {
       "role": "response_active",
       "color": "#ffbb78",
-      "n": 458,
-      "n_primary": 307
+      "n": 565,
+      "n_primary": 385
     },
     {
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 2041
+      "n_primary": 1918
     }
   ]
 }

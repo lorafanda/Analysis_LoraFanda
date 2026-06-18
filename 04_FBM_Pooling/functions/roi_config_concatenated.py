@@ -1,327 +1,257 @@
 """
-roi_config_concatenated.py
+roi_config_layered.py
 
-Functional-role conjunction templates over the CONCATENATED
+RESTRUCTURED functional-role templates over the CONCATENATED
 [audio | picture | reading] ERSP.
 
-Each role is defined as a set of boxes with expected signs.
-A contact matches a role only if ALL boxes are satisfied (strict AND).
-Boxes with sign="pos" must show positive mean ERSP above threshold.
-Boxes with sign="neg" must show negative mean ERSP below threshold.
-Boxes with sign="zero" must show mean ERSP close to zero (no response).
+Design change vs. roi_config_concatenated.py
+--------------------------------------------
+The old flat list entangled three orthogonal axes (process / band / sign).
+This version factors them into LAYERS, tagged via the "layer" key on each
+role so downstream (lf_pool / cluster cards / website) can treat them as
+separate label namespaces:
 
-Block coordinates are PER-BLOCK (1-based, inclusive).
-The engine (lf_pool) adds the block offset when slicing the
-concatenated map. Block order: audio=0, picture=1, reading=2.
+  layer 1  FUNCTIONAL roles — one per anatomical/process hypothesis, each
+           carrying its FULL multiband fingerprint (HGA + beta ERD bundled,
+           the way `motor` already did). No more X / X_suppression splits.
+  layer 2  SPECTRAL tags   — orthogonal single-signature markers (HGA pos,
+           beta ERD, low-f ERD, theta tracking). A contact that fires a
+           layer-2 ERD tag but matches NO layer-1 HGA role is the
+           "missed-by-HGA-only-filter" category (RQ1), expressed directly.
+  layer 3  UMBRELLA tags   — coarse disjunctions (stimulus / response).
 
-Box geometry:
-  t_bins = (t_lo, t_hi)  -> TIME, 1-based inclusive, PER BLOCK (grid-dependent).
-  f_hz   = (f_lo, f_hi)  -> FREQUENCY in Hz (grid-INDEPENDENT). The engine (lf_pool)
-           converts Hz -> rows per grid:
-             full : linear 0-500 Hz over 129 rows  (row = round(hz/500*128)+1)
-             ds   : the 15 bands overlapping the Hz range
-  Frequency windows are written ONCE in Hz and work on both grids; only the time
-  windows differ between grids.
+The engine, box semantics (pos/neg/zero/nonpos), and pct() helper are
+UNCHANGED. Only the role list is reorganized + extended. The "layer" key is
+ignored by the matching engine; it is metadata for grouping the outputs.
 
-Grid specs (time only):
-  ds   : 30 time bins per block (stim 1-15, resp 16-30)
-  full : 300 time bins per block (stim 1-150, resp 151-300)
+Windows are warped (TN). 50% = GO-cue. Production windows derive from the
+single VOICE_ONSET_PCT assumption (replace with subset-measured ratio).
+Block order: audio=0, picture=1, reading=2.
 """
 
 BLOCK_ORDER = ["audio", "picture", "reading"]
 
 # Frequency bands in Hz — grid-independent; lf_pool converts Hz -> rows per grid.
-HGA_HZ          = (70, 170)   # high-gamma activity
-ALPHA_BETA_HZ   = (8,  30)    # alpha + beta (movement / engagement ERD)
-THETA_HZ        = (4,  8)     # theta (semantic retrieval)
-BROADBAND_HF_HZ = (70, 400)   # broadband high-freq (HGA + HFO) — negative networks
-LOW_F_HZ        = (0,  40)    # low frequency (delta-beta) — low-f negative network
-AUD_SUPP_HZ     = (20, 45)    # low-gamma/beta band suppressed while hearing
+HGA_HZ   = (70, 150)   # high-gamma activation / suppression (deactivation = HGA neg)
+BETA_HZ  = (13, 30)    # beta ERD (motor planning/execution; auditory listening)
+THETA_HZ = (4,  8)     # theta — syllabic-rate auditory tracking (layer-2 tag only)
+LOW_F_HZ = (1,  8)     # delta/theta low-frequency ERD network (layer-2 tag)
+
+VOICE_ONSET_PCT = 67   # ASSUMPTION (single-word, RT/T_response ≈ 0.35).
+                       #   Replace with subset-measured median cue→voice / cue→click ratio.
 
 
-def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win, nt):
-    """
-    Build role list for one grid.
-    hga, alpha_beta, theta = (f_lo_hz, f_hi_hz) tuples IN HZ (grid-independent)
-    stim, resp, pre_resp   = (t_lo, t_hi) time-bin tuples (grid-dependent)
-    motor_win              = (t_lo, t_hi) for the motor role (60-90% of the block)
-    nt                     = n_time_per_block (30 ds / 300 full) — for pct() windows
-    pre_resp covers the last 10% of the response window (word search window)
-    """
-    f   = list(hga)
-    fab = list(alpha_beta)
-    fth = list(theta)
+def _roles(stim, resp, motor_win, nt):
+    """Build the layered role list for one grid. stim/resp/motor_win are
+    (t_lo, t_hi) bin tuples (grid-dependent); nt = n_time_per_block."""
+    f   = list(HGA_HZ)
+    fb  = list(BETA_HZ)
+    fth = list(THETA_HZ)
+    flo = list(LOW_F_HZ)
     S   = list(stim)
     R   = list(resp)
-    PR  = list(pre_resp)
     MW  = list(motor_win)
 
     def pct(lo, hi):
-        """[lo%, hi%] of the per-block time range -> 1-based inclusive bins."""
         return [max(1, round(lo / 100.0 * nt)), min(nt, round(hi / 100.0 * nt))]
 
-    def stim_first(p):
-        """first p% of the STIMULUS window -> 1-based inclusive bins."""
-        s0, s1 = S
-        return [s0, min(s1, s0 - 1 + max(1, round(p / 100.0 * (s1 - s0 + 1))))]
+    V = VOICE_ONSET_PCT
 
     return [
 
-        # ── 1. AUDITORY ────────────────────────────────────────────────
+        # ════════════════ LAYER 1 — FUNCTIONAL ROLES ════════════════
+        # Each role = one region/process with its full multiband signature.
+
+        # 1. AUDITORY INPUT — responds to external speech, modality-selective,
+        #    with beta ERD bundled in (HGA + beta, not two roles).
         {
-            "role": "auditory",
-            "description": (
-                "Auditory cortex: responds to the audio STIMULUS and to "
-                "own voice in all three response windows. "
-                "Discriminated from motor by the audio stim box. "
-                "Discriminated from visual by absence of picture/reading stim boxes. "
-                "Citation: Trebuchon et al. 2020 — auditory word-related HGA flows "
-                "from pSTG encoding acoustic properties; "
-                "Kitazawa & Asano et al. 2025 — bilateral STG HGA augmentation "
-                "within 100ms of first phrase onset."
-            ),
-            "color": "#1f77b4",
+            "role": "auditory", "layer": 1, "color": "#1f77b4",
+            "description": "Auditory input cortex: HGA + beta-ERD to the spoken "
+                           "prompt; silent to visual stimuli. Self-voice handled by "
+                           "auditory_feedback.",
             "boxes": [
-                # MUST be on
-                {"block": "audio",   "t_bins": S,  "f_hz": f, "sign": "pos"},  # hears stimulus
-                {"block": "audio",   "t_bins": R,  "f_hz": f, "sign": "pos"},  # hears self
-                {"block": "picture", "t_bins": R,  "f_hz": f, "sign": "pos"},  # hears self
-                {"block": "reading", "t_bins": R,  "f_hz": f, "sign": "pos"},  # hears self
-                # MUST NOT be on
-                {"block": "picture", "t_bins": S,  "f_hz": f, "sign": "zero"}, # not visual input
-                {"block": "reading", "t_bins": S,  "f_hz": f, "sign": "zero"}, # not visual input
+                {"block": "audio",   "t_bins": pct(2, 48), "f_hz": f,  "sign": "pos"},
+                {"block": "audio",   "t_bins": pct(2, 48), "f_hz": fb, "sign": "neg"},  # engagement ERD
+                {"block": "picture", "t_bins": S,          "f_hz": f,  "sign": "zero"},
+                {"block": "reading", "t_bins": S,          "f_hz": f,  "sign": "zero"},
             ],
         },
 
-        # ── 2. VISUAL ──────────────────────────────────────────────────
+        # 2. VISUAL INPUT — sustained HGA + beta ERD to either visual stimulus,
+        #    silent to audio.
         {
-            "role": "visual",
-            "description": (
-                "Visual cortex: fast onset HGA to the VISUAL stimulus — the first 70% "
-                "of the picture stim window and only the first 10% of the reading stim "
-                "window (text drives a briefer early visual response). Silent during "
-                "audio stimulus and all response windows. "
-                "Citation: Crone et al. 1998 — gamma ERS is somatotopically "
-                "organized and spatially focal; "
-                "Ray & Maunsell 2011 — HGA tracks local spiking activity "
-                "with high spatial specificity."
-            ),
-            "color": "#2ca02c",
+            "role": "visual", "layer": 1, "color": "#2ca02c",
+            "description": "Visual input cortex: sustained HGA + beta-ERD across the "
+                           "on-screen image / read sentence; silent to audio.",
             "boxes": [
-                # MUST be on — early visual onset only (not the whole stim window)
-                {"block": "picture", "t_bins": stim_first(70), "f_hz": f, "sign": "pos"},  # first 70% of picture stim
-                {"block": "reading", "t_bins": stim_first(10), "f_hz": f, "sign": "pos"},  # first 10% of reading stim
-                # MUST NOT be on
-                {"block": "audio",   "t_bins": S,  "f_hz": f, "sign": "zero"}, # no auditory input
-                {"block": "audio",   "t_bins": R,  "f_hz": f, "sign": "zero"}, # no response
-                {"block": "picture", "t_bins": R,  "f_hz": f, "sign": "zero"}, # no response
-                {"block": "reading", "t_bins": R,  "f_hz": f, "sign": "zero"}, # no response
+                {"block": "picture", "t_bins": pct(2, 48), "f_hz": f,  "sign": "pos"},
+                {"block": "reading", "t_bins": pct(2, 48), "f_hz": f,  "sign": "pos"},
+                {"block": "picture", "t_bins": pct(2, 48), "f_hz": fb, "sign": "neg"},
+                {"block": "audio",   "t_bins": S,          "f_hz": f,  "sign": "zero"},
             ],
         },
 
-        # ── 3. MOTOR / SPEECH ──────────────────────────────────────────
+        # 3. LEXICAL-SEMANTIC — conceptual access, CONDITION-SPECIFIC timing
+        #    (picture early, audio mid, reading at the blank). Strict AND.
         {
-            "role": "motor",
-            "description": (
-                "Speech-motor cortex: HGA during articulation at 60-90% of the block "
-                "(late response) in all three conditions, with beta AT MOST ZERO "
-                "(movement ERD — suppression or flat, never activated). "
-                "Silent during all stimulus windows — discriminates from sensory. "
-                "Citation: Crone et al. 1998 — high-gamma ERS in peri-rolandic "
-                "cortex is somatotopically organized during motor tasks, with "
-                "simultaneous alpha/beta ERD; "
-                "Trebuchon et al. 2020 — visual naming elicits HGA in "
-                "peri-rolandic and premotor regions."
-            ),
-            "color": "#d62728",
+            "role": "lexical_semantic", "layer": 1, "color": "#9467bd",
+            "description": "Conceptual access at condition-specific times: picture early, "
+                           "audio mid-sentence, reading at the final blank.",
             "boxes": [
-                # MUST be on — HGA articulation, 60-90% of the block
-                {"block": "audio",   "t_bins": MW, "f_hz": f,   "sign": "pos"},
-                {"block": "picture", "t_bins": MW, "f_hz": f,   "sign": "pos"},
-                {"block": "reading", "t_bins": MW, "f_hz": f,   "sign": "pos"},
-                # beta AT MOST ZERO — movement suppression (neg or flat OK, never activated)
-                {"block": "audio",   "t_bins": MW, "f_hz": fab, "sign": "nonpos"},
-                {"block": "picture", "t_bins": MW, "f_hz": fab, "sign": "nonpos"},
-                {"block": "reading", "t_bins": MW, "f_hz": fab, "sign": "nonpos"},
-                # MUST NOT be on — silent during all stimuli
-                {"block": "audio",   "t_bins": S,  "f_hz": f,   "sign": "zero"},
-                {"block": "picture", "t_bins": S,  "f_hz": f,   "sign": "zero"},
-                {"block": "reading", "t_bins": S,  "f_hz": f,   "sign": "zero"},
+                {"block": "picture", "t_bins": pct(10, 25), "f_hz": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": pct(30, 48), "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": pct(40, 48), "f_hz": f, "sign": "pos"},
             ],
         },
 
-        # ── 7. WORD SEARCH / LEXICAL RETRIEVAL ────────────────────────
+        # 4. HETEROMODAL CONVERGENCE — domain-general hub active in the post-sensory
+        #    perception window of ALL three modalities (Forseth-style hubs).
         {
-            "role": "word_search",
-            "description": (
-                "Lexical retrieval: brief HGA burst at the END of the STIMULUS window "
-                "(40-50% of the block, the pre-articulation period just before response "
-                "onset) across all three conditions. Quiet at stimulus ONSET (first half "
-                "of stim) — distinguishes it from a fast sensory-onset response. "
-                "Reflects the final lexical selection and phonological encoding "
-                "step before articulation. "
-                "Citation: Sahin et al. 2009 (via Llorens et al. 2011 review) — "
-                "iEEG Broca's area peaks at ~200ms (lexical), ~320ms (grammatical), "
-                "~450ms (articulatory) post-stimulus; "
-                "PNAS 2009 (overt speech word retrieval) — lexical retrieval starts "
-                "~200ms post picture onset, unfolds for 180ms; "
-                "Communications Biology 2025 (sEEG speech production) — "
-                "IFG gamma and high-gamma onset at 200ms; pSTG activates just "
-                "before articulation for phonological code retrieval; "
-                "Kitazawa & Asano et al. 2025 — left pIFG HGA peaks 350-400ms "
-                "before response onset."
-            ),
-            "color": "#e377c2",
+            "role": "heteromodal_convergence", "layer": 1, "color": "#8c564b",
+            "description": "Multimodal hub: HGA in mid-late perception across audio AND "
+                           "picture AND reading (convergent, not modality-selective).",
             "boxes": [
-                # MUST be on — brief HGA burst at the END of the stimulus, all conditions
-                {"block": "audio",   "t_bins": pct(40, 50),    "f_hz": f, "sign": "pos"},
-                {"block": "picture", "t_bins": pct(40, 50),    "f_hz": f, "sign": "pos"},
-                {"block": "reading", "t_bins": pct(40, 50),    "f_hz": f, "sign": "pos"},
-                # MUST NOT be on — quiet at stimulus ONSET (not a sensory-onset cell)
-                {"block": "audio",   "t_bins": stim_first(50), "f_hz": f, "sign": "zero"},
-                {"block": "picture", "t_bins": stim_first(50), "f_hz": f, "sign": "zero"},
-                {"block": "reading", "t_bins": stim_first(50), "f_hz": f, "sign": "zero"},
+                {"block": "audio",   "t_bins": pct(20, 48), "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": pct(20, 48), "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": pct(20, 48), "f_hz": f, "sign": "pos"},
             ],
         },
 
-        # ── 8. ALPHA/BETA SUPPRESSION ──────────────────────────────────
+        # 5. MAINTENANCE / WORKING MEMORY — bridges the stim->response boundary
+        #    (delayed-response design). Window straddles the GO-cue (50%).
+        #    NB: to STRICTLY require bridging, split each box into pre/post-cue
+        #    boxes (pct(42,50) AND pct(50,58)); this lean version uses one straddle.
         {
-            "role": "alpha_beta_suppression",
-            "description": (
-                "Cortical engagement marker: alpha and beta suppression (ERD) "
-                "during stimulus in all three conditions. "
-                "No constraint on HGA — this role captures electrodes that show "
-                "clear engagement via ERD without necessarily reaching HGA threshold. "
-                "This is the RQ1 proof-of-concept role — electrodes matching this "
-                "but NOT matching any HGA-based role would be missed by a pure "
-                "high-gamma filter. "
-                "Citation: Crone et al. 1998 — gamma ERS and alpha/beta ERD occur "
-                "simultaneously and carry distinct functional information; "
-                "Jia & Kohn 2011 — lower frequency power suppressed while higher "
-                "frequency power increases during network activation; "
-                "Ray & Maunsell 2011 — beta suppression is a separate marker "
-                "from broadband HGA with different neural generator."
-            ),
-            "color": "#bcbd22",
+            "role": "maintenance", "layer": 1, "color": "#7f7f7f",
+            "description": "Working-memory hold: sustained HGA straddling the GO-cue, "
+                           "persisting from late perception into the early response.",
             "boxes": [
-                # MUST suppress during all three stimulus windows
-                {"block": "audio",   "t_bins": S, "f_hz": fab, "sign": "neg"},
-                {"block": "picture", "t_bins": S, "f_hz": fab, "sign": "neg"},
-                {"block": "reading", "t_bins": S, "f_hz": fab, "sign": "neg"},
+                {"block": "audio",   "t_bins": pct(42, 58), "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": pct(42, 58), "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": pct(42, 58), "f_hz": f, "sign": "pos"},
             ],
         },
 
-        # ── 9. AUDITORY SUPPRESSION (20-45 Hz while hearing) ───────────
+        # 6. PHONOLOGICAL ENCODING — cue->voice-onset, condition-shared.
         {
-            "role": "auditory_suppression",
-            "description": (
-                "Low-gamma/beta (20-45 Hz) suppression whenever the patient is actively "
-                "hearing — the audio stimulus (hearing the prompt) and all three response "
-                "windows (hearing own voice). Negative activity is particularly strong in "
-                "the audio condition. Separate marker from the HGA-based auditory role. "
-                "Citation: Crone et al. 1998 — beta/low-gamma ERD accompanies auditory "
-                "and speech processing; Ray & Maunsell 2011 — beta suppression is a "
-                "distinct marker from broadband HGA."
-            ),
-            "color": "#17becf",
+            "role": "phonological_encoding", "layer": 1, "color": "#e377c2",
+            "description": "Pre-articulatory phonological/phonetic encoding between the "
+                           "GO-cue (50%) and voice onset (~V%); condition-shared.",
             "boxes": [
-                {"block": "audio",   "t_bins": S, "f_hz": list(AUD_SUPP_HZ), "sign": "neg"},  # hears prompt
-                {"block": "audio",   "t_bins": R, "f_hz": list(AUD_SUPP_HZ), "sign": "neg"},  # hears self
-                {"block": "picture", "t_bins": R, "f_hz": list(AUD_SUPP_HZ), "sign": "neg"},  # hears self
-                {"block": "reading", "t_bins": R, "f_hz": list(AUD_SUPP_HZ), "sign": "neg"},  # hears self
+                {"block": "audio",   "t_bins": pct(50, V), "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": pct(50, V), "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": pct(50, V), "f_hz": f, "sign": "pos"},
             ],
         },
 
-        # ── 10. NETWORK NEGATIVE 1 (broadband HF suppression + late silence) ──
+        # 7. SPEECH-MOTOR — articulation HGA + beta ERD, silent during stimuli.
         {
-            "role": "network_negative_1",
-            "description": (
-                "Broadband high-frequency (70-400 Hz) suppression over the early-to-mid "
-                "trial (10-60% of the block) in all three conditions, returning to baseline "
-                "(zero) late (80-100% of the block). A task-negative / deactivation network "
-                "marker. Citation: Raichle 2015 — task-negative deactivation; "
-                "Ossandon et al. 2011 — sustained HGA decreases (deactivation) in "
-                "default-mode regions during effortful tasks."
-            ),
-            "color": "#2b8cbe",
+            "role": "motor", "layer": 1, "color": "#d62728",
+            "description": "Speech-motor cortex: HGA articulation at 60-85% with beta "
+                           "ERD (at most zero); silent during all stimulus windows.",
             "boxes": [
-                # MUST suppress (broadband HF) early-mid in all conditions
-                {"block": "audio",   "t_bins": pct(10, 60), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
-                {"block": "picture", "t_bins": pct(10, 60), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
-                {"block": "reading", "t_bins": pct(10, 60), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
-                # MUST return to ~zero late
-                {"block": "audio",   "t_bins": pct(80, 100), "f_hz": list(BROADBAND_HF_HZ), "sign": "zero"},
-                {"block": "picture", "t_bins": pct(80, 100), "f_hz": list(BROADBAND_HF_HZ), "sign": "zero"},
-                {"block": "reading", "t_bins": pct(80, 100), "f_hz": list(BROADBAND_HF_HZ), "sign": "zero"},
+                {"block": "audio",   "t_bins": MW, "f_hz": f,  "sign": "pos"},
+                {"block": "picture", "t_bins": MW, "f_hz": f,  "sign": "pos"},
+                {"block": "reading", "t_bins": MW, "f_hz": f,  "sign": "pos"},
+                {"block": "audio",   "t_bins": MW, "f_hz": fb, "sign": "nonpos"},
+                {"block": "picture", "t_bins": MW, "f_hz": fb, "sign": "nonpos"},
+                {"block": "reading", "t_bins": MW, "f_hz": fb, "sign": "nonpos"},
+                {"block": "audio",   "t_bins": S,  "f_hz": f,  "sign": "zero"},
+                {"block": "picture", "t_bins": S,  "f_hz": f,  "sign": "zero"},
+                {"block": "reading", "t_bins": S,  "f_hz": f,  "sign": "zero"},
             ],
         },
 
-        # ── 11. NETWORK NEGATIVE 2 (sustained broadband HF suppression) ──
+        # 8. AUDITORY FEEDBACK / SELF-MONITORING — responds to external sound but
+        #    SUPPRESSED during own voice (speaker-induced suppression, Chang 2013).
         {
-            "role": "network_negative_2",
-            "description": (
-                "Sustained broadband high-frequency (70-400 Hz) suppression over most of "
-                "the block (10-80%) in all three conditions, with NO late-silence "
-                "constraint. A broader / longer-lasting deactivation than network_negative_1. "
-                "Citation: Raichle 2015 — task-negative deactivation; Ossandon et al. 2011."
-            ),
-            "color": "#045a8d",
+            "role": "auditory_feedback", "layer": 1, "color": "#17becf",
+            "description": "Self-monitoring auditory cortex: HGA pos to the external "
+                           "prompt, HGA suppressed during own-voice articulation (all conds).",
             "boxes": [
-                {"block": "audio",   "t_bins": pct(10, 80), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
-                {"block": "picture", "t_bins": pct(10, 80), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
-                {"block": "reading", "t_bins": pct(10, 80), "f_hz": list(BROADBAND_HF_HZ), "sign": "neg"},
+                {"block": "audio",   "t_bins": pct(2, 48),  "f_hz": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": pct(V, 85),  "f_hz": f, "sign": "neg"},
+                {"block": "picture", "t_bins": pct(V, 85),  "f_hz": f, "sign": "neg"},
+                {"block": "reading", "t_bins": pct(V, 85),  "f_hz": f, "sign": "neg"},
             ],
         },
 
-        # ── 12. LOW-F NEGATIVE NETWORK (0-40 Hz mid-trial suppression) ──
+        # 9. DEACTIVATION — task-negative HGA decrease (merged network_negative_1/2).
         {
-            "role": "low_f_negative_network",
-            "description": (
-                "Low-frequency (0-40 Hz) suppression in the middle of the block "
-                "(30-70% of the time, spanning the stim->response transition) in all "
-                "three conditions. Low-frequency ERD marker distinct from the broadband "
-                "HF negative networks. Citation: Crone et al. 1998 — alpha/beta ERD "
-                "during active processing; Jia & Kohn 2011 — low-frequency power "
-                "suppression during network engagement."
-            ),
-            "color": "#74a9cf",
+            "role": "deactivation", "layer": 1, "color": "#045a8d",
+            "description": "Task-negative network: HGA suppression over the early-mid "
+                           "trial in all conditions (DMN-like deactivation).",
             "boxes": [
-                {"block": "audio",   "t_bins": pct(30, 70), "f_hz": list(LOW_F_HZ), "sign": "neg"},
-                {"block": "picture", "t_bins": pct(30, 70), "f_hz": list(LOW_F_HZ), "sign": "neg"},
-                {"block": "reading", "t_bins": pct(30, 70), "f_hz": list(LOW_F_HZ), "sign": "neg"},
+                {"block": "audio",   "t_bins": pct(10, 70), "f_hz": f, "sign": "neg"},
+                {"block": "picture", "t_bins": pct(10, 70), "f_hz": f, "sign": "neg"},
+                {"block": "reading", "t_bins": pct(10, 70), "f_hz": f, "sign": "neg"},
             ],
         },
 
-        # ── 13. STIMULUS RESPONSIVE (umbrella — HGA in ANY stim window) ──
+        # ════════════════ LAYER 2 — SPECTRAL TAGS ═══════════════════
+        # Orthogonal single-signature markers. "any" = matches on >=1 box.
+
+        # HGA activation anywhere (functional-agnostic).
         {
-            "role": "stimulus_responsive",
-            "match": "any",          # disjunction: matches if >=1 box expresses
-            "description": (
-                "General stimulus-driven HGA: high-gamma activation in the stimulus "
-                "window of AT LEAST ONE condition (audio, picture, or reading). No "
-                "selectivity constraint — an UMBRELLA tag that co-occurs with the "
-                "specific sensory/language roles (an 'auditory' contact is therefore "
-                "also 'stimulus_responsive'), giving a general+specific hierarchy "
-                "rather than one exclusive label."
-            ),
-            "color": "#aec7e8",
+            "role": "tag_hga_activation", "layer": 2, "match": "any", "color": "#aec7e8",
+            "description": "HGA increase in any stim or response window (no selectivity).",
+            "boxes": [
+                {"block": "audio",   "t_bins": S, "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": S, "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": S, "f_hz": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": R, "f_hz": f, "sign": "pos"},
+                {"block": "picture", "t_bins": R, "f_hz": f, "sign": "pos"},
+                {"block": "reading", "t_bins": R, "f_hz": f, "sign": "pos"},
+            ],
+        },
+
+        # Beta ERD engagement — the RQ1 probe (engagement WITHOUT requiring HGA).
+        {
+            "role": "tag_beta_erd", "layer": 2, "match": "any", "color": "#bcbd22",
+            "description": "Beta (13-30) ERD during any stimulus — engagement marker; "
+                           "contacts firing this with NO layer-1 HGA role are missed by "
+                           "a high-gamma-only filter (RQ1).",
+            "boxes": [
+                {"block": "audio",   "t_bins": S, "f_hz": fb, "sign": "neg"},
+                {"block": "picture", "t_bins": S, "f_hz": fb, "sign": "neg"},
+                {"block": "reading", "t_bins": S, "f_hz": fb, "sign": "neg"},
+            ],
+        },
+
+        # Low-frequency ERD network.
+        {
+            "role": "tag_low_f_erd", "layer": 2, "match": "any", "color": "#74a9cf",
+            "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
+            "boxes": [
+                {"block": "audio",   "t_bins": pct(30, 70), "f_hz": flo, "sign": "neg"},
+                {"block": "picture", "t_bins": pct(30, 70), "f_hz": flo, "sign": "neg"},
+                {"block": "reading", "t_bins": pct(30, 70), "f_hz": flo, "sign": "neg"},
+            ],
+        },
+
+        # Theta tracking — syllabic-rate auditory tracking (repurposes dead theta band).
+        {
+            "role": "tag_theta_tracking", "layer": 2, "match": "any", "color": "#fdae6b",
+            "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate "
+                           "auditory tracking.",
+            "boxes": [
+                {"block": "audio", "t_bins": pct(2, 48), "f_hz": fth, "sign": "pos"},
+            ],
+        },
+
+        # ════════════════ LAYER 3 — UMBRELLAS ═══════════════════════
+        {
+            "role": "stimulus_responsive", "layer": 3, "match": "any", "color": "#c7c7c7",
+            "description": "HGA in the stimulus window of >=1 condition.",
             "boxes": [
                 {"block": "audio",   "t_bins": S, "f_hz": f, "sign": "pos"},
                 {"block": "picture", "t_bins": S, "f_hz": f, "sign": "pos"},
                 {"block": "reading", "t_bins": S, "f_hz": f, "sign": "pos"},
             ],
         },
-
-        # ── 14. RESPONSE ACTIVE (umbrella — HGA in ANY response window) ──
         {
-            "role": "response_active",
-            "match": "any",          # disjunction: matches if >=1 box expresses
-            "description": (
-                "General response/production-driven HGA: high-gamma activation in the "
-                "response window of AT LEAST ONE condition. UMBRELLA tag (no selectivity) "
-                "that co-occurs with motor / language / word_search etc."
-            ),
-            "color": "#ffbb78",
+            "role": "response_active", "layer": 3, "match": "any", "color": "#ffbb78",
+            "description": "HGA in the response window of >=1 condition.",
             "boxes": [
                 {"block": "audio",   "t_bins": R, "f_hz": f, "sign": "pos"},
                 {"block": "picture", "t_bins": R, "f_hz": f, "sign": "pos"},
@@ -332,46 +262,16 @@ def _roles(hga, alpha_beta, theta, stim, resp, pre_resp, motor_win, nt):
     ]
 
 
-# ── Pre-response window calculation ────────────────────────────────────────
-# "word search" = last 10% of response window
-# ds  : resp = [16,30], last 10% = bins [28,30]  (3 bins out of 15)
-# full: resp = [151,300], last 10% = bins [271,300] (30 bins out of 150)
-# Approximately 45-50% to 50% of the full trial in TN-normalized space
-
 ERSP_POOLING_ROLES = {
     "block_order": BLOCK_ORDER,
     "ds": {
-        "n_time_per_block": 30,
-        "n_freq": 15,
-        "stim_bins":     [1,  15],
-        "resp_bins":     [16, 30],
-        "pre_resp_bins": [28, 30],
-        "roles": _roles(
-            hga        = HGA_HZ,
-            alpha_beta = ALPHA_BETA_HZ,
-            theta      = THETA_HZ,
-            stim       = (1,  15),
-            resp       = (16, 30),
-            pre_resp   = (28, 30),
-            motor_win  = (18, 27),     # 60-90% of the 30-bin block
-            nt         = 30,
-        ),
+        "n_time_per_block": 30, "n_freq": 15,
+        "stim_bins": [1, 15], "resp_bins": [16, 30], "pre_resp_bins": [28, 30],
+        "roles": _roles(stim=(1, 15), resp=(16, 30), motor_win=(18, 25), nt=30),
     },
     "full": {
-        "n_time_per_block": 300,
-        "n_freq": 129,
-        "stim_bins":     [1,   150],
-        "resp_bins":     [151, 300],
-        "pre_resp_bins": [271, 300],
-        "roles": _roles(
-            hga        = HGA_HZ,
-            alpha_beta = ALPHA_BETA_HZ,
-            theta      = THETA_HZ,
-            stim       = (1,  150),
-            resp       = (151, 300),
-            pre_resp   = (271, 300),
-            motor_win  = (180, 270),   # 60-90% of the 300-bin block
-            nt         = 300,
-        ),
+        "n_time_per_block": 300, "n_freq": 129,
+        "stim_bins": [1, 150], "resp_bins": [151, 300], "pre_resp_bins": [271, 300],
+        "roles": _roles(stim=(1, 150), resp=(151, 300), motor_win=(180, 255), nt=300),
     },
 }
