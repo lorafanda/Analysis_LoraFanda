@@ -2046,16 +2046,22 @@ def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
     cols = ["patient_id", "contact_norm", "name", "hemi", "x", "y", "z"]
     if "is_cortical" in coords.columns:
         cols.append("is_cortical")
+    for yc in ("yeo7_network", "yeo17_network"):   # per-electrode Yeo labels (for the viewer's Yeo colour mode)
+        if yc in coords.columns:
+            cols.append(yc)
     c = coords[cols].drop_duplicates(["patient_id", "contact_norm"])
     m = df_role.merge(c, on=["patient_id", "contact_norm"], how="left").dropna(subset=["x", "y", "z"])
     m["color"] = m["role"].map(colors).fillna("#cccccc")
     if "is_cortical" not in m.columns:
         m["is_cortical"] = 1                       # cortical/depth radius split (page)
+    for yc in ("yeo7_network", "yeo17_network"):
+        m[yc] = m[yc].fillna("") if yc in m.columns else ""
     if "n_roles" not in m.columns:
         m["n_roles"] = m["roles_matched"].fillna("").apply(
             lambda s: len([x for x in str(s).split(";") if x.strip()]))
     out = (m[["patient_id", "contact_norm", "name", "hemi", "x", "y", "z",
-              "is_cortical", "role", "roles_matched", "n_roles", "color"]]
+              "is_cortical", "role", "roles_matched", "n_roles",
+              "yeo7_network", "yeo17_network", "color"]]
            .rename(columns={"patient_id": "patient", "contact_norm": "contact"}))
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
