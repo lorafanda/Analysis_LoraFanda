@@ -784,6 +784,100 @@ print('POOL web data ->', web)
 
 
 # ============================================================
+# 465 — Functional-role matching, GAUSSIAN windows (boxcar's soft sibling)
+# ============================================================
+nb465 = [
+cell("markdown", r"""
+# 465 — Functional-role matching (GAUSSIAN windows)
+
+Same conjunction templates as **460**, but each role box is gated with a **2-D gaussian**
+(time × frequency) centred on the box instead of a hard boxcar rectangle. The gaussian is
+auto-derived from each box's extent (centre = box midpoint, σ = half-extent /
+`GAUSS_SUPPORT_SIGMA`): cells near the centre count fully, the edges taper off — so it
+tolerates latency / frequency jitter and drops the boxcar's hard-edge artefact. The
+threshold (`ROLE_BOX_MIN_PROP`) and the strict silence gate are unchanged.
+
+The discretized −1/0/+1 map is **identical** to 460 — only the box gate differs
+(`shape='gaussian'`). Writes to a **separate** `outputs/pooling/pool_web_gaussian/` so the
+boxcar (460) and gaussian results stand side-by-side (490 compares them).
+"""),
+cell("code", SETUP),
+cell("code", r"""
+# ---- knobs ----
+USE_DS    = False                    # False: full-res discretized baseline (recommended) · True: ds
+GRID      = 'ds' if USE_DS else 'full'
+print('grid:', GRID, '| roles:', [r['role'] for r in P.ROLE_PARAMS[GRID]['roles']])
+"""),
+cell("markdown", r"""
+## 1 — Load dataset (clustering-exact discretization, no score gate)
+"""),
+cell("code", r"""
+df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
+score_min = None        # clustering-exact: the 231 minus101 maps used score_min=None
+print('score gate:', score_min, '| seg:', P.CLUSTERING_SEG_KWARGS)
+"""),
+cell("markdown", r"""
+## 2 — Concatenate + discretize (clustering-exact; one map per all-3-condition contact)
+Identical to 460 — the −1/0/+1 map does not depend on the box gate.
+"""),
+cell("code", r"""
+df_contacts, X_disc = P.build_concat_discretized(df_meta, X_full, score_min=score_min, grid=GRID, seg_kwargs=P.CLUSTERING_SEG_KWARGS)
+print('contacts:', len(df_contacts), '| X_disc:', X_disc.shape)
+df_contacts.head()
+"""),
+cell("markdown", r"""
+## 3 — Conjunction role matching (GAUSSIAN gate)
+Each box must clear `ROLE_BOX_MIN_PROP` of its **gaussian-weighted** ±1 mass in the
+expected sign. `role` = most-specific match; `roles_matched` lists all.
+"""),
+cell("code", r"""
+import matplotlib.pyplot as plt
+df_role = P.build_role_table(df_contacts, X_disc, grid=GRID, shape='gaussian')
+counts = P.role_counts(df_role)
+display(counts)
+ax = counts.set_index('role')['n_matched'].plot.barh(figsize=(7, 0.5 * len(counts) + 1),
+        color=[P.role_colors(GRID).get(r, '#888') for r in counts['role']])
+ax.set_xlabel('# contacts (matched)'); ax.set_title('Functional-role response profile — GAUSSIAN windows')
+ax.invert_yaxis(); plt.tight_layout(); plt.show()
+"""),
+cell("markdown", r"""
+## 3b — Role co-occurrence (multi-label overlap, gaussian gate)
+Diagonal = total contacts per role; off-diagonal = contacts sharing each role pair.
+Compare against 460's boxcar heatmap to see how the soft window shifts overlaps.
+"""),
+cell("code", r"""
+import numpy as np, matplotlib.pyplot as plt
+M = P.role_membership(df_role)                       # one row/contact, bool col per matched role
+role_cols = [c for c in M.columns if c not in ('patient_id', 'contact_norm')]
+B = M[role_cols].to_numpy().astype(int)
+C = B.T @ B                                          # co-occurrence counts; diagonal = n_matched
+fig, ax = plt.subplots(figsize=(0.6 * len(role_cols) + 3, 0.6 * len(role_cols) + 3))
+im = ax.imshow(C, cmap='viridis')
+ax.set_xticks(range(len(role_cols))); ax.set_xticklabels(role_cols, rotation=90)
+ax.set_yticks(range(len(role_cols))); ax.set_yticklabels(role_cols)
+vmax = int(C.max()) if C.size else 1
+for i in range(len(role_cols)):
+    for j in range(len(role_cols)):
+        ax.text(j, i, int(C[i, j]), ha='center', va='center', fontsize=8,
+                color='white' if C[i, j] < vmax * 0.6 else 'black')
+ax.set_title('Role co-occurrence (gaussian) — # contacts sharing each pair (diagonal = total)')
+fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+plt.tight_layout(); plt.show()
+"""),
+cell("markdown", r"""
+## 4 — Export for the POOL web page (gaussian)
+Writes `contacts_pool.csv` + `pool_index.json` to **`outputs/pooling/pool_web_gaussian/`**
+(separate from 460's boxcar export) so `pool.html` can load either set.
+"""),
+cell("code", r"""
+coords = P.load_coords()
+web = P.export_pool_web(df_role, coords, P.OUTPUTS_ROOT / 'pool_web_gaussian', grid=GRID, df_meta=df_meta)
+print('POOL web (gaussian) data ->', web)
+"""),
+]
+
+
+# ============================================================
 # 470 — ROI boxes overlaid on named exemplar ERSPs (validation figure)
 # ============================================================
 nb470 = [
@@ -916,6 +1010,7 @@ print('done')
 # write_nb("440_cascade.ipynb", nb440)
 # write_nb("450_roi_pooling.ipynb", nb450)
 write_nb("460_role_matching.ipynb", nb460)
+write_nb("465_role_matching_gaussian.ipynb", nb465)
 write_nb("470_roi_on_ersp.ipynb", nb470)
 write_nb("490_results.ipynb", nb490)
 print("all notebooks written.")

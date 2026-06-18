@@ -1149,29 +1149,45 @@ def plot_cascade(cascade: dict, out_png, *, cfg: Optional[dict] = None,
     if vlim is None:
         a = float(np.nanpercentile(np.abs(allv), 99)) or 1.0
         vlim = (-a, a)
+    from matplotlib.transforms import blended_transform_factory
     fig, axes = plt.subplots(1, len(conds), squeeze=False, sharey=True,
-                             figsize=(3.8 * len(conds) + 0.5, 0.34 * len(regions) + 1.6))
+                             figsize=(3.8 * len(conds) + 0.6, 0.34 * len(regions) + 1.9),
+                             constrained_layout=True)   # lets suptitle/titles self-space
     im = None
     for ax, c in zip(axes[0], conds):
+        btf = blended_transform_factory(ax.transData, ax.transAxes)
         if cfg:
-            for spec in cfg["zones"].values():
+            for zname, spec in cfg["zones"].items():
                 b = spec["boxcar"]
                 ax.axvspan(b["t_lo_pct"], b["t_hi_pct"], color="0.5", alpha=0.10, zorder=0)
+                ax.text((b["t_lo_pct"] + b["t_hi_pct"]) / 2, 0.995, zname, transform=btf,
+                        ha="center", va="top", fontsize=7, color="0.2", zorder=4,
+                        bbox=dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=0.6))
         im = ax.imshow(mats[c], aspect="auto", origin="upper", cmap="RdBu_r",
                        vmin=vlim[0], vmax=vlim[1], extent=[0, 100, len(regions), 0],
                        interpolation="nearest", zorder=1)
         ax.axvline(STIM_FRAC * 100, color="k", lw=1.0, ls="--", zorder=2)
+        # per-region peak-latency marker -> makes the top->bottom cascade explicit
+        m = mats[c]
+        for i in range(len(regions)):
+            row = m[i]
+            if not row.size or np.all(np.isnan(row)):
+                continue
+            j = int(np.nanargmax(np.abs(row)))
+            ax.plot((j + 0.5) / row.size * 100.0, i + 0.5, marker="o", ms=3,
+                    mfc="k", mec="white", mew=0.5, zorder=3)
         ax.set_title(c)
         ax.set_xlabel("warped time (%)  (50 = response onset)")
     axes[0][0].set_yticks(np.arange(len(regions)) + 0.5)
-    axes[0][0].set_yticklabels([f"{r}  (n={n_total[r]})" for r in regions], fontsize=7)
+    axes[0][0].set_yticklabels([f"{r}  (n={n_total[r]})" for r in regions], fontsize=9)
+    axes[0][0].tick_params(axis="y", pad=4)
     fig.colorbar(im, ax=axes[0].tolist(), label=f"mean {cascade['feature']} power (dB)",
                  fraction=0.025, pad=0.02)
     fig.suptitle(f"Region × time cascade — {cascade['feature']} "
-                 f"(rows sorted by peak latency · grid={cascade['grid']})")
+                 f"(rows sorted by peak latency · dot = peak · grid={cascade['grid']})")
     out_png = Path(out_png)
     out_png.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+    fig.savefig(out_png, dpi=dpi)          # constrained_layout handles spacing (no bbox_inches)
     plt.close(fig)
     return out_png
 
@@ -1683,7 +1699,7 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
     blocks = rp["block_order"]; nt = rp[grid]["n_time_per_block"]; stim_end = rp[grid]["stim_bins"][1]
     concat = np.asarray(concat); n_freq, n_time = concat.shape
     if ax is None:
-        _, ax = plt.subplots(figsize=(14, 5))
+        _, ax = plt.subplots(figsize=(13, 4.6))
     a = ERSP_VLIM
     ax.imshow(concat, aspect="auto", origin="lower", cmap=ERSP_CMAP, vmin=-a, vmax=a,
               extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
@@ -1695,21 +1711,36 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
         ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
                      fill=True, facecolor=c, alpha=(0.16 if active else 0.12),
                      edgecolor=c, lw=2.0, ls=("-" if active else ":")))
+    # block labels sit a FIXED 6-pt gap above the axes (offset points = dpi-independent)
+    # so they never collide with the data, the title, or each other.
     for i, blk in enumerate(blocks):
         off = i * nt
         if i > 0:
             ax.axvline(off + 0.5, color="k", lw=1.6)
         ax.axvline(off + stim_end + 0.5, color="0.3", ls="--", lw=1.0)
-        ax.text(off + nt / 2, n_freq + 0.5, blk, ha="center", va="bottom", fontsize=11, fontweight="bold")
+        ax.annotate(blk, xy=(off + nt / 2, 1.0), xycoords=("data", "axes fraction"),
+                    xytext=(0, 6), textcoords="offset points", ha="center", va="bottom",
+                    fontsize=11, fontweight="bold", annotation_clip=False)
+    # name the response-onset line once (first block), tight to the line just inside the top
+    ax.annotate("resp", xy=(stim_end + 0.5, 1.0), xycoords=("data", "axes fraction"),
+                xytext=(2, -2), textcoords="offset points", ha="left", va="top",
+                fontsize=8, color="0.3", annotation_clip=False)
     ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
     _set_pct_xaxis(ax, nt, len(blocks)); _set_hz_yaxis(ax, n_freq)
+    ax.tick_params(labelsize=11)
+    ax.xaxis.label.set_size(11); ax.yaxis.label.set_size(11)
+    _SIGN_LABEL = {"pos": "activation", "neg": "suppression", "zero": "silent", "nonpos": "not active (≤0)"}
     signs_used = [s for s in ("pos", "neg", "zero", "nonpos") if any(b.get("sign") == s for b in role["boxes"])]
-    ax.legend(handles=[Patch(facecolor=_SIGN3.get(s, "#333"), edgecolor=_SIGN3.get(s, "#333"), alpha=0.5, label=s)
-                       for s in signs_used], loc="upper right", fontsize=8, framealpha=0.9)
-    ax.set_title(f"{label}   role '{role['role']}' template  (pos=red · neg=blue · zero/nonpos=outline)")
+    ax.legend(handles=[Patch(facecolor=_SIGN3.get(s, "#333"), edgecolor=_SIGN3.get(s, "#333"), alpha=0.5,
+                             label=_SIGN_LABEL.get(s, s)) for s in signs_used],
+              loc="upper left", bbox_to_anchor=(1.01, 1), fontsize=9, framealpha=0.9)
+    ax.set_title(f"{label} — role '{role['role']}'", fontsize=13, pad=26)
     if out_png is not None:
         out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
-        ax.get_figure().savefig(out_png, dpi=dpi, bbox_inches="tight")
+        fig = ax.get_figure()
+        fig.savefig(out_png, dpi=dpi, bbox_inches="tight")                       # 150-dpi (slides)
+        out300 = out_png.with_name(out_png.stem + "_300dpi" + out_png.suffix)
+        fig.savefig(out300, dpi=300, bbox_inches="tight")                        # 300-dpi (print)
     return ax
 
 
@@ -1828,12 +1859,32 @@ def _box_slices(box: dict, grid: str) -> Tuple[slice, slice]:
     return slice(f0 - 1, f1), slice(bi * nt + (t0 - 1), bi * nt + t1)
 
 
-def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
+def _box_gaussian_weights(nf: int, nt: int) -> np.ndarray:
+    """Normalized 2-D gaussian over an (nf x nt) box: centred on the box, sigma =
+    half-extent / GAUSS_SUPPORT_SIGMA on each axis (so +/-GAUSS_SUPPORT_SIGMA sigma
+    spans the box). Centre cells count fully, edges taper -> a soft window that
+    tolerates latency/frequency jitter instead of the boxcar's hard edge."""
+    fr = np.arange(nf); tc = np.arange(nt)
+    cf, ct = (nf - 1) / 2.0, (nt - 1) / 2.0
+    sf = max((nf / 2.0) / GAUSS_SUPPORT_SIGMA, 1e-6)
+    st = max((nt / 2.0) / GAUSS_SUPPORT_SIGMA, 1e-6)
+    gf = np.exp(-0.5 * ((fr - cf) / sf) ** 2)
+    gt = np.exp(-0.5 * ((tc - ct) / st) ** 2)
+    w = np.outer(gf, gt)
+    return w / (w.sum() + 1e-12)
+
+
+def box_expresses(disc_concat: np.ndarray, box: dict, grid: str, *, shape: str = "box") -> bool:
     """Proportion gate on the score-gated -1/+1 cells of one box. An "on" box
     (pos/neg/both) must have at least `ROLE_BOX_MIN_PROP` (default 0.5 → half) of its
     cells at the expected sign — a handful of cells is not enough. "Silent"
     constraints (zero/nonpos) stay strict on the clustering presence gate (MIN_PROP_*),
     so they still demand near-total silence. Per-box override via box['min_prop'].
+
+    shape='box'      -> every cell counts equally (boxcar; the default/reference).
+    shape='gaussian' -> cells are weighted by a 2-D gaussian centred on the box
+                        (time x freq), so the proportion is a soft, jitter-tolerant
+                        weighted fraction. Threshold semantics are unchanged.
       'pos'    -> >=half +1 cells (activation),
       'neg'    -> >=half -1 cells (suppression),
       'zero'   -> SILENT: NEITHER +1 nor -1 reaches the strict presence gate (the
@@ -1845,7 +1896,11 @@ def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
     sub = disc_concat[fs, ts]
     if sub.size == 0:
         return False
-    pp = float((sub == 1).mean()); pn = float((sub == -1).mean())
+    if shape == "gaussian":
+        w = _box_gaussian_weights(*sub.shape)            # sums to 1
+        pp = float((w * (sub == 1)).sum()); pn = float((w * (sub == -1)).sum())
+    else:
+        pp = float((sub == 1).mean()); pn = float((sub == -1).mean())
     s = box.get("sign", "both")
     on = float(box.get("min_prop", ROLE_BOX_MIN_PROP))   # "on" gate: >=half by default
     if s == "pos":
@@ -1859,14 +1914,15 @@ def box_expresses(disc_concat: np.ndarray, box: dict, grid: str) -> bool:
     return (pp >= on) or (pn >= on)
 
 
-def role_matches(disc_concat: np.ndarray, role: dict, grid: str) -> bool:
+def role_matches(disc_concat: np.ndarray, role: dict, grid: str, *, shape: str = "box") -> bool:
     """Box reducer. Default `match`='all' -> strict conjunction (every box must
     express its sign — the selective roles). `match`='any' -> disjunction: the role
     matches if AT LEAST ONE box expresses (umbrella/general tags like
     stimulus_responsive: 'HGA in any one stim window'), so it co-occurs with the
-    specific roles instead of excluding them."""
+    specific roles instead of excluding them. `shape` selects the box gate
+    ('box' boxcar or 'gaussian' soft window)."""
     reducer = any if role.get("match") == "any" else all
-    return reducer(box_expresses(disc_concat, b, grid) for b in role["boxes"])
+    return reducer(box_expresses(disc_concat, b, grid, shape=shape) for b in role["boxes"])
 
 
 def role_colors(grid: str = "full", role_params: Optional[dict] = None) -> Dict[str, str]:
@@ -1877,16 +1933,20 @@ def role_colors(grid: str = "full", role_params: Optional[dict] = None) -> Dict[
 
 
 def build_role_table(df_contacts: pd.DataFrame, X_disc: np.ndarray, *, grid: str = "full",
-                     role_params: Optional[dict] = None, cache: bool = True,
-                     write_run: bool = True, verbose: bool = True) -> pd.DataFrame:
+                     role_params: Optional[dict] = None, shape: str = "box",
+                     cache: bool = True, write_run: bool = True, verbose: bool = True) -> pd.DataFrame:
     """Assign each contact its matching role(s). `role` = the MOST SPECIFIC match
-    (most boxes); `roles_matched` lists all. One row per contact."""
+    (most boxes); `roles_matched` lists all. One row per contact. `shape` selects the
+    box gate: 'box' (boxcar, the default/reference) or 'gaussian' (2-D gaussian-
+    weighted window). Non-box shapes get a '_<shape>' suffix on cache + run paths so
+    they never clobber the boxcar artifacts (470 etc. read the un-suffixed table)."""
     rp = role_params or ROLE_PARAMS
     roles = rp[grid]["roles"]
+    tag = "" if shape == "box" else f"_{shape}"
     rows = []
     for k, row in enumerate(df_contacts.itertuples()):
         disc = X_disc[k]
-        matched = [r for r in roles if role_matches(disc, r, grid)]
+        matched = [r for r in roles if role_matches(disc, r, grid, shape=shape)]
         best = max(matched, key=lambda r: len(r["boxes"]))["role"] if matched else "none"
         rows.append({"patient_id": row.patient_id, "contact_norm": row.contact_norm,
                      "electrode": row.electrode, "grid": grid, "role": best,
@@ -1895,14 +1955,14 @@ def build_role_table(df_contacts: pd.DataFrame, X_disc: np.ndarray, *, grid: str
     df = pd.DataFrame(rows)
     if cache:
         DATASET_CACHE.mkdir(parents=True, exist_ok=True)
-        df.to_parquet(DATASET_CACHE / f"role_table_{grid}.parquet", index=False)
+        df.to_parquet(DATASET_CACHE / f"role_table_{grid}{tag}.parquet", index=False)
     if write_run:
-        run_dir = new_run_dir("roles", grid)
+        run_dir = new_run_dir(f"roles{tag}", grid)
         df.to_parquet(run_dir / "role_table.parquet", index=False)
         role_counts(df).to_csv(run_dir / "role_counts.csv", index=False)
         manifest = {
-            "schema_version": SCHEMA_VERSION, "stage": "roles", "grid": grid,
-            "run_id": run_dir.name,
+            "schema_version": SCHEMA_VERSION, "stage": f"roles{tag}", "grid": grid,
+            "shape": shape, "run_id": run_dir.name,
             "created_at": _dt.datetime.now().isoformat(timespec="seconds"),
             "host": platform.node(), "user": _safe_user(),
             "n_contacts": int(len(df)), "n_roles": len(roles),
