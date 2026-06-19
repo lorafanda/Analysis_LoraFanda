@@ -7,13 +7,37 @@
     {
       "role": "auditory",
       "color": "#1f77b4",
-      "n": 16,
-      "n_primary": 16
+      "n": 12,
+      "n_primary": 1
     },
     {
       "role": "visual",
       "color": "#2ca02c",
       "n": 0,
+      "n_primary": 0
+    },
+    {
+      "role": "lexical_semantic",
+      "color": "#9467bd",
+      "n": 5,
+      "n_primary": 0
+    },
+    {
+      "role": "heteromodal_convergence",
+      "color": "#8c564b",
+      "n": 5,
+      "n_primary": 0
+    },
+    {
+      "role": "maintenance",
+      "color": "#7f7f7f",
+      "n": 4,
+      "n_primary": 0
+    },
+    {
+      "role": "phonological_encoding",
+      "color": "#e377c2",
+      "n": 53,
       "n_primary": 0
     },
     {
@@ -23,64 +47,58 @@
       "n_primary": 18
     },
     {
-      "role": "lexical_semantic",
-      "color": "#9467bd",
-      "n": 5,
-      "n_primary": 5
-    },
-    {
-      "role": "phonological_encoding",
-      "color": "#e377c2",
-      "n": 53,
-      "n_primary": 48
-    },
-    {
-      "role": "alpha_beta_suppression",
-      "color": "#bcbd22",
-      "n": 49,
-      "n_primary": 44
-    },
-    {
-      "role": "auditory_suppression",
+      "role": "auditory_feedback",
       "color": "#17becf",
-      "n": 12,
-      "n_primary": 11
+      "n": 0,
+      "n_primary": 0
     },
     {
-      "role": "network_negative_1",
-      "color": "#2b8cbe",
-      "n": 1,
-      "n_primary": 1
-    },
-    {
-      "role": "network_negative_2",
+      "role": "deactivation",
       "color": "#045a8d",
       "n": 2,
       "n_primary": 2
     },
     {
-      "role": "low_f_negative_network",
+      "role": "tag_hga_activation",
+      "color": "#aec7e8",
+      "n": 543,
+      "n_primary": 526
+    },
+    {
+      "role": "tag_beta_erd",
+      "color": "#bcbd22",
+      "n": 250,
+      "n_primary": 195
+    },
+    {
+      "role": "tag_low_f_erd",
       "color": "#74a9cf",
-      "n": 29,
-      "n_primary": 17
+      "n": 254,
+      "n_primary": 104
+    },
+    {
+      "role": "tag_theta_tracking",
+      "color": "#fdae6b",
+      "n": 623,
+      "n_primary": 449
     },
     {
       "role": "stimulus_responsive",
-      "color": "#aec7e8",
+      "color": "#c7c7c7",
       "n": 175,
-      "n_primary": 134
+      "n_primary": 0
     },
     {
       "role": "response_active",
       "color": "#ffbb78",
       "n": 458,
-      "n_primary": 307
+      "n_primary": 0
     },
     {
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 2041
+      "n_primary": 1349
     }
   ]
 }

@@ -779,6 +779,8 @@ coords = P.load_coords()
 # so pool.html can show the selected pool's ERSPs (samples strip).
 web = P.export_pool_web(df_role, coords, P.OUTPUTS_ROOT / 'pool_web', grid=GRID, df_meta=df_meta)
 print('POOL web data ->', web)
+# per-role info cards (description + box/gaussian template on a representative ERSP) for the web info panel
+P.export_role_info(INPUT_DIR, df_role, P.OUTPUTS_ROOT / 'pool_web', grid=GRID)
 """),
 ]
 
@@ -873,6 +875,8 @@ cell("code", r"""
 coords = P.load_coords()
 web = P.export_pool_web(df_role, coords, P.OUTPUTS_ROOT / 'pool_web_gaussian', grid=GRID, df_meta=df_meta)
 print('POOL web (gaussian) data ->', web)
+# per-role info cards for the web info panel (box+gaussian on a representative ERSP)
+P.export_role_info(INPUT_DIR, df_role, P.OUTPUTS_ROOT / 'pool_web_gaussian', grid=GRID)
 """),
 ]
 

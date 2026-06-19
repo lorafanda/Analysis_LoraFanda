@@ -1689,12 +1689,14 @@ _SIGN3 = {"pos": "#cc0033", "neg": "#1f4fd8", "zero": "#777777", "nonpos": "#1f9
 
 def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
                         role_params: Optional[dict] = None, label: str = "",
-                        out_png=None, dpi: int = 150, ax=None):
+                        out_png=None, dpi: int = 150, ax=None, show_gaussian: bool = False):
     """Overlay ONE role's template on a contact's [audio|picture|reading] triptych:
     pos boxes red (filled), neg blue (filled), zero grey (dashed = 'must be silent').
-    Used to show a representative ERSP that fits each role."""
+    With show_gaussian=True, also draw each box's gaussian window as a dotted ±1σ
+    ellipse (same colour) so the box (hard edge) and gaussian (soft) gates show on the
+    SAME plot. Used to show a representative ERSP that fits each role."""
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Rectangle, Patch
+    from matplotlib.patches import Rectangle, Patch, Ellipse
     rp = role_params or ROLE_PARAMS
     blocks = rp["block_order"]; nt = rp[grid]["n_time_per_block"]; stim_end = rp[grid]["stim_bins"][1]
     concat = np.asarray(concat); n_freq, n_time = concat.shape
@@ -1711,6 +1713,11 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
         ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
                      fill=True, facecolor=c, alpha=(0.16 if active else 0.12),
                      edgecolor=c, lw=2.0, ls=("-" if active else ":")))
+        if show_gaussian:                    # dotted ±1σ ellipse = the gaussian window (same box)
+            wt = (t1 - t0 + 1); hf = (f1 - f0 + 1)
+            ax.add_patch(Ellipse((off + (t0 + t1) / 2.0, (f0 + f1) / 2.0),
+                         width=wt / GAUSS_SUPPORT_SIGMA, height=hf / GAUSS_SUPPORT_SIGMA,
+                         fill=False, edgecolor=c, lw=1.3, ls=(0, (1, 1.2))))
     # block labels sit a FIXED 6-pt gap above the axes (offset points = dpi-independent)
     # so they never collide with the data, the title, or each other.
     for i, blk in enumerate(blocks):
@@ -1775,6 +1782,44 @@ def plot_role_exemplars(input_dir, df_role: pd.DataFrame, *, grid: str = "full",
         if verbose:
             print(f"  {rn}: {len(paths)} exemplar(s)")
     return out
+
+
+def export_role_info(input_dir, df_role: pd.DataFrame, out_dir, *, grid: str = "full",
+                     role_params: Optional[dict] = None, verbose: bool = True) -> Path:
+    """Write the per-role 'info card' assets the POOL web page shows in its info panel:
+      - role_cards/<role>.png : a representative ASSIGNED contact's [a|p|r] ERSP with
+        the role's box (solid) + gaussian (dotted ±1σ ellipse) windows on the SAME plot.
+      - role_info.json : {role: {description (citations stripped), color, img, n_primary}}.
+    One image per role; img paths are relative to out_dir (the page prepends the pool dir)."""
+    import matplotlib.pyplot as plt
+    rp = role_params or ROLE_PARAMS
+    out_dir = Path(out_dir); cards = out_dir / "role_cards"; cards.mkdir(parents=True, exist_ok=True)
+    colors = role_colors(grid)
+    info: Dict[str, dict] = {}
+    for role in rp[grid]["roles"]:
+        rn = role["role"]
+        desc = str(role.get("description", "")).split("Citation:")[0].strip()
+        entry = {"description": desc, "color": colors.get(rn, "#888888"),
+                 "img": None, "n_primary": int((df_role["role"] == rn).sum())}
+        sub = df_role[df_role["role"] == rn].drop_duplicates(["patient_id", "contact_norm"])
+        for r in sub.itertuples():                         # first contact whose ERSP loads
+            name = f"{r.patient_id}_reading_WM_ERSP_{r.electrode}_TN.npy"
+            try:
+                concat = load_concat_ersp(input_dir, name)
+            except (FileNotFoundError, ValueError):
+                continue
+            fig, ax = plt.subplots(figsize=(11, 4))
+            plot_role_on_concat(concat, role, grid=grid, ax=ax, show_gaussian=True,
+                                label=f"{r.patient_id} {r.electrode}")
+            fig.savefig(cards / f"{rn}.png", dpi=130, bbox_inches="tight"); plt.close(fig)
+            entry["img"] = f"role_cards/{rn}.png"
+            break
+        info[rn] = entry
+    write_json(out_dir / "role_info.json", info)
+    if verbose:
+        n_img = sum(1 for v in info.values() if v["img"])
+        print(f"[lf_pool] role_info -> {out_dir / 'role_info.json'}  ({len(info)} roles, {n_img} cards)")
+    return out_dir / "role_info.json"
 
 
 # ============================================================
