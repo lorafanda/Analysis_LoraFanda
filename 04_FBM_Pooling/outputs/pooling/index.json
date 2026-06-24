@@ -239,6 +239,20 @@
       "created_at": "2026-06-24T13:16:58",
       "path": "roles_gaussian\\full\\runs\\20260624_131658",
       "n_contacts": 2856
+    },
+    {
+      "stage": "roles",
+      "run_id": "20260624_214948",
+      "created_at": "2026-06-24T21:49:48",
+      "path": "roles\\full\\runs\\20260624_214948",
+      "n_contacts": 2856
+    },
+    {
+      "stage": "roles_gaussian",
+      "run_id": "20260624_215006",
+      "created_at": "2026-06-24T21:50:06",
+      "path": "roles_gaussian\\full\\runs\\20260624_215006",
+      "n_contacts": 2856
     }
   ]
 }
