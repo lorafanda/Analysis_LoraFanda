@@ -34,5 +34,17 @@
     "img": "region_cards/semantic.png",
     "n": 793,
     "n_ersp": 281
+  },
+  "broca": {
+    "color": "#888888",
+    "img": "region_cards/broca.png",
+    "n": 119,
+    "n_ersp": 58
+  },
+  "recall": {
+    "color": "#888888",
+    "img": "region_cards/recall.png",
+    "n": 144,
+    "n_ersp": 37
   }
 }
