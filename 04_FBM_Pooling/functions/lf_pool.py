@@ -1823,6 +1823,144 @@ def export_role_info(input_dir, df_role: pd.DataFrame, out_dir, *, grid: str = "
 
 
 # ============================================================
+# 7c-bis — Neurosynth meta-analytic region assignment (electrode-anatomy based)
+# ============================================================
+# Sample each Neurosynth association-test z-map (MNI152 volume) at every electrode's
+# fsaverage (MNI305) location -> MULTI-LABEL region membership. Region = subfolder
+# name under 04_FBM_Pooling/neurosynth/. Anatomy-based, so independent of the
+# box/gaussian role gate (parallels the Yeo electrode colouring).
+_NEUROSYNTH_DIR = _HERE.parent.parent / "neurosynth"
+
+# FreeSurfer MNI305 (fsaverage) -> MNI152 linear transform (standard constant).
+_MNI305_TO_152 = np.array([
+    [ 0.9975, -0.0073,  0.0176, -0.0429],
+    [ 0.0146,  1.0009, -0.0024,  1.5496],
+    [-0.0130, -0.0093,  0.9971,  1.1840],
+    [ 0.0,     0.0,     0.0,     1.0   ]])
+
+NEUROSYNTH_COLORS = {
+    "auditory":      "#1f77b4",
+    "visual":        "#2ca02c",
+    "motor control": "#d62728",
+    "phonological":  "#9467bd",
+    "lexical":       "#ff7f0e",
+    "semantic":      "#8c564b",
+}
+
+
+def _load_neurosynth_maps(ns_dir=None):
+    """{region: (z_volume, inv_affine)} for each subfolder's *association-test_z_FDR*.nii.gz."""
+    import nibabel as nib
+    ns_dir = Path(ns_dir or _NEUROSYNTH_DIR)
+    maps = {}
+    for sub in sorted(p for p in ns_dir.iterdir() if p.is_dir()):
+        zfs = sorted(sub.glob("*association-test_z_FDR*.nii.gz"))
+        if not zfs:
+            continue
+        img = nib.load(str(zfs[0]))
+        maps[sub.name] = (np.asarray(img.dataobj, dtype=float), np.linalg.inv(img.affine))
+    return maps
+
+
+def assign_neurosynth_regions(coords: pd.DataFrame, *, ns_dir=None, z_thr: float = 0.0,
+                              verbose: bool = True) -> pd.DataFrame:
+    """Multi-label Neurosynth region membership per contact. Each contact's fsaverage
+    (MNI305) xyz -> MNI152 -> sample every region z-map; tag the region when z > z_thr.
+    Returns patient, contact, name, neurosynth (';'-joined), neurosynth_primary (max-z)."""
+    maps = _load_neurosynth_maps(ns_dir)
+    if verbose:
+        print(f"[lf_pool] neurosynth maps: {list(maps)}")
+    xyz = coords[["x", "y", "z"]].to_numpy(dtype=float)
+    mni152 = (np.c_[xyz, np.ones(len(xyz))] @ _MNI305_TO_152.T)[:, :3]
+    pat = coords["patient_id"].astype(str).to_numpy()
+    con = coords["contact_norm"].astype(str).to_numpy()
+    nm = coords["name"].astype(str).to_numpy()
+    rows = []
+    for i in range(len(coords)):
+        p = np.array([mni152[i, 0], mni152[i, 1], mni152[i, 2], 1.0])
+        hits = []
+        for name, (vol, inv_aff) in maps.items():
+            ijk = np.round((inv_aff @ p)[:3]).astype(int)
+            if (ijk >= 0).all() and (ijk < np.array(vol.shape[:3])).all():
+                z = float(vol[ijk[0], ijk[1], ijk[2]])
+                if np.isfinite(z) and z > z_thr:
+                    hits.append((z, name))
+        hits.sort(reverse=True)
+        rows.append({"patient": pat[i], "contact": con[i], "name": nm[i],
+                     "neurosynth": ";".join(n for _, n in hits),
+                     "neurosynth_primary": hits[0][1] if hits else ""})
+    df = pd.DataFrame(rows)
+    if verbose:
+        print(f"[lf_pool] neurosynth: {len(df)} contacts, "
+              f"{int((df['neurosynth_primary'] != '').sum())} in >=1 region (z>{z_thr})")
+    return df
+
+
+def _plot_concat_mean(concat: np.ndarray, label, out_png, *, grid="full",
+                      role_params=None, dpi: int = 130):
+    """Plot a mean concatenated [audio|picture|reading] ERSP (no boxes) for a region card."""
+    import matplotlib.pyplot as plt
+    rp = role_params or ROLE_PARAMS
+    blocks = rp["block_order"]; nt = rp[grid]["n_time_per_block"]; stim_end = rp[grid]["stim_bins"][1]
+    concat = np.asarray(concat); n_freq, n_time = concat.shape
+    fig, ax = plt.subplots(figsize=(11, 4))
+    a = ERSP_VLIM
+    ax.imshow(concat, aspect="auto", origin="lower", cmap=ERSP_CMAP, vmin=-a, vmax=a,
+              extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
+    for i, blk in enumerate(blocks):
+        off = i * nt
+        if i > 0:
+            ax.axvline(off + 0.5, color="k", lw=1.6)
+        ax.axvline(off + stim_end + 0.5, color="0.3", ls="--", lw=1.0)
+        ax.annotate(blk, xy=(off + nt / 2, 1.0), xycoords=("data", "axes fraction"),
+                    xytext=(0, 6), textcoords="offset points", ha="center", va="bottom",
+                    fontsize=11, fontweight="bold", annotation_clip=False)
+    ax.set_xlim(0.5, n_time + 0.5); ax.set_ylim(0.5, n_freq + 0.5)
+    _set_pct_xaxis(ax, nt, len(blocks)); _set_hz_yaxis(ax, n_freq)
+    ax.tick_params(labelsize=11); ax.set_title(label, fontsize=13, pad=26)
+    out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_png, dpi=dpi, bbox_inches="tight"); plt.close(fig)
+
+
+def export_neurosynth(input_dir, coords: pd.DataFrame, out_dir, *, grid: str = "full",
+                      ns_dir=None, z_thr: float = 0.0, verbose: bool = True) -> Path:
+    """Assign electrodes to Neurosynth regions (multi-label), average each region's
+    member ERSPs, and write what the POOL web page reads:
+      - neurosynth_labels.csv : patient, contact, neurosynth, neurosynth_primary
+      - neurosynth_info.json  : {region: {color, img, n}}
+      - region_cards/<region>.png : mean concatenated ERSP of that region's members."""
+    df = assign_neurosynth_regions(coords, ns_dir=ns_dir, z_thr=z_thr, verbose=verbose)
+    out_dir = Path(out_dir); cards = out_dir / "region_cards"; cards.mkdir(parents=True, exist_ok=True)
+    sets = df["neurosynth"].apply(lambda s: [x for x in str(s).split(";") if x])
+    regions = list(NEUROSYNTH_COLORS) + sorted({r for s in sets for r in s if r not in NEUROSYNTH_COLORS})
+    info = {}
+    for region in regions:
+        members = df[[region in s for s in sets]]
+        entry = {"color": NEUROSYNTH_COLORS.get(region, "#888888"), "img": None, "n": int(len(members))}
+        acc, k = None, 0
+        for r in members.itertuples():
+            try:
+                c = load_concat_ersp(input_dir, f"{r.patient}_reading_WM_ERSP_{r.name}_TN.npy")
+            except (FileNotFoundError, ValueError):
+                continue
+            acc = c.astype(float) if acc is None else acc + c.astype(float)
+            k += 1
+        if k:
+            fn = region.replace(" ", "_") + ".png"
+            _plot_concat_mean(acc / k, f"neurosynth · {region}  (mean of {k} contacts)",
+                              cards / fn, grid=grid)
+            entry["img"] = f"region_cards/{fn}"; entry["n_ersp"] = k
+        info[region] = entry
+    df[["patient", "contact", "neurosynth", "neurosynth_primary"]].to_csv(
+        out_dir / "neurosynth_labels.csv", index=False)
+    write_json(out_dir / "neurosynth_info.json", info)
+    if verbose:
+        print(f"[lf_pool] neurosynth -> {out_dir}  "
+              f"({sum(1 for v in info.values() if v['img'])} region cards)")
+    return out_dir
+
+
+# ============================================================
 # 7d — Concatenated [audio|picture|reading] functional-role matching
 # ============================================================
 # Condition-STRUCTURED extension: stitch the three conditions per contact, score-

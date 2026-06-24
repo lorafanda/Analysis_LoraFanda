@@ -1006,6 +1006,50 @@ print('done')
 ]
 
 
+# ============================================================
+# 480 — Neurosynth meta-analytic region assignment
+# ============================================================
+nb480 = [
+cell("markdown", r"""
+# 480 — Neurosynth meta-analytic regions
+
+Assigns every electrode to **Neurosynth** association-test regions (the `neurosynth/`
+folder: auditory · visual · motor control · phonological · semantic · lexical) by
+sampling each FDR z-map at the electrode's fsaverage location (MNI305 → MNI152).
+**Multi-label** — an electrode joins *every* region whose map is significant (z > `Z_THR`)
+at its location. For each region it averages the member electrodes' concatenated
+`[audio | picture | reading]` ERSP into a card. Exports to `outputs/pooling/neurosynth/`
+(`neurosynth_labels.csv` + `neurosynth_info.json` + `region_cards/`), which the POOL web
+page shows as a **'Neurosynth'** colour mode alongside Yeo.
+"""),
+cell("code", SETUP),
+cell("code", r"""
+# ---- knobs ----
+GRID  = 'full'
+Z_THR = 0.0            # 'inside' a region = its FDR z-map > this at the electrode (0 = any significant voxel)
+"""),
+cell("markdown", r"""
+## 1 — Assign electrodes to neurosynth regions, average, export
+"""),
+cell("code", r"""
+coords = P.load_coords()
+out = P.export_neurosynth(INPUT_DIR, coords, P.OUTPUTS_ROOT / 'neurosynth', grid=GRID, z_thr=Z_THR)
+print('neurosynth ->', out)
+"""),
+cell("markdown", r"""
+## 2 — Membership summary
+"""),
+cell("code", r"""
+import json, pandas as pd
+info = json.load(open(P.OUTPUTS_ROOT / 'neurosynth' / 'neurosynth_info.json'))
+display(pd.DataFrame([{'region': k, 'n_contacts': v['n'], 'n_ersp': v.get('n_ersp', 0)} for k, v in info.items()]))
+lab = pd.read_csv(P.OUTPUTS_ROOT / 'neurosynth' / 'neurosynth_labels.csv')
+print('contacts in >=1 region:', int((lab['neurosynth_primary'].fillna('') != '').sum()), '/', len(lab))
+lab.head()
+"""),
+]
+
+
 # 410–450 archived into archived/ (see git history); generator no longer emits them
 # so a rebuild doesn't resurrect them in the main folder. Cell defs kept above for history.
 # write_nb("410_zone_discovery.ipynb", nb410)
@@ -1016,5 +1060,6 @@ print('done')
 write_nb("460_role_matching.ipynb", nb460)
 write_nb("465_role_matching_gaussian.ipynb", nb465)
 write_nb("470_roi_on_ersp.ipynb", nb470)
+write_nb("480_neurosynth_regions.ipynb", nb480)
 write_nb("490_results.ipynb", nb490)
 print("all notebooks written.")
