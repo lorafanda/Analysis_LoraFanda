@@ -1923,12 +1923,22 @@ def _plot_concat_mean(concat: np.ndarray, label, out_png, *, grid="full",
 
 
 def export_neurosynth(input_dir, coords: pd.DataFrame, out_dir, *, grid: str = "full",
-                      ns_dir=None, z_thr: float = 0.0, verbose: bool = True) -> Path:
+                      ns_dir=None, z_thr: float = 0.0, pool_csv=None, verbose: bool = True) -> Path:
     """Assign electrodes to Neurosynth regions (multi-label), average each region's
     member ERSPs, and write what the POOL web page reads:
       - neurosynth_labels.csv : patient, contact, neurosynth, neurosynth_primary
-      - neurosynth_info.json  : {region: {color, img, n}}
-      - region_cards/<region>.png : mean concatenated ERSP of that region's members."""
+      - neurosynth_info.json  : {region: {color, img, n, n_members}}
+      - region_cards/<region>.png : mean concatenated ERSP of that region's members.
+    If `pool_csv` (a contacts_pool.csv) is given, restrict to those POOLED contacts so the
+    counts match the analysis (not all 5k recon contacts). `n` = contacts actually averaged
+    into the card (== what the card claims); `n_members` = total tagged to the region."""
+    if pool_csv is not None and Path(pool_csv).exists():
+        pool = pd.read_csv(pool_csv)
+        keep = set(zip(pool["patient"].astype(str), pool["contact"].astype(str)))
+        mask = [(str(p), str(c)) in keep for p, c in zip(coords["patient_id"], coords["contact_norm"])]
+        coords = coords[mask].reset_index(drop=True)
+        if verbose:
+            print(f"[lf_pool] neurosynth: restricted to {len(coords)} pooled contacts")
     df = assign_neurosynth_regions(coords, ns_dir=ns_dir, z_thr=z_thr, verbose=verbose)
     out_dir = Path(out_dir); cards = out_dir / "region_cards"; cards.mkdir(parents=True, exist_ok=True)
     sets = df["neurosynth"].apply(lambda s: [x for x in str(s).split(";") if x])
@@ -1936,7 +1946,8 @@ def export_neurosynth(input_dir, coords: pd.DataFrame, out_dir, *, grid: str = "
     info = {}
     for region in regions:
         members = df[[region in s for s in sets]]
-        entry = {"color": NEUROSYNTH_COLORS.get(region, "#888888"), "img": None, "n": int(len(members))}
+        entry = {"color": NEUROSYNTH_COLORS.get(region, "#888888"), "img": None,
+                 "n": 0, "n_members": int(len(members))}
         acc, k = None, 0
         for r in members.itertuples():
             try:
@@ -1945,11 +1956,12 @@ def export_neurosynth(input_dir, coords: pd.DataFrame, out_dir, *, grid: str = "
                 continue
             acc = c.astype(float) if acc is None else acc + c.astype(float)
             k += 1
+        entry["n"] = k                                    # contacts actually averaged (what the card claims)
         if k:
             fn = region.replace(" ", "_") + ".png"
             _plot_concat_mean(acc / k, f"neurosynth · {region}  (mean of {k} contacts)",
                               cards / fn, grid=grid)
-            entry["img"] = f"region_cards/{fn}"; entry["n_ersp"] = k
+            entry["img"] = f"region_cards/{fn}"
         info[region] = entry
     df[["patient", "contact", "neurosynth", "neurosynth_primary"]].to_csv(
         out_dir / "neurosynth_labels.csv", index=False)

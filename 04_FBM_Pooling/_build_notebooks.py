@@ -1033,7 +1033,9 @@ cell("markdown", r"""
 """),
 cell("code", r"""
 coords = P.load_coords()
-out = P.export_neurosynth(INPUT_DIR, coords, P.OUTPUTS_ROOT / 'neurosynth', grid=GRID, z_thr=Z_THR)
+# restrict to the POOLED contacts (contacts_pool.csv from 460) so region counts match the analysis
+out = P.export_neurosynth(INPUT_DIR, coords, P.OUTPUTS_ROOT / 'neurosynth', grid=GRID, z_thr=Z_THR,
+                          pool_csv=P.OUTPUTS_ROOT / 'pool_web' / 'contacts_pool.csv')
 print('neurosynth ->', out)
 """),
 cell("markdown", r"""

@@ -164,5 +164,8 @@ outputs/
 # Neurosynth input maps (downloaded .nii.gz from neurosynth.org) — heavy, regenerable, never push.
 # (The DERIVED region labels/cards under outputs/pooling/neurosynth/ stay tracked.)
 04_FBM_Pooling/neurosynth/
+
+# 390_results: heavy embedded outputs (8.6 MB+) — don't track. Strip outputs to version the code.
+03_FBM_Classifying/390_results.ipynb
 # Windows thumbnail cache junk
 Thumbs.db
