@@ -1,0 +1,341 @@
+{
+  "source_run": "04_FBM_Pooling/outputs/_dataset/pooling/_raw_ungated/X_3d.npy",
+  "coords_csv": "02_FBM_Clustering/outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv",
+  "conditions": [
+    "all",
+    "picture",
+    "audio",
+    "reading"
+  ],
+  "bands_hz": [
+    [
+      0,
+      5
+    ],
+    [
+      5,
+      10
+    ],
+    [
+      10,
+      16
+    ],
+    [
+      16,
+      40
+    ],
+    [
+      40,
+      70
+    ],
+    [
+      70,
+      130
+    ],
+    [
+      130,
+      250
+    ],
+    [
+      250,
+      500
+    ]
+  ],
+  "bands_bins": [
+    [
+      0,
+      1
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      10
+    ],
+    [
+      10,
+      18
+    ],
+    [
+      18,
+      33
+    ],
+    [
+      33,
+      64
+    ],
+    [
+      64,
+      128
+    ]
+  ],
+  "n_cond": 4,
+  "n_band": 8,
+  "n_contact": 2901,
+  "n_time": 300,
+  "mode": "TN",
+  "proportions": [
+    0.0,
+    0.5,
+    0.5
+  ],
+  "phases": [
+    {
+      "name": "Stimulus",
+      "start": 0,
+      "end": 150
+    },
+    {
+      "name": "Response",
+      "start": 150,
+      "end": 300
+    }
+  ],
+  "phase_boundary": 150,
+  "fmax_hz": 500.0,
+  "k_nearest": 4,
+  "sigma_mm": 4.0,
+  "agg_contact": "mean",
+  "vmin": -6.0,
+  "vmax": 6.0,
+  "cmap": "bwr",
+  "density_norm_q": 0.98,
+  "alpha_min": 0.1,
+  "alpha_max": 1.0,
+  "alpha_gamma": 0.7,
+  "base_brain_gray_rgb": [
+    0.55,
+    0.55,
+    0.55
+  ],
+  "hemis": {
+    "lh": {
+      "nvert": 163842,
+      "mesh": "../meshes/fsaverage_lh.gii",
+      "mesh_inflated": "../meshes/fsaverage_lh.inflated.gii"
+    },
+    "rh": {
+      "nvert": 163842,
+      "mesh": "../meshes/fsaverage_rh.gii",
+      "mesh_inflated": "../meshes/fsaverage_rh.inflated.gii"
+    }
+  },
+  "files": {
+    "cube": {
+      "name": "cube_f16.bin",
+      "dtype": "float16",
+      "shape": [
+        4,
+        8,
+        2901,
+        300
+      ]
+    },
+    "proj_lh_idx": {
+      "name": "proj_lh_idx_u16.bin",
+      "dtype": "uint16",
+      "shape": [
+        163842,
+        4
+      ]
+    },
+    "proj_lh_w": {
+      "name": "proj_lh_w_f32.bin",
+      "dtype": "float32",
+      "shape": [
+        163842,
+        4
+      ]
+    },
+    "proj_rh_idx": {
+      "name": "proj_rh_idx_u16.bin",
+      "dtype": "uint16",
+      "shape": [
+        163842,
+        4
+      ]
+    },
+    "proj_rh_w": {
+      "name": "proj_rh_w_f32.bin",
+      "dtype": "float32",
+      "shape": [
+        163842,
+        4
+      ]
+    }
+  },
+  "regions": [
+    {
+      "id": 1,
+      "name": "Heschl's gyrus",
+      "system": "Auditory (HG/STG)",
+      "color": [
+        243,
+        104,
+        146
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Planum temporale",
+      "system": "Auditory (HG/STG)",
+      "color": [
+        231,
+        39,
+        97
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Lateral STG",
+      "system": "Auditory (HG/STG)",
+      "color": [
+        170,
+        24,
+        68
+      ]
+    },
+    {
+      "id": 4,
+      "name": "V1 (calcarine)",
+      "system": "Visual / VWFA",
+      "color": [
+        198,
+        104,
+        243
+      ]
+    },
+    {
+      "id": 5,
+      "name": "VWFA / fusiform",
+      "system": "Visual / VWFA",
+      "color": [
+        179,
+        60,
+        235
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Lingual",
+      "system": "Visual / VWFA",
+      "color": [
+        157,
+        27,
+        218
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Lateral occipital",
+      "system": "Visual / VWFA",
+      "color": [
+        123,
+        24,
+        170
+      ]
+    },
+    {
+      "id": 8,
+      "name": "MTG",
+      "system": "Temporal lexical-semantic",
+      "color": [
+        104,
+        243,
+        209
+      ]
+    },
+    {
+      "id": 9,
+      "name": "ITG",
+      "system": "Temporal lexical-semantic",
+      "color": [
+        39,
+        231,
+        185
+      ]
+    },
+    {
+      "id": 10,
+      "name": "ATL / temporal pole",
+      "system": "Temporal lexical-semantic",
+      "color": [
+        24,
+        170,
+        135
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Pars opercularis",
+      "system": "Frontal (IFG / Broca)",
+      "color": [
+        104,
+        160,
+        243
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Pars triangularis",
+      "system": "Frontal (IFG / Broca)",
+      "color": [
+        39,
+        116,
+        231
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Pars orbitalis",
+      "system": "Frontal (IFG / Broca)",
+      "color": [
+        24,
+        82,
+        170
+      ]
+    },
+    {
+      "id": 14,
+      "name": "M1 (precentral)",
+      "system": "Speech-motor (sensorimotor)",
+      "color": [
+        243,
+        171,
+        104
+      ]
+    },
+    {
+      "id": 15,
+      "name": "S1 (postcentral)",
+      "system": "Speech-motor (sensorimotor)",
+      "color": [
+        231,
+        131,
+        39
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Central sulcus",
+      "system": "Speech-motor (sensorimotor)",
+      "color": [
+        170,
+        94,
+        24
+      ]
+    }
+  ],
+  "region_files": {
+    "fill_lh": "region_fill_lh_u8.bin",
+    "fill_rh": "region_fill_rh_u8.bin",
+    "edge_lh": "region_edge_lh_u8.bin",
+    "edge_rh": "region_edge_rh_u8.bin"
+  }
+}
