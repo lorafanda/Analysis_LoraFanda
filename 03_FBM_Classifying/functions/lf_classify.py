@@ -169,32 +169,45 @@ STIM_FRAC = 0.5     # ERSPs are warped 50% stimulus (sensing) / 50% response.
 #                                  discarded; ONLY significant, high-score
 #                                  segments are painted — low-score blobs stay 0)
 # Each at matched time grids {300, 30}. HG line is the continuous-only baseline.
+# VARIANT_SPEC = {
+#     "full_300":    {"bands": "full", "n_time": 300, "disc": False, "rownorm": False},
+#     "hg_300":      {"bands": "hg",   "n_time": 300, "disc": False, "rownorm": False},
+#     "full_30":     {"bands": "full", "n_time": 30,  "disc": False, "rownorm": False},
+#     "hg_30":       {"bands": "hg",   "n_time": 30,  "disc": False, "rownorm": False},
+#     "m101_300":    {"bands": "full", "n_time": 300, "disc": True,  "rownorm": False},
+#     "m101_30":     {"bands": "full", "n_time": 30,  "disc": True,  "rownorm": False},
+#     "full_300_rn": {"bands": "full", "n_time": 300, "disc": False, "rownorm": True},
+#     "full_30_rn":  {"bands": "full", "n_time": 30,  "disc": False, "rownorm": True},
+# }
+
 VARIANT_SPEC = {
     "full_300":    {"bands": "full", "n_time": 300, "disc": False, "rownorm": False},
     "hg_300":      {"bands": "hg",   "n_time": 300, "disc": False, "rownorm": False},
+    "full_300_rn": {"bands": "full", "n_time": 300, "disc": False, "rownorm": True},
+    "hg_300_rn":   {"bands": "hg",   "n_time": 300, "disc": False, "rownorm": True},
     "full_30":     {"bands": "full", "n_time": 30,  "disc": False, "rownorm": False},
     "hg_30":       {"bands": "hg",   "n_time": 30,  "disc": False, "rownorm": False},
-    "m101_300":    {"bands": "full", "n_time": 300, "disc": True,  "rownorm": False},
-    "m101_30":     {"bands": "full", "n_time": 30,  "disc": True,  "rownorm": False},
-    "full_300_rn": {"bands": "full", "n_time": 300, "disc": False, "rownorm": True},
     "full_30_rn":  {"bands": "full", "n_time": 30,  "disc": False, "rownorm": True},
+    "hg_30_rn":    {"bands": "hg",   "n_time": 30,  "disc": False, "rownorm": True},
 }
+
 VARIANTS = tuple(VARIANT_SPEC.keys())
 
 VARIANT_LABELS = {
-    "full_300":    "Full spectrum (15 bands x 300 time)",
-    "hg_300":      "High-gamma line (70-150 Hz, 300 time)",
-    "full_30":     "Full spectrum (15 bands x 30 time)",
-    "hg_30":       "High-gamma line (70-150 Hz, 30 time)",
-    "m101_300":    "Discretized -1/0/+1 (score-gated, 15 x 300)",
-    "m101_30":     "Discretized -1/0/+1 (score-gated, 15 x 30)",
-    "full_300_rn": "Full spectrum, row-normalised (15 x 300)",
-    "full_30_rn":  "Full spectrum, row-normalised (15 x 30)",
+    "full_300":    "Full spectrum 300 time",
+    "hg_300":      "High-gamma line 300 time",
+    "full_300_rn": "Full spectrum, row-normalised 300 time",
+    "hg_300_rn":   "High-gamma line, row-normalised 300 time",
+    "full_30":     "Full spectrum 30 time",
+    "hg_30":       "High-gamma line 30 time",
+    "full_30_rn":  "Full spectrum, row-normalised 30 time",
+    "hg_30_rn":    "High-gamma line, row-normalised 30 time",
 }
+
 # Amplitude triad per time grid — continuous vs row-normed vs discretized.
 AMPLITUDE_TRIADS = (
-    ("full_300", "full_300_rn", "m101_300"),
-    ("full_30",  "full_30_rn",  "m101_30"),
+    ("full_300", "full_300_rn", "hg_300", "hg_300_rn"),
+    ("full_30",  "full_30_rn",  "hg_30",  "hg_30_rn"),
 )
 # Full-vs-HG matched pairs (time held fixed) — the frequency-content contrast.
 MATCHED_PAIRS = (("full_300", "hg_300"), ("full_30", "hg_30"))
