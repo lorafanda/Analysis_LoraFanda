@@ -5,9 +5,15 @@
     "img": null,
     "n_primary": 0
   },
-  "visual": {
-    "description": "Visual input cortex: sustained HGA + beta-ERD across the on-screen image / read sentence; silent to audio.",
+  "visual_picture": {
+    "description": "Visual cortex (picture): HGA across the image-viewing window; silent to the audio prompt.",
     "color": "#2ca02c",
+    "img": "role_cards/visual_picture.png",
+    "n_primary": 1
+  },
+  "visual_reading": {
+    "description": "Visual cortex (reading): HGA across the sentence-reading window; silent to the audio prompt.",
+    "color": "#1f9e6e",
     "img": null,
     "n_primary": 0
   },
@@ -63,19 +69,25 @@
     "description": "Beta (13-30) ERD during any stimulus \u2014 engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
     "color": "#bcbd22",
     "img": "role_cards/tag_beta_erd.png",
-    "n_primary": 212
+    "n_primary": 209
   },
   "tag_low_f_erd": {
     "description": "Delta/theta (1-8) ERD mid-trial \u2014 low-frequency network marker.",
     "color": "#74a9cf",
     "img": "role_cards/tag_low_f_erd.png",
-    "n_primary": 141
+    "n_primary": 139
   },
   "tag_theta_tracking": {
     "description": "Theta (4-8) increase during the spoken prompt \u2014 syllabic-rate auditory tracking.",
     "color": "#fdae6b",
     "img": "role_cards/tag_theta_tracking.png",
     "n_primary": 446
+  },
+  "ultra_hfa": {
+    "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG \u2014 interpret with care.",
+    "color": "#ff1493",
+    "img": "role_cards/ultra_hfa.png",
+    "n_primary": 23
   },
   "stimulus_responsive": {
     "description": "HGA in the stimulus window of >=1 condition.",
