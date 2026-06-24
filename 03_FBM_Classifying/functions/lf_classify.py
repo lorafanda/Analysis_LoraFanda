@@ -1104,6 +1104,68 @@ def plot_class_ersp_profiles(X_full, y, classes, out_png, *, n_time, n_cond,
     plt.close(fig)
 
 
+def plot_coef_ersp_maps(imp, classes, out_png, *, n_time, n_cond,
+                        cond_names=None, title="", stim_frac=STIM_FRAC):
+    """Per-class LR coefficients laid out as the FULL band x time ERSP map
+    (n_cond condition blocks concatenated along time) — same layout as the
+    response profile, but showing WHAT THE MODEL USES rather than what the class
+    looks like. Red = this time-frequency cell pushes an electrode TOWARD the
+    class, blue = away. Dashed grey = stim->response boundary inside each block.
+
+    LR only (RF has no per-class coefficients); 'full'/'m101' band-grid variants
+    only (skips the single-line HG variants).
+    """
+    import matplotlib.pyplot as plt
+    pf = imp.get("per_feature") if isinstance(imp, dict) else None
+    if pf is None:
+        return
+    coef_cols = {c[len("coef["):-1]: c for c in pf.columns if c.startswith("coef[")}
+    if not coef_cols:
+        return                                   # not an LR run
+    nb = len(FREQ_BANDS)
+    if pf.shape[0] != n_cond * nb * n_time:
+        return                                   # not the band x time layout
+    band_lbls = [f"{lo:.0f}-{hi:.0f}" for lo, hi in FREQ_BANDS]
+    use = [c for c in classes if str(c) in coef_cols] or list(coef_cols)
+    imgs, vmax = [], 0.0
+    for c in use:
+        v = pf[coef_cols[str(c)]].to_numpy(dtype=float)
+        blocks = v.reshape(n_cond, nb, n_time)          # [cond][band][time]
+        wide = np.concatenate([blocks[ci] for ci in range(n_cond)], axis=1)
+        imgs.append(wide); vmax = max(vmax, float(np.nanmax(np.abs(wide))))
+    vmax = vmax or 1.0
+    n = len(use); sep = n_cond * n_time
+    fig, axes = plt.subplots(n, 1, squeeze=False,
+                             figsize=(max(5.0, 1.9 * n_cond + 1.6),
+                                      max(2.0, 0.85 * n + 1.0)))
+    im = None
+    for k, (c, wide) in enumerate(zip(use, imgs)):
+        ax = axes[k][0]
+        im = ax.imshow(wide, aspect="auto", origin="lower", cmap="RdBu_r",
+                       vmin=-vmax, vmax=vmax, extent=[0, sep, 0, nb])
+        for ci in range(n_cond):
+            x0 = ci * n_time
+            ax.axvline(x0 + stim_frac * n_time, color="0.35", lw=1.0, ls="--")
+            if ci > 0:
+                ax.axvline(x0, color="black", lw=1.4)
+        ax.set_title(str(c), fontsize=7, loc="left", pad=1)
+        ax.set_yticks(np.arange(nb) + 0.5)
+        ax.set_yticklabels(band_lbls, fontsize=3.4)
+        if k < n - 1:
+            ax.set_xticks([])
+        else:
+            ax.set_xticks([(ci + 0.5) * n_time for ci in range(n_cond)])
+            ax.set_xticklabels(list(cond_names) if cond_names else [""] * n_cond,
+                               fontsize=8)
+    fig.suptitle(title + "  — LR coefficients as band×time   (red → toward class · "
+                 "dashed grey = stim→response)", fontsize=8)
+    if im is not None:
+        fig.colorbar(im, ax=axes.ravel().tolist(), fraction=0.015, pad=0.02,
+                     label="signed LR coefficient")
+    fig.savefig(out_png, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 # ============================================================
 # 10 — Orchestrator: run_experiment + save + index
 # ============================================================
@@ -1214,6 +1276,19 @@ def run_experiment(task, variant, classifier, X, y, groups, cols, meta, *,
                 plot_class_heatmap(cmat, run_dir / "coef_heatmap.png",
                                    title=title + " — LR coefficients (class x band)",
                                    cbar_label="mean signed coefficient")
+            # Full band x time coefficient maps (which time/freq cells lead each class)
+            _spec = VARIANT_SPEC.get(variant, {})
+            if _spec.get("bands") == "full":
+                _vt = int(_spec["n_time"]); _cell = len(FREQ_BANDS) * _vt
+                _nfeat = imp["per_feature"].shape[0]
+                if _cell and _nfeat % _cell == 0:
+                    _ncond = _nfeat // _cell
+                    plot_coef_ersp_maps(
+                        imp, classes, run_dir / "coef_ersp_maps.png",
+                        n_time=_vt, n_cond=_ncond,
+                        cond_names=(profile or {}).get("cond_names")
+                                   or (list(CONDITIONS) if _ncond > 1 else None),
+                        title=title)
     except Exception as e:                                # never kill a run on a plot
         print("  [warn] heatmap step skipped:", repr(e))
 

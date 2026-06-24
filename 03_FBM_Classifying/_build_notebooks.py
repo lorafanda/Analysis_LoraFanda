@@ -448,8 +448,8 @@ def show_run(task, variant, classifier):
          + (f" · **permutation p = {p:.4f}**" if p is not None else "")
          + f" · n={o['n_samples']} over {o['n_patients']} patients")
     for stem in ('confusion_matrix', 'per_class_strength', 'class_ersp_profile',
-                 'class_feature_heatmap', 'coef_heatmap', 'permutation_null',
-                 'feature_importance'):
+                 'coef_ersp_maps', 'class_feature_heatmap', 'coef_heatmap',
+                 'permutation_null', 'feature_importance'):
         if stem in r['figures']:
             display(Image(filename=str(r['figures'][stem])))
     cols = [c for c in ['class', 'support', 'recall', 'recall_ci_lo', 'recall_ci_hi',
