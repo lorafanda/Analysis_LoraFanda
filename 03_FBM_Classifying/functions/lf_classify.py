@@ -1217,6 +1217,11 @@ def run_experiment(task, variant, classifier, X, y, groups, cols, meta, *,
                             n_perm=n_perm, outer_splits=outer_splits,
                             random_state=random_state, verbose=verbose)
     overall["permutation_p"] = perm.get("overall_p")
+    # Standardized distance from the permutation null (useful once the empirical
+    # p floors at 1/(n_perm+1)): z = (observed - null_mean) / null_std.
+    _nb = np.asarray(perm.get("null_bal") or [], dtype=float)
+    overall["perm_z"] = (float((overall["balanced_accuracy"] - _nb.mean()) / _nb.std())
+                         if _nb.size and _nb.std() > 0 else None)
     per_class["perm_p"] = perm.get("per_class_p")
     per_class["perm_p_fdr"] = perm.get("per_class_p_fdr")
 
