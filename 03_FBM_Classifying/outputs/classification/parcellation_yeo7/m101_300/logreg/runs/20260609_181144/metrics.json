@@ -11,7 +11,8 @@
     "n_samples": 958,
     "n_classes": 7,
     "n_patients": 24,
-    "permutation_p": 0.004975124378109453
+    "permutation_p": 0.004975124378109453,
+    "perm_z": 5.600380543234217
   },
   "per_class": [
     {
