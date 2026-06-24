@@ -1,0 +1,164 @@
+{
+  "regions": [
+    {
+      "id": 1,
+      "name": "Heschl's gyrus",
+      "system": "Auditory (HG/STG)",
+      "color": [
+        243,
+        104,
+        146
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Planum temporale",
+      "system": "Auditory (HG/STG)",
+      "color": [
+        231,
+        39,
+        97
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Lateral STG",
+      "system": "Auditory (HG/STG)",
+      "color": [
+        170,
+        24,
+        68
+      ]
+    },
+    {
+      "id": 4,
+      "name": "V1 (calcarine)",
+      "system": "Visual / VWFA",
+      "color": [
+        198,
+        104,
+        243
+      ]
+    },
+    {
+      "id": 5,
+      "name": "VWFA / fusiform",
+      "system": "Visual / VWFA",
+      "color": [
+        179,
+        60,
+        235
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Lingual",
+      "system": "Visual / VWFA",
+      "color": [
+        157,
+        27,
+        218
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Lateral occipital",
+      "system": "Visual / VWFA",
+      "color": [
+        123,
+        24,
+        170
+      ]
+    },
+    {
+      "id": 8,
+      "name": "MTG",
+      "system": "Temporal lexical-semantic",
+      "color": [
+        104,
+        243,
+        209
+      ]
+    },
+    {
+      "id": 9,
+      "name": "ITG",
+      "system": "Temporal lexical-semantic",
+      "color": [
+        39,
+        231,
+        185
+      ]
+    },
+    {
+      "id": 10,
+      "name": "ATL / temporal pole",
+      "system": "Temporal lexical-semantic",
+      "color": [
+        24,
+        170,
+        135
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Pars opercularis",
+      "system": "Frontal (IFG / Broca)",
+      "color": [
+        104,
+        160,
+        243
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Pars triangularis",
+      "system": "Frontal (IFG / Broca)",
+      "color": [
+        39,
+        116,
+        231
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Pars orbitalis",
+      "system": "Frontal (IFG / Broca)",
+      "color": [
+        24,
+        82,
+        170
+      ]
+    },
+    {
+      "id": 14,
+      "name": "M1 (precentral)",
+      "system": "Speech-motor (sensorimotor)",
+      "color": [
+        243,
+        171,
+        104
+      ]
+    },
+    {
+      "id": 15,
+      "name": "S1 (postcentral)",
+      "system": "Speech-motor (sensorimotor)",
+      "color": [
+        231,
+        131,
+        39
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Central sulcus",
+      "system": "Speech-motor (sensorimotor)",
+      "color": [
+        170,
+        94,
+        24
+      ]
+    }
+  ]
+}

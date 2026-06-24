@@ -36,6 +36,7 @@ HGA_HZ   = (70, 150)   # high-gamma activation / suppression (deactivation = HGA
 BETA_HZ  = (13, 30)    # beta ERD (motor planning/execution; auditory listening)
 THETA_HZ = (4,  8)     # theta — syllabic-rate auditory tracking (layer-2 tag only)
 LOW_F_HZ = (1,  8)     # delta/theta low-frequency ERD network (layer-2 tag)
+ULTRA_HFA_HZ = (200, 500)   # ultra high-frequency activity (>200 Hz; HFOs / very-high-gamma)
 
 VOICE_ONSET_PCT = 67   # ASSUMPTION (single-word, RT/T_response ≈ 0.35).
                        #   Replace with subset-measured median cue→voice / cue→click ratio.
@@ -48,6 +49,7 @@ def _roles(stim, resp, motor_win, nt):
     fb  = list(BETA_HZ)
     fth = list(THETA_HZ)
     flo = list(LOW_F_HZ)
+    fu  = list(ULTRA_HFA_HZ)
     S   = list(stim)
     R   = list(resp)
     MW  = list(motor_win)
@@ -77,17 +79,24 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
 
-        # 2. VISUAL INPUT — sustained HGA + beta ERD to either visual stimulus,
-        #    silent to audio.
+        # 2. VISUAL INPUT — split by modality (HGA to the image vs to the sentence),
+        #    each silent to audio. (beta box dropped; picture & reading no longer conjoined.)
         {
-            "role": "visual", "layer": 1, "color": "#2ca02c",
-            "description": "Visual input cortex: sustained HGA + beta-ERD across the "
-                           "on-screen image / read sentence; silent to audio.",
+            "role": "visual_picture", "layer": 1, "color": "#2ca02c",
+            "description": "Visual cortex (picture): HGA across the image-viewing "
+                           "window; silent to the audio prompt.",
             "boxes": [
-                {"block": "picture", "t_bins": pct(2, 48), "f_hz": f,  "sign": "pos"},
-                {"block": "reading", "t_bins": pct(2, 48), "f_hz": f,  "sign": "pos"},
-                {"block": "picture", "t_bins": pct(2, 48), "f_hz": fb, "sign": "neg"},
-                {"block": "audio",   "t_bins": S,          "f_hz": f,  "sign": "zero"},
+                {"block": "picture", "t_bins": pct(2, 48), "f_hz": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": S,          "f_hz": f, "sign": "zero"},
+            ],
+        },
+        {
+            "role": "visual_reading", "layer": 1, "color": "#1f9e6e",
+            "description": "Visual cortex (reading): HGA across the sentence-reading "
+                           "window; silent to the audio prompt.",
+            "boxes": [
+                {"block": "reading", "t_bins": pct(2, 48), "f_hz": f, "sign": "pos"},
+                {"block": "audio",   "t_bins": S,          "f_hz": f, "sign": "zero"},
             ],
         },
 
@@ -236,6 +245,23 @@ def _roles(stim, resp, motor_win, nt):
                            "auditory tracking.",
             "boxes": [
                 {"block": "audio", "t_bins": pct(2, 48), "f_hz": fth, "sign": "pos"},
+            ],
+        },
+
+        # Ultra-HFA — very-high-frequency (>200 Hz) burst in the MIDDLE 40% of any
+        # stimulus OR response window (HFOs / very-high-gamma).
+        {
+            "role": "ultra_hfa", "layer": 2, "match": "any", "color": "#ff1493",
+            "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any "
+                           "stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz "
+                           "overlaps mains harmonics + speech EMG — interpret with care.",
+            "boxes": [
+                {"block": "audio",   "t_bins": pct(15, 35), "f_hz": fu, "sign": "pos"},
+                {"block": "picture", "t_bins": pct(15, 35), "f_hz": fu, "sign": "pos"},
+                {"block": "reading", "t_bins": pct(15, 35), "f_hz": fu, "sign": "pos"},
+                {"block": "audio",   "t_bins": pct(65, 85), "f_hz": fu, "sign": "pos"},
+                {"block": "picture", "t_bins": pct(65, 85), "f_hz": fu, "sign": "pos"},
+                {"block": "reading", "t_bins": pct(65, 85), "f_hz": fu, "sign": "pos"},
             ],
         },
 

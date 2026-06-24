@@ -11,9 +11,15 @@
       "n_primary": 0
     },
     {
-      "role": "visual",
+      "role": "visual_picture",
       "color": "#2ca02c",
-      "n": 0,
+      "n": 62,
+      "n_primary": 1
+    },
+    {
+      "role": "visual_reading",
+      "color": "#1f9e6e",
+      "n": 34,
       "n_primary": 0
     },
     {
@@ -68,19 +74,25 @@
       "role": "tag_beta_erd",
       "color": "#bcbd22",
       "n": 286,
-      "n_primary": 208
+      "n_primary": 205
     },
     {
       "role": "tag_low_f_erd",
       "color": "#74a9cf",
       "n": 286,
-      "n_primary": 111
+      "n_primary": 109
     },
     {
       "role": "tag_theta_tracking",
       "color": "#fdae6b",
       "n": 647,
       "n_primary": 434
+    },
+    {
+      "role": "ultra_hfa",
+      "color": "#ff1493",
+      "n": 276,
+      "n_primary": 22
     },
     {
       "role": "stimulus_responsive",
@@ -98,7 +110,7 @@
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 1224
+      "n_primary": 1206
     }
   ]
 }

@@ -159,3 +159,5 @@ outputs/
 04_FBM_Pooling/outputs/pooling/**/*.png
 # ...except the per-role info-card images, which the web info panel fetches by URL.
 !04_FBM_Pooling/outputs/pooling/**/role_cards/*.png
+# Windows thumbnail cache junk
+Thumbs.db
