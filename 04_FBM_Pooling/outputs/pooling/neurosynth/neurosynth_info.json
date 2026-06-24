@@ -1,0 +1,38 @@
+{
+  "auditory": {
+    "color": "#1f77b4",
+    "img": "region_cards/auditory.png",
+    "n": 103,
+    "n_ersp": 34
+  },
+  "visual": {
+    "color": "#2ca02c",
+    "img": "region_cards/visual.png",
+    "n": 311,
+    "n_ersp": 148
+  },
+  "motor control": {
+    "color": "#d62728",
+    "img": "region_cards/motor_control.png",
+    "n": 85,
+    "n_ersp": 36
+  },
+  "phonological": {
+    "color": "#9467bd",
+    "img": "region_cards/phonological.png",
+    "n": 536,
+    "n_ersp": 205
+  },
+  "lexical": {
+    "color": "#ff7f0e",
+    "img": "region_cards/lexical.png",
+    "n": 81,
+    "n_ersp": 31
+  },
+  "semantic": {
+    "color": "#8c564b",
+    "img": "region_cards/semantic.png",
+    "n": 793,
+    "n_ersp": 281
+  }
+}

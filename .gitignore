@@ -157,7 +157,8 @@ outputs/
 
 # Pooling viz PNGs are regenerable + heavy; pool.html renders from contacts_pool.csv, not PNGs.
 04_FBM_Pooling/outputs/pooling/**/*.png
-# ...except the per-role info-card images, which the web info panel fetches by URL.
+# ...except the per-role / per-neurosynth-region info-card images, fetched by the web info panel.
 !04_FBM_Pooling/outputs/pooling/**/role_cards/*.png
+!04_FBM_Pooling/outputs/pooling/**/region_cards/*.png
 # Windows thumbnail cache junk
 Thumbs.db
