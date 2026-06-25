@@ -781,6 +781,8 @@ web = P.export_pool_web(df_role, coords, P.OUTPUTS_ROOT / 'pool_web', grid=GRID,
 print('POOL web data ->', web)
 # per-role info cards (description + box/gaussian template on a representative ERSP) for the web info panel
 P.export_role_info(INPUT_DIR, df_role, P.OUTPUTS_ROOT / 'pool_web', grid=GRID)
+# downsampled raw-ERSP cube for the poolv2 interactive role designer (fraction-above-threshold, client-side)
+P.export_pool_cube(INPUT_DIR, df_contacts, P.OUTPUTS_ROOT / 'pool_cube')
 """),
 ]
 

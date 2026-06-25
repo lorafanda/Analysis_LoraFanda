@@ -1973,6 +1973,46 @@ def export_neurosynth(input_dir, coords: pd.DataFrame, out_dir, *, grid: str = "
 
 
 # ============================================================
+# 7c-ter — Downsampled raw-ERSP cube for the poolv2 interactive role designer
+# ============================================================
+def export_pool_cube(input_dir, contacts: pd.DataFrame, out_dir, *, scale: float = 4.0,
+                     verbose: bool = True) -> Path:
+    """Downsampled RAW ERSP cube the poolv2 web page reads to re-match boxes live
+    (fraction-above-threshold gate, no discretization). For each pooled contact, load
+    its concatenated [audio|picture|reading] ERSP (129 x 900), average down to the ds
+    grid (15 bands x 90 time = 30 bins x 3 blocks), quantize dB to int8 (round(dB*scale)),
+    and stack -> cube_i8.bin (int8, N x 15 x 90, C-order) + cube_manifest.json.
+    `contacts` needs patient(_id) / contact(_norm) / name|electrode columns."""
+    out_dir = Path(out_dir); out_dir.mkdir(parents=True, exist_ok=True)
+    bands = [tuple(b) for b in FREQ_BANDS]                      # 15 (lo,hi) Hz
+    nF, nT = len(bands), 90
+    full_hz = np.arange(129) / 128.0 * FMAX_HZ                  # full-grid row -> Hz
+    band_rows = [np.where((full_hz >= lo) & (full_hz <= hi))[0] for (lo, hi) in bands]
+    keys, mats = [], []
+    for r in contacts.drop_duplicates(["patient_id", "contact_norm"]).itertuples():
+        pid, con = str(r.patient_id), str(r.contact_norm)
+        ele = str(getattr(r, "electrode", getattr(r, "name", con)))
+        try:
+            ersp = np.asarray(load_concat_ersp(input_dir, f"{pid}_reading_WM_ERSP_{ele}_TN.npy"), float)
+        except (FileNotFoundError, ValueError):
+            continue
+        fac = ersp.shape[1] // nT                               # 900 -> 90 (avg every 10)
+        t_ds = ersp[:, :fac * nT].reshape(ersp.shape[0], nT, fac).mean(axis=2)
+        f_ds = np.vstack([t_ds[rws].mean(axis=0) if len(rws) else np.zeros(nT) for rws in band_rows])
+        keys.append(f"{pid}|{con}"); mats.append(f_ds.astype(np.float32))
+    cube = np.stack(mats) if mats else np.zeros((0, nF, nT), np.float32)
+    q = np.clip(np.round(cube * scale), -127, 127).astype(np.int8)
+    (out_dir / "cube_i8.bin").write_bytes(q.tobytes(order="C"))
+    manifest = {"n": len(keys), "n_freq": nF, "n_time": nT, "n_blocks": 3,
+                "bins_per_block": nT // 3, "stim_bins": (nT // 3) // 2, "scale": scale,
+                "fmax_hz": FMAX_HZ, "band_hz": [list(b) for b in bands], "contacts": keys}
+    write_json(out_dir / "cube_manifest.json", manifest)
+    if verbose:
+        print(f"[lf_pool] pool cube -> {out_dir}  ({len(keys)} contacts, {q.nbytes/1e6:.1f} MB int8)")
+    return out_dir
+
+
+# ============================================================
 # 7d — Concatenated [audio|picture|reading] functional-role matching
 # ============================================================
 # Condition-STRUCTURED extension: stitch the three conditions per contact, score-
