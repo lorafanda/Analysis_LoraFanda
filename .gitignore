@@ -62,6 +62,10 @@ outputs/
 !03_FBM_Classifying/outputs/classification/**
 # Classification dataset/feature cache is large + machine-local — never push
 03_FBM_Classifying/outputs/_dataset/
+# feature_importance.csv explodes for parcellation runs (300 features → 5 MB+ each);
+# regenerable from the run, never push. The broad classification allowlist above
+# force-includes them, so re-deny explicitly here. (Keeps the small _by_band/_by_time variants.)
+03_FBM_Classifying/outputs/classification/**/feature_importance.csv
 
 # Allow the pooling manifest tree (overlays, pool/anatomy run artifacts) — NOT renders
 !04_FBM_Pooling/outputs/

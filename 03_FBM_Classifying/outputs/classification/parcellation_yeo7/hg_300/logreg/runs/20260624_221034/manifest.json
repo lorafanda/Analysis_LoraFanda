@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "task": "parcellation_yeo7",
+  "variant": "hg_300",
+  "classifier": "logreg",
+  "n_networks": 7,
+  "run_id": "20260624_221034",
+  "created_at": "2026-06-24T22:13:52",
+  "host": "wmedapp772",
+  "user": "artoni",
+  "feature_dim": 900,
+  "classes": [
+    "7Networks_1",
+    "7Networks_2",
+    "7Networks_3",
+    "7Networks_4",
+    "7Networks_5",
+    "7Networks_6",
+    "7Networks_7"
+  ],
+  "cv": {
+    "scheme": "nested GroupKFold (by patient)",
+    "outer_splits": 5,
+    "inner_splits": 3,
+    "best_params_per_fold": [
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 0.01
+      },
+      {
+        "clf__C": 0.1
+      },
+      {
+        "clf__C": 0.01
+      }
+    ]
+  },
+  "n_permutations": 200,
+  "n_bootstrap": 1000,
+  "summary": {
+    "balanced_accuracy": 0.3144988733268223,
+    "balanced_accuracy_ci": [
+      0.23680698734322628,
+      0.37777262175331255
+    ],
+    "macro_f1": 0.28909100223110407,
+    "accuracy": 0.31106471816283926,
+    "chance_level": 0.14285714285714285,
+    "n_samples": 958,
+    "n_classes": 7,
+    "n_patients": 24,
+    "permutation_p": 0.004975124378109453,
+    "perm_z": 13.477405332076366
+  },
+  "path": "parcellation_yeo7\\hg_300\\logreg\\runs\\20260624_221034"
+}

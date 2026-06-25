@@ -1,0 +1,223 @@
+{
+  "overall": {
+    "balanced_accuracy": 0.13374936573575325,
+    "balanced_accuracy_ci": [
+      0.10840068355471208,
+      0.16870605111754952
+    ],
+    "macro_f1": 0.11642422036269216,
+    "accuracy": 0.2348643006263048,
+    "chance_level": 0.058823529411764705,
+    "n_samples": 958,
+    "n_classes": 17,
+    "n_patients": 24,
+    "permutation_p": 0.004975124378109453,
+    "perm_z": 45.19211389262916
+  },
+  "per_class": [
+    {
+      "class": "17Networks_1",
+      "support": 26,
+      "precision": 0.19230769230769232,
+      "recall": 0.38461538461538464,
+      "f1": 0.2564102564102564,
+      "recall_ci_lo": 0.3333333333333333,
+      "recall_ci_hi": 0.6666666666666666,
+      "roc_auc_ovr": 0.8535407725321889,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.010572139303482588
+    },
+    {
+      "class": "17Networks_10",
+      "support": 23,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.509834922111137,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_11",
+      "support": 4,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.13522012578616352,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_12",
+      "support": 58,
+      "precision": 0.08163265306122448,
+      "recall": 0.06896551724137931,
+      "f1": 0.07476635514018691,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.1795,
+      "roc_auc_ovr": 0.5294061302681993,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.010572139303482588
+    },
+    {
+      "class": "17Networks_13",
+      "support": 95,
+      "precision": 0.1388888888888889,
+      "recall": 0.05263157894736842,
+      "f1": 0.07633587786259542,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.12075460557392531,
+      "roc_auc_ovr": 0.5786790266512166,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.010572139303482588
+    },
+    {
+      "class": "17Networks_14",
+      "support": 59,
+      "precision": 0.32098765432098764,
+      "recall": 0.4406779661016949,
+      "f1": 0.37142857142857144,
+      "recall_ci_lo": 0.32608695652173914,
+      "recall_ci_hi": 0.5862068965517241,
+      "roc_auc_ovr": 0.8255688995305518,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.010572139303482588
+    },
+    {
+      "class": "17Networks_15",
+      "support": 25,
+      "precision": 0.025,
+      "recall": 0.04,
+      "f1": 0.03076923076923077,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.15384615384615385,
+      "roc_auc_ovr": 0.5590996784565917,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.010572139303482588
+    },
+    {
+      "class": "17Networks_16",
+      "support": 43,
+      "precision": 0.09302325581395349,
+      "recall": 0.09302325581395349,
+      "f1": 0.09302325581395349,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.16460970464135016,
+      "roc_auc_ovr": 0.6098614817638836,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.010572139303482588
+    },
+    {
+      "class": "17Networks_17",
+      "support": 228,
+      "precision": 0.365625,
+      "recall": 0.5131578947368421,
+      "f1": 0.42700729927007297,
+      "recall_ci_lo": 0.35958200827253645,
+      "recall_ci_hi": 0.6696329834484509,
+      "roc_auc_ovr": 0.6205839942321558,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_2",
+      "support": 3,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.06335078534031413,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_3",
+      "support": 25,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.30829581993569133,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_4",
+      "support": 91,
+      "precision": 0.232,
+      "recall": 0.31868131868131866,
+      "f1": 0.26851851851851855,
+      "recall_ci_lo": 0.17853752260397832,
+      "recall_ci_hi": 0.48105630728939325,
+      "roc_auc_ovr": 0.7831603229527105,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.010572139303482588
+    },
+    {
+      "class": "17Networks_5",
+      "support": 23,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.5309462915601023,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_6",
+      "support": 26,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.49257180587652694,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_7",
+      "support": 43,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.0,
+      "roc_auc_ovr": 0.4805184902783073,
+      "perm_p": 1.0,
+      "perm_p_fdr": 1.0
+    },
+    {
+      "class": "17Networks_8",
+      "support": 40,
+      "precision": 0.21951219512195122,
+      "recall": 0.225,
+      "f1": 0.2222222222222222,
+      "recall_ci_lo": 0.0,
+      "recall_ci_hi": 0.4090909090909091,
+      "roc_auc_ovr": 0.7022875816993465,
+      "perm_p": 0.004975124378109453,
+      "perm_p_fdr": 0.010572139303482588
+    },
+    {
+      "class": "17Networks_9",
+      "support": 146,
+      "precision": 0.18867924528301888,
+      "recall": 0.136986301369863,
+      "f1": 0.15873015873015872,
+      "recall_ci_lo": 0.046854440789473685,
+      "recall_ci_hi": 0.22963562290587874,
+      "roc_auc_ovr": 0.4902574397732641,
+      "perm_p": 0.01990049751243781,
+      "perm_p_fdr": 0.037589828634604756
+    }
+  ]
+}
