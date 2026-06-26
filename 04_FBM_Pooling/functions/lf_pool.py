@@ -1800,7 +1800,12 @@ def export_role_info(input_dir, df_role: pd.DataFrame, out_dir, *, grid: str = "
         rn = role["role"]
         desc = str(role.get("description", "")).split("Citation:")[0].strip()
         entry = {"description": desc, "color": colors.get(rn, "#888888"),
-                 "img": None, "n_primary": int((df_role["role"] == rn).sum())}
+                 "img": None, "n_primary": int((df_role["role"] == rn).sum()),
+                 "layer": role.get("layer", 1),
+                 "boxes": role.get("boxes", []),
+                 "thr": role.get("thr", 2.0),
+                 "frac": role.get("frac", 0.30),
+                 "match": role.get("match", "all")}
         sub = df_role[df_role["role"] == rn].drop_duplicates(["patient_id", "contact_norm"])
         for r in sub.itertuples():                         # first contact whose ERSP loads
             name = f"{r.patient_id}_reading_WM_ERSP_{r.electrode}_TN.npy"
