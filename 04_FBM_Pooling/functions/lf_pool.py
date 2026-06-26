@@ -2095,8 +2095,13 @@ def build_concat_discretized(df_meta: pd.DataFrame, X_3d: np.ndarray, *,
 def _box_slices(box: dict, grid: str) -> Tuple[slice, slice]:
     nt = ROLE_PARAMS[grid]["n_time_per_block"]
     bi = ROLE_PARAMS["block_order"].index(box["block"])
-    f0, f1 = _box_rows(box, grid); t0, t1 = box["t_bins"]
-    return slice(f0 - 1, f1), slice(bi * nt + (t0 - 1), bi * nt + t1)
+    f0, f1 = _box_rows(box, grid)
+    if "t_pct" in box:          # designer export format: 0-100% percentages
+        t_start = round(box["t_pct"][0] / 100.0 * nt)
+        t_end   = round(box["t_pct"][1] / 100.0 * nt)
+    else:                        # legacy t_bins: 1-indexed absolute bin indices
+        t0, t1 = box["t_bins"]; t_start, t_end = t0 - 1, t1
+    return slice(f0 - 1, f1), slice(bi * nt + t_start, bi * nt + t_end)
 
 
 def _box_gaussian_weights(nf: int, nt: int) -> np.ndarray:

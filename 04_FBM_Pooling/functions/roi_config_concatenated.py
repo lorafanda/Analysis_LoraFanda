@@ -66,7 +66,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # 1. AUDITORY INPUT — early HGA to spoken prompt; silent during visual stim.
         {
-            "role": "auditory", "layer": 1, "color": "#1f77b4", "thr": 2.0, "frac": 0.10,
+            "role": "auditory", "layer": 1, "color": "#1f77b4", "thr": 1.5, "frac": 0.10,
             "description": "Auditory input cortex: early HGA to the spoken prompt "
                            "(7-14%); silent (zero) to the visual picture stimulus.",
             "boxes": [

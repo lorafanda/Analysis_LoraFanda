@@ -31,7 +31,7 @@
     "sign": "zero"
    }
   ],
-  "thr": 2.0,
+  "thr": 1.5,
   "frac": 0.1,
   "match": "all"
  },
