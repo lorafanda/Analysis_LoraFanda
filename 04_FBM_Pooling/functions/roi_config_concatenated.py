@@ -64,18 +64,14 @@ def _roles(stim, resp, motor_win, nt):
         # ════════════════ LAYER 1 — FUNCTIONAL ROLES ════════════════
         # Each role = one region/process with its full multiband signature.
 
-        # 1. AUDITORY INPUT — responds to external speech, modality-selective,
-        #    with beta ERD bundled in (HGA + beta, not two roles).
+        # 1. AUDITORY INPUT — early HGA to spoken prompt; silent during visual stim.
         {
             "role": "auditory", "layer": 1, "color": "#1f77b4",
-            "description": "Auditory input cortex: HGA + beta-ERD to the spoken "
-                           "prompt; silent to visual stimuli. Self-voice handled by "
-                           "auditory_feedback.",
+            "description": "Auditory input cortex: early HGA to the spoken prompt "
+                           "(7-14%); silent (zero) to the visual picture stimulus.",
             "boxes": [
-                {"block": "audio",   "t_bins": pct(2, 48), "f_hz": f,  "sign": "pos"},
-                {"block": "audio",   "t_bins": pct(2, 48), "f_hz": fb, "sign": "neg"},  # engagement ERD
-                {"block": "picture", "t_bins": S,          "f_hz": f,  "sign": "zero"},
-                {"block": "reading", "t_bins": S,          "f_hz": f,  "sign": "zero"},
+                {"block": "audio",   "t_bins": pct(7, 14),  "f_hz": [79, 151],  "sign": "pos"},
+                {"block": "picture", "t_bins": pct(3, 24),  "f_hz": [52, 185],  "sign": "zero"},
             ],
         },
 
@@ -97,6 +93,17 @@ def _roles(stim, resp, motor_win, nt):
             "boxes": [
                 {"block": "reading", "t_bins": pct(2, 48), "f_hz": f, "sign": "pos"},
                 {"block": "audio",   "t_bins": S,          "f_hz": f, "sign": "zero"},
+            ],
+        },
+
+        # 2b. PICTURE STIM — low-freq pos onset + beta ERD mid-picture.
+        {
+            "role": "picture_stim", "layer": 1, "color": "#d4a017",
+            "description": "Picture stimulus response: low-frequency increase at onset "
+                           "(6-10%) followed by beta ERD during the viewing window (30-46%).",
+            "boxes": [
+                {"block": "picture", "t_bins": pct(6, 10),  "f_hz": [5, 34],   "sign": "pos"},
+                {"block": "picture", "t_bins": pct(30, 46), "f_hz": [13, 24],  "sign": "neg"},
             ],
         },
 
@@ -138,6 +145,18 @@ def _roles(stim, resp, motor_win, nt):
                 {"block": "audio",   "t_bins": pct(42, 58), "f_hz": f, "sign": "pos"},
                 {"block": "picture", "t_bins": pct(42, 58), "f_hz": f, "sign": "pos"},
                 {"block": "reading", "t_bins": pct(42, 58), "f_hz": f, "sign": "pos"},
+            ],
+        },
+
+        # 5b. PRE-RESPONSE — low-freq pos at picture onset + beta ERD mid-picture.
+        #     NB: same box geometry as picture_stim — verify intended distinction.
+        {
+            "role": "pre_response", "layer": 1, "color": "#ff7f0e",
+            "description": "Pre-response activity: low-frequency increase at picture onset "
+                           "(6-10%) with beta ERD in the pre-response window (30-46%).",
+            "boxes": [
+                {"block": "picture", "t_bins": pct(6, 10),  "f_hz": [5, 34],   "sign": "pos"},
+                {"block": "picture", "t_bins": pct(30, 46), "f_hz": [13, 24],  "sign": "neg"},
             ],
         },
 
@@ -194,6 +213,19 @@ def _roles(stim, resp, motor_win, nt):
                 {"block": "audio",   "t_bins": pct(10, 70), "f_hz": f, "sign": "neg"},
                 {"block": "picture", "t_bins": pct(10, 70), "f_hz": f, "sign": "neg"},
                 {"block": "reading", "t_bins": pct(10, 70), "f_hz": f, "sign": "neg"},
+            ],
+        },
+
+        # 9b. NN — broadband HGA suppression across all conditions.
+        {
+            "role": "NN", "layer": 1, "color": "#6c5b7b",
+            "description": "Neural negativity: sustained broadband HGA suppression "
+                           "across audio (9-37%), picture (13-53%), and reading (11-54%). "
+                           "Broad-spectrum task-negative network.",
+            "boxes": [
+                {"block": "audio",   "t_bins": pct(9, 37),   "f_hz": [122, 381], "sign": "neg"},
+                {"block": "picture", "t_bins": pct(13, 53),  "f_hz": [112, 368], "sign": "neg"},
+                {"block": "reading", "t_bins": pct(11, 54),  "f_hz": [112, 401], "sign": "neg"},
             ],
         },
 

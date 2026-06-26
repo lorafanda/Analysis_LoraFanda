@@ -1,9 +1,9 @@
 {
   "auditory": {
-    "description": "Auditory input cortex: HGA + beta-ERD to the spoken prompt; silent to visual stimuli. Self-voice handled by auditory_feedback.",
+    "description": "Auditory input cortex: early HGA to the spoken prompt (7-14%); silent (zero) to the visual picture stimulus.",
     "color": "#1f77b4",
     "img": "role_cards/auditory.png",
-    "n_primary": 2
+    "n_primary": 13
   },
   "visual_picture": {
     "description": "Visual cortex (picture): HGA across the image-viewing window; silent to the audio prompt.",
@@ -16,6 +16,12 @@
     "color": "#1f9e6e",
     "img": "role_cards/visual_reading.png",
     "n_primary": 1
+  },
+  "picture_stim": {
+    "description": "Picture stimulus response: low-frequency increase at onset (6-10%) followed by beta ERD during the viewing window (30-46%).",
+    "color": "#d4a017",
+    "img": "role_cards/picture_stim.png",
+    "n_primary": 2
   },
   "lexical_semantic": {
     "description": "Conceptual access at condition-specific times: picture early, audio mid-sentence, reading at the final blank.",
@@ -32,6 +38,12 @@
   "maintenance": {
     "description": "Working-memory hold: sustained HGA straddling the GO-cue, persisting from late perception into the early response.",
     "color": "#7f7f7f",
+    "img": null,
+    "n_primary": 0
+  },
+  "pre_response": {
+    "description": "Pre-response activity: low-frequency increase at picture onset (6-10%) with beta ERD in the pre-response window (30-46%).",
+    "color": "#ff7f0e",
     "img": null,
     "n_primary": 0
   },
@@ -59,6 +71,12 @@
     "img": "role_cards/deactivation.png",
     "n_primary": 2
   },
+  "NN": {
+    "description": "Neural negativity: sustained broadband HGA suppression across audio (9-37%), picture (13-53%), and reading (11-54%). Broad-spectrum task-negative network.",
+    "color": "#6c5b7b",
+    "img": "role_cards/NN.png",
+    "n_primary": 1
+  },
   "tag_hga_activation": {
     "description": "HGA increase in any stim or response window (no selectivity).",
     "color": "#aec7e8",
@@ -69,7 +87,7 @@
     "description": "Beta (13-30) ERD during any stimulus \u2014 engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
     "color": "#bcbd22",
     "img": "role_cards/tag_beta_erd.png",
-    "n_primary": 194
+    "n_primary": 196
   },
   "tag_low_f_erd": {
     "description": "Delta/theta (1-8) ERD mid-trial \u2014 low-frequency network marker.",
@@ -81,7 +99,7 @@
     "description": "Theta (4-8) increase during the spoken prompt \u2014 syllabic-rate auditory tracking.",
     "color": "#fdae6b",
     "img": "role_cards/tag_theta_tracking.png",
-    "n_primary": 457
+    "n_primary": 455
   },
   "ultra_hfa": {
     "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG \u2014 interpret with care.",

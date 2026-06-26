@@ -7,8 +7,8 @@
     {
       "role": "auditory",
       "color": "#1f77b4",
-      "n": 14,
-      "n_primary": 0
+      "n": 90,
+      "n_primary": 10
     },
     {
       "role": "visual_picture",
@@ -21,6 +21,12 @@
       "color": "#1f9e6e",
       "n": 34,
       "n_primary": 0
+    },
+    {
+      "role": "picture_stim",
+      "color": "#d4a017",
+      "n": 11,
+      "n_primary": 1
     },
     {
       "role": "lexical_semantic",
@@ -38,6 +44,12 @@
       "role": "maintenance",
       "color": "#7f7f7f",
       "n": 6,
+      "n_primary": 0
+    },
+    {
+      "role": "pre_response",
+      "color": "#ff7f0e",
+      "n": 11,
       "n_primary": 0
     },
     {
@@ -63,6 +75,12 @@
       "color": "#045a8d",
       "n": 3,
       "n_primary": 3
+    },
+    {
+      "role": "NN",
+      "color": "#6c5b7b",
+      "n": 6,
+      "n_primary": 0
     },
     {
       "role": "tag_hga_activation",
@@ -110,7 +128,7 @@
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 1206
+      "n_primary": 1195
     }
   ]
 }
