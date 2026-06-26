@@ -66,7 +66,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # 1. AUDITORY INPUT — early HGA to spoken prompt; silent during visual stim.
         {
-            "role": "auditory", "layer": 1, "color": "#1f77b4",
+            "role": "auditory", "layer": 1, "color": "#1f77b4", "thr": 2.0, "frac": 0.10,
             "description": "Auditory input cortex: early HGA to the spoken prompt "
                            "(7-14%); silent (zero) to the visual picture stimulus.",
             "boxes": [
@@ -78,7 +78,7 @@ def _roles(stim, resp, motor_win, nt):
         # 2. VISUAL INPUT — split by modality (HGA to the image vs to the sentence),
         #    each silent to audio. (beta box dropped; picture & reading no longer conjoined.)
         {
-            "role": "visual_picture", "layer": 1, "color": "#2ca02c",
+            "role": "visual_picture", "layer": 1, "color": "#2ca02c", "thr": 2.0, "frac": 0.30,
             "description": "Visual cortex (picture): HGA across the image-viewing "
                            "window; silent to the audio prompt.",
             "boxes": [
@@ -87,7 +87,7 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
         {
-            "role": "visual_reading", "layer": 1, "color": "#1f9e6e",
+            "role": "visual_reading", "layer": 1, "color": "#1f9e6e", "thr": 2.0, "frac": 0.30,
             "description": "Visual cortex (reading): HGA across the sentence-reading "
                            "window; silent to the audio prompt.",
             "boxes": [
@@ -98,7 +98,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # 2b. PICTURE STIM — low-freq pos onset + beta ERD mid-picture.
         {
-            "role": "picture_stim", "layer": 1, "color": "#d4a017",
+            "role": "picture_stim", "layer": 1, "color": "#d4a017", "thr": 2.0, "frac": 0.25,
             "description": "Picture stimulus response: low-frequency increase at onset "
                            "(6-10%) followed by beta ERD during the viewing window (30-46%).",
             "boxes": [
@@ -110,7 +110,7 @@ def _roles(stim, resp, motor_win, nt):
         # 3. LEXICAL-SEMANTIC — conceptual access, CONDITION-SPECIFIC timing
         #    (picture early, audio mid, reading at the blank). Strict AND.
         {
-            "role": "lexical_semantic", "layer": 1, "color": "#9467bd",
+            "role": "lexical_semantic", "layer": 1, "color": "#9467bd", "thr": 2.0, "frac": 0.30,
             "description": "Conceptual access at condition-specific times: picture early, "
                            "audio mid-sentence, reading at the final blank.",
             "boxes": [
@@ -123,7 +123,7 @@ def _roles(stim, resp, motor_win, nt):
         # 4. HETEROMODAL CONVERGENCE — domain-general hub active in the post-sensory
         #    perception window of ALL three modalities (Forseth-style hubs).
         {
-            "role": "heteromodal_convergence", "layer": 1, "color": "#8c564b",
+            "role": "heteromodal_convergence", "layer": 1, "color": "#8c564b", "thr": 2.0, "frac": 0.30,
             "description": "Multimodal hub: HGA in mid-late perception across audio AND "
                            "picture AND reading (convergent, not modality-selective).",
             "boxes": [
@@ -138,7 +138,7 @@ def _roles(stim, resp, motor_win, nt):
         #    NB: to STRICTLY require bridging, split each box into pre/post-cue
         #    boxes (pct(42,50) AND pct(50,58)); this lean version uses one straddle.
         {
-            "role": "maintenance", "layer": 1, "color": "#7f7f7f",
+            "role": "maintenance", "layer": 1, "color": "#7f7f7f", "thr": 2.0, "frac": 0.30,
             "description": "Working-memory hold: sustained HGA straddling the GO-cue, "
                            "persisting from late perception into the early response.",
             "boxes": [
@@ -151,7 +151,7 @@ def _roles(stim, resp, motor_win, nt):
         # 5b. PRE-RESPONSE — low-freq pos at picture onset + beta ERD mid-picture.
         #     NB: same box geometry as picture_stim — verify intended distinction.
         {
-            "role": "pre_response", "layer": 1, "color": "#ff7f0e",
+            "role": "pre_response", "layer": 1, "color": "#ff7f0e", "thr": 2.0, "frac": 0.25,
             "description": "Pre-response activity: low-frequency increase at picture onset "
                            "(6-10%) with beta ERD in the pre-response window (30-46%).",
             "boxes": [
@@ -162,7 +162,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # 6. PHONOLOGICAL ENCODING — cue->voice-onset, condition-shared.
         {
-            "role": "phonological_encoding", "layer": 1, "color": "#e377c2",
+            "role": "phonological_encoding", "layer": 1, "color": "#e377c2", "thr": 2.0, "frac": 0.30,
             "description": "Pre-articulatory phonological/phonetic encoding between the "
                            "GO-cue (50%) and voice onset (~V%); condition-shared.",
             "boxes": [
@@ -174,7 +174,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # 7. SPEECH-MOTOR — articulation HGA + beta ERD, silent during stimuli.
         {
-            "role": "motor", "layer": 1, "color": "#d62728",
+            "role": "motor", "layer": 1, "color": "#d62728", "thr": 2.0, "frac": 0.30,
             "description": "Speech-motor cortex: HGA articulation at 60-85% with beta "
                            "ERD (at most zero); silent during all stimulus windows.",
             "boxes": [
@@ -193,7 +193,7 @@ def _roles(stim, resp, motor_win, nt):
         # 8. AUDITORY FEEDBACK / SELF-MONITORING — responds to external sound but
         #    SUPPRESSED during own voice (speaker-induced suppression, Chang 2013).
         {
-            "role": "auditory_feedback", "layer": 1, "color": "#17becf",
+            "role": "auditory_feedback", "layer": 1, "color": "#17becf", "thr": 2.0, "frac": 0.30,
             "description": "Self-monitoring auditory cortex: HGA pos to the external "
                            "prompt, HGA suppressed during own-voice articulation (all conds).",
             "boxes": [
@@ -206,7 +206,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # 9. DEACTIVATION — task-negative HGA decrease (merged network_negative_1/2).
         {
-            "role": "deactivation", "layer": 1, "color": "#045a8d",
+            "role": "deactivation", "layer": 1, "color": "#045a8d", "thr": 2.0, "frac": 0.30,
             "description": "Task-negative network: HGA suppression over the early-mid "
                            "trial in all conditions (DMN-like deactivation).",
             "boxes": [
@@ -218,7 +218,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # 9b. NN — broadband HGA suppression across all conditions.
         {
-            "role": "NN", "layer": 1, "color": "#6c5b7b",
+            "role": "NN", "layer": 1, "color": "#6c5b7b", "thr": 1.0, "frac": 0.40,
             "description": "Neural negativity: sustained broadband HGA suppression "
                            "across audio (9-37%), picture (13-53%), and reading (11-54%). "
                            "Broad-spectrum task-negative network.",
@@ -234,7 +234,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # HGA activation anywhere (functional-agnostic).
         {
-            "role": "tag_hga_activation", "layer": 2, "match": "any", "color": "#aec7e8",
+            "role": "tag_hga_activation", "layer": 2, "match": "any", "color": "#aec7e8", "thr": 2.0, "frac": 0.20,
             "description": "HGA increase in any stim or response window (no selectivity).",
             "boxes": [
                 {"block": "audio",   "t_bins": S, "f_hz": f, "sign": "pos"},
@@ -248,7 +248,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # Beta ERD engagement — the RQ1 probe (engagement WITHOUT requiring HGA).
         {
-            "role": "tag_beta_erd", "layer": 2, "match": "any", "color": "#bcbd22",
+            "role": "tag_beta_erd", "layer": 2, "match": "any", "color": "#bcbd22", "thr": 2.0, "frac": 0.20,
             "description": "Beta (13-30) ERD during any stimulus — engagement marker; "
                            "contacts firing this with NO layer-1 HGA role are missed by "
                            "a high-gamma-only filter (RQ1).",
@@ -261,7 +261,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # Low-frequency ERD network.
         {
-            "role": "tag_low_f_erd", "layer": 2, "match": "any", "color": "#74a9cf",
+            "role": "tag_low_f_erd", "layer": 2, "match": "any", "color": "#74a9cf", "thr": 2.0, "frac": 0.20,
             "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
             "boxes": [
                 {"block": "audio",   "t_bins": pct(30, 70), "f_hz": flo, "sign": "neg"},
@@ -272,7 +272,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # Theta tracking — syllabic-rate auditory tracking (repurposes dead theta band).
         {
-            "role": "tag_theta_tracking", "layer": 2, "match": "any", "color": "#fdae6b",
+            "role": "tag_theta_tracking", "layer": 2, "match": "any", "color": "#fdae6b", "thr": 2.0, "frac": 0.20,
             "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate "
                            "auditory tracking.",
             "boxes": [
@@ -283,7 +283,7 @@ def _roles(stim, resp, motor_win, nt):
         # Ultra-HFA — very-high-frequency (>200 Hz) burst in the MIDDLE 40% of any
         # stimulus OR response window (HFOs / very-high-gamma).
         {
-            "role": "ultra_hfa", "layer": 2, "match": "any", "color": "#ff1493",
+            "role": "ultra_hfa", "layer": 2, "match": "any", "color": "#ff1493", "thr": 2.0, "frac": 0.20,
             "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any "
                            "stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz "
                            "overlaps mains harmonics + speech EMG — interpret with care.",
@@ -299,7 +299,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # ════════════════ LAYER 3 — UMBRELLAS ═══════════════════════
         {
-            "role": "stimulus_responsive", "layer": 3, "match": "any", "color": "#c7c7c7",
+            "role": "stimulus_responsive", "layer": 3, "match": "any", "color": "#c7c7c7", "thr": 2.0, "frac": 0.20,
             "description": "HGA in the stimulus window of >=1 condition.",
             "boxes": [
                 {"block": "audio",   "t_bins": S, "f_hz": f, "sign": "pos"},
@@ -308,7 +308,7 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
         {
-            "role": "response_active", "layer": 3, "match": "any", "color": "#ffbb78",
+            "role": "response_active", "layer": 3, "match": "any", "color": "#ffbb78", "thr": 2.0, "frac": 0.20,
             "description": "HGA in the response window of >=1 condition.",
             "boxes": [
                 {"block": "audio",   "t_bins": R, "f_hz": f, "sign": "pos"},

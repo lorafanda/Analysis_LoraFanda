@@ -708,29 +708,28 @@ GRID      = 'ds' if USE_DS else 'full'
 print('grid:', GRID, '| roles:', [r['role'] for r in P.ROLE_PARAMS[GRID]['roles']])
 """),
 cell("markdown", r"""
-## 1 — Load dataset (clustering-exact discretization, no score gate)
+## 1 — Load dataset
 """),
 cell("code", r"""
 df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
-score_min = None        # clustering-exact: the 231 minus101 maps used score_min=None
-print('score gate:', score_min, '| seg:', P.CLUSTERING_SEG_KWARGS)
+print('loaded:', len(df_meta), 'rows |', df_meta['condition'].value_counts().to_dict())
 """),
 cell("markdown", r"""
-## 2 — Concatenate + discretize (clustering-exact; one map per all-3-condition contact)
+## 2 — Concatenate raw dB ERSP (one map per all-3-condition contact)
 """),
 cell("code", r"""
-df_contacts, X_disc = P.build_concat_discretized(df_meta, X_full, score_min=score_min, grid=GRID, seg_kwargs=P.CLUSTERING_SEG_KWARGS)
-print('contacts:', len(df_contacts), '| X_disc:', X_disc.shape)
+df_contacts, X_raw = P.build_concat_raw(df_meta, X_full)
+print('contacts:', len(df_contacts), '| X_raw:', X_raw.shape)
 df_contacts.head()
 """),
 cell("markdown", r"""
-## 3 — Conjunction role matching
-A contact gets a role only if **all** that role's boxes clear the proportion gate in the expected
-sign. `role` = most-specific match.
+## 3 — Raw-dB role matching (mirrors poolv2 Apply button exactly)
+Per-role `thr` and `frac` come from `roi_config_concatenated.py`.
+`role` = most-specific match; `roles_matched` lists all.
 """),
 cell("code", r"""
 import matplotlib.pyplot as plt
-df_role = P.build_role_table(df_contacts, X_disc, grid=GRID)
+df_role = P.build_role_table_raw(df_contacts, X_raw, grid=GRID)
 counts = P.role_counts(df_role)
 display(counts)
 # role_counts is multi-label: n_matched = contacts where the role is in roles_matched
@@ -813,30 +812,29 @@ GRID      = 'ds' if USE_DS else 'full'
 print('grid:', GRID, '| roles:', [r['role'] for r in P.ROLE_PARAMS[GRID]['roles']])
 """),
 cell("markdown", r"""
-## 1 — Load dataset (clustering-exact discretization, no score gate)
+## 1 — Load dataset
 """),
 cell("code", r"""
 df_meta, X_full = P.prepare_pooling_dataset(INPUT_DIR)
-score_min = None        # clustering-exact: the 231 minus101 maps used score_min=None
-print('score gate:', score_min, '| seg:', P.CLUSTERING_SEG_KWARGS)
+print('loaded:', len(df_meta), 'rows |', df_meta['condition'].value_counts().to_dict())
 """),
 cell("markdown", r"""
-## 2 — Concatenate + discretize (clustering-exact; one map per all-3-condition contact)
-Identical to 460 — the −1/0/+1 map does not depend on the box gate.
+## 2 — Concatenate raw dB ERSP (one map per all-3-condition contact)
+Identical to 460 — raw ERSP is used directly, no discretization.
 """),
 cell("code", r"""
-df_contacts, X_disc = P.build_concat_discretized(df_meta, X_full, score_min=score_min, grid=GRID, seg_kwargs=P.CLUSTERING_SEG_KWARGS)
-print('contacts:', len(df_contacts), '| X_disc:', X_disc.shape)
+df_contacts, X_raw = P.build_concat_raw(df_meta, X_full)
+print('contacts:', len(df_contacts), '| X_raw:', X_raw.shape)
 df_contacts.head()
 """),
 cell("markdown", r"""
-## 3 — Conjunction role matching (GAUSSIAN gate)
-Each box must clear `ROLE_BOX_MIN_PROP` of its **gaussian-weighted** ±1 mass in the
-expected sign. `role` = most-specific match; `roles_matched` lists all.
+## 3 — Raw-dB role matching (mirrors poolv2 Apply button exactly)
+Per-role `thr` and `frac` come from `roi_config_concatenated.py`.
+`role` = most-specific match; `roles_matched` lists all.
 """),
 cell("code", r"""
 import matplotlib.pyplot as plt
-df_role = P.build_role_table(df_contacts, X_disc, grid=GRID, shape='gaussian')
+df_role = P.build_role_table_raw(df_contacts, X_raw, grid=GRID)
 counts = P.role_counts(df_role)
 display(counts)
 ax = counts.set_index('role')['n_matched'].plot.barh(figsize=(7, 0.5 * len(counts) + 1),

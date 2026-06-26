@@ -2212,6 +2212,105 @@ def build_role_table(df_contacts: pd.DataFrame, X_disc: np.ndarray, *, grid: str
     return df
 
 
+def build_concat_raw(df_meta: pd.DataFrame, X_3d: np.ndarray, *,
+                     conditions: Sequence[str] = CONDITIONS,
+                     verbose: bool = True) -> Tuple[pd.DataFrame, np.ndarray]:
+    """Concatenated [audio|picture|reading] raw dB ERSP per contact that has ALL conditions.
+    Returns (df_contacts, X_raw) float32 (n_contacts, n_freq, 3*n_time_per_block).
+    No discretization — preserves raw amplitude for web-style threshold matching."""
+    by_contact: Dict[tuple, dict] = {}
+    for row in df_meta.itertuples():
+        if row.contact_norm is None:
+            continue
+        by_contact.setdefault((row.patient_id, row.contact_norm), {})[row.condition] = \
+            (row.Index, row.electrode)
+    rows, raw_maps = [], []
+    cond = list(conditions)
+    for (pid, contact), cm in by_contact.items():
+        if not all(c in cm for c in cond):
+            continue
+        blocks = [X_3d[cm[c][0]].astype(np.float32) for c in cond]
+        rows.append({"patient_id": pid, "contact_norm": contact, "electrode": cm[cond[0]][1]})
+        raw_maps.append(np.concatenate(blocks, axis=1).astype(np.float32))
+    df_contacts = pd.DataFrame(rows).reset_index(drop=True)
+    X_raw = np.stack(raw_maps, 0) if raw_maps else np.zeros((0, 0, 0), np.float32)
+    if verbose:
+        print(f"[lf_pool] concat-raw: {len(df_contacts)} contacts, all {len(cond)} conditions "
+              f"· X_raw={X_raw.shape}")
+    return df_contacts, X_raw
+
+
+def box_expresses_raw(ersp_raw: np.ndarray, box: dict, grid: str, *,
+                       thr: float, min_prop: float) -> bool:
+    """Raw-dB fraction gate — mirrors poolv2's boxPass() exactly.
+    ersp_raw: (n_freq, n_time_total) float32 raw dB [audio|picture|reading].
+    'pos'  -> fraction of cells > thr >= min_prop.
+    'neg'  -> fraction of cells < -thr >= min_prop.
+    'zero' -> silent gate: fraction of cells with |dB| > thr must be < min_prop."""
+    fs, ts = _box_slices(box, grid)
+    patch = ersp_raw[fs, ts]
+    if patch.size == 0:
+        return box.get("sign", "pos") == "zero"
+    sign = box.get("sign", "pos")
+    if sign == "pos":
+        return float((patch > thr).mean()) >= min_prop
+    if sign == "neg":
+        return float((patch < -thr).mean()) >= min_prop
+    return float((np.abs(patch) > thr).mean()) < min_prop   # zero / silent
+
+
+def role_matches_raw(ersp_raw: np.ndarray, role: dict, grid: str) -> bool:
+    """Raw-dB conjunction/disjunction — mirrors poolv2's Apply button.
+    thr and frac come from the role definition in roi_config_concatenated.py."""
+    thr      = float(role.get("thr",  2.0))
+    min_prop = float(role.get("frac", ROLE_BOX_MIN_PROP))
+    reducer  = any if role.get("match") == "any" else all
+    return reducer(box_expresses_raw(ersp_raw, b, grid, thr=thr, min_prop=min_prop)
+                   for b in role["boxes"])
+
+
+def build_role_table_raw(df_contacts: pd.DataFrame, X_raw: np.ndarray, *, grid: str = "full",
+                          role_params: Optional[dict] = None,
+                          cache: bool = True, write_run: bool = True, verbose: bool = True) -> pd.DataFrame:
+    """Role assignment via raw-dB matching (identical to poolv2's Apply button).
+    X_raw: (n_contacts, n_freq, n_time_total) float32 — output of build_concat_raw().
+    Each role's thr and frac come from roi_config_concatenated.py."""
+    rp    = role_params or ROLE_PARAMS
+    roles = rp[grid]["roles"]
+    rows  = []
+    for k, row in enumerate(df_contacts.itertuples()):
+        ersp    = X_raw[k].astype(np.float32)
+        matched = [r for r in roles if role_matches_raw(ersp, r, grid)]
+        best    = max(matched, key=lambda r: len(r["boxes"]))["role"] if matched else "none"
+        rows.append({"patient_id": row.patient_id, "contact_norm": row.contact_norm,
+                     "electrode": row.electrode, "grid": grid, "role": best,
+                     "roles_matched": ";".join(r["role"] for r in matched),
+                     "n_roles": len(matched)})
+    df = pd.DataFrame(rows)
+    if cache:
+        DATASET_CACHE.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(DATASET_CACHE / "role_table_raw.parquet", index=False)
+    if write_run:
+        run_dir = new_run_dir("roles_raw", grid)
+        df.to_parquet(run_dir / "role_table.parquet", index=False)
+        role_counts(df).to_csv(run_dir / "role_counts.csv", index=False)
+        manifest = {
+            "schema_version": SCHEMA_VERSION, "stage": "roles_raw", "grid": grid,
+            "shape": "raw_db", "run_id": run_dir.name,
+            "created_at": _dt.datetime.now().isoformat(timespec="seconds"),
+            "host": platform.node(), "user": _safe_user(),
+            "n_contacts": int(len(df)), "n_roles": len(roles),
+            "path": str(run_dir.relative_to(OUTPUTS_ROOT)),
+        }
+        write_json(run_dir / "manifest.json", manifest)
+        update_index(manifest)
+        if verbose:
+            print(f"[lf_pool] roles_raw run -> {run_dir}")
+    if verbose:
+        print(f"[lf_pool] role table (raw dB): {df.shape}")
+    return df
+
+
 def _matched_sets(df_role: pd.DataFrame) -> pd.Series:
     """roles_matched ';'-string -> set of role names, per contact (multi-label)."""
     return df_role["roles_matched"].fillna("").apply(
