@@ -7,62 +7,62 @@
     {
       "role": "auditory",
       "color": "#1f77b4",
-      "n": 92,
-      "n_primary": 12
+      "n": 114,
+      "n_primary": 25
     },
     {
       "role": "visual_picture",
       "color": "#2ca02c",
-      "n": 43,
-      "n_primary": 1
+      "n": 28,
+      "n_primary": 0
     },
     {
       "role": "visual_reading",
       "color": "#1f9e6e",
-      "n": 29,
-      "n_primary": 1
+      "n": 12,
+      "n_primary": 0
     },
     {
       "role": "picture_stim",
       "color": "#d4a017",
-      "n": 11,
-      "n_primary": 2
+      "n": 14,
+      "n_primary": 1
     },
     {
       "role": "lexical_semantic",
       "color": "#9467bd",
-      "n": 5,
+      "n": 2,
       "n_primary": 0
     },
     {
       "role": "heteromodal_convergence",
       "color": "#8c564b",
-      "n": 5,
+      "n": 2,
       "n_primary": 0
     },
     {
       "role": "maintenance",
       "color": "#7f7f7f",
-      "n": 4,
+      "n": 1,
       "n_primary": 0
     },
     {
       "role": "pre_response",
       "color": "#ff7f0e",
-      "n": 11,
+      "n": 14,
       "n_primary": 0
     },
     {
       "role": "phonological_encoding",
       "color": "#e377c2",
-      "n": 53,
+      "n": 20,
       "n_primary": 0
     },
     {
       "role": "motor",
       "color": "#d62728",
-      "n": 18,
-      "n_primary": 18
+      "n": 39,
+      "n_primary": 39
     },
     {
       "role": "auditory_feedback",
@@ -73,62 +73,62 @@
     {
       "role": "deactivation",
       "color": "#045a8d",
-      "n": 2,
-      "n_primary": 2
+      "n": 6,
+      "n_primary": 6
     },
     {
       "role": "NN",
       "color": "#6c5b7b",
-      "n": 6,
-      "n_primary": 1
+      "n": 110,
+      "n_primary": 81
     },
     {
       "role": "tag_hga_activation",
       "color": "#aec7e8",
-      "n": 543,
-      "n_primary": 526
+      "n": 279,
+      "n_primary": 240
     },
     {
       "role": "tag_beta_erd",
       "color": "#bcbd22",
-      "n": 250,
-      "n_primary": 192
+      "n": 572,
+      "n_primary": 500
     },
     {
       "role": "tag_low_f_erd",
       "color": "#74a9cf",
-      "n": 254,
-      "n_primary": 101
+      "n": 808,
+      "n_primary": 405
     },
     {
       "role": "tag_theta_tracking",
       "color": "#fdae6b",
-      "n": 623,
-      "n_primary": 437
+      "n": 567,
+      "n_primary": 327
     },
     {
       "role": "ultra_hfa",
       "color": "#ff1493",
-      "n": 258,
-      "n_primary": 50
+      "n": 137,
+      "n_primary": 43
     },
     {
       "role": "stimulus_responsive",
       "color": "#c7c7c7",
-      "n": 175,
+      "n": 94,
       "n_primary": 0
     },
     {
       "role": "response_active",
       "color": "#ffbb78",
-      "n": 458,
+      "n": 227,
       "n_primary": 0
     },
     {
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 1301
+      "n_primary": 977
     }
   ]
 }
