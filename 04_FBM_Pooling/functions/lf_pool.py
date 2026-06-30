@@ -2618,12 +2618,24 @@ def _ersp_png_rel(file_path) -> Optional[str]:
     return re.sub(r"\.npy$", "_CLEAN.png", p, flags=re.IGNORECASE)
 
 
+def _lerp_to_white(hex_col: str, t: float, bins: int = 10) -> str:
+    """Lerp from white (t=0) to hex_col (t=1) in `bins` discrete steps."""
+    t = round(float(t) * bins) / bins
+    h = hex_col.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return "#{:02x}{:02x}{:02x}".format(
+        int(255 + (r - 255) * t), int(255 + (g - 255) * t), int(255 + (b - 255) * t))
+
+
 def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
                     grid: str = "full", df_meta: pd.DataFrame = None) -> Path:
     """Write the data the POOL web page reads: contacts_pool.csv (xyz + role +
     colour) + pool_index.json. If df_meta is given, also write pool_samples.json
     mapping 'patient|contact' -> {condition: ERSP_clean PNG path} so the page can
-    show each pooled contact's ERSPs. Reuses the MOBA fsaverage meshes."""
+    show each pooled contact's ERSPs. Reuses the MOBA fsaverage meshes.
+
+    If df_role contains an 'hga_strength' column (float [0,1], within-role normalised),
+    electrode colours are lerped from white (weak) to the role colour (strong)."""
     colors = role_colors(grid)
     cols = ["patient_id", "contact_norm", "name", "hemi", "x", "y", "z"]
     if "is_cortical" in coords.columns:
@@ -2633,7 +2645,15 @@ def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
             cols.append(yc)
     c = coords[cols].drop_duplicates(["patient_id", "contact_norm"])
     m = df_role.merge(c, on=["patient_id", "contact_norm"], how="left").dropna(subset=["x", "y", "z"])
-    m["color"] = m["role"].map(colors).fillna("#cccccc")
+    base_color = m["role"].map(colors).fillna("#cccccc")
+    if "hga_strength" in m.columns:
+        m["color"] = [
+            _lerp_to_white(bc, s) if (pd.notna(s) and pd.notna(bc) and bc != "#cccccc")
+            else (bc if pd.notna(bc) else "#cccccc")
+            for bc, s in zip(base_color, m["hga_strength"])
+        ]
+    else:
+        m["color"] = base_color
     if "is_cortical" not in m.columns:
         m["is_cortical"] = 1                       # cortical/depth radius split (page)
     for yc in ("yeo7_network", "yeo17_network"):
