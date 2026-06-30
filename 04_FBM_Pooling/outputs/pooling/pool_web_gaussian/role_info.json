@@ -794,7 +794,7 @@
     "onset_t_pct": 60.8
   },
   "tag_beta_erd": {
-    "description": "Beta (13-30) ERD during any stimulus — engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
+    "description": "Beta (13-30) ERD during any stimulus â€” engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
     "color": "#bcbd22",
     "img": "role_cards/tag_beta_erd.png",
     "n_primary": 333,
@@ -843,7 +843,7 @@
     "onset_t_pct": 100.0
   },
   "tag_low_f_erd": {
-    "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
+    "description": "Delta/theta (1-8) ERD mid-trial â€” low-frequency network marker.",
     "color": "#74a9cf",
     "img": "role_cards/tag_low_f_erd.png",
     "n_primary": 241,
@@ -892,7 +892,7 @@
     "onset_t_pct": 100.0
   },
   "tag_theta_tracking": {
-    "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate auditory tracking.",
+    "description": "Theta (4-8) increase during the spoken prompt â€” syllabic-rate auditory tracking.",
     "color": "#fdae6b",
     "img": "role_cards/tag_theta_tracking.png",
     "n_primary": 188,
@@ -917,7 +917,7 @@
     "onset_t_pct": 100.0
   },
   "ultra_hfa": {
-    "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG — interpret with care.",
+    "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG â€” interpret with care.",
     "color": "#ff1493",
     "img": "role_cards/ultra_hfa.png",
     "n_primary": 68,

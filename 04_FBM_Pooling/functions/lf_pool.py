@@ -2747,7 +2747,11 @@ def _safe_user() -> str:
 def write_json(path, obj) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(obj, indent=2, default=str))
+    # Always UTF-8: on Windows the default text encoding is cp1252, which silently
+    # mangles em-dashes etc. in role descriptions -> later utf-8 reads crash
+    # ('invalid start byte 0x97'). ensure_ascii=False keeps the JSON human-readable.
+    path.write_text(json.dumps(obj, indent=2, default=str, ensure_ascii=False),
+                    encoding="utf-8")
 
 
 def new_run_dir(*parts: str) -> Path:

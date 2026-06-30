@@ -3,7 +3,7 @@
     "description": "Auditory input cortex: early HGA to the spoken prompt (7-14%); silent (zero) to the visual picture stimulus.",
     "color": "#1f77b4",
     "img": "role_cards/auditory.png",
-    "n_primary": 111,
+    "n_primary": 133,
     "layer": 1,
     "boxes": [
       {
@@ -360,10 +360,10 @@
     "match": "all"
   },
   "premotor planning": {
-    "description": "Premotor planning: pre-response HGA broadband increase across all three conditions.",
+    "description": "Premotor planning: pre-response HGA broadband increase across all three conditions with suppressed high-frequency oscillations.",
     "color": "#ff7f0e",
-    "img": null,
-    "n_primary": 0,
+    "img": "role_cards/premotor planning.png",
+    "n_primary": 49,
     "layer": 1,
     "boxes": [
       {
@@ -401,9 +401,45 @@
           150
         ],
         "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_pct": [
+          6,
+          94
+        ],
+        "f_hz": [
+          261,
+          495
+        ],
+        "sign": "nonpos"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          3,
+          99
+        ],
+        "f_hz": [
+          259,
+          493
+        ],
+        "sign": "nonpos"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          4,
+          99
+        ],
+        "f_hz": [
+          241,
+          493
+        ],
+        "sign": "nonpos"
       }
     ],
-    "thr": 2.0,
+    "thr": 0.5,
     "frac": 0.25,
     "match": "all"
   },
@@ -459,7 +495,7 @@
     "description": "Speech-motor cortex: HGA at 60-85% in all conditions, beta not-activating (nonpos) in same window; silent (zero) during stimulus window (0-50%).",
     "color": "#d62728",
     "img": "role_cards/motor.png",
-    "n_primary": 24,
+    "n_primary": 26,
     "layer": 1,
     "boxes": [
       {
@@ -579,7 +615,7 @@
     "description": "Speech-motor (lenient): per-condition HGA at 62-85% (lower thr), silent (zero HGA all freqs) during stimulus, beta decrease mid-trial.",
     "color": "#e57373",
     "img": "role_cards/motor_v2.png",
-    "n_primary": 21,
+    "n_primary": 23,
     "layer": 1,
     "boxes": [
       {
@@ -855,7 +891,7 @@
     "description": "HGA increase in any stim or response window (no selectivity).",
     "color": "#aec7e8",
     "img": "role_cards/tag_hga_activation.png",
-    "n_primary": 64,
+    "n_primary": 70,
     "layer": 2,
     "boxes": [
       {
@@ -939,7 +975,7 @@
     "description": "Beta (13-30) ERD during any stimulus — engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
     "color": "#bcbd22",
     "img": "role_cards/tag_beta_erd.png",
-    "n_primary": 317,
+    "n_primary": 301,
     "layer": 2,
     "boxes": [
       {
@@ -987,7 +1023,7 @@
     "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
     "color": "#74a9cf",
     "img": "role_cards/tag_low_f_erd.png",
-    "n_primary": 235,
+    "n_primary": 274,
     "layer": 2,
     "boxes": [
       {
@@ -1035,7 +1071,7 @@
     "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate auditory tracking.",
     "color": "#fdae6b",
     "img": "role_cards/tag_theta_tracking.png",
-    "n_primary": 179,
+    "n_primary": 180,
     "layer": 2,
     "boxes": [
       {
@@ -1059,7 +1095,7 @@
     "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG — interpret with care.",
     "color": "#ff1493",
     "img": "role_cards/ultra_hfa.png",
-    "n_primary": 67,
+    "n_primary": 70,
     "layer": 2,
     "boxes": [
       {

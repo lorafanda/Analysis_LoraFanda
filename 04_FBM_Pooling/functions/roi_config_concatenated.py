@@ -170,15 +170,20 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
 
-        # 5b. PREMOTOR PLANNING — pre-response HGA in all 3 conditions (thr=2.0, 3 boxes).
+        # 5b. PREMOTOR PLANNING — pre-response HGA in all 3 conditions + suppressed HFO.
+        #     As developed in the poolv2 designer (6 boxes, thr=0.5): 3 HGA-pos boxes +
+        #     3 ultra-high-freq nonpos boxes.
         {
-            "role": "premotor planning", "layer": 1, "color": "#ff7f0e", "thr": 2.0, "frac": 0.25,
+            "role": "premotor planning", "layer": 1, "color": "#ff7f0e", "thr": 0.5, "frac": 0.25,
             "description": "Premotor planning: pre-response HGA broadband increase "
-                           "across all three conditions.",
+                           "across all three conditions with suppressed high-frequency oscillations.",
             "boxes": [
-                {"block": "picture", "t_pct": [10, 31], "f_hz": [72, 150], "sign": "pos"},
-                {"block": "audio",   "t_pct": [38, 56], "f_hz": [71, 151], "sign": "pos"},
-                {"block": "reading", "t_pct": [33, 48], "f_hz": [64, 150], "sign": "pos"},
+                {"block": "picture", "t_pct": [10, 31], "f_hz": [72, 150],  "sign": "pos"},
+                {"block": "audio",   "t_pct": [38, 56], "f_hz": [71, 151],  "sign": "pos"},
+                {"block": "reading", "t_pct": [33, 48], "f_hz": [64, 150],  "sign": "pos"},
+                {"block": "audio",   "t_pct": [6,  94], "f_hz": [261, 495], "sign": "nonpos"},
+                {"block": "picture", "t_pct": [3,  99], "f_hz": [259, 493], "sign": "nonpos"},
+                {"block": "reading", "t_pct": [4,  99], "f_hz": [241, 493], "sign": "nonpos"},
             ],
         },
 

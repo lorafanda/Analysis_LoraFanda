@@ -8,7 +8,7 @@
       "role": "auditory",
       "color": "#1f77b4",
       "n": 124,
-      "n_primary": 111
+      "n_primary": 110
     },
     {
       "role": "auditory_v2",
@@ -61,8 +61,8 @@
     {
       "role": "premotor planning",
       "color": "#ff7f0e",
-      "n": 1,
-      "n_primary": 0
+      "n": 43,
+      "n_primary": 41
     },
     {
       "role": "phonological_encoding",
@@ -110,19 +110,19 @@
       "role": "tag_beta_erd",
       "color": "#bcbd22",
       "n": 379,
-      "n_primary": 317
+      "n_primary": 299
     },
     {
       "role": "tag_low_f_erd",
       "color": "#74a9cf",
       "n": 536,
-      "n_primary": 235
+      "n_primary": 232
     },
     {
       "role": "tag_theta_tracking",
       "color": "#fdae6b",
       "n": 252,
-      "n_primary": 179
+      "n_primary": 178
     },
     {
       "role": "ultra_hfa",
@@ -146,7 +146,7 @@
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 1569
+      "n_primary": 1551
     }
   ]
 }
