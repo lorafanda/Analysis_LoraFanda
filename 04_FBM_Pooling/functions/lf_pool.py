@@ -1844,6 +1844,18 @@ def plot_role_hga_timeseries(
     CONDS = ["audio", "picture", "reading"]
     t_pct = np.linspace(0, 100, nt, endpoint=False) + 50.0 / nt
 
+    # pre-build contact key → set of ALL matched roles (multi-label)
+    mset_lookup: dict = {
+        (row[dp_col], row[dc_col]): set(str(row.get("roles_matched", "") or "").split(";")) - {""}
+        for _, row in df_pool.iterrows()
+    }
+    # contact key → X_raw row index
+    role_contact_idx: Dict[str, list] = {
+        role_name: [key_to_idx[k] for k, mset in mset_lookup.items()
+                    if role_name in mset and k in key_to_idx]
+        for role_name in roles
+    }
+
     fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey=True)
 
     for ci, (cond, ax) in enumerate(zip(CONDS, axes)):
@@ -1853,19 +1865,14 @@ def plot_role_hga_timeseries(
         ax.text(51.5, 0, "GO", fontsize=7, color="0.4", va="bottom")
         for role_name in roles:
             color = role_info[role_name].get("color", "#888")
-            rows_r = df_pool[df_pool["role"] == role_name]
-            mats = []
-            for _, row in rows_r.iterrows():
-                idx = key_to_idx.get((row[dp_col], row[dc_col]))
-                if idx is not None:
-                    mats.append(hga_all[idx, sl])
-            if not mats:
+            idxs = role_contact_idx[role_name]
+            if not idxs:
                 continue
-            mat  = np.stack(mats)
+            mat  = hga_all[np.array(idxs), :][:, sl]
             mean = mat.mean(0)
-            sem  = mat.std(0) / np.sqrt(len(mats)) * ci_mult
+            sem  = mat.std(0) / np.sqrt(len(idxs)) * ci_mult
             ax.plot(t_pct, mean, color=color, lw=1.5,
-                    label=f"{role_name} (n={len(mats)})" if ci == 0 else None, zorder=2)
+                    label=f"{role_name} (n={len(idxs)})" if ci == 0 else None, zorder=2)
             ax.fill_between(t_pct, mean - sem, mean + sem, color=color, alpha=0.15, zorder=1)
         ax.set_title(cond.capitalize(), fontsize=11)
         ax.set_xlabel("Trial time (%)")
@@ -1879,21 +1886,20 @@ def plot_role_hga_timeseries(
     if out_png:
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
 
-    # Onset time: first bin where |grand mean across all conditions| > onset_thr_db
-    onset_dict: Dict[str, float] = {}
+    # Onset time per condition: first bin where |mean| > onset_thr_db
+    onset_dict: Dict[str, Dict[str, float]] = {}
     for role_name in roles:
-        rows_r = df_pool[df_pool["role"] == role_name]
-        grand = []
-        for ci_b in range(3):
+        idxs = role_contact_idx[role_name]
+        cond_onsets: Dict[str, float] = {}
+        for ci_b, cond_name in enumerate(CONDS):
             sl_b = slice(ci_b * nt, (ci_b + 1) * nt)
-            for _, row in rows_r.iterrows():
-                idx = key_to_idx.get((row[dp_col], row[dc_col]))
-                if idx is not None:
-                    grand.append(hga_all[idx, sl_b])
-        if grand:
-            gm = np.stack(grand).mean(0)
-            hits = np.where(np.abs(gm) > onset_thr_db)[0]
-            onset_dict[role_name] = float(t_pct[hits[0]]) if len(hits) else 100.0
+            if idxs:
+                gm = hga_all[np.array(idxs), :][:, sl_b].mean(0)
+                hits = np.where(np.abs(gm) > onset_thr_db)[0]
+                cond_onsets[cond_name] = float(t_pct[hits[0]]) if len(hits) else 100.0
+            else:
+                cond_onsets[cond_name] = 100.0
+        onset_dict[role_name] = cond_onsets
 
     return fig, onset_dict
 
