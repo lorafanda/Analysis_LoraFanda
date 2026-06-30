@@ -33,7 +33,8 @@
   ],
   "thr": 1.5,
   "frac": 0.1,
-  "match": "all"
+  "match": "all",
+  "onset_t_pct": 66.2
  },
  "visual_picture": {
   "description": "Visual cortex (picture): HGA across the image-viewing window; silent to the audio prompt.",
@@ -141,7 +142,8 @@
   ],
   "thr": 2.0,
   "frac": 0.25,
-  "match": "all"
+  "match": "all",
+  "onset_t_pct": 52.2
  },
  "lexical_semantic": {
   "description": "Conceptual access at condition-specific times: picture early, audio mid-sentence, reading at the final blank.",
@@ -489,7 +491,8 @@
   ],
   "thr": 2.0,
   "frac": 0.3,
-  "match": "all"
+  "match": "all",
+  "onset_t_pct": 56.2
  },
  "auditory_feedback": {
   "description": "Self-monitoring auditory cortex: HGA pos to the external prompt, HGA suppressed during own-voice articulation (all conds).",
@@ -597,7 +600,8 @@
   ],
   "thr": 2.0,
   "frac": 0.3,
-  "match": "all"
+  "match": "all",
+  "onset_t_pct": 0.2
  },
  "NN": {
   "description": "Neural negativity: sustained broadband HGA suppression across audio (9-37%), picture (13-54%), and reading (11-54%). Broad-spectrum task-negative network.",
@@ -645,7 +649,8 @@
   ],
   "thr": 1.5,
   "frac": 0.3,
-  "match": "all"
+  "match": "all",
+  "onset_t_pct": 7.2
  },
  "tag_hga_activation": {
   "description": "HGA increase in any stim or response window (no selectivity).",
@@ -729,10 +734,11 @@
   ],
   "thr": 2.0,
   "frac": 0.2,
-  "match": "any"
+  "match": "any",
+  "onset_t_pct": 60.8
  },
  "tag_beta_erd": {
-  "description": "Beta (13-30) ERD during any stimulus — engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
+  "description": "Beta (13-30) ERD during any stimulus \u2014 engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
   "color": "#bcbd22",
   "img": "role_cards/tag_beta_erd.png",
   "n_primary": 518,
@@ -777,10 +783,11 @@
   ],
   "thr": 2.0,
   "frac": 0.2,
-  "match": "any"
+  "match": "any",
+  "onset_t_pct": 100.0
  },
  "tag_low_f_erd": {
-  "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
+  "description": "Delta/theta (1-8) ERD mid-trial \u2014 low-frequency network marker.",
   "color": "#74a9cf",
   "img": "role_cards/tag_low_f_erd.png",
   "n_primary": 457,
@@ -825,10 +832,11 @@
   ],
   "thr": 2.0,
   "frac": 0.2,
-  "match": "any"
+  "match": "any",
+  "onset_t_pct": 100.0
  },
  "tag_theta_tracking": {
-  "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate auditory tracking.",
+  "description": "Theta (4-8) increase during the spoken prompt \u2014 syllabic-rate auditory tracking.",
   "color": "#fdae6b",
   "img": "role_cards/tag_theta_tracking.png",
   "n_primary": 335,
@@ -849,10 +857,11 @@
   ],
   "thr": 2.0,
   "frac": 0.2,
-  "match": "any"
+  "match": "any",
+  "onset_t_pct": 100.0
  },
  "ultra_hfa": {
-  "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG — interpret with care.",
+  "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG \u2014 interpret with care.",
   "color": "#ff1493",
   "img": "role_cards/ultra_hfa.png",
   "n_primary": 44,
@@ -933,7 +942,8 @@
   ],
   "thr": 2.0,
   "frac": 0.2,
-  "match": "any"
+  "match": "any",
+  "onset_t_pct": 13.2
  },
  "response_active": {
   "description": "HGA in the response window of >=1 condition.",
@@ -1101,7 +1111,8 @@
   ],
   "thr": 1.0,
   "frac": 0.25,
-  "match": "all"
+  "match": "all",
+  "onset_t_pct": 58.2
  },
  "pic_stim": {
   "description": "Picture-specific: early low-freq onset at 6-10% (wide band 5-34 Hz) and mid-stimulus beta decrease at 30-46% (13-26 Hz).",
@@ -1221,6 +1232,7 @@
   ],
   "thr": 1.5,
   "frac": 0.25,
-  "match": "all"
+  "match": "all",
+  "onset_t_pct": 3.2
  }
 }
