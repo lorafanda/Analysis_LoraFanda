@@ -1991,21 +1991,25 @@ def plot_region_hga_timeseries(
     if out_png:
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
 
-    # Onset time: first bin where |grand mean across all conditions| > onset_thr_db
-    onset_dict: Dict[str, float] = {}
+    # Onset time per condition: first bin where |mean| > onset_thr_db
+    onset_dict: Dict[str, Dict[str, float]] = {}
     for region_name in region_list:
         rows_r = ns_valid[ns_valid[region_col] == region_name]
-        grand = []
-        for ci_b in range(3):
+        cond_onsets: Dict[str, float] = {}
+        for ci_b, cond_name in enumerate(CONDS):
             sl_b = slice(ci_b * nt, (ci_b + 1) * nt)
+            mats = []
             for _, row in rows_r.iterrows():
                 idx = key_to_idx.get((row[np_col], row[nc_col]))
                 if idx is not None:
-                    grand.append(hga_all[idx, sl_b])
-        if grand:
-            gm = np.stack(grand).mean(0)
-            hits = np.where(np.abs(gm) > onset_thr_db)[0]
-            onset_dict[region_name] = float(t_pct[hits[0]]) if len(hits) else 100.0
+                    mats.append(hga_all[idx, sl_b])
+            if mats:
+                gm = np.stack(mats).mean(0)
+                hits = np.where(np.abs(gm) > onset_thr_db)[0]
+                cond_onsets[cond_name] = float(t_pct[hits[0]]) if len(hits) else 100.0
+            else:
+                cond_onsets[cond_name] = 100.0
+        onset_dict[region_name] = cond_onsets
 
     return fig, onset_dict
 
