@@ -1892,6 +1892,118 @@ def plot_role_hga_timeseries(
     return fig, onset_dict
 
 
+def plot_region_hga_timeseries(
+        df_contacts: pd.DataFrame,
+        X_raw: np.ndarray,
+        ns_labels: pd.DataFrame,
+        region_info: Dict[str, dict],
+        *,
+        regions: Optional[list] = None,
+        region_col: str = "neurosynth_primary",
+        grid: str = "full",
+        hga_hz: tuple = (70.0, 150.0),
+        ci_mult: float = 1.0,
+        onset_thr_db: float = 0.5,
+        out_png=None,
+        dpi: int = 150,
+) -> tuple:
+    """Average HGA time series per neurosynth region, one subplot per condition.
+
+    ns_labels : DataFrame with columns (patient|patient_id), (contact|contact_norm),
+                and `region_col` (default: neurosynth_primary).
+    Returns (fig, onset_dict) where onset_dict = {region: onset_t_pct}.
+    """
+    import matplotlib.pyplot as plt
+
+    nt = 30 if grid == "ds" else N_TIME
+    nf = X_raw.shape[1]
+
+    if grid == "ds":
+        hga_rows = np.array([i for i, (lo, hi) in enumerate(FREQ_BANDS)
+                             if lo < hga_hz[1] and hi > hga_hz[0]])
+    else:
+        hz_per_row = FMAX_HZ / nf
+        hga_rows = np.array([i for i in range(nf)
+                             if i * hz_per_row < hga_hz[1] and (i + 1) * hz_per_row > hga_hz[0]])
+    if not len(hga_rows):
+        raise ValueError(f"No freq rows for HGA {hga_hz} Hz in grid='{grid}' (n_freq={nf})")
+
+    hga_all = X_raw[:, hga_rows, :].mean(axis=1)   # (n_contacts, n_time_total)
+
+    # normalise column names: df_contacts side
+    p_col = "patient_id" if "patient_id" in df_contacts.columns else "patient"
+    c_col = "contact_norm" if "contact_norm" in df_contacts.columns else "contact"
+    key_to_idx: dict = {(row[p_col], row[c_col]): i for i, row in df_contacts.iterrows()}
+
+    # normalise column names: ns_labels side
+    np_col = "patient_id" if "patient_id" in ns_labels.columns else "patient"
+    nc_col = "contact_norm" if "contact_norm" in ns_labels.columns else "contact"
+
+    # drop rows with no region assignment
+    ns_valid = ns_labels[ns_labels[region_col].notna() & (ns_labels[region_col] != "")]
+
+    if regions is not None:
+        region_list = [r for r in regions if r in region_info]
+    else:
+        region_list = [r for r in ns_valid[region_col].unique() if r in region_info]
+
+    CONDS = ["audio", "picture", "reading"]
+    t_pct = np.linspace(0, 100, nt, endpoint=False) + 50.0 / nt
+
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey=True)
+
+    for ci, (cond, ax) in enumerate(zip(CONDS, axes)):
+        sl = slice(ci * nt, (ci + 1) * nt)
+        ax.axhline(0, color="0.75", lw=0.8, zorder=0)
+        ax.axvline(50, color="0.4", lw=1.0, ls="--", zorder=0)
+        ax.text(51.5, 0, "GO", fontsize=7, color="0.4", va="bottom")
+        for region_name in region_list:
+            color = region_info[region_name].get("color", "#888")
+            rows_r = ns_valid[ns_valid[region_col] == region_name]
+            mats = []
+            for _, row in rows_r.iterrows():
+                idx = key_to_idx.get((row[np_col], row[nc_col]))
+                if idx is not None:
+                    mats.append(hga_all[idx, sl])
+            if not mats:
+                continue
+            mat  = np.stack(mats)
+            mean = mat.mean(0)
+            sem  = mat.std(0) / np.sqrt(len(mats)) * ci_mult
+            ax.plot(t_pct, mean, color=color, lw=1.5,
+                    label=f"{region_name} (n={len(mats)})" if ci == 0 else None, zorder=2)
+            ax.fill_between(t_pct, mean - sem, mean + sem, color=color, alpha=0.15, zorder=1)
+        ax.set_title(cond.capitalize(), fontsize=11)
+        ax.set_xlabel("Trial time (%)")
+        if ci == 0:
+            ax.set_ylabel("HGA (dB)")
+            ax.legend(fontsize=6.5, loc="upper left", ncol=1, framealpha=0.85)
+        ax.set_xlim(0, 100)
+
+    fig.suptitle("Average HGA time series per neurosynth region  (±1 SEM)", fontsize=12, y=1.01)
+    plt.tight_layout()
+    if out_png:
+        fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+
+    # Onset time: first bin where |grand mean across all conditions| > onset_thr_db
+    onset_dict: Dict[str, float] = {}
+    for region_name in region_list:
+        rows_r = ns_valid[ns_valid[region_col] == region_name]
+        grand = []
+        for ci_b in range(3):
+            sl_b = slice(ci_b * nt, (ci_b + 1) * nt)
+            for _, row in rows_r.iterrows():
+                idx = key_to_idx.get((row[np_col], row[nc_col]))
+                if idx is not None:
+                    grand.append(hga_all[idx, sl_b])
+        if grand:
+            gm = np.stack(grand).mean(0)
+            hits = np.where(np.abs(gm) > onset_thr_db)[0]
+            onset_dict[region_name] = float(t_pct[hits[0]]) if len(hits) else 100.0
+
+    return fig, onset_dict
+
+
 def export_role_info(input_dir, df_role: pd.DataFrame, out_dir, *, grid: str = "full",
                      role_params: Optional[dict] = None, verbose: bool = True) -> Path:
     """Write the per-role 'info card' assets the POOL web page shows in its info panel:
