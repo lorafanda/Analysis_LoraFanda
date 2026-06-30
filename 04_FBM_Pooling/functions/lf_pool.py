@@ -1790,6 +1790,7 @@ def plot_role_hga_timeseries(
         df_pool: pd.DataFrame,
         role_info: Dict[str, dict],
         *,
+        roles: Optional[list] = None,
         grid: str = "ds",
         hga_hz: tuple = (70.0, 150.0),
         ci_mult: float = 1.0,
@@ -1828,8 +1829,11 @@ def plot_role_hga_timeseries(
     dc_col = "contact_norm" if "contact_norm"  in df_pool.columns     else "contact"
     key_to_idx: dict = {(row[p_col], row[c_col]): i for i, row in df_contacts.iterrows()}
 
-    roles = [r for r in df_pool["role"].dropna().unique()
-             if r not in ("none", "") and r in role_info]
+    if roles is not None:
+        roles = [r for r in roles if r in role_info]
+    else:
+        roles = [r for r in df_pool["role"].dropna().unique()
+                 if r not in ("none", "") and r in role_info]
 
     CONDS = ["audio", "picture", "reading"]
     t_pct = np.linspace(0, 100, nt, endpoint=False) + 50.0 / nt
