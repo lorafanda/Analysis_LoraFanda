@@ -1,5 +1,5 @@
 {
-  "grid": "ds",
+  "grid": "full",
   "n_contacts": 2644,
   "csv": "contacts_pool.csv",
   "multilabel": true,
@@ -8,19 +8,19 @@
       "role": "auditory",
       "color": "#1f77b4",
       "n": 127,
-      "n_primary": 56
+      "n_primary": 114
     },
     {
       "role": "auditory_v2",
       "color": "#539fd4",
       "n": 22,
-      "n_primary": 0
+      "n_primary": 2
     },
     {
       "role": "visual_picture",
       "color": "#2ca02c",
       "n": 18,
-      "n_primary": 0
+      "n_primary": 17
     },
     {
       "role": "visual_reading",
@@ -32,7 +32,7 @@
       "role": "picture_stim",
       "color": "#d4a017",
       "n": 9,
-      "n_primary": 0
+      "n_primary": 5
     },
     {
       "role": "pic_stim",
@@ -44,7 +44,7 @@
       "role": "lexical_semantic",
       "color": "#9467bd",
       "n": 1,
-      "n_primary": 0
+      "n_primary": 1
     },
     {
       "role": "heteromodal_convergence",
@@ -61,14 +61,14 @@
     {
       "role": "premotor planning",
       "color": "#ff7f0e",
-      "n": 53,
-      "n_primary": 51
+      "n": 1,
+      "n_primary": 0
     },
     {
       "role": "phonological_encoding",
       "color": "#e377c2",
       "n": 8,
-      "n_primary": 0
+      "n_primary": 4
     },
     {
       "role": "motor",
@@ -98,37 +98,37 @@
       "role": "NN",
       "color": "#6c5b7b",
       "n": 32,
-      "n_primary": 24
+      "n_primary": 28
     },
     {
       "role": "tag_hga_activation",
       "color": "#aec7e8",
       "n": 143,
-      "n_primary": 112
+      "n_primary": 62
     },
     {
       "role": "tag_beta_erd",
       "color": "#bcbd22",
       "n": 399,
-      "n_primary": 338
+      "n_primary": 333
     },
     {
       "role": "tag_low_f_erd",
       "color": "#74a9cf",
       "n": 557,
-      "n_primary": 246
+      "n_primary": 241
     },
     {
       "role": "tag_theta_tracking",
       "color": "#fdae6b",
       "n": 264,
-      "n_primary": 186
+      "n_primary": 188
     },
     {
       "role": "ultra_hfa",
       "color": "#ff1493",
       "n": 124,
-      "n_primary": 72
+      "n_primary": 68
     },
     {
       "role": "stimulus_active",
@@ -146,7 +146,7 @@
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 1506
+      "n_primary": 1528
     }
   ]
 }

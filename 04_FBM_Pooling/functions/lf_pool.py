@@ -2529,7 +2529,9 @@ def build_role_table_raw(df_contacts: pd.DataFrame, X_raw: np.ndarray, *, grid: 
     for k, row in enumerate(df_contacts.itertuples()):
         ersp    = X_raw[k].astype(np.float32)
         matched = [r for r in roles if role_matches_raw(ersp, r, grid)]
-        best    = max(matched, key=lambda r: len(r["boxes"]))["role"] if matched else "none"
+        # Layer-1 (functional) roles take priority over layer-2 (spectral tags) and layer-3 (umbrellas).
+        # Within the same layer, most boxes wins (more specific role = more constraints = more informative).
+        best    = max(matched, key=lambda r: (-r.get("layer", 1), len(r["boxes"])))["role"] if matched else "none"
         rows.append({"patient_id": row.patient_id, "contact_norm": row.contact_norm,
                      "electrode": row.electrode, "grid": grid, "role": best,
                      "roles_matched": ";".join(r["role"] for r in matched),

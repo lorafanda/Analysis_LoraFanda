@@ -1,1295 +1,1295 @@
 {
- "auditory": {
-  "description": "Auditory input cortex: early HGA to the spoken prompt (7-14%); silent (zero) to the visual picture stimulus.",
-  "color": "#1f77b4",
-  "img": "role_cards/auditory.png",
-  "n_primary": 28,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     21,
-     42
-    ],
-    "f_hz": [
-     79,
-     151
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     9,
-     72
-    ],
-    "f_hz": [
-     52,
-     185
-    ],
-    "sign": "zero"
-   }
-  ],
-  "thr": 1.5,
-  "frac": 0.1,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "visual_picture": {
-  "description": "Visual cortex (picture): HGA across the image-viewing window; silent to the audio prompt.",
-  "color": "#2ca02c",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "picture",
-    "t_bins": [
-     6,
-     144
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "zero"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "visual_reading": {
-  "description": "Visual cortex (reading): HGA across the sentence-reading window; silent to the audio prompt.",
-  "color": "#1f9e6e",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "reading",
-    "t_bins": [
-     6,
-     144
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "zero"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "picture_stim": {
-  "description": "Picture stimulus response: low-frequency increase at onset (6-10%) followed by beta ERD during the viewing window (30-46%).",
-  "color": "#d4a017",
-  "img": "role_cards/picture_stim.png",
-  "n_primary": 1,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "picture",
-    "t_bins": [
-     18,
-     30
-    ],
-    "f_hz": [
-     5,
-     34
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     90,
-     138
-    ],
-    "f_hz": [
-     13,
-     24
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.25,
-  "match": "all",
-  "onset_t_pct": 52.2
- },
- "lexical_semantic": {
-  "description": "Conceptual access at condition-specific times: picture early, audio mid-sentence, reading at the final blank.",
-  "color": "#9467bd",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "picture",
-    "t_bins": [
-     30,
-     75
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_bins": [
-     90,
-     144
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     120,
-     144
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "heteromodal_convergence": {
-  "description": "Multimodal hub: HGA in mid-late perception across audio AND picture AND reading (convergent, not modality-selective).",
-  "color": "#8c564b",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     60,
-     144
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     60,
-     144
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     60,
-     144
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "maintenance": {
-  "description": "Working-memory hold: sustained HGA straddling the GO-cue, persisting from late perception into the early response.",
-  "color": "#7f7f7f",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     126,
-     174
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     126,
-     174
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     126,
-     174
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "premotor planning": {
-  "description": "Premotor planning: pre-response HGA broadband increase across all three conditions with suppressed high-frequency oscillations.",
-  "color": "#ff7f0e",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "picture",
-    "t_pct": [
-     10,
-     31
-    ],
-    "f_hz": [
-     72,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_pct": [
-     38,
-     56
-    ],
-    "f_hz": [
-     71,
-     151
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     33,
-     48
-    ],
-    "f_hz": [
-     64,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_pct": [
-     6,
-     94
-    ],
-    "f_hz": [
-     261,
-     495
-    ],
-    "sign": "nonpos"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     3,
-     99
-    ],
-    "f_hz": [
-     259,
-     493
-    ],
-    "sign": "nonpos"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     4,
-     99
-    ],
-    "f_hz": [
-     241,
-     493
-    ],
-    "sign": "nonpos"
-   }
-  ],
-  "thr": 0.5,
-  "frac": 0.25,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "phonological_encoding": {
-  "description": "Pre-articulatory phonological/phonetic encoding between the GO-cue (50%) and voice onset (~V%); condition-shared.",
-  "color": "#e377c2",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     150,
-     201
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     150,
-     201
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     150,
-     201
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "motor": {
-  "description": "Speech-motor cortex: HGA at 60-85% in all conditions, beta not-activating (nonpos) in same window; silent (zero) during stimulus window (0-50%).",
-  "color": "#d62728",
-  "img": "role_cards/motor.png",
-  "n_primary": 43,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_pct": [
-     60,
-     85
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     60,
-     85
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     60,
-     85
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_pct": [
-     60,
-     85
-    ],
-    "f_hz": [
-     13,
-     30
-    ],
-    "sign": "nonpos"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     60,
-     85
-    ],
-    "f_hz": [
-     13,
-     30
-    ],
-    "sign": "nonpos"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     60,
-     85
-    ],
-    "f_hz": [
-     13,
-     30
-    ],
-    "sign": "nonpos"
-   },
-   {
-    "block": "audio",
-    "t_pct": [
-     0,
-     50
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "zero"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     0,
-     50
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "zero"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     0,
-     50
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "zero"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 31.7
- },
- "auditory_feedback": {
-  "description": "Self-monitoring auditory cortex: HGA pos to the external prompt, HGA suppressed during own-voice articulation (all conds).",
-  "color": "#17becf",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     6,
-     144
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_bins": [
-     201,
-     255
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     201,
-     255
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     201,
-     255
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 100.0
- },
- "deactivation": {
-  "description": "Task-negative network: HGA suppression over the early-mid trial in all conditions (DMN-like deactivation).",
-  "color": "#045a8d",
-  "img": "role_cards/deactivation.png",
-  "n_primary": 6,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     30,
-     210
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     30,
-     210
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     30,
-     210
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 0.2
- },
- "NN": {
-  "description": "Neural negativity: sustained broadband HGA suppression across audio (9-37%), picture (13-54%), and reading (11-54%). Broad-spectrum task-negative network.",
-  "color": "#6c5b7b",
-  "img": "role_cards/NN.png",
-  "n_primary": 81,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_pct": [
-     9,
-     37
-    ],
-    "f_hz": [
-     122,
-     381
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     13,
-     54
-    ],
-    "f_hz": [
-     147,
-     403
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     11,
-     54
-    ],
-    "f_hz": [
-     112,
-     401
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 1.5,
-  "frac": 0.3,
-  "match": "all",
-  "onset_t_pct": 5.0
- },
- "tag_hga_activation": {
-  "description": "HGA increase in any stim or response window (no selectivity).",
-  "color": "#aec7e8",
-  "img": "role_cards/tag_hga_activation.png",
-  "n_primary": 253,
-  "layer": 2,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_bins": [
-     151,
-     300
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     151,
-     300
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     151,
-     300
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.2,
-  "match": "any",
-  "onset_t_pct": 60.8
- },
- "tag_beta_erd": {
-  "description": "Beta (13-30) ERD during any stimulus \u2014 engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
-  "color": "#bcbd22",
-  "img": "role_cards/tag_beta_erd.png",
-  "n_primary": 518,
-  "layer": 2,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     13,
-     30
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     13,
-     30
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     13,
-     30
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.2,
-  "match": "any",
-  "onset_t_pct": 100.0
- },
- "tag_low_f_erd": {
-  "description": "Delta/theta (1-8) ERD mid-trial \u2014 low-frequency network marker.",
-  "color": "#74a9cf",
-  "img": "role_cards/tag_low_f_erd.png",
-  "n_primary": 457,
-  "layer": 2,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     90,
-     210
-    ],
-    "f_hz": [
-     1,
-     8
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     90,
-     210
-    ],
-    "f_hz": [
-     1,
-     8
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     90,
-     210
-    ],
-    "f_hz": [
-     1,
-     8
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.2,
-  "match": "any",
-  "onset_t_pct": 100.0
- },
- "tag_theta_tracking": {
-  "description": "Theta (4-8) increase during the spoken prompt \u2014 syllabic-rate auditory tracking.",
-  "color": "#fdae6b",
-  "img": "role_cards/tag_theta_tracking.png",
-  "n_primary": 335,
-  "layer": 2,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     6,
-     144
-    ],
-    "f_hz": [
-     4,
-     8
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.2,
-  "match": "any",
-  "onset_t_pct": 100.0
- },
- "ultra_hfa": {
-  "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG \u2014 interpret with care.",
-  "color": "#ff1493",
-  "img": "role_cards/ultra_hfa.png",
-  "n_primary": 44,
-  "layer": 2,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     45,
-     105
-    ],
-    "f_hz": [
-     200,
-     500
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     45,
-     105
-    ],
-    "f_hz": [
-     200,
-     500
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     45,
-     105
-    ],
-    "f_hz": [
-     200,
-     500
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_bins": [
-     195,
-     255
-    ],
-    "f_hz": [
-     200,
-     500
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     195,
-     255
-    ],
-    "f_hz": [
-     200,
-     500
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     195,
-     255
-    ],
-    "f_hz": [
-     200,
-     500
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.2,
-  "match": "any",
-  "onset_t_pct": 13.2
- },
- "response_active": {
-  "description": "HGA in the response window of >=1 condition.",
-  "color": "#ffbb78",
-  "img": null,
-  "n_primary": 0,
-  "layer": 3,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     151,
-     300
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     151,
-     300
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     151,
-     300
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.2,
-  "match": "any"
- },
- "motor_v2": {
-  "description": "Speech-motor (lenient): per-condition HGA at 62-85% (lower thr), silent (zero HGA all freqs) during stimulus, beta decrease mid-trial.",
-  "color": "#e57373",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_pct": [
-     63,
-     85
-    ],
-    "f_hz": [
-     68,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     62,
-     81
-    ],
-    "f_hz": [
-     68,
-     145
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     62,
-     82
-    ],
-    "f_hz": [
-     77,
-     151
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_pct": [
-     0,
-     51
-    ],
-    "f_hz": [
-     68,
-     500
-    ],
-    "sign": "zero"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     2,
-     54
-    ],
-    "f_hz": [
-     66,
-     500
-    ],
-    "sign": "zero"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     1,
-     55
-    ],
-    "f_hz": [
-     70,
-     500
-    ],
-    "sign": "zero"
-   },
-   {
-    "block": "reading",
-    "t_pct": [
-     33,
-     56
-    ],
-    "f_hz": [
-     0,
-     31
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     35,
-     57
-    ],
-    "f_hz": [
-     0,
-     37
-    ],
-    "sign": "neg"
-   },
-   {
-    "block": "audio",
-    "t_pct": [
-     34,
-     57
-    ],
-    "f_hz": [
-     0,
-     31
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 1.0,
-  "frac": 0.25,
-  "match": "all",
-  "onset_t_pct": 5.0
- },
- "pic_stim": {
-  "description": "Picture-specific: early low-freq onset at 6-10% (wide band 5-34 Hz) and mid-stimulus beta decrease at 30-46% (13-26 Hz).",
-  "color": "#e9c46a",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "picture",
-    "t_pct": [
-     6,
-     10
-    ],
-    "f_hz": [
-     5,
-     34
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_pct": [
-     30,
-     46
-    ],
-    "f_hz": [
-     13,
-     26
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.25,
-  "match": "all",
-  "onset_t_pct": 1.7
- },
- "stimulus_active": {
-  "description": "HGA in the stimulus window of >=1 condition.",
-  "color": "#c7c7c7",
-  "img": null,
-  "n_primary": 0,
-  "layer": 3,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.2,
-  "match": "any"
- },
- "auditory_v2": {
-  "description": "Auditory cortex (lenient): HGA onset 8-28% (39-102 Hz) and concurrent low-frequency decrease 12-34% (6-26 Hz) to the spoken prompt.",
-  "color": "#539fd4",
-  "img": null,
-  "n_primary": 0,
-  "layer": 1,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_pct": [
-     8,
-     28
-    ],
-    "f_hz": [
-     39,
-     102
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "audio",
-    "t_pct": [
-     12,
-     34
-    ],
-    "f_hz": [
-     6,
-     26
-    ],
-    "sign": "neg"
-   }
-  ],
-  "thr": 1.5,
-  "frac": 0.25,
-  "match": "all",
-  "onset_t_pct": 1.7
- }
+  "auditory": {
+    "description": "Auditory input cortex: early HGA to the spoken prompt (7-14%); silent (zero) to the visual picture stimulus.",
+    "color": "#1f77b4",
+    "img": "role_cards/auditory.png",
+    "n_primary": 114,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          21,
+          42
+        ],
+        "f_hz": [
+          79,
+          151
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          9,
+          72
+        ],
+        "f_hz": [
+          52,
+          185
+        ],
+        "sign": "zero"
+      }
+    ],
+    "thr": 1.5,
+    "frac": 0.1,
+    "match": "all",
+    "onset_t_pct": 2.2
+  },
+  "visual_picture": {
+    "description": "Visual cortex (picture): HGA across the image-viewing window; silent to the audio prompt.",
+    "color": "#2ca02c",
+    "img": null,
+    "n_primary": 17,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "picture",
+        "t_bins": [
+          6,
+          144
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "zero"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 1.5
+  },
+  "visual_reading": {
+    "description": "Visual cortex (reading): HGA across the sentence-reading window; silent to the audio prompt.",
+    "color": "#1f9e6e",
+    "img": null,
+    "n_primary": 0,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "reading",
+        "t_bins": [
+          6,
+          144
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "zero"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 0.5
+  },
+  "picture_stim": {
+    "description": "Picture stimulus response: low-frequency increase at onset (6-10%) followed by beta ERD during the viewing window (30-46%).",
+    "color": "#d4a017",
+    "img": "role_cards/picture_stim.png",
+    "n_primary": 5,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "picture",
+        "t_bins": [
+          18,
+          30
+        ],
+        "f_hz": [
+          5,
+          34
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          90,
+          138
+        ],
+        "f_hz": [
+          13,
+          24
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.25,
+    "match": "all",
+    "onset_t_pct": 52.2
+  },
+  "lexical_semantic": {
+    "description": "Conceptual access at condition-specific times: picture early, audio mid-sentence, reading at the final blank.",
+    "color": "#9467bd",
+    "img": null,
+    "n_primary": 1,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "picture",
+        "t_bins": [
+          30,
+          75
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_bins": [
+          90,
+          144
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          120,
+          144
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 1.7
+  },
+  "heteromodal_convergence": {
+    "description": "Multimodal hub: HGA in mid-late perception across audio AND picture AND reading (convergent, not modality-selective).",
+    "color": "#8c564b",
+    "img": null,
+    "n_primary": 0,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          60,
+          144
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          60,
+          144
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          60,
+          144
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 1.7
+  },
+  "maintenance": {
+    "description": "Working-memory hold: sustained HGA straddling the GO-cue, persisting from late perception into the early response.",
+    "color": "#7f7f7f",
+    "img": null,
+    "n_primary": 0,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          126,
+          174
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          126,
+          174
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          126,
+          174
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 1.7
+  },
+  "premotor planning": {
+    "description": "Premotor planning: pre-response HGA broadband increase across all three conditions with suppressed high-frequency oscillations.",
+    "color": "#ff7f0e",
+    "img": null,
+    "n_primary": 0,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "picture",
+        "t_pct": [
+          10,
+          31
+        ],
+        "f_hz": [
+          72,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_pct": [
+          38,
+          56
+        ],
+        "f_hz": [
+          71,
+          151
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          33,
+          48
+        ],
+        "f_hz": [
+          64,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_pct": [
+          6,
+          94
+        ],
+        "f_hz": [
+          261,
+          495
+        ],
+        "sign": "nonpos"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          3,
+          99
+        ],
+        "f_hz": [
+          259,
+          493
+        ],
+        "sign": "nonpos"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          4,
+          99
+        ],
+        "f_hz": [
+          241,
+          493
+        ],
+        "sign": "nonpos"
+      }
+    ],
+    "thr": 0.5,
+    "frac": 0.25,
+    "match": "all",
+    "onset_t_pct": 7.8
+  },
+  "phonological_encoding": {
+    "description": "Pre-articulatory phonological/phonetic encoding between the GO-cue (50%) and voice onset (~V%); condition-shared.",
+    "color": "#e377c2",
+    "img": null,
+    "n_primary": 4,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          150,
+          201
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          150,
+          201
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          150,
+          201
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 1.5
+  },
+  "motor": {
+    "description": "Speech-motor cortex: HGA at 60-85% in all conditions, beta not-activating (nonpos) in same window; silent (zero) during stimulus window (0-50%).",
+    "color": "#d62728",
+    "img": "role_cards/motor.png",
+    "n_primary": 25,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_pct": [
+          60,
+          85
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          60,
+          85
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          60,
+          85
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_pct": [
+          60,
+          85
+        ],
+        "f_hz": [
+          13,
+          30
+        ],
+        "sign": "nonpos"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          60,
+          85
+        ],
+        "f_hz": [
+          13,
+          30
+        ],
+        "sign": "nonpos"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          60,
+          85
+        ],
+        "f_hz": [
+          13,
+          30
+        ],
+        "sign": "nonpos"
+      },
+      {
+        "block": "audio",
+        "t_pct": [
+          0,
+          50
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "zero"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          0,
+          50
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "zero"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          0,
+          50
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "zero"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 2.5
+  },
+  "auditory_feedback": {
+    "description": "Self-monitoring auditory cortex: HGA pos to the external prompt, HGA suppressed during own-voice articulation (all conds).",
+    "color": "#17becf",
+    "img": null,
+    "n_primary": 0,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          6,
+          144
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_bins": [
+          201,
+          255
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          201,
+          255
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          201,
+          255
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 100.0
+  },
+  "deactivation": {
+    "description": "Task-negative network: HGA suppression over the early-mid trial in all conditions (DMN-like deactivation).",
+    "color": "#045a8d",
+    "img": "role_cards/deactivation.png",
+    "n_primary": 1,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          30,
+          210
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          30,
+          210
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          30,
+          210
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 0.2
+  },
+  "NN": {
+    "description": "Neural negativity: sustained broadband HGA suppression across audio (9-37%), picture (13-54%), and reading (11-54%). Broad-spectrum task-negative network.",
+    "color": "#6c5b7b",
+    "img": "role_cards/NN.png",
+    "n_primary": 28,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_pct": [
+          9,
+          37
+        ],
+        "f_hz": [
+          122,
+          381
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          13,
+          54
+        ],
+        "f_hz": [
+          147,
+          403
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          11,
+          54
+        ],
+        "f_hz": [
+          112,
+          401
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 1.5,
+    "frac": 0.3,
+    "match": "all",
+    "onset_t_pct": 0.2
+  },
+  "tag_hga_activation": {
+    "description": "HGA increase in any stim or response window (no selectivity).",
+    "color": "#aec7e8",
+    "img": "role_cards/tag_hga_activation.png",
+    "n_primary": 62,
+    "layer": 2,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_bins": [
+          151,
+          300
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          151,
+          300
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          151,
+          300
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.2,
+    "match": "any",
+    "onset_t_pct": 60.8
+  },
+  "tag_beta_erd": {
+    "description": "Beta (13-30) ERD during any stimulus — engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
+    "color": "#bcbd22",
+    "img": "role_cards/tag_beta_erd.png",
+    "n_primary": 333,
+    "layer": 2,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          13,
+          30
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          13,
+          30
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          13,
+          30
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.2,
+    "match": "any",
+    "onset_t_pct": 100.0
+  },
+  "tag_low_f_erd": {
+    "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
+    "color": "#74a9cf",
+    "img": "role_cards/tag_low_f_erd.png",
+    "n_primary": 241,
+    "layer": 2,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          90,
+          210
+        ],
+        "f_hz": [
+          1,
+          8
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          90,
+          210
+        ],
+        "f_hz": [
+          1,
+          8
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          90,
+          210
+        ],
+        "f_hz": [
+          1,
+          8
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.2,
+    "match": "any",
+    "onset_t_pct": 100.0
+  },
+  "tag_theta_tracking": {
+    "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate auditory tracking.",
+    "color": "#fdae6b",
+    "img": "role_cards/tag_theta_tracking.png",
+    "n_primary": 188,
+    "layer": 2,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          6,
+          144
+        ],
+        "f_hz": [
+          4,
+          8
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.2,
+    "match": "any",
+    "onset_t_pct": 100.0
+  },
+  "ultra_hfa": {
+    "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG — interpret with care.",
+    "color": "#ff1493",
+    "img": "role_cards/ultra_hfa.png",
+    "n_primary": 68,
+    "layer": 2,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          45,
+          105
+        ],
+        "f_hz": [
+          200,
+          500
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          45,
+          105
+        ],
+        "f_hz": [
+          200,
+          500
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          45,
+          105
+        ],
+        "f_hz": [
+          200,
+          500
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_bins": [
+          195,
+          255
+        ],
+        "f_hz": [
+          200,
+          500
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          195,
+          255
+        ],
+        "f_hz": [
+          200,
+          500
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          195,
+          255
+        ],
+        "f_hz": [
+          200,
+          500
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.2,
+    "match": "any",
+    "onset_t_pct": 13.2
+  },
+  "response_active": {
+    "description": "HGA in the response window of >=1 condition.",
+    "color": "#ffbb78",
+    "img": null,
+    "n_primary": 0,
+    "layer": 3,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          151,
+          300
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          151,
+          300
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          151,
+          300
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.2,
+    "match": "any"
+  },
+  "motor_v2": {
+    "description": "Speech-motor (lenient): per-condition HGA at 62-85% (lower thr), silent (zero HGA all freqs) during stimulus, beta decrease mid-trial.",
+    "color": "#e57373",
+    "img": null,
+    "n_primary": 25,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_pct": [
+          63,
+          85
+        ],
+        "f_hz": [
+          68,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          62,
+          81
+        ],
+        "f_hz": [
+          68,
+          145
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          62,
+          82
+        ],
+        "f_hz": [
+          77,
+          151
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_pct": [
+          0,
+          51
+        ],
+        "f_hz": [
+          68,
+          500
+        ],
+        "sign": "zero"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          2,
+          54
+        ],
+        "f_hz": [
+          66,
+          500
+        ],
+        "sign": "zero"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          1,
+          55
+        ],
+        "f_hz": [
+          70,
+          500
+        ],
+        "sign": "zero"
+      },
+      {
+        "block": "reading",
+        "t_pct": [
+          33,
+          56
+        ],
+        "f_hz": [
+          0,
+          31
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          35,
+          57
+        ],
+        "f_hz": [
+          0,
+          37
+        ],
+        "sign": "neg"
+      },
+      {
+        "block": "audio",
+        "t_pct": [
+          34,
+          57
+        ],
+        "f_hz": [
+          0,
+          31
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 1.0,
+    "frac": 0.25,
+    "match": "all",
+    "onset_t_pct": 2.8
+  },
+  "pic_stim": {
+    "description": "Picture-specific: early low-freq onset at 6-10% (wide band 5-34 Hz) and mid-stimulus beta decrease at 30-46% (13-26 Hz).",
+    "color": "#e9c46a",
+    "img": null,
+    "n_primary": 2,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "picture",
+        "t_pct": [
+          6,
+          10
+        ],
+        "f_hz": [
+          5,
+          34
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_pct": [
+          30,
+          46
+        ],
+        "f_hz": [
+          13,
+          26
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.25,
+    "match": "all",
+    "onset_t_pct": 1.7
+  },
+  "stimulus_active": {
+    "description": "HGA in the stimulus window of >=1 condition.",
+    "color": "#c7c7c7",
+    "img": null,
+    "n_primary": 0,
+    "layer": 3,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "picture",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "reading",
+        "t_bins": [
+          1,
+          150
+        ],
+        "f_hz": [
+          70,
+          150
+        ],
+        "sign": "pos"
+      }
+    ],
+    "thr": 2.0,
+    "frac": 0.2,
+    "match": "any"
+  },
+  "auditory_v2": {
+    "description": "Auditory cortex (lenient): HGA onset 8-28% (39-102 Hz) and concurrent low-frequency decrease 12-34% (6-26 Hz) to the spoken prompt.",
+    "color": "#539fd4",
+    "img": null,
+    "n_primary": 2,
+    "layer": 1,
+    "boxes": [
+      {
+        "block": "audio",
+        "t_pct": [
+          8,
+          28
+        ],
+        "f_hz": [
+          39,
+          102
+        ],
+        "sign": "pos"
+      },
+      {
+        "block": "audio",
+        "t_pct": [
+          12,
+          34
+        ],
+        "f_hz": [
+          6,
+          26
+        ],
+        "sign": "neg"
+      }
+    ],
+    "thr": 1.5,
+    "frac": 0.25,
+    "match": "all",
+    "onset_t_pct": 2.2
+  }
 }
