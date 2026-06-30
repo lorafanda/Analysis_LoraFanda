@@ -170,15 +170,18 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
 
-        # 5b. PRE-RESPONSE — low-freq pos at picture onset + beta ERD mid-picture.
-        #     NB: same box geometry as picture_stim — verify intended distinction.
+        # 5b. PREMOTOR PLANNING — pre-response HGA in all 3 conditions + nonpos HFO.
         {
-            "role": "pre_response", "layer": 1, "color": "#ff7f0e", "thr": 2.0, "frac": 0.25,
-            "description": "Pre-response activity: low-frequency increase at picture onset "
-                           "(6-10%) with beta ERD in the pre-response window (30-46%).",
+            "role": "premotor planning", "layer": 1, "color": "#ff7f0e", "thr": 0.5, "frac": 0.25,
+            "description": "Premotor planning: pre-response HGA broadband increase "
+                           "across all three conditions with suppressed high-frequency oscillations.",
             "boxes": [
-                {"block": "picture", "t_bins": pct(6, 10),  "f_hz": [5, 34],   "sign": "pos"},
-                {"block": "picture", "t_bins": pct(30, 46), "f_hz": [13, 24],  "sign": "neg"},
+                {"block": "picture", "t_pct": [10, 31], "f_hz": [72, 150],  "sign": "pos"},
+                {"block": "audio",   "t_pct": [38, 56], "f_hz": [71, 151],  "sign": "pos"},
+                {"block": "reading", "t_pct": [33, 48], "f_hz": [64, 150],  "sign": "pos"},
+                {"block": "audio",   "t_pct": [6,  94], "f_hz": [261, 495], "sign": "nonpos"},
+                {"block": "picture", "t_pct": [3,  99], "f_hz": [259, 493], "sign": "nonpos"},
+                {"block": "reading", "t_pct": [4,  99], "f_hz": [241, 493], "sign": "nonpos"},
             ],
         },
 
