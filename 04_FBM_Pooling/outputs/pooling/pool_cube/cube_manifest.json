@@ -5,7 +5,7 @@
   "n_blocks": 3,
   "bins_per_block": 30,
   "stim_bins": 15,
-  "scale": 4.0,
+  "scale": 16.0,
   "fmax_hz": 500.0,
   "band_hz": [
     [
