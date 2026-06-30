@@ -2677,15 +2677,15 @@ def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
             cols.append(yc)
     c = coords[cols].drop_duplicates(["patient_id", "contact_norm"])
     m = df_role.merge(c, on=["patient_id", "contact_norm"], how="left").dropna(subset=["x", "y", "z"])
-    base_color = m["role"].map(colors).fillna("#cccccc")
+    # `color` = the BASE role colour (no white-lerp). The per-contact HGA-strength
+    # gradient is applied CLIENT-SIDE (poolv2 colorOf blends the vivid role colour
+    # toward white by 1-strength, with a visible floor) — baking lerped colours here
+    # washed the functional roles out to near-white on the bone-coloured mesh.
+    m["color"] = m["role"].map(colors).fillna("#cccccc")
     if "hga_strength" in m.columns:
-        m["color"] = [
-            _lerp_to_white(bc, s) if (pd.notna(s) and pd.notna(bc) and bc != "#cccccc")
-            else (bc if pd.notna(bc) else "#cccccc")
-            for bc, s in zip(base_color, m["hga_strength"])
-        ]
+        m["hga_strength"] = pd.to_numeric(m["hga_strength"], errors="coerce").round(4)
     else:
-        m["color"] = base_color
+        m["hga_strength"] = np.nan
     if "is_cortical" not in m.columns:
         m["is_cortical"] = 1                       # cortical/depth radius split (page)
     for yc in ("yeo7_network", "yeo17_network"):
@@ -2695,7 +2695,7 @@ def export_pool_web(df_role: pd.DataFrame, coords: pd.DataFrame, run_dir, *,
             lambda s: len([x for x in str(s).split(";") if x.strip()]))
     out = (m[["patient_id", "contact_norm", "name", "hemi", "x", "y", "z",
               "is_cortical", "role", "roles_matched", "n_roles",
-              "yeo7_network", "yeo17_network", "color"]]
+              "yeo7_network", "yeo17_network", "color", "hga_strength"]]
            .rename(columns={"patient_id": "patient", "contact_norm": "contact"}))
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)

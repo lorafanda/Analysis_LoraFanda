@@ -37,6 +37,9 @@
   .swatch { width:14px; height:14px; border-radius:3px; flex:0 0 auto; border:1px solid #0002; }
   .count { margin-left:auto; color:var(--muted); font-size:12px; }
   .chips { display:flex; flex-wrap:wrap; gap:5px; }
+  #intensityToggle { display:flex; align-items:center; gap:6px; font-size:12px; margin-top:7px;
+                     cursor:pointer; color:var(--fg); user-select:none; }
+  #intensityToggle input { cursor:pointer; margin:0; }
   .chip { font-size:12px; padding:3px 8px; border:1px solid var(--line); border-radius:999px;
           background:#fff; cursor:pointer; user-select:none; }
   .chip.off { opacity:.4; text-decoration:line-through; }
@@ -128,6 +131,9 @@
       <button class="mini"     data-mode="yeo17" onclick="setColorMode('yeo17')">Yeo 17</button>
       <button class="mini"     data-mode="neurosynth" onclick="setColorMode('neurosynth')">Neurosynth</button>
     </div>
+    <label id="intensityToggle" title="Shade each functional-role electrode by its peak HGA dB (strong = bold, weak = faint), normalised within the role.">
+      <input type="checkbox" id="intensityChk" checked onchange="setIntensity(this.checked)"> dB-strength gradient
+    </label>
 
     <h2>Roles <button id="rolesAll" class="mini">all</button><button id="rolesNone" class="mini">none</button></h2>
     <div id="roles"></div>
@@ -257,6 +263,13 @@ function hslToRgb(h,s,l){ if(s===0){const v=Math.round(l*255);return[v,v,v];}
 function vivid(hex){ const [r,g,b]=hexToRgb(hex); let [h,s,l]=rgbToHsl(r,g,b);
   if (s < 0.06) return hex; s = Math.min(1, s*1.6 + 0.15); l = Math.min(0.62, Math.max(0.50, l*1.10));
   const [R,G,B]=hslToRgb(h,s,l); return toHex(R,G,B); }
+// linear mix hex->target by t in [0,1]
+function mixHex(hex, target, t){ const [r,g,b]=hexToRgb(hex), [tr,tg,tb]=hexToRgb(target);
+  return toHex(Math.round(r+(tr-r)*t), Math.round(g+(tg-g)*t), Math.round(b+(tb-b)*t)); }
+// HGA-strength gradient: strong dB = full vivid role colour, weak = faded toward white
+// (with a visible floor so the weakest contacts don't vanish on the bone mesh).
+let intensityOn = true;
+const INTENSITY_FLOOR = 0.62;   // weakest contact = this fraction toward white (0=no fade)
 
 // ---------- icosphere (42v / 80f) ----------
 function buildIcosphere() {
@@ -317,7 +330,13 @@ const DESIGN_COLOR = "#ff3b30";                     // poolv2: contacts matching
 const DESIGN_MATCH = new Set();                     // keys "patient|contact" matching the current design
 function colorOf(c) {
   if (colorMode === "design") return DESIGN_COLOR;
-  if (colorMode === "role") return roleColorV(c.role);
+  if (colorMode === "role") {
+    const base = roleColorV(c.role);
+    const s = parseFloat(c.hga_strength);
+    if (!intensityOn || isNaN(s)) return base;           // tags/no-strength -> flat colour
+    const t = (1 - Math.max(0, Math.min(1, s))) * INTENSITY_FLOOR;   // strong=0 (vivid), weak->floor
+    return mixHex(base, "#ffffff", t);
+  }
   if (colorMode === "neurosynth") return (NS_INFO[c.ns_primary] && NS_INFO[c.ns_primary].color) || "#888888";
   return yeoPalette()[netOf(c)] || "#808080";
 }
@@ -418,9 +437,12 @@ function buildYeoLegend() {
 function setColorMode(mode) {
   colorMode = mode;
   _colorModeBtns.forEach(b => b.classList.toggle("on", b.dataset.mode === mode));
+  const it = document.getElementById("intensityToggle");
+  if (it) it.style.opacity = (mode === "role") ? "1" : "0.4";   // only meaningful in role mode
   buildYeoLegend();
   rerender();
 }
+function setIntensity(on) { intensityOn = on; rerender(); }
 
 // ---------- info panel (left of the brain): role explanations + neurosynth region cards ----------
 let ROLE_INFO = {};                 // role   -> {description, color, img, n_primary}
