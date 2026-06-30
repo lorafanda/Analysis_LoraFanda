@@ -372,7 +372,7 @@
   "match": "all"
  },
  "motor": {
-  "description": "Speech-motor cortex: HGA articulation at 60-85% with beta ERD (at most zero); silent during all stimulus windows.",
+  "description": "Speech-motor cortex: HGA at 60-85% in all conditions, beta not-activating (nonpos) in same window; silent (zero) during stimulus window (0-50%).",
   "color": "#d62728",
   "img": "role_cards/motor.png",
   "n_primary": 43,
@@ -380,9 +380,9 @@
   "boxes": [
    {
     "block": "audio",
-    "t_bins": [
-     180,
-     255
+    "t_pct": [
+     60,
+     85
     ],
     "f_hz": [
      70,
@@ -392,9 +392,9 @@
    },
    {
     "block": "picture",
-    "t_bins": [
-     180,
-     255
+    "t_pct": [
+     60,
+     85
     ],
     "f_hz": [
      70,
@@ -404,9 +404,9 @@
    },
    {
     "block": "reading",
-    "t_bins": [
-     180,
-     255
+    "t_pct": [
+     60,
+     85
     ],
     "f_hz": [
      70,
@@ -416,9 +416,9 @@
    },
    {
     "block": "audio",
-    "t_bins": [
-     180,
-     255
+    "t_pct": [
+     60,
+     85
     ],
     "f_hz": [
      13,
@@ -428,9 +428,9 @@
    },
    {
     "block": "picture",
-    "t_bins": [
-     180,
-     255
+    "t_pct": [
+     60,
+     85
     ],
     "f_hz": [
      13,
@@ -440,9 +440,9 @@
    },
    {
     "block": "reading",
-    "t_bins": [
-     180,
-     255
+    "t_pct": [
+     60,
+     85
     ],
     "f_hz": [
      13,
@@ -452,9 +452,9 @@
    },
    {
     "block": "audio",
-    "t_bins": [
-     1,
-     150
+    "t_pct": [
+     0,
+     50
     ],
     "f_hz": [
      70,
@@ -464,9 +464,9 @@
    },
    {
     "block": "picture",
-    "t_bins": [
-     1,
-     150
+    "t_pct": [
+     0,
+     50
     ],
     "f_hz": [
      70,
@@ -476,9 +476,9 @@
    },
    {
     "block": "reading",
-    "t_bins": [
-     1,
-     150
+    "t_pct": [
+     0,
+     50
     ],
     "f_hz": [
      70,
@@ -732,7 +732,7 @@
   "match": "any"
  },
  "tag_beta_erd": {
-  "description": "Beta (13-30) ERD during any stimulus \u2014 engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
+  "description": "Beta (13-30) ERD during any stimulus — engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
   "color": "#bcbd22",
   "img": "role_cards/tag_beta_erd.png",
   "n_primary": 518,
@@ -780,7 +780,7 @@
   "match": "any"
  },
  "tag_low_f_erd": {
-  "description": "Delta/theta (1-8) ERD mid-trial \u2014 low-frequency network marker.",
+  "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
   "color": "#74a9cf",
   "img": "role_cards/tag_low_f_erd.png",
   "n_primary": 457,
@@ -828,7 +828,7 @@
   "match": "any"
  },
  "tag_theta_tracking": {
-  "description": "Theta (4-8) increase during the spoken prompt \u2014 syllabic-rate auditory tracking.",
+  "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate auditory tracking.",
   "color": "#fdae6b",
   "img": "role_cards/tag_theta_tracking.png",
   "n_primary": 335,
@@ -852,7 +852,7 @@
   "match": "any"
  },
  "ultra_hfa": {
-  "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG \u2014 interpret with care.",
+  "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG — interpret with care.",
   "color": "#ff1493",
   "img": "role_cards/ultra_hfa.png",
   "n_primary": 44,
@@ -1030,5 +1030,161 @@
   "thr": 2.0,
   "frac": 0.2,
   "match": "any"
+ },
+ "motor_v2": {
+  "description": "Speech-motor (lenient): per-condition HGA at 62-85% (lower thr), silent (zero HGA all freqs) during stimulus, beta decrease mid-trial.",
+  "color": "#e57373",
+  "img": null,
+  "n_primary": 0,
+  "layer": 1,
+  "boxes": [
+   {
+    "block": "audio",
+    "t_pct": [
+     63,
+     85
+    ],
+    "f_hz": [
+     68,
+     150
+    ],
+    "sign": "pos"
+   },
+   {
+    "block": "picture",
+    "t_pct": [
+     62,
+     81
+    ],
+    "f_hz": [
+     68,
+     145
+    ],
+    "sign": "pos"
+   },
+   {
+    "block": "reading",
+    "t_pct": [
+     62,
+     82
+    ],
+    "f_hz": [
+     77,
+     151
+    ],
+    "sign": "pos"
+   },
+   {
+    "block": "audio",
+    "t_pct": [
+     0,
+     51
+    ],
+    "f_hz": [
+     68,
+     500
+    ],
+    "sign": "zero"
+   },
+   {
+    "block": "picture",
+    "t_pct": [
+     2,
+     54
+    ],
+    "f_hz": [
+     66,
+     500
+    ],
+    "sign": "zero"
+   },
+   {
+    "block": "reading",
+    "t_pct": [
+     1,
+     55
+    ],
+    "f_hz": [
+     70,
+     500
+    ],
+    "sign": "zero"
+   },
+   {
+    "block": "reading",
+    "t_pct": [
+     33,
+     56
+    ],
+    "f_hz": [
+     0,
+     31
+    ],
+    "sign": "neg"
+   },
+   {
+    "block": "picture",
+    "t_pct": [
+     35,
+     57
+    ],
+    "f_hz": [
+     0,
+     37
+    ],
+    "sign": "neg"
+   },
+   {
+    "block": "audio",
+    "t_pct": [
+     34,
+     57
+    ],
+    "f_hz": [
+     0,
+     31
+    ],
+    "sign": "neg"
+   }
+  ],
+  "thr": 1.0,
+  "frac": 0.25,
+  "match": "all"
+ },
+ "pic_stim": {
+  "description": "Picture-specific: early low-freq onset at 6-10% (wide band 5-34 Hz) and mid-stimulus beta decrease at 30-46% (13-26 Hz).",
+  "color": "#e9c46a",
+  "img": null,
+  "n_primary": 0,
+  "layer": 1,
+  "boxes": [
+   {
+    "block": "picture",
+    "t_pct": [
+     6,
+     10
+    ],
+    "f_hz": [
+     5,
+     34
+    ],
+    "sign": "pos"
+   },
+   {
+    "block": "picture",
+    "t_pct": [
+     30,
+     46
+    ],
+    "f_hz": [
+     13,
+     26
+    ],
+    "sign": "neg"
+   }
+  ],
+  "thr": 2.0,
+  "frac": 0.25,
+  "match": "all"
  }
 }

@@ -107,6 +107,17 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
 
+        # 2c. PIC STIM — designer-fitted picture onset (t_pct); slightly wider beta band.
+        {
+            "role": "pic_stim", "layer": 1, "color": "#e9c46a", "thr": 2.0, "frac": 0.25,
+            "description": "Picture-specific: early low-freq onset at 6-10% (wide band 5-34 Hz) "
+                           "and mid-stimulus beta decrease at 30-46% (13-26 Hz).",
+            "boxes": [
+                {"block": "picture", "t_pct": [6,  10], "f_hz": [5,  34], "sign": "pos"},
+                {"block": "picture", "t_pct": [30, 46], "f_hz": [13, 26], "sign": "neg"},
+            ],
+        },
+
         # 3. LEXICAL-SEMANTIC — conceptual access, CONDITION-SPECIFIC timing
         #    (picture early, audio mid, reading at the blank). Strict AND.
         {
@@ -172,21 +183,40 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
 
-        # 7. SPEECH-MOTOR — articulation HGA + beta ERD, silent during stimuli.
+        # 7. SPEECH-MOTOR — articulation HGA + beta ERD (nonpos), silent during stimuli.
         {
             "role": "motor", "layer": 1, "color": "#d62728", "thr": 2.0, "frac": 0.30,
-            "description": "Speech-motor cortex: HGA articulation at 60-85% with beta "
-                           "ERD (at most zero); silent during all stimulus windows.",
+            "description": "Speech-motor cortex: HGA at 60-85% in all conditions, beta "
+                           "not-activating (nonpos) in same window; silent (zero) during "
+                           "stimulus window (0-50%).",
             "boxes": [
-                {"block": "audio",   "t_bins": MW, "f_hz": f,  "sign": "pos"},
-                {"block": "picture", "t_bins": MW, "f_hz": f,  "sign": "pos"},
-                {"block": "reading", "t_bins": MW, "f_hz": f,  "sign": "pos"},
-                {"block": "audio",   "t_bins": MW, "f_hz": fb, "sign": "nonpos"},
-                {"block": "picture", "t_bins": MW, "f_hz": fb, "sign": "nonpos"},
-                {"block": "reading", "t_bins": MW, "f_hz": fb, "sign": "nonpos"},
-                {"block": "audio",   "t_bins": S,  "f_hz": f,  "sign": "zero"},
-                {"block": "picture", "t_bins": S,  "f_hz": f,  "sign": "zero"},
-                {"block": "reading", "t_bins": S,  "f_hz": f,  "sign": "zero"},
+                {"block": "audio",   "t_pct": [60, 85], "f_hz": [70, 150], "sign": "pos"},
+                {"block": "picture", "t_pct": [60, 85], "f_hz": [70, 150], "sign": "pos"},
+                {"block": "reading", "t_pct": [60, 85], "f_hz": [70, 150], "sign": "pos"},
+                {"block": "audio",   "t_pct": [60, 85], "f_hz": [13,  30], "sign": "nonpos"},
+                {"block": "picture", "t_pct": [60, 85], "f_hz": [13,  30], "sign": "nonpos"},
+                {"block": "reading", "t_pct": [60, 85], "f_hz": [13,  30], "sign": "nonpos"},
+                {"block": "audio",   "t_pct": [0,  50], "f_hz": [70, 150], "sign": "zero"},
+                {"block": "picture", "t_pct": [0,  50], "f_hz": [70, 150], "sign": "zero"},
+                {"block": "reading", "t_pct": [0,  50], "f_hz": [70, 150], "sign": "zero"},
+            ],
+        },
+
+        # 7b. SPEECH-MOTOR v2 — lenient per-condition HGA + beta ERD, stim silent.
+        {
+            "role": "motor_v2", "layer": 1, "color": "#e57373", "thr": 1.0, "frac": 0.25,
+            "description": "Speech-motor (lenient): per-condition HGA at 62-85% (lower thr), "
+                           "silent (zero HGA all freqs) during stimulus, beta decrease mid-trial.",
+            "boxes": [
+                {"block": "audio",   "t_pct": [63, 85], "f_hz": [68, 150], "sign": "pos"},
+                {"block": "picture", "t_pct": [62, 81], "f_hz": [68, 145], "sign": "pos"},
+                {"block": "reading", "t_pct": [62, 82], "f_hz": [77, 151], "sign": "pos"},
+                {"block": "audio",   "t_pct": [0,  51], "f_hz": [68, 500], "sign": "zero"},
+                {"block": "picture", "t_pct": [2,  54], "f_hz": [66, 500], "sign": "zero"},
+                {"block": "reading", "t_pct": [1,  55], "f_hz": [70, 500], "sign": "zero"},
+                {"block": "reading", "t_pct": [33, 56], "f_hz": [0,  31],  "sign": "neg"},
+                {"block": "picture", "t_pct": [35, 57], "f_hz": [0,  37],  "sign": "neg"},
+                {"block": "audio",   "t_pct": [34, 57], "f_hz": [0,  31],  "sign": "neg"},
             ],
         },
 

@@ -2260,12 +2260,14 @@ def box_expresses_raw(ersp_raw: np.ndarray, box: dict, grid: str, *,
     fs, ts = _box_slices(box, grid)
     patch = ersp_raw[fs, ts]
     if patch.size == 0:
-        return box.get("sign", "pos") == "zero"
+        return box.get("sign", "pos") in ("zero", "nonpos")
     sign = box.get("sign", "pos")
     if sign == "pos":
         return float((patch > thr).mean()) >= min_prop
     if sign == "neg":
         return float((patch < -thr).mean()) >= min_prop
+    if sign == "nonpos":
+        return float((patch > thr).mean()) < min_prop       # not-activating gate
     return float((np.abs(patch) > thr).mean()) < min_prop   # zero / silent
 
 
