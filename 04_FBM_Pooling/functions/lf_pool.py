@@ -1607,7 +1607,8 @@ def _hz_to_rows(f_hz, grid: str) -> Tuple[int, int]:
     full: linear 0..FMAX over N_FREQ rows. ds: the 15 bands overlapping the range."""
     lo_hz, hi_hz = float(f_hz[0]), float(f_hz[1])
     if grid == "ds":
-        idx = [i + 1 for i, (blo, bhi) in enumerate(FREQ_BANDS) if bhi > lo_hz and blo < hi_hz]
+        # inclusive boundaries: match JS boxPass `bd[1] >= lo && bd[0] <= hi`
+        idx = [i + 1 for i, (blo, bhi) in enumerate(FREQ_BANDS) if bhi >= lo_hz and blo <= hi_hz]
         return (min(idx), max(idx)) if idx else (1, 1)
     lo = max(1, int(round(lo_hz / FMAX_HZ * (N_FREQ - 1))) + 1)
     hi = min(N_FREQ, int(round(hi_hz / FMAX_HZ * (N_FREQ - 1))) + 1)
