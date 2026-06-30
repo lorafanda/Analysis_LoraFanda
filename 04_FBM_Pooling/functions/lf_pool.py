@@ -1707,7 +1707,12 @@ def plot_role_on_concat(concat: np.ndarray, role: dict, *, grid: str = "full",
               extent=[0.5, n_time + 0.5, 0.5, n_freq + 0.5])
     for b in role["boxes"]:
         off = blocks.index(b["block"]) * nt
-        t0, t1 = b["t_bins"]; f0, f1 = _box_rows(b, grid)
+        f0, f1 = _box_rows(b, grid)
+        if "t_pct" in b:
+            t0 = round(b["t_pct"][0] / 100.0 * nt) + 1
+            t1 = round(b["t_pct"][1] / 100.0 * nt)
+        else:
+            t0, t1 = b["t_bins"]
         s = b.get("sign", "pos"); c = _SIGN3.get(s, "#333")
         active = s in ("pos", "neg")        # active=solid fill; zero/nonpos=translucent gray dashed
         ax.add_patch(Rectangle((off + t0 - 0.5, f0 - 0.5), (t1 - t0) + 1, (f1 - f0) + 1,
