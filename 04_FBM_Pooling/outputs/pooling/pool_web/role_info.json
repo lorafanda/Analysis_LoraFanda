@@ -600,7 +600,7 @@
   "match": "all"
  },
  "NN": {
-  "description": "Neural negativity: sustained broadband HGA suppression across audio (9-37%), picture (13-53%), and reading (11-54%). Broad-spectrum task-negative network.",
+  "description": "Neural negativity: sustained broadband HGA suppression across audio (9-37%), picture (13-54%), and reading (11-54%). Broad-spectrum task-negative network.",
   "color": "#6c5b7b",
   "img": "role_cards/NN.png",
   "n_primary": 81,
@@ -608,9 +608,9 @@
   "boxes": [
    {
     "block": "audio",
-    "t_bins": [
-     27,
-     111
+    "t_pct": [
+     9,
+     37
     ],
     "f_hz": [
      122,
@@ -620,21 +620,21 @@
    },
    {
     "block": "picture",
-    "t_bins": [
-     39,
-     159
+    "t_pct": [
+     13,
+     54
     ],
     "f_hz": [
-     112,
-     368
+     147,
+     403
     ],
     "sign": "neg"
    },
    {
     "block": "reading",
-    "t_bins": [
-     33,
-     162
+    "t_pct": [
+     11,
+     54
     ],
     "f_hz": [
      112,
@@ -643,8 +643,8 @@
     "sign": "neg"
    }
   ],
-  "thr": 1.0,
-  "frac": 0.4,
+  "thr": 1.5,
+  "frac": 0.3,
   "match": "all"
  },
  "tag_hga_activation": {
@@ -935,54 +935,6 @@
   "frac": 0.2,
   "match": "any"
  },
- "stimulus_responsive": {
-  "description": "HGA in the stimulus window of >=1 condition.",
-  "color": "#c7c7c7",
-  "img": null,
-  "n_primary": 0,
-  "layer": 3,
-  "boxes": [
-   {
-    "block": "audio",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "picture",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   },
-   {
-    "block": "reading",
-    "t_bins": [
-     1,
-     150
-    ],
-    "f_hz": [
-     70,
-     150
-    ],
-    "sign": "pos"
-   }
-  ],
-  "thr": 2.0,
-  "frac": 0.2,
-  "match": "any"
- },
  "response_active": {
   "description": "HGA in the response window of >=1 condition.",
   "color": "#ffbb78",
@@ -1184,6 +1136,90 @@
    }
   ],
   "thr": 2.0,
+  "frac": 0.25,
+  "match": "all"
+ },
+ "stimulus_active": {
+  "description": "HGA in the stimulus window of >=1 condition.",
+  "color": "#c7c7c7",
+  "img": null,
+  "n_primary": 0,
+  "layer": 3,
+  "boxes": [
+   {
+    "block": "audio",
+    "t_bins": [
+     1,
+     150
+    ],
+    "f_hz": [
+     70,
+     150
+    ],
+    "sign": "pos"
+   },
+   {
+    "block": "picture",
+    "t_bins": [
+     1,
+     150
+    ],
+    "f_hz": [
+     70,
+     150
+    ],
+    "sign": "pos"
+   },
+   {
+    "block": "reading",
+    "t_bins": [
+     1,
+     150
+    ],
+    "f_hz": [
+     70,
+     150
+    ],
+    "sign": "pos"
+   }
+  ],
+  "thr": 2.0,
+  "frac": 0.2,
+  "match": "any"
+ },
+ "auditory_v2": {
+  "description": "Auditory cortex (lenient): HGA onset 8-28% (39-102 Hz) and concurrent low-frequency decrease 12-34% (6-26 Hz) to the spoken prompt.",
+  "color": "#539fd4",
+  "img": null,
+  "n_primary": 0,
+  "layer": 1,
+  "boxes": [
+   {
+    "block": "audio",
+    "t_pct": [
+     8,
+     28
+    ],
+    "f_hz": [
+     39,
+     102
+    ],
+    "sign": "pos"
+   },
+   {
+    "block": "audio",
+    "t_pct": [
+     12,
+     34
+    ],
+    "f_hz": [
+     6,
+     26
+    ],
+    "sign": "neg"
+   }
+  ],
+  "thr": 1.5,
   "frac": 0.25,
   "match": "all"
  }

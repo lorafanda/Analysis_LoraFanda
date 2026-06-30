@@ -1784,6 +1784,110 @@ def plot_role_exemplars(input_dir, df_role: pd.DataFrame, *, grid: str = "full",
     return out
 
 
+def plot_role_hga_timeseries(
+        df_contacts: pd.DataFrame,
+        X_raw: np.ndarray,
+        df_pool: pd.DataFrame,
+        role_info: Dict[str, dict],
+        *,
+        grid: str = "ds",
+        hga_hz: tuple = (70.0, 150.0),
+        ci_mult: float = 1.0,
+        onset_thr_db: float = 0.5,
+        out_png=None,
+        dpi: int = 150,
+) -> tuple:
+    """Average HGA time series per role, one subplot per condition (audio / picture / reading).
+
+    X_raw  : (n_contacts, n_freq, n_time_total) raw dB.
+              For grid='ds' pass the output of build_concat_raw(df_meta, _ds_cube(X_3d)).
+    Returns (fig, onset_dict) where onset_dict = {role: onset_t_pct}.
+    Patch onset_dict into role_info.json to enable website sidebar sorting.
+    """
+    import matplotlib.pyplot as plt
+
+    nt = 30 if grid == "ds" else N_TIME
+    nf = X_raw.shape[1]
+
+    # HGA row selection
+    if grid == "ds":
+        hga_rows = np.array([i for i, (lo, hi) in enumerate(FREQ_BANDS)
+                             if lo < hga_hz[1] and hi > hga_hz[0]])
+    else:
+        hz_per_row = FMAX_HZ / nf
+        hga_rows = np.array([i for i in range(nf)
+                             if i * hz_per_row < hga_hz[1] and (i + 1) * hz_per_row > hga_hz[0]])
+    if not len(hga_rows):
+        raise ValueError(f"No freq rows for HGA {hga_hz} Hz in grid='{grid}' (n_freq={nf})")
+
+    hga_all = X_raw[:, hga_rows, :].mean(axis=1)   # (n_contacts, n_time_total)
+
+    p_col  = "patient_id"   if "patient_id"   in df_contacts.columns else "patient"
+    c_col  = "contact_norm" if "contact_norm"  in df_contacts.columns else "contact"
+    dp_col = "patient_id"   if "patient_id"   in df_pool.columns     else "patient"
+    dc_col = "contact_norm" if "contact_norm"  in df_pool.columns     else "contact"
+    key_to_idx: dict = {(row[p_col], row[c_col]): i for i, row in df_contacts.iterrows()}
+
+    roles = [r for r in df_pool["role"].dropna().unique()
+             if r not in ("none", "") and r in role_info]
+
+    CONDS = ["audio", "picture", "reading"]
+    t_pct = np.linspace(0, 100, nt, endpoint=False) + 50.0 / nt
+
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey=True)
+
+    for ci, (cond, ax) in enumerate(zip(CONDS, axes)):
+        sl = slice(ci * nt, (ci + 1) * nt)
+        ax.axhline(0, color="0.75", lw=0.8, zorder=0)
+        ax.axvline(50, color="0.4", lw=1.0, ls="--", zorder=0)
+        ax.text(51.5, 0, "GO", fontsize=7, color="0.4", va="bottom")
+        for role_name in roles:
+            color = role_info[role_name].get("color", "#888")
+            rows_r = df_pool[df_pool["role"] == role_name]
+            mats = []
+            for _, row in rows_r.iterrows():
+                idx = key_to_idx.get((row[dp_col], row[dc_col]))
+                if idx is not None:
+                    mats.append(hga_all[idx, sl])
+            if not mats:
+                continue
+            mat  = np.stack(mats)
+            mean = mat.mean(0)
+            sem  = mat.std(0) / np.sqrt(len(mats)) * ci_mult
+            ax.plot(t_pct, mean, color=color, lw=1.5,
+                    label=f"{role_name} (n={len(mats)})" if ci == 0 else None, zorder=2)
+            ax.fill_between(t_pct, mean - sem, mean + sem, color=color, alpha=0.15, zorder=1)
+        ax.set_title(cond.capitalize(), fontsize=11)
+        ax.set_xlabel("Trial time (%)")
+        if ci == 0:
+            ax.set_ylabel("HGA (dB)")
+            ax.legend(fontsize=6.5, loc="upper left", ncol=1, framealpha=0.85)
+        ax.set_xlim(0, 100)
+
+    fig.suptitle("Average HGA time series per role  (±1 SEM)", fontsize=12, y=1.01)
+    plt.tight_layout()
+    if out_png:
+        fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+
+    # Onset time: first bin where |grand mean across all conditions| > onset_thr_db
+    onset_dict: Dict[str, float] = {}
+    for role_name in roles:
+        rows_r = df_pool[df_pool["role"] == role_name]
+        grand = []
+        for ci_b in range(3):
+            sl_b = slice(ci_b * nt, (ci_b + 1) * nt)
+            for _, row in rows_r.iterrows():
+                idx = key_to_idx.get((row[dp_col], row[dc_col]))
+                if idx is not None:
+                    grand.append(hga_all[idx, sl_b])
+        if grand:
+            gm = np.stack(grand).mean(0)
+            hits = np.where(np.abs(gm) > onset_thr_db)[0]
+            onset_dict[role_name] = float(t_pct[hits[0]]) if len(hits) else 100.0
+
+    return fig, onset_dict
+
+
 def export_role_info(input_dir, df_role: pd.DataFrame, out_dir, *, grid: str = "full",
                      role_params: Optional[dict] = None, verbose: bool = True) -> Path:
     """Write the per-role 'info card' assets the POOL web page shows in its info panel:

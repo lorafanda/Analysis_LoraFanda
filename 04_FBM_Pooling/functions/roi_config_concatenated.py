@@ -75,6 +75,17 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
 
+        # 1b. AUDITORY v2 — designer-fitted: broadband HGA onset + early low-freq decrease.
+        {
+            "role": "auditory_v2", "layer": 1, "color": "#539fd4", "thr": 1.5, "frac": 0.25,
+            "description": "Auditory cortex (lenient): HGA onset 8-28% (39-102 Hz) and "
+                           "concurrent low-frequency decrease 12-34% (6-26 Hz) to the spoken prompt.",
+            "boxes": [
+                {"block": "audio", "t_pct": [8,  28], "f_hz": [39, 102], "sign": "pos"},
+                {"block": "audio", "t_pct": [12, 34], "f_hz": [6,  26],  "sign": "neg"},
+            ],
+        },
+
         # 2. VISUAL INPUT — split by modality (HGA to the image vs to the sentence),
         #    each silent to audio. (beta box dropped; picture & reading no longer conjoined.)
         {
@@ -246,16 +257,16 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
 
-        # 9b. NN — broadband HGA suppression across all conditions.
+        # 9b. NN — broadband HGA suppression across all conditions (designer-fitted).
         {
-            "role": "NN", "layer": 1, "color": "#6c5b7b", "thr": 1.0, "frac": 0.40,
+            "role": "NN", "layer": 1, "color": "#6c5b7b", "thr": 1.5, "frac": 0.30,
             "description": "Neural negativity: sustained broadband HGA suppression "
-                           "across audio (9-37%), picture (13-53%), and reading (11-54%). "
+                           "across audio (9-37%), picture (13-54%), and reading (11-54%). "
                            "Broad-spectrum task-negative network.",
             "boxes": [
-                {"block": "audio",   "t_bins": pct(9, 37),   "f_hz": [122, 381], "sign": "neg"},
-                {"block": "picture", "t_bins": pct(13, 53),  "f_hz": [112, 368], "sign": "neg"},
-                {"block": "reading", "t_bins": pct(11, 54),  "f_hz": [112, 401], "sign": "neg"},
+                {"block": "audio",   "t_pct": [9,  37], "f_hz": [122, 381], "sign": "neg"},
+                {"block": "picture", "t_pct": [13, 54], "f_hz": [147, 403], "sign": "neg"},
+                {"block": "reading", "t_pct": [11, 54], "f_hz": [112, 401], "sign": "neg"},
             ],
         },
 
@@ -329,7 +340,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # ════════════════ LAYER 3 — UMBRELLAS ═══════════════════════
         {
-            "role": "stimulus_responsive", "layer": 3, "match": "any", "color": "#c7c7c7", "thr": 2.0, "frac": 0.20,
+            "role": "stimulus_active", "layer": 3, "match": "any", "color": "#c7c7c7", "thr": 2.0, "frac": 0.20,
             "description": "HGA in the stimulus window of >=1 condition.",
             "boxes": [
                 {"block": "audio",   "t_bins": S, "f_hz": f, "sign": "pos"},
