@@ -169,6 +169,7 @@ def fit_and_save(
         method_label=method_label or METHOD_LABELS.get(method, method),
         feature_set_label=feature_set_label or FEATURE_SET_LABELS.get(feature_set, feature_set),
         sweep=fit.get("sweep"),
+        sil_per_point=sil_per_point,
     )
 
     # ---- persist artifacts ----
@@ -678,15 +679,22 @@ def _save_figures(
     method_label: str,
     feature_set_label: str,
     sweep: Optional[Dict[str, Any]] = None,
+    sil_per_point: Optional[np.ndarray] = None,
 ) -> Dict[str, str]:
     """
     Generate the standard figure set:
 
       centroids.png                    — cluster × feature heatmap (default view)
-      silhouette_per_cluster.png       — bar chart, sorted; tells you which clusters are tight
+      silhouette_per_cluster.png       — two-panel silhouette analysis: (left) per-sample
+                                         silhouette knife plot grouped + sorted by cluster
+                                         with the overall-average line; (right) PCA(2)
+                                         projection of X coloured by cluster with centroids
       similarity_heatmap.png           — sample × sample distance matrix reordered by cluster
       centroid_distance_heatmap.png    — k × k inter-centroid distances; cluster separation
       silhouette_by_k.png              — sweep curve (KMeans with k_range only)
+
+    `sil_per_point` is the precomputed per-sample silhouette (from fit_and_save);
+    if None it's recomputed here.
     """
     figs: Dict[str, str] = {}
     title_prefix = f"{method_label} · {feature_set_label}"
@@ -711,27 +719,78 @@ def _save_figures(
     plt.close(fig)
     figs["centroids_figure"] = "centroids.png"
 
-    # 2) silhouette per cluster
-    pc = metrics["per_cluster"]
-    cluster_ids = sorted(pc.keys(), key=lambda k: -pc[k]["silhouette_mean"]
-                         if not np.isnan(pc[k]["silhouette_mean"]) else 0)
-    sils = [pc[c]["silhouette_mean"] for c in cluster_ids]
-    sizes = [pc[c]["size"] for c in cluster_ids]
+    # 2) silhouette analysis — two panels:
+    #    LEFT  = per-sample silhouette "knife" plot (sklearn-style): every sample
+    #            is a horizontal bar, grouped by cluster and sorted within cluster,
+    #            with a dashed line at the overall average silhouette.
+    #    RIGHT = PCA(2) projection of X coloured by cluster (the high-D analogue
+    #            of sklearn's 2-feature scatter), with projected centroids marked.
+    import matplotlib.cm as _cm
+    from sklearn.decomposition import PCA as _PCA
+
+    # Per-sample silhouette — reuse the precomputed vector from fit_and_save.
+    if sil_per_point is None:
+        sil_per_point = (silhouette_samples(X, labels)
+                         if len(np.unique(labels)) > 1
+                         else np.full(len(labels), float("nan")))
+    sil_per_point = np.asarray(sil_per_point, dtype=float)
+
+    uniq_sorted = sorted(int(c) for c in uniq)
+    n_clu = len(uniq_sorted)
+    overall_sil = float(metrics.get("silhouette_overall", np.nanmean(sil_per_point)))
+
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(15, max(5, 0.18 * len(labels) / n_clu + 3)))
+
+    # ── LEFT: knife plot ──────────────────────────────────────────────
+    axL.set_xlim([min(-0.1, float(np.nanmin(sil_per_point)) - 0.05), 1.0])
+    axL.set_ylim([0, len(X) + (n_clu + 1) * 10])
+    y_lower = 10
+    for i, c in enumerate(uniq_sorted):
+        vals = np.sort(sil_per_point[labels == c])
+        size_c = vals.shape[0]
+        y_upper = y_lower + size_c
+        color = _cm.nipy_spectral(float(i) / max(n_clu, 1))
+        axL.fill_betweenx(np.arange(y_lower, y_upper), 0, vals,
+                          facecolor=color, edgecolor=color, alpha=0.75)
+        axL.text(-0.05, y_lower + 0.5 * size_c, str(c), fontsize=8, va="center")
+        y_lower = y_upper + 10
+    axL.axvline(x=overall_sil, color="#b85c6e", linestyle="--", lw=1.2,
+                label=f"overall = {overall_sil:.3f}")
+    axL.set_title(f"{title_prefix} — per-sample silhouette")
+    axL.set_xlabel("silhouette coefficient")
+    axL.set_ylabel("samples (grouped by cluster)")
+    axL.set_yticks([])
+    axL.legend(loc="lower right", fontsize=8)
+
+    # ── RIGHT: PCA(2) scatter coloured by cluster ─────────────────────
+    try:
+        if X.shape[1] >= 2 and len(labels) >= 3:
+            pca = _PCA(n_components=2, random_state=0)
+            XY = pca.fit_transform(X)
+            evr = pca.explained_variance_ratio_
+            cols = _cm.nipy_spectral(np.array([uniq_sorted.index(int(c)) for c in labels], float) / max(n_clu, 1))
+            axR.scatter(XY[:, 0], XY[:, 1], marker=".", s=22, lw=0, alpha=0.6, c=cols)
+            # projected centroids (mean of each cluster's projected points)
+            for i, c in enumerate(uniq_sorted):
+                cen = XY[labels == c].mean(axis=0)
+                axR.scatter(cen[0], cen[1], marker="o", c="white", s=180,
+                            edgecolor="k", alpha=0.95, zorder=3)
+                axR.scatter(cen[0], cen[1], marker=f"${c}$", c="k", s=48, zorder=4)
+            axR.set_title(f"{title_prefix} — PCA projection")
+            axR.set_xlabel(f"PC1 ({evr[0]*100:.1f}% var)")
+            axR.set_ylabel(f"PC2 ({evr[1]*100:.1f}% var)")
+        else:
+            axR.text(0.5, 0.5, "PCA needs ≥2 features & ≥3 samples",
+                     ha="center", va="center", transform=axR.transAxes, color="#7a6560")
+            axR.set_xticks([]); axR.set_yticks([])
+    except Exception as _e_pca:
+        axR.text(0.5, 0.5, f"PCA failed:\n{_e_pca}", ha="center", va="center",
+                 transform=axR.transAxes, color="#b85c6e", fontsize=8)
+        axR.set_xticks([]); axR.set_yticks([])
 
     p = run_dir / "silhouette_per_cluster.png"
-    fig, ax = plt.subplots(figsize=(max(6, 0.3 * len(cluster_ids) + 4), 4))
-    bars = ax.bar(range(len(cluster_ids)), sils,
-                  color=["#7a8c6e" if s >= 0 else "#b85c6e" for s in sils])
-    ax.axhline(metrics["silhouette_overall"], color="black", lw=1, ls="--",
-               label=f"overall = {metrics['silhouette_overall']:.3f}")
-    ax.set_xticks(range(len(cluster_ids)))
-    ax.set_xticklabels([f"{c}\n(n={sizes[i]})" for i, c in enumerate(cluster_ids)],
-                       fontsize=8)
-    ax.set_ylabel("mean silhouette")
-    ax.set_title(f"{title_prefix} — silhouette by cluster (sorted)")
-    ax.legend(loc="best", fontsize=8)
-    ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
+    fig.suptitle(f"Silhouette analysis — k={n_clu}", fontsize=13, fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.97])
     fig.savefig(p, dpi=150, bbox_inches="tight")
     plt.close(fig)
     figs["silhouette_per_cluster_figure"] = "silhouette_per_cluster.png"
