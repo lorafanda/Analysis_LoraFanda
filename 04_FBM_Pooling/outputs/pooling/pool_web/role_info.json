@@ -793,7 +793,7 @@
   },
   "deactivation": {
     "description": "Task-negative network: HGA suppression over the early-mid trial in all conditions (DMN-like deactivation).",
-    "color": "#045a8d",
+    "color": "#393b79",
     "img": "role_cards/deactivation.png",
     "n_primary": 1,
     "layer": 1,
@@ -889,7 +889,7 @@
   },
   "tag_hga_activation": {
     "description": "HGA increase in any stim or response window (no selectivity).",
-    "color": "#aec7e8",
+    "color": "#bcb0b0",
     "img": "role_cards/tag_hga_activation.png",
     "n_primary": 70,
     "layer": 2,
@@ -973,7 +973,7 @@
   },
   "tag_beta_erd": {
     "description": "Beta (13-30) ERD during any stimulus — engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
-    "color": "#bcbd22",
+    "color": "#bcbca0",
     "img": "role_cards/tag_beta_erd.png",
     "n_primary": 301,
     "layer": 2,
@@ -1021,7 +1021,7 @@
   },
   "tag_low_f_erd": {
     "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
-    "color": "#74a9cf",
+    "color": "#a6b2bc",
     "img": "role_cards/tag_low_f_erd.png",
     "n_primary": 274,
     "layer": 2,
@@ -1069,7 +1069,7 @@
   },
   "tag_theta_tracking": {
     "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate auditory tracking.",
-    "color": "#fdae6b",
+    "color": "#c4b6a4",
     "img": "role_cards/tag_theta_tracking.png",
     "n_primary": 180,
     "layer": 2,
@@ -1093,7 +1093,7 @@
   },
   "ultra_hfa": {
     "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG — interpret with care.",
-    "color": "#ff1493",
+    "color": "#c2a6bc",
     "img": "role_cards/ultra_hfa.png",
     "n_primary": 70,
     "layer": 2,
@@ -1225,7 +1225,7 @@
   },
   "response_active": {
     "description": "HGA in the response window of >=1 condition.",
-    "color": "#ffbb78",
+    "color": "#c9c9c9",
     "img": null,
     "n_primary": 0,
     "layer": 3,

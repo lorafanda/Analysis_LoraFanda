@@ -90,7 +90,7 @@
     },
     {
       "role": "deactivation",
-      "color": "#045a8d",
+      "color": "#393b79",
       "n": 1,
       "n_primary": 1
     },
@@ -102,31 +102,31 @@
     },
     {
       "role": "tag_hga_activation",
-      "color": "#aec7e8",
+      "color": "#bcb0b0",
       "n": 139,
       "n_primary": 64
     },
     {
       "role": "tag_beta_erd",
-      "color": "#bcbd22",
+      "color": "#bcbca0",
       "n": 379,
       "n_primary": 299
     },
     {
       "role": "tag_low_f_erd",
-      "color": "#74a9cf",
+      "color": "#a6b2bc",
       "n": 536,
       "n_primary": 232
     },
     {
       "role": "tag_theta_tracking",
-      "color": "#fdae6b",
+      "color": "#c4b6a4",
       "n": 252,
       "n_primary": 178
     },
     {
       "role": "ultra_hfa",
-      "color": "#ff1493",
+      "color": "#c2a6bc",
       "n": 121,
       "n_primary": 67
     },
@@ -138,7 +138,7 @@
     },
     {
       "role": "response_active",
-      "color": "#ffbb78",
+      "color": "#c9c9c9",
       "n": 104,
       "n_primary": 0
     },

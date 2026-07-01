@@ -252,7 +252,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # 9. DEACTIVATION — task-negative HGA decrease (merged network_negative_1/2).
         {
-            "role": "deactivation", "layer": 1, "color": "#045a8d", "thr": 2.0, "frac": 0.30,
+            "role": "deactivation", "layer": 1, "color": "#393b79", "thr": 2.0, "frac": 0.30,
             "description": "Task-negative network: HGA suppression over the early-mid "
                            "trial in all conditions (DMN-like deactivation).",
             "boxes": [
@@ -280,7 +280,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # HGA activation anywhere (functional-agnostic).
         {
-            "role": "tag_hga_activation", "layer": 2, "match": "any", "color": "#aec7e8", "thr": 2.0, "frac": 0.20,
+            "role": "tag_hga_activation", "layer": 2, "match": "any", "color": "#bcb0b0", "thr": 2.0, "frac": 0.20,
             "description": "HGA increase in any stim or response window (no selectivity).",
             "boxes": [
                 {"block": "audio",   "t_bins": S, "f_hz": f, "sign": "pos"},
@@ -294,7 +294,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # Beta ERD engagement — the RQ1 probe (engagement WITHOUT requiring HGA).
         {
-            "role": "tag_beta_erd", "layer": 2, "match": "any", "color": "#bcbd22", "thr": 2.0, "frac": 0.20,
+            "role": "tag_beta_erd", "layer": 2, "match": "any", "color": "#bcbca0", "thr": 2.0, "frac": 0.20,
             "description": "Beta (13-30) ERD during any stimulus — engagement marker; "
                            "contacts firing this with NO layer-1 HGA role are missed by "
                            "a high-gamma-only filter (RQ1).",
@@ -307,7 +307,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # Low-frequency ERD network.
         {
-            "role": "tag_low_f_erd", "layer": 2, "match": "any", "color": "#74a9cf", "thr": 2.0, "frac": 0.20,
+            "role": "tag_low_f_erd", "layer": 2, "match": "any", "color": "#a6b2bc", "thr": 2.0, "frac": 0.20,
             "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
             "boxes": [
                 {"block": "audio",   "t_bins": pct(30, 70), "f_hz": flo, "sign": "neg"},
@@ -318,7 +318,7 @@ def _roles(stim, resp, motor_win, nt):
 
         # Theta tracking — syllabic-rate auditory tracking (repurposes dead theta band).
         {
-            "role": "tag_theta_tracking", "layer": 2, "match": "any", "color": "#fdae6b", "thr": 2.0, "frac": 0.20,
+            "role": "tag_theta_tracking", "layer": 2, "match": "any", "color": "#c4b6a4", "thr": 2.0, "frac": 0.20,
             "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate "
                            "auditory tracking.",
             "boxes": [
@@ -329,7 +329,7 @@ def _roles(stim, resp, motor_win, nt):
         # Ultra-HFA — very-high-frequency (>200 Hz) burst in the MIDDLE 40% of any
         # stimulus OR response window (HFOs / very-high-gamma).
         {
-            "role": "ultra_hfa", "layer": 2, "match": "any", "color": "#ff1493", "thr": 2.0, "frac": 0.20,
+            "role": "ultra_hfa", "layer": 2, "match": "any", "color": "#c2a6bc", "thr": 2.0, "frac": 0.20,
             "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any "
                            "stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz "
                            "overlaps mains harmonics + speech EMG — interpret with care.",
@@ -354,7 +354,7 @@ def _roles(stim, resp, motor_win, nt):
             ],
         },
         {
-            "role": "response_active", "layer": 3, "match": "any", "color": "#ffbb78", "thr": 2.0, "frac": 0.20,
+            "role": "response_active", "layer": 3, "match": "any", "color": "#c9c9c9", "thr": 2.0, "frac": 0.20,
             "description": "HGA in the response window of >=1 condition.",
             "boxes": [
                 {"block": "audio",   "t_bins": R, "f_hz": f, "sign": "pos"},
