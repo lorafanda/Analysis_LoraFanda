@@ -108,26 +108,25 @@ def render_hg_sparkline(
     ax,
     hg_vec,
     *,
-    color: str = "#cc0033",
+    color: str = "black",
     show_axes: bool = False,
     ylim: Optional[Tuple[float, float]] = (-6.5, 6.5),  # match cfg.hg_vmin/vmax + the ERSP_clean cmap scale
     zero_line: bool = True,
 ):
     """
-    Draw a 1D HG time series onto an existing matplotlib axis.
+    Draw a single 1D HG time series onto an existing matplotlib axis.
 
-    Style: thin red line, optional baseline at 0, no axes/labels by
-    default. Same minimalist look as the ERSP_clean PNGs so the chip
-    grid stays visually consistent across feature sets.
+    Per-SAMPLE view (one contact) — a single trace has no variance to show,
+    so this is just a clean black line + faint zero baseline. The directional
+    red/blue fill was removed; SEM error shading only makes sense for a
+    CLUSTER centroid (mean of many samples), which lives in
+    lf_centroids.render_hg_centroid.
     """
     hg = np.asarray(hg_vec).ravel()
     x = np.arange(len(hg))
 
     if zero_line:
-        ax.axhline(0, color="#888", lw=0.4, alpha=0.6, zorder=1)
-    # Fill above/below zero with light tint so direction reads at a glance
-    ax.fill_between(x, 0, hg, where=hg > 0, color="#cc0033", alpha=0.20, lw=0, zorder=2)
-    ax.fill_between(x, 0, hg, where=hg < 0, color="#0033cc", alpha=0.20, lw=0, zorder=2)
+        ax.axhline(0, color="#999", lw=0.35, alpha=0.7, zorder=1)
     ax.plot(x, hg, color=color, lw=1.1, zorder=3)
 
     if ylim is not None:
