@@ -616,6 +616,31 @@ left→right means the decode was riding on power, not pattern. **Bottom:** time
 cell("code", r"""
 if len(comp): C.plot_paired_contrasts(comp, classifier='logreg', out_png=outdir/'paired_contrasts.png'); plt.show()
 """),
+cell("markdown", r"""
+## Fig 4 — Paired feature comparison (patient-grouped)
+
+The honest cross-feature comparison: every feature is scored on the **same electrodes with the
+same GroupKFold**, so per-patient balanced accuracies are **paired**.
+
+- **Wilcoxon table** — each feature vs a baseline (`full_300`): the per-patient balanced-accuracy
+  Δ tested with a signed-rank test over patients. Respects the patient-grouped design (unlike
+  McNemar on pooled out-of-fold predictions). With ~N patients it has limited power and
+  per-patient accuracy is noisy — a **screen, not proof**.
+- **Δ-confusion** — `confusion(feature) − confusion(baseline)`, row-normalised: **red** = the
+  feature sends more of a true class to that predicted class than the baseline (blue = less).
+  Isolates the *change* in error structure so you don't mentally subtract two matrices.
+"""),
+cell("code", r"""
+BASELINE = 'full_300'; CLF = 'logreg'
+for t in ('condition', 'parcellation_yeo7', 'parcellation_yeo17'):
+    print(f'\n=== {t} · {CLF} — vs {BASELINE} ===')
+    w = C.paired_feature_wilcoxon(t, CLF, baseline=BASELINE)
+    if len(w): display(w.round(4))
+    else: print('  no runs')
+    fig = C.plot_delta_confusion(t, CLF, baseline=BASELINE, out_png=outdir/f'delta_confusion_{t}.png')
+    if fig is not None: plt.show()
+    else: print('  (need the baseline + >=1 other feature run)')
+"""),
 ]
 
 write_nb("310_classification_dataprep.ipynb", nb310)

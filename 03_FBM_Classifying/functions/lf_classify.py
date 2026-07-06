@@ -1628,3 +1628,118 @@ def plot_paired_contrasts(comp, classifier="logreg", out_png=None):
     if out_png:
         fig.savefig(out_png, dpi=140, bbox_inches="tight")
     return fig
+
+
+# ============================================================
+# 14 — Paired feature comparison (patient-grouped, from predictions.csv)
+# ============================================================
+# Every feature is scored on the SAME electrodes with the SAME GroupKFold, so
+# predictions are aligned electrode-by-electrode and per-patient balanced
+# accuracies are PAIRED across features. That lets us test "is feature A better
+# than B" honestly (Wilcoxon over patients), and diff their confusion matrices.
+def per_patient_balanced_acc(task, variant, classifier,
+                             outputs_root: Path = OUTPUTS_ROOT) -> dict:
+    """{patient_id: balanced accuracy} from a run's out-of-fold predictions.csv.
+    Each patient's rows are the fold in which that patient was held out, so this
+    is a per-patient generalisation estimate."""
+    from sklearn.metrics import balanced_accuracy_score
+    rd = latest_run_dir(task, variant, classifier, outputs_root)
+    if rd is None or not (rd / "predictions.csv").exists():
+        return {}
+    df = pd.read_csv(rd / "predictions.csv")
+    out = {}
+    for pid, g in df.groupby("patient_id"):
+        try:
+            out[str(pid)] = float(balanced_accuracy_score(g["y_true"], g["y_pred"]))
+        except Exception:
+            pass
+    return out
+
+
+def paired_feature_wilcoxon(task, classifier, baseline="full_300", variants=None,
+                            outputs_root: Path = OUTPUTS_ROOT) -> pd.DataFrame:
+    """Per-patient paired Wilcoxon signed-rank of each feature vs `baseline`,
+    respecting the patient-grouped design (the honest 'is A better than B').
+
+    Columns: variant, n_patients, median_delta (feature − baseline balanced acc),
+    wilcoxon_p. NOTE: ~N_patients paired samples → limited power; per-patient
+    balanced accuracy is noisy for patients with few electrodes. Screen, not proof."""
+    from scipy.stats import wilcoxon
+    if variants is None:
+        variants = [v for v in VARIANT_DISPLAY_ORDER
+                    if latest_run_dir(task, v, classifier, outputs_root) is not None]
+    base = per_patient_balanced_acc(task, baseline, classifier, outputs_root)
+    rows = []
+    for v in variants:
+        if v == baseline:
+            continue
+        cur = per_patient_balanced_acc(task, v, classifier, outputs_root)
+        pats = sorted(set(base) & set(cur))
+        d = np.array([cur[p] - base[p] for p in pats], dtype=float)
+        pval = float("nan")
+        if len(pats) >= 3 and np.any(d != 0):
+            try:
+                pval = float(wilcoxon(d).pvalue)
+            except Exception:
+                pval = float("nan")
+        rows.append({"variant": v, "n_patients": len(pats),
+                     "median_delta": float(np.median(d)) if len(d) else float("nan"),
+                     "wilcoxon_p": pval})
+    out = pd.DataFrame(rows)
+    if len(out):
+        out.insert(0, "vs_baseline", baseline)
+    return out
+
+
+def plot_delta_confusion(task, classifier, baseline="full_300", variants=None,
+                         outputs_root: Path = OUTPUTS_ROOT, out_png=None):
+    """Row-normalised confusion(feature) − confusion(baseline), one diverging
+    panel per feature. Red = the feature sends MORE of a true class to that
+    predicted class than the baseline does (blue = less). Isolates the change."""
+    import matplotlib.pyplot as plt
+
+    def rn_conf(v):
+        rd = latest_run_dir(task, v, classifier, outputs_root)
+        if rd is None or not (rd / "confusion_matrix.csv").exists():
+            return None, None
+        df = pd.read_csv(rd / "confusion_matrix.csv", index_col=0)
+        cm = df.to_numpy(dtype=float)
+        rs = cm.sum(axis=1, keepdims=True); rs[rs == 0] = 1.0
+        return list(df.index), cm / rs
+
+    labels, base = rn_conf(baseline)
+    if base is None:
+        return None
+    if variants is None:
+        variants = [v for v in VARIANT_DISPLAY_ORDER
+                    if v != baseline and latest_run_dir(task, v, classifier, outputs_root)]
+    diffs = []
+    for v in variants:
+        _, cm = rn_conf(v)
+        if cm is not None and cm.shape == base.shape:
+            diffs.append((v, cm - base))
+    if not diffs:
+        return None
+    vmax = max(float(np.nanmax(np.abs(d))) for _, d in diffs) or 1.0
+    short = [str(l).replace("Networks_", "N") for l in labels]
+    n = len(diffs); ncols = min(4, n); nrows = int(np.ceil(n / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(2.7 * ncols, 2.7 * nrows),
+                             squeeze=False)
+    im = None
+    for k, (v, d) in enumerate(diffs):
+        ax = axes[k // ncols][k % ncols]
+        im = ax.imshow(d, cmap="RdBu_r", vmin=-vmax, vmax=vmax)
+        ax.set_title(f"{v} − {baseline}", fontsize=8)
+        ax.set_xticks(range(len(short))); ax.set_xticklabels(short, fontsize=5, rotation=90)
+        ax.set_yticks(range(len(short))); ax.set_yticklabels(short, fontsize=5)
+        ax.set_xlabel("predicted", fontsize=6); ax.set_ylabel("true", fontsize=6)
+    for k in range(n, nrows * ncols):
+        axes[k // ncols][k % ncols].axis("off")
+    fig.suptitle(f"Δ confusion vs {baseline} — {TASK_SHORT.get(task, task)} · {classifier}"
+                 "   (red = feature sends more mass here)", fontsize=9)
+    if im is not None:
+        fig.colorbar(im, ax=axes.ravel().tolist(), fraction=0.02, pad=0.02,
+                     label="Δ row-fraction")
+    if out_png:
+        fig.savefig(out_png, dpi=140, bbox_inches="tight")
+    return fig
