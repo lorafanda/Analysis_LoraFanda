@@ -158,12 +158,21 @@ outputs/
 # No HTML in the analysis repo — web pages live in the lorafanda.github.io repo.
 # The pipeline only EXPORTS data (pool_web/*.csv,*.json) that those pages fetch.
 *.html
+# ...except the committed viewer pages that live here (opened locally / mirrored to Pages).
+!poolv2.html
+!pool.html
+!analysis_status.html
 
 # Pooling viz PNGs are regenerable + heavy; pool.html renders from contacts_pool.csv, not PNGs.
 04_FBM_Pooling/outputs/pooling/**/*.png
 # ...except the per-role / per-neurosynth-region info-card images, fetched by the web info panel.
 !04_FBM_Pooling/outputs/pooling/**/role_cards/*.png
 !04_FBM_Pooling/outputs/pooling/**/region_cards/*.png
+# ...and the summary figures the whole-pipeline status page (analysis_status.html) embeds.
+!04_FBM_Pooling/outputs/pooling/pool_web/hga_timeseries.png
+!04_FBM_Pooling/outputs/pooling/pool_web/role_corr.png
+!04_FBM_Pooling/outputs/pooling/neurosynth/hga_timeseries.png
+!04_FBM_Pooling/outputs/pooling/neurosynth/region_corr.png
 
 # Neurosynth input maps (downloaded .nii.gz from neurosynth.org) — heavy, regenerable, never push.
 # (The DERIVED region labels/cards under outputs/pooling/neurosynth/ stay tracked.)
