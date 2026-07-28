@@ -180,6 +180,8 @@ outputs/
 !04_FBM_Pooling/outputs/pooling/neurosynth/attribution_matrix.png
 !04_FBM_Pooling/outputs/pooling/pool_web/attribution_matrix.png
 !04_FBM_Pooling/outputs/pooling/atlas_corr/*.png
+# hand-drawn figures from the lab meetings, shown in the status page's Meetings tab.
+!04_FBM_Pooling/outputs/pooling/meeting_notes/*.png
 
 # Neurosynth input maps (downloaded .nii.gz from neurosynth.org) — heavy, regenerable, never push.
 # (The DERIVED region labels/cards under outputs/pooling/neurosynth/ stay tracked.)
