@@ -171,8 +171,10 @@ outputs/
 # ...and the summary figures the whole-pipeline status page (analysis_status.html) embeds.
 !04_FBM_Pooling/outputs/pooling/pool_web/hga_timeseries.png
 !04_FBM_Pooling/outputs/pooling/pool_web/role_corr.png
+!04_FBM_Pooling/outputs/pooling/pool_web/role_onset_ordering.png
 !04_FBM_Pooling/outputs/pooling/neurosynth/hga_timeseries.png
 !04_FBM_Pooling/outputs/pooling/neurosynth/region_corr.png
+!04_FBM_Pooling/outputs/pooling/neurosynth/region_onset_ordering.png
 
 # Neurosynth input maps (downloaded .nii.gz from neurosynth.org) — heavy, regenerable, never push.
 # (The DERIVED region labels/cards under outputs/pooling/neurosynth/ stay tracked.)
