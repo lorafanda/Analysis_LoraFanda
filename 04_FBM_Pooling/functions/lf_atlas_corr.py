@@ -124,19 +124,29 @@ def fdr_bh(p: np.ndarray, q: float = 0.05) -> Tuple[np.ndarray, float]:
 def plot_tf_corr_map(r_map: np.ndarray, *, sig_mask: Optional[np.ndarray] = None,
                      n_blocks: int = 3, block_labels: Sequence[str] = ("audio", "picture", "reading"),
                      fmax_hz: float = 500.0, title: str = "", out_png=None,
-                     vlim: Optional[float] = None, dpi: int = 130):
+                     vlim: Optional[float] = None, dpi: int = 130,
+                     cmap: str = "RdBu_r", zero_contour: bool = False,
+                     cbar_label: str = "correlation with atlas value"):
     """r_map: (n_freq, n_time_total). Draws the correlation on the TF plane with the
-    condition-block dividers, the mid-block GO-cue, and (optionally) an FDR contour."""
+    condition-block dividers, the mid-block GO-cue, and (optionally) an FDR contour.
+
+    The scale is always symmetric about zero (-v..+v). With a SEQUENTIAL cmap
+    (e.g. green->yellow) pass `zero_contour=True`: a sequential ramp cannot encode sign
+    on its own, so the r=0 line is drawn to show where the correlation flips direction."""
     import matplotlib.pyplot as plt
     n_freq, n_time = r_map.shape
     nb = n_time // n_blocks
     v = float(vlim if vlim is not None else max(0.05, np.nanpercentile(np.abs(r_map), 99)))
     fig, ax = plt.subplots(figsize=(13, 4.2))
-    im = ax.imshow(r_map, aspect="auto", origin="lower", cmap="RdBu_r", vmin=-v, vmax=v,
+    im = ax.imshow(r_map, aspect="auto", origin="lower", cmap=cmap, vmin=-v, vmax=v,
                    extent=[0, n_time, 0, fmax_hz])
+    xs = np.linspace(0, n_time, n_time); ys = np.linspace(0, fmax_hz, n_freq)
+    if zero_contour:
+        from scipy.ndimage import uniform_filter
+        ax.contour(xs, ys, uniform_filter(r_map.astype(float), size=9), levels=[0.0],
+                   colors="#333333", linewidths=0.5, alpha=0.5)
     if sig_mask is not None and sig_mask.any():
-        ax.contour(np.linspace(0, n_time, n_time), np.linspace(0, fmax_hz, n_freq),
-                   sig_mask.astype(float), levels=[0.5], colors="k", linewidths=0.7)
+        ax.contour(xs, ys, sig_mask.astype(float), levels=[0.5], colors="k", linewidths=0.7)
     for b in range(n_blocks):
         x0 = b * nb
         if b:
@@ -147,8 +157,7 @@ def plot_tf_corr_map(r_map: np.ndarray, *, sig_mask: Optional[np.ndarray] = None
     ax.set_xticklabels([f"{l}\n(0-100% of trial)" for l in block_labels], fontsize=8)
     ax.set_ylabel("Frequency (Hz)")
     ax.set_title(title, fontsize=11)
-    fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02,
-                 label="correlation with atlas value")
+    fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02, label=cbar_label)
     plt.tight_layout()
     if out_png:
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
