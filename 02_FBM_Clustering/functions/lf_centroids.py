@@ -103,14 +103,38 @@ def render_heatmap_centroid(ax, mean_vec: np.ndarray, centroid_shape, *,
 # ============================================================
 # One-cluster writer
 # ============================================================
+def _is_line_feature_set(feature_set: str) -> bool:
+    """Feature sets whose centroid is a 1-D time course (line + SEM) rather than a
+    2-D ERSP heatmap: the per-condition HG track and its concatenated counterpart."""
+    return feature_set == "hg" or feature_set == "concat_hg"
+
+
+def _n_condition_blocks(feature_set: str) -> int:
+    """Concatenated feature sets stitch 3 conditions in time; draw the seams so the
+    [audio | picture | reading] structure is readable on the centroid chip."""
+    return 3 if str(feature_set).startswith("concat_") else 1
+
+
+def _draw_block_seams(ax, n_blocks: int, n_x: int, *, heatmap: bool):
+    if n_blocks <= 1:
+        return
+    for b in range(1, n_blocks):
+        x = b * (n_x / n_blocks)
+        ax.axvline(x - (0.5 if heatmap else 0), color="k", lw=1.0, zorder=5)
+
+
 def _write_one(out_path: Path, X_cluster: np.ndarray, feature_set: str, *,
                centroid_shape, hg_ylim, vlim, figsize):
     fig, ax = plt.subplots(figsize=figsize)
-    if feature_set == "hg":
+    nb = _n_condition_blocks(feature_set)
+    if _is_line_feature_set(feature_set):
         render_hg_centroid(ax, X_cluster, ylim=hg_ylim)
+        _draw_block_seams(ax, nb, np.asarray(X_cluster).shape[1], heatmap=False)
     else:
         render_heatmap_centroid(ax, np.asarray(X_cluster, float).mean(axis=0),
                                 centroid_shape, vlim=vlim)
+        if centroid_shape is not None:
+            _draw_block_seams(ax, nb, centroid_shape[1], heatmap=True)
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_path, dpi=90, bbox_inches="tight", pad_inches=0)
@@ -171,7 +195,7 @@ def save_per_cluster_centroids(
     root = run_dir / "cluster_centroids"
     written: Dict[str, int] = {}
 
-    if vlim is None and feature_set != "hg":
+    if vlim is None and not _is_line_feature_set(feature_set):
         vlim = float(np.percentile(np.abs(X), 99)) or 1.0
 
     # ── Per-K centroids from cluster_labels_by_k.csv ──
