@@ -30,9 +30,37 @@
     {
       "id": "rawds",
       "label": "Raw ERSP (band-aware downsampled 15\u00d730)"
+    },
+    {
+      "id": "concat_hg",
+      "label": "Concatenated HG [a|p|r]"
+    },
+    {
+      "id": "concat_rawds",
+      "label": "Concatenated 15-band [a|p|r]"
     }
   ],
   "runs": [
+    {
+      "method": "hierarchical",
+      "feature_set": "concat_hg",
+      "run_id": "20260728_110823",
+      "created_at": "2026-07-28T09:08:26Z",
+      "n_samples": 1163,
+      "n_clusters": 6,
+      "silhouette": 0.17301510274410248,
+      "path": "hierarchical/concat_hg/runs/20260728_110823"
+    },
+    {
+      "method": "hierarchical",
+      "feature_set": "concat_rawds",
+      "run_id": "20260728_110904",
+      "created_at": "2026-07-28T09:09:08Z",
+      "n_samples": 1163,
+      "n_clusters": 20,
+      "silhouette": 0.09933555871248245,
+      "path": "hierarchical/concat_rawds/runs/20260728_110904"
+    },
     {
       "method": "hierarchical",
       "feature_set": "hg",
@@ -90,6 +118,26 @@
       "path": "hierarchical/rawds/runs/20260719_155101",
       "has_ranking": true,
       "n_clusters_ranked": 10
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "concat_hg",
+      "run_id": "20260728_110801",
+      "created_at": "2026-07-28T09:08:22Z",
+      "n_samples": 1163,
+      "n_clusters": 5,
+      "silhouette": 0.20052362978458405,
+      "path": "kmeans/concat_hg/runs/20260728_110801"
+    },
+    {
+      "method": "kmeans",
+      "feature_set": "concat_rawds",
+      "run_id": "20260728_110829",
+      "created_at": "2026-07-28T09:09:03Z",
+      "n_samples": 1163,
+      "n_clusters": 16,
+      "silhouette": 0.10751401633024216,
+      "path": "kmeans/concat_rawds/runs/20260728_110829"
     },
     {
       "method": "kmeans",
@@ -334,15 +382,19 @@
       "blob": "20260603_230453",
       "minus101": "20260523_102735",
       "hg": "20260719_153420",
-      "rawds": "20260719_155034"
+      "rawds": "20260719_155034",
+      "concat_hg": "20260728_110801",
+      "concat_rawds": "20260728_110829"
     },
     "hierarchical": {
       "raw": "20260605_185134",
       "blob": "20260603_230501",
       "minus101": "20260523_104339",
       "hg": "20260719_153443",
-      "rawds": "20260719_155101"
+      "rawds": "20260719_155101",
+      "concat_hg": "20260728_110823",
+      "concat_rawds": "20260728_110904"
     }
   },
-  "updated_at": "2026-07-19T14:03:27Z"
+  "updated_at": "2026-07-28T09:09:09Z"
 }
