@@ -1,0 +1,117 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 80,
+    "n_unknown": 37,
+    "top_3": [
+      [
+        "superiortemporal",
+        0.256
+      ],
+      [
+        "insula",
+        0.256
+      ],
+      [
+        "lateraloccipital",
+        0.163
+      ]
+    ],
+    "entropy_bits": 2.6525727763590585,
+    "purity": 0.2558139534883721,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 3.9803774369725753
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 130,
+    "n_unknown": 31,
+    "top_3": [
+      [
+        "middletemporal",
+        0.172
+      ],
+      [
+        "inferiortemporal",
+        0.121
+      ],
+      [
+        "insula",
+        0.091
+      ]
+    ],
+    "entropy_bits": 3.813353091950873,
+    "purity": 0.1717171717171717,
+    "p_entropy_lower_tail": 0.006,
+    "null_entropy_mean": 4.086296047722185
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 169,
+    "n_unknown": 122,
+    "top_3": [
+      [
+        "middletemporal",
+        0.298
+      ],
+      [
+        "postcentral",
+        0.234
+      ],
+      [
+        "inferiortemporal",
+        0.234
+      ]
+    ],
+    "entropy_bits": 2.428626308631809,
+    "purity": 0.2978723404255319,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.120579833707559
+  },
+  "3": {
+    "cluster_id": 3,
+    "n_total": 101,
+    "n_unknown": 43,
+    "top_3": [
+      [
+        "middletemporal",
+        0.276
+      ],
+      [
+        "inferiortemporal",
+        0.207
+      ],
+      [
+        "superiortemporal",
+        0.121
+      ]
+    ],
+    "entropy_bits": 3.178223719865149,
+    "purity": 0.27586206896551724,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.030432512545466
+  },
+  "4": {
+    "cluster_id": 4,
+    "n_total": 683,
+    "n_unknown": 337,
+    "top_3": [
+      [
+        "middletemporal",
+        0.127
+      ],
+      [
+        "rostralmiddlefrontal",
+        0.101
+      ],
+      [
+        "insula",
+        0.081
+      ]
+    ],
+    "entropy_bits": 4.296014054829168,
+    "purity": 0.12716763005780346,
+    "p_entropy_lower_tail": NaN,
+    "null_entropy_mean": NaN
+  }
+}

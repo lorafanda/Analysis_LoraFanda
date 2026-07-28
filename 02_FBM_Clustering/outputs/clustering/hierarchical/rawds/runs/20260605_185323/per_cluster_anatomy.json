@@ -1,0 +1,263 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 207,
+    "n_unknown": 116,
+    "top_3": [
+      [
+        "middletemporal",
+        0.264
+      ],
+      [
+        "inferiortemporal",
+        0.198
+      ],
+      [
+        "superiortemporal",
+        0.121
+      ]
+    ],
+    "entropy_bits": 3.3684449384266033,
+    "purity": 0.26373626373626374
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 72,
+    "n_unknown": 7,
+    "top_3": [
+      [
+        "parsopercularis",
+        0.2
+      ],
+      [
+        "rostralmiddlefrontal",
+        0.2
+      ],
+      [
+        "insula",
+        0.123
+      ]
+    ],
+    "entropy_bits": 3.0844244257387334,
+    "purity": 0.2
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 119,
+    "n_unknown": 45,
+    "top_3": [
+      [
+        "superiortemporal",
+        0.149
+      ],
+      [
+        "lateraloccipital",
+        0.122
+      ],
+      [
+        "inferiortemporal",
+        0.095
+      ]
+    ],
+    "entropy_bits": 3.959247524954784,
+    "purity": 0.14864864864864866
+  },
+  "5": {
+    "cluster_id": 5,
+    "n_total": 204,
+    "n_unknown": 93,
+    "top_3": [
+      [
+        "insula",
+        0.189
+      ],
+      [
+        "postcentral",
+        0.135
+      ],
+      [
+        "supramarginal",
+        0.108
+      ]
+    ],
+    "entropy_bits": 3.6286581996623912,
+    "purity": 0.1891891891891892
+  },
+  "6": {
+    "cluster_id": 6,
+    "n_total": 216,
+    "n_unknown": 93,
+    "top_3": [
+      [
+        "middletemporal",
+        0.211
+      ],
+      [
+        "inferiortemporal",
+        0.114
+      ],
+      [
+        "supramarginal",
+        0.098
+      ]
+    ],
+    "entropy_bits": 3.6904163270747405,
+    "purity": 0.21138211382113822
+  },
+  "7": {
+    "cluster_id": 7,
+    "n_total": 26,
+    "n_unknown": 15,
+    "top_3": [
+      [
+        "lateraloccipital",
+        1.0
+      ]
+    ],
+    "entropy_bits": 0.0,
+    "purity": 1.0
+  },
+  "8": {
+    "cluster_id": 8,
+    "n_total": 133,
+    "n_unknown": 45,
+    "top_3": [
+      [
+        "superiortemporal",
+        0.205
+      ],
+      [
+        "lateralorbitofrontal",
+        0.136
+      ],
+      [
+        "rostralmiddlefrontal",
+        0.125
+      ]
+    ],
+    "entropy_bits": 3.691362757886992,
+    "purity": 0.20454545454545456
+  },
+  "9": {
+    "cluster_id": 9,
+    "n_total": 262,
+    "n_unknown": 142,
+    "top_3": [
+      [
+        "middletemporal",
+        0.158
+      ],
+      [
+        "superiortemporal",
+        0.1
+      ],
+      [
+        "insula",
+        0.092
+      ]
+    ],
+    "entropy_bits": 3.784773706301894,
+    "purity": 0.15833333333333333
+  },
+  "10": {
+    "cluster_id": 10,
+    "n_total": 34,
+    "n_unknown": 30,
+    "top_3": [
+      [
+        "middletemporal",
+        0.5
+      ],
+      [
+        "supramarginal",
+        0.25
+      ],
+      [
+        "superiortemporal",
+        0.25
+      ]
+    ],
+    "entropy_bits": 1.5,
+    "purity": 0.5
+  },
+  "11": {
+    "cluster_id": 11,
+    "n_total": 91,
+    "n_unknown": 87,
+    "top_3": [
+      [
+        "inferiortemporal",
+        0.5
+      ],
+      [
+        "middletemporal",
+        0.5
+      ]
+    ],
+    "entropy_bits": 1.0,
+    "purity": 0.5
+  },
+  "12": {
+    "cluster_id": 12,
+    "n_total": 364,
+    "n_unknown": 193,
+    "top_3": [
+      [
+        "postcentral",
+        0.152
+      ],
+      [
+        "middletemporal",
+        0.14
+      ],
+      [
+        "inferiortemporal",
+        0.105
+      ]
+    ],
+    "entropy_bits": 3.9044594322632697,
+    "purity": 0.15204678362573099
+  },
+  "13": {
+    "cluster_id": 13,
+    "n_total": 237,
+    "n_unknown": 184,
+    "top_3": [
+      [
+        "middletemporal",
+        0.396
+      ],
+      [
+        "inferiortemporal",
+        0.151
+      ],
+      [
+        "superiorfrontal",
+        0.094
+      ]
+    ],
+    "entropy_bits": 2.787386372435071,
+    "purity": 0.39622641509433965
+  },
+  "15": {
+    "cluster_id": 15,
+    "n_total": 130,
+    "n_unknown": 95,
+    "top_3": [
+      [
+        "insula",
+        0.371
+      ],
+      [
+        "inferiortemporal",
+        0.143
+      ],
+      [
+        "supramarginal",
+        0.143
+      ]
+    ],
+    "entropy_bits": 2.762575237258259,
+    "purity": 0.37142857142857144
+  }
+}
