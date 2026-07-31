@@ -48,9 +48,38 @@ PATIENTS = ["EL035", "EL037", "EL038", "EL040", "EL042"]
 RX_NAME = re.compile(r"^([ap])l([LR]\d+)$")
 STAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+# Per-patient SHAFT aliases: recon spelling -> ERSP spelling. Unlike the l/I case these
+# are not typos, they are different naming CONVENTIONS between the recon and the
+# clinical/ERSP side, so they are applied to the derived coords only (never to DATARAW).
+# Each was verified by matching contact count and hemisphere:
+#   EL034  MFG    12 hemi L  == MFGL 12   (source omits the hemisphere suffix)
+#   EL043  pl     18 hemi L  == PINS 18   (pl = pI = posterior Insula, spelled out)
+#   EL045  PlanTL 15 hemi L  >= PLATL  6  (ERSP carries only the first 6 of the shaft)
+#   PAT_6619 OFAD  5 hemi R  == OFA   5   (trailing D = Droite)
+#            OFPD  8 hemi R  == OFP   8
+SHAFT_ALIASES: dict[str, dict[str, str]] = {
+    "EL034":    {"MFG": "MFGL"},
+    "EL043":    {"pl": "PINS"},
+    "EL045":    {"PlanTL": "PLATL"},
+    "PAT_6619": {"OFAD": "OFA", "OFPD": "OFP"},
+}
+ALIAS_PATIENTS = list(SHAFT_ALIASES)
+RX_SPLIT = re.compile(r"^(.*?)(\d+)$")
+
 
 def fix_name(n: str) -> str:
+    """The l/I typo fix (applies everywhere)."""
     return RX_NAME.sub(r"\1I\2", str(n).strip())
+
+
+def apply_alias(n: str, pid: str) -> str:
+    """Shaft-convention rename for one patient, preserving the contact number."""
+    m = RX_SPLIT.match(str(n).strip())
+    if not m:
+        return n
+    shaft, num = m.group(1), m.group(2)
+    tgt = SHAFT_ALIASES.get(pid, {}).get(shaft)
+    return f"{tgt}{num}" if tgt else n
 
 
 def backup(p: Path, apply: bool) -> None:
@@ -101,13 +130,21 @@ def fix_electrode_names(apply: bool) -> int:
 
 
 # ---------------------------------------------------------------- derived
-def fix_csv(p: Path, col: str, apply: bool, label: str) -> int:
+def fix_csv(p: Path, col: str, apply: bool, label: str, pid: str | None = None) -> int:
+    """Apply the l/I fix, plus (for the derived coords) the shaft aliases. When `pid`
+    is None the file is multi-patient and the alias is chosen per row."""
     if not p.exists():
         return 0
     df = pd.read_csv(p)
     if col not in df.columns:
         return 0
-    new = df[col].map(fix_name)
+    if pid is not None:
+        new = df[col].map(lambda v: apply_alias(fix_name(v), pid))
+    elif "patient" in df.columns:
+        new = [apply_alias(fix_name(v), str(q)) for v, q in zip(df[col], df["patient"])]
+    else:
+        new = df[col].map(fix_name)
+    new = pd.Series(new, index=df.index)
     n = int((new != df[col]).sum())
     if n:
         print(f"  {label}: {n} names{'  [WROTE]' if apply else '  [dry-run]'}")
@@ -121,11 +158,11 @@ def fix_csv(p: Path, col: str, apply: bool, label: str) -> int:
 def fix_derived(apply: bool) -> int:
     print("\n=== 2. derived coords (so you need not re-run 251) ===")
     total = 0
-    for pid in PATIENTS:
+    for pid in sorted(set(PATIENTS) | set(ALIAS_PATIENTS)):
         total += fix_csv(RECON_OUT / pid / "glassbrain" / "coords" / f"{pid}_contacts_tkrRAS.csv",
-                         "name", apply, f"{pid} tkrRAS")
+                         "name", apply, f"{pid} tkrRAS", pid=pid)
         total += fix_csv(RECON_OUT / "fsaverage" / "coords" / f"{pid}_contacts_fsaverage.csv",
-                         "name", apply, f"{pid} fsaverage")
+                         "name", apply, f"{pid} fsaverage", pid=pid)
     for extra in sorted((RECON_OUT / "fsaverage" / "coords").glob("ALL_PATIENTS*.csv")):
         total += fix_csv(extra, "name", apply, f"  {extra.name}")
     for extra in sorted((RECON_OUT / "talairach" / "coords").glob("*.csv")) if (RECON_OUT / "talairach" / "coords").is_dir() else []:
