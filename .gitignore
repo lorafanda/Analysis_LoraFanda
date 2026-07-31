@@ -197,3 +197,6 @@ outputs/
 03_FBM_Classifying/390_results.ipynb
 # Windows thumbnail cache junk
 Thumbs.db
+
+# Timestamped backups written by fix_recon_l_vs_I.py --apply (git history is the real record)
+*.bak_[0-9]*
