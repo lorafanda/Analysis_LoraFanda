@@ -200,3 +200,18 @@ Thumbs.db
 
 # Timestamped backups written by fix_recon_l_vs_I.py --apply (git history is the real record)
 *.bak_[0-9]*
+# ...and the index.json backup cleanup_stale.py writes before pruning.
+*.json.bak
+
+# Spike-sorting outputs: raw acquisition binaries (FBMdata_*.bin is 0.7-1.7 GB EACH,
+# far over GitHub's 100 MB hard limit) plus their derived artifacts. Machine-local and
+# regenerable from DATARAW by notebook 13 — the NOTEBOOKS stay tracked, the data does not.
+01_FBM_Analysis/outputs/13_microSpikeSorting/
+01_FBM_Analysis/outputs/13b_microSpikeSorting_notrials/
+**/FBMdata_*.bin
+
+# Fedorenko / LanA atlas: downloaded inputs from the Fedorenko lab release, not our
+# output. Same treatment as the neurosynth maps above — heavy, re-downloadable, and the
+# DERIVED results (atlas_corr figures, the lana_inout run) stay tracked.
+04_FBM_Pooling/federenko_atlas/
+04_FBM_Pooling/federenko-atlases-archive.zip
