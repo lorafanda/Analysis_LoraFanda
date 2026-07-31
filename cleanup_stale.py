@@ -137,9 +137,44 @@ def collect(ref: set[str]) -> list[tuple[Path, str]]:
     return [(p, w) for p, w in out if not refused(p)]
 
 
+def prune_index(apply: bool) -> int:
+    """Drop index.json entries whose run dir no longer exists.
+
+    These accumulate when a run dir is deleted (deliberately, in a commit) without
+    updating the registry. They are not harmless: 213 filters on feature_set and then
+    opens the run dir, so a phantom `rawds` entry sends it looking for a directory
+    that was removed months ago, and MOBA lists a run you cannot open.
+    """
+    base = ROOT / "02_FBM_Clustering" / "outputs" / "clustering"
+    idx_path = base / "index.json"
+    if not idx_path.exists():
+        return 0
+    import json
+    idx = json.loads(idx_path.read_text(encoding="utf-8"))
+    runs = idx.get("runs", [])
+    alive, dead = [], []
+    for r in runs:
+        p = base / str(r.get("path", "")).replace("\\", "/")
+        (alive if p.is_dir() else dead).append(r)
+    if not dead:
+        print("  index.json: no phantom entries")
+        return 0
+    print(f"  index.json: {len(dead)} phantom entries (run dir gone)")
+    for r in dead:
+        print(f"      {r.get('method')}/{r.get('feature_set')}/{r.get('run_id')}")
+    if apply:
+        shutil.copy2(idx_path, idx_path.with_suffix(".json.bak"))
+        idx["runs"] = alive
+        idx_path.write_text(json.dumps(idx, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"      -> pruned, {len(alive)} runs remain (backup: index.json.bak)")
+    return len(dead)
+
+
 def main() -> int:
     ref = referenced_run_ids()
     targets = collect(ref)
+    prune_index(APPLY)
+    print()
     print(f"referenced run ids: {len(ref)}   targets: {len(targets)}")
     if not APPLY:
         print("DRY RUN — nothing will be deleted.\n")
