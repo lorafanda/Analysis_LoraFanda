@@ -60,7 +60,14 @@ def norm(s) -> str:
 try:
     sys.path.insert(0, str(ROOT / "02_FBM_Clustering"))
     from functions.lf_dataset import is_non_neural_electrode as _is_non_neural  # type: ignore
+    from functions.lf_dataset import is_micro_electrode as _is_micro            # type: ignore
 except Exception:                                                   # standalone fallback
+    def _is_micro(label, patient_id=None):
+        if patient_id is not None and not str(patient_id).upper().startswith("PAT"):
+            return False
+        sh = re.sub(r"\d+$", "", norm(label))
+        return bool(sh) and sh.endswith("M")
+
     def _is_non_neural(label):
         s = norm(label)
         return (not s) or bool(re.fullmatch(r"(AINP\d*|[XE]\d+)", s)) or \
@@ -192,7 +199,8 @@ def audit_coords(inv: pd.DataFrame) -> set:
     inv["has_xyz"] = list(zip(inv["patient_id"], inv["contact_norm"]))
     inv["has_xyz"] = inv["has_xyz"].map(lambda k: k in have)
     bad = inv[~inv["has_xyz"]].copy()
-    bad["aux"] = bad["contact_norm"].map(looks_non_neural)
+    bad["aux"] = [looks_non_neural(c) or _is_micro(c, p)
+                  for p, c in zip(bad["patient_id"], bad["contact_norm"])]
     real, aux = bad[~bad["aux"]], bad[bad["aux"]]
     if real.empty:
         ok("every real electrode has a coordinate")
@@ -205,7 +213,7 @@ def audit_coords(inv: pd.DataFrame) -> set:
             note("coords", pid, f"{len(g)} contacts", "no fsaverage coordinate",
                  "shafts=" + ",".join(shafts[:12]))
     if not aux.empty:
-        print(f"  ({len(aux)} aux/non-neural contacts also lack coords — expected, not a problem)")
+        print(f"  ({len(aux)} aux / micro contacts also lack coords — expected by design, not a problem)")
 
     # Per-patient work list for whoever redoes the localisation.
     if not real.empty:

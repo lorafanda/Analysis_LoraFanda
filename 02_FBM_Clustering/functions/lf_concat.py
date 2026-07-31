@@ -40,7 +40,7 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-from functions.lf_dataset import prepare_dataset, is_non_neural_electrode
+from functions.lf_dataset import prepare_dataset, is_non_neural_electrode, is_micro_electrode
 from functions.lf_features import FREQ_BANDS_15_TO_400HZ, downsample_ersp_to_bands
 from functions.lf_hg import build_hg_feature_matrix
 
@@ -102,6 +102,14 @@ def build_concat_dataset(
             print(f"[lf_concat] dropped {int(bad.sum())} non-neural rows "
                   f"({sorted(df.loc[bad, 'electrode'].astype(str).unique())[:6]})")
         df = df[~bad].reset_index(drop=True)
+
+    mic = df.apply(lambda r: is_micro_electrode(r["electrode"], r["patient_id"]), axis=1)
+    if mic.any():
+        if verbose:
+            sh = sorted({str(e).replace("_", "").upper().rstrip("0123456789")
+                         for e in df.loc[mic, "electrode"]})
+            print(f"[lf_concat] dropped {int(mic.sum())} microelectrode rows ({', '.join(sh)})")
+        df = df[~mic].reset_index(drop=True)
 
     excl = {str(p) for p in (exclude_patients or ())}
     if excl:

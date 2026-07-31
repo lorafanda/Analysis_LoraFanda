@@ -98,6 +98,28 @@ def is_non_neural_electrode(label: str) -> bool:
     return False
 
 
+# GVA (PAT_*) shafts ending in "M" are MICROelectrodes: ADM/AGM/FODM/HADM/HAGM/PHDM/
+# TPDM/FOM/IDM/POM/TM, and the discarded X1M/X2M. Each is the micro counterpart of a
+# macro shaft with the same stem (AD/ADM, FOD/FODM, ...). They are neural — just a
+# different scale — so they are NOT "non-neural"; they simply have no macro recon
+# contact and do not belong in a macro-ERSP analysis, where they would cluster and pool
+# but never appear on the brain.
+_RX_MICRO_SHAFT = re.compile(r"^[A-Z0-9]*M$")
+
+
+def is_micro_electrode(label, patient_id=None) -> bool:
+    """True for a GVA microelectrode contact. `patient_id` restricts the rule to the
+    GVA cohort (BERN naming does not use this convention); pass None to apply it to
+    any label."""
+    if label is None:
+        return False
+    if patient_id is not None and not str(patient_id).upper().startswith("PAT"):
+        return False
+    s = str(label).replace("_", "").replace("-", "").upper()
+    shaft = re.sub(r"\d+$", "", s)
+    return bool(shaft) and bool(_RX_MICRO_SHAFT.fullmatch(shaft))
+
+
 # ============================================================
 # Public: prepare_dataset
 # ============================================================
@@ -113,6 +135,7 @@ def prepare_dataset(
     thr_neg: float = DEFAULT_THR_NEG,
     min_prop_neg: float = DEFAULT_MIN_PROP_NEG,
     apply_high_activity: bool = True,
+    exclude_micro: bool = True,
     cache_dir = None,
     verbose: bool = True,
 ) -> Tuple[pd.DataFrame, List[np.ndarray], np.ndarray]:
@@ -136,6 +159,8 @@ def prepare_dataset(
     params = {
         "input_dir": str(input_dir),
         "task": task,
+        "exclude_micro": bool(exclude_micro),   # part of the key: a cache built without
+                                                # the micro filter must not be reused
         "conditions": list(conditions),
         "n_freq": int(n_freq),
         "n_time": int(n_time),
@@ -221,6 +246,23 @@ def prepare_dataset(
         ersp_list = [ersp_list[i] for i in np.where(keep.to_numpy())[0]]
         if verbose:
             print(f"  excluded {n_non_neural} non-neural channels → {len(df_meta)} samples")
+
+    # ---- Microelectrode filter (GVA "*M" shafts) ----
+    # These have no macro recon contact, so they cluster/pool but never render on the
+    # brain. Set exclude_micro=False to keep them (e.g. for a micro-specific analysis).
+    if exclude_micro and len(df_meta):
+        micro_mask = df_meta.apply(
+            lambda r: is_micro_electrode(r["electrode"], r["patient_id"]), axis=1)
+        n_micro = int(micro_mask.sum())
+        if n_micro:
+            keep = ~micro_mask
+            shafts = sorted({re.sub(r"\d+$", "", str(e).replace("_", "").upper())
+                             for e in df_meta.loc[micro_mask, "electrode"]})
+            df_meta = df_meta[keep].reset_index(drop=True)
+            ersp_list = [ersp_list[i] for i in np.where(keep.to_numpy())[0]]
+            if verbose:
+                print(f"  excluded {n_micro} microelectrode channels ({', '.join(shafts)}) "
+                      f"→ {len(df_meta)} samples")
 
     # ---- High-activity computation (always computed, optionally filtered) ----
     prop_pos = []
