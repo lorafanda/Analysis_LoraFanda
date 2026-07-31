@@ -40,6 +40,7 @@ COORDS_DIR = ROOT / "02_FBM_Clustering" / "outputs" / "250_recon" / "fsaverage" 
 POOL_DIR = ROOT / "04_FBM_Pooling" / "outputs" / "pooling"
 CLASSIFY_CACHE = ROOT / "03_FBM_Classifying" / "outputs" / "_dataset" / "classification"
 CONDITIONS = ("audio", "picture", "reading")
+WORKLIST = POOL_DIR / "missing_coords_worklist.csv"
 
 FINDINGS: list[dict] = []
 _RX_BERN = re.compile(r"_ERSP_([A-Za-z]+)_([LR])(\d+)_TN", re.IGNORECASE)
@@ -155,8 +156,36 @@ def audit_coords(inv: pd.DataFrame) -> set:
     co = pd.concat(frames, ignore_index=True)
     co["patient_id"] = co["patient"].astype(str)
     co["contact_norm"] = co["name"].map(norm)
+
+    # A coordinate row can exist and still be unusable.
+    if {"x", "y", "z"} <= set(co.columns):
+        nan_xyz = co[co[["x", "y", "z"]].isna().any(axis=1)]
+        if len(nan_xyz):
+            print(f"  !! {len(nan_xyz)} coord rows have NaN xyz "
+                  f"({sorted(nan_xyz['patient_id'].unique())[:6]})")
+            note("coords", "-", f"{len(nan_xyz)} rows", "coord row present but xyz is NaN")
+        co = co[~co[["x", "y", "z"]].isna().any(axis=1)]
+    dup = co.duplicated(["patient_id", "contact_norm"], keep=False)
+    if dup.any():
+        d = co[dup]
+        print(f"  !! {int(dup.sum())} duplicated (patient, contact) coord rows — joins may fan out "
+              f"({sorted(d['patient_id'].unique())[:6]})")
+        note("coords", "-", f"{int(dup.sum())} rows", "duplicate contact in coords CSV",
+             ";".join(sorted(d['patient_id'].unique())[:12]))
+
     have = set(zip(co["patient_id"], co["contact_norm"]))
     print(f"  coords available for {len(have)} contacts across {co['patient_id'].nunique()} patients")
+
+    # Patients on one side of the pipeline but not the other.
+    if not inv.empty:
+        ersp_pats = set(inv["patient_id"]); coord_pats = set(co["patient_id"])
+        only_coords = sorted(coord_pats - ersp_pats)
+        only_ersp = sorted(ersp_pats - coord_pats)
+        if only_ersp:
+            print(f"  !! patients with ERSP but NO coords file at all: {only_ersp}")
+            note("coords", ",".join(only_ersp), "-", "patient has ERSP but no coords file")
+        if only_coords:
+            print(f"  (patients with coords but no ERSP yet — not an error: {only_coords})")
     if inv.empty:
         return have
     inv = inv.copy()
@@ -177,6 +206,14 @@ def audit_coords(inv: pd.DataFrame) -> set:
                  "shafts=" + ",".join(shafts[:12]))
     if not aux.empty:
         print(f"  ({len(aux)} aux/non-neural contacts also lack coords — expected, not a problem)")
+
+    # Per-patient work list for whoever redoes the localisation.
+    if not real.empty:
+        wl = real[["patient_id", "contact_norm", "n_cond"]].copy()
+        wl["shaft"] = wl["contact_norm"].str.replace(r"\d+$", "", regex=True)
+        wl = wl.sort_values(["patient_id", "shaft", "contact_norm"])
+        wl.to_csv(WORKLIST, index=False)
+        print(f"  -> per-contact work list ({len(wl)} contacts): {WORKLIST.name}")
     return have
 
 
@@ -221,6 +258,23 @@ def audit_clustering(have: set):
             if gone:
                 print(f"  {tag}: recon MISSING dirs for {sorted(gone)}")
                 note("cluster", "-", tag, "recon missing clusters", ",".join(sorted(gone)))
+            # a cluster dir can exist and still hold no rendered views
+            empty = [d for d in drawn if not list((recon / d).rglob("*.png"))]
+            if empty:
+                print(f"  {tag}: recon dirs with NO png: {empty[:6]}")
+                note("cluster", "-", tag, "recon dirs empty", ",".join(empty[:12]))
+            # cross-check my count against 252's own unmatched log
+            um = recon / "UNMATCHED_contacts.csv"
+            if um.exists():
+                try:
+                    n_um = len(pd.read_csv(um))
+                    if abs(n_um - miss) > 1:
+                        print(f"  {tag}: !! my unplottable count ({miss}) disagrees with "
+                              f"252's UNMATCHED log ({n_um}) — one of the joins is wrong")
+                        note("cluster", "-", tag, "audit vs 252 unmatched mismatch",
+                             f"audit={miss} recon_log={n_um}")
+                except Exception:
+                    pass
         if not miss and recon.is_dir():
             ok(f"{tag}: all {len(lab)} samples plottable, recon present")
 
@@ -269,6 +323,30 @@ def audit_pooling(have: set):
                 if nx < len(g):
                     print(f"    role {role}: only {nx}/{len(g)} plottable")
                     note("pool", "-", f"{sub}:{role}", f"{len(g)-nx}/{len(g)} unplottable")
+        # role cards the web info panel expects
+        ri = d / "role_info.json"
+        if ri.exists() and "role" in pool.columns:
+            info = json.loads(ri.read_text(encoding="utf-8"))
+            for role, meta in info.items():
+                n_prim = int((pool["role"].astype(str) == role).sum())
+                if n_prim and not meta.get("img"):
+                    print(f"    role {role}: {n_prim} contacts but NO card image")
+                    note("pool", "-", f"{sub}:{role}", "role has members but no card image")
+
+    # poolv2 designer must cover every exported contact, or its counts silently differ
+    cube_man = POOL_DIR / "pool_cube" / "cube_manifest.json"
+    cp = POOL_DIR / "pool_web" / "contacts_pool.csv"
+    if cube_man.exists() and cp.exists():
+        keys = set(json.loads(cube_man.read_text()).get("contacts", []))
+        pool = pd.read_csv(cp)
+        want = {f"{p}|{c}" for p, c in zip(pool["patient"].astype(str), pool["contact"].astype(str))}
+        gone = want - keys
+        if gone:
+            print(f"  poolv2 cube is MISSING {len(gone)} exported contacts "
+                  f"(designer counts will differ from the map)")
+            note("pool", "-", "pool_cube", f"{len(gone)} exported contacts absent from cube")
+        else:
+            ok(f"pool_cube covers all {len(want)} exported contacts")
 
 
 # ------------------------------------------------------------------ 5. classification
