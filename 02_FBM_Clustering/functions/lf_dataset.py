@@ -77,14 +77,19 @@ def parse_electrode_from_filename(fname: str) -> str:
 
 
 def is_non_neural_electrode(label: str) -> bool:
-    """Match non-neural channel name patterns: PHOTO, MRK, ECG, AUDIO,
+    """Match non-neural channel name patterns: PHOTO, MRK, ECG, AUDIO, AINP
+    (Blackrock analog input — photodiode / mic / trigger), EKG/EMG,
     X / X1..X8 / E1..E8, or anything with '+' or '-' in the label."""
     if label is None:
         return False
     s = str(label).strip().upper()
     if "+" in s or "-" in s:
         return True
-    if any(tag in s for tag in ("PHOTO", "MRK", "MKR", "ECG", "AUDIO")):
+    # AINP1/2/3... are the Blackrock analog inputs (photodiode, microphone, trigger).
+    # They were slipping through and being clustered as if they were brain channels.
+    if re.fullmatch(r"AINP\d*", s):
+        return True
+    if any(tag in s for tag in ("PHOTO", "MRK", "MKR", "ECG", "EKG", "EMG", "AUDIO")):
         return True
     if s == "X":
         return True

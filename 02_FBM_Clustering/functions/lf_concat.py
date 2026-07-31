@@ -40,11 +40,15 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-from functions.lf_dataset import prepare_dataset
+from functions.lf_dataset import prepare_dataset, is_non_neural_electrode
 from functions.lf_features import FREQ_BANDS_15_TO_400HZ, downsample_ersp_to_bands
 from functions.lf_hg import build_hg_feature_matrix
 
 DEFAULT_CONDITIONS: Tuple[str, ...] = ("audio", "picture", "reading")
+# Grid (ECoG) patients are excluded from the concatenated track: the electrode geometry
+# and coverage differ from the depth/sEEG cohort, so a per-electrode functional TYPE is
+# not comparable across the two. Pass exclude_patients=() to keep them.
+DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044",)
 DEFAULT_FMAX = 500.0
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30
@@ -64,6 +68,7 @@ def build_concat_dataset(
     *,
     conditions: Sequence[str] = DEFAULT_CONDITIONS,
     require_high_activity: bool = True,
+    exclude_patients: Sequence[str] = DEFAULT_EXCLUDE_PATIENTS,
     cache_dir: Optional[Path] = DEFAULT_CONCAT_CACHE,
     verbose: bool = True,
 ) -> Tuple[pd.DataFrame, np.ndarray]:
@@ -87,6 +92,26 @@ def build_concat_dataset(
     df = df_meta.reset_index(drop=True).copy()
     df["_row"] = np.arange(len(df))
     df["contact_norm"] = df["electrode"].map(normalize_label)
+
+    # Re-apply the non-neural filter here as well. prepare_dataset already does it, but a
+    # dataset CACHE written before the filter was widened would still contain e.g. AINP
+    # analog-input channels — this makes a stale cache harmless.
+    bad = df["electrode"].map(is_non_neural_electrode)
+    if bad.any():
+        if verbose:
+            print(f"[lf_concat] dropped {int(bad.sum())} non-neural rows "
+                  f"({sorted(df.loc[bad, 'electrode'].astype(str).unique())[:6]})")
+        df = df[~bad].reset_index(drop=True)
+
+    excl = {str(p) for p in (exclude_patients or ())}
+    if excl:
+        drop = df["patient_id"].astype(str).isin(excl)
+        if verbose:
+            present = sorted(set(df.loc[drop, "patient_id"].astype(str)))
+            print(f"[lf_concat] excluded patients {sorted(excl)}"
+                  f" — {int(drop.sum())} rows removed"
+                  f"{'' if present else ' (none present in this dataset)'}")
+        df = df[~drop].reset_index(drop=True)
 
     n_freq, n_time = X_3d.shape[1], X_3d.shape[2]
     keep_rows: List[List[int]] = []
