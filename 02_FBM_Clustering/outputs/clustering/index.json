@@ -9,7 +9,10 @@
       "id": "hierarchical",
       "label": "Hierarchical (Ward)"
     },
-    "atlas"
+    {
+      "id": "atlas",
+      "label": "Fedorenko/LanA atlas"
+    }
   ],
   "feature_sets": [
     {
@@ -44,7 +47,10 @@
       "id": "concat_raw",
       "label": "Concatenated full-res [a|p|r]"
     },
-    "lana_inout"
+    {
+      "id": "lana_inout",
+      "label": "in/out language network (P>=0.1)"
+    }
   ],
   "runs": [
     {

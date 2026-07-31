@@ -1012,15 +1012,24 @@ def _update_index(outputs_root: Path, manifest: Dict[str, Any]) -> None:
             "latest": {},
         }
 
-    # Ensure method / feature_set entries exist
-    methods = {m["id"]: m for m in idx.get("methods", [])}
+    # Ensure method / feature_set entries exist.
+    # Entries are {"id","label"} dicts, but a hand-written or external registration can
+    # leave a bare string here — which used to crash the dict comprehension below with
+    # "string indices must be integers". Coerce instead of trusting the file.
+    def _as_entry(e):
+        return {"id": e, "label": e} if isinstance(e, str) else e
+
+    idx["methods"] = [_as_entry(m) for m in idx.get("methods", [])]
+    idx["feature_sets"] = [_as_entry(f) for f in idx.get("feature_sets", [])]
+
+    methods = {m["id"]: m for m in idx["methods"]}
     if manifest["method"] not in methods:
-        idx.setdefault("methods", []).append({
+        idx["methods"].append({
             "id": manifest["method"], "label": manifest["method_label"],
         })
-    feats = {f["id"]: f for f in idx.get("feature_sets", [])}
+    feats = {f["id"]: f for f in idx["feature_sets"]}
     if manifest["feature_set"] not in feats:
-        idx.setdefault("feature_sets", []).append({
+        idx["feature_sets"].append({
             "id": manifest["feature_set"], "label": manifest["feature_set_label"],
         })
 
