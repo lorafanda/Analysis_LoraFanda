@@ -1,0 +1,5 @@
+cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean
+0,130,54,3.501623937705853,0.18421052631578946,inferiortemporal,0.184,"[[""inferiortemporal"", 0.184], [""middletemporal"", 0.184], [""superiortemporal"", 0.132]]",0.0,4.084055840216311
+1,707,307,4.207867937314603,0.1425,middletemporal,0.142,"[[""middletemporal"", 0.142], [""insula"", 0.102], [""rostralmiddlefrontal"", 0.087]]",,
+2,175,160,2.040223928941852,0.5333333333333333,middletemporal,0.533,"[[""middletemporal"", 0.533], [""inferiortemporal"", 0.133], [""supramarginal"", 0.133]]",0.0,4.132577511748784
+3,104,8,4.0069741123955716,0.13541666666666666,middletemporal,0.135,"[[""middletemporal"", 0.135], [""postcentral"", 0.094], [""precentral"", 0.083]]",0.338,4.0473556458076665
