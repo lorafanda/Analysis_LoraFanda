@@ -1,0 +1,211 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 173,
+    "n_with_coords": 32,
+    "n_missing": 141,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 39.81334639733917,
+    "centroid_xyz": [
+      -42.075380742549896,
+      -9.879158287774771,
+      -17.386233538389206
+    ],
+    "spread_xyz": [
+      10.89048264164428,
+      18.610671178381963,
+      26.16834226017867
+    ]
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 142,
+    "n_with_coords": 97,
+    "n_missing": 45,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 66.59639440687175,
+    "centroid_xyz": [
+      -35.647814217301985,
+      -5.480424232089643,
+      -2.9474790120862195
+    ],
+    "spread_xyz": [
+      13.941799519877257,
+      47.13270174357477,
+      20.819470262322202
+    ]
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 135,
+    "n_with_coords": 23,
+    "n_missing": 112,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 45.94629681300273,
+    "centroid_xyz": [
+      -54.362274957739785,
+      -24.51018466120181,
+      -9.159733710081682
+    ],
+    "spread_xyz": [
+      12.432507476221001,
+      23.527952140328225,
+      27.518333768337712
+    ]
+  },
+  "3": {
+    "cluster_id": 3,
+    "n_total": 66,
+    "n_with_coords": 23,
+    "n_missing": 43,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 36.503242418946435,
+    "centroid_xyz": [
+      -47.652675296949305,
+      -40.93522859656292,
+      2.3064161820904068
+    ],
+    "spread_xyz": [
+      11.804219193830512,
+      27.393805747644123,
+      11.08506972962649
+    ]
+  },
+  "4": {
+    "cluster_id": 4,
+    "n_total": 81,
+    "n_with_coords": 73,
+    "n_missing": 8,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 39.50208408032051,
+    "centroid_xyz": [
+      -42.68147265421201,
+      6.251771999548559,
+      15.403926903866742
+    ],
+    "spread_xyz": [
+      11.405461369079436,
+      24.82294689840932,
+      15.308266077594833
+    ]
+  },
+  "5": {
+    "cluster_id": 5,
+    "n_total": 424,
+    "n_with_coords": 193,
+    "n_missing": 231,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 51.86286289518452,
+    "centroid_xyz": [
+      -38.57095773479482,
+      -10.769684218951149,
+      -2.436203042460229
+    ],
+    "spread_xyz": [
+      13.571859814186993,
+      27.50679608191371,
+      27.12497138779706
+    ]
+  },
+  "6": {
+    "cluster_id": 6,
+    "n_total": 167,
+    "n_with_coords": 100,
+    "n_missing": 67,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 51.44191869047326,
+    "centroid_xyz": [
+      -43.18657691955566,
+      -16.22610539305955,
+      -6.224967018961906
+    ],
+    "spread_xyz": [
+      16.340312946456155,
+      20.894157415670634,
+      31.47193083988967
+    ]
+  },
+  "7": {
+    "cluster_id": 7,
+    "n_total": 358,
+    "n_with_coords": 187,
+    "n_missing": 171,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 53.80477710984474,
+    "centroid_xyz": [
+      -41.124543294549625,
+      -15.083870581764588,
+      6.280184748975988
+    ],
+    "spread_xyz": [
+      14.248616514984443,
+      28.677257232150758,
+      26.891831954061576
+    ]
+  },
+  "8": {
+    "cluster_id": 8,
+    "n_total": 166,
+    "n_with_coords": 55,
+    "n_missing": 111,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 37.42308029955517,
+    "centroid_xyz": [
+      -43.716402176835324,
+      -15.065163612365723,
+      15.30581073327498
+    ],
+    "spread_xyz": [
+      15.508618228399886,
+      14.602038893686483,
+      21.107656280063882
+    ]
+  },
+  "9": {
+    "cluster_id": 9,
+    "n_total": 356,
+    "n_with_coords": 233,
+    "n_missing": 123,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 58.63116512970779,
+    "centroid_xyz": [
+      -44.11866857322501,
+      -15.085737087184267,
+      5.446296873458465
+    ],
+    "spread_xyz": [
+      16.90073753049869,
+      29.972418985165255,
+      28.851644744851463
+    ]
+  },
+  "10": {
+    "cluster_id": 10,
+    "n_total": 34,
+    "n_with_coords": 7,
+    "n_missing": 27,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 36.06333799884711,
+    "centroid_xyz": [
+      -54.55118070329939,
+      -7.001034413065229,
+      -17.809763976505824
+    ],
+    "spread_xyz": [
+      12.486153528033812,
+      17.480828544260106,
+      13.58586957592635
+    ]
+  }
+}
