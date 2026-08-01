@@ -1,7 +1,6 @@
-cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean
-0,42,18,2.1320139422512874,0.4166666666666667,inferiortemporal,0.417,"[[""inferiortemporal"", 0.417], [""middletemporal"", 0.292], [""fusiform"", 0.083]]",0.0,3.770022554536108
-1,144,27,3.6416434585647983,0.23076923076923078,middletemporal,0.231,"[[""middletemporal"", 0.231], [""inferiortemporal"", 0.154], [""superiortemporal"", 0.077]]",0.0,4.104519556322553
-2,242,151,2.967410816298989,0.21978021978021978,middletemporal,0.22,"[[""middletemporal"", 0.22], [""postcentral"", 0.209], [""inferiortemporal"", 0.165]]",0.0,4.168224069500719
-3,678,343,4.288392890934653,0.11343283582089553,middletemporal,0.113,"[[""middletemporal"", 0.113], [""rostralmiddlefrontal"", 0.104], [""insula"", 0.084]]",,
-4,39,26,0.961236604722876,0.6153846153846154,superiortemporal,0.615,"[[""superiortemporal"", 0.615], [""bankssts"", 0.385]]",0.0,3.7279539894173506
-5,18,5,0.6193821946787638,0.8461538461538461,lateraloccipital,0.846,"[[""lateraloccipital"", 0.846], [""lingual"", 0.154]]",0.0,3.2733901250758968
+cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json
+1,186,45,3.5286763303314017,0.24113475177304963,middletemporal,0.241,"[[""middletemporal"", 0.241], [""inferiortemporal"", 0.199], [""superiortemporal"", 0.078]]"
+2,242,151,2.967410816298989,0.21978021978021978,middletemporal,0.22,"[[""middletemporal"", 0.22], [""postcentral"", 0.209], [""inferiortemporal"", 0.165]]"
+3,678,343,4.288392890934653,0.11343283582089553,middletemporal,0.113,"[[""middletemporal"", 0.113], [""rostralmiddlefrontal"", 0.104], [""insula"", 0.084]]"
+4,39,26,0.961236604722876,0.6153846153846154,superiortemporal,0.615,"[[""superiortemporal"", 0.615], [""bankssts"", 0.385]]"
+5,18,5,0.6193821946787638,0.8461538461538461,lateraloccipital,0.846,"[[""lateraloccipital"", 0.846], [""lingual"", 0.154]]"
