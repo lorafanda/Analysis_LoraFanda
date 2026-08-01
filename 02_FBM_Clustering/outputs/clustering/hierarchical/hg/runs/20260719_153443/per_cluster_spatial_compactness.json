@@ -1,0 +1,192 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 81,
+    "n_with_coords": 29,
+    "n_missing": 52,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 53.245581087315614,
+    "centroid_xyz": [
+      -50.272348140848095,
+      -22.927569319461956,
+      -16.934565840096308
+    ],
+    "spread_xyz": [
+      12.17664817420679,
+      30.427577795401398,
+      27.61045318808659
+    ]
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 128,
+    "n_with_coords": 99,
+    "n_missing": 29,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 48.353611421825654,
+    "centroid_xyz": [
+      -43.32960862824411,
+      -16.39560656776332,
+      -4.657652442503458
+    ],
+    "spread_xyz": [
+      15.642612908752529,
+      19.077753531958194,
+      30.068369826104504
+    ]
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 426,
+    "n_with_coords": 234,
+    "n_missing": 192,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 56.41992859311523,
+    "centroid_xyz": [
+      -36.899889568997246,
+      -7.371119714190817,
+      3.6421104478211994
+    ],
+    "spread_xyz": [
+      13.747907556781842,
+      34.28773704566648,
+      24.29108389301518
+    ]
+  },
+  "4": {
+    "cluster_id": 4,
+    "n_total": 42,
+    "n_with_coords": 21,
+    "n_missing": 21,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 27.662430024340864,
+    "centroid_xyz": [
+      -32.74883756183443,
+      -85.66074434916179,
+      -6.5823824519202825
+    ],
+    "spread_xyz": [
+      10.003112826274016,
+      23.941648791615965,
+      7.381639335017286
+    ]
+  },
+  "6": {
+    "cluster_id": 6,
+    "n_total": 76,
+    "n_with_coords": 14,
+    "n_missing": 62,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 34.13986347833813,
+    "centroid_xyz": [
+      -53.989448819841655,
+      -18.62129875591823,
+      -5.187745468957083
+    ],
+    "spread_xyz": [
+      10.592268486880755,
+      10.125811559583155,
+      22.335751304221056
+    ]
+  },
+  "8": {
+    "cluster_id": 8,
+    "n_total": 138,
+    "n_with_coords": 62,
+    "n_missing": 76,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 39.81700079494291,
+    "centroid_xyz": [
+      -45.9802699704324,
+      -15.554475314194157,
+      17.143619345080467
+    ],
+    "spread_xyz": [
+      11.36154379077355,
+      18.735381817977323,
+      24.326007499795992
+    ]
+  },
+  "9": {
+    "cluster_id": 9,
+    "n_total": 475,
+    "n_with_coords": 196,
+    "n_missing": 279,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 54.478022636907575,
+    "centroid_xyz": [
+      -39.68254891220404,
+      -3.667312179273945,
+      4.872547422972869
+    ],
+    "spread_xyz": [
+      13.570850366758133,
+      31.37676050788476,
+      25.061894189424308
+    ]
+  },
+  "10": {
+    "cluster_id": 10,
+    "n_total": 464,
+    "n_with_coords": 252,
+    "n_missing": 212,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 52.20338921989815,
+    "centroid_xyz": [
+      -44.209653201084286,
+      -14.85978582820722,
+      0.807064613179555
+    ],
+    "spread_xyz": [
+      15.520946818018093,
+      24.504291830632543,
+      28.306334318818177
+    ]
+  },
+  "11": {
+    "cluster_id": 11,
+    "n_total": 184,
+    "n_with_coords": 102,
+    "n_missing": 82,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 54.86323759417416,
+    "centroid_xyz": [
+      -44.08750078374264,
+      -12.029942390381121,
+      5.165356562272007
+    ],
+    "spread_xyz": [
+      17.868108823614655,
+      23.370824750402026,
+      29.854730113447776
+    ]
+  },
+  "12": {
+    "cluster_id": 12,
+    "n_total": 88,
+    "n_with_coords": 14,
+    "n_missing": 74,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 47.465764959690915,
+    "centroid_xyz": [
+      -49.528458731515066,
+      -5.974252947739193,
+      -17.49365895135062
+    ],
+    "spread_xyz": [
+      13.889764301285906,
+      28.388572451261236,
+      21.21684886979169
+    ]
+  }
+}

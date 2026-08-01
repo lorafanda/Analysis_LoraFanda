@@ -1,0 +1,789 @@
+{
+  "run_id": "20260719_153443",
+  "method": "hierarchical",
+  "feature_set": "hg",
+  "n_clusters_original": 13,
+  "n_clusters_final": 10,
+  "reassignment_iterations": 2,
+  "clusters_dissolved": [
+    {
+      "iteration": 1,
+      "from_cluster": 3,
+      "to_cluster": 4,
+      "n_members": 7
+    },
+    {
+      "iteration": 1,
+      "from_cluster": 5,
+      "to_cluster": 4,
+      "n_members": 19
+    },
+    {
+      "iteration": 1,
+      "from_cluster": 7,
+      "to_cluster": 8,
+      "n_members": 3
+    }
+  ],
+  "weights": {
+    "cross_patient": 4,
+    "stability": 3,
+    "condition": 2,
+    "anatomy": 1
+  },
+  "consensus": {
+    "n_runs": 50,
+    "subsample_frac": 0.8,
+    "random_state": 42
+  },
+  "spatial": {
+    "mirror_to": "left",
+    "metric": "mean_pairwise",
+    "note": "anatomy axis = negated spatial distance (lower mm = higher score after min-max norm)"
+  },
+  "silhouette_overall_final": 0.10697958618402481,
+  "gap_at_k_final": {
+    "10": {
+      "gap": 3.239086703733589,
+      "sk": 0.0015225886848911983,
+      "w_obs": 242089.765625,
+      "w_ref_mean": 6175809.792887528
+    }
+  },
+  "clusters": [
+    {
+      "cluster_id": 9,
+      "rank": 1,
+      "composite_score": 1.0,
+      "composite_raw": 0.5732558575861815,
+      "raw": {
+        "cross_patient": 0.9230769230769231,
+        "stability": 0.5786377191543579,
+        "condition": 0.11508771929824563,
+        "anatomy": -54.478022636907575
+      },
+      "normalized": {
+        "cross_patient": 1.0,
+        "stability": 0.4399988884119392,
+        "condition": 0.1725174839950136,
+        "anatomy": 0.06752694263597138
+      },
+      "spatial": {
+        "distance_mm": 54.478022636907575,
+        "n_total": 475,
+        "n_with_coords": 196,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -39.68254891220404,
+          -3.667312179273945,
+          4.872547422972869
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.12849162011173185,
+        "entropy_bits": 4.086927395797918,
+        "top_3": [
+          [
+            "middletemporal",
+            0.128
+          ],
+          [
+            "rostralmiddlefrontal",
+            0.117
+          ],
+          [
+            "insula",
+            0.089
+          ]
+        ]
+      },
+      "size": 475,
+      "n_patients": 24,
+      "n_bern": 11,
+      "n_gva": 13,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.20377634465694427,
+      "top_3_regions": [
+        [
+          "middletemporal",
+          0.128
+        ],
+        [
+          "rostralmiddlefrontal",
+          0.117
+        ],
+        [
+          "insula",
+          0.089
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.3642105263157895,
+        "picture": 0.18736842105263157,
+        "reading": 0.44842105263157894
+      }
+    },
+    {
+      "cluster_id": 11,
+      "rank": 2,
+      "composite_score": 0.885040906439473,
+      "composite_raw": 0.540820607525373,
+      "raw": {
+        "cross_patient": 0.5769230769230769,
+        "stability": 0.7742444276809692,
+        "condition": 0.3460144927536232,
+        "anatomy": -54.86323759417416
+      },
+      "normalized": {
+        "cross_patient": 0.47058823529411753,
+        "stability": 0.7267865107740148,
+        "condition": 0.6456809732428045,
+        "anatomy": 0.054131655269605644
+      },
+      "spatial": {
+        "distance_mm": 54.86323759417416,
+        "n_total": 184,
+        "n_with_coords": 102,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -44.08750078374264,
+          -12.029942390381121,
+          5.165356562272007
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.13829787234042554,
+        "entropy_bits": 3.791639102335277,
+        "top_3": [
+          [
+            "middletemporal",
+            0.138
+          ],
+          [
+            "inferiortemporal",
+            0.128
+          ],
+          [
+            "superiortemporal",
+            0.117
+          ]
+        ]
+      },
+      "size": 184,
+      "n_patients": 15,
+      "n_bern": 7,
+      "n_gva": 8,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.18860457837581635,
+      "top_3_regions": [
+        [
+          "middletemporal",
+          0.138
+        ],
+        [
+          "inferiortemporal",
+          0.128
+        ],
+        [
+          "superiortemporal",
+          0.117
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.11956521739130435,
+        "picture": 0.6793478260869565,
+        "reading": 0.20108695652173914
+      }
+    },
+    {
+      "cluster_id": 2,
+      "rank": 3,
+      "composite_score": 0.72881024672599,
+      "composite_raw": 0.49674074956873493,
+      "raw": {
+        "cross_patient": 0.9230769230769231,
+        "stability": 0.4682053029537201,
+        "condition": 0.06338028169014087,
+        "anatomy": -56.41992859311523
+      },
+      "normalized": {
+        "cross_patient": 1.0,
+        "stability": 0.27808905253546945,
+        "condition": 0.0665701690404706,
+        "anatomy": 0.0
+      },
+      "spatial": {
+        "distance_mm": 56.41992859311523,
+        "n_total": 426,
+        "n_with_coords": 234,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -36.899889568997246,
+          -7.371119714190817,
+          3.6421104478211994
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.14418604651162792,
+        "entropy_bits": 4.164400155768185,
+        "top_3": [
+          [
+            "insula",
+            0.144
+          ],
+          [
+            "superiortemporal",
+            0.107
+          ],
+          [
+            "lateralorbitofrontal",
+            0.102
+          ]
+        ]
+      },
+      "size": 426,
+      "n_patients": 24,
+      "n_bern": 10,
+      "n_gva": 14,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.02757425047457218,
+      "top_3_regions": [
+        [
+          "insula",
+          0.144
+        ],
+        [
+          "superiortemporal",
+          0.107
+        ],
+        [
+          "lateralorbitofrontal",
+          0.102
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.3967136150234742,
+        "picture": 0.2793427230046948,
+        "reading": 0.323943661971831
+      }
+    },
+    {
+      "cluster_id": 8,
+      "rank": 4,
+      "composite_score": 0.7025815394223265,
+      "composite_raw": 0.48934042434158653,
+      "raw": {
+        "cross_patient": 0.6923076923076923,
+        "stability": 0.47059428691864014,
+        "condition": 0.24637681159420294,
+        "anatomy": -39.81700079494291
+      },
+      "normalized": {
+        "cross_patient": 0.6470588235294117,
+        "stability": 0.2815916472896127,
+        "condition": 0.44152572449223,
+        "anatomy": 0.57734255844492
+      },
+      "spatial": {
+        "distance_mm": 39.81700079494291,
+        "n_total": 138,
+        "n_with_coords": 62,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -45.9802699704324,
+          -15.554475314194157,
+          17.143619345080467
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.2903225806451613,
+        "entropy_bits": 3.0458571008361823,
+        "top_3": [
+          [
+            "postcentral",
+            0.29
+          ],
+          [
+            "precentral",
+            0.194
+          ],
+          [
+            "insula",
+            0.161
+          ]
+        ]
+      },
+      "size": 138,
+      "n_patients": 18,
+      "n_bern": 8,
+      "n_gva": 10,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.04732191935181618,
+      "top_3_regions": [
+        [
+          "postcentral",
+          0.29
+        ],
+        [
+          "precentral",
+          0.194
+        ],
+        [
+          "insula",
+          0.161
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.18840579710144928,
+        "picture": 0.5797101449275363,
+        "reading": 0.2318840579710145
+      }
+    },
+    {
+      "cluster_id": 6,
+      "rank": 5,
+      "composite_score": 0.5940424550444672,
+      "composite_raw": 0.4587165542837256,
+      "raw": {
+        "cross_patient": 0.5,
+        "stability": 0.6487905979156494,
+        "condition": 0.21929824561403516,
+        "anatomy": -34.13986347833813
+      },
+      "normalized": {
+        "cross_patient": 0.3529411764705882,
+        "stability": 0.542853117969555,
+        "condition": 0.3860423841619304,
+        "anatomy": 0.7747567147223775
+      },
+      "spatial": {
+        "distance_mm": 34.13986347833813,
+        "n_total": 76,
+        "n_with_coords": 14,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -53.989448819841655,
+          -18.62129875591823,
+          -5.187745468957083
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.42857142857142855,
+        "entropy_bits": 2.4137995646056805,
+        "top_3": [
+          [
+            "middletemporal",
+            0.429
+          ],
+          [
+            "insula",
+            0.143
+          ],
+          [
+            "transversetemporal",
+            0.143
+          ]
+        ]
+      },
+      "size": 76,
+      "n_patients": 13,
+      "n_bern": 6,
+      "n_gva": 7,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.027544837445020676,
+      "top_3_regions": [
+        [
+          "middletemporal",
+          0.429
+        ],
+        [
+          "insula",
+          0.143
+        ],
+        [
+          "transversetemporal",
+          0.143
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.15789473684210525,
+        "picture": 0.2894736842105263,
+        "reading": 0.5526315789473685
+      }
+    },
+    {
+      "cluster_id": 0,
+      "rank": 6,
+      "composite_score": 0.5870393812850285,
+      "composite_raw": 0.4567406649343364,
+      "raw": {
+        "cross_patient": 0.34615384615384615,
+        "stability": 0.9605927467346191,
+        "condition": 0.271604938271605,
+        "anatomy": -53.245581087315614
+      },
+      "normalized": {
+        "cross_patient": 0.1176470588235294,
+        "stability": 1.0,
+        "condition": 0.4932175585193115,
+        "anatomy": 0.11038329701062403
+      },
+      "spatial": {
+        "distance_mm": 53.245581087315614,
+        "n_total": 81,
+        "n_with_coords": 29,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -50.272348140848095,
+          -22.927569319461956,
+          -16.934565840096308
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.3448275862068966,
+        "entropy_bits": 2.7118144103852444,
+        "top_3": [
+          [
+            "middletemporal",
+            0.345
+          ],
+          [
+            "inferiortemporal",
+            0.207
+          ],
+          [
+            "superiortemporal",
+            0.103
+          ]
+        ]
+      },
+      "size": 81,
+      "n_patients": 9,
+      "n_bern": 3,
+      "n_gva": 6,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.21992871165275574,
+      "top_3_regions": [
+        [
+          "middletemporal",
+          0.345
+        ],
+        [
+          "inferiortemporal",
+          0.207
+        ],
+        [
+          "superiortemporal",
+          0.103
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.32098765432098764,
+        "picture": 0.07407407407407407,
+        "reading": 0.6049382716049383
+      }
+    },
+    {
+      "cluster_id": 10,
+      "rank": 7,
+      "composite_score": 0.34901448467050034,
+      "composite_raw": 0.3895828890396835,
+      "raw": {
+        "cross_patient": 0.7307692307692307,
+        "stability": 0.4889873266220093,
+        "condition": 0.03089080459770116,
+        "anatomy": -52.20338921989815
+      },
+      "normalized": {
+        "cross_patient": 0.7058823529411763,
+        "stability": 0.30855849400092006,
+        "condition": 0.0,
+        "anatomy": 0.14662399662936987
+      },
+      "spatial": {
+        "distance_mm": 52.20338921989815,
+        "n_total": 464,
+        "n_with_coords": 252,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -44.209653201084286,
+          -14.85978582820722,
+          0.807064613179555
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.189873417721519,
+        "entropy_bits": 3.689693246823735,
+        "top_3": [
+          [
+            "middletemporal",
+            0.19
+          ],
+          [
+            "postcentral",
+            0.139
+          ],
+          [
+            "inferiortemporal",
+            0.135
+          ]
+        ]
+      },
+      "size": 464,
+      "n_patients": 19,
+      "n_bern": 9,
+      "n_gva": 10,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.090622179210186,
+      "top_3_regions": [
+        [
+          "middletemporal",
+          0.19
+        ],
+        [
+          "postcentral",
+          0.139
+        ],
+        [
+          "inferiortemporal",
+          0.135
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.3642241379310345,
+        "picture": 0.35129310344827586,
+        "reading": 0.28448275862068967
+      }
+    },
+    {
+      "cluster_id": 1,
+      "rank": 8,
+      "composite_score": 0.2733096479551005,
+      "composite_raw": 0.3682230710937998,
+      "raw": {
+        "cross_patient": 0.4230769230769231,
+        "stability": 0.48580628633499146,
+        "condition": 0.4088541666666667,
+        "anatomy": -48.353611421825654
+      },
+      "normalized": {
+        "cross_patient": 0.2352941176470588,
+        "stability": 0.3038946305402877,
+        "condition": 0.7744379767161781,
+        "anatomy": 0.28049439529654335
+      },
+      "spatial": {
+        "distance_mm": 48.353611421825654,
+        "n_total": 128,
+        "n_with_coords": 99,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -43.32960862824411,
+          -16.39560656776332,
+          -4.657652442503458
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.29411764705882354,
+        "entropy_bits": 3.233568863474967,
+        "top_3": [
+          [
+            "middletemporal",
+            0.294
+          ],
+          [
+            "inferiortemporal",
+            0.188
+          ],
+          [
+            "superiortemporal",
+            0.118
+          ]
+        ]
+      },
+      "size": 128,
+      "n_patients": 11,
+      "n_bern": 4,
+      "n_gva": 7,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.06131058931350708,
+      "top_3_regions": [
+        [
+          "middletemporal",
+          0.294
+        ],
+        [
+          "inferiortemporal",
+          0.188
+        ],
+        [
+          "superiortemporal",
+          0.118
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.1328125,
+        "picture": 0.125,
+        "reading": 0.7421875
+      }
+    },
+    {
+      "cluster_id": 12,
+      "rank": 9,
+      "composite_score": 0.037623029944165894,
+      "composite_raw": 0.3017250311875789,
+      "raw": {
+        "cross_patient": 0.38461538461538464,
+        "stability": 0.278531551361084,
+        "condition": 0.518939393939394,
+        "anatomy": -47.465764959690915
+      },
+      "normalized": {
+        "cross_patient": 0.17647058823529413,
+        "stability": 0.0,
+        "condition": 1.0,
+        "anatomy": 0.3113679589346125
+      },
+      "spatial": {
+        "distance_mm": 47.465764959690915,
+        "n_total": 88,
+        "n_with_coords": 14,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -49.528458731515066,
+          -5.974252947739193,
+          -17.49365895135062
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.5714285714285714,
+        "entropy_bits": 1.807354922057604,
+        "top_3": [
+          [
+            "middletemporal",
+            0.571
+          ],
+          [
+            "rostralmiddlefrontal",
+            0.143
+          ],
+          [
+            "inferiortemporal",
+            0.143
+          ]
+        ]
+      },
+      "size": 88,
+      "n_patients": 10,
+      "n_bern": 5,
+      "n_gva": 5,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.03426530584692955,
+      "top_3_regions": [
+        [
+          "middletemporal",
+          0.571
+        ],
+        [
+          "rostralmiddlefrontal",
+          0.143
+        ],
+        [
+          "inferiortemporal",
+          0.143
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.8522727272727273,
+        "picture": 0.10227272727272728,
+        "reading": 0.045454545454545456
+      }
+    },
+    {
+      "cluster_id": 4,
+      "rank": 10,
+      "composite_score": 0.0,
+      "composite_raw": 0.29110984324125255,
+      "raw": {
+        "cross_patient": 0.2692307692307692,
+        "stability": 0.6087095737457275,
+        "condition": 0.14285714285714285,
+        "anatomy": -27.662430024340864
+      },
+      "normalized": {
+        "cross_patient": 0.0,
+        "stability": 0.4840885607101859,
+        "condition": 0.22941637514098365,
+        "anatomy": 1.0
+      },
+      "spatial": {
+        "distance_mm": 27.662430024340864,
+        "n_total": 42,
+        "n_with_coords": 21,
+        "metric": "mean_pairwise",
+        "mirror_to": "left",
+        "centroid_xyz": [
+          -32.74883756183443,
+          -85.66074434916179,
+          -6.5823824519202825
+        ]
+      },
+      "anatomy_descriptive": {
+        "purity": 0.8571428571428571,
+        "entropy_bits": 0.5916727785823275,
+        "top_3": [
+          [
+            "lateraloccipital",
+            0.857
+          ],
+          [
+            "superiortemporal",
+            0.143
+          ]
+        ]
+      },
+      "size": 42,
+      "n_patients": 7,
+      "n_bern": 6,
+      "n_gva": 1,
+      "has_bern": true,
+      "has_gva": true,
+      "silhouette": 0.05422835797071457,
+      "top_3_regions": [
+        [
+          "lateraloccipital",
+          0.857
+        ],
+        [
+          "superiortemporal",
+          0.143
+        ]
+      ],
+      "condition_proportions": {
+        "audio": 0.47619047619047616,
+        "picture": 0.38095238095238093,
+        "reading": 0.14285714285714285
+      }
+    }
+  ],
+  "cluster_col_ranked": "cluster_hierarchical_hg_ranked",
+  "created_at": "2026-07-19T14:00:02Z"
+}
