@@ -165,7 +165,7 @@ def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
                           peak_z_thresh=3.0, min_prominence_db=6.0,
                           Q_min=10.0, Q_max=500.0,
                           local_hz=5.0, peak_hz=1.0, min_df=0.3, max_df=1.5,
-                          df_safety=1.0, mode="per_channel", nper_s=4.0,
+                          df_safety=1.0, max_passes=1, mode="per_channel", nper_s=4.0,
                           welch_average="median", min_bg_bins=5,
                           return_audit=False, verbose=True):
     """
@@ -200,6 +200,15 @@ def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
         Clamp on the measured peak FWHM (Hz).
     df_safety : float
         Multiplicative widening of the measured FWHM (1.0 = exact, 1.2 = 20% safety).
+        Raise (e.g. 1.5–2.0) to make each notch wider and remove peak skirts, not
+        just the centre — the main "filter stronger" knob.
+    repeats : int (see above)
+        forward-back filtfilt passes of the SAME notch per harmonic (deepens centre).
+    max_passes : int
+        Re-measure the PSD on the cleaned signal and re-notch any harmonic still above
+        threshold, up to this many passes (stops early once nothing is left). This is
+        the automatic "do another run if the peaks are still there" behaviour. 1 =
+        single pass (old behaviour); 2–3 typically drives residual harmonics to the floor.
     mode : {"per_channel", "median"}
         ``"per_channel"`` (default): detect peaks and derive Q on **each channel's
         own PSD**, notch each channel with only its own significant harmonics.
@@ -254,32 +263,52 @@ def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
 
     Y = X.copy()
     audit = {}
+    max_passes = max(1, int(max_passes))
 
     if mode == "median":
-        f_psd, P0 = _welch(X[:, 0])
-        if n_ch > 1:
-            P_med = np.median(np.vstack([_welch(X[:, ci])[1] for ci in range(n_ch)]), axis=0)
-        else:
-            P_med = P0
-        P_db = 10.0 * np.log10(P_med + 1e-30)
-        designs = _design_notches_for_psd(f_psd, P_db, harms, nyq, **design_kw)
-        audit["__median__"] = designs
-        if designs:
+        # Iterate: re-measure the channel-median PSD on the CURRENT (cleaned) signal
+        # each pass and re-notch any harmonic still above threshold. Converges when a
+        # pass finds nothing left to notch (or after max_passes).
+        all_designs, passes_used = [], 0
+        for _p in range(max_passes):
+            f_psd, P0 = _welch(Y[:, 0])
+            if n_ch > 1:
+                P_med = np.median(np.vstack([_welch(Y[:, ci])[1] for ci in range(n_ch)]), axis=0)
+            else:
+                P_med = P0
+            P_db = 10.0 * np.log10(P_med + 1e-30)
+            designs = _design_notches_for_psd(f_psd, P_db, harms, nyq, **design_kw)
+            if not designs:
+                break
             for ci in range(n_ch):
                 Y[:, ci] = _apply_designs(Y[:, ci], designs, fs, repeats, iirnotch, filtfilt)
+            all_designs.extend(designs)
+            passes_used = _p + 1
+        audit["__median__"] = all_designs
         if verbose:
-            _print_median_summary(designs, n_ch)
+            _print_median_summary(all_designs, n_ch)
+            print(f"[notch:median] passes used: {passes_used}/{max_passes}"
+                  + ("  (converged)" if passes_used < max_passes else "  (hit max_passes)"))
 
     elif mode == "per_channel":
+        passes_used = 0
         for ci in range(n_ch):
-            f_psd, P = _welch(X[:, ci])
-            P_db = 10.0 * np.log10(P + 1e-30)
-            designs = _design_notches_for_psd(f_psd, P_db, harms, nyq, **design_kw)
-            audit[ci] = designs
-            if designs:
-                Y[:, ci] = _apply_designs(Y[:, ci], designs, fs, repeats, iirnotch, filtfilt)
+            yc = Y[:, ci]
+            ch_designs = []
+            for _p in range(max_passes):
+                f_psd, P = _welch(yc)
+                P_db = 10.0 * np.log10(P + 1e-30)
+                designs = _design_notches_for_psd(f_psd, P_db, harms, nyq, **design_kw)
+                if not designs:
+                    break
+                yc = _apply_designs(yc, designs, fs, repeats, iirnotch, filtfilt)
+                ch_designs.extend(designs)
+                passes_used = max(passes_used, _p + 1)
+            Y[:, ci] = yc
+            audit[ci] = ch_designs
         if verbose:
             _print_per_channel_summary(audit, n_ch)
+            print(f"[notch:per_channel] max passes used by any channel: {passes_used}/{max_passes}")
 
     else:
         raise ValueError(f"mode must be 'per_channel' or 'median', got {mode!r}")

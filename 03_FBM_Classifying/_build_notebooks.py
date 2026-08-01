@@ -563,20 +563,27 @@ nb391 = [
 cell("markdown", r"""
 # 391 — Compare features across class types
 
-Three figures that compare the **8 feature variants** against the **class types**
+Six figures that compare the **feature variants** against the **class types**
 (condition / Yeo-7 / Yeo-17) and classifiers. Reads the runs 320/330 wrote — no new
 computation. Run 320 + 330 first, then this.
 
-> **The rule every panel obeys:** chance differs by task (0.33 / 0.14 / 0.06). So balanced
-> accuracy is **never** shared across tasks on one axis. We plot **fraction above chance**
-> = `(BA − chance) / (1 − chance)`, or one panel per task with its own chance line. A taller
-> bar for Yeo-17 than condition would otherwise be a lie.
+> **The rule every panel obeys:** chance differs by task (0.33 / 0.14 / 0.06), so balanced
+> accuracy is **never** shared across tasks on one axis — a taller Yeo-17 bar than condition
+> would be a lie. Figs 2–4 share one axis using **fraction above chance** = `(BA − chance) /
+> (1 − chance)` — bounded 0–1, comparable across tasks, and it carries a real **bootstrap 95%
+> CI**, so the panels can show honest **error bars**. (A z-score *can't*: its CI is ±1.96 by
+> construction — and the permutation-null z blows up to z≈50–390 for random-forest on the
+> parcellation tasks. The Wald z is kept in the table for reference.) Figs 5–6 open up the
+> **confusion matrices** (per task — the class sets differ, so they can't be merged), and a
+> closing cell **tests HG vs FULL** per task. Styled with **seaborn** (falls back to
+> matplotlib's seaborn theme if seaborn isn't installed).
 """),
 cell("code", r"""
-import sys
+import sys, importlib
 from pathlib import Path
 sys.path.insert(0, str(Path('..').resolve()))
 from functions import lf_classify as C
+importlib.reload(C)            # pick up any edits to lf_classify without restarting the kernel
 import matplotlib.pyplot as plt
 from IPython.display import display
 
@@ -587,7 +594,7 @@ if not len(comp):
 else:
     print(f'{len(comp)} runs · {comp.task.nunique()} tasks · {comp.variant.nunique()} variants')
     display(comp[['task','variant','classifier','balanced_accuracy','chance_level',
-                  'above_chance','permutation_p']].round(3))
+                  'above_chance','z_score','permutation_p']].round(3))
 """),
 cell("markdown", r"""
 ## Fig 1 — Master heatmap (the one-glance overview)
@@ -599,19 +606,23 @@ cell("code", r"""
 if len(comp): C.plot_compare_heatmap(comp, out_png=outdir/'heatmap.png'); plt.show()
 """),
 cell("markdown", r"""
-## Fig 2 — Forest plot (effect size + uncertainty)
-One panel per task, own chance line. Balanced accuracy **± 95% CI** per variant×classifier;
-**filled = p<.05, hollow = ns**, colour = family. If two variants' CIs overlap, they're not
-meaningfully different — don't crown one.
+## Fig 2 — Decoding strength, all tasks on one axis
+**One condensed panel** (was three). x = **fraction above chance** with **bootstrap 95% CI**
+(the error bars). Each **variant** gets a horizontal band; **colour = task**, **marker =
+classifier** (● logreg / ■ rf), **filled = p<.05, hollow = ns**. Vertical line at 0 = chance.
+Read down a band to compare tasks, across the plot to rank features. Condition decodes
+strongest (esp. `hg_300`); Yeo-17 weakest; overlapping CIs = variants you can't separate.
 """),
 cell("code", r"""
 if len(comp): C.plot_compare_forest(comp, out_png=outdir/'forest.png'); plt.show()
 """),
 cell("markdown", r"""
 ## Fig 3 — Paired contrasts (the science)
-**Top:** amplitude triad (continuous → row-norm → discretized), a line per time grid — a drop
-left→right means the decode was riding on power, not pattern. **Bottom:** time resolution
-(●300 vs ○30) for the full and HG families. Paired, so read the *direction*, not the height.
+**Two panels sharing one axis** (was a 2×3 grid). **Colour = task**, **bootstrap 95% CI**
+error bars. **Left — amplitude triad** (continuous → row-norm → discretized; solid = 300-time,
+dashed = 30-time): a drop left→right means the decode was riding on **power**, not pattern.
+**Right — time resolution** (●300 vs ○30) for the full and HG families, paired per task. Read
+the *direction*, not the absolute height.
 """),
 cell("code", r"""
 if len(comp): C.plot_paired_contrasts(comp, classifier='logreg', out_png=outdir/'paired_contrasts.png'); plt.show()
@@ -640,6 +651,69 @@ for t in ('condition', 'parcellation_yeo7', 'parcellation_yeo17'):
     fig = C.plot_delta_confusion(t, CLF, baseline=BASELINE, out_png=outdir/f'delta_confusion_{t}.png')
     if fig is not None: plt.show()
     else: print('  (need the baseline + >=1 other feature run)')
+"""),
+cell("markdown", r"""
+## Fig 5 — Classifier agreement (robustness check)
+Each point is one (task, variant): x = **above-chance(logreg)**, y = **above-chance(rf)**.
+Points on the **diagonal** mean both classifiers reach the same decoding strength (the feature
+is robust to model choice); points pulled **off-diagonal** (labelled) depend on the model.
+Condition `full_30` / `full_*_rn` sit **below** the line (logreg > rf), while `m101_*` sit
+**above** it (rf ≥ logreg).
+"""),
+cell("code", r"""
+if len(comp): C.plot_compare_clf_scatter(comp, out_png=outdir/'clf_scatter.png'); plt.show()
+"""),
+cell("markdown", r"""
+## Fig 6 — Combined confusion matrices (per task)
+The overall-accuracy figures above collapse each confusion matrix to one number; the next two
+recover the **class-level** structure. Confusion matrices are only comparable **within** a task
+(condition has 3 classes, Yeo-7 has 7, Yeo-17 has 17 — different label sets can't be merged),
+so each task gets its own matrix.
+
+**Fig 6** = the **mean row-normalized confusion** across all 16 variant×classifier runs per task:
+**diagonal = mean recall**, **off-diagonal = the confusions stable across every feature** (which
+network gets mistaken for which). Yeo-17 shows predictions pooling into a few "attractor"
+networks (4, 9, 17) — the signature of a hard, imbalanced decode.
+"""),
+cell("code", r"""
+if len(comp): C.plot_confusion_consensus(out_png=outdir/'confusion_consensus.png'); plt.show()
+"""),
+cell("markdown", r"""
+## Fig 7 — Per-class recall (the confusion diagonals, side by side)
+The complement to Fig 6: instead of averaging, lay every run's **diagonal** out for comparison.
+One stacked heatmap per task — **rows = class, cols = variant·classifier, cell = recall**,
+`*` = permutation-FDR p<.05. A row that's pale across the board is a class **no feature decodes**
+(chronically confused); a row that brightens for a specific column shows a feature that
+selectively recovers that class. Reveals, e.g., that Yeo-17 networks 1/4/14/17 carry almost all
+the decodable signal while most others sit near zero.
+"""),
+cell("code", r"""
+if len(comp): C.plot_class_recall_compare(out_png=outdir/'class_recall_compare.png'); plt.show()
+"""),
+cell("markdown", r"""
+## Analysis — is high-gamma alone as good as the full spectrum?
+The variant family was built to answer exactly this: **does the single 70–150 Hz high-gamma
+line decode as well as the full 15-band spectrum?** HG and FULL come in **matched pairs** (same
+time grid × rownorm × classifier), so this is a *paired* test, run **per task** — the only fair
+contrast (they share a time grid by design).
+
+Table below: per-task group means, the median paired Δ (HG−FULL), how many pairs favour HG, a
+sign-test + Wilcoxon signed-rank p, and the single **best HG vs best FULL** run (does either win,
+and do their 95% CIs overlap?). The slopegraph draws every matched pair — **green rising = HG
+higher**.
+"""),
+cell("code", r"""
+if len(comp):
+    hgf = C.hg_vs_full_stats(comp)
+    display(hgf)
+    C.plot_hg_vs_full(comp, out_png=outdir/'hg_vs_full.png'); plt.show()
+    for _, r in hgf.iterrows():
+        lead = 'HG' if r['median_d(hg-full)'] > 0 else 'FULL'
+        tie = ' (CIs overlap — n.s. at best-vs-best)' if r['best_CIs_overlap'] else ''
+        print(f"{r['task']:10s}: {lead} ahead · {r['hg_better']} pairs favour HG · "
+              f"median Δ={r['median_d(hg-full)']:+.3f} · sign p={r['sign_p']}, "
+              f"wilcoxon p={r['wilcoxon_p']} · best HG {r['best_hg']} vs best FULL "
+              f"{r['best_full']} (Δ={r['best_d']:+.3f}){tie}")
 """),
 ]
 
