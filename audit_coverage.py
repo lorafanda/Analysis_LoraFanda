@@ -37,6 +37,11 @@ ROOT = Path(__file__).resolve().parent
 ERSP_DIR = ROOT / "01_FBM_Analysis" / "outputs" / "04_ersp_LM_RAWONLY"
 CLUST_DIR = ROOT / "02_FBM_Clustering" / "outputs" / "clustering"
 COORDS_DIR = ROOT / "02_FBM_Clustering" / "outputs" / "250_recon" / "fsaverage" / "coords"
+
+# (patient_id, contact_norm) of contacts whose coordinate lands in white matter.
+# Populated by audit_coords(); 252 renders with KEEP_WM=False so these are legitimately
+# absent from every brain plot despite having a valid coordinate.
+WM_CONTACTS: set = set()
 POOL_DIR = ROOT / "04_FBM_Pooling" / "outputs" / "pooling"
 CLASSIFY_CACHE = ROOT / "03_FBM_Classifying" / "outputs" / "_dataset" / "classification"
 CONDITIONS = ("audio", "picture", "reading")
@@ -183,6 +188,16 @@ def audit_coords(inv: pd.DataFrame) -> set:
     have = set(zip(co["patient_id"], co["contact_norm"]))
     print(f"  coords available for {len(have)} contacts across {co['patient_id'].nunique()} patients")
 
+    # 252 renders with KEEP_WM=False, so a white-matter contact HAS a coordinate but is
+    # still absent from the brain plot. Track those separately or the cross-check below
+    # compares two different questions and reports a phantom "the join is wrong".
+    WM_CONTACTS.clear()
+    if "is_wm" in co.columns:
+        wm = co[co["is_wm"] == 1]
+        WM_CONTACTS.update(zip(wm["patient_id"], wm["contact_norm"]))
+        print(f"  ({len(WM_CONTACTS)} of those are white matter — present in the coords, "
+              f"but dropped by 252's KEEP_WM=False)")
+
     # Patients on one side of the pipeline but not the other.
     if not inv.empty:
         ersp_pats = set(inv["patient_id"]); coord_pats = set(co["patient_id"])
@@ -276,11 +291,33 @@ def audit_clustering(have: set):
             if um.exists():
                 try:
                     n_um = len(pd.read_csv(um))
-                    if abs(n_um - miss) > 1:
-                        print(f"  {tag}: !! my unplottable count ({miss}) disagrees with "
-                              f"252's UNMATCHED log ({n_um}) — one of the joins is wrong")
-                        note("cluster", "-", tag, "audit vs 252 unmatched mismatch",
-                             f"audit={miss} recon_log={n_um}")
+                    # 252 drops a sample for EITHER reason: no coordinate at all, or a
+                    # coordinate that lands in white matter (KEEP_WM=False). Compare
+                    # against that sum, not against `miss` alone.
+                    n_wm = sum(1 for p, k in zip(lab["patient_id"].astype(str), key)
+                               if (p, k) in WM_CONTACTS)
+                    expect = miss + n_wm
+                    # A log written BEFORE the coords were last fixed describes a world
+                    # that no longer exists — that is staleness, not a broken join.
+                    coords_mtime = max((f.stat().st_mtime for f in
+                                        COORDS_DIR.glob("*_contacts_fsaverage.csv")), default=0)
+                    stale = um.stat().st_mtime < coords_mtime
+                    if abs(n_um - expect) > 1:
+                        if stale:
+                            print(f"  {tag}: recon is STALE — its UNMATCHED log ({n_um}) predates "
+                                  f"the current coords; today's answer is {expect} "
+                                  f"({miss} no coords + {n_wm} white matter). Re-run 252.")
+                            note("cluster", "-", tag, "recon predates the coords fix",
+                                 f"log={n_um} now={expect}")
+                        else:
+                            print(f"  {tag}: !! 252's UNMATCHED log ({n_um}) does not equal "
+                                  f"no-coords ({miss}) + white-matter ({n_wm}) = {expect} "
+                                  f"— one of the joins is wrong")
+                            note("cluster", "-", tag, "audit vs 252 unmatched mismatch",
+                                 f"audit={miss}+wm{n_wm} recon_log={n_um}")
+                    elif n_wm:
+                        print(f"  [ok] {tag}: 252 dropped {n_um} "
+                              f"({miss} no coords + {n_wm} white matter — by design)")
                 except Exception:
                     pass
         if not miss and recon.is_dir():
