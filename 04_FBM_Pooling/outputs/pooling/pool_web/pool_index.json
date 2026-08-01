@@ -1,19 +1,19 @@
 {
   "grid": "ds",
-  "n_contacts": 2644,
+  "n_contacts": 2724,
   "csv": "contacts_pool.csv",
   "multilabel": true,
   "roles": [
     {
       "role": "auditory",
       "color": "#1f77b4",
-      "n": 124,
-      "n_primary": 110
+      "n": 144,
+      "n_primary": 130
     },
     {
       "role": "auditory_v2",
       "color": "#539fd4",
-      "n": 21,
+      "n": 25,
       "n_primary": 1
     },
     {
@@ -61,8 +61,8 @@
     {
       "role": "premotor planning",
       "color": "#ff7f0e",
-      "n": 43,
-      "n_primary": 41
+      "n": 50,
+      "n_primary": 47
     },
     {
       "role": "phonological_encoding",
@@ -79,8 +79,8 @@
     {
       "role": "motor_v2",
       "color": "#e57373",
-      "n": 21,
-      "n_primary": 21
+      "n": 22,
+      "n_primary": 22
     },
     {
       "role": "auditory_feedback",
@@ -103,32 +103,32 @@
     {
       "role": "tag_hga_activation",
       "color": "#bcb0b0",
-      "n": 139,
-      "n_primary": 64
+      "n": 145,
+      "n_primary": 67
     },
     {
       "role": "tag_beta_erd",
       "color": "#bcbca0",
-      "n": 379,
-      "n_primary": 299
+      "n": 391,
+      "n_primary": 301
     },
     {
       "role": "tag_low_f_erd",
       "color": "#a6b2bc",
-      "n": 536,
-      "n_primary": 232
+      "n": 565,
+      "n_primary": 252
     },
     {
       "role": "tag_theta_tracking",
       "color": "#c4b6a4",
-      "n": 252,
-      "n_primary": 178
+      "n": 258,
+      "n_primary": 175
     },
     {
       "role": "ultra_hfa",
       "color": "#c2a6bc",
-      "n": 121,
-      "n_primary": 67
+      "n": 124,
+      "n_primary": 68
     },
     {
       "role": "stimulus_active",
@@ -139,14 +139,14 @@
     {
       "role": "response_active",
       "color": "#c9c9c9",
-      "n": 104,
+      "n": 110,
       "n_primary": 0
     },
     {
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 1551
+      "n_primary": 1581
     }
   ]
 }

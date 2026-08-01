@@ -1049,6 +1049,41 @@
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_aH_R9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_aH_R9_TN_CLEAN.png"
   },
+  "EL035|AIR1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_aI_R1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_aI_R1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_aI_R1_TN_CLEAN.png"
+  },
+  "EL035|AIR2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_aI_R2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_aI_R2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_aI_R2_TN_CLEAN.png"
+  },
+  "EL035|AIR3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_aI_R3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_aI_R3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_aI_R3_TN_CLEAN.png"
+  },
+  "EL035|AIR4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_aI_R4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_aI_R4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_aI_R4_TN_CLEAN.png"
+  },
+  "EL035|AIR5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_aI_R5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_aI_R5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_aI_R5_TN_CLEAN.png"
+  },
+  "EL035|AIR6": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_aI_R6_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_aI_R6_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_aI_R6_TN_CLEAN.png"
+  },
+  "EL035|AIR7": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_aI_R7_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_aI_R7_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_aI_R7_TN_CLEAN.png"
+  },
   "EL035|CINGR1": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_CinG_R1_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_CinG_R1_TN_CLEAN.png",
@@ -1258,6 +1293,56 @@
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_PHG_R6_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_PHG_R6_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_PHG_R6_TN_CLEAN.png"
+  },
+  "EL035|PIR10": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R10_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R10_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R10_TN_CLEAN.png"
+  },
+  "EL035|PIR1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R1_TN_CLEAN.png"
+  },
+  "EL035|PIR2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R2_TN_CLEAN.png"
+  },
+  "EL035|PIR3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R3_TN_CLEAN.png"
+  },
+  "EL035|PIR4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R4_TN_CLEAN.png"
+  },
+  "EL035|PIR5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R5_TN_CLEAN.png"
+  },
+  "EL035|PIR6": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R6_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R6_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R6_TN_CLEAN.png"
+  },
+  "EL035|PIR7": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R7_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R7_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R7_TN_CLEAN.png"
+  },
+  "EL035|PIR8": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R8_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R8_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R8_TN_CLEAN.png"
+  },
+  "EL035|PIR9": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_pI_R9_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/picture/EL035_picture_WM_ERSP_pI_R9_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/reading/EL035_reading_WM_ERSP_pI_R9_TN_CLEAN.png"
   },
   "EL035|SMGR1": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL035/LM/ERSP_clean/audio/EL035_audio_WM_ERSP_SMG_R1_TN_CLEAN.png",
@@ -1739,6 +1824,71 @@
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aH_R9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aH_R9_TN_CLEAN.png"
   },
+  "EL037|AIL10": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L10_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L10_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L10_TN_CLEAN.png"
+  },
+  "EL037|AIL11": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L11_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L11_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L11_TN_CLEAN.png"
+  },
+  "EL037|AIL16": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L16_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L16_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L16_TN_CLEAN.png"
+  },
+  "EL037|AIL17": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L17_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L17_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L17_TN_CLEAN.png"
+  },
+  "EL037|AIL1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L1_TN_CLEAN.png"
+  },
+  "EL037|AIL2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L2_TN_CLEAN.png"
+  },
+  "EL037|AIL3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L3_TN_CLEAN.png"
+  },
+  "EL037|AIL4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L4_TN_CLEAN.png"
+  },
+  "EL037|AIL5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L5_TN_CLEAN.png"
+  },
+  "EL037|AIL6": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L6_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L6_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L6_TN_CLEAN.png"
+  },
+  "EL037|AIL7": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L7_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L7_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L7_TN_CLEAN.png"
+  },
+  "EL037|AIL8": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L8_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L8_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L8_TN_CLEAN.png"
+  },
+  "EL037|AIL9": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_aI_L9_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_aI_L9_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/reading/EL037_reading_WM_ERSP_aI_L9_TN_CLEAN.png"
+  },
   "EL037|CINGL14": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/audio/EL037_audio_WM_ERSP_CinG_L14_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL037/LM/ERSP_clean/picture/EL037_picture_WM_ERSP_CinG_L14_TN_CLEAN.png",
@@ -2048,6 +2198,61 @@
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aH_L9_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aH_L9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aH_L9_TN_CLEAN.png"
+  },
+  "EL038|AIR10": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R10_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R10_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R10_TN_CLEAN.png"
+  },
+  "EL038|AIR11": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R11_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R11_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R11_TN_CLEAN.png"
+  },
+  "EL038|AIR12": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R12_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R12_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R12_TN_CLEAN.png"
+  },
+  "EL038|AIR13": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R13_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R13_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R13_TN_CLEAN.png"
+  },
+  "EL038|AIR14": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R14_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R14_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R14_TN_CLEAN.png"
+  },
+  "EL038|AIR15": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R15_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R15_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R15_TN_CLEAN.png"
+  },
+  "EL038|AIR3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R3_TN_CLEAN.png"
+  },
+  "EL038|AIR4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R4_TN_CLEAN.png"
+  },
+  "EL038|AIR7": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R7_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R7_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R7_TN_CLEAN.png"
+  },
+  "EL038|AIR8": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R8_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R8_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R8_TN_CLEAN.png"
+  },
+  "EL038|AIR9": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_aI_R9_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/picture/EL038_picture_WM_ERSP_aI_R9_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/reading/EL038_reading_WM_ERSP_aI_R9_TN_CLEAN.png"
   },
   "EL038|CINGR1": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL038/LM/ERSP_clean/audio/EL038_audio_WM_ERSP_CinG_R1_TN_CLEAN.png",
@@ -2383,6 +2588,56 @@
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aH_R9_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aH_R9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aH_R9_TN_CLEAN.png"
+  },
+  "EL040|AIR17": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R17_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R17_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R17_TN_CLEAN.png"
+  },
+  "EL040|AIR18": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R18_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R18_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R18_TN_CLEAN.png"
+  },
+  "EL040|AIR1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R1_TN_CLEAN.png"
+  },
+  "EL040|AIR2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R2_TN_CLEAN.png"
+  },
+  "EL040|AIR3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R3_TN_CLEAN.png"
+  },
+  "EL040|AIR4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R4_TN_CLEAN.png"
+  },
+  "EL040|AIR5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R5_TN_CLEAN.png"
+  },
+  "EL040|AIR6": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R6_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R6_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R6_TN_CLEAN.png"
+  },
+  "EL040|AIR7": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R7_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R7_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R7_TN_CLEAN.png"
+  },
+  "EL040|AIR8": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_aI_R8_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/picture/EL040_picture_WM_ERSP_aI_R8_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/reading/EL040_reading_WM_ERSP_aI_R8_TN_CLEAN.png"
   },
   "EL040|CINGL11": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL040/LM/ERSP_clean/audio/EL040_audio_WM_ERSP_CinG_L11_TN_CLEAN.png",
@@ -3064,6 +3319,96 @@
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aH_R9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aH_R9_TN_CLEAN.png"
   },
+  "EL042|AIR10": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R10_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R10_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R10_TN_CLEAN.png"
+  },
+  "EL042|AIR11": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R11_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R11_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R11_TN_CLEAN.png"
+  },
+  "EL042|AIR12": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R12_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R12_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R12_TN_CLEAN.png"
+  },
+  "EL042|AIR13": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R13_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R13_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R13_TN_CLEAN.png"
+  },
+  "EL042|AIR14": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R14_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R14_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R14_TN_CLEAN.png"
+  },
+  "EL042|AIR15": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R15_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R15_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R15_TN_CLEAN.png"
+  },
+  "EL042|AIR16": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R16_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R16_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R16_TN_CLEAN.png"
+  },
+  "EL042|AIR17": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R17_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R17_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R17_TN_CLEAN.png"
+  },
+  "EL042|AIR18": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R18_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R18_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R18_TN_CLEAN.png"
+  },
+  "EL042|AIR1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R1_TN_CLEAN.png"
+  },
+  "EL042|AIR2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R2_TN_CLEAN.png"
+  },
+  "EL042|AIR3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R3_TN_CLEAN.png"
+  },
+  "EL042|AIR4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R4_TN_CLEAN.png"
+  },
+  "EL042|AIR5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R5_TN_CLEAN.png"
+  },
+  "EL042|AIR6": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R6_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R6_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R6_TN_CLEAN.png"
+  },
+  "EL042|AIR7": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R7_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R7_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R7_TN_CLEAN.png"
+  },
+  "EL042|AIR8": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R8_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R8_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R8_TN_CLEAN.png"
+  },
+  "EL042|AIR9": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_aI_R9_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_aI_R9_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/reading/EL042_reading_WM_ERSP_aI_R9_TN_CLEAN.png"
+  },
   "EL042|ENTGR10": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/audio/EL042_audio_WM_ERSP_EntG_R10_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL042/LM/ERSP_clean/picture/EL042_picture_WM_ERSP_EntG_R10_TN_CLEAN.png",
@@ -3478,6 +3823,96 @@
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_LinG9_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_LinG9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_LinG9_TN_CLEAN.png"
+  },
+  "EL043|PINS10": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns10_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns10_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns10_TN_CLEAN.png"
+  },
+  "EL043|PINS11": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns11_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns11_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns11_TN_CLEAN.png"
+  },
+  "EL043|PINS12": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns12_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns12_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns12_TN_CLEAN.png"
+  },
+  "EL043|PINS13": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns13_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns13_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns13_TN_CLEAN.png"
+  },
+  "EL043|PINS14": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns14_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns14_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns14_TN_CLEAN.png"
+  },
+  "EL043|PINS15": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns15_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns15_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns15_TN_CLEAN.png"
+  },
+  "EL043|PINS16": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns16_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns16_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns16_TN_CLEAN.png"
+  },
+  "EL043|PINS17": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns17_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns17_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns17_TN_CLEAN.png"
+  },
+  "EL043|PINS18": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns18_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns18_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns18_TN_CLEAN.png"
+  },
+  "EL043|PINS1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns1_TN_CLEAN.png"
+  },
+  "EL043|PINS2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns2_TN_CLEAN.png"
+  },
+  "EL043|PINS3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns3_TN_CLEAN.png"
+  },
+  "EL043|PINS4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns4_TN_CLEAN.png"
+  },
+  "EL043|PINS5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns5_TN_CLEAN.png"
+  },
+  "EL043|PINS6": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns6_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns6_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns6_TN_CLEAN.png"
+  },
+  "EL043|PINS7": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns7_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns7_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns7_TN_CLEAN.png"
+  },
+  "EL043|PINS8": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns8_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns8_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns8_TN_CLEAN.png"
+  },
+  "EL043|PINS9": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_pIns9_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/picture/EL043_picture_WM_ERSP_pIns9_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/reading/EL043_reading_WM_ERSP_pIns9_TN_CLEAN.png"
   },
   "EL043|SSMG10": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL043/LM/ERSP_clean/audio/EL043_audio_WM_ERSP_sSMG10_TN_CLEAN.png",
@@ -3894,6 +4329,36 @@
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/picture/EL045_picture_WM_ERSP_pH_L9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/reading/EL045_reading_WM_ERSP_pH_L9_TN_CLEAN.png"
   },
+  "EL045|PLATL1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/audio/EL045_audio_WM_ERSP_PlaT_L1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/picture/EL045_picture_WM_ERSP_PlaT_L1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/reading/EL045_reading_WM_ERSP_PlaT_L1_TN_CLEAN.png"
+  },
+  "EL045|PLATL2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/audio/EL045_audio_WM_ERSP_PlaT_L2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/picture/EL045_picture_WM_ERSP_PlaT_L2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/reading/EL045_reading_WM_ERSP_PlaT_L2_TN_CLEAN.png"
+  },
+  "EL045|PLATL3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/audio/EL045_audio_WM_ERSP_PlaT_L3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/picture/EL045_picture_WM_ERSP_PlaT_L3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/reading/EL045_reading_WM_ERSP_PlaT_L3_TN_CLEAN.png"
+  },
+  "EL045|PLATL4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/audio/EL045_audio_WM_ERSP_PlaT_L4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/picture/EL045_picture_WM_ERSP_PlaT_L4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/reading/EL045_reading_WM_ERSP_PlaT_L4_TN_CLEAN.png"
+  },
+  "EL045|PLATL5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/audio/EL045_audio_WM_ERSP_PlaT_L5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/picture/EL045_picture_WM_ERSP_PlaT_L5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/reading/EL045_reading_WM_ERSP_PlaT_L5_TN_CLEAN.png"
+  },
+  "EL045|PLATL6": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/audio/EL045_audio_WM_ERSP_PlaT_L6_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/picture/EL045_picture_WM_ERSP_PlaT_L6_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/reading/EL045_reading_WM_ERSP_PlaT_L6_TN_CLEAN.png"
+  },
   "EL045|STGL1": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/audio/EL045_audio_WM_ERSP_STG_L1_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/EL045/LM/ERSP_clean/picture/EL045_picture_WM_ERSP_STG_L1_TN_CLEAN.png",
@@ -3994,16 +4459,6 @@
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/picture/PAT_2868_picture_WM_ERSP_FOP5_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/reading/PAT_2868_reading_WM_ERSP_FOP5_TN_CLEAN.png"
   },
-  "PAT_2868|IDM2": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/audio/PAT_2868_audio_WM_ERSP_IDM2_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/picture/PAT_2868_picture_WM_ERSP_IDM2_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/reading/PAT_2868_reading_WM_ERSP_IDM2_TN_CLEAN.png"
-  },
-  "PAT_2868|IDM5": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/audio/PAT_2868_audio_WM_ERSP_IDM5_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/picture/PAT_2868_picture_WM_ERSP_IDM5_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/reading/PAT_2868_reading_WM_ERSP_IDM5_TN_CLEAN.png"
-  },
   "PAT_2868|IDP1": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/audio/PAT_2868_audio_WM_ERSP_IDP1_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/picture/PAT_2868_picture_WM_ERSP_IDP1_TN_CLEAN.png",
@@ -4043,21 +4498,6 @@
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/audio/PAT_2868_audio_WM_ERSP_POI5_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/picture/PAT_2868_picture_WM_ERSP_POI5_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/reading/PAT_2868_reading_WM_ERSP_POI5_TN_CLEAN.png"
-  },
-  "PAT_2868|POM2": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/audio/PAT_2868_audio_WM_ERSP_POM2_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/picture/PAT_2868_picture_WM_ERSP_POM2_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/reading/PAT_2868_reading_WM_ERSP_POM2_TN_CLEAN.png"
-  },
-  "PAT_2868|POM3": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/audio/PAT_2868_audio_WM_ERSP_POM3_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/picture/PAT_2868_picture_WM_ERSP_POM3_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/reading/PAT_2868_reading_WM_ERSP_POM3_TN_CLEAN.png"
-  },
-  "PAT_2868|POM4": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/audio/PAT_2868_audio_WM_ERSP_POM4_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/picture/PAT_2868_picture_WM_ERSP_POM4_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/reading/PAT_2868_reading_WM_ERSP_POM4_TN_CLEAN.png"
   },
   "PAT_2868|POP1": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_2868/LM/ERSP_clean/audio/PAT_2868_audio_WM_ERSP_POP1_TN_CLEAN.png",
@@ -5918,36 +6358,6 @@
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/audio/PAT_3415_audio_WM_ERSP_TA6_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/picture/PAT_3415_picture_WM_ERSP_TA6_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/reading/PAT_3415_reading_WM_ERSP_TA6_TN_CLEAN.png"
-  },
-  "PAT_3415|TM1": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/audio/PAT_3415_audio_WM_ERSP_TM1_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/picture/PAT_3415_picture_WM_ERSP_TM1_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/reading/PAT_3415_reading_WM_ERSP_TM1_TN_CLEAN.png"
-  },
-  "PAT_3415|TM2": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/audio/PAT_3415_audio_WM_ERSP_TM2_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/picture/PAT_3415_picture_WM_ERSP_TM2_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/reading/PAT_3415_reading_WM_ERSP_TM2_TN_CLEAN.png"
-  },
-  "PAT_3415|TM3": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/audio/PAT_3415_audio_WM_ERSP_TM3_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/picture/PAT_3415_picture_WM_ERSP_TM3_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/reading/PAT_3415_reading_WM_ERSP_TM3_TN_CLEAN.png"
-  },
-  "PAT_3415|TM4": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/audio/PAT_3415_audio_WM_ERSP_TM4_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/picture/PAT_3415_picture_WM_ERSP_TM4_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/reading/PAT_3415_reading_WM_ERSP_TM4_TN_CLEAN.png"
-  },
-  "PAT_3415|TM5": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/audio/PAT_3415_audio_WM_ERSP_TM5_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/picture/PAT_3415_picture_WM_ERSP_TM5_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/reading/PAT_3415_reading_WM_ERSP_TM5_TN_CLEAN.png"
-  },
-  "PAT_3415|TM6": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/audio/PAT_3415_audio_WM_ERSP_TM6_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/picture/PAT_3415_picture_WM_ERSP_TM6_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/reading/PAT_3415_reading_WM_ERSP_TM6_TN_CLEAN.png"
   },
   "PAT_3415|TP1": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_3415/LM/ERSP_clean/audio/PAT_3415_audio_WM_ERSP_TP1_TN_CLEAN.png",
@@ -10824,6 +11234,71 @@
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_IPD9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_IPD9_TN_CLEAN.png"
   },
+  "PAT_6619|OFA1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFA1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFA1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFA1_TN_CLEAN.png"
+  },
+  "PAT_6619|OFA2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFA2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFA2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFA2_TN_CLEAN.png"
+  },
+  "PAT_6619|OFA3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFA3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFA3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFA3_TN_CLEAN.png"
+  },
+  "PAT_6619|OFA4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFA4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFA4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFA4_TN_CLEAN.png"
+  },
+  "PAT_6619|OFA5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFA5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFA5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFA5_TN_CLEAN.png"
+  },
+  "PAT_6619|OFP1": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFP1_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFP1_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFP1_TN_CLEAN.png"
+  },
+  "PAT_6619|OFP2": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFP2_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFP2_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFP2_TN_CLEAN.png"
+  },
+  "PAT_6619|OFP3": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFP3_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFP3_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFP3_TN_CLEAN.png"
+  },
+  "PAT_6619|OFP4": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFP4_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFP4_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFP4_TN_CLEAN.png"
+  },
+  "PAT_6619|OFP5": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFP5_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFP5_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFP5_TN_CLEAN.png"
+  },
+  "PAT_6619|OFP6": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFP6_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFP6_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFP6_TN_CLEAN.png"
+  },
+  "PAT_6619|OFP7": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFP7_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFP7_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFP7_TN_CLEAN.png"
+  },
+  "PAT_6619|OFP8": {
+    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_OFP8_TN_CLEAN.png",
+    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_OFP8_TN_CLEAN.png",
+    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/reading/PAT_6619_reading_WM_ERSP_OFP8_TN_CLEAN.png"
+  },
   "PAT_6619|PHD1": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/audio/PAT_6619_audio_WM_ERSP_PHD1_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6619/LM/ERSP_clean/picture/PAT_6619_picture_WM_ERSP_PHD1_TN_CLEAN.png",
@@ -11098,81 +11573,6 @@
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOL9_TN_CLEAN.png",
     "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOL9_TN_CLEAN.png",
     "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOL9_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM10": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM10_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM10_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM10_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM11": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM11_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM11_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM11_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM12": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM12_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM12_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM12_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM13": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM13_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM13_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM13_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM14": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM14_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM14_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM14_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM15": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM15_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM15_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM15_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM1": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM1_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM1_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM1_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM2": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM2_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM2_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM2_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM3": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM3_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM3_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM3_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM4": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM4_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM4_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM4_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM5": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM5_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM5_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM5_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM6": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM6_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM6_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM6_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM7": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM7_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM7_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM7_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM8": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM8_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM8_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM8_TN_CLEAN.png"
-  },
-  "PAT_6684|FOM9": {
-    "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FOM9_TN_CLEAN.png",
-    "picture": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/picture/PAT_6684_picture_WM_ERSP_FOM9_TN_CLEAN.png",
-    "reading": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/reading/PAT_6684_reading_WM_ERSP_FOM9_TN_CLEAN.png"
   },
   "PAT_6684|FPG10": {
     "audio": "01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY/PAT_6684/LM/ERSP_clean/audio/PAT_6684_audio_WM_ERSP_FPG10_TN_CLEAN.png",

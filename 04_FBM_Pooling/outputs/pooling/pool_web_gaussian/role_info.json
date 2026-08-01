@@ -446,7 +446,7 @@
   "thr": 0.5,
   "frac": 0.25,
   "match": "all",
-  "onset_t_pct": 7.5
+  "onset_t_pct": 7.8
  },
  "phonological_encoding": {
   "description": "Pre-articulatory phonological/phonetic encoding between the GO-cue (50%) and voice onset (~V%); condition-shared.",
