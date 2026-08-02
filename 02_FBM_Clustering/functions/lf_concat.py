@@ -40,21 +40,28 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 import numpy as np
 import pandas as pd
 
-from functions.lf_dataset import prepare_dataset, is_non_neural_electrode, is_micro_electrode
+from functions.lf_dataset import (prepare_dataset, is_non_neural_electrode,
+                                  is_micro_electrode, is_grid_electrode)
 from functions.lf_features import FREQ_BANDS_15_TO_400HZ, downsample_ersp_to_bands
 from functions.lf_hg import build_hg_feature_matrix
 
 DEFAULT_CONDITIONS: Tuple[str, ...] = ("audio", "picture", "reading")
-# Grid (ECoG) patients are excluded from the concatenated track: the electrode geometry
-# and coverage differ from the depth/sEEG cohort, so a per-electrode functional TYPE is
-# not comparable across the two. Pass exclude_patients=() to keep them.
+# Subdural GRID contacts are excluded from the concatenated track: a grid contact is
+# physically a different measurement from a depth contact (larger surface area, cortical
+# surface potential rather than intraparenchymal), so its ERSP is not comparable.
 #
-#   EL044     whole-patient ECoG — 108 contacts over 4 shafts (Pa 51, T 46, P 6, postP 5)
-#   PAT_3415  carries a 64-contact grid (GA..GH, 8 shafts x 8) alongside its depth
-#             electrodes. The patient is excluded ENTIRELY, not just the G* shafts:
-#             mixing grid and depth contacts from one subject would put two different
-#             recording geometries into the same per-electrode sample space.
-DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_3415")
+# The exclusion is at CONTACT level wherever possible, because the sample unit is one
+# ELECTRODE. A depth contact in a mixed-implant patient is exactly as comparable to
+# other depth contacts as anyone else's, so throwing the whole patient away costs real
+# data for no methodological gain.
+#
+#   PAT_3415  MIXED — 64 grid contacts (GA..GH) dropped by lf_dataset.GRID_SHAFTS,
+#             57 depth contacts (IMG, IPG, OI, OS, TA, TM, TP) KEPT.
+#   EL044     ECoG THROUGHOUT (Pa 51, T 46, P 6, postP 5) — no depth contacts to keep,
+#             so it stays a whole-patient exclusion.
+#
+# Pass exclude_patients=() to keep the ECoG patients as well.
+DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044",)
 DEFAULT_FMAX = 500.0
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30
@@ -108,6 +115,14 @@ def build_concat_dataset(
             print(f"[lf_concat] dropped {int(bad.sum())} non-neural rows "
                   f"({sorted(df.loc[bad, 'electrode'].astype(str).unique())[:6]})")
         df = df[~bad].reset_index(drop=True)
+
+    grid = df.apply(lambda r: is_grid_electrode(r["electrode"], r["patient_id"]), axis=1)
+    if grid.any():
+        if verbose:
+            by = df.loc[grid].groupby("patient_id")["electrode"].size().to_dict()
+            print(f"[lf_concat] dropped {int(grid.sum())} subdural GRID contacts {by} "
+                  f"— their depth contacts are kept")
+        df = df[~grid].reset_index(drop=True)
 
     mic = df.apply(lambda r: is_micro_electrode(r["electrode"], r["patient_id"]), axis=1)
     if mic.any():

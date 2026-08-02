@@ -120,6 +120,36 @@ def is_micro_electrode(label, patient_id=None) -> bool:
     return bool(shaft) and bool(_RX_MICRO_SHAFT.fullmatch(shaft))
 
 
+# Subdural GRID / strip shafts, per patient. Listed EXPLICITLY rather than matched by
+# pattern: a regex like ^G[A-Z]$ happens to fit PAT_3415 today, but would silently
+# swallow a future patient's depth shaft that shares the naming.
+#
+# The exclusion is at CONTACT level, not patient level, because the sample unit is one
+# electrode. A depth contact in a mixed-implant patient is exactly as comparable to
+# other depth contacts as anyone else's; what differs physically is the subdural grid
+# contact — larger surface, cortical surface potential rather than intraparenchymal —
+# so that is what should go.
+#
+#   PAT_3415   GA..GH = 8 shafts x 8 = a 64-contact 8x8 grid, alongside 57 depth
+#              contacts (IMG, IPG, OI, OS, TA, TM, TP) which are KEPT.
+#   EL044      not listed here: it is ECoG throughout (Pa 51, T 46, P 6, postP 5) with
+#              no depth contacts to keep, so it stays a whole-patient exclusion.
+GRID_SHAFTS: dict = {
+    "PAT_3415": ("GA", "GB", "GC", "GD", "GE", "GF", "GG", "GH"),
+}
+
+
+def is_grid_electrode(label, patient_id=None) -> bool:
+    """True for a subdural grid/strip contact listed in GRID_SHAFTS for that patient."""
+    if label is None or patient_id is None:
+        return False
+    shafts = GRID_SHAFTS.get(str(patient_id))
+    if not shafts:
+        return False
+    s = str(label).replace("_", "").replace("-", "").upper()
+    return re.sub(r"\d+$", "", s) in {x.upper() for x in shafts}
+
+
 # ============================================================
 # Public: prepare_dataset
 # ============================================================
