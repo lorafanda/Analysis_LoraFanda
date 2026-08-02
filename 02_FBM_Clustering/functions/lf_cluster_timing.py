@@ -174,17 +174,23 @@ def sweep_timing(X_hg: np.ndarray, labels_by_k: Dict[int, np.ndarray], *,
         t.insert(0, "k", k)
         frames.append(t)
         if out and make_figures:
+            order = onset_order(t)
             plot_cluster_hga_timeseries(
                 X_hg, labels_by_k[k], n_blocks=n_blocks, conditions=conditions,
-                onset_thr_db=onset_thr_db, title=f"K={k}",
+                onset_thr_db=onset_thr_db, title=f"K={k}", order=order,
                 out_png=out / f"timing_k{k:02d}_hga.png", dpi=dpi)
-            plot_onset_ladder(t, title=f"Onset ordering · K={k}",
+            plot_onset_ladder(t, title=f"Onset ordering · K={k}", order=order,
                               out_png=out / f"timing_k{k:02d}_onset.png", dpi=dpi)
+            plot_cluster_timing_panel(
+                X_hg, labels_by_k[k], t, n_blocks=n_blocks, conditions=conditions,
+                onset_thr_db=onset_thr_db, title=f"K={k}",
+                out_png=out / f"timing_k{k:02d}_panel.png", dpi=dpi)
     tab = pd.concat(frames, ignore_index=True)
     if out:
         tab.to_csv(out / "cluster_timing_by_k.csv", index=False)
         if make_figures:
-            plot_onset_across_k(tab, out_png=out / "onset_across_k.png", dpi=dpi)
+            plot_onset_across_k(tab, labels_by_k=labels_by_k,
+                                out_png=out / "onset_across_k.png", dpi=dpi)
     return tab
 
 
@@ -192,26 +198,48 @@ def sweep_timing(X_hg: np.ndarray, labels_by_k: Dict[int, np.ndarray], *,
 # Figures
 # ============================================================
 def _cluster_colors(clusters) -> Dict[int, tuple]:
+    """Colour by POSITION in the given sequence, so the caller controls the mapping.
+
+    Pass the onset-sorted order and the colours become a timing gradient: earliest
+    cluster at one end of turbo, latest at the other. Pass the same order to every
+    figure of a run and a cluster keeps one colour throughout — which is the only way
+    the time-course panel and the ladder can be read together.
+    """
     cmap = plt.get_cmap("turbo")
     n = max(len(clusters), 1)
     return {int(c): cmap(0.06 + 0.88 * i / max(n - 1, 1)) for i, c in enumerate(clusters)}
+
+
+def onset_order(timing: pd.DataFrame, sort_by: str = "stim") -> list:
+    """Cluster ids ordered by across-condition mean onset. The canonical ordering —
+    use it for both the colour map and the ladder rows so the two never disagree."""
+    col = {"stim": "onset_stim_pct", "resp": "onset_resp_pct"}.get(sort_by, "onset_pct")
+    return (timing.groupby("cluster")[col].mean()
+            .sort_values(na_position="last").index.astype(int).tolist())
 
 
 def plot_cluster_hga_timeseries(X_hg: np.ndarray, labels: np.ndarray, *,
                                 n_blocks: int = 3, conditions: Sequence[str] = CONDITIONS,
                                 onset_thr_db: float = DEFAULT_ONSET_THR_DB,
                                 ci_mult: float = 1.0, title: str = "",
+                                order: Optional[Sequence[int]] = None,
+                                width_per_panel: float = 7.2,
                                 out_png=None, dpi: int = 150):
-    """Mean HGA per cluster, one panel per condition, +/- SEM. Cluster analogue of the
-    pooling role time-course figure."""
+    """Mean HGA per cluster, one panel per condition, +/- SEM.
+
+    `order` sets the colour mapping — pass onset_order(timing) so the curves carry the
+    same timing-gradient colours as the ladder. Without it, colours fall back to
+    cluster-id order and will NOT match the ladder.
+    """
     Xb = block_view(X_hg, n_blocks)
     nt = Xb.shape[2]
     t_pct = np.linspace(0, 100, nt, endpoint=False) + 50.0 / nt
     clusters = sorted(int(c) for c in np.unique(labels))
-    colors = _cluster_colors(clusters)
+    colors = _cluster_colors([int(c) for c in order] if order is not None else clusters)
     conds = list(conditions)[:n_blocks]
 
-    fig, axes = plt.subplots(1, n_blocks, figsize=(5.3 * n_blocks, 4.6), sharey=True)
+    fig, axes = plt.subplots(1, n_blocks, figsize=(width_per_panel * n_blocks, 4.6),
+                             sharey=True, sharex=True)
     axes = np.atleast_1d(axes)
     for bi, (cond, ax) in enumerate(zip(conds, axes)):
         ax.axhline(0, color="0.75", lw=0.8, zorder=0)
@@ -245,7 +273,8 @@ def plot_cluster_hga_timeseries(X_hg: np.ndarray, labels: np.ndarray, *,
 
 
 def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "", sort_by: str = "stim",
-                      out_png=None, dpi: int = 150):
+                      order: Optional[Sequence[int]] = None,
+                      width_per_panel: float = 7.2, out_png=None, dpi: int = 150):
     """Onset ladder with SEPARATE stimulus and response onsets.
 
     Each cluster row can carry two marks:
@@ -260,16 +289,15 @@ def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "", sort_by: str = "
     the comparison the figure exists for could not be made. Clusters with no onset in
     the sorting window fall to the bottom.
     """
-    col = {"stim": "onset_stim_pct", "resp": "onset_resp_pct"}.get(sort_by, "onset_pct")
     conds = list(dict.fromkeys(timing["condition"]))
-    key = timing.groupby("cluster")[col].mean()
-    order = key.sort_values(na_position="last").index.tolist()
+    order = [int(c) for c in order] if order is not None else onset_order(timing, sort_by)
     colors = _cluster_colors(order)
     pos = {c: i for i, c in enumerate(order)}
 
-    fig, axes = plt.subplots(1, len(conds), figsize=(4.6 * len(conds),
-                                                     max(2.8, 0.36 * len(order) + 1.7)),
-                             sharey=True)
+    fig, axes = plt.subplots(1, len(conds),
+                             figsize=(width_per_panel * len(conds),
+                                      max(2.8, 0.36 * len(order) + 1.7)),
+                             sharey=True, sharex=True)
     axes = np.atleast_1d(axes)
     for ax, cond in zip(axes, conds):
         sub = timing[timing["condition"] == cond]
@@ -317,52 +345,6 @@ def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "", sort_by: str = "
     return fig
 
 
-def plot_onset_across_k(tab: pd.DataFrame, *, out_png=None, dpi: int = 150):
-    """Every cluster's onset at every K, one panel per condition.
-
-    The question this answers: is the timing structure a stable property of the data,
-    or an artefact of the K we happened to pick? A spread that keeps its shape as K
-    grows is the former.
-    """
-    conds = list(dict.fromkeys(tab["condition"]))
-    ks = sorted(tab["k"].unique())
-    SERIES = [("onset_stim_pct", "#2f6fb2", "o", "stimulus (0-50%)"),
-              ("onset_resp_pct", "#b85c6e", "^", "response (50-100%)")]
-    fig, axes = plt.subplots(1, len(conds), figsize=(4.9 * len(conds), 4.2), sharey=True)
-    axes = np.atleast_1d(axes)
-    for ax, cond in zip(axes, conds):
-        sub = tab[tab["condition"] == cond]
-        ax.axhspan(0, GO_PCT, color="#f2f4f7", zorder=0)
-        ax.axhline(GO_PCT, color="0.35", lw=1.1, ls="--", zorder=1)
-        for col, colr, mk, lab in SERIES:
-            for k in ks:
-                s = sub[(sub["k"] == k) & sub[col].notna()]
-                if not len(s):
-                    continue
-                jitter = np.random.default_rng(k).uniform(-0.16, 0.16, len(s))
-                ax.scatter(np.full(len(s), k) + jitter, s[col],
-                           s=np.clip(s["n"] / 6.0, 8, 90), alpha=0.5, marker=mk,
-                           color=colr, edgecolor="none", zorder=2)
-            med = sub.groupby("k")[col].median()
-            ax.plot(med.index, med.values, color=colr, lw=1.5, zorder=3, label=lab)
-        ax.set_title(cond.capitalize(), fontsize=10.5)
-        ax.set_xlabel("K")
-        ax.set_xticks(ks[::max(1, len(ks) // 10)])
-        ax.grid(alpha=0.25)
-        for s_ in ("top", "right"):
-            ax.spines[s_].set_visible(False)
-    axes[0].set_ylabel("onset (% of trial;  50 = GO)")
-    axes[0].legend(fontsize=8, loc="center left")
-    fig.suptitle("Cluster onset across the whole K sweep — stimulus vs response window  "
-                 "(dot size = cluster n; a window with no crossing is not plotted)",
-                 fontsize=10.5, y=1.02)
-    fig.tight_layout()
-    if out_png:
-        fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
-        plt.close(fig)
-    return fig
-
-
 def onset_matrix(tab: pd.DataFrame, k: int) -> pd.DataFrame:
     """Wide cluster × condition onset table for one K — the sortable version."""
     s = tab[tab["k"] == k]
@@ -370,3 +352,279 @@ def onset_matrix(tab: pd.DataFrame, k: int) -> pd.DataFrame:
     w["mean"] = w.mean(axis=1)
     w["n"] = s.groupby("cluster")["n"].first()
     return w.sort_values("mean")
+
+
+def plot_cluster_timing_panel(X_hg: np.ndarray, labels: np.ndarray,
+                              timing: pd.DataFrame, *,
+                              n_blocks: int = 3, conditions: Sequence[str] = CONDITIONS,
+                              onset_thr_db: float = DEFAULT_ONSET_THR_DB,
+                              sort_by: str = "stim", ci_mult: float = 1.0,
+                              title: str = "", width_per_panel: float = 7.2,
+                              out_png=None, dpi: int = 150):
+    """Time courses and onset ladder in ONE figure, sharing the x axis per condition.
+
+    The two were separate figures on the same 0-100% axis, which meant reading a
+    cluster's onset off the ladder and then hunting for the matching curve above it.
+    Stacked and sharex'd, an onset marker sits directly under the curve it came from.
+
+    Colours are the onset gradient: clusters are coloured by their rank in `sort_by`
+    order, so early clusters sit at one end of turbo and late ones at the other, and
+    the same cluster is the same colour in both rows.
+    """
+    Xb = block_view(X_hg, n_blocks)
+    nt = Xb.shape[2]
+    t_pct = np.linspace(0, 100, nt, endpoint=False) + 50.0 / nt
+    conds = list(conditions)[:n_blocks]
+    order = onset_order(timing, sort_by)
+    colors = _cluster_colors(order)
+    pos = {c: i for i, c in enumerate(order)}
+
+    h_top = 4.4
+    h_bot = max(2.2, 0.32 * len(order) + 1.1)
+    # sharey='row': the top row gets ONE dB scale across conditions (so curve heights
+    # are comparable, not silently rescaled per panel) and the bottom row shares the
+    # cluster positions, which also suppresses the stray 0..K-1 ticks on panels 2-3.
+    fig, axes = plt.subplots(
+        2, n_blocks, sharex=True, sharey='row',
+        figsize=(width_per_panel * n_blocks, h_top + h_bot),
+        gridspec_kw={"height_ratios": [h_top, h_bot], "hspace": 0.08})
+    axes = np.atleast_2d(axes)
+
+    for bi, cond in enumerate(conds):
+        # ---- top: mean HGA per cluster
+        ax = axes[0, bi]
+        ax.axvspan(0, GO_PCT, color="#f2f4f7", zorder=0)
+        ax.axhline(0, color="0.75", lw=0.8, zorder=1)
+        ax.axhline(onset_thr_db, color="#c0392b", lw=0.7, ls=":", zorder=1)
+        ax.axhline(-onset_thr_db, color="#c0392b", lw=0.7, ls=":", zorder=1)
+        ax.axvline(GO_PCT, color="0.35", lw=1.1, ls="--", zorder=1)
+        for c in order:
+            m = labels == c
+            if not m.any():
+                continue
+            mat = Xb[m, bi, :]
+            mean = mat.mean(0)
+            sem = mat.std(0) / np.sqrt(max(m.sum(), 1)) * ci_mult
+            ax.plot(t_pct, mean, color=colors[c], lw=1.6, zorder=3,
+                    label=f"c{c} (n={int(m.sum())})" if bi == 0 else None)
+            ax.fill_between(t_pct, mean - sem, mean + sem, color=colors[c],
+                            alpha=0.13, zorder=2, linewidth=0)
+        ax.set_title(cond.capitalize(), fontsize=11.5)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+        if bi == 0:
+            ax.set_ylabel("HGA (dB)")
+            ax.legend(fontsize=7.5, loc="upper left", ncol=1, framealpha=0.85)
+        ax.text(GO_PCT + 1.2, ax.get_ylim()[1] * 0.94, "GO", fontsize=7.5, color="0.35")
+
+        # ---- bottom: the ladder, same x
+        axb = axes[1, bi]
+        sub = timing[timing["condition"] == cond]
+        axb.axvspan(0, GO_PCT, color="#f2f4f7", zorder=0)
+        axb.axvline(GO_PCT, color="0.35", lw=1.1, ls="--", zorder=1)
+        for _, r in sub.iterrows():
+            c = int(r["cluster"])
+            if c not in pos:
+                continue
+            y = pos[c]
+            s_on, r_on = r.get("onset_stim_pct"), r.get("onset_resp_pct")
+            carry = bool(r.get("resp_carryover", False))
+            have = [v for v in (s_on, r_on) if pd.notna(v)]
+            if len(have) == 2:
+                axb.plot(have, [y, y], color=colors[c], lw=1.1, alpha=0.45, zorder=2)
+            for v, mk, hollow in ((s_on, "o", False), (r_on, "^", carry)):
+                if pd.isna(v):
+                    continue
+                axb.scatter(v, y, s=68, marker=mk,
+                            color="white" if hollow else colors[c],
+                            edgecolor=colors[c] if hollow else "white",
+                            linewidth=1.3 if hollow else 0.9, zorder=4)
+                axb.text(v + 1.4, y - 0.02, f"{v:.0f}", va="center", fontsize=7,
+                         color="#333", zorder=5)
+            if not have:
+                axb.text(2, y, "silent", va="center", fontsize=7,
+                         style="italic", color="#aab2ba", zorder=3)
+        axb.set_xlim(0, 104)
+        axb.set_xlabel("trial time (%)   —   50 = GO")
+        axb.grid(axis="x", alpha=0.25)
+        for s in ("top", "right", "left"):
+            axb.spines[s].set_visible(False)
+
+    axes[1, 0].set_yticks(range(len(order)))
+    axes[1, 0].set_yticklabels(
+        [f"c{c}  (n={int(timing[timing.cluster == c]['n'].iloc[0])})" for c in order],
+        fontsize=8.5)
+    axes[1, 0].invert_yaxis()
+    fig.suptitle((title or "Cluster response timing") +
+                 "        ● stimulus onset    ▲ response onset    "
+                 "hollow ▲ = already active at GO    absent = no crossing",
+                 fontsize=11, y=0.995)
+    if out_png:
+        fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+        plt.close(fig)
+    return fig
+
+
+# ============================================================
+# Across-K: identity-tracked, with the size confound made explicit
+# ============================================================
+def match_clusters_across_k(labels_by_k: Dict[int, np.ndarray]) -> pd.DataFrame:
+    """Follow each cluster from K to K+1 by maximum sample overlap (Jaccard).
+
+    Without this there is no such thing as "the ordering across K": a scatter of
+    onsets at each K has no identity, so nothing can be said to be stable or unstable.
+    Matching gives every cluster a LINEAGE id that persists across the sweep, and the
+    onset of a lineage can then actually be tracked.
+
+    Returns columns: k, cluster, lineage, jaccard (overlap with its K-1 parent).
+    Greedy and one-directional: at each step every cluster is assigned to the parent it
+    overlaps most. Splits therefore share a lineage until one child wins it; that is a
+    real limitation, and `jaccard` is what tells you how much to trust the link.
+    """
+    ks = sorted(labels_by_k)
+    rows, prev_line = [], {}
+    for i, k in enumerate(ks):
+        lab = np.asarray(labels_by_k[k])
+        if i == 0:
+            for c in sorted(np.unique(lab)):
+                prev_line[int(c)] = int(c)
+                rows.append(dict(k=k, cluster=int(c), lineage=int(c), jaccard=1.0))
+            prev_lab = lab
+            continue
+        cur_line = {}
+        for c in sorted(np.unique(lab)):
+            m = lab == c
+            best, best_j = None, -1.0
+            for pc in np.unique(prev_lab):
+                pm = prev_lab == pc
+                inter = np.logical_and(m, pm).sum()
+                if not inter:
+                    continue
+                j = inter / np.logical_or(m, pm).sum()
+                if j > best_j:
+                    best, best_j = int(pc), float(j)
+            lin = prev_line.get(best, int(c)) if best is not None else int(c)
+            cur_line[int(c)] = lin
+            rows.append(dict(k=k, cluster=int(c), lineage=lin,
+                             jaccard=round(best_j, 3) if best is not None else np.nan))
+        prev_line, prev_lab = cur_line, lab
+    return pd.DataFrame(rows)
+
+
+def plot_onset_across_k(tab: pd.DataFrame, *, labels_by_k: Optional[Dict] = None,
+                        out_png=None, dpi: int = 150):
+    """Is the timing structure a property of the DATA or of the K we picked?
+
+    Three rows, because the plain scatter version of this figure invited a conclusion
+    it could not support:
+
+      1  LINEAGE TRACES. Clusters matched across K by overlap, so each line follows one
+         lineage. A cloud of unlinked dots cannot show stability, because stability is
+         a statement about identity. Needs `labels_by_k`; falls back to the scatter.
+      2  THE SIZE CONFOUND. Onset against cluster n. A small cluster has a noisier mean,
+         which crosses a fixed dB threshold sooner, so onset drifts EARLIER as K grows
+         and clusters shrink. On the concatenated run this is Spearman r = +0.42
+         (p ~ 1e-20) — not a nuisance, a first-order effect. Any apparent "spread grows
+         with K" has to be read against it.
+      3  COVERAGE. The fraction of clusters with any onset at all in each window. The
+         scatter silently omits NaNs, so a K where half the clusters are silent looks
+         sparse rather than uninformative.
+    """
+    conds = list(dict.fromkeys(tab["condition"]))
+    ks = sorted(tab["k"].unique())
+    SERIES = [("onset_stim_pct", "#2f6fb2", "o", "stimulus (0-50%)"),
+              ("onset_resp_pct", "#b85c6e", "^", "response (50-100%)")]
+
+    lin = match_clusters_across_k(labels_by_k) if labels_by_k else None
+    tt = tab.merge(lin, on=["k", "cluster"], how="left") if lin is not None else tab.copy()
+
+    fig, axes = plt.subplots(3, len(conds), figsize=(5.4 * len(conds), 11.4),
+                             gridspec_kw={"height_ratios": [1.25, 1.0, 0.75],
+                                          "hspace": 0.30})
+    axes = np.atleast_2d(axes)
+
+    for ci, cond in enumerate(conds):
+        sub = tt[tt["condition"] == cond]
+
+        # --- 1. lineage traces
+        ax = axes[0, ci]
+        ax.axhspan(0, GO_PCT, color="#f2f4f7", zorder=0)
+        ax.axhline(GO_PCT, color="0.35", lw=1.1, ls="--", zorder=1)
+        if "lineage" in sub.columns and sub["lineage"].notna().any():
+            lineages = sorted(sub["lineage"].dropna().unique())
+            cmap = plt.get_cmap("turbo")
+            for li, lg in enumerate(lineages):
+                s = sub[sub["lineage"] == lg]
+                col = cmap(0.06 + 0.88 * li / max(len(lineages) - 1, 1))
+                # A lineage holds SEVERAL clusters once it has split, so plotting every
+                # member gives one zig-zag line per lineage instead of a trajectory.
+                # Trace the dominant heir (largest cluster) and show the rest as faint
+                # dots, so a split is visible as spread around its own trace.
+                heir = s.loc[s.groupby("k")["n"].idxmax()].sort_values("k")
+                rest = s.drop(index=heir.index)
+                for c_, style in (("onset_stim_pct", "-"), ("onset_resp_pct", "--")):
+                    d = heir.dropna(subset=[c_])
+                    if len(d) > 1:
+                        ax.plot(d["k"], d[c_], style, color=col, lw=1.6, alpha=.9,
+                                zorder=3)
+                    r_ = rest.dropna(subset=[c_])
+                    if len(r_):
+                        ax.scatter(r_["k"], r_[c_], s=9, color=col, alpha=.30,
+                                   edgecolor="none", zorder=2)
+            ax.set_title(f"{cond.capitalize()} — lineage traces "
+                         f"({len(lineages)} lineages; line = dominant heir, dots = split-off)",
+                         fontsize=9.5)
+        else:
+            for col, colr, mk, lab_ in SERIES:
+                s = sub.dropna(subset=[col])
+                ax.scatter(s["k"], s[col], s=18, marker=mk, color=colr, alpha=.5)
+            ax.set_title(f"{cond.capitalize()} — (no lineage: pass labels_by_k)",
+                         fontsize=10.5)
+        ax.set_xlabel("K")
+        if ci == 0:
+            ax.set_ylabel("onset (%)   solid = stim, dashed = resp")
+
+        # --- 2. the size confound
+        ax = axes[1, ci]
+        for col, colr, mk, lab_ in SERIES:
+            s = sub.dropna(subset=[col])
+            ax.scatter(s["n"], s[col], s=14, marker=mk, color=colr, alpha=.45,
+                       edgecolor="none", label=lab_)
+        s_all = sub.dropna(subset=["onset_stim_pct"])
+        if len(s_all) > 8:
+            from scipy.stats import spearmanr
+            r, pv = spearmanr(s_all["n"], s_all["onset_stim_pct"])
+            ax.text(.97, .04, f"stim: rho={r:+.2f}\np={pv:.1e}", transform=ax.transAxes,
+                    ha="right", va="bottom", fontsize=8,
+                    bbox=dict(fc="white", ec="#ccc", alpha=.85, boxstyle="round,pad=.3"))
+        ax.set_xscale("log")
+        ax.set_xlabel("cluster n (log)")
+        ax.set_title("onset vs cluster size — the confound", fontsize=10)
+        if ci == 0:
+            ax.set_ylabel("onset (%)")
+            ax.legend(fontsize=7.5, loc="upper left")
+
+        # --- 3. coverage
+        ax = axes[2, ci]
+        cov = sub.groupby("k").agg(
+            stim=("onset_stim_pct", lambda v: 100 * v.notna().mean()),
+            resp=("onset_resp_pct", lambda v: 100 * v.notna().mean()))
+        ax.plot(cov.index, cov["stim"], "-o", ms=3, color="#2f6fb2", label="stimulus")
+        ax.plot(cov.index, cov["resp"], "-^", ms=3, color="#b85c6e", label="response")
+        ax.set_ylim(0, 105)
+        ax.set_xlabel("K")
+        ax.set_title("% of clusters with any onset", fontsize=10)
+        if ci == 0:
+            ax.set_ylabel("coverage (%)")
+            ax.legend(fontsize=7.5)
+
+    for ax in axes.ravel():
+        ax.grid(alpha=.25)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+    fig.suptitle("Onset across the K sweep — tracked, confound-checked, coverage-aware",
+                 fontsize=12, y=0.997)
+    if out_png:
+        fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+        plt.close(fig)
+    return fig
