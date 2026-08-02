@@ -1,0 +1,117 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 384,
+    "n_unknown": 191,
+    "top_3": [
+      [
+        "lateralorbitofrontal",
+        0.171
+      ],
+      [
+        "rostralmiddlefrontal",
+        0.145
+      ],
+      [
+        "caudalanteriorcingulate",
+        0.114
+      ]
+    ],
+    "entropy_bits": 3.736109148727656,
+    "purity": 0.17098445595854922,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.265026370128622
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 1226,
+    "n_unknown": 491,
+    "top_3": [
+      [
+        "insula",
+        0.204
+      ],
+      [
+        "rostralmiddlefrontal",
+        0.167
+      ],
+      [
+        "superiorfrontal",
+        0.073
+      ]
+    ],
+    "entropy_bits": 3.9707975058222638,
+    "purity": 0.20408163265306123,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.307388873864975
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 630,
+    "n_unknown": 294,
+    "top_3": [
+      [
+        "middletemporal",
+        0.164
+      ],
+      [
+        "inferiortemporal",
+        0.086
+      ],
+      [
+        "postcentral",
+        0.08
+      ]
+    ],
+    "entropy_bits": 4.076768932278394,
+    "purity": 0.1636904761904762,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.289281515679173
+  },
+  "3": {
+    "cluster_id": 3,
+    "n_total": 173,
+    "n_unknown": 60,
+    "top_3": [
+      [
+        "middletemporal",
+        0.212
+      ],
+      [
+        "inferiortemporal",
+        0.106
+      ],
+      [
+        "superiortemporal",
+        0.088
+      ]
+    ],
+    "entropy_bits": 3.640128667232239,
+    "purity": 0.21238938053097345,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.186898677161229
+  },
+  "4": {
+    "cluster_id": 4,
+    "n_total": 204,
+    "n_unknown": 98,
+    "top_3": [
+      [
+        "superiortemporal",
+        0.321
+      ],
+      [
+        "middletemporal",
+        0.321
+      ],
+      [
+        "bankssts",
+        0.113
+      ]
+    ],
+    "entropy_bits": 2.5114941181036325,
+    "purity": 0.32075471698113206,
+    "p_entropy_lower_tail": 0.0,
+    "null_entropy_mean": 4.206036248667564
+  }
+}

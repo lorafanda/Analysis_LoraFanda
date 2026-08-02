@@ -1,0 +1,3 @@
+cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean
+0,1810,731,4.098357956572588,0.17330861909175163,rostralmiddlefrontal,0.173,"[[""rostralmiddlefrontal"", 0.173], [""insula"", 0.171], [""lateralorbitofrontal"", 0.072]]",,
+1,1171,515,4.098885052905974,0.19817073170731708,middletemporal,0.198,"[[""middletemporal"", 0.198], [""superiortemporal"", 0.087], [""inferiortemporal"", 0.067]]",0.0,4.30099717459036

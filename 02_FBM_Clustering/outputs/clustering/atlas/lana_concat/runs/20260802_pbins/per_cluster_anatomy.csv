@@ -1,0 +1,6 @@
+cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean
+0,384,191,3.736109148727656,0.17098445595854922,lateralorbitofrontal,0.171,"[[""lateralorbitofrontal"", 0.171], [""rostralmiddlefrontal"", 0.145], [""caudalanteriorcingulate"", 0.114]]",0.0,4.265026370128622
+1,1226,491,3.9707975058222638,0.20408163265306123,insula,0.204,"[[""insula"", 0.204], [""rostralmiddlefrontal"", 0.167], [""superiorfrontal"", 0.073]]",0.0,4.307388873864975
+2,630,294,4.076768932278394,0.1636904761904762,middletemporal,0.164,"[[""middletemporal"", 0.164], [""inferiortemporal"", 0.086], [""postcentral"", 0.08]]",0.0,4.289281515679173
+3,173,60,3.640128667232239,0.21238938053097345,middletemporal,0.212,"[[""middletemporal"", 0.212], [""inferiortemporal"", 0.106], [""superiortemporal"", 0.088]]",0.0,4.186898677161229
+4,204,98,2.5114941181036325,0.32075471698113206,superiortemporal,0.321,"[[""superiortemporal"", 0.321], [""middletemporal"", 0.321], [""bankssts"", 0.113]]",0.0,4.206036248667564

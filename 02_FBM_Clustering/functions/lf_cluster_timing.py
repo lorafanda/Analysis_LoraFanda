@@ -628,3 +628,199 @@ def plot_onset_across_k(tab: pd.DataFrame, *, labels_by_k: Optional[Dict] = None
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
         plt.close(fig)
     return fig
+
+# ============================================================
+# Cross-correlation against a reference cluster
+# ============================================================
+# Sign convention, verified on synthetic data in both directions:
+#
+#     r(tau) = Pearson[ ref(t), other(t + tau) ]
+#     tau > 0  ->  the OTHER cluster happens LATER  (the reference leads)
+#
+# WINDOW MATTERS MORE THAN ANY OTHER SETTING. Cross-correlation only means
+# something when two signals are the same SHAPE shifted in time. Over the full
+# trial these cluster means are not: one has an early sensory transient, another
+# only a late production bump, so no shift maps one onto the other and the peak
+# lag is whatever maximises a weak correlation. Measured on run 20260802_220720
+# K=10, the full-trial lag disagreed with the actual peak-time difference for
+# 8 of 8 clusters. Restricted to the RESPONSE window every cluster has a
+# production-period bump, the shapes genuinely are shifted copies, and 8 of 8
+# agree. Use window="response"; "full" is kept for diagnosis, not for reporting.
+#
+# MIN_OVERLAP sets the usable lag range, not `max_lag`: at overlap f the widest
+# lag is (1-f) * window length. 0.6 was chosen empirically — 0.8 censored half
+# the peaks at the search boundary, 0.6 censored none.
+DEFAULT_MIN_OVERLAP = 0.6
+DEFAULT_SHAPE_GATE = 0.30      # peak r below this -> shapes differ, lag is not a delay
+
+
+def cross_correlate(a: np.ndarray, b: np.ndarray, *,
+                    min_overlap: float = DEFAULT_MIN_OVERLAP):
+    """Lag profile of Pearson r between two 1-D signals.
+
+    Returns (lags_in_bins, r). r is NaN where either segment is constant.
+    Pearson is recomputed on the overlapping segment at each lag rather than
+    zero-padding, so a lag is never rewarded for padding one signal with zeros.
+    """
+    a = np.asarray(a, dtype=float); b = np.asarray(b, dtype=float)
+    max_lag = int(len(a) * (1.0 - min_overlap))
+    lags = np.arange(-max_lag, max_lag + 1)
+    out = np.full(len(lags), np.nan)
+    for i, L in enumerate(lags):
+        x, y = (a[:len(a) - L], b[L:]) if L >= 0 else (a[-L:], b[:len(b) + L])
+        if len(x) < 3 or x.std() == 0 or y.std() == 0:
+            continue
+        out[i] = np.corrcoef(x, y)[0, 1]
+    return lags, out
+
+
+def _window_slice(nt: int, window: str) -> slice:
+    if window == "response":
+        return slice(nt // 2, None)          # 50-100%, GO onward
+    if window == "stimulus":
+        return slice(0, nt // 2)
+    if window == "full":
+        return slice(None)
+    raise ValueError(f"window must be full / response / stimulus, got {window!r}")
+
+
+def cluster_xcorr(X_hg: np.ndarray, labels: np.ndarray, ref_cluster: int, *,
+                  n_blocks: int = 3, conditions: Sequence[str] = CONDITIONS,
+                  window: str = "response",
+                  min_overlap: float = DEFAULT_MIN_OVERLAP,
+                  n_boot: int = 400, n_shuffle: int = 200,
+                  shape_gate: float = DEFAULT_SHAPE_GATE,
+                  seed: int = 0) -> tuple:
+    """Every cluster's lag profile against `ref_cluster`, per condition.
+
+    Returns (table, profiles) where
+      table    one row per (condition, cluster): peak_lag_pct, peak_r, bootstrap CI,
+               shuffle p, and `interpretable` — the honest gate.
+      profiles {(condition, cluster): (lag_pct, r)} for plotting the full curve.
+
+    Three things are reported alongside the lag because the lag alone is not
+    trustworthy on its own:
+      peak_r        how well the shapes align AT ALL. Below `shape_gate` the two
+                    clusters simply have different shapes and the lag is not a delay.
+      ci_lo / ci_hi bootstrap over electrodes WITHIN each cluster — the precision of
+                    the lag. A wide CI means the lag is not resolvable, whatever its
+                    point estimate.
+      at_edge       the peak sits at the end of the searched range, so the true peak
+                    may lie beyond it. A censored lag, not a measured one.
+      p_shuffle     label-permutation null ON THE LAG. Note this is a WEAK test:
+                    shuffling makes both means near-identical so the null lag is ~0
+                    and almost any real lag beats it. It rules out "lag is zero",
+                    nothing more. (The same shuffle applied to peak r is useless —
+                    it gives p ~ 1.0 because the shuffled means correlate at ~0.97.)
+    """
+    rng = np.random.default_rng(seed)
+    Xb = block_view(X_hg, n_blocks)
+    nt = Xb.shape[2]
+    sl = _window_slice(nt, window)
+    conds = list(conditions)[:n_blocks]
+    clusters = sorted(int(c) for c in np.unique(labels))
+    if ref_cluster not in clusters:
+        raise ValueError(f"ref_cluster {ref_cluster} not in {clusters}")
+    idx = {c: np.where(labels == c)[0] for c in clusters}
+
+    rows, profiles = [], {}
+    for bi, cond in enumerate(conds):
+        ref_mean = Xb[idx[ref_cluster], bi, sl].mean(0)
+        for c in clusters:
+            if c == ref_cluster:
+                continue
+            other = Xb[idx[c], bi, sl].mean(0)
+            lags, r = cross_correlate(ref_mean, other, min_overlap=min_overlap)
+            profiles[(cond, c)] = (lags / nt * 100.0, r)
+            if np.all(np.isnan(r)):
+                continue
+            j = int(np.nanargmax(r))
+            peak_lag, peak_r = int(lags[j]), float(r[j])
+            at_edge = abs(peak_lag) >= abs(lags[-1]) - 1
+
+            boot = np.empty(n_boot)
+            for k in range(n_boot):
+                aa = Xb[rng.choice(idx[ref_cluster], len(idx[ref_cluster]), replace=True), bi, sl].mean(0)
+                bb = Xb[rng.choice(idx[c], len(idx[c]), replace=True), bi, sl].mean(0)
+                lg, rr = cross_correlate(aa, bb, min_overlap=min_overlap)
+                boot[k] = lg[int(np.nanargmax(rr))] if not np.all(np.isnan(rr)) else np.nan
+            lo, hi = np.nanpercentile(boot, [2.5, 97.5])
+
+            null = np.empty(n_shuffle)
+            for k in range(n_shuffle):
+                sh = rng.permutation(labels)
+                aa = Xb[sh == ref_cluster, bi, sl].mean(0)
+                bb = Xb[sh == c, bi, sl].mean(0)
+                lg, rr = cross_correlate(aa, bb, min_overlap=min_overlap)
+                null[k] = abs(lg[int(np.nanargmax(rr))]) if not np.all(np.isnan(rr)) else np.nan
+            p_sh = float(np.nanmean(null >= abs(peak_lag)))
+
+            ci_w = (hi - lo) / nt * 100.0
+            rows.append(dict(
+                condition=cond, cluster=c, n=int(len(idx[c])),
+                ref=ref_cluster, window=window,
+                peak_lag_pct=peak_lag / nt * 100.0, peak_r=peak_r,
+                ci_lo_pct=lo / nt * 100.0, ci_hi_pct=hi / nt * 100.0, ci_width_pct=ci_w,
+                at_edge=at_edge, p_shuffle=p_sh,
+                interpretable=bool(peak_r >= shape_gate and not at_edge and ci_w <= 20.0),
+                reason=("shapes differ (r<%.2f)" % shape_gate if peak_r < shape_gate else
+                        "lag censored at search edge" if at_edge else
+                        "CI too wide" if ci_w > 20.0 else "ok"),
+            ))
+    return pd.DataFrame(rows), profiles
+
+
+def plot_xcorr_profiles(table: pd.DataFrame, profiles: dict, *,
+                        ref_cluster: int, order: Optional[Sequence[int]] = None,
+                        shape_gate: float = DEFAULT_SHAPE_GATE,
+                        title: str = "", width_per_panel: float = 7.2,
+                        out_png=None, dpi: int = 150):
+    """Full r-vs-lag curve per cluster, one panel per condition, peak marked.
+
+    Curves that fail the interpretability gate are drawn dashed and pale — they are
+    shown rather than hidden, because "these two shapes do not align at any lag" is
+    a result, but they must not read like a measured delay.
+    """
+    conds = list(dict.fromkeys(table["condition"]))
+    clusters = sorted(table["cluster"].unique())
+    order = [int(c) for c in order] if order is not None else clusters
+    colors = _cluster_colors([c for c in order if c != ref_cluster] or clusters)
+
+    fig, axes = plt.subplots(1, len(conds), figsize=(width_per_panel * len(conds), 5.0),
+                             sharey=True, sharex=True)
+    axes = np.atleast_1d(axes)
+    for ax, cond in zip(axes, conds):
+        ax.axhline(0, color="0.75", lw=0.8, zorder=0)
+        ax.axvline(0, color="0.35", lw=1.1, ls="--", zorder=1)
+        ax.axhspan(-shape_gate, shape_gate, color="#f2f4f7", zorder=0)
+        for c in clusters:
+            if (cond, c) not in profiles:
+                continue
+            lag, r = profiles[(cond, c)]
+            row = table[(table.condition == cond) & (table.cluster == c)]
+            good = bool(row["interpretable"].iloc[0]) if len(row) else False
+            col = colors.get(c, "#888")
+            ax.plot(lag, r, color=col, lw=1.8 if good else 1.0,
+                    ls="-" if good else "--", alpha=1.0 if good else .45, zorder=3 if good else 2,
+                    label=f"c{c} (n={int(row['n'].iloc[0])})" if len(row) else f"c{c}")
+            if len(row) and good:
+                x = float(row["peak_lag_pct"].iloc[0]); y = float(row["peak_r"].iloc[0])
+                ax.scatter([x], [y], s=70, color=col, edgecolor="white", lw=1.2, zorder=5)
+                ax.annotate(f"{x:+.0f}%", (x, y), textcoords="offset points", xytext=(4, 5),
+                            fontsize=8, color=col, fontweight="bold")
+        ax.set_title(cond.capitalize(), fontsize=11)
+        ax.set_xlabel(f"lag (% of trial)   + = cluster LAGS behind c{ref_cluster}")
+        ax.grid(alpha=.25)
+        for s in ("top", "right"):
+            ax.spines[s].set_visible(False)
+    axes[0].set_ylabel("Pearson r")
+    axes[0].legend(fontsize=7.5, loc="lower left", ncol=2, framealpha=.9)
+    fig.suptitle((title or f"Cross-correlation against c{ref_cluster}") +
+                 f"        solid = interpretable   dashed = shapes differ (|r| < {shape_gate}) "
+                 f"or lag censored   grey band = below the shape gate",
+                 fontsize=10.5, y=1.02)
+    fig.tight_layout()
+    if out_png:
+        fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
+        plt.close(fig)
+    return fig
