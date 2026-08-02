@@ -48,7 +48,13 @@ DEFAULT_CONDITIONS: Tuple[str, ...] = ("audio", "picture", "reading")
 # Grid (ECoG) patients are excluded from the concatenated track: the electrode geometry
 # and coverage differ from the depth/sEEG cohort, so a per-electrode functional TYPE is
 # not comparable across the two. Pass exclude_patients=() to keep them.
-DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044",)
+#
+#   EL044     whole-patient ECoG — 108 contacts over 4 shafts (Pa 51, T 46, P 6, postP 5)
+#   PAT_3415  carries a 64-contact grid (GA..GH, 8 shafts x 8) alongside its depth
+#             electrodes. The patient is excluded ENTIRELY, not just the G* shafts:
+#             mixing grid and depth contacts from one subject would put two different
+#             recording geometries into the same per-electrode sample space.
+DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_3415")
 DEFAULT_FMAX = 500.0
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30

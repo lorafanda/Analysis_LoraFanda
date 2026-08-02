@@ -98,6 +98,7 @@ def fit_and_save(
     run_id: Optional[str] = None,
     compute_gap: bool = False,
     gap_n_refs: int = 10,
+    sweep_sort_by: str = "k",
     verbose: bool = True,
 ) -> Dict[str, Any]:
     """
@@ -170,6 +171,7 @@ def fit_and_save(
         feature_set_label=feature_set_label or FEATURE_SET_LABELS.get(feature_set, feature_set),
         sweep=fit.get("sweep"),
         sil_per_point=sil_per_point,
+        sweep_sort_by=sweep_sort_by,
     )
 
     # ---- persist artifacts ----
@@ -237,6 +239,24 @@ def fit_and_save(
         _write_json(run_dir / "silhouette_by_k.json",
                     {str(k): v for k, v in fit["sweep"]["sil_by_k"].items()})
         artifacts["silhouette_sweep"] = "silhouette_by_k.json"
+
+        # Statistics for EVERY K in the sweep, not just the winner. Silhouette alone
+        # can crown a K that also produces a singleton cluster or a badly unbalanced
+        # split; the table makes that trade-off visible and sortable.
+        lbk_all = extras.get("labels_by_k") or {}
+        if lbk_all:
+            sw = _sweep_metrics(X, lbk_all)
+            sw.to_csv(run_dir / "sweep_metrics.csv", index=False)
+            artifacts["sweep_metrics"] = "sweep_metrics.csv"
+            _plot_sweep_metrics(run_dir / "sweep_metrics.png", sw,
+                                title_prefix=f"{method_label or method} · "
+                                             f"{feature_set_label or feature_set}",
+                                best_k=int(fit["sweep"]["best_k"]),
+                                sort_by=sweep_sort_by)
+            artifacts["sweep_metrics_figure"] = "sweep_metrics.png"
+            if verbose:
+                print(f"[fit_and_save] sweep statistics for K="
+                      f"{sorted(int(k) for k in lbk_all)} -> sweep_metrics.csv")
 
     # K-sweep: Tibshirani 2001 gap statistic (optional — slow because it
     # fits KMeans gap_n_refs extra times per K on uniform-bounding-box null
@@ -680,6 +700,7 @@ def _save_figures(
     feature_set_label: str,
     sweep: Optional[Dict[str, Any]] = None,
     sil_per_point: Optional[np.ndarray] = None,
+    sweep_sort_by: str = "k",
 ) -> Dict[str, str]:
     """
     Generate the standard figure set:
@@ -845,24 +866,164 @@ def _save_figures(
     plt.close(fig)
     figs["centroid_distance_heatmap_figure"] = "centroid_distance_heatmap.png"
 
-    # 5) silhouette-by-k curve (only when KMeans swept K)
+    # 5) silhouette-by-k — HORIZONTAL bars, one row per K.
+    #    A vertical line/curve packs every K into the x-axis and the differences
+    #    between adjacent K become invisible. One horizontal bar per K makes the
+    #    K labels readable, the values directly comparable, and lets the rows be
+    #    re-ordered by score (sweep_sort_by='silhouette') instead of by K.
     if sweep:
         ks = sorted(int(k) for k in sweep["sil_by_k"].keys())
         ys = [sweep["sil_by_k"][k] for k in ks]
+        best_k = int(sweep["best_k"])
+
+        order = list(range(len(ks)))
+        if str(sweep_sort_by).lower() in ("silhouette", "score", "value"):
+            order = sorted(order, key=lambda i: (float("-inf") if np.isnan(ys[i]) else ys[i]))
+        ks_o = [ks[i] for i in order]
+        ys_o = [ys[i] for i in order]
+
         p = run_dir / "silhouette_by_k.png"
-        fig, ax = plt.subplots(figsize=(7, 3))
-        ax.plot(ks, ys, marker="o", lw=1.5, color="#b85c6e")
-        ax.axvline(sweep["best_k"], color="black", ls="--", lw=1,
-                   label=f"best K = {sweep['best_k']}")
-        ax.set_xlabel("K"); ax.set_ylabel("silhouette")
-        ax.set_title(f"{title_prefix} — silhouette vs K")
-        ax.legend(); ax.grid(alpha=0.3)
+        fig, ax = plt.subplots(figsize=(7.5, max(2.4, 0.42 * len(ks_o) + 1.1)))
+        pos = np.arange(len(ks_o))
+        colors = ["#b85c6e" if k == best_k else "#c9ced6" for k in ks_o]
+        ax.barh(pos, ys_o, color=colors, edgecolor="none", height=0.7)
+        finite = [v for v in ys_o if not np.isnan(v)]
+        span = (max(finite) - min(min(finite), 0)) if finite else 1.0
+        for y, (k, v) in enumerate(zip(ks_o, ys_o)):
+            if np.isnan(v):
+                continue
+            ax.text(v + 0.012 * max(span, 1e-6), y, f"{v:.3f}", va="center", fontsize=8,
+                    color="#22262b", fontweight="bold" if k == best_k else "normal")
+        ax.set_yticks(pos)
+        ax.set_yticklabels([f"K={k}" + ("  ←best" if k == best_k else "") for k in ks_o], fontsize=9)
+        ax.invert_yaxis()                      # first row at the top
+        ax.set_xlabel("silhouette")
+        ax.set_xlim(min(0.0, min(finite) if finite else 0.0), (max(finite) if finite else 1.0) * 1.18)
+        srt = "sorted by silhouette" if order != list(range(len(ks))) else "in K order"
+        ax.set_title(f"{title_prefix} — silhouette by K ({srt})", fontsize=10)
+        ax.grid(axis="x", alpha=0.3)
+        for s in ("top", "right", "left"):
+            ax.spines[s].set_visible(False)
         fig.tight_layout()
         fig.savefig(p, dpi=150, bbox_inches="tight")
         plt.close(fig)
         figs["silhouette_sweep_figure"] = "silhouette_by_k.png"
 
     return figs
+
+
+def _sweep_metrics(X: np.ndarray, labels_by_k: Dict[Any, Any]) -> pd.DataFrame:
+    """Per-K cluster-quality table for EVERY K in the sweep, not only the winner.
+
+    Picking K on silhouette alone hides the trade-off: a K can win on silhouette
+    while producing a singleton cluster or a wildly unbalanced split. Computing the
+    same statistics at every K makes that visible, and makes the sweep sortable by
+    whichever criterion matters.
+
+    Columns
+        k, silhouette, calinski_harabasz, davies_bouldin,
+        n_clusters, n_singletons, min_size, max_size, size_cv
+    (calinski_harabasz: higher is better. davies_bouldin: LOWER is better.
+     size_cv: sd/mean of cluster sizes — 0 is perfectly balanced.)
+    """
+    from sklearn.metrics import (calinski_harabasz_score, davies_bouldin_score,
+                                 silhouette_score)
+
+    rows = []
+    for k in sorted(int(v) for v in labels_by_k.keys()):
+        lbl = np.asarray(labels_by_k[k] if k in labels_by_k else labels_by_k[str(k)])
+        uniq, counts = np.unique(lbl, return_counts=True)
+        r: Dict[str, Any] = {
+            "k": k,
+            "n_clusters": int(len(uniq)),
+            "n_singletons": int((counts == 1).sum()),
+            "min_size": int(counts.min()),
+            "max_size": int(counts.max()),
+            "size_cv": float(counts.std() / counts.mean()) if counts.mean() else float("nan"),
+        }
+        if len(uniq) > 1:
+            # Any of these can fail on a degenerate split; record NaN rather than die
+            # halfway through the sweep and lose the K values that did work.
+            for name, fn in (("silhouette", silhouette_score),
+                             ("calinski_harabasz", calinski_harabasz_score),
+                             ("davies_bouldin", davies_bouldin_score)):
+                try:
+                    r[name] = float(fn(X, lbl))
+                except Exception:
+                    r[name] = float("nan")
+        else:
+            r.update(silhouette=float("nan"), calinski_harabasz=float("nan"),
+                     davies_bouldin=float("nan"))
+        rows.append(r)
+    cols = ["k", "silhouette", "calinski_harabasz", "davies_bouldin",
+            "n_clusters", "n_singletons", "min_size", "max_size", "size_cv"]
+    return pd.DataFrame(rows)[cols]
+
+
+def _plot_sweep_metrics(path: Path, df: pd.DataFrame, *, title_prefix: str,
+                        best_k: Optional[int] = None, sort_by: str = "k") -> None:
+    """One horizontal panel per metric, rows = K, shared ordering across panels.
+
+    Sorting by any metric re-orders every panel together, so you can sort by
+    silhouette and immediately read off what that K costs on balance and on
+    Davies-Bouldin.
+    """
+    metrics_spec = [("silhouette", "silhouette (higher better)", False),
+                    ("calinski_harabasz", "Calinski-Harabasz (higher better)", False),
+                    ("davies_bouldin", "Davies-Bouldin (LOWER better)", True),
+                    ("size_cv", "size imbalance CV (lower better)", True)]
+    d = df.copy()
+    if sort_by in d.columns and sort_by != "k":
+        d = d.sort_values(sort_by, ascending=sort_by in ("davies_bouldin", "size_cv"))
+    else:
+        d = d.sort_values("k")
+    ks = d["k"].tolist()
+    pos = np.arange(len(ks))
+
+    fig, axes = plt.subplots(1, len(metrics_spec),
+                             figsize=(4.1 * len(metrics_spec), max(2.6, 0.42 * len(ks) + 1.3)),
+                             sharey=True)
+    for ax, (col, label, lower_better) in zip(np.atleast_1d(axes), metrics_spec):
+        vals = d[col].to_numpy(dtype=float)
+        colors = ["#b85c6e" if k == best_k else "#c9ced6" for k in ks]
+        ax.barh(pos, np.nan_to_num(vals, nan=0.0), color=colors, edgecolor="none", height=0.7)
+        fin = vals[np.isfinite(vals)]
+        span = (fin.max() - min(fin.min(), 0)) if fin.size else 1.0
+        for y, v in enumerate(vals):
+            if np.isfinite(v):
+                ax.text(v + 0.015 * max(span, 1e-9), y,
+                        f"{v:.3g}" if abs(v) >= 0.01 else f"{v:.2e}",
+                        va="center", fontsize=7.5)
+        ax.set_title(label, fontsize=9)
+        ax.grid(axis="x", alpha=0.3)
+        for s in ("top", "right", "left"):
+            ax.spines[s].set_visible(False)
+        if fin.size:
+            ax.set_xlim(min(0.0, fin.min()), fin.max() * 1.22)
+    # Flag degenerate cuts. A K can top the silhouette table while quietly emitting a
+    # one-sample cluster, which is never a real functional type — mark it on the label
+    # so the trade-off is visible without opening the CSV.
+    sing = dict(zip(d["k"], d["n_singletons"])) if "n_singletons" in d.columns else {}
+    labels_y = []
+    for k in ks:
+        s = f"K={k}"
+        if k == best_k:
+            s += "  <-best"
+        if sing.get(k, 0):
+            s += f"  [{int(sing[k])} singleton{'s' if sing[k] > 1 else ''}]"
+        labels_y.append(s)
+    a0 = np.atleast_1d(axes)[0]
+    a0.set_yticks(pos)
+    a0.set_yticklabels(labels_y, fontsize=9)
+    for t, k in zip(a0.get_yticklabels(), ks):
+        if sing.get(k, 0):
+            t.set_color("#c0392b")
+    a0.invert_yaxis()
+    order_note = f"sorted by {sort_by}" if sort_by != "k" else "in K order"
+    fig.suptitle(f"{title_prefix} — sweep statistics, every K ({order_note})", fontsize=10.5)
+    fig.tight_layout(rect=(0, 0, 1, 0.94))
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 # ============================================================
