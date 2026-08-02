@@ -126,7 +126,8 @@ def plot_tf_corr_map(r_map: np.ndarray, *, sig_mask: Optional[np.ndarray] = None
                      fmax_hz: float = 500.0, title: str = "", out_png=None,
                      vlim: Optional[float] = None, dpi: int = 130,
                      cmap: str = "RdBu_r", zero_contour: bool = False,
-                     cbar_label: str = "correlation with atlas value"):
+                     cbar_label: str = "correlation with atlas value",
+                     clean: bool = False):
     """r_map: (n_freq, n_time_total). Draws the correlation on the TF plane with the
     condition-block dividers, the mid-block GO-cue, and (optionally) an FDR contour.
 
@@ -141,23 +142,33 @@ def plot_tf_corr_map(r_map: np.ndarray, *, sig_mask: Optional[np.ndarray] = None
     im = ax.imshow(r_map, aspect="auto", origin="lower", cmap=cmap, vmin=-v, vmax=v,
                    extent=[0, n_time, 0, fmax_hz])
     xs = np.linspace(0, n_time, n_time); ys = np.linspace(0, fmax_hz, n_freq)
-    if zero_contour:
+    if zero_contour and not clean:
         from scipy.ndimage import uniform_filter
         ax.contour(xs, ys, uniform_filter(r_map.astype(float), size=9), levels=[0.0],
                    colors="#333333", linewidths=0.5, alpha=0.5)
-    if sig_mask is not None and sig_mask.any():
+    if sig_mask is not None and sig_mask.any() and not clean:
         ax.contour(xs, ys, sig_mask.astype(float), levels=[0.5], colors="k", linewidths=0.7)
     for b in range(n_blocks):
         x0 = b * nb
         if b:
-            ax.axvline(x0, color="k", lw=1.6)
-        ax.axvline(x0 + nb / 2, color="0.35", lw=1.0, ls="--")   # GO-cue
-        ax.text(x0 + nb / 2, fmax_hz * 0.94, block_labels[b], ha="center", fontsize=10)
+            ax.axvline(x0, color="white" if clean else "k", lw=1.0 if clean else 1.6)
+        if not clean:
+            ax.axvline(x0 + nb / 2, color="0.35", lw=1.0, ls="--")   # GO-cue
+            ax.text(x0 + nb / 2, fmax_hz * 0.94, block_labels[b], ha="center", fontsize=10)
     ax.set_xticks([b * nb + nb / 2 for b in range(n_blocks)])
-    ax.set_xticklabels([f"{l}\n(0-100% of trial)" for l in block_labels], fontsize=8)
+    _sub = "\n(0-100% of trial)"
+    _xt = list(block_labels) if clean else [f"{l}{_sub}" for l in block_labels]
+    ax.set_xticklabels(_xt, fontsize=10 if clean else 8)
     ax.set_ylabel("Frequency (Hz)")
-    ax.set_title(title, fontsize=11)
-    fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02, label=cbar_label)
+    if title:
+        ax.set_title(title, fontsize=11)
+    if clean:
+        for _s in ax.spines.values():
+            _s.set_visible(False)
+        ax.tick_params(length=0)
+    _cb = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02, label=cbar_label)
+    if clean:
+        _cb.outline.set_visible(False)
     plt.tight_layout()
     if out_png:
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
