@@ -16,5 +16,11 @@
     "n_in": 1042,
     "n_out": 1602
   },
-  "notebook": "generated for 252 rendering"
+  "notebook": "generated for 252 rendering",
+  "n_clusters": 2,
+  "artifacts": {
+    "labels": "labels.csv",
+    "per_cluster_anatomy": "per_cluster_anatomy.csv"
+  },
+  "silhouette": null
 }
