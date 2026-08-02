@@ -84,16 +84,33 @@ def cluster_timing(X_hg: np.ndarray, labels: np.ndarray, *,
                    onset_thr_db: float = DEFAULT_ONSET_THR_DB) -> pd.DataFrame:
     """One row per (cluster, condition): onset, peak, amplitude and size.
 
+    Three onsets are reported, because "when did this come on" has two answers on a
+    warped trial split by the GO cue at 50%:
+
+        onset_pct        first crossing ANYWHERE — the pooling-identical measure.
+                         100.0 when it never crosses (kept as a number so it sorts last).
+        onset_stim_pct   first crossing in the STIMULUS window, 0-50% (before GO).
+                         NaN when the cluster is silent there.
+        onset_resp_pct   first crossing in the RESPONSE window, 50-100% (GO onward).
+                         NaN when the cluster is silent there.
+
+    The two windowed onsets are NaN rather than 100.0 on purpose: a cluster with no
+    stimulus-locked response has no stimulus onset, and plotting it at 100 would
+    invent a late stimulus response that does not exist. Callers skip the NaNs.
+
+    A cluster can legitimately have both (early sensory response, then a separate
+    production response), one, or neither.
+
     Columns
-        cluster, condition, n, onset_pct, peak_pct, peak_db, mean_db, auc_post_go
-    `onset_pct` is 100.0 when the cluster never crosses the threshold in that
-    condition — that is a real result ("silent here"), not a missing value, so it is
-    kept as a number and simply reads as last in the ladder.
+        cluster, condition, n, onset_pct, crosses, onset_stim_pct, onset_resp_pct,
+        peak_pct, peak_db, peak_stim_pct, peak_stim_db, peak_resp_pct, peak_resp_db,
+        mean_db, auc_post_go
     """
     Xb = block_view(X_hg, n_blocks)
     nt = Xb.shape[2]
     t_pct = np.linspace(0, 100, nt, endpoint=False) + 50.0 / nt
-    post = t_pct >= GO_PCT
+    stim_w = t_pct < GO_PCT
+    resp_w = t_pct >= GO_PCT
 
     rows = []
     for c in sorted(np.unique(labels)):
@@ -101,14 +118,38 @@ def cluster_timing(X_hg: np.ndarray, labels: np.ndarray, *,
         n_c = int(m.sum())
         for bi, cond in enumerate(list(conditions)[:n_blocks]):
             gm = Xb[m, bi, :].mean(axis=0)
-            hits = np.where(np.abs(gm) > onset_thr_db)[0]
+            above = np.abs(gm) > onset_thr_db          # crossing mask
+            hits = np.where(above)[0]
+
+            def _first(win):
+                h = np.where(above & win)[0]
+                return float(t_pct[h[0]]) if len(h) else float("nan")
+
+            def _peak(win):
+                idx = np.where(win)[0]
+                j = idx[int(np.argmax(np.abs(gm[idx])))]
+                return float(t_pct[j]), float(gm[j])
+
             pk = int(np.argmax(np.abs(gm)))
+            ps_t, ps_db = _peak(stim_w)
+            pr_t, pr_db = _peak(resp_w)
+            # A response onset landing on the very first post-GO bin usually means the
+            # signal was ALREADY above threshold at the cue and simply continued — not
+            # a new response. Flag it so ~50% is not read as "fires exactly at GO".
+            first_resp_bin = int(np.argmax(resp_w))
+            resp_carryover = bool(above[first_resp_bin] and above[first_resp_bin - 1]) \
+                if first_resp_bin > 0 else False
             rows.append(dict(
                 cluster=int(c), condition=cond, n=n_c,
                 onset_pct=float(t_pct[hits[0]]) if len(hits) else 100.0,
                 crosses=bool(len(hits)),
+                onset_stim_pct=_first(stim_w),
+                onset_resp_pct=_first(resp_w),
+                resp_carryover=resp_carryover,
                 peak_pct=float(t_pct[pk]), peak_db=float(gm[pk]),
-                mean_db=float(gm.mean()), auc_post_go=float(gm[post].mean()),
+                peak_stim_pct=ps_t, peak_stim_db=ps_db,
+                peak_resp_pct=pr_t, peak_resp_db=pr_db,
+                mean_db=float(gm.mean()), auc_post_go=float(gm[resp_w].mean()),
             ))
     return pd.DataFrame(rows)
 
@@ -203,39 +244,58 @@ def plot_cluster_hga_timeseries(X_hg: np.ndarray, labels: np.ndarray, *,
     return fig
 
 
-def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "",
+def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "", sort_by: str = "stim",
                       out_png=None, dpi: int = 150):
-    """Onset ladder: clusters on y ordered by mean onset, one panel per condition.
+    """Onset ladder with SEPARATE stimulus and response onsets.
 
-    Ordered by the ACROSS-CONDITION mean so the y-order is the same in all three
-    panels — otherwise each panel re-sorts and the comparison the figure exists for
-    becomes impossible to make.
+    Each cluster row can carry two marks:
+        filled circle    stimulus-window onset  (0-50%, before GO)
+        filled triangle  response-window onset  (50-100%, GO onward)
+    A window with no threshold crossing is simply NOT DRAWN — a cluster that is silent
+    before GO has no stimulus onset, and inventing a marker for it would read as a very
+    late stimulus response.
+
+    Rows are ordered by the across-condition mean of `sort_by` ("stim", "resp" or
+    "any"), and that one order is used in every panel — if each panel re-sorted itself
+    the comparison the figure exists for could not be made. Clusters with no onset in
+    the sorting window fall to the bottom.
     """
+    col = {"stim": "onset_stim_pct", "resp": "onset_resp_pct"}.get(sort_by, "onset_pct")
     conds = list(dict.fromkeys(timing["condition"]))
-    order = (timing.groupby("cluster")["onset_pct"].mean()
-             .sort_values().index.tolist())
+    key = timing.groupby("cluster")[col].mean()
+    order = key.sort_values(na_position="last").index.tolist()
     colors = _cluster_colors(order)
     pos = {c: i for i, c in enumerate(order)}
 
-    fig, axes = plt.subplots(1, len(conds), figsize=(4.4 * len(conds),
-                                                     max(2.6, 0.34 * len(order) + 1.5)),
+    fig, axes = plt.subplots(1, len(conds), figsize=(4.6 * len(conds),
+                                                     max(2.8, 0.36 * len(order) + 1.7)),
                              sharey=True)
     axes = np.atleast_1d(axes)
     for ax, cond in zip(axes, conds):
         sub = timing[timing["condition"] == cond]
-        ax.axvline(GO_PCT, color="0.4", lw=1.0, ls="--", zorder=0)
+        ax.axvspan(0, GO_PCT, color="#f2f4f7", zorder=0)
+        ax.axvline(GO_PCT, color="0.35", lw=1.1, ls="--", zorder=1)
         for _, r in sub.iterrows():
-            y = pos[int(r["cluster"])]
-            never = not bool(r.get("crosses", True))
-            ax.plot([0, r["onset_pct"]], [y, y], color=colors[int(r["cluster"])],
-                    lw=1.2, alpha=0.35, zorder=1)
-            ax.scatter(r["onset_pct"], y, s=64,
-                       color="white" if never else colors[int(r["cluster"])],
-                       edgecolor=colors[int(r["cluster"])], linewidth=1.4,
-                       zorder=3, marker="o" if not never else "X")
-            if not never:
-                ax.text(r["onset_pct"] + 1.6, y, f"{r['onset_pct']:.0f}",
-                        va="center", fontsize=7.5, color="#333")
+            c = int(r["cluster"]); y = pos[c]; col_c = colors[c]
+            s_on, r_on = r.get("onset_stim_pct"), r.get("onset_resp_pct")
+            have = [v for v in (s_on, r_on) if pd.notna(v)]
+            if len(have) == 2:                      # link the pair so it reads as one row
+                ax.plot(have, [y, y], color=col_c, lw=1.1, alpha=0.45, zorder=2)
+            carry = bool(r.get("resp_carryover", False))
+            for v, mk, hollow in ((s_on, "o", False), (r_on, "^", carry)):
+                if pd.isna(v):
+                    continue
+                # hollow triangle = the signal was already above threshold at GO, so
+                # this is carry-over, not a new response-locked onset
+                ax.scatter(v, y, s=70, marker=mk,
+                           color="white" if hollow else col_c,
+                           edgecolor=col_c if hollow else "white", linewidth=1.3 if hollow else 0.9,
+                           zorder=4)
+                ax.text(v + 1.5, y - 0.02, f"{v:.0f}", va="center", fontsize=7.2,
+                        color="#333", zorder=5)
+            if not have:                            # silent in both windows
+                ax.text(2, y, "silent", va="center", fontsize=7.2,
+                        style="italic", color="#aab2ba", zorder=3)
         ax.set_title(cond.capitalize(), fontsize=10.5)
         ax.set_xlim(0, 108)
         ax.set_xlabel("onset (% of trial;  50 = GO)")
@@ -247,8 +307,9 @@ def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "",
                              for c in order], fontsize=9)
     axes[0].invert_yaxis()
     fig.suptitle((title or "Onset ordering") +
-                 "      ○ = threshold crossed   ✕ = never crosses (plotted at 100)",
-                 fontsize=10.5, y=1.02)
+                 "        ● stimulus window (0-50%)    ▲ response window (50-100%)"
+                 "    hollow = already active at GO (carry-over)",
+                 fontsize=10, y=1.02)
     fig.tight_layout()
     if out_png:
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
@@ -265,19 +326,25 @@ def plot_onset_across_k(tab: pd.DataFrame, *, out_png=None, dpi: int = 150):
     """
     conds = list(dict.fromkeys(tab["condition"]))
     ks = sorted(tab["k"].unique())
-    fig, axes = plt.subplots(1, len(conds), figsize=(4.6 * len(conds), 4.0), sharey=True)
+    SERIES = [("onset_stim_pct", "#2f6fb2", "o", "stimulus (0-50%)"),
+              ("onset_resp_pct", "#b85c6e", "^", "response (50-100%)")]
+    fig, axes = plt.subplots(1, len(conds), figsize=(4.9 * len(conds), 4.2), sharey=True)
     axes = np.atleast_1d(axes)
     for ax, cond in zip(axes, conds):
         sub = tab[tab["condition"] == cond]
-        ax.axhline(GO_PCT, color="0.4", lw=1.0, ls="--", zorder=0)
-        for k in ks:
-            s = sub[sub["k"] == k]
-            jitter = (np.random.default_rng(k).uniform(-0.16, 0.16, len(s)))
-            ax.scatter(np.full(len(s), k) + jitter, s["onset_pct"],
-                       s=np.clip(s["n"] / 6.0, 8, 90), alpha=0.55,
-                       color="#b85c6e", edgecolor="none", zorder=2)
-        med = sub.groupby("k")["onset_pct"].median()
-        ax.plot(med.index, med.values, color="#22262b", lw=1.4, zorder=3, label="median")
+        ax.axhspan(0, GO_PCT, color="#f2f4f7", zorder=0)
+        ax.axhline(GO_PCT, color="0.35", lw=1.1, ls="--", zorder=1)
+        for col, colr, mk, lab in SERIES:
+            for k in ks:
+                s = sub[(sub["k"] == k) & sub[col].notna()]
+                if not len(s):
+                    continue
+                jitter = np.random.default_rng(k).uniform(-0.16, 0.16, len(s))
+                ax.scatter(np.full(len(s), k) + jitter, s[col],
+                           s=np.clip(s["n"] / 6.0, 8, 90), alpha=0.5, marker=mk,
+                           color=colr, edgecolor="none", zorder=2)
+            med = sub.groupby("k")[col].median()
+            ax.plot(med.index, med.values, color=colr, lw=1.5, zorder=3, label=lab)
         ax.set_title(cond.capitalize(), fontsize=10.5)
         ax.set_xlabel("K")
         ax.set_xticks(ks[::max(1, len(ks) // 10)])
@@ -285,9 +352,10 @@ def plot_onset_across_k(tab: pd.DataFrame, *, out_png=None, dpi: int = 150):
         for s_ in ("top", "right"):
             ax.spines[s_].set_visible(False)
     axes[0].set_ylabel("onset (% of trial;  50 = GO)")
-    axes[0].legend(fontsize=8)
-    fig.suptitle("Cluster onset across the whole K sweep  (dot size = cluster n)",
-                 fontsize=11, y=1.02)
+    axes[0].legend(fontsize=8, loc="center left")
+    fig.suptitle("Cluster onset across the whole K sweep — stimulus vs response window  "
+                 "(dot size = cluster n; a window with no crossing is not plotted)",
+                 fontsize=10.5, y=1.02)
     fig.tight_layout()
     if out_png:
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
