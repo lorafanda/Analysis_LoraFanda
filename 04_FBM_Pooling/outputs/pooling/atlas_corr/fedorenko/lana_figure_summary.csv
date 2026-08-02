@@ -1,0 +1,7 @@
+cohort,figure,kind,threshold,n_electrodes,n_in,n_out,pct_in,n_in_left,n_in_right
+all,lana_all_membership_p0.05.png,membership,0.05,5247,4290.0,957.0,81.8,2357.0,1933.0
+all,lana_all_membership_p0.10.png,membership,0.1,5247,1984.0,3263.0,37.8,1263.0,721.0
+all,lana_all_overlap_p.png,overlap_p,,5247,,,,,
+concat,lana_concat_membership_p0.05.png,membership,0.05,2617,2233.0,384.0,85.3,1063.0,1170.0
+concat,lana_concat_membership_p0.10.png,membership,0.1,2617,1007.0,1610.0,38.5,568.0,439.0
+concat,lana_concat_overlap_p.png,overlap_p,,2617,,,,,
