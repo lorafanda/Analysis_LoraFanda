@@ -26,8 +26,12 @@ MESH_DIR = _REPO / "02_FBM_Clustering" / "outputs" / "250_recon" / "fsaverage" /
 
 # (label, axis pair, which hemisphere's silhouette, flip-x) for each view
 VIEWS = {
-    "lateral_L": dict(ax=(1, 2), hemi="lh", invert_x=False, xlabel="y (post → ant)", ylabel="z"),
-    "lateral_R": dict(ax=(1, 2), hemi="rh", invert_x=True,  xlabel="y (ant ← post)", ylabel="z"),
+    # OUTSIDE views, not medial. Camera for lateral_L sits at -x looking toward +x with
+    # up = +z, so screen-right = -y = POSTERIOR and anterior must appear on the LEFT.
+    # lateral_R is the mirror. These were the wrong way round, which silently rendered
+    # both hemispheres from the inside.
+    "lateral_L": dict(ax=(1, 2), hemi="lh", invert_x=True,  xlabel="y (ant ← post)", ylabel="z"),
+    "lateral_R": dict(ax=(1, 2), hemi="rh", invert_x=False, xlabel="y (post → ant)", ylabel="z"),
     "dorsal":    dict(ax=(0, 1), hemi="both", invert_x=False, xlabel="x (L → R)",    ylabel="y"),
 }
 

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "method": "atlas",
+  "method_label": "Fedorenko/LanA atlas",
+  "feature_set": "lana_concat",
+  "feature_set_label": "LanA \u00b7 concatenated cohort",
+  "run_id": "20260802_thr0p05",
+  "created_at": "2026-08-02T12:52:18Z",
+  "params": {
+    "atlas": "langloc_n806_p_0.05_atlas.nii",
+    "threshold": 0.05,
+    "cohort": "lana_concat",
+    "cluster_meaning": {
+      "0": "outside (P < 0.05)",
+      "1": "in network (P >= 0.05)"
+    }
+  },
+  "summary": {
+    "n_samples": 2617,
+    "n_clusters": 2,
+    "cluster_sizes": {
+      "0": 384,
+      "1": 2233
+    }
+  },
+  "notebook": "make_lana_runs.py \u2014 rendered by 252",
+  "n_clusters": 2,
+  "artifacts": {
+    "labels": "labels.csv"
+  },
+  "silhouette": null
+}

@@ -50,6 +50,14 @@
     {
       "id": "lana_inout",
       "label": "in/out language network (P>=0.1)"
+    },
+    {
+      "id": "lana_all",
+      "label": "LanA · all electrodes"
+    },
+    {
+      "id": "lana_concat",
+      "label": "LanA · concatenated cohort"
     }
   ],
   "runs": [
@@ -330,6 +338,66 @@
       "path": "kmeans/rawds/runs/20260719_155034",
       "has_ranking": true,
       "n_clusters_ranked": 11
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_all",
+      "run_id": "20260802_thr0p05",
+      "path": "atlas/lana_all/runs/20260802_thr0p05",
+      "n_clusters": 2,
+      "n_samples": 2981,
+      "silhouette": null,
+      "created_at": "2026-08-02T12:52:18Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_all",
+      "run_id": "20260802_thr0p1",
+      "path": "atlas/lana_all/runs/20260802_thr0p1",
+      "n_clusters": 2,
+      "n_samples": 2981,
+      "silhouette": null,
+      "created_at": "2026-08-02T12:52:18Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_all",
+      "run_id": "20260802_pbins",
+      "path": "atlas/lana_all/runs/20260802_pbins",
+      "n_clusters": 5,
+      "n_samples": 2981,
+      "silhouette": null,
+      "created_at": "2026-08-02T12:52:18Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_concat",
+      "run_id": "20260802_thr0p05",
+      "path": "atlas/lana_concat/runs/20260802_thr0p05",
+      "n_clusters": 2,
+      "n_samples": 2617,
+      "silhouette": null,
+      "created_at": "2026-08-02T12:52:18Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_concat",
+      "run_id": "20260802_thr0p1",
+      "path": "atlas/lana_concat/runs/20260802_thr0p1",
+      "n_clusters": 2,
+      "n_samples": 2617,
+      "silhouette": null,
+      "created_at": "2026-08-02T12:52:18Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_concat",
+      "run_id": "20260802_pbins",
+      "path": "atlas/lana_concat/runs/20260802_pbins",
+      "n_clusters": 5,
+      "n_samples": 2617,
+      "silhouette": null,
+      "created_at": "2026-08-02T12:52:19Z"
     }
   ],
   "latest": {
