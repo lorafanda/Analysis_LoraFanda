@@ -35,7 +35,10 @@ OUT = ROOT / "02_FBM_Clustering" / "outputs" / "clustering" / "story"
 CLUST = ROOT / "02_FBM_Clustering" / "outputs" / "clustering"
 POOL = ROOT / "04_FBM_Pooling" / "outputs" / "pooling"
 CLS = ROOT / "03_FBM_Classifying" / "outputs" / "classification"
-RUN = CLUST / "kmeans" / "concat_hg" / "runs" / "20260802_220720"
+# Newest run, not a pinned id: these composites are regenerated after every re-run and
+# a hard-coded path silently keeps showing the previous cohort.
+_RUNS = CLUST / "kmeans" / "concat_hg" / "runs"
+RUN = sorted((d for d in _RUNS.iterdir() if d.is_dir()), key=lambda d: d.name)[-1]     if _RUNS.is_dir() else _RUNS
 CONDS = ("audio", "picture", "reading")
 MIN_N = 10          # roles/clusters smaller than this have a meaningless "mean"
 
@@ -168,11 +171,18 @@ def s3(dpi=150):
           (16.5, 11), dpi, 2, 2)
 
 
+def _newest_xcorr(timing_dir):
+    """The reference cluster id changes on every re-fit, so the filename cannot be
+    pinned. Pick the response-window profile that actually exists."""
+    c = sorted(Path(timing_dir).glob("xcorr_K*_ref-c*_response.png"))
+    return c[-1] if c else Path(timing_dir) / "xcorr_response.png"
+
+
 def s4(dpi=150):
     T = RUN / "timing"
     _grid([("a", RUN / "cluster_cards.png", "what each cluster is, and where"),
            ("b", T / "timing_k10_panel.png", "when it comes on (K=10)"),
-           ("c", T / "xcorr_K10_ref-c1_response.png", "in what order, vs the auditory cluster")],
+           ("c", _newest_xcorr(T), "in what order, vs the auditory cluster")],
           "S4_timing.png",
           "S4 · Timing: what, where, when, and in what order",
           (15, 15), dpi, 3, 1, ratios=[1.15, 1.25, 0.9])
