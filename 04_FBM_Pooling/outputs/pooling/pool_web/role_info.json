@@ -33,12 +33,7 @@
     ],
     "thr": 1.5,
     "frac": 0.1,
-    "match": "all",
-    "onset": {
-      "audio": 2.17,
-      "picture": 62.83,
-      "reading": 68.17
-    }
+    "match": "all"
   },
   "auditory_v2": {
     "description": "Auditory cortex (lenient): HGA onset 8-28% (39-102 Hz) and concurrent low-frequency decrease 12-34% (6-26 Hz) to the spoken prompt.",
@@ -74,12 +69,7 @@
     ],
     "thr": 1.5,
     "frac": 0.25,
-    "match": "all",
-    "onset": {
-      "audio": 2.17,
-      "picture": 54.17,
-      "reading": 71.5
-    }
+    "match": "all"
   },
   "visual_picture": {
     "description": "Visual cortex (picture): HGA across the image-viewing window; silent to the audio prompt.",
@@ -115,12 +105,7 @@
     ],
     "thr": 2.0,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 2.5,
-      "picture": 4.5,
-      "reading": 1.5
-    }
+    "match": "all"
   },
   "visual_reading": {
     "description": "Visual cortex (reading): HGA across the sentence-reading window; silent to the audio prompt.",
@@ -156,12 +141,7 @@
     ],
     "thr": 2.0,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 9.17,
-      "picture": 3.83,
-      "reading": 0.5
-    }
+    "match": "all"
   },
   "picture_stim": {
     "description": "Picture stimulus response: low-frequency increase at onset (6-10%) followed by beta ERD during the viewing window (30-46%).",
@@ -197,12 +177,7 @@
     ],
     "thr": 2.0,
     "frac": 0.25,
-    "match": "all",
-    "onset": {
-      "audio": 52.17,
-      "picture": 5.83,
-      "reading": 1.5
-    }
+    "match": "all"
   },
   "pic_stim": {
     "description": "Picture-specific: early low-freq onset at 6-10% (wide band 5-34 Hz) and mid-stimulus beta decrease at 30-46% (13-26 Hz).",
@@ -238,12 +213,7 @@
     ],
     "thr": 2.0,
     "frac": 0.25,
-    "match": "all",
-    "onset": {
-      "audio": 52.5,
-      "picture": 6.17,
-      "reading": 1.83
-    }
+    "match": "all"
   },
   "lexical_semantic": {
     "description": "Conceptual access at condition-specific times: picture early, audio mid-sentence, reading at the final blank.",
@@ -291,12 +261,7 @@
     ],
     "thr": 2.0,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 0.5,
-      "picture": 0.17,
-      "reading": 0.17
-    }
+    "match": "all"
   },
   "heteromodal_convergence": {
     "description": "Multimodal hub: HGA in mid-late perception across audio AND picture AND reading (convergent, not modality-selective).",
@@ -344,12 +309,7 @@
     ],
     "thr": 2.0,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 0.5,
-      "picture": 0.17,
-      "reading": 0.17
-    }
+    "match": "all"
   },
   "maintenance": {
     "description": "Working-memory hold: sustained HGA straddling the GO-cue, persisting from late perception into the early response.",
@@ -397,12 +357,7 @@
     ],
     "thr": 2.0,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 0.5,
-      "picture": 0.17,
-      "reading": 0.17
-    }
+    "match": "all"
   },
   "premotor planning": {
     "description": "Premotor planning: pre-response HGA broadband increase across all three conditions with suppressed high-frequency oscillations.",
@@ -486,12 +441,7 @@
     ],
     "thr": 0.5,
     "frac": 0.25,
-    "match": "all",
-    "onset": {
-      "audio": 32.5,
-      "picture": 11.17,
-      "reading": 7.83
-    }
+    "match": "all"
   },
   "phonological_encoding": {
     "description": "Pre-articulatory phonological/phonetic encoding between the GO-cue (50%) and voice onset (~V%); condition-shared.",
@@ -539,12 +489,7 @@
     ],
     "thr": 2.0,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 1.83,
-      "picture": 4.5,
-      "reading": 1.17
-    }
+    "match": "all"
   },
   "motor": {
     "description": "Speech-motor cortex: HGA at 60-85% in all conditions, beta not-activating (nonpos) in same window; silent (zero) during stimulus window (0-50%).",
@@ -664,12 +609,7 @@
     ],
     "thr": 2.0,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 22.17,
-      "picture": 56.17,
-      "reading": 2.5
-    }
+    "match": "all"
   },
   "motor_v2": {
     "description": "Speech-motor (lenient): per-condition HGA at 62-85% (lower thr), silent (zero HGA all freqs) during stimulus, beta decrease mid-trial.",
@@ -789,12 +729,7 @@
     ],
     "thr": 1.0,
     "frac": 0.25,
-    "match": "all",
-    "onset": {
-      "audio": 2.83,
-      "picture": 54.17,
-      "reading": 58.5
-    }
+    "match": "all"
   },
   "auditory_feedback": {
     "description": "Self-monitoring auditory cortex: HGA pos to the external prompt, HGA suppressed during own-voice articulation (all conds).",
@@ -902,12 +837,7 @@
     ],
     "thr": 2.0,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 1.83,
-      "picture": 0.17,
-      "reading": 0.17
-    }
+    "match": "all"
   },
   "NN": {
     "description": "Neural negativity: sustained broadband HGA suppression across audio (9-37%), picture (13-54%), and reading (11-54%). Broad-spectrum task-negative network.",
@@ -955,12 +885,7 @@
     ],
     "thr": 1.5,
     "frac": 0.3,
-    "match": "all",
-    "onset": {
-      "audio": 4.83,
-      "picture": 0.17,
-      "reading": 1.5
-    }
+    "match": "all"
   },
   "tag_hga_activation": {
     "description": "HGA increase in any stim or response window (no selectivity).",
@@ -1044,12 +969,7 @@
     ],
     "thr": 2.0,
     "frac": 0.2,
-    "match": "any",
-    "onset": {
-      "audio": 2.83,
-      "picture": 8.17,
-      "reading": 2.17
-    }
+    "match": "any"
   },
   "tag_beta_erd": {
     "description": "Beta (13-30) ERD during any stimulus — engagement marker; contacts firing this with NO layer-1 HGA role are missed by a high-gamma-only filter (RQ1).",
@@ -1097,12 +1017,7 @@
     ],
     "thr": 2.0,
     "frac": 0.2,
-    "match": "any",
-    "onset": {
-      "audio": 3.83,
-      "picture": 62.83,
-      "reading": 70.5
-    }
+    "match": "any"
   },
   "tag_low_f_erd": {
     "description": "Delta/theta (1-8) ERD mid-trial — low-frequency network marker.",
@@ -1150,12 +1065,7 @@
     ],
     "thr": 2.0,
     "frac": 0.2,
-    "match": "any",
-    "onset": {
-      "audio": null,
-      "picture": 71.83,
-      "reading": null
-    }
+    "match": "any"
   },
   "tag_theta_tracking": {
     "description": "Theta (4-8) increase during the spoken prompt — syllabic-rate auditory tracking.",
@@ -1179,18 +1089,13 @@
     ],
     "thr": 2.0,
     "frac": 0.2,
-    "match": "any",
-    "onset": {
-      "audio": null,
-      "picture": 62.83,
-      "reading": 73.5
-    }
+    "match": "any"
   },
   "ultra_hfa": {
     "description": "Ultra high-frequency activity (>200 Hz) in the middle 40% of any stimulus or response window (HFOs / very-high-gamma). NB: 200-400 Hz overlaps mains harmonics + speech EMG — interpret with care.",
     "color": "#c2a6bc",
     "img": "role_cards/ultra_hfa.png",
-    "n_primary": 68,
+    "n_primary": 42,
     "layer": 2,
     "boxes": [
       {
@@ -1268,12 +1173,7 @@
     ],
     "thr": 2.0,
     "frac": 0.2,
-    "match": "any",
-    "onset": {
-      "audio": 19.5,
-      "picture": 59.17,
-      "reading": 7.83
-    }
+    "match": "any"
   },
   "stimulus_active": {
     "description": "HGA in the stimulus window of >=1 condition.",
@@ -1321,12 +1221,7 @@
     ],
     "thr": 2.0,
     "frac": 0.2,
-    "match": "any",
-    "onset": {
-      "audio": 1.83,
-      "picture": 5.17,
-      "reading": 1.5
-    }
+    "match": "any"
   },
   "response_active": {
     "description": "HGA in the response window of >=1 condition.",
@@ -1374,11 +1269,6 @@
     ],
     "thr": 2.0,
     "frac": 0.2,
-    "match": "any",
-    "onset": {
-      "audio": 2.5,
-      "picture": 56.5,
-      "reading": 2.17
-    }
+    "match": "any"
   }
 }

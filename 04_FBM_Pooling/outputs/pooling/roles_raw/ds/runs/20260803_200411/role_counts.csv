@@ -1,0 +1,24 @@
+role,n_matched,n_primary
+tag_low_f_erd,562,252
+tag_beta_erd,390,301
+tag_theta_tracking,257,175
+tag_hga_activation,145,67
+auditory,144,130
+response_active,110,0
+ultra_hfa,98,42
+stimulus_active,54,0
+premotor planning,50,47
+NN,30,27
+auditory_v2,25,1
+motor,24,24
+motor_v2,22,22
+visual_picture,18,17
+pic_stim,12,2
+picture_stim,9,5
+phonological_encoding,6,3
+visual_reading,5,0
+deactivation,1,1
+heteromodal_convergence,1,0
+lexical_semantic,1,1
+maintenance,1,0
+none,0,1579

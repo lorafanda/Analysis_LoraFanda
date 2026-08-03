@@ -1,6 +1,6 @@
 {
   "grid": "ds",
-  "n_contacts": 2724,
+  "n_contacts": 2691,
   "csv": "contacts_pool.csv",
   "multilabel": true,
   "roles": [
@@ -109,26 +109,26 @@
     {
       "role": "tag_beta_erd",
       "color": "#bcbca0",
-      "n": 391,
+      "n": 390,
       "n_primary": 301
     },
     {
       "role": "tag_low_f_erd",
       "color": "#a6b2bc",
-      "n": 565,
+      "n": 562,
       "n_primary": 252
     },
     {
       "role": "tag_theta_tracking",
       "color": "#c4b6a4",
-      "n": 258,
+      "n": 257,
       "n_primary": 175
     },
     {
       "role": "ultra_hfa",
       "color": "#c2a6bc",
-      "n": 124,
-      "n_primary": 68
+      "n": 98,
+      "n_primary": 42
     },
     {
       "role": "stimulus_active",
@@ -146,7 +146,7 @@
       "role": "none",
       "color": "#cccccc",
       "n": 0,
-      "n_primary": 1581
+      "n_primary": 1574
     }
   ]
 }
