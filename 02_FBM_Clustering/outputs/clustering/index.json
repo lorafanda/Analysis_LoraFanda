@@ -169,6 +169,16 @@
     },
     {
       "method": "hierarchical",
+      "feature_set": "concat_hg",
+      "run_id": "20260803_175444",
+      "created_at": "2026-08-03T15:54:50Z",
+      "n_samples": 1027,
+      "n_clusters": 4,
+      "silhouette": 0.14132890105247498,
+      "path": "hierarchical/concat_hg/runs/20260803_175444"
+    },
+    {
+      "method": "hierarchical",
       "feature_set": "concat_raw",
       "run_id": "20260728_114228",
       "created_at": "2026-07-28T09:45:02Z",
@@ -313,6 +323,16 @@
     },
     {
       "method": "kmeans",
+      "feature_set": "concat_hg",
+      "run_id": "20260803_175417",
+      "created_at": "2026-08-03T15:54:44Z",
+      "n_samples": 1027,
+      "n_clusters": 5,
+      "silhouette": 0.17554466426372528,
+      "path": "kmeans/concat_hg/runs/20260803_175417"
+    },
+    {
+      "method": "kmeans",
       "feature_set": "concat_raw",
       "run_id": "20260728_110909",
       "created_at": "2026-07-28T09:42:27Z",
@@ -451,7 +471,7 @@
       "minus101": "20260523_102735",
       "hg": "20260719_153420",
       "rawds": "20260719_155034",
-      "concat_hg": "20260802_220720",
+      "concat_hg": "20260803_175417",
       "concat_rawds": "20260802_220808",
       "concat_raw": "20260731_215525"
     },
@@ -461,11 +481,11 @@
       "minus101": "20260523_104339",
       "hg": "20260719_153443",
       "rawds": "20260719_155101",
-      "concat_hg": "20260802_220747",
+      "concat_hg": "20260803_175444",
       "concat_rawds": "20260802_220847",
       "concat_raw": "20260731_224035"
     },
     "atlas|lana_inout": "20260728_lana_p05_thr010"
   },
-  "updated_at": "2026-08-02T20:15:46Z"
+  "updated_at": "2026-08-03T15:54:50Z"
 }
