@@ -175,7 +175,9 @@
       "n_samples": 1027,
       "n_clusters": 4,
       "silhouette": 0.14132890105247498,
-      "path": "hierarchical/concat_hg/runs/20260803_175444"
+      "path": "hierarchical/concat_hg/runs/20260803_175444",
+      "has_ranking": true,
+      "n_clusters_ranked": 4
     },
     {
       "method": "hierarchical",
@@ -339,7 +341,9 @@
       "n_samples": 1027,
       "n_clusters": 5,
       "silhouette": 0.17554466426372528,
-      "path": "kmeans/concat_hg/runs/20260803_175417"
+      "path": "kmeans/concat_hg/runs/20260803_175417",
+      "has_ranking": true,
+      "n_clusters_ranked": 5
     },
     {
       "method": "kmeans",
@@ -507,5 +511,5 @@
     },
     "atlas|lana_inout": "20260728_lana_p05_thr010"
   },
-  "updated_at": "2026-08-03T15:55:33Z"
+  "updated_at": "2026-08-03T15:57:23Z"
 }
