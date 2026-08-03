@@ -150,6 +150,28 @@ def is_grid_electrode(label, patient_id=None) -> bool:
     return re.sub(r"\d+$", "", s) in {x.upper() for x in shafts}
 
 
+# Shafts excluded for SIGNAL QUALITY rather than geometry — heavy noise contamination
+# judged from the raw traces. Distinct from GRID_SHAFTS because the reason is different:
+# a grid contact is a valid recording of the wrong kind, whereas these are unusable.
+# Applied in prepare_dataset, so EVERY track (per-condition and concatenated) drops them.
+#
+#   PAT_3415  IMG, TA, IPG — leaving OI, OS, TM, TP as its usable depth coverage.
+NOISY_SHAFTS: dict = {
+    "PAT_3415": ("IMG", "TA", "IPG"),
+}
+
+
+def is_noisy_electrode(label, patient_id=None) -> bool:
+    """True for a contact on a shaft listed in NOISY_SHAFTS for that patient."""
+    if label is None or patient_id is None:
+        return False
+    shafts = NOISY_SHAFTS.get(str(patient_id))
+    if not shafts:
+        return False
+    s = str(label).replace("_", "").replace("-", "").upper()
+    return re.sub(r"\d+$", "", s) in {x.upper() for x in shafts}
+
+
 # ============================================================
 # Public: prepare_dataset
 # ============================================================
@@ -191,6 +213,8 @@ def prepare_dataset(
         "task": task,
         "exclude_micro": bool(exclude_micro),   # part of the key: a cache built without
                                                 # the micro filter must not be reused
+        # Same reasoning: a cache built before a shaft was blacklisted still contains it.
+        "noisy_shafts": {k: sorted(v) for k, v in sorted(NOISY_SHAFTS.items())},
         "conditions": list(conditions),
         "n_freq": int(n_freq),
         "n_time": int(n_time),
@@ -292,6 +316,25 @@ def prepare_dataset(
             ersp_list = [ersp_list[i] for i in np.where(keep.to_numpy())[0]]
             if verbose:
                 print(f"  excluded {n_micro} microelectrode channels ({', '.join(shafts)}) "
+                      f"→ {len(df_meta)} samples")
+
+    # ---- Noise-contaminated shafts (per patient, see NOISY_SHAFTS) ----
+    # Excluded for signal quality, not geometry: unlike a grid contact these are not a
+    # valid recording of a different kind, they are unusable. Applied here rather than in
+    # lf_concat so the per-condition tracks drop them too.
+    if len(df_meta):
+        noisy_mask = df_meta.apply(
+            lambda r: is_noisy_electrode(r["electrode"], r["patient_id"]), axis=1)
+        n_noisy = int(noisy_mask.sum())
+        if n_noisy:
+            keep = ~noisy_mask
+            by = (df_meta.loc[noisy_mask].groupby("patient_id")["electrode"]
+                  .apply(lambda s: sorted({re.sub(r"\d+$", "", str(e).replace("_", "").upper())
+                                           for e in s})).to_dict())
+            df_meta = df_meta[keep].reset_index(drop=True)
+            ersp_list = [ersp_list[i] for i in np.where(keep.to_numpy())[0]]
+            if verbose:
+                print(f"  excluded {n_noisy} noise-contaminated channels {by} "
                       f"→ {len(df_meta)} samples")
 
     # ---- High-activity computation (always computed, optionally filtered) ----

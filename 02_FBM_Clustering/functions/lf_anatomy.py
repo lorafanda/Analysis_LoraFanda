@@ -381,20 +381,36 @@ def cluster_anatomy_purity(
     df_aparc must have columns: patient, electrode, aparc_label
     df_labels must have the cluster col + patient_col + electrode_col.
     """
-    # Build a fast lookup
+    # Build a fast lookup.
+    #
+    # NORMALISE BOTH SIDES. The aparc cache stores electrodes stripped ("AL1") while a
+    # run's labels.csv carries the clinical spelling ("A_L1"), so keying on the raw
+    # string silently dropped 45% of contacts into "unknown" — a JOIN FAILURE that read
+    # as an anatomical fact and pushed every purity estimate down. Same class of bug as
+    # the recon aI/al homoglyph. Measured on kmeans/concat_hg 20260802_220720:
+    # raw 582/1060 matched, normalised 1020/1060, and the largest cluster's top region
+    # changed from rostralmiddlefrontal to middletemporal.
+    def _nz(s) -> str:
+        return str(s).replace("_", "").replace("-", "").upper()
+
     df_aparc = df_aparc.copy()
     df_aparc["patient"] = df_aparc["patient"].astype(str)
     df_aparc["electrode"] = df_aparc["electrode"].astype(str)
     lookup = {
-        (str(p), str(e)): str(lbl)
+        (str(p), _nz(e)): str(lbl)
         for p, e, lbl in zip(df_aparc["patient"], df_aparc["electrode"], df_aparc["aparc_label"])
     }
 
     df_l = df_labels.copy()
     df_l["aparc_label"] = [
-        lookup.get((str(p), str(e)), "unknown")
+        lookup.get((str(p), _nz(e)), "unknown")
         for p, e in zip(df_l[patient_col], df_l[electrode_col])
     ]
+    _miss = float((df_l["aparc_label"] == "unknown").mean())
+    if _miss > 0.30:
+        print(f"[lf_anatomy] WARNING: {100*_miss:.0f}% of contacts have no aparc label. "
+              f"Above ~15% usually means the join is failing, not that the contacts are "
+              f"unlocalised — check the electrode spelling on both sides.")
 
     out: Dict[int, Dict] = {}
     rng = np.random.default_rng(random_state)

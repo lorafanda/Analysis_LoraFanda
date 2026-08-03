@@ -774,6 +774,8 @@ def plot_xcorr_profiles(table: pd.DataFrame, profiles: dict, *,
                         ref_cluster: int, order: Optional[Sequence[int]] = None,
                         shape_gate: float = DEFAULT_SHAPE_GATE,
                         title: str = "", width_per_panel: float = 7.2,
+                        ylim: Optional[tuple] = None,
+                        reliable_lag: Optional[float] = None,
                         out_png=None, dpi: int = 150):
     """Full r-vs-lag curve per cluster, one panel per condition, peak marked.
 
@@ -808,6 +810,15 @@ def plot_xcorr_profiles(table: pd.DataFrame, profiles: dict, *,
                 ax.scatter([x], [y], s=70, color=col, edgecolor="white", lw=1.2, zorder=5)
                 ax.annotate(f"{x:+.0f}%", (x, y), textcoords="offset points", xytext=(4, 5),
                             fontsize=8, color=col, fontweight="bold")
+        if reliable_lag:
+            # Beyond this the two segments overlap by less than the minimum, so the
+            # correlation is computed on a shrinking tail and drifts toward +/-1 for
+            # reasons that have nothing to do with alignment.
+            ax.axvspan(-reliable_lag, reliable_lag, color="#eef1f5", zorder=0)
+            ax.axvline(-reliable_lag, color="#9aa3ac", lw=0.8, ls=":", zorder=1)
+            ax.axvline(reliable_lag, color="#9aa3ac", lw=0.8, ls=":", zorder=1)
+        if ylim:
+            ax.set_ylim(*ylim)
         ax.set_title(cond.capitalize(), fontsize=11)
         ax.set_xlabel(f"lag (% of trial)   + = cluster LAGS behind c{ref_cluster}")
         ax.grid(alpha=.25)

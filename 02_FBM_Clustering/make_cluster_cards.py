@@ -53,6 +53,26 @@ def crop_to_content(path: Path, pad: int = 12, thr: int = 245):
     return a[y0:y1, x0:x1]
 
 
+def chance_purity(labels_by_region: pd.Series, n: int, n_draw: int = 400, seed: int = 0) -> float:
+    """Purity a cluster of this size would reach by drawing regions at random.
+
+    Raw purity is uninterpretable on its own: with a skewed region distribution a
+    random draw already lands ~0.24 here, so a cluster at 0.18 is BELOW chance and one
+    at 0.41 is genuinely coherent. Reporting the ratio instead of the raw number is the
+    difference between "all our clusters are anatomically weak" and the truth.
+    """
+    rng = np.random.default_rng(seed)
+    vals = labels_by_region.to_numpy()
+    if n < 1 or len(vals) < n:
+        return float("nan")
+    out = np.empty(n_draw)
+    for i in range(n_draw):
+        s = rng.choice(vals, n, replace=False)
+        _, c = np.unique(s, return_counts=True)
+        out[i] = c.max() / n
+    return float(out.mean())
+
+
 def top_regions(anat: pd.DataFrame, cid: int, k: int = 3):
     row = anat[anat["cluster_id"] == cid]
     if not len(row):
@@ -142,8 +162,28 @@ def main() -> int:
     labels = pd.read_csv(run / "labels.csv")
     ccol = next(c for c in labels.columns if c.startswith("cluster_") and not c.endswith("_ranked"))
     sizes = labels[ccol].value_counts().to_dict()
-    anat_p = run / "per_cluster_anatomy.csv"
-    anat = pd.read_csv(anat_p) if anat_p.exists() else pd.DataFrame(columns=["cluster_id"])
+    # Recompute the region labels here with a NORMALISED join. per_cluster_anatomy.csv
+    # is written by 211, and any copy produced before the lf_anatomy fix keyed on the raw
+    # electrode string and dropped ~45% of contacts into "unknown".
+    def _nz(s):
+        return str(s).replace("_", "").replace("-", "").upper()
+
+    apath = ROOT / "outputs" / "250_recon" / "fsaverage" / "aparc_lookup.csv"
+    lut, hemi_lut = {}, {}
+    if apath.exists():
+        _ap = pd.read_csv(apath)
+        lut = {(str(q), _nz(e)): str(l)
+               for q, e, l in zip(_ap["patient"], _ap["electrode"], _ap["aparc_label"])}
+        if "hemi" in _ap.columns:
+            hemi_lut = {(str(q), _nz(e)): str(h)
+                        for q, e, h in zip(_ap["patient"], _ap["electrode"], _ap["hemi"])}
+    labels["_reg"] = [lut.get((str(q), _nz(e)), "unknown")
+                      for q, e in zip(labels["patient_id"], labels["electrode"])]
+    labels["_hemi"] = [hemi_lut.get((str(q), _nz(e)), "?")
+                       for q, e in zip(labels["patient_id"], labels["electrode"])]
+    known = labels[labels["_reg"] != "unknown"]
+    print(f"  region labels: {len(known)}/{len(labels)} matched "
+          f"({100*len(known)/max(len(labels),1):.0f}%)")
 
     ncol = 1 + len(VIEWS) + 1                       # waveform + views + text
     widths = [1.35] + [1.0] * len(VIEWS) + [1.25]
@@ -175,18 +215,30 @@ def main() -> int:
                 axb.set_title(v.replace("_", " "), fontsize=9)
 
         axt = axes[r, ncol - 1]
-        tops = top_regions(anat, cid)
-        if tops:
-            lines = [f"{nm[:22]}  {100*pr:.0f}%" for nm, pr in tops]
-            row = anat[anat["cluster_id"] == cid]
-            if len(row) and "purity" in row:
-                lines.append(f"purity {float(row.iloc[0]['purity']):.2f}")
+        sub = labels[labels[ccol] == cid]
+        kn = sub[sub["_reg"] != "unknown"]
+        lines = []
+        if len(kn):
+            vc = kn["_reg"].value_counts()
+            for nm, cnt in vc.head(3).items():
+                lines.append(f"{nm[:20]}  {100*cnt/len(kn):.0f}%")
+            pur = vc.iloc[0] / len(kn)
+            ch = chance_purity(known["_reg"], len(kn))
+            ratio = pur / ch if ch and np.isfinite(ch) else float("nan")
+            verdict = ("above chance" if ratio > 1.15 else
+                       "BELOW chance" if ratio < 0.95 else "at chance")
+            lines += ["", f"purity {pur:.2f}  vs chance {ch:.2f}",
+                      f"= {ratio:.2f}x  ({verdict})"]
         else:
-            lines = ["no anatomy table"]
-        axt.text(0.0, 0.5, "\n".join(lines), fontsize=8.6, va="center", ha="left",
-                 family="DejaVu Sans", transform=axt.transAxes)
+            lines = ["no region match"]
+        h = sub["_hemi"].astype(str).str.upper().str[0]
+        nl, nr = int((h == "L").sum()), int((h == "R").sum())
+        if nl + nr:
+            lines.append(f"{nl} left / {nr} right   ({100*nl/(nl+nr):.0f}% LH)")
+        axt.text(0.0, 0.5, "\n".join(lines), fontsize=8.4, va="center", ha="left",
+                 transform=axt.transAxes)
         if r == 0:
-            axt.set_title("top regions", fontsize=9)
+            axt.set_title("anatomy  ·  purity vs chance  ·  hemisphere", fontsize=8.5)
 
         for axx in axes[r]:
             axx.set_xticks([]); axx.set_yticks([])
