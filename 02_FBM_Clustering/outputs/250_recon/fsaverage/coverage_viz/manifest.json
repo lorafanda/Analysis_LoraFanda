@@ -1,0 +1,58 @@
+{
+  "generated_from": {
+    "run": "20260803_175417",
+    "coords": "ALL_PATIENTS_contacts_fsaverage.csv"
+  },
+  "radius_mm": 10.0,
+  "n_patients_total": 35,
+  "n_contacts_total": 5247,
+  "n_contacts_with_cluster": 1027,
+  "clusters": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "cluster_sizes": {
+    "0": 73,
+    "1": 575,
+    "2": 130,
+    "3": 175,
+    "4": 74
+  },
+  "fields": [
+    "n_contacts",
+    "n_patients",
+    "n_cluster_0",
+    "n_cluster_1",
+    "n_cluster_2",
+    "n_cluster_3",
+    "n_cluster_4"
+  ],
+  "dtype": "uint16",
+  "hemis": {
+    "lh": {
+      "nvert": 163842,
+      "file": "counts_lh_u16.bin",
+      "n_contacts_hemi": 2759,
+      "pct_vertices_sampled": 86.5,
+      "max_patients_at_a_vertex": 28
+    },
+    "rh": {
+      "nvert": 163842,
+      "file": "counts_rh_u16.bin",
+      "n_contacts_hemi": 2488,
+      "pct_vertices_sampled": 81.2,
+      "max_patients_at_a_vertex": 26
+    }
+  },
+  "note": "counts within radius_mm of each vertex; ratios are computed client-side so the denominator stays visible",
+  "contacts_file": "contacts.json",
+  "meshes": {
+    "lh": "../meshes/fsaverage_lh.gii",
+    "rh": "../meshes/fsaverage_rh.gii",
+    "lh_inflated": "../meshes/fsaverage_lh.inflated.gii",
+    "rh_inflated": "../meshes/fsaverage_rh.inflated.gii"
+  }
+}
