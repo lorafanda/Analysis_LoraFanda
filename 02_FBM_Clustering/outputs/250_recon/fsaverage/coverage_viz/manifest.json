@@ -1,58 +1,1030 @@
 {
-  "generated_from": {
-    "run": "20260803_175417",
-    "coords": "ALL_PATIENTS_contacts_fsaverage.csv"
-  },
   "radius_mm": 10.0,
   "n_patients_total": 35,
   "n_contacts_total": 5247,
-  "n_contacts_with_cluster": 1027,
-  "clusters": [
-    0,
-    1,
-    2,
-    3,
-    4
-  ],
-  "cluster_sizes": {
-    "0": 73,
-    "1": 575,
-    "2": 130,
-    "3": 175,
-    "4": 74
-  },
-  "fields": [
+  "coords": "ALL_PATIENTS_contacts_fsaverage.csv",
+  "coverage_fields": [
     "n_contacts",
-    "n_patients",
-    "n_cluster_0",
-    "n_cluster_1",
-    "n_cluster_2",
-    "n_cluster_3",
-    "n_cluster_4"
+    "n_patients"
   ],
-  "dtype": "uint16",
   "hemis": {
     "lh": {
       "nvert": 163842,
-      "file": "counts_lh_u16.bin",
+      "file": "coverage_lh_u8.bin",
+      "dtype": "uint8",
       "n_contacts_hemi": 2759,
       "pct_vertices_sampled": 86.5,
-      "max_patients_at_a_vertex": 28
+      "max_patients_at_a_vertex": 28,
+      "max_contacts_at_a_vertex": 179
     },
     "rh": {
       "nvert": 163842,
-      "file": "counts_rh_u16.bin",
+      "file": "coverage_rh_u8.bin",
+      "dtype": "uint8",
       "n_contacts_hemi": 2488,
       "pct_vertices_sampled": 81.2,
-      "max_patients_at_a_vertex": 26
+      "max_patients_at_a_vertex": 26,
+      "max_contacts_at_a_vertex": 204
     }
   },
-  "note": "counts within radius_mm of each vertex; ratios are computed client-side so the denominator stays visible",
   "contacts_file": "contacts.json",
-  "meshes": {
-    "lh": "../meshes/fsaverage_lh.gii",
-    "rh": "../meshes/fsaverage_rh.gii",
-    "lh_inflated": "../meshes/fsaverage_lh.inflated.gii",
-    "rh_inflated": "../meshes/fsaverage_rh.inflated.gii"
-  }
+  "runs": [
+    {
+      "id": "kmeans__concat_hg__20260803_175417",
+      "track": "kmeans/concat_hg",
+      "track_label": "K-means \u00b7 concatenated",
+      "cohort": "1027-electrode concat cohort",
+      "run": "20260803_175417",
+      "dir": "runs/kmeans__concat_hg__20260803_175417",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1027,
+      "n_contacts_with_cluster": 1027,
+      "n_samples_with_cluster": 1027,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "cluster_sizes": {
+        "0": 73,
+        "1": 575,
+        "2": 130,
+        "3": 175,
+        "4": 74
+      },
+      "label": "K-means \u00b7 concatenated \u00b7 20260803_175417 \u00b7 K=5 \u00b7 n=1027",
+      "hemis": {
+        "lh": {
+          "file": "clusters_lh_u8.bin",
+          "dtype": "uint8"
+        },
+        "rh": {
+          "file": "clusters_rh_u8.bin",
+          "dtype": "uint8"
+        }
+      },
+      "figures": {
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_04.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "cluster_cards.png",
+            "title": "Cluster cards \u2014 waveform, glass brains, anatomy"
+          },
+          {
+            "path": "timing/timing_k05_panel.png",
+            "title": "Cluster timing panel (K=5)"
+          },
+          {
+            "path": "timing/onset_across_k.png",
+            "title": "Onset ordering across K"
+          },
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "silhouette_by_k.png",
+            "title": "Silhouette by K"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
+      },
+      "path": "kmeans/concat_hg/runs/20260803_175417"
+    },
+    {
+      "id": "hierarchical__concat_hg__20260803_175444",
+      "track": "hierarchical/concat_hg",
+      "track_label": "Ward \u00b7 concatenated",
+      "cohort": "1027-electrode concat cohort",
+      "run": "20260803_175444",
+      "dir": "runs/hierarchical__concat_hg__20260803_175444",
+      "k": 4,
+      "clusters": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "n_electrodes": 1027,
+      "n_contacts_with_cluster": 1027,
+      "n_samples_with_cluster": 1027,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "cluster_sizes": {
+        "0": 142,
+        "1": 597,
+        "2": 54,
+        "3": 234
+      },
+      "label": "Ward \u00b7 concatenated \u00b7 20260803_175444 \u00b7 K=4 \u00b7 n=1027",
+      "hemis": {
+        "lh": {
+          "file": "clusters_lh_u8.bin",
+          "dtype": "uint8"
+        },
+        "rh": {
+          "file": "clusters_rh_u8.bin",
+          "dtype": "uint8"
+        }
+      },
+      "figures": {
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "silhouette_by_k.png",
+            "title": "Silhouette by K"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
+      },
+      "path": "hierarchical/concat_hg/runs/20260803_175444"
+    },
+    {
+      "id": "kmeans__concat_rawds__20260803_175450",
+      "track": "kmeans/concat_rawds",
+      "track_label": "K-means \u00b7 concat 15-band",
+      "cohort": "1027-electrode concat cohort",
+      "run": "20260803_175450",
+      "dir": "runs/kmeans__concat_rawds__20260803_175450",
+      "k": 6,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "n_electrodes": 1027,
+      "n_contacts_with_cluster": 1027,
+      "n_samples_with_cluster": 1027,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "cluster_sizes": {
+        "0": 166,
+        "1": 109,
+        "2": 163,
+        "3": 126,
+        "4": 414,
+        "5": 49
+      },
+      "label": "K-means \u00b7 concat 15-band \u00b7 20260803_175450 \u00b7 K=6 \u00b7 n=1027",
+      "hemis": {
+        "lh": {
+          "file": "clusters_lh_u8.bin",
+          "dtype": "uint8"
+        },
+        "rh": {
+          "file": "clusters_rh_u8.bin",
+          "dtype": "uint8"
+        }
+      },
+      "figures": {
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {
+              "lateral_L": "recon/cluster_05/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_05/by_condition/dorsal.png",
+              "frontal": "recon/cluster_05/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_05.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "silhouette_by_k.png",
+            "title": "Silhouette by K"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
+      },
+      "path": "kmeans/concat_rawds/runs/20260803_175450"
+    },
+    {
+      "id": "kmeans__hg__20260719_153420",
+      "track": "kmeans/hg",
+      "track_label": "K-means \u00b7 per-condition",
+      "cohort": "2026-07-19 per-task cohort",
+      "run": "20260719_153420",
+      "dir": "runs/kmeans__hg__20260719_153420",
+      "k": 9,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "n_electrodes": 2102,
+      "n_contacts_with_cluster": 1287,
+      "n_samples_with_cluster": 2031,
+      "unit": "electrode x condition",
+      "n_electrodes_multilabel": 375,
+      "cluster_sizes": {
+        "0": 349,
+        "1": 33,
+        "2": 154,
+        "3": 574,
+        "4": 96,
+        "5": 36,
+        "6": 294,
+        "7": 468,
+        "8": 98
+      },
+      "label": "K-means \u00b7 per-condition \u00b7 20260719_153420 \u00b7 K=9 \u00b7 n=2102",
+      "hemis": {
+        "lh": {
+          "file": "clusters_lh_u8.bin",
+          "dtype": "uint8"
+        },
+        "rh": {
+          "file": "clusters_rh_u8.bin",
+          "dtype": "uint8"
+        }
+      },
+      "figures": {
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {
+              "lateral_L": "recon/cluster_05/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_05/by_condition/dorsal.png",
+              "frontal": "recon/cluster_05/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {
+              "lateral_L": "recon/cluster_06/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_06/by_condition/dorsal.png",
+              "frontal": "recon/cluster_06/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_06.png"
+          },
+          "7": {
+            "glass": {
+              "lateral_L": "recon/cluster_07/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_07/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_07/by_condition/dorsal.png",
+              "frontal": "recon/cluster_07/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_07.png"
+          },
+          "8": {
+            "glass": {
+              "lateral_L": "recon/cluster_08/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_08/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_08/by_condition/dorsal.png",
+              "frontal": "recon/cluster_08/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_08.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "silhouette_by_k.png",
+            "title": "Silhouette by K"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
+      },
+      "path": "kmeans/hg/runs/20260719_153420"
+    },
+    {
+      "id": "hierarchical__hg__20260719_153443",
+      "track": "hierarchical/hg",
+      "track_label": "Ward \u00b7 per-condition",
+      "cohort": "2026-07-19 per-task cohort",
+      "run": "20260719_153443",
+      "dir": "runs/hierarchical__hg__20260719_153443",
+      "k": 13,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "n_electrodes": 2102,
+      "n_contacts_with_cluster": 1287,
+      "n_samples_with_cluster": 2031,
+      "unit": "electrode x condition",
+      "n_electrodes_multilabel": 394,
+      "cluster_sizes": {
+        "0": 81,
+        "1": 128,
+        "2": 426,
+        "3": 7,
+        "4": 16,
+        "5": 19,
+        "6": 76,
+        "7": 3,
+        "8": 135,
+        "9": 475,
+        "10": 464,
+        "11": 184,
+        "12": 88
+      },
+      "label": "Ward \u00b7 per-condition \u00b7 20260719_153443 \u00b7 K=13 \u00b7 n=2102",
+      "hemis": {
+        "lh": {
+          "file": "clusters_lh_u8.bin",
+          "dtype": "uint8"
+        },
+        "rh": {
+          "file": "clusters_rh_u8.bin",
+          "dtype": "uint8"
+        }
+      },
+      "figures": {
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {
+              "lateral_L": "recon/cluster_05/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_05/by_condition/dorsal.png",
+              "frontal": "recon/cluster_05/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {
+              "lateral_L": "recon/cluster_06/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_06/by_condition/dorsal.png",
+              "frontal": "recon/cluster_06/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_06.png"
+          },
+          "7": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_07.png"
+          },
+          "8": {
+            "glass": {
+              "lateral_L": "recon/cluster_08/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_08/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_08/by_condition/dorsal.png",
+              "frontal": "recon/cluster_08/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_08.png"
+          },
+          "9": {
+            "glass": {
+              "lateral_L": "recon/cluster_09/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_09/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_09/by_condition/dorsal.png",
+              "frontal": "recon/cluster_09/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_09.png"
+          },
+          "10": {
+            "glass": {
+              "lateral_L": "recon/cluster_10/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_10/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_10/by_condition/dorsal.png",
+              "frontal": "recon/cluster_10/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_10.png"
+          },
+          "11": {
+            "glass": {
+              "lateral_L": "recon/cluster_11/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_11/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_11/by_condition/dorsal.png",
+              "frontal": "recon/cluster_11/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_11.png"
+          },
+          "12": {
+            "glass": {
+              "lateral_L": "recon/cluster_12/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_12/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_12/by_condition/dorsal.png",
+              "frontal": "recon/cluster_12/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_12.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "silhouette_by_k.png",
+            "title": "Silhouette by K"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
+      },
+      "path": "hierarchical/hg/runs/20260719_153443"
+    },
+    {
+      "id": "kmeans__rawds__20260719_155034",
+      "track": "kmeans/rawds",
+      "track_label": "K-means \u00b7 per-condition 15-band",
+      "cohort": "2026-07-19 per-task cohort",
+      "run": "20260719_155034",
+      "dir": "runs/kmeans__rawds__20260719_155034",
+      "k": 11,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "n_electrodes": 2102,
+      "n_contacts_with_cluster": 1287,
+      "n_samples_with_cluster": 2031,
+      "unit": "electrode x condition",
+      "n_electrodes_multilabel": 328,
+      "cluster_sizes": {
+        "0": 173,
+        "1": 142,
+        "2": 135,
+        "3": 66,
+        "4": 81,
+        "5": 424,
+        "6": 167,
+        "7": 358,
+        "8": 166,
+        "9": 356,
+        "10": 34
+      },
+      "label": "K-means \u00b7 per-condition 15-band \u00b7 20260719_155034 \u00b7 K=11 \u00b7 n=2102",
+      "hemis": {
+        "lh": {
+          "file": "clusters_lh_u8.bin",
+          "dtype": "uint8"
+        },
+        "rh": {
+          "file": "clusters_rh_u8.bin",
+          "dtype": "uint8"
+        }
+      },
+      "figures": {
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            }
+          },
+          "1": {
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            }
+          },
+          "2": {
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            }
+          },
+          "3": {
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            }
+          },
+          "4": {
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            }
+          },
+          "5": {
+            "glass": {
+              "lateral_L": "recon/cluster_05/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_05/by_condition/dorsal.png",
+              "frontal": "recon/cluster_05/by_condition/frontal.png"
+            }
+          },
+          "6": {
+            "glass": {
+              "lateral_L": "recon/cluster_06/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_06/by_condition/dorsal.png",
+              "frontal": "recon/cluster_06/by_condition/frontal.png"
+            }
+          },
+          "7": {
+            "glass": {
+              "lateral_L": "recon/cluster_07/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_07/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_07/by_condition/dorsal.png",
+              "frontal": "recon/cluster_07/by_condition/frontal.png"
+            }
+          },
+          "8": {
+            "glass": {
+              "lateral_L": "recon/cluster_08/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_08/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_08/by_condition/dorsal.png",
+              "frontal": "recon/cluster_08/by_condition/frontal.png"
+            }
+          },
+          "9": {
+            "glass": {
+              "lateral_L": "recon/cluster_09/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_09/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_09/by_condition/dorsal.png",
+              "frontal": "recon/cluster_09/by_condition/frontal.png"
+            }
+          },
+          "10": {
+            "glass": {
+              "lateral_L": "recon/cluster_10/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_10/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_10/by_condition/dorsal.png",
+              "frontal": "recon/cluster_10/by_condition/frontal.png"
+            }
+          }
+        },
+        "overview": [
+          {
+            "path": "silhouette_by_k.png",
+            "title": "Silhouette by K"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
+      },
+      "path": "kmeans/rawds/runs/20260719_155034"
+    },
+    {
+      "id": "hierarchical__rawds__20260719_155101",
+      "track": "hierarchical/rawds",
+      "track_label": "Ward \u00b7 per-condition 15-band",
+      "cohort": "2026-07-19 per-task cohort",
+      "run": "20260719_155101",
+      "dir": "runs/hierarchical__rawds__20260719_155101",
+      "k": 10,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "n_electrodes": 2102,
+      "n_contacts_with_cluster": 1287,
+      "n_samples_with_cluster": 2031,
+      "unit": "electrode x condition",
+      "n_electrodes_multilabel": 373,
+      "cluster_sizes": {
+        "0": 169,
+        "1": 66,
+        "2": 661,
+        "3": 53,
+        "4": 23,
+        "5": 154,
+        "6": 129,
+        "7": 303,
+        "8": 287,
+        "9": 257
+      },
+      "label": "Ward \u00b7 per-condition 15-band \u00b7 20260719_155101 \u00b7 K=10 \u00b7 n=2102",
+      "hemis": {
+        "lh": {
+          "file": "clusters_lh_u8.bin",
+          "dtype": "uint8"
+        },
+        "rh": {
+          "file": "clusters_rh_u8.bin",
+          "dtype": "uint8"
+        }
+      },
+      "figures": {
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            }
+          },
+          "1": {
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            }
+          },
+          "2": {
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            }
+          },
+          "3": {
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            }
+          },
+          "4": {
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            }
+          },
+          "5": {
+            "glass": {
+              "lateral_L": "recon/cluster_05/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_05/by_condition/dorsal.png",
+              "frontal": "recon/cluster_05/by_condition/frontal.png"
+            }
+          },
+          "6": {
+            "glass": {
+              "lateral_L": "recon/cluster_06/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_06/by_condition/dorsal.png",
+              "frontal": "recon/cluster_06/by_condition/frontal.png"
+            }
+          },
+          "7": {
+            "glass": {
+              "lateral_L": "recon/cluster_07/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_07/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_07/by_condition/dorsal.png",
+              "frontal": "recon/cluster_07/by_condition/frontal.png"
+            }
+          },
+          "8": {
+            "glass": {
+              "lateral_L": "recon/cluster_08/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_08/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_08/by_condition/dorsal.png",
+              "frontal": "recon/cluster_08/by_condition/frontal.png"
+            }
+          },
+          "9": {
+            "glass": {
+              "lateral_L": "recon/cluster_09/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_09/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_09/by_condition/dorsal.png",
+              "frontal": "recon/cluster_09/by_condition/frontal.png"
+            }
+          }
+        },
+        "overview": [
+          {
+            "path": "silhouette_by_k.png",
+            "title": "Silhouette by K"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
+      },
+      "path": "hierarchical/rawds/runs/20260719_155101"
+    }
+  ],
+  "note": "counts within radius_mm of each vertex; ratios are computed client-side so the denominator stays visible"
 }
