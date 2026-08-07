@@ -324,6 +324,10 @@ def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "", sort_by: str = "
             if len(have) == 2:                      # link the pair so it reads as one row
                 ax.plot(have, [y, y], color=col_c, lw=1.1, alpha=0.45, zorder=2)
             carry = bool(r.get("resp_carryover", False))
+            # A SUPPRESSION cluster's "onset" is when it switched OFF. Drawn identically to
+            # an activation it reads as an early response, which is the opposite of what
+            # happened, so it is marked and the row is labelled.
+            supp = str(r.get("polarity", "activation")) == "suppression"
             for v, mk, hollow in ((s_on, "o", False), (r_on, "^", carry)):
                 if pd.isna(v):
                     continue
@@ -331,8 +335,9 @@ def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "", sort_by: str = "
                 # this is carry-over, not a new response-locked onset
                 ax.scatter(v, y, s=70, marker=mk,
                            color="white" if hollow else col_c,
-                           edgecolor=col_c if hollow else "white", linewidth=1.3 if hollow else 0.9,
-                           zorder=4)
+                           edgecolor="#c1121f" if supp else (col_c if hollow else "white"),
+                           linewidth=2.0 if supp else (1.3 if hollow else 0.9),
+                           hatch="///" if supp else None, zorder=4)
                 ax.text(v + 1.5, y - 0.02, f"{v:.0f}", va="center", fontsize=7.2,
                         color="#333", zorder=5)
             if not have:                            # silent in both windows
@@ -345,12 +350,18 @@ def plot_onset_ladder(timing: pd.DataFrame, *, title: str = "", sort_by: str = "
         for s in ("top", "right", "left"):
             ax.spines[s].set_visible(False)
     axes[0].set_yticks(range(len(order)))
-    axes[0].set_yticklabels([f"c{c}  (n={int(timing[timing.cluster == c]['n'].iloc[0])})"
-                             for c in order], fontsize=9)
+    _pol = (timing.groupby("cluster")["polarity"].agg(
+        lambda s: "suppression" if (s == "suppression").all() else "activation")
+        if "polarity" in timing.columns else {})
+    axes[0].set_yticklabels(
+        [f"c{c}  (n={int(timing[timing.cluster == c]['n'].iloc[0])})"
+         + ("  ↓supp" if str(dict(_pol).get(c, "")) == "suppression" else "")
+         for c in order], fontsize=9)
     axes[0].invert_yaxis()
     fig.suptitle((title or "Onset ordering") +
                  "        ● stimulus window (0-50%)    ▲ response window (50-100%)"
-                 "    hollow = already active at GO (carry-over)",
+                 "    hollow = already active at GO (carry-over)"
+                 "    red hatched = SUPPRESSION (onset of desynchronisation)",
                  fontsize=10, y=1.02)
     fig.tight_layout()
     if out_png:
