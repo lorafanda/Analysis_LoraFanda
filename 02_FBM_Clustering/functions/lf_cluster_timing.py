@@ -16,7 +16,10 @@ other and to the pooling roles.
 The onset definition is deliberately IDENTICAL to lf_pool.plot_role_hga_timeseries:
 
     onset = first bin whose |mean HGA| crosses `onset_thr_db`, expressed as % of the
-            warped trial (50% = GO cue). No crossing -> 100.0 (i.e. "never").
+            warped trial (50% = GO cue). No crossing -> NaN.
+
+    Onset is defined on the ABSOLUTE value, so it fires for suppressions as well as
+    activations. `polarity` records which, and the two must not share a rank axis.
 
 Keeping it identical is the point: it is what makes the cluster ladder and the role
 ladder readable on the same axis.
@@ -88,13 +91,14 @@ def cluster_timing(X_hg: np.ndarray, labels: np.ndarray, *,
     warped trial split by the GO cue at 50%:
 
         onset_pct        first crossing ANYWHERE — the pooling-identical measure.
-                         100.0 when it never crosses (kept as a number so it sorts last).
+                         NaN when it never crosses.
+        polarity         "activation" or "suppression", from the sign at the peak.
         onset_stim_pct   first crossing in the STIMULUS window, 0-50% (before GO).
                          NaN when the cluster is silent there.
         onset_resp_pct   first crossing in the RESPONSE window, 50-100% (GO onward).
                          NaN when the cluster is silent there.
 
-    The two windowed onsets are NaN rather than 100.0 on purpose: a cluster with no
+    All onsets are NaN rather than 100.0 on purpose: a cluster with no
     stimulus-locked response has no stimulus onset, and plotting it at 100 would
     invent a late stimulus response that does not exist. Callers skip the NaNs.
 
@@ -102,7 +106,7 @@ def cluster_timing(X_hg: np.ndarray, labels: np.ndarray, *,
     production response), one, or neither.
 
     Columns
-        cluster, condition, n, onset_pct, crosses, onset_stim_pct, onset_resp_pct,
+        cluster, condition, n, onset_pct, crosses, polarity, onset_stim_pct, onset_resp_pct,
         peak_pct, peak_db, peak_stim_pct, peak_stim_db, peak_resp_pct, peak_resp_db,
         mean_db, auc_post_go
     """
@@ -139,10 +143,20 @@ def cluster_timing(X_hg: np.ndarray, labels: np.ndarray, *,
             first_resp_bin = int(np.argmax(resp_w))
             resp_carryover = bool(above[first_resp_bin] and above[first_resp_bin - 1]) \
                 if first_resp_bin > 0 else False
+            # POLARITY. Onset is defined on |mean HGA|, so a cluster that DESYNCHRONISES
+            # produces an "onset" exactly like one that activates. Ranking the two on one
+            # axis compares when cortex switched on against when it switched off. The sign
+            # of the response at its own peak is recorded so the two can be separated.
+            polarity = "suppression" if gm[pk] < 0 else "activation"
+
             rows.append(dict(
                 cluster=int(c), condition=cond, n=n_c,
-                onset_pct=float(t_pct[hits[0]]) if len(hits) else 100.0,
+                # NaN, not 100.0, when the threshold is never crossed. A non-detection
+                # stored as the latest possible onset is silently averaged and ranked as
+                # though it were measured; NaN makes every consumer skip it instead.
+                onset_pct=float(t_pct[hits[0]]) if len(hits) else float("nan"),
                 crosses=bool(len(hits)),
+                polarity=polarity,
                 onset_stim_pct=_first(stim_w),
                 onset_resp_pct=_first(resp_w),
                 resp_carryover=resp_carryover,
