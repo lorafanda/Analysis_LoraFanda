@@ -1,5 +1,10 @@
 {
-  "radius_mm": 10.0,
+  "radii_mm": [
+    "6",
+    "10",
+    "15"
+  ],
+  "default_radius": "10",
   "n_patients_total": 35,
   "n_contacts_total": 5247,
   "coords": "ALL_PATIENTS_contacts_fsaverage.csv",
@@ -10,21 +15,61 @@
   "hemis": {
     "lh": {
       "nvert": 163842,
-      "file": "coverage_lh_u8.bin",
-      "dtype": "uint8",
-      "n_contacts_hemi": 2759,
-      "pct_vertices_sampled": 86.5,
-      "max_patients_at_a_vertex": 28,
-      "max_contacts_at_a_vertex": 179
+      "n_contacts_hemi": 2759
     },
     "rh": {
       "nvert": 163842,
-      "file": "coverage_rh_u8.bin",
-      "dtype": "uint8",
-      "n_contacts_hemi": 2488,
-      "pct_vertices_sampled": 81.2,
-      "max_patients_at_a_vertex": 26,
-      "max_contacts_at_a_vertex": 204
+      "n_contacts_hemi": 2488
+    }
+  },
+  "coverage": {
+    "6": {
+      "lh": {
+        "file": "coverage_r6_lh_u8.bin",
+        "dtype": "uint8",
+        "pct_vertices_sampled": 68.4,
+        "max_patients_at_a_vertex": 26,
+        "max_contacts_at_a_vertex": 85
+      },
+      "rh": {
+        "file": "coverage_r6_rh_u8.bin",
+        "dtype": "uint8",
+        "pct_vertices_sampled": 61.3,
+        "max_patients_at_a_vertex": 23,
+        "max_contacts_at_a_vertex": 76
+      }
+    },
+    "10": {
+      "lh": {
+        "file": "coverage_r10_lh_u8.bin",
+        "dtype": "uint8",
+        "pct_vertices_sampled": 86.5,
+        "max_patients_at_a_vertex": 28,
+        "max_contacts_at_a_vertex": 179
+      },
+      "rh": {
+        "file": "coverage_r10_rh_u8.bin",
+        "dtype": "uint8",
+        "pct_vertices_sampled": 81.2,
+        "max_patients_at_a_vertex": 26,
+        "max_contacts_at_a_vertex": 204
+      }
+    },
+    "15": {
+      "lh": {
+        "file": "coverage_r15_lh_u16.bin",
+        "dtype": "uint16",
+        "pct_vertices_sampled": 95.5,
+        "max_patients_at_a_vertex": 29,
+        "max_contacts_at_a_vertex": 287
+      },
+      "rh": {
+        "file": "coverage_r15_rh_u16.bin",
+        "dtype": "uint16",
+        "pct_vertices_sampled": 92.2,
+        "max_patients_at_a_vertex": 26,
+        "max_contacts_at_a_vertex": 342
+      }
     }
   },
   "contacts_file": "contacts.json",
@@ -56,15 +101,45 @@
         "3": 175,
         "4": 74
       },
+      "cluster_patients": {
+        "0": 16,
+        "1": 24,
+        "2": 16,
+        "3": 14,
+        "4": 16
+      },
+      "n_patients_run": 24,
       "label": "K-means \u00b7 concatenated \u00b7 20260803_175417 \u00b7 K=5 \u00b7 n=1027",
-      "hemis": {
-        "lh": {
-          "file": "clusters_lh_u8.bin",
-          "dtype": "uint8"
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
         },
-        "rh": {
-          "file": "clusters_rh_u8.bin",
-          "dtype": "uint8"
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
         }
       },
       "figures": {
@@ -133,10 +208,6 @@
             "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
           },
           {
-            "path": "silhouette_by_k.png",
-            "title": "Silhouette by K"
-          },
-          {
             "path": "consensus_heatmap.png",
             "title": "Consensus heatmap"
           },
@@ -177,15 +248,44 @@
         "2": 54,
         "3": 234
       },
+      "cluster_patients": {
+        "0": 14,
+        "1": 24,
+        "2": 2,
+        "3": 19
+      },
+      "n_patients_run": 24,
       "label": "Ward \u00b7 concatenated \u00b7 20260803_175444 \u00b7 K=4 \u00b7 n=1027",
-      "hemis": {
-        "lh": {
-          "file": "clusters_lh_u8.bin",
-          "dtype": "uint8"
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
         },
-        "rh": {
-          "file": "clusters_rh_u8.bin",
-          "dtype": "uint8"
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
         }
       },
       "figures": {
@@ -233,10 +333,6 @@
             "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
           },
           {
-            "path": "silhouette_by_k.png",
-            "title": "Silhouette by K"
-          },
-          {
             "path": "consensus_heatmap.png",
             "title": "Consensus heatmap"
           },
@@ -281,15 +377,46 @@
         "4": 414,
         "5": 49
       },
+      "cluster_patients": {
+        "0": 21,
+        "1": 10,
+        "2": 14,
+        "3": 10,
+        "4": 22,
+        "5": 6
+      },
+      "n_patients_run": 24,
       "label": "K-means \u00b7 concat 15-band \u00b7 20260803_175450 \u00b7 K=6 \u00b7 n=1027",
-      "hemis": {
-        "lh": {
-          "file": "clusters_lh_u8.bin",
-          "dtype": "uint8"
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
         },
-        "rh": {
-          "file": "clusters_rh_u8.bin",
-          "dtype": "uint8"
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
         }
       },
       "figures": {
@@ -355,10 +482,6 @@
             "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
           },
           {
-            "path": "silhouette_by_k.png",
-            "title": "Silhouette by K"
-          },
-          {
             "path": "centroids.png",
             "title": "Cluster centroids"
           },
@@ -405,15 +528,49 @@
         "7": 468,
         "8": 98
       },
+      "cluster_patients": {
+        "0": 24,
+        "1": 5,
+        "2": 13,
+        "3": 26,
+        "4": 14,
+        "5": 9,
+        "6": 20,
+        "7": 22,
+        "8": 13
+      },
+      "n_patients_run": 26,
       "label": "K-means \u00b7 per-condition \u00b7 20260719_153420 \u00b7 K=9 \u00b7 n=2102",
-      "hemis": {
-        "lh": {
-          "file": "clusters_lh_u8.bin",
-          "dtype": "uint8"
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
         },
-        "rh": {
-          "file": "clusters_rh_u8.bin",
-          "dtype": "uint8"
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
         }
       },
       "figures": {
@@ -502,10 +659,6 @@
         },
         "overview": [
           {
-            "path": "silhouette_by_k.png",
-            "title": "Silhouette by K"
-          },
-          {
             "path": "consensus_heatmap.png",
             "title": "Consensus heatmap"
           },
@@ -564,15 +717,53 @@
         "11": 184,
         "12": 88
       },
+      "cluster_patients": {
+        "0": 9,
+        "1": 11,
+        "2": 24,
+        "3": 1,
+        "4": 3,
+        "5": 5,
+        "6": 13,
+        "7": 2,
+        "8": 17,
+        "9": 24,
+        "10": 19,
+        "11": 15,
+        "12": 10
+      },
+      "n_patients_run": 26,
       "label": "Ward \u00b7 per-condition \u00b7 20260719_153443 \u00b7 K=13 \u00b7 n=2102",
-      "hemis": {
-        "lh": {
-          "file": "clusters_lh_u8.bin",
-          "dtype": "uint8"
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
         },
-        "rh": {
-          "file": "clusters_rh_u8.bin",
-          "dtype": "uint8"
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
         }
       },
       "figures": {
@@ -692,10 +883,6 @@
         },
         "overview": [
           {
-            "path": "silhouette_by_k.png",
-            "title": "Silhouette by K"
-          },
-          {
             "path": "consensus_heatmap.png",
             "title": "Consensus heatmap"
           },
@@ -750,15 +937,51 @@
         "9": 356,
         "10": 34
       },
+      "cluster_patients": {
+        "0": 22,
+        "1": 15,
+        "2": 13,
+        "3": 11,
+        "4": 10,
+        "5": 25,
+        "6": 11,
+        "7": 25,
+        "8": 14,
+        "9": 21,
+        "10": 7
+      },
+      "n_patients_run": 26,
       "label": "K-means \u00b7 per-condition 15-band \u00b7 20260719_155034 \u00b7 K=11 \u00b7 n=2102",
-      "hemis": {
-        "lh": {
-          "file": "clusters_lh_u8.bin",
-          "dtype": "uint8"
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
         },
-        "rh": {
-          "file": "clusters_rh_u8.bin",
-          "dtype": "uint8"
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
         }
       },
       "figures": {
@@ -854,10 +1077,6 @@
         },
         "overview": [
           {
-            "path": "silhouette_by_k.png",
-            "title": "Silhouette by K"
-          },
-          {
             "path": "consensus_heatmap.png",
             "title": "Consensus heatmap"
           },
@@ -910,15 +1129,50 @@
         "8": 287,
         "9": 257
       },
+      "cluster_patients": {
+        "0": 12,
+        "1": 7,
+        "2": 25,
+        "3": 5,
+        "4": 5,
+        "5": 14,
+        "6": 9,
+        "7": 13,
+        "8": 20,
+        "9": 9
+      },
+      "n_patients_run": 26,
       "label": "Ward \u00b7 per-condition 15-band \u00b7 20260719_155101 \u00b7 K=10 \u00b7 n=2102",
-      "hemis": {
-        "lh": {
-          "file": "clusters_lh_u8.bin",
-          "dtype": "uint8"
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
         },
-        "rh": {
-          "file": "clusters_rh_u8.bin",
-          "dtype": "uint8"
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
         }
       },
       "figures": {
@@ -1005,10 +1259,6 @@
           }
         },
         "overview": [
-          {
-            "path": "silhouette_by_k.png",
-            "title": "Silhouette by K"
-          },
           {
             "path": "consensus_heatmap.png",
             "title": "Consensus heatmap"

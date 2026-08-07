@@ -9,17 +9,23 @@ implanted, not where language is" — this makes that checkable instead of a foo
 
 Why not reuse the activity-visualizer projection: that one keeps the k=4 NEAREST
 contacts per vertex, so a patient count taken from it can never exceed 4 of 35 and is
-useless as a probability. Here every contact within RADIUS_MM of a vertex is counted,
+useless as a probability. Here every contact within the radius of a vertex is counted,
 which is what makes "fraction of patients sampled here" meaningful.
 
 LAYOUT — the counts split into two kinds, because they have different lifetimes:
 
-    coverage_{lh,rh}_u8.bin      n_contacts, n_patients      SHARED by every run
-    runs/<id>/clusters_{h}_u8.bin  n_cluster_0 .. n_cluster_{K-1}   per run
+    coverage_r{R}_{lh,rh}_u8.bin          n_contacts, n_patients    SHARED by every run
+    runs/<id>/clusters_r{R}_{h}_u8.bin    n_cluster_0 .. n_cluster_{K-1}    per run
 
 Sampling depends only on where the electrodes are, so it is identical across runs and
 is stored once. Only the cluster breakdown is per-run. That is what makes shipping many
-runs affordable (~1.6 MB per run instead of ~4.6 MB).
+runs affordable (~1.6 MB per run per radius instead of ~4.6 MB).
+
+Everything is emitted at several radii (RADII_MM). The radius is a boxcar smoothing
+kernel, not a neutral display setting: it decides how much cortex has an estimate at
+all and how much evidence each estimate rests on. Shipping one radius would bake that
+choice in and hide it, so the page exposes it and the reader can watch a map hold or
+dissolve as it changes.
 
 uint8 is checked, not assumed: if any count exceeds 255 the file is written as uint16
 and the manifest says so, so a larger radius cannot silently wrap around.
@@ -32,9 +38,9 @@ Per vertex this gives the page everything it needs to compute both maps as plain
 Counts, not probabilities, are shipped on purpose: the ratio you want depends on the
 question, and a stored ratio hides its own denominator.
 
-    python make_coverage_bundle.py                 # every run in every known track
-    python make_coverage_bundle.py --radius 8
-    python make_coverage_bundle.py --run <run dir> # just one
+    python make_coverage_bundle.py                    # every run, every radius
+    python make_coverage_bundle.py --radii 8 12
+    python make_coverage_bundle.py --run <run dir>    # just one
 """
 from __future__ import annotations
 
@@ -52,7 +58,8 @@ MESHES = FS / "meshes"
 COORDS = FS / "coords" / "ALL_PATIENTS_contacts_fsaverage.csv"
 OUT = FS / "coverage_viz"
 CLUSTERING = ROOT / "outputs" / "clustering"
-RADIUS_MM = 10.0
+RADII_MM = (6.0, 10.0, 15.0)   # the radius is a smoothing kernel; the page lets you vary it
+DEFAULT_RADIUS = 10.0
 
 # Tracks offered in the page's dropdown, in display order. Only the NEWEST run per track
 # is bundled by default (--per-track raises it): within a track the older runs are
@@ -146,7 +153,7 @@ def git_tracked() -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--radius", type=float, default=RADIUS_MM)
+    ap.add_argument("--radii", type=float, nargs="+", default=list(RADII_MM))
     ap.add_argument("--run", default=None, help="one clustering run dir (default: newest per track)")
     ap.add_argument("--per-track", type=int, default=1, help="how many runs per track to bundle")
     a = ap.parse_args()
@@ -167,29 +174,33 @@ def main() -> int:
     n_pat_total = int(co["patient"].nunique())
     pat_codes = {p: i for i, p in enumerate(sorted(co["patient"].unique()))}
 
-    # ── shared: sampling geometry. Identical for every run, so computed once.
-    hemis, near_by_hemi, sub_by_hemi = {}, {}, {}
+    # ── shared: sampling geometry. Identical for every run, so computed once per radius.
+    hemis, near_by_hemi, sub_by_hemi, coverage = {}, {}, {}, {}
     for h, tag in (("lh", "L"), ("rh", "R")):
         verts = nib.load(str(MESHES / f"fsaverage_{h}.gii")).darrays[0].data.astype(float)
         sub = co[co["hemi"].astype(str).str.upper().str[0] == tag].reset_index(drop=True)
-        near = cKDTree(sub[["x", "y", "z"]].to_numpy()).query_ball_point(verts, r=a.radius)
-        near_by_hemi[h], sub_by_hemi[h] = near, sub
-
-        cov = np.zeros((len(verts), 2), dtype=np.int32)
+        tree = cKDTree(sub[["x", "y", "z"]].to_numpy())
+        hemis[h] = {"nvert": int(len(verts)), "n_contacts_hemi": int(len(sub))}
+        sub_by_hemi[h] = sub
+        near_by_hemi[h] = {}
         pcodes = sub["patient"].map(pat_codes).to_numpy()
-        for v, hits in enumerate(near):
-            if hits:
-                cov[v, 0] = len(hits)
-                cov[v, 1] = len(set(pcodes[hits]))
-        fn, dt = write_counts(cov, OUT / f"coverage_{h}")
-        pct = 100 * float((cov[:, 1] > 0).mean())
-        hemis[h] = {"nvert": int(len(verts)), "file": fn, "dtype": dt,
-                    "n_contacts_hemi": int(len(sub)),
-                    "pct_vertices_sampled": round(pct, 1),
-                    "max_patients_at_a_vertex": int(cov[:, 1].max()),
-                    "max_contacts_at_a_vertex": int(cov[:, 0].max())}
-        print(f"  shared {h}: {len(verts)} verts, {len(sub)} contacts | {pct:.1f}% sampled | "
-              f"{dt} | {(OUT / fn).stat().st_size/1e6:.2f} MB")
+        for r in a.radii:
+            near = tree.query_ball_point(verts, r=r)
+            near_by_hemi[h][r] = near
+            cov = np.zeros((len(verts), 2), dtype=np.int32)
+            for v, hits in enumerate(near):
+                if hits:
+                    cov[v, 0] = len(hits)
+                    cov[v, 1] = len(set(pcodes[hits]))
+            fn, dt = write_counts(cov, OUT / f"coverage_r{r:g}_{h}")
+            pct = 100 * float((cov[:, 1] > 0).mean())
+            coverage.setdefault(f"{r:g}", {})[h] = {
+                "file": fn, "dtype": dt,
+                "pct_vertices_sampled": round(pct, 1),
+                "max_patients_at_a_vertex": int(cov[:, 1].max()),
+                "max_contacts_at_a_vertex": int(cov[:, 0].max())}
+            print(f"  shared {h} r={r:g}: {pct:.1f}% sampled | max {cov[:, 1].max()} pat / "
+                  f"{cov[:, 0].max()} con | {dt} | {(OUT / fn).stat().st_size/1e6:.2f} MB")
 
     # ── per run: only the cluster breakdown
     entries, total_mb = [], 0.0
@@ -225,18 +236,18 @@ def main() -> int:
         rdir.mkdir(parents=True, exist_ok=True)
         files, mb = {}, 0.0
         for h, tag in (("lh", "L"), ("rh", "R")):
-            sub, near = sub_by_hemi[h], near_by_hemi[h]
             cl = cl_all[co["hemi"].astype(str).str.upper().str[0] == tag].to_numpy()
-            arr = np.zeros((hemis[h]["nvert"], len(clusters)), dtype=np.int32)
-            for v, hits in enumerate(near):
-                for i in hits:
-                    labels = cl[i]
-                    if isinstance(labels, list):
-                        for c in labels:
-                            arr[v, cidx[c]] += 1
-            fn, dt = write_counts(arr, rdir / f"clusters_{h}")
-            files[h] = {"file": fn, "dtype": dt}
-            mb += (rdir / fn).stat().st_size / 1e6
+            for r in a.radii:
+                arr = np.zeros((hemis[h]["nvert"], len(clusters)), dtype=np.int32)
+                for v, hits in enumerate(near_by_hemi[h][r]):
+                    for i in hits:
+                        labels = cl[i]
+                        if isinstance(labels, list):
+                            for c in labels:
+                                arr[v, cidx[c]] += 1
+                fn, dt = write_counts(arr, rdir / f"clusters_r{r:g}_{h}")
+                files.setdefault(f"{r:g}", {})[h] = {"file": fn, "dtype": dt}
+                mb += (rdir / fn).stat().st_size / 1e6
 
         matched = int(cl_all.notna().sum())
         n_samples = int(sum(len(v) for v in cl_all.dropna()))
@@ -251,8 +262,11 @@ def main() -> int:
             "unit": unit,
             "n_electrodes_multilabel": multi,
             "cluster_sizes": {str(k): int((lab[ccol] == k).sum()) for k in clusters},
+            "cluster_patients": {str(k): int(lab.loc[lab[ccol] == k, "patient_id"].nunique())
+                                 for k in clusters},
+            "n_patients_run": int(lab["patient_id"].nunique()),
             "label": f"{label} · {run.name} · K={len(clusters)} · n={len(lab)}",
-            "hemis": files,
+            "counts": files,
             "figures": run_figures(run, clusters, tracked, len(clusters)),
             "path": f"{key}/runs/{run.name}",
         })
@@ -262,12 +276,14 @@ def main() -> int:
               f"{matched} contacts / {n_samples} samples matched{extra} | {mb:.2f} MB")
 
     manifest = {
-        "radius_mm": a.radius,
+        "radii_mm": [f"{r:g}" for r in a.radii],
+        "default_radius": f"{DEFAULT_RADIUS:g}",
         "n_patients_total": n_pat_total,
         "n_contacts_total": int(len(co)),
         "coords": COORDS.name,
         "coverage_fields": ["n_contacts", "n_patients"],
         "hemis": hemis,
+        "coverage": coverage,
         "contacts_file": "contacts.json",
         "runs": entries,
         "note": ("counts within radius_mm of each vertex; ratios are computed client-side "
@@ -294,7 +310,7 @@ def main() -> int:
     (OUT / "contacts.json").write_text(json.dumps(cj), encoding="utf-8")
 
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    cov_mb = sum((OUT / hemis[h]["file"]).stat().st_size for h in hemis) / 1e6
+    cov_mb = sum(f.stat().st_size for f in OUT.glob("coverage_r*_*.bin")) / 1e6
     con_mb = (OUT / "contacts.json").stat().st_size / 1e6
     print(f"\n  {len(entries)} runs | shared {cov_mb:.2f} MB + contacts {con_mb:.2f} MB "
           f"+ per-run {total_mb:.2f} MB = {cov_mb + con_mb + total_mb:.2f} MB")
@@ -344,7 +360,6 @@ def run_figures(run: Path, clusters: list[int], tracked: set[str], k: int) -> di
         (f"timing/timing_k{k:02d}_panel.png", f"Cluster timing panel (K={k})"),
         ("timing/onset_across_k.png", "Onset ordering across K"),
         ("sweep_metrics.png", "K sweep — silhouette, CH, DB, cluster sizes"),
-        ("silhouette_by_k.png", "Silhouette by K"),
         ("consensus_heatmap.png", "Consensus heatmap"),
         ("centroids.png", "Cluster centroids"),
         ("centroid_distance_heatmap.png", "Centroid distance matrix"),
