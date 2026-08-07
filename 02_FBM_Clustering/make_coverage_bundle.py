@@ -88,6 +88,50 @@ SKIP_RUNS = {
 }
 
 
+# Patient colours copied from the MOBA palette (lorafanda.github.io/colors_config.json)
+# so one patient is the same colour in both tools. MOBA indexes by the patient's
+# alphabetical position WITHIN its id-prefix group, which is reproduced here.
+PALETTE = {
+    "EL": [
+        "#0000ff",
+        "#00bfff",
+        "#00ffff",
+        "#008080",
+        "#008000",
+        "#00ff00",
+        "#b0e0e6",
+        "#228b22",
+        "#e0ffff",
+        "#556b2f"
+    ],
+    "PAT": [
+        "#8a2be2",
+        "#ff00ff",
+        "#ff1493",
+        "#dc143c",
+        "#ffc0cb",
+        "#ff0000",
+        "#d2691e",
+        "#ffd700",
+        "#800080",
+        "#8b4513",
+        "#fffacd",
+        "#fff0f5",
+        "#00ff00",
+        "#b0e0e6",
+        "#228b22",
+        "#e0ffff"
+    ],
+    "MICRO": [
+        "#000080",
+        "#2f4f4f",
+        "#000000",
+        "#8b0000",
+        "#556b2f"
+    ]
+}
+
+
 def norm(s) -> str:
     return "" if s is None else str(s).replace("_", "").replace("-", "").upper()
 
@@ -167,153 +211,213 @@ def main() -> int:
     if not runs:
         print("  no runs found", file=sys.stderr)
         return 1
-    print(f"  {len(runs)} run(s) across {len({k for k, _, _, _ in runs})} track(s)")
 
-    co = pd.read_csv(COORDS).dropna(subset=["x", "y", "z"])
-    co["key"] = [f"{p}|{norm(n)}" for p, n in zip(co["patient"], co["name"])]
-    n_pat_total = int(co["patient"].nunique())
-    pat_codes = {p: i for i, p in enumerate(sorted(co["patient"].unique()))}
+    co_all = pd.read_csv(COORDS).dropna(subset=["x", "y", "z"])
+    co_all["key"] = [f"{p}|{norm(n)}" for p, n in zip(co_all["patient"], co_all["name"])]
+    co_all["hemi1"] = co_all["hemi"].astype(str).str.upper().str[0]
 
-    # ── shared: sampling geometry. Identical for every run, so computed once per radius.
-    hemis, near_by_hemi, sub_by_hemi, coverage = {}, {}, {}, {}
-    for h, tag in (("lh", "L"), ("rh", "R")):
-        verts = nib.load(str(MESHES / f"fsaverage_{h}.gii")).darrays[0].data.astype(float)
-        sub = co[co["hemi"].astype(str).str.upper().str[0] == tag].reset_index(drop=True)
-        tree = cKDTree(sub[["x", "y", "z"]].to_numpy())
-        hemis[h] = {"nvert": int(len(verts)), "n_contacts_hemi": int(len(sub))}
-        sub_by_hemi[h] = sub
-        near_by_hemi[h] = {}
-        pcodes = sub["patient"].map(pat_codes).to_numpy()
-        for r in a.radii:
-            near = tree.query_ball_point(verts, r=r)
-            near_by_hemi[h][r] = near
-            cov = np.zeros((len(verts), 2), dtype=np.int32)
-            for v, hits in enumerate(near):
-                if hits:
-                    cov[v, 0] = len(hits)
-                    cov[v, 1] = len(set(pcodes[hits]))
-            fn, dt = write_counts(cov, OUT / f"coverage_r{r:g}_{h}")
-            pct = 100 * float((cov[:, 1] > 0).mean())
-            coverage.setdefault(f"{r:g}", {})[h] = {
-                "file": fn, "dtype": dt,
-                "pct_vertices_sampled": round(pct, 1),
-                "max_patients_at_a_vertex": int(cov[:, 1].max()),
-                "max_contacts_at_a_vertex": int(cov[:, 0].max())}
-            print(f"  shared {h} r={r:g}: {pct:.1f}% sampled | max {cov[:, 1].max()} pat / "
-                  f"{cov[:, 0].max()} con | {dt} | {(OUT / fn).stat().st_size/1e6:.2f} MB")
-
-    # ── per run: only the cluster breakdown
-    entries, total_mb = [], 0.0
-    for key, label, cohort, run in runs:
+    # ── read every run's labels first, because the PATIENT SET is what defines a cohort
+    #
+    # The coordinate file carries 35 patients, but only the ones that actually entered a
+    # run are part of FBM. Counting the other 9 inflated both the numerator and the
+    # denominator of every coverage map. Coverage is therefore computed per cohort, over
+    # that cohort's contacts only, against that cohort's patient count.
+    loaded = []
+    for key, label, cohort_name, run in runs:
         try:
             lab = pd.read_csv(run / "labels.csv")
             ccol = next(c for c in lab.columns
                         if c.startswith("cluster_") and not c.endswith("_ranked"))
-        except Exception as e:            # noqa: B014 - any unreadable run is skipped
+        except Exception as e:                                   # noqa: BLE001
             print(f"  !! skip {key}/{run.name}: {e}")
             continue
-
-        lab["key"] = [f"{p}|{norm(e)}" for p, e in zip(lab["patient_id"], lab["electrode"])]
         clusters = sorted(int(c) for c in lab[ccol].dropna().unique())
         if not clusters:
             print(f"  !! skip {key}/{run.name}: no cluster labels")
             continue
-        cidx = {k: i for i, k in enumerate(clusters)}
+        lab["key"] = [f"{p}|{norm(e)}" for p, e in zip(lab["patient_id"], lab["electrode"])]
+        pats = frozenset(str(p) for p in lab["patient_id"].dropna().unique())
+        loaded.append(dict(key=key, label=label, cohort_name=cohort_name, run=run,
+                           lab=lab, ccol=ccol, clusters=clusters, pats=pats))
 
-        # ONE ELECTRODE CAN CARRY SEVERAL LABELS. In the per-condition tracks a row is an
-        # electrode x condition sample, and 28% of electrodes land in a different cluster
-        # for audio than for reading. Collapsing to one label per electrode (dict(zip(...))
-        # keeps whichever row came last) would silently discard that, so every row counts
-        # and the denominator becomes samples-near-here, which the manifest states.
-        clu_of = lab.dropna(subset=[ccol]).groupby("key")[ccol].apply(
-            lambda s: [int(v) for v in s]).to_dict()
-        cl_all = co["key"].map(clu_of)
-        n_rows_per_el = lab.groupby("key")[ccol].size()
-        multi = int((lab.groupby("key")[ccol].nunique() > 1).sum())
-        unit = "electrode" if int(n_rows_per_el.max()) == 1 else "electrode x condition"
+    if not loaded:
+        print("  no usable runs", file=sys.stderr)
+        return 1
 
-        rdir = OUT / "runs" / f"{key.replace('/', '__')}__{run.name}"
-        rdir.mkdir(parents=True, exist_ok=True)
-        files, mb = {}, 0.0
+    # group runs that share a patient set — there are only a couple, so coverage stays cheap
+    cohorts, order = {}, []
+    for L in loaded:
+        cid = next((c for c in order if cohorts[c]["pats"] == L["pats"]), None)
+        if cid is None:
+            cid = f"cohort{len(order) + 1}_n{len(L['pats'])}"
+            cohorts[cid] = {"pats": L["pats"], "label": L["cohort_name"], "runs": []}
+            order.append(cid)
+        cohorts[cid]["runs"].append(L)
+        L["cohort_id"] = cid
+
+    print(f"  {len(loaded)} run(s), {len(order)} cohort(s), radii {[f'{r:g}' for r in a.radii]}")
+    for cid in order:
+        c = cohorts[cid]
+        print(f"    {cid}: {len(c['pats'])} patients, {len(c['runs'])} run(s) — {c['label']}")
+
+    nverts = {}
+    verts_by_hemi = {}
+    for h in ("lh", "rh"):
+        v = nib.load(str(MESHES / f"fsaverage_{h}.gii")).darrays[0].data.astype(float)
+        verts_by_hemi[h] = v
+        nverts[h] = int(len(v))
+
+    manifest_cohorts = {}
+    contacts_json = {"xyz": [], "hemi": [], "patient": [], "cohorts": {}, "runs": {}}
+    # one global contact table; each cohort names the indices it owns
+    co_all = co_all.reset_index(drop=True)
+    contacts_json["xyz"] = [[round(float(r.x), 1), round(float(r.y), 1), round(float(r.z), 1)]
+                            for r in co_all.itertuples()]
+    contacts_json["hemi"] = ["lh" if r == "L" else "rh" for r in co_all["hemi1"]]
+    contacts_json["patient"] = [str(p) for p in co_all["patient"]]
+
+    total_mb = 0.0
+    for cid in order:
+        C = cohorts[cid]
+        sel = co_all[co_all["patient"].astype(str).isin(C["pats"])].reset_index()
+        contacts_json["cohorts"][cid] = [int(i) for i in sel["index"]]
+        pat_codes = {p: i for i, p in enumerate(sorted(sel["patient"].astype(str).unique()))}
+        n_pat = len(C["pats"])
+
+        near, subs, cov_entry = {}, {}, {}
         for h, tag in (("lh", "L"), ("rh", "R")):
-            cl = cl_all[co["hemi"].astype(str).str.upper().str[0] == tag].to_numpy()
+            sub = sel[sel["hemi1"] == tag].reset_index(drop=True)
+            subs[h] = sub
+            tree = cKDTree(sub[["x", "y", "z"]].to_numpy())
+            pc = sub["patient"].astype(str).map(pat_codes).to_numpy()
+            near[h] = {}
             for r in a.radii:
-                arr = np.zeros((hemis[h]["nvert"], len(clusters)), dtype=np.int32)
-                for v, hits in enumerate(near_by_hemi[h][r]):
-                    for i in hits:
-                        labels = cl[i]
-                        if isinstance(labels, list):
-                            for c in labels:
-                                arr[v, cidx[c]] += 1
-                fn, dt = write_counts(arr, rdir / f"clusters_r{r:g}_{h}")
-                files.setdefault(f"{r:g}", {})[h] = {"file": fn, "dtype": dt}
-                mb += (rdir / fn).stat().st_size / 1e6
+                nb = tree.query_ball_point(verts_by_hemi[h], r=r)
+                near[h][r] = nb
+                cov = np.zeros((nverts[h], 2), dtype=np.int32)
+                for v, hits in enumerate(nb):
+                    if hits:
+                        cov[v, 0] = len(hits)
+                        cov[v, 1] = len(set(pc[hits]))
+                fn, dt = write_counts(cov, OUT / f"coverage_{cid}_r{r:g}_{h}")
+                pct = 100 * float((cov[:, 1] > 0).mean())
+                cov_entry.setdefault(f"{r:g}", {})[h] = {
+                    "file": fn, "dtype": dt,
+                    "pct_vertices_sampled": round(pct, 1),
+                    "max_patients_at_a_vertex": int(cov[:, 1].max()),
+                    "max_contacts_at_a_vertex": int(cov[:, 0].max())}
+                total_mb += (OUT / fn).stat().st_size / 1e6
+            print(f"    {cid} {h}: {len(sub)} contacts | " +
+                  " ".join(f"r{r:g}={cov_entry[f'{r:g}'][h]['pct_vertices_sampled']:.0f}%"
+                           for r in a.radii))
 
-        matched = int(cl_all.notna().sum())
-        n_samples = int(sum(len(v) for v in cl_all.dropna()))
-        entries.append({
-            "id": f"{key.replace('/', '__')}__{run.name}",
-            "track": key, "track_label": label, "cohort": cohort, "run": run.name,
-            "dir": f"runs/{key.replace('/', '__')}__{run.name}",
-            "k": len(clusters), "clusters": clusters,
-            "n_electrodes": int(len(lab)),
-            "n_contacts_with_cluster": matched,
-            "n_samples_with_cluster": n_samples,
-            "unit": unit,
-            "n_electrodes_multilabel": multi,
-            "cluster_sizes": {str(k): int((lab[ccol] == k).sum()) for k in clusters},
-            "cluster_patients": {str(k): int(lab.loc[lab[ccol] == k, "patient_id"].nunique())
-                                 for k in clusters},
-            "n_patients_run": int(lab["patient_id"].nunique()),
-            "label": f"{label} · {run.name} · K={len(clusters)} · n={len(lab)}",
-            "counts": files,
-            "figures": run_figures(run, clusters, tracked, len(clusters)),
-            "path": f"{key}/runs/{run.name}",
-        })
-        total_mb += mb
-        extra = f", {multi} multi-label" if multi else ""
-        print(f"  {key}/{run.name}: K={len(clusters)}, {len(lab)} rows [{unit}], "
-              f"{matched} contacts / {n_samples} samples matched{extra} | {mb:.2f} MB")
+        manifest_cohorts[cid] = {
+            "label": C["label"],
+            "patients": sorted(C["pats"]),
+            "n_patients": n_pat,
+            "n_contacts": int(len(sel)),
+            "coverage": cov_entry,
+        }
+
+        # ── per-run cluster counts, on this cohort's neighbourhoods
+        for L in C["runs"]:
+            lab, ccol, clusters = L["lab"], L["ccol"], L["clusters"]
+            cidx = {k: i for i, k in enumerate(clusters)}
+            # one electrode can carry several labels (per-condition runs); every row counts
+            clu_of = lab.dropna(subset=[ccol]).groupby("key")[ccol].apply(
+                lambda s: [int(v) for v in s]).to_dict()
+            multi = int((lab.groupby("key")[ccol].nunique() > 1).sum())
+            unit = "electrode" if int(lab.groupby("key")[ccol].size().max()) == 1 \
+                else "electrode x condition"
+
+            rdir = OUT / "runs" / f"{L['key'].replace('/', '__')}__{L['run'].name}"
+            rdir.mkdir(parents=True, exist_ok=True)
+            files, mb = {}, 0.0
+            matched = n_samples = 0
+            for h, tag in (("lh", "L"), ("rh", "R")):
+                lists = subs[h]["key"].map(clu_of).to_numpy()
+                matched += int(sum(1 for x in lists if isinstance(x, list)))
+                n_samples += int(sum(len(x) for x in lists if isinstance(x, list)))
+                for r in a.radii:
+                    arr = np.zeros((nverts[h], len(clusters)), dtype=np.int32)
+                    for v, hits in enumerate(near[h][r]):
+                        for i in hits:
+                            lb = lists[i]
+                            if isinstance(lb, list):
+                                for c in lb:
+                                    arr[v, cidx[c]] += 1
+                    fn, dt = write_counts(arr, rdir / f"clusters_r{r:g}_{h}")
+                    files.setdefault(f"{r:g}", {})[h] = {"file": fn, "dtype": dt}
+                    mb += (rdir / fn).stat().st_size / 1e6
+            total_mb += mb
+
+            # patient composition, for the pie charts: how many samples each patient
+            # contributed to each cluster, and to the run overall
+            comp = {}
+            for k in clusters:
+                vc = lab.loc[lab[ccol] == k, "patient_id"].astype(str).value_counts()
+                comp[str(k)] = {p: int(n) for p, n in vc.items()}
+            run_pat_totals = {p: int(n) for p, n in
+                              lab["patient_id"].astype(str).value_counts().items()}
+
+            L["entry"] = {
+                "id": f"{L['key'].replace('/', '__')}__{L['run'].name}",
+                "track": L["key"], "track_label": L["label"],
+                "cohort": C["label"], "cohort_id": cid,
+                "run": L["run"].name,
+                "path": f"{L['key']}/runs/{L['run'].name}",
+                "dir": f"runs/{L['key'].replace('/', '__')}__{L['run'].name}",
+                "k": len(clusters), "clusters": clusters,
+                "n_electrodes": int(len(lab)),
+                "n_contacts_with_cluster": matched,
+                "n_samples_with_cluster": n_samples,
+                "unit": unit,
+                "n_electrodes_multilabel": multi,
+                "n_patients_run": int(lab["patient_id"].nunique()),
+                "cluster_sizes": {str(k): int((lab[ccol] == k).sum()) for k in clusters},
+                "cluster_patients": {str(k): int(lab.loc[lab[ccol] == k, "patient_id"].nunique())
+                                     for k in clusters},
+                "cluster_patient_counts": comp,
+                "patient_totals": run_pat_totals,
+                "counts": files,
+                "figures": run_figures(L["run"], clusters, tracked, len(clusters)),
+            }
+            e = L["entry"]
+            print(f"      {L['key']}/{L['run'].name}: K={e['k']}, {e['n_electrodes']} rows "
+                  f"[{unit}], {matched} contacts / {n_samples} samples"
+                  f"{f', {multi} multi-label' if multi else ''} | {mb:.1f} MB")
+
+    # per-run label vector over the GLOBAL contact table, for the electrode overlay
+    for L in loaded:
+        m = co_all["key"].map(L["lab"].dropna(subset=[L["ccol"]]).groupby("key")[L["ccol"]]
+                              .apply(lambda s: sorted({int(v) for v in s})).to_dict())
+        contacts_json["runs"][L["entry"]["id"]] = [
+            None if not isinstance(v, list) else v for v in m]
 
     manifest = {
         "radii_mm": [f"{r:g}" for r in a.radii],
         "default_radius": f"{DEFAULT_RADIUS:g}",
-        "n_patients_total": n_pat_total,
-        "n_contacts_total": int(len(co)),
         "coords": COORDS.name,
+        "n_contacts_in_coords": int(len(co_all)),
+        "n_patients_in_coords": int(co_all["patient"].nunique()),
         "coverage_fields": ["n_contacts", "n_patients"],
-        "hemis": hemis,
-        "coverage": coverage,
+        "hemis": {h: {"nvert": nverts[h]} for h in ("lh", "rh")},
+        "cohorts": manifest_cohorts,
         "contacts_file": "contacts.json",
-        "runs": entries,
-        "note": ("counts within radius_mm of each vertex; ratios are computed client-side "
-                 "so the denominator stays visible"),
+        "runs": [L["entry"] for L in loaded],
+        "patient_palette": PALETTE,
+        "note": ("counts within radius_mm of each vertex, restricted to the patients of "
+                 "the run's own cohort; ratios are computed client-side so the "
+                 "denominator stays visible"),
     }
-
-    # contact list for the electrode overlay, with each run's label so the page can
-    # colour/filter contacts without refetching anything
-    cj = {"xyz": [[round(float(r.x), 1), round(float(r.y), 1), round(float(r.z), 1)] for r in co.itertuples()],
-          "hemi": ["lh" if str(r.hemi).upper().startswith("L") else "rh" for r in co.itertuples()],
-          "runs": {}}
-    for key, label, cohort, run in runs:
-        try:
-            lab = pd.read_csv(run / "labels.csv")
-            ccol = next(c for c in lab.columns
-                        if c.startswith("cluster_") and not c.endswith("_ranked"))
-        except Exception:
-            continue
-        lab["key"] = [f"{p}|{norm(e)}" for p, e in zip(lab["patient_id"], lab["electrode"])]
-        m = co["key"].map(lab.dropna(subset=[ccol]).groupby("key")[ccol].apply(
-            lambda s: sorted({int(v) for v in s})).to_dict())
-        cj["runs"][f"{key.replace('/', '__')}__{run.name}"] = [
-            None if not isinstance(v, list) else v for v in m]
-    (OUT / "contacts.json").write_text(json.dumps(cj), encoding="utf-8")
-
+    (OUT / "contacts.json").write_text(json.dumps(contacts_json), encoding="utf-8")
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    cov_mb = sum(f.stat().st_size for f in OUT.glob("coverage_r*_*.bin")) / 1e6
+
     con_mb = (OUT / "contacts.json").stat().st_size / 1e6
-    print(f"\n  {len(entries)} runs | shared {cov_mb:.2f} MB + contacts {con_mb:.2f} MB "
-          f"+ per-run {total_mb:.2f} MB = {cov_mb + con_mb + total_mb:.2f} MB")
+    print(f"\n  {len(loaded)} runs, {len(order)} cohorts | counts {total_mb:.1f} MB "
+          f"+ contacts {con_mb:.2f} MB")
+    print(f"  patients: {manifest['n_patients_in_coords']} in the coordinate file, "
+          f"{sorted({len(c['pats']) for c in cohorts.values()})} per FBM cohort")
     print(f"  -> {OUT}")
     return 0
 
