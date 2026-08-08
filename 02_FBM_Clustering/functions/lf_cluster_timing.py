@@ -674,6 +674,12 @@ def plot_onset_across_k(tab: pd.DataFrame, *, labels_by_k: Optional[Dict] = None
 #     r(tau) = Pearson[ ref(t), other(t + tau) ]
 #     tau > 0  ->  the OTHER cluster happens LATER  (the reference leads)
 #
+# THAT READING HOLDS ONLY FOR SAME-POLARITY PAIRS. When one cluster activates and
+# the other suppresses, the aligned relationship is "simultaneous and opposite",
+# and tau is the offset between a rise and a fall. Calling it a lead or a lag puts
+# the two on one rank axis, which is exactly the error the onset ladder was fixed
+# for. Rows carry `anti` so the caller can keep them off that axis.
+#
 # WINDOW MATTERS MORE THAN ANY OTHER SETTING. Cross-correlation only means
 # something when two signals are the same SHAPE shifted in time. Over the full
 # trial these cluster means are not: one has an early sensory transient, another
@@ -686,9 +692,84 @@ def plot_onset_across_k(tab: pd.DataFrame, *, labels_by_k: Optional[Dict] = None
 #
 # MIN_OVERLAP sets the usable lag range, not `max_lag`: at overlap f the widest
 # lag is (1-f) * window length. 0.6 was chosen empirically — 0.8 censored half
-# the peaks at the search boundary, 0.6 censored none.
+# the peaks at the search boundary. It does NOT censor none: on run 20260803_175417
+# K=10, 8 of 27 pairs have a true peak-time difference outside the +/-20% that 0.6
+# allows, so `at_edge` fires and those lags are censored rather than measured. That
+# is the honest outcome, not a bug, but the old claim here that 0.6 "censored none"
+# was false and is corrected.
 DEFAULT_MIN_OVERLAP = 0.6
-DEFAULT_SHAPE_GATE = 0.30      # peak r below this -> shapes differ, lag is not a delay
+DEFAULT_SHAPE_GATE = 0.30      # |peak r| below this -> shapes differ, lag is not a delay
+
+
+# ------------------------------------------------------------------
+# POLARITY. The reason this section needed rewriting.
+# ------------------------------------------------------------------
+# A suppression cluster is, to a first approximation, an inverted copy of an
+# activation cluster. Its alignment therefore sits at the MOST NEGATIVE r, and
+# `argmax` on the signed r can never return it. What argmax returns instead is
+# the anti-phase side lobe, which for these asymmetric response ramps typically
+# lands near the search edge — a fabricated lag with a large positive r that then
+# sails through the shape gate. Three of the shipped rows were certified that way.
+#
+# The obvious repair, argmax|r|, is WORSE and was rejected on measurement: the same
+# asymmetry gives same-polarity pairs an anti-phase lobe whose |r| marginally beats
+# the true in-phase peak (audio c8: +0.950 at -11.3% against 0.965 at +16.7%), so
+# |r| would corrupt 15 of the 20 pairs that are currently right.
+#
+# The estimator is therefore POLARITY-CONDITIONED: maximise r when the two clusters
+# have the same polarity, maximise -r when they differ. On the run above that
+# changes exactly the 7 cross-polarity rows and leaves all 20 others byte-identical.
+#
+# Polarity is measured INSIDE THE ANALYSIS WINDOW, not on the full trial: c6 is an
+# activation across the whole trial and a suppression within the response window,
+# and using the full-trial sign would leave that row uncorrected.
+
+
+def _window_polarity(seg: np.ndarray) -> str:
+    """Polarity of one cluster-mean segment, by the same rule `cluster_timing` uses."""
+    pk = int(np.argmax(np.abs(seg)))
+    return "suppression" if seg[pk] < 0 else "activation"
+
+
+def _pick_peak(r: np.ndarray, anti: bool) -> Optional[int]:
+    """Index of the alignment peak; None when r is all-NaN.
+
+    `anti` is True when the two signals have opposite polarity, in which case the
+    alignment is the most negative r rather than the most positive.
+    """
+    s = -r if anti else r
+    if np.all(np.isnan(s)):
+        return None
+    return int(np.nanargmax(s))
+
+
+def pick_reference_cluster(timing: pd.DataFrame, *, audio: str = "audio") -> int:
+    """The auditory cluster, chosen on its PROFILE rather than by id.
+
+    Cluster ids are arbitrary and change on every re-fit, so a hard-coded reference
+    silently points at a different cluster the next time the run is rebuilt — which
+    is exactly what happened here: the notebook said `REF_CLUSTER = 1` while every
+    published number had been computed against c4.
+
+    The auditory reference is the cluster that responds to the sound and to nothing
+    else: an ACTIVATION with the earliest stimulus-window onset under audio, and no
+    stimulus-window onset at all in the other conditions. If no cluster is that
+    selective the rule relaxes to the earliest audio stimulus onset among
+    activations, and the caller is told which branch fired.
+    """
+    t = timing[timing["polarity"] == "activation"]
+    stim = t.pivot_table(index="cluster", columns="condition",
+                         values="onset_stim_pct", dropna=False)
+    if audio not in stim.columns:
+        raise ValueError(f"no {audio!r} condition in the timing table")
+    others = [c for c in stim.columns if c != audio]
+    has_audio = stim[audio].notna()
+    selective = has_audio & stim[others].isna().all(axis=1)
+    pool = stim[selective] if selective.any() else stim[has_audio]
+    if not len(pool):
+        raise ValueError("no activation cluster has a stimulus-window onset in "
+                         f"{audio!r}; pick the reference manually")
+    return int(pool[audio].idxmin())
 
 
 def cross_correlate(a: np.ndarray, b: np.ndarray, *,
@@ -735,10 +816,16 @@ def cluster_xcorr(X_hg: np.ndarray, labels: np.ndarray, ref_cluster: int, *,
                shuffle p, and `interpretable` — the honest gate.
       profiles {(condition, cluster): (lag_pct, r)} for plotting the full curve.
 
-    Three things are reported alongside the lag because the lag alone is not
+    Four things are reported alongside the lag because the lag alone is not
     trustworthy on its own:
-      peak_r        how well the shapes align AT ALL. Below `shape_gate` the two
-                    clusters simply have different shapes and the lag is not a delay.
+      polarity      activation or suppression, measured on the cluster mean INSIDE
+                    the analysis window. With `anti` (polarities differ) it says
+                    whether tau is a delay at all: across polarities the aligned
+                    relationship is simultaneous-and-opposite, not lead/lag.
+      peak_r        how well the shapes align AT ALL, SIGNED. Negative is a perfectly
+                    good alignment — an inverted copy. Below `shape_gate` IN ABSOLUTE
+                    VALUE the two clusters have different shapes and the lag is not
+                    a delay.
       ci_lo / ci_hi bootstrap over electrodes WITHIN each cluster — the precision of
                     the lag. A wide CI means the lag is not resolvable, whatever its
                     point estimate.
@@ -763,33 +850,45 @@ def cluster_xcorr(X_hg: np.ndarray, labels: np.ndarray, ref_cluster: int, *,
     rows, profiles = [], {}
     for bi, cond in enumerate(conds):
         ref_mean = Xb[idx[ref_cluster], bi, sl].mean(0)
+        ref_pol = _window_polarity(ref_mean)
         for c in clusters:
             if c == ref_cluster:
                 continue
             other = Xb[idx[c], bi, sl].mean(0)
+            pol = _window_polarity(other)
+            anti = pol != ref_pol
             lags, r = cross_correlate(ref_mean, other, min_overlap=min_overlap)
             profiles[(cond, c)] = (lags / nt * 100.0, r)
-            if np.all(np.isnan(r)):
+            j = _pick_peak(r, anti)
+            if j is None:
                 continue
-            j = int(np.nanargmax(r))
             peak_lag, peak_r = int(lags[j]), float(r[j])
             at_edge = abs(peak_lag) >= abs(lags[-1]) - 1
 
+            # The bootstrap conditions on the OBSERVED polarity rather than
+            # re-deriving it per resample: a noisy resample that flips the sign
+            # would flip the selector and inflate the interval for a reason that
+            # has nothing to do with the precision of the lag.
             boot = np.empty(n_boot)
             for k in range(n_boot):
                 aa = Xb[rng.choice(idx[ref_cluster], len(idx[ref_cluster]), replace=True), bi, sl].mean(0)
                 bb = Xb[rng.choice(idx[c], len(idx[c]), replace=True), bi, sl].mean(0)
                 lg, rr = cross_correlate(aa, bb, min_overlap=min_overlap)
-                boot[k] = lg[int(np.nanargmax(rr))] if not np.all(np.isnan(rr)) else np.nan
+                jj = _pick_peak(rr, anti)
+                boot[k] = lg[jj] if jj is not None else np.nan
             lo, hi = np.nanpercentile(boot, [2.5, 97.5])
 
+            # The shuffle DOES re-derive polarity: its two groups are random subsets
+            # with no polarity to inherit, so conditioning on `anti` would impose a
+            # structure the null is supposed to lack.
             null = np.empty(n_shuffle)
             for k in range(n_shuffle):
                 sh = rng.permutation(labels)
                 aa = Xb[sh == ref_cluster, bi, sl].mean(0)
                 bb = Xb[sh == c, bi, sl].mean(0)
                 lg, rr = cross_correlate(aa, bb, min_overlap=min_overlap)
-                null[k] = abs(lg[int(np.nanargmax(rr))]) if not np.all(np.isnan(rr)) else np.nan
+                jj = _pick_peak(rr, _window_polarity(bb) != _window_polarity(aa))
+                null[k] = abs(lg[jj]) if jj is not None else np.nan
             p_sh = float(np.nanmean(null >= abs(peak_lag)))
 
             ci_w = (hi - lo) / nt * 100.0
@@ -797,10 +896,13 @@ def cluster_xcorr(X_hg: np.ndarray, labels: np.ndarray, ref_cluster: int, *,
                 condition=cond, cluster=c, n=int(len(idx[c])),
                 ref=ref_cluster, window=window,
                 peak_lag_pct=peak_lag / nt * 100.0, peak_r=peak_r,
+                polarity=pol, ref_polarity=ref_pol, anti=bool(anti),
                 ci_lo_pct=lo / nt * 100.0, ci_hi_pct=hi / nt * 100.0, ci_width_pct=ci_w,
                 at_edge=at_edge, p_shuffle=p_sh,
-                interpretable=bool(peak_r >= shape_gate and not at_edge and ci_w <= 20.0),
-                reason=("shapes differ (r<%.2f)" % shape_gate if peak_r < shape_gate else
+                # Gate on |r|: an inverted copy aligns at r = -1, which is a perfect
+                # alignment and must not be read as "no relationship".
+                interpretable=bool(abs(peak_r) >= shape_gate and not at_edge and ci_w <= 20.0),
+                reason=("shapes differ (|r|<%.2f)" % shape_gate if abs(peak_r) < shape_gate else
                         "lag censored at search edge" if at_edge else
                         "CI too wide" if ci_w > 20.0 else "ok"),
             ))
@@ -813,6 +915,7 @@ def plot_xcorr_profiles(table: pd.DataFrame, profiles: dict, *,
                         title: str = "", width_per_panel: float = 7.2,
                         ylim: Optional[tuple] = None,
                         reliable_lag: Optional[float] = None,
+                        mark_within: Optional[float] = None,
                         out_png=None, dpi: int = 150):
     """Full r-vs-lag curve per cluster, one panel per condition, peak marked.
 
@@ -838,14 +941,32 @@ def plot_xcorr_profiles(table: pd.DataFrame, profiles: dict, *,
             lag, r = profiles[(cond, c)]
             row = table[(table.condition == cond) & (table.cluster == c)]
             good = bool(row["interpretable"].iloc[0]) if len(row) else False
+            anti = bool(row["anti"].iloc[0]) if len(row) and "anti" in row else False
             col = colors.get(c, "#888")
+            lbl = f"c{c} (n={int(row['n'].iloc[0])})" if len(row) else f"c{c}"
+            if anti:
+                lbl += "  ↓supp"
+            # On a widened axis the gate can certify a peak out where the two
+            # segments barely overlap. Drawing a bold dot there advertises it as a
+            # measurement, so a peak outside `mark_within` demotes the whole curve to
+            # the dashed style — the curve is still shown, which is the point of the
+            # wide view, but nothing about it reads as measured.
+            x = float(row["peak_lag_pct"].iloc[0]) if len(row) else 0.0
+            if mark_within is not None and abs(x) > mark_within:
+                good = False
             ax.plot(lag, r, color=col, lw=1.8 if good else 1.0,
                     ls="-" if good else "--", alpha=1.0 if good else .45, zorder=3 if good else 2,
-                    label=f"c{c} (n={int(row['n'].iloc[0])})" if len(row) else f"c{c}")
+                    label=lbl)
             if len(row) and good:
-                x = float(row["peak_lag_pct"].iloc[0]); y = float(row["peak_r"].iloc[0])
-                ax.scatter([x], [y], s=70, color=col, edgecolor="white", lw=1.2, zorder=5)
-                ax.annotate(f"{x:+.0f}%", (x, y), textcoords="offset points", xytext=(4, 5),
+                y = float(row["peak_r"].iloc[0])
+                # Black ring = opposite polarity. Its peak sits BELOW the axis because
+                # the alignment is an anti-correlation, and its tau is an offset between
+                # a rise and a fall, not a lag. Same marking rule as the onset ladder.
+                ax.scatter([x], [y], s=70, color=col,
+                           edgecolor="black" if anti else "white",
+                           lw=1.8 if anti else 1.2, zorder=5)
+                ax.annotate(f"{x:+.0f}%" + ("↓" if anti else ""), (x, y),
+                            textcoords="offset points", xytext=(4, 5),
                             fontsize=8, color=col, fontweight="bold")
         if reliable_lag:
             # Beyond this the two segments overlap by less than the minimum, so the
@@ -857,7 +978,8 @@ def plot_xcorr_profiles(table: pd.DataFrame, profiles: dict, *,
         if ylim:
             ax.set_ylim(*ylim)
         ax.set_title(cond.capitalize(), fontsize=11)
-        ax.set_xlabel(f"lag (% of trial)   + = cluster LAGS behind c{ref_cluster}")
+        ax.set_xlabel(f"lag (% of trial)   + = cluster LAGS behind c{ref_cluster}"
+                      "   (same-polarity pairs only)")
         ax.grid(alpha=.25)
         for s in ("top", "right"):
             ax.spines[s].set_visible(False)
@@ -865,8 +987,10 @@ def plot_xcorr_profiles(table: pd.DataFrame, profiles: dict, *,
     axes[0].legend(fontsize=7.5, loc="lower left", ncol=2, framealpha=.9)
     fig.suptitle((title or f"Cross-correlation against c{ref_cluster}") +
                  f"        solid = interpretable   dashed = shapes differ (|r| < {shape_gate}) "
-                 f"or lag censored   grey band = below the shape gate",
-                 fontsize=10.5, y=1.02)
+                 f"or lag censored   grey band = below the shape gate\n"
+                 "ringed marker + ↓supp = SUPPRESSION against an activation reference: the "
+                 "alignment is an anti-correlation, so its offset is not a lead or a lag",
+                 fontsize=10.5, y=1.06)
     fig.tight_layout()
     if out_png:
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
