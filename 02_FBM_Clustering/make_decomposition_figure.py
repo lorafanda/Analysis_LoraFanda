@@ -45,6 +45,35 @@ OUT = DEC / "D3_graded_decomposition.png"
 CONDS = ["audio", "picture", "reading"]
 INK, MUTED, ACC, WARN = "#1b232c", "#68727d", "#1f77b4", "#c1121f"
 
+# Must match LOADING_FLOOR in render_cnmf_glassbrains.py — B3 embeds those renders and
+# the caption states the number, so a silent disagreement would mislabel the panel.
+LOADING_FLOOR = 0.08
+
+
+def _glass(ax, glass_dir, j: int, sub: str, prompt: str, fig, is_middle: bool,
+           prompt_y: float) -> bool:
+    """Embed one pre-rendered glassbrain. Returns False if it is not on disk.
+
+    B2 and B3 read from the same run directory and the same camera, so they are the
+    same view by construction rather than by two scripts agreeing about a convention.
+    """
+    ax.axis("off")
+    png = (glass_dir / f"cluster_{j:02d}" / sub / "lateral_L.png") if glass_dir else None
+    if png is not None and png.exists():
+        a = np.asarray(plt.imread(png))
+        if a.ndim == 3 and a.shape[2] == 4:          # trim the wide transparent margin
+            ys, xs = np.where(a[..., 3] > 0.02)
+            if len(xs):
+                a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+        ax.imshow(a)
+        return True
+    ax.add_patch(plt.Rectangle((0, 0), 1, 1, transform=ax.transAxes,
+                               facecolor="#fbfbfc", edgecolor="#dfe3e7", ls="--"))
+    if is_middle:                    # one prompt spanning the row, not clipped in a cell
+        fig.text(0.52, prompt_y, prompt, ha="center", va="center",
+                 fontsize=9, color="#9aa3ab")
+    return False
+
 
 def _norm(s) -> str:
     return str(s).replace("_", "").replace("-", "").upper()
@@ -158,32 +187,29 @@ def main() -> int:
 
         # B2 — the project glassbrain (argmax), if 252 has produced it
         ax = fig.add_subplot(sub2[0, j])
-        ax.axis("off")
-        png = (GLASS / f"cluster_{j:02d}" / "by_condition" / "lateral_L.png") if GLASS else None
-        if png is not None and png.exists():
-            a = np.asarray(plt.imread(png))
-            if a.ndim == 3 and a.shape[2] == 4:      # trim the wide transparent margin
-                ys, xs = np.where(a[..., 3] > 0.02)
-                if len(xs):
-                    a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
-            ax.imshow(a)
-        else:
-            ax.add_patch(plt.Rectangle((0, 0), 1, 1, transform=ax.transAxes,
-                                       facecolor="#fbfbfc", edgecolor="#dfe3e7", ls="--"))
-            # one prompt spanning the row, not clipped inside a narrow cell
-            if j == K // 2:
-                fig.text(0.52, 0.50, prompt, ha="center", va="center",
-                         fontsize=9, color="#9aa3ab")
+        _glass(ax, GLASS, j, "by_condition", prompt, fig, j == K // 2, 0.50)
 
-        # B3 — every electrode, sized and shaded by its loading on this component
+        # B3 — the SAME brain, SAME left-lateral camera, but every electrode above the
+        # loading floor, radius and opacity scaled by its loading. B2 and B3 differ only
+        # in which electrodes are drawn, which is the whole point of the pair; anything
+        # else differing (a mirrored sagittal scatter, as this was) makes the reader
+        # compare two pictures that do not line up.
         ax = fig.add_subplot(sub3[0, j])
-        w = Gn[ok, j]
-        order = np.argsort(w)                        # faint ones first, strong on top
-        ax.scatter(XYZ[ok][order, 1], XYZ[ok][order, 2],
-                   s=3 + 44 * w[order] ** 2, c=w[order], cmap="magma_r",
-                   vmin=0, vmax=float(Gn.max()), lw=0, alpha=.85)
-        ax.set_aspect("equal")
-        ax.axis("off")
+        drawn = _glass(ax, GLASS, j, "by_loading", prompt, fig, j == K // 2, 0.31)
+        if not drawn:
+            # Fallback only. Note the inverted x-axis: the project's left-lateral camera
+            # puts ANTERIOR on the image LEFT (measured, not assumed), and a plain
+            # scatter of +y rightwards would face the other way from B2.
+            w = Gn[ok, j]
+            order = np.argsort(w)                    # faint ones first, strong on top
+            ax.scatter(XYZ[ok][order, 1], XYZ[ok][order, 2],
+                       s=3 + 44 * w[order] ** 2, c=w[order], cmap="magma_r",
+                       vmin=0, vmax=float(Gn.max()), lw=0, alpha=.85)
+            ax.invert_xaxis()
+            ax.set_aspect("equal")
+            ax.axis("off")
+        ax.set_title(f"n={int((Gn[:, j] > LOADING_FLOOR).sum())} above {LOADING_FLOOR:g}",
+                     fontsize=7.8, color=MUTED, pad=1)
         if j == 0:
             ax.text(-0.03, 0.5, "loading", rotation=90, va="center", ha="right",
                     fontsize=8.5, color=INK, transform=ax.transAxes)
@@ -191,12 +217,13 @@ def main() -> int:
     fig.text(0.055, 0.782, "B1 - Component response profiles  (50% = GO cue)",
              fontsize=10.5, color=INK)
     fig.text(0.055, 0.593,
-             "B2 - Where its electrodes are: project glassbrain, left lateral. ARGMAX ONLY, "
-             "i.e. electrodes whose leading component is this one.",
+             "B2 - Where its electrodes are: project glassbrain, left lateral (anterior left). "
+             "ARGMAX ONLY, i.e. electrodes whose leading component is this one.",
              fontsize=10.5, color=INK)
     fig.text(0.055, 0.404,
-             "B3 - What the argmax hides: every electrode, sized and shaded by its loading on "
-             "this component (sagittal y-z, both hemispheres)",
+             f"B3 - What the argmax hides: the SAME brain and camera as B2, now with every "
+             f"electrode loading above {LOADING_FLOOR:g} - radius and opacity scale with the "
+             f"loading, on one scale shared by all {K} components.",
              fontsize=10.5, color=INK)
 
     # ── E · LOPO vs matched null ---------------------------------------------

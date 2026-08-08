@@ -41,11 +41,17 @@ sys.path.insert(0, str(ROOT / "functions"))
 VIEW_MAP = {"lateral_L": "left", "lateral_R": "right",
             "dorsal": "dorsal", "frontal": "frontal"}
 
+# Below this a contact contributes nothing visible and only costs a sphere. Uniform
+# loading at K=7 is 1/7 = 0.143, so this keeps everything down to about half of uniform.
+LOADING_FLOOR = 0.08
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default=None, help="run dir (default: newest cnmf/concat_hg)")
     ap.add_argument("--scale", type=int, default=2, help="screenshot supersampling")
+    ap.add_argument("--which", choices=["both", "argmax", "loading"], default="both",
+                    help="which of the two renders to (re)draw")
     a = ap.parse_args()
 
     import pyvista as pv
@@ -95,20 +101,31 @@ def main() -> int:
     Wn = W / np.maximum(W.sum(1, keepdims=True), 1e-12)
     xyz = df[["x", "y", "z"]].to_numpy()
 
+    # ONE scale for every component. Dividing each component by its OWN maximum makes
+    # every panel peak at full radius and full opacity, so a component whose strongest
+    # electrode loads 0.84 looks exactly as intense as one whose strongest loads 0.99 —
+    # the panels stop being comparable, which is the only reason to put them in a row.
+    # Here the spread is small (per-component max 0.84-0.99 against a global 0.99, so at
+    # most a 15% intensity change) but the fix costs nothing and removes the trap.
+    GMAX = float(max(Wn.max(), 1e-9))
+
     for j in range(K):
         rgb = tuple(pal[j % 10])
         cd = rd / "recon" / f"cluster_{j:02d}"
-        # ARGMAX — what 252 would draw
+        if a.which in ("both", "argmax"):
+            # ARGMAX — what 252 would draw
+            m = df[ccol].to_numpy() == j
+            for v in VIEW_MAP:
+                shot(xyz[m], rgb, np.ones(m.sum()), cd / "by_condition" / f"{v}.png", v)
+        if a.which in ("both", "loading"):
+            # GRADED — what the argmax throws away
+            keep = Wn[:, j] > LOADING_FLOOR
+            for v in VIEW_MAP:
+                shot(xyz[keep], rgb, Wn[keep, j] / GMAX, cd / "by_loading" / f"{v}.png", v)
         m = df[ccol].to_numpy() == j
-        for v in VIEW_MAP:
-            shot(xyz[m], rgb, np.ones(m.sum()), cd / "by_condition" / f"{v}.png", v)
-        # GRADED — what the argmax throws away
-        keep = Wn[:, j] > 0.08
-        for v in VIEW_MAP:
-            shot(xyz[keep], rgb, Wn[keep, j] / max(Wn[:, j].max(), 1e-9),
-                 cd / "by_loading" / f"{v}.png", v)
+        keep = Wn[:, j] > LOADING_FLOOR
         print(f"    comp {j}: argmax {int(m.sum())} contacts, graded {int(keep.sum())} "
-              f"above 0.08 loading")
+              f"above {LOADING_FLOOR} loading (max {Wn[:, j].max():.2f} of {GMAX:.2f})")
 
     print(f"\n  -> {rd / 'recon'}")
     print("  by_condition/ = argmax (comparable to 252) · by_loading/ = graded")
