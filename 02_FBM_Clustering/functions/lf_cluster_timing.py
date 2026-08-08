@@ -454,12 +454,19 @@ def plot_cluster_timing_panel(X_hg: np.ndarray, labels: np.ndarray,
             y = pos[c]
             s_on, r_on = r.get("onset_stim_pct"), r.get("onset_resp_pct")
             carry = bool(r.get("resp_carryover", False))
+            # This ladder shares an axis with activations, so a cluster that goes DOWN has
+            # to be marked or it reads as an early response. Ringed here rather than
+            # red-edged: the cluster's own colour can be red and would hide the ring.
+            supp = str(r.get("polarity", "activation")) == "suppression"
             have = [v for v in (s_on, r_on) if pd.notna(v)]
             if len(have) == 2:
                 axb.plot(have, [y, y], color=colors[c], lw=1.1, alpha=0.45, zorder=2)
             for v, mk, hollow in ((s_on, "o", False), (r_on, "^", carry)):
                 if pd.isna(v):
                     continue
+                if supp:                       # halo so it survives any cluster colour
+                    axb.scatter(v, y, s=190, marker=mk, facecolor="none",
+                                edgecolor="#111", linewidth=1.4, zorder=5)
                 axb.scatter(v, y, s=68, marker=mk,
                             color="white" if hollow else colors[c],
                             edgecolor=colors[c] if hollow else "white",
@@ -476,13 +483,18 @@ def plot_cluster_timing_panel(X_hg: np.ndarray, labels: np.ndarray,
             axb.spines[s].set_visible(False)
 
     axes[1, 0].set_yticks(range(len(order)))
+    _pol = (timing.groupby("cluster")["polarity"].agg(
+        lambda s: "suppression" if (s == "suppression").all() else "activation")
+        if "polarity" in timing.columns else {})
     axes[1, 0].set_yticklabels(
-        [f"c{c}  (n={int(timing[timing.cluster == c]['n'].iloc[0])})" for c in order],
-        fontsize=8.5)
+        [f"c{c}  (n={int(timing[timing.cluster == c]['n'].iloc[0])})"
+         + ("  ↓supp" if str(dict(_pol).get(c, "")) == "suppression" else "")
+         for c in order], fontsize=8.5)
     axes[1, 0].invert_yaxis()
     fig.suptitle((title or "Cluster response timing") +
                  "        ● stimulus onset    ▲ response onset    "
-                 "hollow ▲ = already active at GO    absent = no crossing",
+                 "hollow ▲ = already active at GO    absent = no crossing    "
+                 "ringed = SUPPRESSION (onset of desynchronisation)",
                  fontsize=11, y=0.995)
     if out_png:
         fig.savefig(out_png, dpi=dpi, bbox_inches="tight")
