@@ -1,7 +1,0 @@
-patient_id,condition,electrode,file_path,contact_name
-EL038,concat,aI_R10,\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY\EL038\LM\ERSP_matrix\audio\EL038_audio_WM_ERSP_aI_R10_TN.npy,AIR10
-EL042,concat,aI_R10,\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY\EL042\LM\ERSP_matrix\audio\EL042_audio_WM_ERSP_aI_R10_TN.npy,AIR10
-EL042,concat,aI_R9,\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY\EL042\LM\ERSP_matrix\audio\EL042_audio_WM_ERSP_aI_R9_TN.npy,AIR9
-EL043,concat,pIns1,\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY\EL043\LM\ERSP_matrix\audio\EL043_audio_WM_ERSP_pIns1_TN.npy,PINS1
-EL043,concat,pIns7,\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY\EL043\LM\ERSP_matrix\audio\EL043_audio_WM_ERSP_pIns7_TN.npy,PINS7
-EL045,concat,PlaT_L4,\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY\EL045\LM\ERSP_matrix\audio\EL045_audio_WM_ERSP_PlaT_L4_TN.npy,PLATL4
