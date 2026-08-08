@@ -67,6 +67,7 @@ DEFAULT_OUTPUTS_ROOT = (Path(__file__).resolve().parent.parent / "outputs" / "cl
 METHOD_LABELS = {
     "kmeans": "K-Means",
     "hierarchical": "Hierarchical",
+    "cnmf": "Convex NMF (graded)",
 }
 
 FEATURE_SET_LABELS = {

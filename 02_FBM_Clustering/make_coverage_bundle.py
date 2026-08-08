@@ -70,6 +70,7 @@ DEFAULT_RADIUS = 10.0
 # them pinned at K=20 = the sweep ceiling) and hierarchical/concat_rawds (K=20 for the
 # same reason, and the largest payload of the set).
 TRACKS = [
+    ("cnmf/concat_hg", "Convex NMF - graded (argmax)", "1027-electrode concat cohort"),
     ("kmeans/concat_hg", "K-means · concatenated", "1027-electrode concat cohort"),
     ("hierarchical/concat_hg", "Ward · concatenated", "1027-electrode concat cohort"),
     ("kmeans/concat_rawds", "K-means · concat 15-band", "1027-electrode concat cohort"),
