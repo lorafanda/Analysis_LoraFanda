@@ -296,8 +296,16 @@ def compute_ersp(
     trial_ends: np.ndarray | None = None,      # TN needs this
     mode: str = "TN",                           # "RT" or "TN"
     time_window: tuple[float,float] = (-1.0, 3.0),  # RT only
+    align: str = "onset",                       # RT only: "onset" | "go"
     params: ERSPParams = ERSPParams(),
 ) -> dict:
+    """ERSP for one channel, either time-normalised (TN) or in real seconds (RT).
+
+    RT `align`: "onset" epochs on the stimulus onset, "go" epochs on the stimulus
+    OFFSET, i.e. the GO cue. The baseline is taken from the pre-stimulus window in
+    both cases -- it is defined relative to stimulus onset and stays there -- so
+    only the epoch centre moves and the dB units remain comparable.
+    """
     assert signals.ndim == 2, "signals must be 2D"
     sig_in = signals[:, int(channel_idx)].astype(float)
     sig_ds, fs_ds, scale = _to_khz_resampled(sig_in, float(fs))
@@ -312,19 +320,52 @@ def compute_ersp(
     if str(mode).upper() == "RT":
         trials_db, trials_z = [], []
         f_first = None
-        for on in on_ds:
-            s = int(on + time_window[0]*fs_ds)
-            e = int(on + time_window[1]*fs_ds)
+        go_aligned = str(align).lower() == "go"
+        if go_aligned and off_ds.size != on_ds.size:
+            raise ValueError("compute_ersp: align='go' needs one offset per onset "
+                             f"(got {off_ds.size} offsets for {on_ds.size} onsets)")
+        # The epoch is centred on `centres`, but the baseline window is defined
+        # relative to STIMULUS ONSET. Under GO alignment those are different points,
+        # so the baseline mask is shifted by the stimulus duration of that trial
+        # rather than being taken from wherever calc_w happens to land.
+        centres = off_ds if go_aligned else on_ds
+        n_base_fallback = 0
+        for i, ctr in enumerate(centres):
+            s = int(ctr + time_window[0]*fs_ds)
+            e = int(ctr + time_window[1]*fs_ds)
             s = max(0, s); e = min(len(sig_ds), max(s+1, e))
             seg = sig_ds[s:e]
             f, t_rel, S_db = _spectro(seg, fs_ds, params)
             if f_first is None: f_first = f
             t_abs = t_rel + time_window[0]
-            bmask = (t_abs >= calc_w[0]) & (t_abs < calc_w[1])
-            if not np.any(bmask):
-                nT = S_db.shape[1]; bmask = np.zeros(nT, bool); bmask[:max(2, nT//10)] = True
-            mu = np.mean(S_db[:, bmask], axis=1, keepdims=True)
-            sd = np.std (S_db[:, bmask], axis=1, keepdims=True, ddof=1)
+            if go_aligned:
+                # The baseline is pre-STIMULUS, and the stimulus lasts a different
+                # length on every trial, so no fixed GO-centred window can be
+                # guaranteed to contain it. Cutting it from its own slice of the
+                # signal removes the coupling entirely: whatever `time_window` is,
+                # the baseline is always the real pre-stimulus period. Leaving it
+                # to the in-epoch mask would silently fall back to "first 10% of
+                # the epoch", i.e. baselining post-GO activity against itself.
+                bs = int(on_ds[i] + calc_w[0]*fs_ds)
+                be = int(on_ds[i] + calc_w[1]*fs_ds)
+                bs = max(0, bs); be = min(len(sig_ds), max(bs+1, be))
+                bseg = sig_ds[bs:be]
+                if bseg.size >= params.nperseg:
+                    _, _, S_base = _spectro(bseg, fs_ds, params)
+                    mu = np.mean(S_base, axis=1, keepdims=True)
+                    sd = np.std (S_base, axis=1, keepdims=True, ddof=1)
+                else:
+                    nT = S_db.shape[1]
+                    bmask = np.zeros(nT, bool); bmask[:max(2, nT//10)] = True
+                    mu = np.mean(S_db[:, bmask], axis=1, keepdims=True)
+                    sd = np.std (S_db[:, bmask], axis=1, keepdims=True, ddof=1)
+                    n_base_fallback += 1
+            else:
+                bmask = (t_abs >= calc_w[0]) & (t_abs < calc_w[1])
+                if not np.any(bmask):
+                    nT = S_db.shape[1]; bmask = np.zeros(nT, bool); bmask[:max(2, nT//10)] = True
+                mu = np.mean(S_db[:, bmask], axis=1, keepdims=True)
+                sd = np.std (S_db[:, bmask], axis=1, keepdims=True, ddof=1)
             trials_db.append((t_abs, S_db - mu))
             trials_z .append((t_abs, (S_db - mu)/(sd + 1e-12)))
 
@@ -352,16 +393,24 @@ def compute_ersp(
         avg_z[:,  -1] = np.nan
 
         if offsets is not None and len(offsets) == len(onsets) and len(onsets) > 0:
-            offset_marker = float(np.mean((np.asarray(offsets) - np.asarray(onsets)) / float(fs)))
+            stim_dur = float(np.mean((np.asarray(offsets) - np.asarray(onsets)) / float(fs)))
         else:
-            offset_marker = (time_window[1] - time_window[0]) * 0.5
+            stim_dur = (time_window[1] - time_window[0]) * 0.5
+        # Under GO alignment 0 IS the GO cue, and the stimulus onset sits a mean
+        # stimulus duration earlier.
+        markers = (dict(onset=-stim_dur, offset=0.0) if go_aligned
+                   else dict(onset=0.0, offset=stim_dur))
 
         sys.stdout.write("*"); sys.stdout.flush()
 
         return dict(
             avg_db=avg_db, avg_z=avg_z, f=f_first, x=x,
-            markers=dict(onset=0.0, offset=offset_marker),
-            meta=dict(mode="RT", fs_in=float(fs), fs_ds=float(fs_ds), scale=float(scale))
+            markers=markers,
+            meta=dict(mode="RT", align=("go" if go_aligned else "onset"),
+                      time_window=tuple(float(v) for v in time_window),
+                      mean_stim_dur=stim_dur, n_trials=int(len(centres)),
+                      n_baseline_fallback=int(n_base_fallback),
+                      fs_in=float(fs), fs_ds=float(fs_ds), scale=float(scale))
         )
 
     # ---- TN
@@ -692,7 +741,8 @@ def plot_hg_trials(
     add_separators=False,
     sort_ascending=True,
     trial_end_indices=None,       # supports trial-end-based segmentation
-    sort_by="stim"                # "stim" | "resp" | "total" | "none"
+    sort_by="stim",               # "stim" | "resp" | "total" | "none"
+    align="onset"                 # "onset" (t=0 is stimulus onset) | "go" (t=0 is the GO cue)
 ):
     """
     Mirrors the legacy HG plot (color/shape/sorting) but lives inside lf_ersp.py.
@@ -701,6 +751,25 @@ def plot_hg_trials(
       magenta dashed offset ticks, optional separators, and trial numbers.
     - Uses trial_end when provided; otherwise falls back conservatively.
     Returns: saved TIFF filename (str).
+
+    ALIGNMENT. `align="onset"` is the legacy behaviour and is byte-for-byte
+    unchanged. `align="go"` re-references the x axis to the GO cue (the stimulus
+    OFFSET), which is what a response-timing analysis needs: the response follows
+    GO after a variable delay, and locking to stimulus onset smears that delay by
+    the stimulus duration.
+
+    Two things have to be right for that to work:
+
+      1. Trials no longer share a common start time, because the stimulus lasts a
+         different length on every trial. The legacy code pads rows by INDEX,
+         which silently assumes they do. Under GO alignment the rows are instead
+         resampled onto a common SECONDS grid. (For onset alignment every trial
+         does start at baseline_w[0] with the same 1/fs spacing, so index padding
+         and regridding agree and the legacy path is left alone.)
+      2. The baseline is still taken from the pre-stimulus window, i.e. relative
+         to stimulus ONSET, whatever the axis shows. Only the display shifts, so
+         the z units stay identical to the onset-aligned figure and the two are
+         directly comparable.
     """
     import numpy as _np
     import matplotlib.pyplot as _plt
@@ -788,14 +857,34 @@ def plot_hg_trials(
             off_rel_s.append(_np.nan)
         used_total_s.append( max(0.0, (e - on) / fs) )
 
-    # --- pad to common length for plotting; build common time axis
+    # --- common time axis
+    go_aligned = str(align).lower() == "go"
     max_len = max(len(z) for z in trials_z)
-    trial_matrix = _np.full((len(trials_z), max_len), _np.nan, dtype=float)
-    for r, z in enumerate(trials_z):
-        trial_matrix[r, :len(z)] = z
-    t_min = min(tv[0] for tv in t_vecs)
-    t_max = max(tv[-1] for tv in t_vecs)
-    t_common = _np.linspace(t_min, t_max, max_len, endpoint=False)
+    if go_aligned:
+        # Shift each trial so t=0 is its own GO cue, then RESAMPLE onto one grid.
+        # A trial with no usable offset cannot be GO-aligned at all and is dropped
+        # rather than silently plotted against the wrong zero.
+        shift = _np.asarray(off_rel_s, dtype=float)
+        keep = _np.isfinite(shift)
+        if not _np.any(keep):
+            raise ValueError("plot_hg_trials: align='go' needs stimulus offsets.")
+        t_shift = [tv - shift[i] for i, tv in enumerate(t_vecs)]
+        t_min = min(t_shift[i][0]  for i in range(len(t_shift)) if keep[i])
+        t_max = max(t_shift[i][-1] for i in range(len(t_shift)) if keep[i])
+        t_common = _np.linspace(t_min, t_max, max_len, endpoint=False)
+        trial_matrix = _np.full((len(trials_z), max_len), _np.nan, dtype=float)
+        for r, z in enumerate(trials_z):
+            if not keep[r]:
+                continue
+            trial_matrix[r, :] = _np.interp(t_common, t_shift[r], z,
+                                            left=_np.nan, right=_np.nan)
+    else:
+        trial_matrix = _np.full((len(trials_z), max_len), _np.nan, dtype=float)
+        for r, z in enumerate(trials_z):
+            trial_matrix[r, :len(z)] = z
+        t_min = min(tv[0] for tv in t_vecs)
+        t_max = max(tv[-1] for tv in t_vecs)
+        t_common = _np.linspace(t_min, t_max, max_len, endpoint=False)
 
     # --- sorting metric
     sb = (sort_by or "stim").lower()
@@ -824,6 +913,11 @@ def plot_hg_trials(
 
     trial_matrix = trial_matrix[order, :]
     off_rel_sorted = _np.asarray(off_rel_s, dtype=float)[order]
+    # response duration per trial (GO -> trial end); padded because used_post_s is
+    # only appended for trials that had an offset.
+    _post = _np.full(n_trials, _np.nan)
+    _post[:len(used_post_s)] = _np.asarray(used_post_s, dtype=float)
+    post_sorted = _post[order]
 
     # --- labels & output name
     if chan_name is None:
@@ -831,8 +925,9 @@ def plot_hg_trials(
             chan_name = str(channel_names[channel_idx])
         else:
             chan_name = f"Ch{channel_idx}"
+    _atag = "_GO" if str(align).lower() == "go" else ""
     title = f"{patient_id} – {condition} – {reref_type}-ref HG trials: {chan_name}"
-    fname = f"{patient_id}_{condition}_{reref_type}_HGtrials_{chan_name}.tif"
+    fname = f"{patient_id}_{condition}_{reref_type}_HGtrials_{chan_name}{_atag}.tif"
     out_path = os.path.join(save_dir, fname) if save_dir else fname
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
@@ -848,17 +943,27 @@ def plot_hg_trials(
         cmap=cmap, vmin=vmin, vmax=vmax, interpolation="none"
     )
 
-    # onset at 0 s
+    # the aligned event sits at 0 s: stimulus onset, or the GO cue
     _plt.axvline(x=0.0, color="k", linestyle="-", linewidth=1.2, zorder=3)
 
-    # dashed offset ticks
     half_ms = 30.0
     y_rows = _np.arange(1, trial_matrix.shape[0] + 1)
-    if _np.any(_np.isfinite(off_rel_sorted)):
-        for y, x_ in zip(y_rows, off_rel_sorted):
+
+    def _ticks(vals, color, lw=2.0):
+        for y, x_ in zip(y_rows, vals):
             if _np.isfinite(x_):
                 _plt.plot([x_ - half_ms/1000.0, x_ + half_ms/1000.0], [y, y],
-                          linestyle="--", color="m", lw=2.0, solid_capstyle="butt", zorder=4)
+                          linestyle="--", color=color, lw=lw, solid_capstyle="butt", zorder=4)
+
+    if go_aligned:
+        # 0 is GO. Magenta now marks where the stimulus STARTED (negative, its
+        # distance from 0 is the stimulus duration), and green marks the end of the
+        # response window. Sorted by "resp" the green ticks form a staircase, which
+        # is the whole point of the figure.
+        _ticks(-off_rel_sorted, "m")
+        _ticks(post_sorted, "#2a9d8f", lw=2.2)
+    elif _np.any(_np.isfinite(off_rel_sorted)):
+        _ticks(off_rel_sorted, "m")
 
     # annotate original row index (1-based) at baseline start
     for new_row, orig_idx in enumerate(order):
@@ -873,8 +978,11 @@ def plot_hg_trials(
                         colors="k", linestyles=":", linewidth=0.4, alpha=0.6, zorder=2)
 
     cb = _plt.colorbar(im); cb.set_label("High-gamma z-score")
-    _plt.title(title + (f"  | sorted by: {sb}" if sb else ""))
-    _plt.xlabel("Time (s) relative to onset")
+    _plt.title(title + (f"  | sorted by: {sb}" if sb else "") +
+               ("  | aligned: GO" if go_aligned else ""))
+    _plt.xlabel("Time (s) relative to GO cue   (magenta = stimulus onset, "
+                "green = end of response window)" if go_aligned
+                else "Time (s) relative to onset")
     _plt.ylabel("Trials (sorted)")
     _plt.xlim(t_common[0], t_common[-1])
     _plt.tight_layout()
