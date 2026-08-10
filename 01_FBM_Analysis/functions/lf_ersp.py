@@ -324,48 +324,40 @@ def compute_ersp(
         if go_aligned and off_ds.size != on_ds.size:
             raise ValueError("compute_ersp: align='go' needs one offset per onset "
                              f"(got {off_ds.size} offsets for {on_ds.size} onsets)")
-        # The epoch is centred on `centres`, but the baseline window is defined
-        # relative to STIMULUS ONSET. Under GO alignment those are different points,
-        # so the baseline mask is shifted by the stimulus duration of that trial
-        # rather than being taken from wherever calc_w happens to land.
+        # The epoch is centred on `centres`, but the baseline window is and stays
+        # the pre-STIMULUS window (calc_w relative to stimulus onset) -- the same
+        # baseline every other analysis in the project uses. Under GO alignment
+        # those are different points, so the mask is shifted by that trial's own
+        # stimulus duration.
+        #
+        # The one hazard: a GO-centred `time_window` need not reach back far enough
+        # to contain the pre-stimulus period, and the mask would then be empty and
+        # fall through to "first 10% of the epoch" -- baselining post-GO activity
+        # against itself. So the SEGMENT is extended backwards until the baseline
+        # is inside it. The baseline is still computed exactly as before, by
+        # masking frames of the trial's own spectrogram; only the segment is
+        # longer. The extra pre-roll falls outside the output grid `x` and is
+        # dropped by the regrid, so the returned window is unchanged.
         centres = off_ds if go_aligned else on_ds
         n_base_fallback = 0
         for i, ctr in enumerate(centres):
-            s = int(ctr + time_window[0]*fs_ds)
+            shift = ((off_ds[i] - on_ds[i]) / fs_ds) if go_aligned else 0.0
+            seg_t0 = min(time_window[0], calc_w[0] - shift - 2.0/fs_ds)
+            s = int(ctr + seg_t0*fs_ds)
             e = int(ctr + time_window[1]*fs_ds)
             s = max(0, s); e = min(len(sig_ds), max(s+1, e))
             seg = sig_ds[s:e]
             f, t_rel, S_db = _spectro(seg, fs_ds, params)
             if f_first is None: f_first = f
-            t_abs = t_rel + time_window[0]
-            if go_aligned:
-                # The baseline is pre-STIMULUS, and the stimulus lasts a different
-                # length on every trial, so no fixed GO-centred window can be
-                # guaranteed to contain it. Cutting it from its own slice of the
-                # signal removes the coupling entirely: whatever `time_window` is,
-                # the baseline is always the real pre-stimulus period. Leaving it
-                # to the in-epoch mask would silently fall back to "first 10% of
-                # the epoch", i.e. baselining post-GO activity against itself.
-                bs = int(on_ds[i] + calc_w[0]*fs_ds)
-                be = int(on_ds[i] + calc_w[1]*fs_ds)
-                bs = max(0, bs); be = min(len(sig_ds), max(bs+1, be))
-                bseg = sig_ds[bs:be]
-                if bseg.size >= params.nperseg:
-                    _, _, S_base = _spectro(bseg, fs_ds, params)
-                    mu = np.mean(S_base, axis=1, keepdims=True)
-                    sd = np.std (S_base, axis=1, keepdims=True, ddof=1)
-                else:
-                    nT = S_db.shape[1]
-                    bmask = np.zeros(nT, bool); bmask[:max(2, nT//10)] = True
-                    mu = np.mean(S_db[:, bmask], axis=1, keepdims=True)
-                    sd = np.std (S_db[:, bmask], axis=1, keepdims=True, ddof=1)
-                    n_base_fallback += 1
-            else:
-                bmask = (t_abs >= calc_w[0]) & (t_abs < calc_w[1])
-                if not np.any(bmask):
-                    nT = S_db.shape[1]; bmask = np.zeros(nT, bool); bmask[:max(2, nT//10)] = True
-                mu = np.mean(S_db[:, bmask], axis=1, keepdims=True)
-                sd = np.std (S_db[:, bmask], axis=1, keepdims=True, ddof=1)
+            # t_abs is time relative to the ALIGNED event, so the segment's true
+            # start is used here, not time_window[0].
+            t_abs = t_rel + (s - ctr) / fs_ds
+            bmask = (t_abs >= calc_w[0] - shift) & (t_abs < calc_w[1] - shift)
+            if not np.any(bmask):
+                nT = S_db.shape[1]; bmask = np.zeros(nT, bool); bmask[:max(2, nT//10)] = True
+                n_base_fallback += 1
+            mu = np.mean(S_db[:, bmask], axis=1, keepdims=True)
+            sd = np.std (S_db[:, bmask], axis=1, keepdims=True, ddof=1)
             trials_db.append((t_abs, S_db - mu))
             trials_z .append((t_abs, (S_db - mu)/(sd + 1e-12)))
 
@@ -742,7 +734,8 @@ def plot_hg_trials(
     sort_ascending=True,
     trial_end_indices=None,       # supports trial-end-based segmentation
     sort_by="stim",               # "stim" | "resp" | "total" | "none"
-    align="onset"                 # "onset" (t=0 is stimulus onset) | "go" (t=0 is the GO cue)
+    align="onset",                # "onset" (t=0 is stimulus onset) | "go" (t=0 is the GO cue)
+    fmt="tif"                     # "tif" | "png" — default keeps 140's output format
 ):
     """
     Mirrors the legacy HG plot (color/shape/sorting) but lives inside lf_ersp.py.
@@ -926,8 +919,9 @@ def plot_hg_trials(
         else:
             chan_name = f"Ch{channel_idx}"
     _atag = "_GO" if str(align).lower() == "go" else ""
+    _ext = "png" if str(fmt).lower() == "png" else "tif"
     title = f"{patient_id} – {condition} – {reref_type}-ref HG trials: {chan_name}"
-    fname = f"{patient_id}_{condition}_{reref_type}_HGtrials_{chan_name}{_atag}.tif"
+    fname = f"{patient_id}_{condition}_{reref_type}_HGtrials_{chan_name}{_atag}.{_ext}"
     out_path = os.path.join(save_dir, fname) if save_dir else fname
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
@@ -987,7 +981,8 @@ def plot_hg_trials(
     _plt.xlim(t_common[0], t_common[-1])
     _plt.tight_layout()
 
-    _plt.savefig(out_path, dpi=dpi, transparent=True, format="tiff")
+    _plt.savefig(out_path, dpi=dpi, transparent=True,
+                 format=("png" if _ext == "png" else "tiff"))
     _plt.close()
     return out_path
 
