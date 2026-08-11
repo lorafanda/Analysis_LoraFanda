@@ -1,5 +1,5 @@
 from __future__ import annotations
-import os, glob, warnings
+import os, glob, hashlib, warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -41,19 +41,66 @@ def collect_trials(
         Tukey factor for IQR fences (default 1.5).
     """
 
+    # Language suffixes were enumerated one at a time, and the list fell behind the
+    # data: auditory_naming_ENG was absent, so it never normalised to "audio" and
+    # PAT_6704 acquired a fourth condition folder holding one stray trial, splitting
+    # that patient's auditory trials across two incomplete sets. Enumerating is the
+    # bug; the prefix fallback below means the next language code cannot repeat it.
+    _PREFIX_RULES = (("auditory_naming", "audio"), ("picture_naming", "picture"),
+                     ("reading_completion", "reading"))
+    _unmapped_seen = set()
+
     def _norm_cond(x):
         s = str(x).strip().lower()
         if condition_aliases and s in condition_aliases:
             s = condition_aliases[s]
         mapping = {
             "picture_naming": "picture", "pict": "picture",
-            "auditory": "audio", "auditory_naming": "audio", "auditory_naming_ger": "audio", "auditory_naming_fre": "audio", "audi": "audio",
-            "read": "reading", "reading": "reading", "reading_completion": "reading","reading_completion_fre": "reading", "reading_completion_ger": "reading",
+            "auditory": "audio", "auditory_naming": "audio", "auditory_naming_ger": "audio",
+            "auditory_naming_fre": "audio", "auditory_naming_eng": "audio", "audi": "audio",
+            "read": "reading", "reading": "reading", "reading_completion": "reading",
+            "reading_completion_fre": "reading", "reading_completion_ger": "reading",
+            "reading_completion_eng": "reading",
         }
-        return mapping.get(s, s)
+        if s in mapping:
+            return mapping[s]
+        for pre, canon in _PREFIX_RULES:
+            if s.startswith(pre):
+                if s not in _unmapped_seen:
+                    _unmapped_seen.add(s)
+                    print(f"  [cond] {s!r} not in the table; matched prefix {pre!r} "
+                         f"-> {canon!r}")
+                return canon
+        return s
+
+    # DE-DUPLICATION. prep0 can hold the same trial table twice under two extraction
+    # dates -- 4 of the 6 MicroEPI patients have a byte-identical
+    # ..._2026-05-08.tsv / ..._2026-05-12.tsv pair for every condition. This glob
+    # ingested both, so every trial was counted TWICE and every per-condition average
+    # was silently double-weighted (audio n_in = 104 = 52 x 2).
+    #
+    # Only BYTE-IDENTICAL files are dropped. A patient with genuinely different files
+    # for one condition has separate blocks that must still be concatenated, and
+    # de-duplicating on filename or on condition would throw those away. Verified
+    # across all 30 patients: 90 TSVs, 12 redundant copies, and no patient has two
+    # DIFFERENT files for the same condition.
+    _seen_hashes = {}
+    _paths = []
+    for path in sorted(glob.glob(os.path.join(prep_dir, "*.tsv"))):
+        try:
+            h = hashlib.md5(open(path, "rb").read()).hexdigest()
+        except OSError:
+            _paths.append(path)
+            continue
+        if h in _seen_hashes:
+            print(f"  [trials] skipping {os.path.basename(path)} — byte-identical to "
+                 f"{os.path.basename(_seen_hashes[h])}")
+            continue
+        _seen_hashes[h] = path
+        _paths.append(path)
 
     rows = []
-    for path in sorted(glob.glob(os.path.join(prep_dir, "*.tsv"))):
+    for path in _paths:
         df = pd.read_csv(path, sep="\t")
         cols = {c.lower() for c in df.columns}
         need = {"sample", "sample_offsets", "trial_end"}
@@ -245,6 +292,7 @@ def plot_montage_overview(
     patient_id="",
     figsize_w=200,
     dpi=150,
+    fmt="tif",              # "tif" | "png" — default keeps 140's output format
 ):
     """
     Save a stacked montage trace of all channels over full recording duration.
@@ -296,8 +344,12 @@ def plot_montage_overview(
 
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
-        out = os.path.join(save_dir, f"{patient_id}_montage_overview.tif")
-        fig.savefig(out, dpi=dpi, format="tiff")
+        # A 200-inch figure at 150 dpi is 30000 px wide; as TIFF that is ~1 GB per
+        # patient, and 9 of them were 73% of the whole real-time output tree. PNG of
+        # the same figure is a fraction of that.
+        _ext = "png" if str(fmt).lower() == "png" else "tif"
+        out = os.path.join(save_dir, f"{patient_id}_montage_overview.{_ext}")
+        fig.savefig(out, dpi=dpi, format=("png" if _ext == "png" else "tiff"))
         plt.close(fig)
         return out
     else:

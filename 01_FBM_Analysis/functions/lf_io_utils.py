@@ -380,7 +380,13 @@ def build_paths_for_patient(pid_raw, block_name):
         patient_id = pid_raw
         base_root  = fr"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\{patient_id}\task_FBM"
     else:
-        patient_id = f"PAT_{pid_raw}"
+        # HUG ids appear BOTH ways in this project: config.py's older patient_ids
+        # lists use bare numbers (3455) while the current one uses "PAT_3455".
+        # Prepending unconditionally turned the second form into PAT_PAT_3455 and
+        # cost all 10 HUG patients on the 2026-08-11 real-time run -- WinError 3,
+        # for data that was present the whole time. Accept both spellings.
+        s = str(pid_raw)
+        patient_id = s if s.startswith("PAT_") else f"PAT_{s}"
         base_root  = fr"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_HUG\{patient_id}\task_FBM"
 
     raw_dir  = os.path.join(base_root, f"data_{block_name}", "raw")
