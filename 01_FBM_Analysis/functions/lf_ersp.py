@@ -191,8 +191,23 @@ def fill_nans_nearest(A):
     return A
 
 
-def save_clean_png(A, vmin, vmax, path_png):
-    plt.figure(figsize=(4, 4), dpi=300)
+def save_clean_png(A, vmin, vmax, path_png, *, keep_rows=None, figsize=(4, 4)):
+    """The image MOBA shows when an electrode is clicked, so it has to be readable.
+
+    `keep_rows` crops the frequency axis to the first N rows before drawing. The cube
+    spans 0-500 Hz in 129 bins, and everything above ~200 Hz is noise; drawn in full it
+    takes 60% of the frame and pushes the actual response into a thin band. Only the
+    PICTURE is cropped -- the .npy keeps every bin, so no analysis changes.
+
+    `figsize` controls the aspect. The default square frame squashes a wide cube
+    (129 x 471 for the GO-locked runs) into the same extent as its frequency axis,
+    which turns a 1.5 s response into a narrow vertical blob. Passing a wider frame
+    keeps the time axis legible.
+    """
+    A = np.asarray(A)
+    if keep_rows:
+        A = A[:int(keep_rows)]
+    plt.figure(figsize=figsize, dpi=300)
     ax = plt.axes([0, 0, 1, 1])
     ax.imshow(A, origin="lower", aspect="auto", cmap="bwr",
               vmin=vmin, vmax=vmax, interpolation="none")
