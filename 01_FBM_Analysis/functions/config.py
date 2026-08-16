@@ -114,8 +114,8 @@ bad_channels_manual = {
 # picks by CONTENT, not by filename; these entries only say which folder.
 LOOKUP_ANATOMY_PATIENTS = {"EL046", "EL048"}
 LOOKUP_ANATOMY_DIRS = {
-    "EL046": r"S:\HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL046\anatomy\raw",
-    "EL048": r"S:\HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL048\anatomy",
+    "EL046": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL046\anatomy\raw",
+    "EL048": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL048\anatomy",
 }
 
 # Contacts flagged isOut=TRUE in the Lookup sit OUTSIDE the brain, so they are
@@ -290,7 +290,7 @@ EL_PRESETS = {
     "EL044": dict(trig="DC6", flip=False, time_range=(2478, 4290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
     "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 
-    "EL046": dict(trig="DC6", flip=True, time_range=(22120, 26000), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "EL046": dict(trig="DC6", flip=False, time_range=(21120, 23320), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     "EL048": dict(trig="DC6", flip=False, time_range=(4600, 8468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 }
 
