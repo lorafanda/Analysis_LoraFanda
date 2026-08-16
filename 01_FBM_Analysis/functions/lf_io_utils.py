@@ -499,7 +499,17 @@ def ensure_dir(p: str) -> str:
     os.makedirs(p, exist_ok=True)
     return p
 
-_non_neural_pat = re.compile(r"^(PHOTO|MRK|MKR|ECG|AUDIO)$|^[XE][1-8]$|^[X]$", re.I)
+# Widened 2026-08-16. The old pattern matched only X1-X8 / E1-E8 and ECG, so
+# EKG-, EMG- and the X9..X12 / X1m1..X1m8 / X2m1..X2m8 auxiliary families were
+# being ERSP'd as if they were cortex -- 156 cubes across both output trees,
+# which would have entered clustering as ordinary electrodes.
+# Checked against all 1690 distinct channel names in 04 and 05 before widening:
+# the 22 names this newly catches are all EKG/EMG/X-family, and every X* name in
+# the cohort is auxiliary, so no real contact is affected.
+_non_neural_pat = re.compile(
+    r"^(PHOTO|MRK|MKR|ECG|EKG|EMG|EOG|AUDIO|TRIG|PULSE|RESP)_?\d*$"
+    r"|^X\d+(M\d+)?$"          # X9, X10-X12, X1m1..X1m8, X2m1..X2m8
+    r"|^[XE][1-8]$|^X$", re.I)
 
 def _is_non_neural(label: str) -> bool:
     if not label: return False

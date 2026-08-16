@@ -138,6 +138,15 @@ for _pid, _out in LOOKUP_OUT_OF_BRAIN.items():
 # EL046 has MNI for all 178 localised contacts.
 LOOKUP_NO_MNI = {"EL048"}
 
+# EL040: the FP-R shank sits on the parcellation boundary. FP-R11 was already
+# dropped by the Unknown rule ("Unknown ctx-rh-rostralmiddlefrontal"), while
+# FP-R12 and FP-R15 carry the SAME two labels in the opposite order and were
+# kept -- the rule tests only whether the FIRST token is Unknown. Excluding the
+# whole run FP-R10..FP-R15 rather than relying on label order.
+bad_channels_manual["EL040"] = sorted(set(
+    bad_channels_manual.get("EL040", [])) | {
+    "FP-R10", "FP-R11", "FP-R12", "FP-R13", "FP-R14", "FP-R15"})
+
 # Placeholder for PSD suggestions you accept (copy printed line from driver here)
 bad_channels_auto = {
     # "PAT_3415": ["WM2", "IPG4"],  # example; you paste/curate
