@@ -1,6 +1,6 @@
 # lf_io_utils.py
 from __future__ import annotations
-import os, json, glob, h5py
+import os, json, glob, functools, h5py
 import numpy as np
 import pandas as pd
 import re
@@ -122,6 +122,79 @@ def derive_wm_channels_from_electrodes_tsv(tsv_path_pattern: str) -> list[str]:
     return [str(r["name"]) for r in df.to_dict("records") if _is_wm(r)]
 
 
+def _lookup_truthy(v) -> bool:
+    """isWM / isOut come back as float 0.0/1.0/nan in one workbook and bool in
+    another, so neither `== 1` nor `is True` is safe on its own."""
+    if isinstance(v, str):
+        return v.strip().lower() in ("1", "true", "yes")
+    try:
+        return bool(v) and not pd.isna(v)
+    except (TypeError, ValueError):
+        return False
+
+
+@functools.lru_cache(maxsize=8)
+def read_anatomy_lookup(lookup_dir: str) -> pd.DataFrame:
+    """The anatomy Lookup workbook for a patient with no BIDS_elec entry.
+
+    A folder holds two workbooks and THE ONE NAMED AFTER THE PATIENT IS NOT
+    ALWAYS THE USABLE ONE: EL048_Lookup.xlsx has an entirely empty `natus`
+    column, so nothing in it can be matched to a recording channel, while the
+    generic Lookup.xlsx beside it is populated. EL046 is the other way round.
+    So the file is chosen by CONTENT -- most rows with a usable `natus` wins --
+    rather than by name.
+
+    Returns the `channels` sheet restricted to plugged lead/micro contacts, with
+    two added boolean columns, `_is_wm` and `_is_out`.
+    """
+    cands = sorted(glob.glob(os.path.join(lookup_dir, "*Lookup*.xls*")))
+    if not cands:
+        raise FileNotFoundError(f"No Lookup workbook in {lookup_dir}")
+    best, best_n = None, -1
+    for f in cands:
+        try:
+            df = pd.read_excel(f, sheet_name="channels")
+        except Exception:
+            continue
+        if "natus" not in df.columns:
+            continue
+        n = int(df["natus"].astype(str).str.strip().str.lower()
+                .isin(("unplugged", "nan", "")).eq(False).sum())
+        if n > best_n:
+            best, best_n = (f, df), n
+    if best is None or best_n <= 0:
+        raise ValueError(f"No Lookup workbook in {lookup_dir} has a usable "
+                         f"`natus` column (tried {[os.path.basename(c) for c in cands]})")
+    path, df = best
+    log(f"  [lookup] {os.path.basename(path)}: {best_n} plugged contacts")
+
+    lead = df[df["type"].astype(str).str.lower().isin(("lead", "micro"))].copy()
+    lead = lead[~lead["natus"].astype(str).str.strip().str.lower()
+                .isin(("unplugged", "nan", ""))]
+    lead["_is_wm"] = [_lookup_truthy(v) for v in lead.get("isWM", [])]
+    lead["_is_out"] = [_lookup_truthy(v) for v in lead.get("isOut", [])]
+    return lead
+
+
+def derive_wm_channels_from_lookup(lookup_dir: str) -> list[str]:
+    """WM channel names from an anatomy Lookup, same contract as the BIDS version.
+
+    Returns `natus` names -- the RECORDING labels -- not `name`, which uses a
+    different punctuation convention (Fp_L1 vs Fp_L-1). Contacts flagged isOut
+    are excluded: they sit outside the brain, so they are bad channels and must
+    not be averaged into a reference.
+    """
+    lead = read_anatomy_lookup(lookup_dir)
+    wm = lead[lead["_is_wm"] & ~lead["_is_out"]]
+    return [str(x) for x in wm["natus"]]
+
+
+def out_of_brain_channels_from_lookup(lookup_dir: str) -> list[str]:
+    """Plugged contacts flagged isOut -- outside the brain, i.e. bad channels."""
+    lead = read_anatomy_lookup(lookup_dir)
+    return [str(x) for x in lead[lead["_is_out"]]["natus"]]
+
+
 def canonicalize_labels(labels: list[str], patient_id_hint: str | None = None) -> tuple[list[str], dict]:
     """
     Return (canon_list, mapping) where mapping[orig] = canon.
@@ -173,6 +246,26 @@ def wm_labels_for_patient(patient_id: str, *,
     try:
         names = derive_wm_channels_from_electrodes_tsv(pattern)
     except FileNotFoundError as e:
+        # EL046 and EL048 have no BIDS_elec entry at all, so the anatomy Lookup
+        # workbook is the only source of WM flags. This is the single choke point
+        # for WM names -- apply_wm_reref reaches it through wm_indices_for_patient
+        # -- so hooking it here covers every caller. Strictly opt-in via
+        # cfg.LOOKUP_ANATOMY_PATIENTS: no other patient changes behaviour, and a
+        # genuinely missing TSV still returns an empty set as before.
+        try:
+            from functions import config as _cfg
+        except Exception:
+            _cfg = None
+        d = (getattr(_cfg, "LOOKUP_ANATOMY_DIRS", {}) or {}).get(str(patient_id))
+        if d and str(patient_id) in getattr(_cfg, "LOOKUP_ANATOMY_PATIENTS", set()):
+            try:
+                names = derive_wm_channels_from_lookup(d)
+                log(f"[WM] {patient_id}: no BIDS TSV; using anatomy Lookup "
+                    f"-> {len(names)} WM channels")
+                return {normalize_label(n) for n in names}
+            except Exception as e2:
+                log(f"[WM] {patient_id}: Lookup fallback failed — {e2}")
+                return set()
         log(f"[WM] {e}")
         return set()
     return {normalize_label(n) for n in names}

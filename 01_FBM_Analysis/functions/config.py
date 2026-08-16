@@ -101,6 +101,43 @@ bad_channels_manual = {
     "": [""],
 }
 
+# ----------------------------------------------------------------------------
+# LOOKUP-BASED ANATOMY  (EL046, EL048 only)
+# ----------------------------------------------------------------------------
+# These two have no BIDS_elec entry at all, so the anatomy Lookup workbook is
+# the only source of WM flags and contact labels. The paths are explicit
+# because the useful workbook is NOT always the one named after the patient:
+# EL048_Lookup.xlsx has an entirely EMPTY `natus` column (no recording-channel
+# names, so a WM list built from it comes back empty and re-referencing
+# silently does nothing), while the generic Lookup.xlsx beside it is
+# populated. EL046 is the other way round. derive_wm_channels_from_lookup()
+# picks by CONTENT, not by filename; these entries only say which folder.
+LOOKUP_ANATOMY_PATIENTS = {"EL046", "EL048"}
+LOOKUP_ANATOMY_DIRS = {
+    "EL046": r"S:\HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL046\anatomy\raw",
+    "EL048": r"S:\HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL048\anatomy",
+}
+
+# Contacts flagged isOut=TRUE in the Lookup sit OUTSIDE the brain, so they are
+# bad channels rather than data. Only PLUGGED contacts are listed -- an
+# unplugged contact was never recorded and cannot be excluded from a signal it
+# is not in. Read from the workbooks on 2026-08-14; regenerate if the anatomy
+# is redone.
+LOOKUP_OUT_OF_BRAIN = {
+    "EL046": ["pI_L1", "pI_L4"],
+    "EL048": ["A_R9", "EntG_R12", "PHG_R15", "aH_L8", "aH_L9", "pH_R14",
+              "pH_R15"],
+}
+for _pid, _out in LOOKUP_OUT_OF_BRAIN.items():
+    bad_channels_manual[_pid] = sorted(
+        set(bad_channels_manual.get(_pid, [])) | set(_out))
+
+# EL048 has NO MNI coordinates in either workbook (native_x/y/z only), so it
+# can be re-referenced and analysed but cannot enter the recon, the
+# glassbrains or MOBA's 3-D brain until its native->MNI normalisation is run.
+# EL046 has MNI for all 178 localised contacts.
+LOOKUP_NO_MNI = {"EL048"}
+
 # Placeholder for PSD suggestions you accept (copy printed line from driver here)
 bad_channels_auto = {
     # "PAT_3415": ["WM2", "IPG4"],  # example; you paste/curate
