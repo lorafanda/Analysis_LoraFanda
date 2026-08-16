@@ -15,7 +15,7 @@ patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL
 
 patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780] #,"EL043"
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
-patient_ids = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780"]  
+patient_ids = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953"]  
 
 block_name  = "LM"
 conditions_expected = ("picture", "audio", "reading")
@@ -222,7 +222,16 @@ PAT_PRESETS = {
     3965: dict(trig="x1",    flip=False, time_range=(40, 1295),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3975: dict(trig="E2",    flip=False, time_range=(200, 1550), invalid_trials=[], trial_ids=["picture"]*50 + ["auditory"]*50 + ["reading"]*51, fake_trials=[], manual_trig="PAT_3975__FLM_all.tsv"),
     3780: dict(trig="X2",    flip=False, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig="PAT_3780_FLM_all.tsv"),
+    6953: dict(trig="X2",    flip=False, time_range=(188, 1180),     invalid_trials=[59,92], trial_ids=["picture"]*51 + ["auditory"]*65 + ["reading"]*53, fake_trials=[52, 59, 60, 62, 63,89,98, 113, 117,118,119,120], manual_trig=None),
 }
+
+# PAT_PRESETS is keyed by INT (3455) but patient_ids supplies STRINGS (PAT_3455),
+# so PAT_PRESETS.get(pid) silently returned None for every HUG patient. That is the
+# same id-spelling mismatch that made build_paths_for_patient look for PAT_PAT_3455;
+# it just fails quietly here instead of raising. Register every spelling.
+PAT_PRESETS.update({str(_k): _v for _k, _v in list(PAT_PRESETS.items())})
+PAT_PRESETS.update({f"PAT_{_k}": _v for _k, _v in list(PAT_PRESETS.items())
+                    if not str(_k).startswith("PAT_")})
 
 # EL_PATIENTS = ["EL030","EL034","EL035","EL036","EL037","EL038","EL039","EL040","EL042","EL043","EL044","EL045"]
 EL_PATIENTS = ["EL033","EL034","EL036","EL039","EL040","EL041","EL043","EL044","EL045"]
@@ -244,8 +253,8 @@ EL_PRESETS = {
     "EL044": dict(trig="DC6", flip=False, time_range=(2478, 4290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
     "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 
-    "EL046": dict(trig="DC6", flip=False, time_range=(0, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
-    "EL048": dict(trig="DC6", flip=False, time_range=(0, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "EL046": dict(trig="DC6", flip=True, time_range=(22120, 26000), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "EL048": dict(trig="DC6", flip=False, time_range=(4600, 8468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 }
 
 # MICROEPI_PATIENTS = ["G-01","G-02","G-03","G-04","G-05"]
