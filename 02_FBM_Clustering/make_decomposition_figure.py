@@ -27,6 +27,7 @@ drift away from the analysis behind it.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import matplotlib
@@ -90,7 +91,50 @@ def _norm(s) -> str:
     return str(s).replace("_", "").replace("-", "").upper()
 
 
+def _anatomy_bars(K, Gn, XYZ, meta_in):
+    """Neighbours-sharing-label / chance, for each labelling of the SAME electrodes.
+
+    Computed rather than quoted. The graded and consensus values come from the
+    decomposition's own meta.json; the two partitions are recomputed from their
+    labels.csv with the identical spatial_coherence call, so all four bars refer to
+    one cohort and one metric.
+    """
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT / "functions"))
+    import lf_decompose as _D
+    import lf_runs as _LR
+
+    out = {}
+    for key, method, fset in (("k-means\n(as shipped)", "kmeans", "concat_hg"),
+                              ("Ward\n(as shipped)", "hierarchical", "concat_hg")):
+        try:
+            rd = _LR.newest_run(method, fset)
+            L = pd.read_csv(rd / "labels.csv")
+            ccol = next(c for c in L.columns
+                        if c.startswith("cluster_") and not c.endswith("_ranked"))
+            co = pd.read_csv(COORDS)
+            co["key"] = [f"{p}|{_norm(x)}" for p, x in zip(co["patient"], co["name"])]
+            L["key"] = [f"{p}|{_norm(e)}" for p, e in zip(L["patient_id"], L["electrode"])]
+            xyz = L.merge(co[["key", "x", "y", "z"]], on="key",
+                          how="left")[["x", "y", "z"]].to_numpy()
+            kk = int(L[ccol].nunique())
+            _, ratio = _D.spatial_coherence(L[ccol].to_numpy(), xyz)
+            out[f"{key.split(chr(10))[0]}\n(K={kk})"] = float(ratio)
+        except Exception as e:
+            print(f"  !! {method}/{fset} coherence failed: {type(e).__name__}: {e}")
+
+    cons = (meta_in or {}).get("consensus_spatial_coherence")
+    if cons:
+        out["pipeline\nconsensus"] = float(cons[1])
+    arg = (meta_in or {}).get("argmax_spatial_coherence")
+    out[f"graded\n(K={K})"] = float(arg[1]) if arg else float(
+        _D.spatial_coherence(Gn.argmax(1), XYZ)[1])
+    return out
+
+
 def main() -> int:
+    _mp0 = DEC / "meta.json"
+    meta_in = json.loads(_mp0.read_text(encoding="utf-8")) if _mp0.exists() else {}
     cv = pd.read_csv(DEC / "cv_rank_curve.csv")
     C = np.load(DEC / "components.npy")
     G = np.load(DEC / "G_loadings.npy")
@@ -152,9 +196,12 @@ def main() -> int:
             transform=ax.transAxes, ha="right", va="top", fontsize=7.8, color=MUTED)
 
     # ── D · anatomy -----------------------------------------------------------
+    # Every bar is COMPUTED from the current runs. They were hard-coded literals
+    # (1.36 / 1.71 / 1.70 / 2.00) from the 1027-electrode cohort at K=5, so the
+    # panel kept reporting the old numbers while every other panel moved to the
+    # 1266-electrode cohort - the figure looked internally consistent and was not.
     ax = fig.add_subplot(gs[0, 4:])
-    bars = {"k-means\n(as shipped)": 1.36, "k-means\n(shape)": 1.71,
-            "pipeline\nconsensus": 1.70, f"graded\n(K={K})": 2.00}
+    bars = _anatomy_bars(K, Gn, XYZ, meta_in)
     b = ax.bar(range(len(bars)), list(bars.values()),
                color=["#adb5bd", "#adb5bd", "#adb5bd", ACC], width=.62)
     ax.bar_label(b, fmt="%.2fx", fontsize=8.4, padding=2)
@@ -252,26 +299,44 @@ def main() -> int:
     ax.set_xlim(0, 1)
     ax.spines[["top", "right"]].set_visible(False)
     z = (r["ari"].min() - null["min"].mean()) / max(null["min"].std(), 1e-9)
-    ax.set_title("E - No single patient carries the solution", fontsize=10.5,
-                 loc="left", color=INK, pad=16)
+    # The verdict is DERIVED from z, not asserted. On the 24-patient cohort this
+    # sat inside the null and the panel title read "no single patient carries the
+    # solution"; at 27 patients z = -7.91 and the conclusion reverses. A hard-coded
+    # verdict would have kept printing the old one under a new figure date.
+    _inside = abs(z) < 2
+    ax.set_title("E - No single patient carries the solution" if _inside
+                 else "E - One patient DOES move the solution",
+                 fontsize=10.5, loc="left",
+                 color=INK if _inside else WARN, pad=16)
+    _worst = r.loc[r["ari"].idxmin(), "group"] if "group" in r.columns else "?"
     ax.text(0.0, 1.015,
-            f"worst fold {r['ari'].min():.2f}  vs  size-matched null "
+            f"worst fold {r['ari'].min():.2f} ({_worst})  vs  size-matched null "
             f"{null['min'].mean():.2f} +/- {null['min'].std():.2f} (shaded)  ->  "
-            f"z = {z:+.2f}, inside the null",
+            f"z = {z:+.2f}, {'inside' if _inside else 'OUTSIDE'} the null",
             transform=ax.transAxes, fontsize=7.8, color=MUTED, va="bottom")
 
     # ── F · limits ------------------------------------------------------------
     ax = fig.add_subplot(gs[4, 3:])
     ax.axis("off")
     ax.text(0, 1.0, "F - What this does and does not settle", fontsize=10.5, color=INK, va="top")
+    # Every number here is read from the run, so F cannot describe a different
+    # cohort from the panels above it.
+    _npat = int(meta_in.get("n_patients") or lab["patient_id"].nunique())
+    _rep = meta_in.get("replication_mean")
+    _ks = sorted(cv["k"].unique())
+    _cvm = cv.groupby("k")["var_explained"].mean()
+    _kmax = int(_cvm.idxmax())
     lines = [
         ("Components replicate across independent patient halves at",
-         "r = 0.687 +/- 0.036 - recognisable, not identical (12 vs 12 patients)."),
-        ("The held-out curve never turns over, so K is chosen by where the",
-         "gain flattens, not by an optimum. K=7 sits just past the 5-6 knee."),
+         (f"r = {_rep:.3f}" if _rep else "r = n/a") +
+         f" - recognisable, not identical ({_npat//2} vs {_npat - _npat//2} patients)."),
+        (f"The held-out curve RISES MONOTONICALLY to K={_kmax} "
+         f"({_cvm.max():.3f}), so it cannot",
+         f"choose K. K={K} is a fixed setting, not an optimum" +
+         (f"; K={K} was not even in the sweep." if K not in _ks else ".")),
         (f"{100*(top < 0.5).mean():.0f}% of electrodes have no majority component, which is why",
          "B2 (argmax) and B3 (loadings) do not show the same electrodes."),
-        ("24 patients cannot settle generalisation. Every stability number",
+        (f"{_npat} patients cannot settle generalisation. Every stability number",
          "here is reported against a size-matched null, never on its own."),
     ]
     y = 0.86
@@ -284,11 +349,14 @@ def main() -> int:
     import json as _json
     _mp = DEC / "meta.json"
     _m = _json.loads(_mp.read_text(encoding="utf-8")) if _mp.exists() else {}
+    # Describe the DECOMPOSITION, not the k-means run it borrowed X from - appending
+    # that run's provenance printed "K=7 ... K=6" in one line and read as a conflict.
+    from datetime import datetime as _dt
     _stamp = (f"convex NMF, K={_m.get('K', '?')}  ·  "
               f"{_m.get('n_electrodes', '?')} electrodes, "
               f"{_m.get('n_patients', '?')} patients  ·  {FSET}  ·  "
-              f"source {_m.get('source_run', '?').split('/')[-1]}  ·  "
-              f"{LR.provenance(RUN)}")
+              f"features from {_m.get('source_run', '?').split('/')[-1]}  ·  "
+              f"rendered {_dt.now():%Y-%m-%d}")
     fig.suptitle("Graded decomposition of the concatenated cohort  ·  " + _stamp,
                  fontsize=10.5, x=0.055, ha="left", y=0.985, color=INK)
     OUT.parent.mkdir(parents=True, exist_ok=True)
