@@ -48,11 +48,19 @@ VIEW_MAP = {"lateral_L": "left", "lateral_R": "right",
 # loading at K=7 is 1/7 = 0.143, so this keeps everything down to about half of uniform.
 LOADING_FLOOR = 0.08
 
+# Measured, not chosen: at 1.0 the brain renders flat grey, at 0.85 it keeps the
+# project's warm translucent surface. See the comment in shot().
+MAX_SPHERE_OPACITY = 0.85
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default=None, help="run dir (default: newest cnmf/concat_hg)")
     ap.add_argument("--scale", type=int, default=2, help="screenshot supersampling")
+    ap.add_argument("--spin-frames", type=int, default=60)
+    ap.add_argument("--spin-px", type=int, default=460,
+                    help="width of each rotation frame; they are embedded in the "
+                         "HTML report, so this drives its size")
     # THE ARGMAX OPTION IS GONE ON PURPOSE. by_condition/ belongs to notebook 252,
     # which renders it through MNE/PySurfer Brain.add_foci. This script is a pyvista
     # reimplementation and produces a visibly different brain from the same colour
@@ -64,7 +72,8 @@ def main() -> int:
     #     by_condition/  <- 252   (argmax, the project look)
     #     by_patient/    <- 252   (per-patient colours)
     #     by_loading/    <- here  (graded, which 252 cannot produce)
-    ap.add_argument("--which", choices=["loading"], default="loading",
+    ap.add_argument("--which", choices=["loading", "cluster", "spin", "all"],
+                    default="all",
                     help="which of the two renders to (re)draw")
     a = ap.parse_args()
 
@@ -95,24 +104,36 @@ def main() -> int:
     cams = RS.compute_cameras(bounds)
     pal = plt.get_cmap("tab10").colors
 
-    def shot(sel, rgb, weights, out_png, view):
-        pl = pv.Plotter(off_screen=True, window_size=C.WINDOW_SIZE)
+    def shot(sel, rgb, weights, out_png, view, az=None, px=None):
+        ws = C.WINDOW_SIZE if px is None else (px, int(px * C.WINDOW_SIZE[1]
+                                                      / C.WINDOW_SIZE[0]))
+        pl = pv.Plotter(off_screen=True, window_size=ws)
         for m in (lh, rh):
             pl.add_mesh(m, color=C.BRAIN_COLOR, opacity=C.BRAIN_OPACITY_CLEAN,
                         specular=C.BRAIN_SPECULAR, specular_power=C.BRAIN_SPECULAR_POWER,
                         ambient=C.BRAIN_AMBIENT, diffuse=C.BRAIN_DIFFUSE)
         for (x, y, z), w in zip(sel, weights):
             r = C.DEPTH_RADIUS * (0.45 + 1.15 * float(w))
+            # NEVER 1.0. A few hundred FULLY OPAQUE spheres change how VTK composites
+            # the translucent brain behind them and the mauve surface washes out to a
+            # flat grey - which is exactly why the argmax view (w=1) looked wrong while
+            # the graded view (w<1) looked right, from this same function. Capped at
+            # MAX_SPHERE_OPACITY, measured: 0.85 keeps the warm surface, 1.0 kills it.
             pl.add_mesh(pv.Sphere(radius=r, center=(x, y, z)), color=rgb,
-                        opacity=float(np.clip(0.15 + 0.85 * w, 0, 1)))
-        pl.camera_position = cams[VIEW_MAP[view]]
+                        opacity=float(np.clip(0.15 + 0.85 * w, 0, MAX_SPHERE_OPACITY)))
+        pl.camera_position = cams[VIEW_MAP[view]] if view else cams['left']
         pl.reset_camera_clipping_range()
-        if out_png.parent.name != "by_loading":
+        if az is not None:
+            pl.camera.azimuth = az        # sweep a full turn from the left view
+        if (out_png.parent.name not in ("by_loading", "by_cluster")
+                and out_png.parent.parent.name != "spin"):
             raise RuntimeError(
-                f"refusing to write {out_png.parent.name}/ - this script only owns "
-                f"by_loading/; by_condition/ and by_patient/ belong to notebook 252")
+                f"refusing to write {out_png.parent.name}/ - this script owns "
+                f"by_loading/, by_cluster/ and spin/; by_condition/ and "
+                f"by_patient/ belong to notebook 252")
         out_png.parent.mkdir(parents=True, exist_ok=True)
-        pl.screenshot(str(out_png), transparent_background=C.TRANSPARENT_BG, scale=a.scale)
+        pl.screenshot(str(out_png), transparent_background=C.TRANSPARENT_BG,
+                      scale=1 if px else a.scale)
         pl.close()
 
     W = df[wcols].to_numpy()
@@ -130,11 +151,23 @@ def main() -> int:
     for j in range(K):
         rgb = tuple(pal[j % 10])
         cd = rd / "recon" / f"cluster_{j:02d}"
-        if a.which == "loading":
+        m = df[ccol].to_numpy() == j
+        keep = Wn[:, j] > LOADING_FLOOR
+        if a.which in ("loading", "all"):
             # GRADED — what the argmax throws away
-            keep = Wn[:, j] > LOADING_FLOOR
             for v in VIEW_MAP:
                 shot(xyz[keep], rgb, Wn[keep, j] / GMAX, cd / "by_loading" / f"{v}.png", v)
+        if a.which in ("cluster", "all"):
+            # ARGMAX, this script's own copy — by_condition/ stays 252's
+            for v in VIEW_MAP:
+                shot(xyz[m], rgb, np.ones(m.sum()), cd / "by_cluster" / f"{v}.png", v)
+        if a.which in ("spin", "all"):
+            # a full turn for the HTML report, one folder per component
+            sd = rd / "recon" / "spin" / f"cluster_{j:02d}"
+            for fi in range(a.spin_frames):
+                shot(xyz[m], rgb, np.ones(m.sum()),
+                     sd / f"f{fi:03d}.png", None, az=(360.0 * fi) / a.spin_frames,
+                     px=a.spin_px)
         m = df[ccol].to_numpy() == j
         keep = Wn[:, j] > LOADING_FLOOR
         print(f"    comp {j}: argmax {int(m.sum())} contacts, graded {int(keep.sum())} "

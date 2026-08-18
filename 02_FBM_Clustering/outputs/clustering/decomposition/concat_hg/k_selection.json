@@ -1,0 +1,25 @@
+{
+  "feature_set": "concat_hg",
+  "ks": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    14,
+    16
+  ],
+  "picks": {
+    "bicv": 8,
+    "lopo": 16,
+    "split": 7
+  },
+  "k_in_use": 7,
+  "quick": false,
+  "written": "2026-08-18 18:07:49"
+}
