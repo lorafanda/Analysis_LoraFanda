@@ -239,23 +239,23 @@
           "EL035": 22,
           "EL043": 15,
           "PAT_6953": 13,
-          "PAT_3975": 12,
           "EL030": 12,
+          "PAT_3975": 12,
           "EL038": 10,
           "PAT_6684": 9,
-          "EL046": 8,
           "PAT_3415": 8,
+          "EL046": 8,
           "EL045": 5,
           "PAT_6854": 5,
-          "EL042": 4,
           "EL033": 4,
+          "EL042": 4,
           "EL037": 3,
+          "PAT_3066": 2,
           "EL040": 2,
           "PAT_5533": 2,
-          "PAT_3066": 2,
+          "PAT_5515": 1,
           "PAT_3455": 1,
-          "PAT_3965": 1,
-          "PAT_5515": 1
+          "PAT_3965": 1
         },
         "1": {
           "EL042": 45,
@@ -267,37 +267,37 @@
           "EL046": 9,
           "PAT_3066": 8,
           "EL037": 8,
-          "PAT_6684": 6,
           "PAT_6704": 6,
+          "PAT_6684": 6,
           "EL040": 5,
           "PAT_3455": 5,
           "EL038": 3,
           "PAT_6619": 3,
-          "PAT_3390": 2,
           "PAT_5533": 2,
-          "PAT_3415": 1,
-          "PAT_3965": 1,
+          "PAT_3390": 2,
           "EL036": 1,
-          "EL030": 1
+          "EL030": 1,
+          "PAT_3415": 1,
+          "PAT_3965": 1
         },
         "2": {
           "PAT_6854": 70,
           "PAT_6953": 17,
           "PAT_6619": 17,
-          "PAT_3066": 14,
           "PAT_3975": 14,
+          "PAT_3066": 14,
           "EL046": 10,
-          "EL038": 7,
           "EL037": 7,
+          "EL038": 7,
           "PAT_5515": 6,
           "EL042": 5,
-          "EL043": 4,
-          "EL045": 4,
           "PAT_5533": 4,
+          "EL045": 4,
+          "EL043": 4,
           "EL035": 3,
           "EL030": 2,
-          "PAT_6684": 1,
-          "EL036": 1
+          "EL036": 1,
+          "PAT_6684": 1
         },
         "3": {
           "PAT_3780": 47,
@@ -305,15 +305,15 @@
           "EL030": 14,
           "PAT_6854": 13,
           "EL045": 8,
-          "EL036": 6,
           "PAT_6704": 6,
+          "EL036": 6,
           "EL040": 4,
           "PAT_3975": 3,
           "PAT_3066": 2,
           "EL037": 1,
           "EL038": 1,
-          "EL042": 1,
           "EL043": 1,
+          "EL042": 1,
           "PAT_3455": 1,
           "PAT_5533": 1
         },
@@ -330,9 +330,9 @@
           "EL043": 6,
           "PAT_3415": 4,
           "EL035": 3,
+          "PAT_6619": 2,
           "PAT_3066": 2,
           "PAT_5533": 2,
-          "PAT_6619": 2,
           "PAT_3390": 1,
           "EL045": 1,
           "PAT_6704": 1,
@@ -353,8 +353,8 @@
           "PAT_2868": 5,
           "PAT_3415": 5,
           "PAT_6854": 2,
-          "PAT_3965": 1,
-          "PAT_5533": 1
+          "PAT_5533": 1,
+          "PAT_3965": 1
         },
         "6": {
           "EL033": 61,
@@ -363,9 +363,9 @@
           "EL038": 12,
           "PAT_5533": 10,
           "PAT_6704": 6,
+          "EL046": 2,
           "EL037": 2,
           "EL045": 2,
-          "EL046": 2,
           "PAT_3965": 2,
           "EL042": 1,
           "PAT_2868": 1
@@ -380,21 +380,21 @@
         "PAT_3975": 67,
         "EL033": 65,
         "EL042": 56,
-        "PAT_6619": 48,
         "EL038": 48,
+        "PAT_6619": 48,
         "PAT_3780": 47,
         "PAT_6704": 41,
         "EL043": 39,
-        "PAT_3455": 38,
         "PAT_3965": 38,
+        "PAT_3455": 38,
         "EL035": 37,
         "PAT_6684": 37,
         "EL040": 30,
         "EL037": 28,
         "PAT_3066": 28,
         "PAT_5533": 22,
-        "EL036": 18,
         "PAT_3415": 18,
+        "EL036": 18,
         "PAT_3390": 13,
         "EL034": 8,
         "PAT_5515": 7,
@@ -440,7 +440,8 @@
               "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_00/by_condition/dorsal.png",
               "frontal": "recon/cluster_00/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
           },
           "1": {
             "glass": {
@@ -448,7 +449,8 @@
               "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_01/by_condition/dorsal.png",
               "frontal": "recon/cluster_01/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
           },
           "2": {
             "glass": {
@@ -456,7 +458,8 @@
               "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_02/by_condition/dorsal.png",
               "frontal": "recon/cluster_02/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
           },
           "3": {
             "glass": {
@@ -464,7 +467,8 @@
               "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_03/by_condition/dorsal.png",
               "frontal": "recon/cluster_03/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
           },
           "4": {
             "glass": {
@@ -472,7 +476,8 @@
               "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_04/by_condition/dorsal.png",
               "frontal": "recon/cluster_04/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_04.png"
           },
           "5": {
             "glass": {
@@ -480,7 +485,8 @@
               "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_05/by_condition/dorsal.png",
               "frontal": "recon/cluster_05/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_05.png"
           },
           "6": {
             "glass": {
@@ -488,10 +494,20 @@
               "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_06/by_condition/dorsal.png",
               "frontal": "recon/cluster_06/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_06.png"
           }
         },
-        "overview": []
+        "overview": [
+          {
+            "path": "cluster_cards.png",
+            "title": "Cluster cards \u2014 waveform, glass brains, anatomy"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          }
+        ]
       }
     },
     {
@@ -554,52 +570,52 @@
           "PAT_3455": 3,
           "PAT_6704": 2,
           "PAT_3390": 1,
-          "PAT_3415": 1,
           "PAT_3780": 1,
-          "PAT_3965": 1,
-          "PAT_5533": 1
+          "PAT_3415": 1,
+          "PAT_5533": 1,
+          "PAT_3965": 1
         },
         "1": {
           "PAT_3780": 41,
           "PAT_6704": 15,
           "PAT_6854": 11,
-          "EL033": 9,
           "EL038": 9,
+          "EL033": 9,
           "EL037": 7,
           "EL043": 6,
           "PAT_3975": 2,
           "EL030": 1,
           "EL040": 1,
+          "PAT_3066": 1,
           "EL042": 1,
-          "EL045": 1,
-          "PAT_3066": 1
+          "EL045": 1
         },
         "2": {
           "PAT_6854": 38,
           "EL042": 24,
-          "EL030": 22,
           "EL035": 22,
+          "EL030": 22,
           "EL046": 20,
           "EL033": 16,
           "PAT_6953": 15,
           "EL040": 9,
-          "PAT_3975": 7,
           "EL045": 7,
           "PAT_6619": 7,
-          "EL043": 6,
+          "PAT_3975": 7,
           "EL037": 6,
           "PAT_3390": 6,
+          "EL043": 6,
           "PAT_5515": 6,
-          "PAT_5533": 4,
           "PAT_3066": 4,
+          "PAT_5533": 4,
           "EL036": 3,
-          "PAT_3965": 2,
           "EL038": 2,
-          "PAT_6704": 2,
           "EL034": 2,
           "PAT_3780": 2,
-          "PAT_3415": 1,
+          "PAT_3965": 2,
+          "PAT_6704": 2,
           "PAT_2868": 1,
+          "PAT_3415": 1,
           "PAT_6684": 1
         },
         "3": {
@@ -614,9 +630,9 @@
           "PAT_6619": 6,
           "PAT_3390": 5,
           "PAT_5533": 5,
+          "PAT_2868": 3,
           "EL046": 3,
           "PAT_3975": 3,
-          "PAT_2868": 3,
           "EL038": 1,
           "EL035": 1,
           "PAT_6684": 1
@@ -626,19 +642,19 @@
           "EL038": 21,
           "PAT_6619": 17,
           "EL046": 14,
-          "PAT_5533": 12,
           "PAT_3066": 12,
+          "PAT_5533": 12,
           "EL030": 6,
-          "EL037": 5,
           "PAT_6684": 5,
-          "EL045": 3,
+          "EL037": 5,
           "PAT_3975": 3,
+          "EL045": 3,
           "PAT_3780": 2,
+          "EL033": 1,
+          "EL035": 1,
           "EL043": 1,
           "EL040": 1,
-          "EL033": 1,
           "PAT_3455": 1,
-          "EL035": 1,
           "PAT_6704": 1
         },
         "5": {
@@ -646,21 +662,21 @@
           "EL046": 34,
           "EL037": 8,
           "EL036": 6,
-          "EL043": 5,
           "EL030": 5,
-          "EL042": 3,
-          "EL045": 3,
+          "EL043": 5,
           "EL035": 3,
+          "EL045": 3,
+          "EL042": 3,
           "PAT_6684": 3,
           "EL040": 2,
-          "PAT_6619": 2,
           "PAT_6704": 2,
           "PAT_2868": 2,
+          "PAT_6619": 2,
           "EL038": 1,
-          "PAT_3390": 1,
-          "PAT_3415": 1,
+          "PAT_5515": 1,
           "PAT_3780": 1,
-          "PAT_5515": 1
+          "PAT_3415": 1,
+          "PAT_3390": 1
         },
         "6": {
           "PAT_3975": 47,
@@ -672,8 +688,8 @@
           "EL034": 6,
           "EL030": 3,
           "EL037": 2,
-          "PAT_3415": 2,
           "PAT_6854": 2,
+          "PAT_3415": 2,
           "EL038": 1,
           "PAT_3066": 1
         }
@@ -687,21 +703,21 @@
         "PAT_3975": 67,
         "EL033": 65,
         "EL042": 56,
-        "PAT_6619": 48,
         "EL038": 48,
+        "PAT_6619": 48,
         "PAT_3780": 47,
         "PAT_6704": 41,
         "EL043": 39,
-        "PAT_3455": 38,
         "PAT_3965": 38,
+        "PAT_3455": 38,
         "EL035": 37,
         "PAT_6684": 37,
         "EL040": 30,
         "EL037": 28,
         "PAT_3066": 28,
         "PAT_5533": 22,
-        "EL036": 18,
         "PAT_3415": 18,
+        "EL036": 18,
         "PAT_3390": 13,
         "EL034": 8,
         "PAT_5515": 7,
@@ -740,7 +756,71 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {
+              "lateral_L": "recon/cluster_05/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_05/by_condition/dorsal.png",
+              "frontal": "recon/cluster_05/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {
+              "lateral_L": "recon/cluster_06/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_06/by_condition/dorsal.png",
+              "frontal": "recon/cluster_06/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       }
     },
@@ -788,19 +868,19 @@
         "0": {
           "PAT_6953": 14,
           "EL042": 10,
-          "EL045": 8,
           "EL035": 8,
+          "EL045": 8,
           "PAT_6684": 6,
-          "EL040": 5,
-          "EL043": 5,
-          "PAT_3455": 5,
           "PAT_6704": 5,
+          "PAT_3455": 5,
+          "EL043": 5,
+          "EL040": 5,
+          "PAT_5533": 2,
+          "PAT_3415": 2,
           "EL038": 2,
           "PAT_3390": 2,
-          "PAT_5533": 2,
-          "PAT_6619": 2,
           "PAT_6854": 2,
-          "PAT_3415": 2,
+          "PAT_6619": 2,
           "EL036": 1,
           "PAT_3965": 1
         },
@@ -810,8 +890,8 @@
           "PAT_3780": 47,
           "EL042": 42,
           "PAT_6953": 36,
-          "PAT_3975": 35,
           "EL038": 35,
+          "PAT_3975": 35,
           "EL030": 34,
           "PAT_6619": 32,
           "EL043": 25,
@@ -830,8 +910,8 @@
           "PAT_3390": 4,
           "PAT_3455": 2,
           "PAT_2868": 2,
-          "PAT_3415": 1,
-          "EL034": 1
+          "EL034": 1,
+          "PAT_3415": 1
         },
         "2": {
           "EL033": 43,
@@ -846,10 +926,10 @@
           "PAT_6854": 7,
           "PAT_3390": 6,
           "PAT_3415": 5,
+          "PAT_5533": 4,
+          "PAT_2868": 4,
           "EL036": 4,
           "EL038": 4,
-          "PAT_2868": 4,
-          "PAT_5533": 4,
           "EL046": 3,
           "PAT_3975": 3,
           "PAT_6619": 1,
@@ -861,15 +941,15 @@
           "PAT_3975": 10,
           "EL046": 8,
           "EL034": 7,
-          "EL030": 6,
           "PAT_6684": 6,
+          "EL030": 6,
           "EL037": 3,
-          "PAT_3415": 3,
           "PAT_5533": 3,
           "PAT_6854": 3,
+          "PAT_3415": 3,
           "EL043": 2,
-          "PAT_3066": 1,
           "PAT_3390": 1,
+          "PAT_3066": 1,
           "PAT_6619": 1,
           "PAT_6704": 1
         },
@@ -879,17 +959,17 @@
           "EL030": 10,
           "EL045": 8,
           "PAT_6854": 8,
+          "PAT_3415": 7,
           "EL038": 7,
           "EL043": 7,
-          "PAT_3415": 7,
           "PAT_5533": 5,
-          "EL042": 4,
-          "EL035": 4,
-          "PAT_6619": 4,
           "PAT_6684": 4,
+          "EL035": 4,
+          "EL042": 4,
+          "PAT_6619": 4,
           "EL037": 3,
-          "PAT_5515": 3,
           "PAT_3066": 3,
+          "PAT_5515": 3,
           "EL040": 2,
           "EL046": 2,
           "PAT_3455": 1
@@ -904,21 +984,21 @@
         "PAT_3975": 67,
         "EL033": 65,
         "EL042": 56,
-        "PAT_6619": 48,
         "EL038": 48,
+        "PAT_6619": 48,
         "PAT_3780": 47,
         "PAT_6704": 41,
         "EL043": 39,
-        "PAT_3455": 38,
         "PAT_3965": 38,
+        "PAT_3455": 38,
         "EL035": 37,
         "PAT_6684": 37,
         "EL040": 30,
         "EL037": 28,
         "PAT_3066": 28,
         "PAT_5533": 22,
-        "EL036": 18,
         "PAT_3415": 18,
+        "EL036": 18,
         "PAT_3390": 13,
         "EL034": 8,
         "PAT_5515": 7,
@@ -983,20 +1063,7 @@
             "centroid": "cluster_centroids/cluster_05.png"
           }
         },
-        "overview": [
-          {
-            "path": "sweep_metrics.png",
-            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
-          },
-          {
-            "path": "centroids.png",
-            "title": "Cluster centroids"
-          },
-          {
-            "path": "centroid_distance_heatmap.png",
-            "title": "Centroid distance matrix"
-          }
-        ]
+        "overview": []
       }
     },
     {
@@ -1035,8 +1102,8 @@
       },
       "cluster_patient_counts": {
         "0": {
-          "PAT_3975": 35,
           "PAT_3965": 35,
+          "PAT_3975": 35,
           "PAT_3455": 30,
           "EL030": 19,
           "PAT_6684": 16,
@@ -1063,8 +1130,8 @@
           "EL045": 30,
           "EL035": 27,
           "EL043": 27,
-          "PAT_3066": 26,
           "EL038": 26,
+          "PAT_3066": 26,
           "PAT_3975": 26,
           "EL030": 23,
           "EL037": 22,
@@ -1076,8 +1143,8 @@
           "PAT_5515": 7,
           "PAT_3415": 6,
           "PAT_6684": 5,
-          "PAT_3455": 3,
           "PAT_2868": 3,
+          "PAT_3455": 3,
           "PAT_3965": 2,
           "PAT_3390": 1
         },
@@ -1104,8 +1171,8 @@
           "PAT_6619": 13,
           "EL040": 12,
           "PAT_3415": 9,
-          "PAT_5533": 7,
           "PAT_3390": 7,
+          "PAT_5533": 7,
           "PAT_3975": 6,
           "PAT_6854": 5,
           "EL036": 3,
@@ -1123,21 +1190,21 @@
         "PAT_3975": 67,
         "EL033": 65,
         "EL042": 56,
-        "PAT_6619": 48,
         "EL038": 48,
+        "PAT_6619": 48,
         "PAT_3780": 47,
         "PAT_6704": 41,
         "EL043": 39,
-        "PAT_3455": 38,
         "PAT_3965": 38,
+        "PAT_3455": 38,
         "EL035": 37,
         "PAT_6684": 37,
         "EL040": 30,
         "EL037": 28,
         "PAT_3066": 28,
         "PAT_5533": 22,
-        "EL036": 18,
         "PAT_3415": 18,
+        "EL036": 18,
         "PAT_3390": 13,
         "EL034": 8,
         "PAT_5515": 7,
@@ -1194,20 +1261,7 @@
             "centroid": "cluster_centroids/cluster_03.png"
           }
         },
-        "overview": [
-          {
-            "path": "sweep_metrics.png",
-            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
-          },
-          {
-            "path": "centroids.png",
-            "title": "Cluster centroids"
-          },
-          {
-            "path": "centroid_distance_heatmap.png",
-            "title": "Centroid distance matrix"
-          }
-        ]
+        "overview": []
       }
     },
     {
@@ -1307,8 +1361,8 @@
           "PAT_3975": 5,
           "PAT_6619": 5,
           "PAT_5533": 4,
-          "EL030": 3,
           "EL045": 3,
+          "EL030": 3,
           "PAT_6704": 3,
           "EL036": 2,
           "EL040": 2,
@@ -1332,8 +1386,8 @@
           "PAT_6854": 13,
           "EL046": 8,
           "PAT_3066": 5,
-          "PAT_5533": 4,
           "PAT_6684": 4,
+          "PAT_5533": 4,
           "EL037": 3,
           "PAT_3415": 1
         },
@@ -1361,30 +1415,30 @@
           "EL040": 7,
           "EL046": 6,
           "PAT_5515": 6,
-          "PAT_5533": 5,
+          "EL045": 5,
           "EL037": 5,
           "PAT_3066": 5,
-          "EL045": 5,
+          "PAT_5533": 5,
           "PAT_6953": 4,
           "EL033": 3,
-          "EL043": 3,
+          "PAT_6704": 3,
           "PAT_3390": 3,
           "EL036": 3,
-          "PAT_6704": 3,
+          "EL043": 3,
+          "EL038": 1,
+          "EL034": 1,
+          "PAT_2868": 1,
           "PAT_3415": 1,
           "PAT_3965": 1,
           "PAT_3975": 1,
-          "EL038": 1,
           "PAT_6619": 1,
-          "PAT_6684": 1,
-          "EL034": 1,
-          "PAT_2868": 1
+          "PAT_6684": 1
         },
         "8": {
           "PAT_6854": 38,
           "PAT_5533": 6,
-          "EL038": 2,
-          "PAT_3066": 2
+          "PAT_3066": 2,
+          "EL038": 2
         },
         "9": {
           "PAT_6854": 40,
@@ -1401,15 +1455,15 @@
           "EL045": 8,
           "EL030": 6,
           "EL037": 4,
-          "EL040": 2,
-          "PAT_6619": 2,
-          "PAT_6704": 2,
           "PAT_6854": 2,
-          "EL036": 1,
+          "EL040": 2,
+          "PAT_6704": 2,
+          "PAT_6619": 2,
           "EL042": 1,
-          "PAT_3066": 1,
-          "PAT_3455": 1,
+          "EL036": 1,
           "PAT_3975": 1,
+          "PAT_3455": 1,
+          "PAT_3066": 1,
           "PAT_6684": 1
         },
         "12": {
@@ -1443,8 +1497,8 @@
           "EL037": 7,
           "EL038": 3,
           "EL033": 2,
-          "EL045": 2,
           "PAT_6704": 2,
+          "EL045": 2,
           "EL030": 1,
           "EL040": 1,
           "EL042": 1,
@@ -1456,8 +1510,8 @@
           "PAT_3965": 21,
           "PAT_3415": 10,
           "EL034": 2,
-          "EL040": 1,
-          "EL043": 1
+          "EL043": 1,
+          "EL040": 1
         },
         "19": {
           "PAT_6953": 54,
@@ -1468,15 +1522,15 @@
           "EL043": 5,
           "PAT_2868": 4,
           "EL046": 4,
-          "EL033": 3,
-          "EL045": 3,
           "PAT_6684": 3,
           "EL035": 3,
+          "EL045": 3,
+          "EL033": 3,
           "EL038": 2,
           "PAT_6619": 2,
+          "EL030": 1,
           "PAT_3415": 1,
-          "PAT_6854": 1,
-          "EL030": 1
+          "PAT_6854": 1
         },
         "20": {
           "PAT_3975": 15
@@ -1494,8 +1548,8 @@
           "PAT_3975": 5,
           "EL033": 4,
           "EL035": 1,
-          "PAT_3455": 1,
           "PAT_5515": 1,
+          "PAT_3455": 1,
           "PAT_5533": 1,
           "PAT_6953": 1
         },
@@ -1515,21 +1569,21 @@
         "PAT_3975": 67,
         "EL033": 65,
         "EL042": 56,
-        "PAT_6619": 48,
         "EL038": 48,
+        "PAT_6619": 48,
         "PAT_3780": 47,
         "PAT_6704": 41,
         "EL043": 39,
-        "PAT_3455": 38,
         "PAT_3965": 38,
+        "PAT_3455": 38,
         "EL035": 37,
         "PAT_6684": 37,
         "EL040": 30,
         "EL037": 28,
         "PAT_3066": 28,
         "PAT_5533": 22,
-        "EL036": 18,
         "PAT_3415": 18,
+        "EL036": 18,
         "PAT_3390": 13,
         "EL034": 8,
         "PAT_5515": 7,
@@ -1662,20 +1716,7 @@
             "centroid": "cluster_centroids/cluster_22.png"
           }
         },
-        "overview": [
-          {
-            "path": "sweep_metrics.png",
-            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
-          },
-          {
-            "path": "centroids.png",
-            "title": "Cluster centroids"
-          },
-          {
-            "path": "centroid_distance_heatmap.png",
-            "title": "Centroid distance matrix"
-          }
-        ]
+        "overview": []
       }
     },
     {
@@ -1800,18 +1841,18 @@
           "PAT_5515": 6,
           "PAT_6684": 5,
           "PAT_3066": 5,
+          "EL037": 3,
           "PAT_6953": 3,
           "EL040": 3,
-          "EL037": 3,
+          "EL034": 2,
+          "PAT_6704": 2,
           "EL042": 2,
           "EL036": 2,
-          "PAT_6704": 2,
-          "EL034": 2,
           "EL038": 1,
-          "PAT_3965": 1,
-          "PAT_3975": 1,
+          "PAT_2868": 1,
           "PAT_6619": 1,
-          "PAT_2868": 1
+          "PAT_3965": 1,
+          "PAT_3975": 1
         },
         "6": {
           "EL045": 7,
@@ -1834,8 +1875,8 @@
           "PAT_6953": 42,
           "EL040": 5,
           "PAT_5533": 4,
-          "EL035": 2,
           "EL042": 2,
+          "EL035": 2,
           "PAT_6619": 2,
           "EL043": 1
         },
@@ -1851,9 +1892,9 @@
           "PAT_3965": 8,
           "EL043": 2,
           "PAT_6854": 2,
-          "EL034": 1,
-          "EL037": 1,
           "PAT_3390": 1,
+          "EL037": 1,
+          "EL034": 1,
           "PAT_3455": 1
         },
         "12": {
@@ -1896,16 +1937,16 @@
           "EL037": 12,
           "EL040": 7,
           "EL030": 4,
-          "PAT_3066": 4,
           "EL033": 4,
+          "PAT_3066": 4,
           "PAT_3975": 3,
           "EL045": 3,
-          "PAT_2868": 3,
           "EL035": 3,
-          "PAT_6684": 2,
+          "PAT_2868": 3,
           "PAT_6854": 2,
-          "PAT_3455": 1,
-          "EL042": 1
+          "PAT_6684": 2,
+          "EL042": 1,
+          "PAT_3455": 1
         },
         "20": {
           "PAT_6953": 36,
@@ -1922,8 +1963,8 @@
           "PAT_6619": 45,
           "EL045": 15,
           "EL038": 13,
-          "PAT_3066": 3,
           "PAT_5533": 3,
+          "PAT_3066": 3,
           "PAT_3390": 2,
           "EL042": 1
         }
@@ -1937,21 +1978,21 @@
         "PAT_3975": 67,
         "EL033": 65,
         "EL042": 56,
-        "PAT_6619": 48,
         "EL038": 48,
+        "PAT_6619": 48,
         "PAT_3780": 47,
         "PAT_6704": 41,
         "EL043": 39,
-        "PAT_3455": 38,
         "PAT_3965": 38,
+        "PAT_3455": 38,
         "EL035": 37,
         "PAT_6684": 37,
         "EL040": 30,
         "EL037": 28,
         "PAT_3066": 28,
         "PAT_5533": 22,
-        "EL036": 18,
         "PAT_3415": 18,
+        "EL036": 18,
         "PAT_3390": 13,
         "EL034": 8,
         "PAT_5515": 7,
@@ -2084,20 +2125,7 @@
             "centroid": "cluster_centroids/cluster_22.png"
           }
         },
-        "overview": [
-          {
-            "path": "sweep_metrics.png",
-            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
-          },
-          {
-            "path": "centroids.png",
-            "title": "Cluster centroids"
-          },
-          {
-            "path": "centroid_distance_heatmap.png",
-            "title": "Centroid distance matrix"
-          }
-        ]
+        "overview": []
       }
     },
     {
@@ -2162,17 +2190,17 @@
           "EL043": 13,
           "PAT_3415": 13,
           "EL038": 12,
-          "PAT_3301": 10,
           "EL037": 10,
+          "PAT_3301": 10,
           "PAT_6684": 10,
-          "EL040": 9,
           "PAT_6619": 9,
+          "EL040": 9,
           "PAT_3390": 8,
-          "PAT_3066": 7,
           "PAT_5533": 7,
+          "PAT_3066": 7,
           "PAT_3455": 6,
-          "PAT_5515": 5,
           "PAT_6704": 5,
+          "PAT_5515": 5,
           "EL033": 3,
           "PAT_3965": 1
         },
@@ -2193,8 +2221,8 @@
           "PAT_6854": 6,
           "EL044": 5,
           "EL037": 3,
-          "EL040": 3,
           "EL043": 3,
+          "EL040": 3,
           "PAT_5533": 2,
           "PAT_3066": 1
         },
@@ -2213,16 +2241,16 @@
           "EL033": 16,
           "EL035": 13,
           "PAT_3780": 9,
-          "PAT_3415": 8,
-          "EL036": 8,
           "EL040": 8,
+          "EL036": 8,
+          "PAT_3415": 8,
           "PAT_6684": 7,
           "PAT_3301": 6,
           "PAT_5533": 5,
           "PAT_6704": 5,
           "PAT_3455": 4,
-          "PAT_3965": 4,
           "PAT_5515": 4,
+          "PAT_3965": 4,
           "PAT_3390": 1,
           "PAT_2868": 1
         },
@@ -2233,8 +2261,8 @@
           "EL040": 9,
           "EL036": 3,
           "PAT_3415": 3,
-          "PAT_6619": 2,
           "PAT_6854": 2,
+          "PAT_6619": 2,
           "EL033": 1,
           "EL042": 1,
           "EL043": 1,
@@ -2245,8 +2273,8 @@
         "5": {
           "EL043": 9,
           "PAT_3415": 9,
-          "EL035": 5,
           "EL044": 5,
+          "EL035": 5,
           "EL042": 3,
           "EL030": 2,
           "EL045": 1,
@@ -2264,23 +2292,23 @@
           "EL040": 10,
           "EL036": 7,
           "EL033": 6,
+          "PAT_6704": 4,
           "EL043": 4,
           "PAT_6619": 4,
-          "PAT_6704": 4,
           "EL038": 3,
           "PAT_3390": 3,
-          "PAT_2868": 2,
           "PAT_5533": 2,
-          "EL042": 1,
+          "PAT_2868": 2,
           "EL035": 1,
+          "EL042": 1,
           "PAT_6684": 1
         },
         "7": {
           "PAT_3415": 105,
           "EL033": 46,
           "EL045": 41,
-          "EL030": 39,
           "PAT_3301": 39,
+          "EL030": 39,
           "PAT_6854": 38,
           "PAT_6704": 26,
           "PAT_6684": 23,
@@ -2305,12 +2333,12 @@
           "PAT_3390": 8,
           "PAT_5533": 7,
           "EL030": 5,
-          "EL040": 5,
-          "PAT_3415": 5,
           "PAT_6619": 5,
+          "PAT_3415": 5,
+          "EL040": 5,
           "PAT_3301": 2,
-          "EL038": 1,
           "EL042": 1,
+          "EL038": 1,
           "PAT_3975": 1,
           "PAT_6704": 1
         }
@@ -2332,8 +2360,8 @@
         "PAT_3301": 58,
         "EL043": 56,
         "PAT_6704": 55,
-        "PAT_6684": 49,
         "PAT_3780": 49,
+        "PAT_6684": 49,
         "EL035": 46,
         "PAT_5533": 37,
         "EL037": 33,
@@ -2558,13 +2586,13 @@
           "PAT_5533": 3,
           "PAT_6684": 3,
           "PAT_3415": 2,
-          "EL037": 1,
-          "EL038": 1
+          "EL038": 1,
+          "EL037": 1
         },
         "2": {
           "EL042": 45,
-          "PAT_6854": 41,
           "PAT_3780": 41,
+          "PAT_6854": 41,
           "PAT_3975": 29,
           "EL044": 27,
           "EL045": 27,
@@ -2573,14 +2601,14 @@
           "EL035": 23,
           "EL043": 20,
           "PAT_3415": 15,
-          "PAT_3066": 12,
           "EL037": 12,
           "PAT_6619": 12,
+          "PAT_3066": 12,
           "EL038": 11,
           "EL040": 10,
-          "PAT_5533": 9,
           "PAT_6684": 9,
           "PAT_3390": 9,
+          "PAT_5533": 9,
           "PAT_3455": 8,
           "PAT_6704": 7,
           "PAT_5515": 6,
@@ -2612,10 +2640,10 @@
           "EL036": 2,
           "PAT_6854": 2,
           "EL043": 1,
-          "PAT_3301": 1,
           "PAT_3415": 1,
-          "PAT_6619": 1,
-          "PAT_6684": 1
+          "PAT_3301": 1,
+          "PAT_6684": 1,
+          "PAT_6619": 1
         },
         "7": {
           "PAT_6854": 2,
@@ -2635,10 +2663,10 @@
           "EL040": 4,
           "EL045": 3,
           "PAT_6684": 2,
+          "PAT_3066": 1,
           "EL044": 1,
           "EL042": 1,
-          "EL036": 1,
-          "PAT_3066": 1
+          "EL036": 1
         },
         "9": {
           "PAT_6854": 129,
@@ -2658,20 +2686,20 @@
           "PAT_3301": 7,
           "EL040": 5,
           "PAT_6684": 5,
+          "PAT_6704": 4,
           "PAT_3965": 4,
           "PAT_5533": 4,
-          "PAT_6704": 4,
           "EL036": 3,
-          "PAT_5515": 3,
           "PAT_3415": 3,
+          "PAT_5515": 3,
           "PAT_3390": 1
         },
         "10": {
           "PAT_3415": 117,
           "EL030": 61,
           "EL033": 48,
-          "EL045": 33,
           "PAT_6854": 33,
+          "EL045": 33,
           "PAT_6704": 29,
           "PAT_6684": 25,
           "EL040": 21,
@@ -2679,8 +2707,8 @@
           "PAT_6619": 14,
           "PAT_3301": 12,
           "EL038": 11,
-          "PAT_3975": 10,
           "PAT_5533": 10,
+          "PAT_3975": 10,
           "EL035": 9,
           "PAT_2868": 6,
           "EL042": 4,
@@ -2699,10 +2727,10 @@
           "PAT_6619": 3,
           "EL043": 2,
           "EL035": 1,
-          "EL036": 1,
           "EL038": 1,
-          "PAT_3975": 1,
-          "PAT_5533": 1
+          "EL036": 1,
+          "PAT_5533": 1,
+          "PAT_3975": 1
         },
         "12": {
           "EL033": 28,
@@ -2734,8 +2762,8 @@
         "PAT_3301": 58,
         "EL043": 56,
         "PAT_6704": 55,
-        "PAT_6684": 49,
         "PAT_3780": 49,
+        "PAT_6684": 49,
         "EL035": 46,
         "PAT_5533": 37,
         "EL037": 33,
@@ -2973,25 +3001,25 @@
           "EL045": 4,
           "PAT_6704": 4,
           "EL040": 4,
-          "PAT_5515": 3,
           "EL037": 3,
+          "PAT_5515": 3,
           "PAT_3390": 2,
-          "EL038": 1,
-          "PAT_6684": 1,
-          "PAT_6619": 1,
-          "PAT_5533": 1,
-          "PAT_3415": 1,
-          "PAT_3975": 1,
-          "PAT_3965": 1,
           "EL036": 1,
-          "PAT_3066": 1,
+          "EL038": 1,
           "PAT_2868": 1,
-          "PAT_3301": 1
+          "PAT_3415": 1,
+          "PAT_3301": 1,
+          "PAT_3066": 1,
+          "PAT_3965": 1,
+          "PAT_5533": 1,
+          "PAT_3975": 1,
+          "PAT_6684": 1,
+          "PAT_6619": 1
         },
         "1": {
           "PAT_3780": 40,
-          "EL044": 14,
           "PAT_3975": 14,
+          "EL044": 14,
           "EL043": 13,
           "PAT_3415": 11,
           "PAT_3301": 9,
@@ -3011,11 +3039,11 @@
           "PAT_3965": 14,
           "PAT_3415": 12,
           "EL040": 5,
-          "PAT_6684": 3,
           "PAT_6704": 3,
+          "PAT_6684": 3,
           "EL043": 2,
-          "EL036": 1,
           "EL038": 1,
+          "EL036": 1,
           "PAT_3390": 1,
           "PAT_3455": 1,
           "PAT_6619": 1
@@ -3025,24 +3053,24 @@
           "EL035": 9,
           "PAT_3066": 5,
           "PAT_3455": 5,
-          "EL043": 4,
           "PAT_6854": 4,
+          "EL043": 4,
           "EL040": 2,
-          "PAT_3390": 2,
           "PAT_5533": 2,
+          "PAT_3390": 2,
           "EL045": 1,
           "PAT_6704": 1
         },
         "4": {
           "PAT_6854": 55,
           "PAT_5533": 10,
-          "EL038": 4,
           "PAT_6684": 4,
+          "EL038": 4,
           "EL042": 3,
           "EL037": 1,
-          "PAT_3066": 1,
-          "PAT_3415": 1,
           "PAT_3455": 1,
+          "PAT_3415": 1,
+          "PAT_3066": 1,
           "PAT_3975": 1
         },
         "5": {
@@ -3060,8 +3088,8 @@
           "PAT_3066": 13,
           "EL037": 11,
           "EL036": 10,
-          "PAT_3975": 9,
           "EL042": 9,
+          "PAT_3975": 9,
           "PAT_3780": 7,
           "PAT_5533": 7,
           "EL035": 6,
@@ -3093,24 +3121,24 @@
           "PAT_3975": 21,
           "EL045": 20,
           "PAT_3301": 18,
-          "EL037": 15,
           "EL043": 15,
+          "EL037": 15,
           "PAT_6619": 14,
           "PAT_6704": 12,
           "PAT_3455": 11,
           "PAT_5533": 8,
           "PAT_3066": 8,
-          "PAT_3415": 7,
+          "EL030": 7,
           "EL033": 7,
           "EL040": 7,
-          "EL030": 7,
+          "PAT_3415": 7,
           "EL035": 6,
           "EL042": 4,
           "EL036": 3,
-          "PAT_3780": 2,
           "PAT_5515": 2,
-          "PAT_3965": 1,
-          "PAT_2868": 1
+          "PAT_3780": 2,
+          "PAT_2868": 1,
+          "PAT_3965": 1
         },
         "8": {
           "EL033": 62,
@@ -3121,12 +3149,12 @@
           "PAT_3301": 9,
           "PAT_5533": 6,
           "EL045": 5,
-          "PAT_6704": 5,
           "PAT_6854": 5,
+          "PAT_6704": 5,
           "PAT_6619": 3,
+          "EL043": 1,
           "EL036": 1,
-          "EL038": 1,
-          "EL043": 1
+          "EL038": 1
         },
         "9": {
           "PAT_3415": 191,
@@ -3135,20 +3163,20 @@
           "EL040": 15,
           "EL036": 13,
           "PAT_6704": 12,
-          "PAT_3975": 7,
           "PAT_3301": 7,
+          "PAT_3975": 7,
           "PAT_6619": 4,
           "PAT_6684": 4,
-          "PAT_2868": 2,
-          "PAT_3390": 2,
+          "PAT_5533": 2,
           "PAT_3455": 2,
           "EL043": 2,
-          "PAT_5533": 2,
-          "PAT_3066": 1,
+          "PAT_2868": 2,
+          "PAT_3390": 2,
+          "EL038": 1,
           "EL033": 1,
+          "PAT_3066": 1,
           "EL044": 1,
           "PAT_3965": 1,
-          "EL038": 1,
           "PAT_6854": 1
         },
         "10": {
@@ -3178,8 +3206,8 @@
         "PAT_3301": 58,
         "EL043": 56,
         "PAT_6704": 55,
-        "PAT_6684": 49,
         "PAT_3780": 49,
+        "PAT_6684": 49,
         "EL035": 46,
         "PAT_5533": 37,
         "EL037": 33,
@@ -3388,12 +3416,12 @@
           "PAT_3415": 15,
           "PAT_6684": 9,
           "EL044": 4,
-          "EL030": 3,
           "EL037": 3,
+          "EL030": 3,
           "EL043": 3,
           "PAT_6854": 2,
-          "EL038": 1,
-          "EL040": 1
+          "EL040": 1,
+          "EL038": 1
         },
         "1": {
           "PAT_6854": 46,
@@ -3423,8 +3451,8 @@
           "EL037": 18,
           "EL033": 18,
           "PAT_6684": 12,
-          "PAT_3975": 10,
           "EL035": 10,
+          "PAT_3975": 10,
           "EL042": 7,
           "PAT_5515": 6,
           "PAT_2868": 3,
@@ -3454,12 +3482,12 @@
           "EL043": 9,
           "PAT_3301": 5,
           "PAT_6619": 4,
-          "EL030": 2,
           "EL040": 2,
-          "EL045": 2,
+          "EL030": 2,
           "PAT_3415": 2,
-          "EL037": 1,
-          "EL042": 1
+          "EL045": 2,
+          "EL042": 1,
+          "EL037": 1
         },
         "6": {
           "EL030": 47,
@@ -3478,9 +3506,9 @@
           "PAT_6684": 24,
           "EL033": 21,
           "PAT_3455": 18,
-          "EL040": 17,
-          "PAT_3975": 17,
           "PAT_6619": 17,
+          "PAT_3975": 17,
+          "EL040": 17,
           "EL043": 9,
           "PAT_5533": 2,
           "EL038": 1,
@@ -3498,10 +3526,10 @@
           "EL037": 11,
           "PAT_6619": 7,
           "EL045": 6,
-          "EL040": 5,
           "PAT_3415": 5,
-          "PAT_3975": 4,
+          "EL040": 5,
           "PAT_5533": 4,
+          "PAT_3975": 4,
           "PAT_3390": 4,
           "PAT_2868": 3,
           "PAT_5515": 3,
@@ -3538,8 +3566,8 @@
         "PAT_3301": 58,
         "EL043": 56,
         "PAT_6704": 55,
-        "PAT_6684": 49,
         "PAT_3780": 49,
+        "PAT_6684": 49,
         "EL035": 46,
         "PAT_5533": 37,
         "EL037": 33,
