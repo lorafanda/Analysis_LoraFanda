@@ -64,8 +64,8 @@ def shared_hg_ylim(X: np.ndarray, labels: np.ndarray, *, pad: float = 1.08) -> t
         if not len(M):
             continue
         m = M.mean(axis=0)
-        sem = M.std(axis=0, ddof=1) / np.sqrt(len(M)) if len(M) > 1 else 0.0
-        hi = max(hi, float(np.abs(m + sem).max()), float(np.abs(m - sem).max()))
+        sd = M.std(axis=0, ddof=1) if len(M) > 1 else 0.0
+        hi = max(hi, float(np.abs(m + sd).max()), float(np.abs(m - sd).max()))
     if not np.isfinite(hi) or hi <= 0:
         return HG_YLIM_DEFAULT
     hi *= pad
@@ -92,8 +92,13 @@ def render_hg_centroid(ax, cluster_samples: np.ndarray, *,
         sample assigned to this cluster. Mean and SEM are computed across
         the sample axis (axis 0).
 
-    The SEM band = mean ± std / sqrt(n). For a singleton cluster (n==1) the
-    SEM is zero, so only the line shows.
+    The band is the STANDARD DEVIATION across electrodes, mean ± SD — how much the
+    electrodes in this cluster differ from each other. Not the SEM: with 139-297
+    electrodes per cluster the SEM is a hairline and says only that the mean is well
+    estimated, which is never in doubt here. SD answers the question the plot is
+    actually for — is this cluster a tight family or a loose one.
+
+    For a singleton cluster (n==1) the SD is zero, so only the line shows.
     """
     M = np.asarray(cluster_samples, dtype=float)
     if M.ndim == 1:
@@ -101,7 +106,7 @@ def render_hg_centroid(ax, cluster_samples: np.ndarray, *,
     n, T = M.shape
     x = np.arange(T)
     mean = M.mean(axis=0)
-    sem = M.std(axis=0, ddof=1) / np.sqrt(n) if n > 1 else np.zeros(T)
+    sd = M.std(axis=0, ddof=1) if n > 1 else np.zeros(T)
 
     ax.axhline(0, color="#999", lw=0.5, alpha=0.8, zorder=1)
 
@@ -112,13 +117,12 @@ def render_hg_centroid(ax, cluster_samples: np.ndarray, *,
     for b in range(max(n_blocks, 1)):
         ax.axvline((b + 0.5) * per, color="#9aa3ab", lw=0.9, ls=(0, (4, 3)), zorder=2)
 
-    # SEM band, drawn so it is actually visible: a filled band plus hairlines at the
-    # edges. For a singleton cluster SEM is 0 and only the mean line shows - that is a
-    # real statement about n, not a rendering failure.
-    ax.fill_between(x, mean - sem, mean + sem,
-                    color=sem_color, alpha=0.30, lw=0, zorder=3)
-    ax.plot(x, mean - sem, color=sem_color, lw=0.5, alpha=0.85, zorder=4)
-    ax.plot(x, mean + sem, color=sem_color, lw=0.5, alpha=0.85, zorder=4)
+    # +/-1 SD across electrodes. For a singleton cluster this is 0 and only the mean
+    # line shows - a statement about n, not a rendering failure.
+    ax.fill_between(x, mean - sd, mean + sd,
+                    color=sem_color, alpha=0.22, lw=0, zorder=3)
+    ax.plot(x, mean - sd, color=sem_color, lw=0.45, alpha=0.7, zorder=4)
+    ax.plot(x, mean + sd, color=sem_color, lw=0.45, alpha=0.7, zorder=4)
     ax.plot(x, mean, color=line_color, lw=1.3, zorder=5)
 
     if ylim is not None:
@@ -147,7 +151,7 @@ def render_hg_centroid(ax, cluster_samples: np.ndarray, *,
         ax.spines[side].set_linewidth(0.6)
         ax.spines[side].set_color("#c8cfd6")
     # the label sits ON the dashed line, so say once what the line is
-    ax.text(0.5, -0.30, "dashed = GO cue (50% of each condition)",
+    ax.text(0.5, -0.30, "dashed = GO cue (50% of each condition)  ·  band = ±1 SD across electrodes",
             transform=ax.transAxes, ha="center", va="top",
             fontsize=5.8, color="#9aa3ab")
 
