@@ -44,7 +44,14 @@ def centroid_shape_for(run_dir: Path, feature_set: str):
     fs = run_dir / "feature_schema.json"
     if not fs.exists():
         return None
-    names = json.loads(fs.read_text(encoding="utf-8"))["feature_names"]
+    schema = json.loads(fs.read_text(encoding="utf-8"))
+    names = schema.get("feature_names")
+    if not names:
+        # The per-task runs were written with feature_names: null. Without a grid
+        # the renderer silently falls back to a 1xN strip, which is the smear this
+        # function exists to prevent - so recover the grid from a sibling schema
+        # instead, and only accept it if it accounts for every feature.
+        return _grid_from_sibling(schema.get("n_features"))
     bands, times, conds = [], set(), []
     for f in names:
         c, b, t = f.split("|")
@@ -55,6 +62,39 @@ def centroid_shape_for(run_dir: Path, feature_set: str):
         times.add(t)
     # rows = bands, columns = the 3 conditions laid end to end in time
     return (len(bands), len(conds) * len(times))
+
+
+def _grid_from_sibling(n_features):
+    """(n_bands, n_times) borrowed from any run whose schema does name features.
+
+    Accepted only when n_bands * n_times equals this run's n_features exactly, so
+    a wrong grid cannot quietly reshape the data - a per-task row is one condition
+    of the same band x time grid the concat sets lay end to end.
+    """
+    if not n_features:
+        return None
+    grids = set()
+    for fs in CLUST.glob("*/*/runs/*/feature_schema.json"):
+        try:
+            names = json.loads(fs.read_text(encoding="utf-8")).get("feature_names")
+        except Exception:
+            continue
+        if not names:
+            continue
+        bands, times = set(), set()
+        for f in names:
+            parts = f.split("|")
+            if len(parts) != 3:
+                break
+            bands.add(parts[1])
+            times.add(parts[2])
+        else:
+            if len(bands) * len(times) == n_features:
+                grids.add((len(bands), len(times)))
+    if len(grids) == 1:
+        return grids.pop()
+    print(f"    no unambiguous grid for n_features={n_features} (candidates: {sorted(grids)})")
+    return None
 
 
 def needs(run_dir: Path) -> bool:
