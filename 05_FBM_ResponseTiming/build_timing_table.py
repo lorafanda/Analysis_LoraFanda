@@ -72,23 +72,43 @@ def main() -> int:
     ap.add_argument("--thr-db", type=float, default=1.0)
     ap.add_argument("--min-ms", type=float, default=100.0)
     ap.add_argument("--resp", nargs=2, type=float, default=[0.0, 5.0])
-    ap.add_argument("--out", default=str(HERE / "outputs" / "timing"))
+    ap.add_argument("--tree", choices=["RT", "TN"], default="RT",
+                    help="RT = GO-aligned real time (05); TN = warped %% of trial (04)")
+    ap.add_argument("--out", default=None)
     a = ap.parse_args()
 
-    out = Path(a.out)
+    TN = a.tree == "TN"
+    out = Path(a.out) if a.out else (HERE / "outputs" /
+                                     ("timing_tn" if TN else "timing"))
     out.mkdir(parents=True, exist_ok=True)
-    rt_root = os.path.join(cfg.outputs_root, "05_ERSP_LM_RAWONLY_RealTime")
+    rt_root = os.path.join(cfg.outputs_root,
+                           "04_ersp_LM_RAWONLY" if TN else "05_ERSP_LM_RAWONLY_RealTime")
     band = tuple(a.band)
+    # In warped time the response portion is 50-100%% of the trial and the units
+    # are percent, so the resp window and the sustain requirement both change.
+    resp = (R.TN_GO_PCT, 100.0) if TN else tuple(a.resp)
+    min_units = 2.0 if TN else a.min_ms
 
-    print(f"scanning {rt_root}")
-    recs = list(R.iter_cubes(rt_root))
+    print(f"scanning {rt_root}  [{a.tree}]")
+    recs = list(R.iter_cubes_tn(rt_root) if TN else R.iter_cubes(rt_root))
     print(f"  {len(recs)} cubes")
 
     rows, bad = [], 0
     for i, rec in enumerate(recs):
         try:
-            rows.append(R.timing_row(rec, band=band, resp=tuple(a.resp),
-                                     thr_db=a.thr_db, min_ms=a.min_ms))
+            if TN:
+                A = np.load(rec["path"])
+                tr = R.to_grid_tn(R.band_trace(A, band))
+                row = {k2: v for k2, v in rec.items() if k2 != "path"}
+                row["n_cols"] = int(A.shape[1])
+                from dataclasses import asdict as _asdict
+                row.update(_asdict(R.timing_features(
+                    tr, grid=R.TN_GRID, resp=resp, thr_db=a.thr_db,
+                    min_ms=min_units * 1000.0)))
+                rows.append(row)
+            else:
+                rows.append(R.timing_row(rec, band=band, resp=resp,
+                                         thr_db=a.thr_db, min_ms=a.min_ms))
         except Exception as e:
             bad += 1
             if bad <= 5:
@@ -148,8 +168,12 @@ def main() -> int:
         cov[k] = int(T[k].notna().sum())
     meta = dict(
         rt_root=rt_root, band=list(band), thr_db=a.thr_db, min_ms=a.min_ms,
-        resp_window=list(a.resp), grid_step_s=0.02, rt_window=list(R.RT_WINDOW),
-        t0_is="GO cue (stimulus offset); there is no speech-onset event in this dataset",
+        tree=a.tree, resp_window=list(resp),
+        grid_step=(100.0 / 300.0 if TN else 0.02),
+        window=list(R.TN_WINDOW if TN else R.RT_WINDOW),
+        units=("percent of warped trial" if TN else "seconds after GO"),
+        t0_is=("0%% = stimulus onset, 50%% = GO cue" if TN else
+               "GO cue (stimulus offset); no speech-onset event exists in this dataset"),
         cubes_found=len(recs), rows_built=len(T), failed=bad,
         n_patients=int(T["patient_id"].nunique()),
         per_condition={k: int(v) for k, v in T["condition"].value_counts().items()},

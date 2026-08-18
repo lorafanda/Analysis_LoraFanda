@@ -1,0 +1,19 @@
+group,label,condition,feature,n_electrodes,n_groups,perm_p
+hier_concat_hg,Ward · concat HG,audio,peak_lat,1209,4,0.0012484394506866417
+hier_concat_hg,Ward · concat HG,picture,peak_lat,1170,4,0.0012484394506866417
+hier_concat_hg,Ward · concat HG,reading,peak_lat,1247,4,0.003745318352059925
+kmeans_concat_hg,k-means · concat HG,audio,peak_lat,1209,6,0.0012484394506866417
+kmeans_concat_hg,k-means · concat HG,picture,peak_lat,1170,6,0.02122347066167291
+kmeans_concat_hg,k-means · concat HG,reading,peak_lat,1247,6,0.3645443196004994
+cnmf_lead,convex-NMF lead,audio,peak_lat,1209,7,0.0012484394506866417
+cnmf_lead,convex-NMF lead,picture,peak_lat,1170,7,0.00749063670411985
+cnmf_lead,convex-NMF lead,reading,peak_lat,1247,7,0.0012484394506866417
+role,pooling role (a-priori),audio,peak_lat,2495,17,0.01373283395755306
+role,pooling role (a-priori),picture,peak_lat,2421,17,0.8052434456928839
+role,pooling role (a-priori),reading,peak_lat,2664,18,0.27965043695380776
+kmeans_concat_rawds,k-means · concat 15-band,audio,peak_lat,1209,22,0.13358302122347065
+kmeans_concat_rawds,k-means · concat 15-band,picture,peak_lat,1170,22,0.01373283395755306
+kmeans_concat_rawds,k-means · concat 15-band,reading,peak_lat,1247,23,0.550561797752809
+hier_concat_rawds,Ward · concat 15-band,audio,peak_lat,1209,23,0.01373283395755306
+hier_concat_rawds,Ward · concat 15-band,picture,peak_lat,1170,23,0.0299625468164794
+hier_concat_rawds,Ward · concat 15-band,reading,peak_lat,1247,23,0.6729088639200999

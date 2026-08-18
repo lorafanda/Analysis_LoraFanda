@@ -1,0 +1,13 @@
+group,feature,condition,n_electrodes,n_groups,perm_p
+hier_concat_hg,peak_lat,audio,1209,4,0.0012484394506866417
+hier_concat_hg,peak_lat,picture,1170,4,0.0012484394506866417
+hier_concat_hg,peak_lat,reading,1247,4,0.003745318352059925
+kmeans_concat_hg,peak_lat,audio,1209,6,0.0012484394506866417
+kmeans_concat_hg,peak_lat,picture,1170,6,0.02122347066167291
+kmeans_concat_hg,peak_lat,reading,1247,6,0.3645443196004994
+cnmf_lead,peak_lat,audio,1209,7,0.0012484394506866417
+cnmf_lead,peak_lat,picture,1170,7,0.00749063670411985
+cnmf_lead,peak_lat,reading,1247,7,0.0012484394506866417
+role,peak_lat,audio,2495,17,0.01373283395755306
+role,peak_lat,picture,2421,17,0.8052434456928839
+role,peak_lat,reading,2664,18,0.27965043695380776

@@ -1,0 +1,50 @@
+{
+  "rt_root": "\\\\nasac-m2.unige.ch\\m-HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda\\01_FBM_Analysis\\outputs\\04_ersp_LM_RAWONLY",
+  "band": [
+    70.0,
+    150.0
+  ],
+  "thr_db": 1.0,
+  "min_ms": 100.0,
+  "tree": "TN",
+  "resp_window": [
+    50.0,
+    100.0
+  ],
+  "grid_step": 0.3333333333333333,
+  "window": [
+    0.0,
+    100.0
+  ],
+  "units": "percent of warped trial",
+  "t0_is": "0%% = stimulus onset, 50%% = GO cue",
+  "cubes_found": 9711,
+  "rows_built": 9711,
+  "failed": 0,
+  "n_patients": 29,
+  "per_condition": {
+    "picture": 3303,
+    "audio": 3262,
+    "reading": 3146
+  },
+  "electrodes_per_condition": {
+    "audio": 1491,
+    "picture": 1397,
+    "reading": 1375
+  },
+  "label_coverage": {
+    "kmeans_concat_hg": 3798,
+    "kmeans_concat_rawds": 3798,
+    "hier_concat_hg": 3798,
+    "hier_concat_rawds": 3798,
+    "cnmf_lead": 3798,
+    "role": 8073
+  },
+  "source_runs": {
+    "kmeans_concat_hg": "02_FBM_Clustering/outputs/clustering/kmeans/concat_hg/runs/20260817_171544",
+    "kmeans_concat_rawds": "02_FBM_Clustering/outputs/clustering/kmeans/concat_rawds/runs/20260817_171634",
+    "hier_concat_hg": "02_FBM_Clustering/outputs/clustering/hierarchical/concat_hg/runs/20260817_171627",
+    "hier_concat_rawds": "02_FBM_Clustering/outputs/clustering/hierarchical/concat_rawds/runs/20260817_171733"
+  },
+  "written": "2026-08-18 16:37:27"
+}

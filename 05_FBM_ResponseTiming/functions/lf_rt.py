@@ -70,6 +70,54 @@ def time_axis(n_cols: int, window=RT_WINDOW) -> np.ndarray:
     return np.linspace(window[0], window[1], int(n_cols), endpoint=False)
 
 
+# ---------------------------------------------------------------------------
+# Time-normalised (04) cubes, for the warped-vs-real comparison
+# ---------------------------------------------------------------------------
+# lf_ersp.compute_ersp, TN branch:  x = np.linspace(0.0, 100.0, N, endpoint=False)
+# with cfg.proportions = (0.0, 0.5, 0.5), so 0% is stimulus ONSET and 50% is the
+# GO cue. The response portion is 50-100%.
+#
+# This exists so the same timing features can be measured on the SAME electrodes
+# in both time bases. The only difference between the two tables is the axis, so
+# any disagreement between them is attributable to the warp and nothing else.
+TN_WINDOW = (0.0, 100.0)
+TN_GO_PCT = 50.0
+TN_GRID = np.arange(0.0, 100.0, 100.0 / 300.0)
+
+_FNAME_TN = re.compile(
+    r"^(?P<pid>.+?)_(?P<cond>audio|picture|reading)_(?P<ref>[A-Z]+)_ERSP_"
+    r"(?P<chan>.+?)_TN\.npy$")
+
+
+def tn_time_axis(n_cols: int) -> np.ndarray:
+    return np.linspace(TN_WINDOW[0], TN_WINDOW[1], int(n_cols), endpoint=False)
+
+
+def iter_cubes_tn(tn_root: str, conditions=CONDITIONS):
+    """Same walk as iter_cubes but over the time-normalised 04 tree."""
+    for pid in sorted(os.listdir(tn_root)):
+        base = os.path.join(tn_root, pid, "LM", "ERSP_matrix")
+        if not os.path.isdir(base):
+            continue
+        for cond in conditions:
+            d = os.path.join(base, cond)
+            if not os.path.isdir(d):
+                continue
+            for fn in sorted(os.listdir(d)):
+                m = _FNAME_TN.match(fn)
+                if not m:
+                    continue
+                yield dict(patient_id=m.group("pid"), condition=m.group("cond"),
+                           reref=m.group("ref"), electrode=m.group("chan"),
+                           contact_norm=normalize_label(m.group("chan")),
+                           path=os.path.join(d, fn))
+
+
+def to_grid_tn(trace: np.ndarray, grid: np.ndarray = TN_GRID) -> np.ndarray:
+    x = tn_time_axis(trace.shape[0])
+    return np.interp(grid, x, trace, left=np.nan, right=np.nan)
+
+
 def freq_axis(n_rows: int = N_FREQ, fmax: float = FMAX) -> np.ndarray:
     return np.linspace(0.0, fmax, int(n_rows))
 
@@ -251,3 +299,57 @@ def load_roles(pool_csv: str) -> pd.DataFrame:
         "is_cortical": d.get("is_cortical"),
     })
     return t.drop_duplicates(["patient_id", "contact_norm"])
+
+
+# ---------------------------------------------------------------------------
+# Statistics shared by every figure script
+# ---------------------------------------------------------------------------
+
+def within_patient_perm(df, group, feature, n=2000, seed=0):
+    """Shuffle group labels WITHIN each patient; statistic is the spread of group
+    medians. Returns (observed_spread, p, n_electrodes, n_groups).
+
+    This is the test, not Kruskal-Wallis. Electrodes inside a patient share a
+    brain, a reference, a montage and a response speed, so pooling them and
+    calling them independent returns p < 1e-10 for group x condition cells that
+    this test scores as null. Shuffling within patient asks the question that
+    survives: given this patient's own contacts, does membership still order them
+    in time?
+    """
+    import numpy as _np
+    import pandas as _pd
+    d = df[["patient_id", group, feature]].dropna()
+    if d[group].nunique() < 2 or len(d) < 20:
+        return float("nan"), float("nan"), len(d), int(d[group].nunique())
+
+    vals = d[feature].to_numpy()
+
+    def spread(lbl):
+        m = _pd.DataFrame({"g": lbl, "v": vals}).groupby("g")["v"].median()
+        return float(m.max() - m.min())
+
+    obs = spread(d[group].to_numpy())
+    rng = _np.random.default_rng(seed)
+    pid = d["patient_id"].to_numpy()
+    lbl = d[group].to_numpy().copy()
+    idx_by_pat = [_np.flatnonzero(pid == p) for p in _np.unique(pid)]
+    null = _np.empty(n)
+    for i in range(n):
+        sh = lbl.copy()
+        for ix in idx_by_pat:
+            sh[ix] = rng.permutation(sh[ix])
+        null[i] = spread(sh)
+    p = float((_np.sum(null >= obs) + 1) / (n + 1))
+    return obs, p, len(d), int(d[group].nunique())
+
+
+def boot_ci(v, n=2000, seed=0):
+    """Median with a bootstrap 95% CI. Returns (median, lo, hi)."""
+    import numpy as _np
+    v = _np.asarray(v, dtype=float)
+    v = v[_np.isfinite(v)]
+    if v.size < 3:
+        return float("nan"), float("nan"), float("nan")
+    rng = _np.random.default_rng(seed)
+    b = _np.median(rng.choice(v, (n, v.size), replace=True), axis=1)
+    return float(_np.median(v)), float(_np.percentile(b, 2.5)), float(_np.percentile(b, 97.5))

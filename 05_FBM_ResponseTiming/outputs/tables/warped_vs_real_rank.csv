@@ -1,0 +1,7 @@
+group,condition,n_levels,spearman_rho,p,feature
+hier_concat_hg,audio,4,0.6000000000000001,0.4,peak_lat
+hier_concat_hg,picture,4,-0.316227766016838,0.683772233983162,peak_lat
+hier_concat_hg,reading,4,0.7999999999999999,0.2000000000000001,peak_lat
+role,audio,12,0.27272727272727276,0.39109677094189615,peak_lat
+role,picture,12,-0.37762237762237766,0.22620604493502644,peak_lat
+role,reading,12,0.34325796948578974,0.2746714096854004,peak_lat
