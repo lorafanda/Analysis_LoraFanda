@@ -435,15 +435,26 @@
       "figures": {
         "per_cluster": {
           "0": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_00.png"
           },
           "1": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_01.png"
           },
           "2": {
             "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
               "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_02/by_condition/dorsal.png",
               "frontal": "recon/cluster_02/by_condition/frontal.png"
@@ -811,7 +822,12 @@
             "centroid": "cluster_centroids/cluster_06.png"
           }
         },
-        "overview": []
+        "overview": [
+          {
+            "path": "cluster_cards.png",
+            "title": "Cluster cards \u2014 waveform, glass brains, anatomy"
+          }
+        ]
       },
       "has_loadings": true
     },
@@ -1030,31 +1046,90 @@
       "figures": {
         "per_cluster": {
           "0": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_00.png"
           },
           "1": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_01.png"
           },
           "2": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_02.png"
           },
           "3": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_03.png"
           },
           "4": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_04.png"
           },
           "5": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_05/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_05/by_condition/dorsal.png",
+              "frontal": "recon/cluster_05/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_05.png"
           }
         },
-        "overview": []
+        "overview": [
+          {
+            "path": "cluster_cards.png",
+            "title": "Cluster cards \u2014 waveform, glass brains, anatomy"
+          },
+          {
+            "path": "timing/timing_k06_panel.png",
+            "title": "Cluster timing panel (K=6)"
+          },
+          {
+            "path": "timing/onset_across_k.png",
+            "title": "Onset ordering across K"
+          },
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       }
     },
     {
@@ -1252,7 +1327,24 @@
             "centroid": "cluster_centroids/cluster_03.png"
           }
         },
-        "overview": []
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "consensus_heatmap.png",
+            "title": "Consensus heatmap"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       }
     },
     {
@@ -1615,99 +1707,231 @@
       "figures": {
         "per_cluster": {
           "0": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_00.png"
           },
           "1": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
+              "frontal": "recon/cluster_01/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_01.png"
           },
           "2": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_02/by_condition/dorsal.png",
+              "frontal": "recon/cluster_02/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_02.png"
           },
           "3": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_03/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_03/by_condition/dorsal.png",
+              "frontal": "recon/cluster_03/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_03.png"
           },
           "4": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_04/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_04/by_condition/dorsal.png",
+              "frontal": "recon/cluster_04/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_04.png"
           },
           "5": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_05/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_05/by_condition/dorsal.png",
+              "frontal": "recon/cluster_05/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_05.png"
           },
           "6": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_06/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_06/by_condition/dorsal.png",
+              "frontal": "recon/cluster_06/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_06.png"
           },
           "7": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_07/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_07/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_07/by_condition/dorsal.png",
+              "frontal": "recon/cluster_07/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_07.png"
           },
           "8": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_08/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_08/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_08/by_condition/dorsal.png",
+              "frontal": "recon/cluster_08/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_08.png"
           },
           "9": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_09/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_09/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_09/by_condition/dorsal.png",
+              "frontal": "recon/cluster_09/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_09.png"
           },
           "10": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_10/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_10/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_10/by_condition/dorsal.png",
+              "frontal": "recon/cluster_10/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_10.png"
           },
           "11": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_11/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_11/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_11/by_condition/dorsal.png",
+              "frontal": "recon/cluster_11/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_11.png"
           },
           "12": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_12/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_12/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_12/by_condition/dorsal.png",
+              "frontal": "recon/cluster_12/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_12.png"
           },
           "13": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_13/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_13/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_13/by_condition/dorsal.png",
+              "frontal": "recon/cluster_13/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_13.png"
           },
           "14": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_14/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_14/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_14/by_condition/dorsal.png",
+              "frontal": "recon/cluster_14/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_14.png"
           },
           "15": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_15/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_15/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_15/by_condition/dorsal.png",
+              "frontal": "recon/cluster_15/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_15.png"
           },
           "16": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_16/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_16/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_16/by_condition/dorsal.png",
+              "frontal": "recon/cluster_16/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_16.png"
           },
           "17": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_17/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_17/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_17/by_condition/dorsal.png",
+              "frontal": "recon/cluster_17/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_17.png"
           },
           "18": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_18/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_18/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_18/by_condition/dorsal.png",
+              "frontal": "recon/cluster_18/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_18.png"
           },
           "19": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_19/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_19/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_19/by_condition/dorsal.png",
+              "frontal": "recon/cluster_19/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_19.png"
           },
           "20": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_20/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_20/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_20/by_condition/dorsal.png",
+              "frontal": "recon/cluster_20/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_20.png"
           },
           "21": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_21/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_21/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_21/by_condition/dorsal.png",
+              "frontal": "recon/cluster_21/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_21.png"
           },
           "22": {
-            "glass": {},
+            "glass": {
+              "lateral_L": "recon/cluster_22/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_22/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_22/by_condition/dorsal.png",
+              "frontal": "recon/cluster_22/by_condition/frontal.png"
+            },
             "centroid": "cluster_centroids/cluster_22.png"
           }
         },
-        "overview": []
+        "overview": [
+          {
+            "path": "cluster_cards.png",
+            "title": "Cluster cards \u2014 waveform, glass brains, anatomy"
+          },
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       }
     },
     {
@@ -2116,7 +2340,20 @@
             "centroid": "cluster_centroids/cluster_22.png"
           }
         },
-        "overview": []
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       }
     },
     {
@@ -3248,7 +3485,8 @@
               "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_00/by_condition/dorsal.png",
               "frontal": "recon/cluster_00/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
           },
           "1": {
             "glass": {
@@ -3256,7 +3494,8 @@
               "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_01/by_condition/dorsal.png",
               "frontal": "recon/cluster_01/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
           },
           "2": {
             "glass": {
@@ -3264,7 +3503,8 @@
               "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_02/by_condition/dorsal.png",
               "frontal": "recon/cluster_02/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
           },
           "3": {
             "glass": {
@@ -3272,7 +3512,8 @@
               "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_03/by_condition/dorsal.png",
               "frontal": "recon/cluster_03/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
           },
           "4": {
             "glass": {
@@ -3280,7 +3521,8 @@
               "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_04/by_condition/dorsal.png",
               "frontal": "recon/cluster_04/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_04.png"
           },
           "5": {
             "glass": {
@@ -3288,7 +3530,8 @@
               "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_05/by_condition/dorsal.png",
               "frontal": "recon/cluster_05/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_05.png"
           },
           "6": {
             "glass": {
@@ -3296,7 +3539,8 @@
               "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_06/by_condition/dorsal.png",
               "frontal": "recon/cluster_06/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_06.png"
           },
           "7": {
             "glass": {
@@ -3304,7 +3548,8 @@
               "lateral_R": "recon/cluster_07/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_07/by_condition/dorsal.png",
               "frontal": "recon/cluster_07/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_07.png"
           },
           "8": {
             "glass": {
@@ -3312,7 +3557,8 @@
               "lateral_R": "recon/cluster_08/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_08/by_condition/dorsal.png",
               "frontal": "recon/cluster_08/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_08.png"
           },
           "9": {
             "glass": {
@@ -3320,7 +3566,8 @@
               "lateral_R": "recon/cluster_09/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_09/by_condition/dorsal.png",
               "frontal": "recon/cluster_09/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_09.png"
           },
           "10": {
             "glass": {
@@ -3328,7 +3575,8 @@
               "lateral_R": "recon/cluster_10/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_10/by_condition/dorsal.png",
               "frontal": "recon/cluster_10/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_10.png"
           }
         },
         "overview": [
@@ -3608,7 +3856,8 @@
               "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_00/by_condition/dorsal.png",
               "frontal": "recon/cluster_00/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
           },
           "1": {
             "glass": {
@@ -3616,7 +3865,8 @@
               "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_01/by_condition/dorsal.png",
               "frontal": "recon/cluster_01/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_01.png"
           },
           "2": {
             "glass": {
@@ -3624,7 +3874,8 @@
               "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_02/by_condition/dorsal.png",
               "frontal": "recon/cluster_02/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_02.png"
           },
           "3": {
             "glass": {
@@ -3632,7 +3883,8 @@
               "lateral_R": "recon/cluster_03/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_03/by_condition/dorsal.png",
               "frontal": "recon/cluster_03/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_03.png"
           },
           "4": {
             "glass": {
@@ -3640,7 +3892,8 @@
               "lateral_R": "recon/cluster_04/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_04/by_condition/dorsal.png",
               "frontal": "recon/cluster_04/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_04.png"
           },
           "5": {
             "glass": {
@@ -3648,7 +3901,8 @@
               "lateral_R": "recon/cluster_05/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_05/by_condition/dorsal.png",
               "frontal": "recon/cluster_05/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_05.png"
           },
           "6": {
             "glass": {
@@ -3656,7 +3910,8 @@
               "lateral_R": "recon/cluster_06/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_06/by_condition/dorsal.png",
               "frontal": "recon/cluster_06/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_06.png"
           },
           "7": {
             "glass": {
@@ -3664,7 +3919,8 @@
               "lateral_R": "recon/cluster_07/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_07/by_condition/dorsal.png",
               "frontal": "recon/cluster_07/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_07.png"
           },
           "8": {
             "glass": {
@@ -3672,7 +3928,8 @@
               "lateral_R": "recon/cluster_08/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_08/by_condition/dorsal.png",
               "frontal": "recon/cluster_08/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_08.png"
           },
           "9": {
             "glass": {
@@ -3680,7 +3937,8 @@
               "lateral_R": "recon/cluster_09/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_09/by_condition/dorsal.png",
               "frontal": "recon/cluster_09/by_condition/frontal.png"
-            }
+            },
+            "centroid": "cluster_centroids/cluster_09.png"
           }
         },
         "overview": [
