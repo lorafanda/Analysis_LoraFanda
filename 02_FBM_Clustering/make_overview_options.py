@@ -27,7 +27,11 @@ ROOT = Path(__file__).resolve().parent
 import sys
 sys.path.insert(0, str(ROOT / "functions"))
 import lf_runs as LR  # noqa: E402
-DEC = ROOT / "outputs" / "clustering" / "decomposition"
+# Per FEATURE SET, not the flat folder. The flat decomposition/ directory still
+# holds the pre-split 2026-08-08 files from the 1027-electrode cohort; reading it
+# rebuilds the old figure with today's date on it.
+FSET = "concat_hg"
+DEC = ROOT / "outputs" / "clustering" / "decomposition" / FSET
 # Resolved, not pinned. This used to hard-code runs/20260803_175417; after the
 # cohort moved to 1266 electrodes / 27 patients, re-running reproduced the OLD
 # cohort in a figure dated today. lf_runs.provenance() stamps the run id, the

@@ -1,0 +1,10 @@
+{
+  "verdict": {
+    "G-04": "inconclusive - inspect the plots",
+    "G-06": "likely amplifier noise / unconnected"
+  },
+  "block_s": 10.0,
+  "n_blocks": 4,
+  "max_files": 1,
+  "written": "2026-08-18 16:08:23"
+}
