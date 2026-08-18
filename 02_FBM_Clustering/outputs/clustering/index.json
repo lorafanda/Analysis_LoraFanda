@@ -155,7 +155,9 @@
       "n_samples": 1266,
       "n_clusters": 4,
       "silhouette": 0.1333715319633484,
-      "path": "hierarchical/concat_hg/runs/20260817_171627"
+      "path": "hierarchical/concat_hg/runs/20260817_171627",
+      "has_ranking": true,
+      "n_clusters_ranked": 4
     },
     {
       "method": "hierarchical",
@@ -255,7 +257,9 @@
       "n_samples": 1266,
       "n_clusters": 6,
       "silhouette": 0.16481707990169525,
-      "path": "kmeans/concat_hg/runs/20260817_171544"
+      "path": "kmeans/concat_hg/runs/20260817_171544",
+      "has_ranking": true,
+      "n_clusters_ranked": 6
     },
     {
       "method": "kmeans",
@@ -368,7 +372,8 @@
       "n_clusters": 7,
       "silhouette": null,
       "path": "cnmf/concat_hg/runs/20260818_112939",
-      "has_ranking": false
+      "has_ranking": true,
+      "n_clusters_ranked": 7
     },
     {
       "method": "cnmf",
@@ -407,5 +412,5 @@
       "concat_rawds": "20260818_112941"
     }
   },
-  "updated_at": "2026-08-18T11:29:41Z"
+  "updated_at": "2026-08-18T13:42:05Z"
 }
