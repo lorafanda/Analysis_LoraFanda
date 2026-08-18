@@ -163,8 +163,8 @@ def main() -> int:
     recon = sorted(CNMF.glob("*/recon")) if CNMF.exists() else []
     GLASS = recon[-1] if recon else None
 
-    fig = plt.figure(figsize=(15.5, 14.8))
-    gs = fig.add_gridspec(5, 6, height_ratios=[1.0, 0.92, 0.92, 0.92, 1.0],
+    fig = plt.figure(figsize=(15.5, 17.6))
+    gs = fig.add_gridspec(6, 6, height_ratios=[1.0, 0.92, 1.05, 0.92, 0.92, 1.0],
                           hspace=0.70, wspace=0.9,
                           left=0.055, right=0.985, top=0.94, bottom=0.05)
 
@@ -223,14 +223,17 @@ def main() -> int:
     t_ax = np.linspace(0, 100, NT)
     pal = plt.get_cmap("tab10").colors
     sub1 = gs[1, :].subgridspec(1, K, wspace=0.28)
-    sub2 = gs[2, :].subgridspec(1, K, wspace=0.06)
-    sub3 = gs[3, :].subgridspec(1, K, wspace=0.06)
+    sub2 = gs[3, :].subgridspec(1, K, wspace=0.06)
+    sub3 = gs[4, :].subgridspec(1, K, wspace=0.06)
     prompt = ("run notebook 252 with RUN_FILTER = "
               "[{'method': 'cnmf', 'feature_set': 'concat_hg'}] to fill this row")
 
+    row_ref = {}
     for j in range(K):
         # B1 — the response profile
         ax = fig.add_subplot(sub1[0, j])
+        if j == 0:
+            row_ref["B1"] = len(fig.axes) - 1
         for bi in range(3):
             ax.plot(t_ax, C[j].reshape(3, NT)[bi], lw=1.15,
                     color=["#c1121f", "#1f77b4", "#2a9d8f"][bi], alpha=.9,
@@ -250,6 +253,8 @@ def main() -> int:
 
         # B2 — the project glassbrain (argmax), if 252 has produced it
         ax = fig.add_subplot(sub2[0, j])
+        if j == 0:
+            row_ref["B2"] = len(fig.axes) - 1
         _glass(ax, GLASS, j, "by_condition", prompt, fig, j == K // 2, 0.50)
 
         # B3 — the SAME brain, SAME left-lateral camera, but every electrode above the
@@ -258,6 +263,8 @@ def main() -> int:
         # else differing (a mirrored sagittal scatter, as this was) makes the reader
         # compare two pictures that do not line up.
         ax = fig.add_subplot(sub3[0, j])
+        if j == 0:
+            row_ref["B3"] = len(fig.axes) - 1
         drawn = _glass(ax, GLASS, j, "by_loading", prompt, fig, j == K // 2, 0.31)
         if not drawn:
             # Fallback only. Note the inverted x-axis: the project's left-lateral camera
@@ -277,20 +284,69 @@ def main() -> int:
             ax.text(-0.03, 0.5, "loading", rotation=90, va="center", ha="right",
                     fontsize=8.5, color=INK, transform=ax.transAxes)
 
-    fig.text(0.055, 0.782, "B1 - Component response profiles  (50% = GO cue)",
-             fontsize=10.5, color=INK)
-    fig.text(0.055, 0.593,
-             "B2 - Where its electrodes are: project glassbrain, left lateral (anterior left). "
-             "ARGMAX ONLY, i.e. electrodes whose leading component is this one.",
-             fontsize=10.5, color=INK)
-    fig.text(0.055, 0.404,
-             f"B3 - What the argmax hides: the SAME brain and camera as B2, now with every "
-             f"electrode loading above {LOADING_FLOOR:g} - radius and opacity scale with the "
-             f"loading, on one scale shared by all {K} components.",
-             fontsize=10.5, color=INK)
+    # ── B1b · every component on ONE axis, in its render colour ───────────────
+    # B1 puts each component in its own small panel with the three conditions in
+    # different colours, which makes WITHIN-component condition differences easy and
+    # ACROSS-component timing almost impossible - the thing the decomposition is for.
+    # Here the colour means the component (the same tab10 the glassbrains use), the
+    # x axis runs through all three conditions, and the seven traces sit on one scale.
+    axb = fig.add_subplot(gs[2, :])
+    Xraw = np.load(RUN / "X_train.npy").astype(float)
+    # Raw dB, not the unit-normed matrix the components are fitted on: this panel is
+    # for reading latencies off, so the y axis has to be the data's own units.
+    for j in range(K):
+        m = lead == j
+        if not m.any():
+            continue
+        M = Xraw[m]
+        mu = M.mean(0)
+        sd = M.std(0, ddof=1) if m.sum() > 1 else np.zeros_like(mu)
+        xx = np.arange(mu.size)
+        axb.fill_between(xx, mu - sd, mu + sd, color=pal[j % 10], alpha=0.05, lw=0, zorder=1)
+        axb.plot(xx, mu, color=pal[j % 10], lw=1.5, zorder=3,
+                 label=f"c{j}  n={int(m.sum())}")
+    per = Xraw.shape[1] / 3.0
+    for b in range(3):
+        axb.axvline((b + 0.5) * per, color="#9aa3ab", lw=0.9, ls=(0, (4, 3)), zorder=2)
+        if b:
+            axb.axvline(b * per, color="k", lw=1.0, zorder=4)
+    axb.axhline(0, color="0.85", lw=.7, zorder=1)
+    axb.set_xlim(0, Xraw.shape[1])
+    axb.set_xticks([(b + 0.5) * per for b in range(3)])
+    axb.set_xticklabels(CONDS, fontsize=9)
+    axb.set_ylabel("HG (dB)", fontsize=9)
+    axb.tick_params(labelsize=8)
+    axb.legend(fontsize=7.4, frameon=False, ncol=K, loc="upper center",
+               bbox_to_anchor=(0.5, 1.16), columnspacing=1.4, handlelength=1.4)
+    axb.spines[["top", "right"]].set_visible(False)
+    axb.text(0.5, -0.17, "dashed = GO cue (50% of each condition)  ·  "
+                         "shading = ±1 SD across that component's electrodes",
+             transform=axb.transAxes, ha="center", va="top", fontsize=7.4, color=MUTED)
+
+    # Row labels are placed from the axes' ACTUAL positions, not from hard-coded y
+    # values. The three literals here (0.782 / 0.593 / 0.404) were correct for a
+    # five-row grid and silently landed on top of the plots the moment B1b made it
+    # six - the label said B2 while sitting inside B1b.
+    def _row_label(ax_ref, text, dy=0.012):
+        bb = ax_ref.get_position()
+        fig.text(0.055, min(0.985, bb.y1 + dy), text, fontsize=10.5, color=INK,
+                 va="bottom")
+
+    _row_label(fig.axes[row_ref["B1"]], "B1 - Component response profiles  (50% = GO cue)")
+    _row_label(axb, f"B1b - All {K} components on one axis, in their render colours. "
+                    "Colour is the COMPONENT here, not the condition, so the panel is "
+                    "read for relative TIMING.")
+    _row_label(fig.axes[row_ref["B2"]],
+               "B2 - Where its electrodes are: project glassbrain, left lateral "
+               "(anterior left). ARGMAX ONLY, i.e. electrodes whose leading component "
+               "is this one.")
+    _row_label(fig.axes[row_ref["B3"]],
+               f"B3 - What the argmax hides: the SAME brain and camera as B2, now with "
+               f"every electrode loading above {LOADING_FLOOR:g} - radius and opacity "
+               f"scale with the loading, on one scale shared by all {K} components.")
 
     # ── E · LOPO vs matched null ---------------------------------------------
-    ax = fig.add_subplot(gs[4, :3])
+    ax = fig.add_subplot(gs[5, :3])
     r = real.sort_values("ari")
     ax.barh(range(len(r)), r["ari"], color=ACC, height=.72)
     lo = null["min"].mean() - null["min"].std()
@@ -321,7 +377,7 @@ def main() -> int:
             transform=ax.transAxes, fontsize=7.8, color=MUTED, va="bottom")
 
     # ── F · limits ------------------------------------------------------------
-    ax = fig.add_subplot(gs[4, 3:])
+    ax = fig.add_subplot(gs[5, 3:])
     ax.axis("off")
     ax.text(0, 1.0, "F - What this does and does not settle", fontsize=10.5, color=INK, va="top")
     # Every number here is read from the run, so F cannot describe a different
