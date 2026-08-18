@@ -144,6 +144,9 @@ outputs/
 
 # Re-deny legacy / old ERSP siblings + clustering siblings if anyone tries to re-add them
 01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY_old/
+# The real-time (GO-locked) ERSP tree is a working intermediate: 18,825 files.
+# The 05 analysis reads it from disk; only 05_FBM_ResponseTiming/outputs is tracked.
+01_FBM_Analysis/outputs/05_ERSP_LM_RAWONLY_RealTime/
 01_FBM_Analysis/outputs/04_ersp_LM/
 01_FBM_Analysis/outputs/04_ersp_segmented/
 01_FBM_Analysis/outputs/11_MicroMacro_results/
