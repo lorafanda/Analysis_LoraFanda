@@ -1,0 +1,28 @@
+condition,cluster,n,ref,window,peak_lag_pct,peak_r,polarity,ref_polarity,anti,ci_lo_pct,ci_hi_pct,ci_width_pct,at_edge,p_shuffle,interpretable,reason
+audio,1,123,0,response,-4.666666666666667,0.9622958297423642,activation,activation,False,-6.333333333333334,-2.666666666666667,3.6666666666666665,False,0.04,True,ok
+audio,2,111,0,response,-20.0,-0.8010171720879524,suppression,activation,True,-20.0,-20.0,0.0,True,0.0,False,lag censored at search edge
+audio,3,345,0,response,-7.333333333333333,0.8603408914122046,activation,activation,False,-11.0,-4.0,7.000000000000001,False,0.0,True,ok
+audio,4,259,0,response,-16.333333333333332,0.8494280643319359,activation,activation,False,-19.666666666666664,-13.666666666666666,6.0,False,0.0,True,ok
+audio,5,64,0,response,-5.0,0.9203208979040068,activation,activation,False,-8.0,-3.0,5.0,False,0.045,True,ok
+audio,6,50,0,response,-14.666666666666666,0.8606326844037013,activation,activation,False,-18.0,-12.333333333333334,5.666666666666666,False,0.0,True,ok
+audio,7,246,0,response,-7.333333333333333,0.9530096733060959,activation,activation,False,-10.0,-5.0,5.0,False,0.01,True,ok
+audio,8,13,0,response,-20.0,-0.47356391203086406,suppression,activation,True,-20.0,-20.0,0.0,True,0.01,False,lag censored at search edge
+audio,9,13,0,response,-15.666666666666668,0.7739768445077854,activation,activation,False,-20.0,-13.666666666666666,6.333333333333334,False,0.025,True,ok
+picture,1,123,0,response,-2.3333333333333335,0.9677154158735342,activation,activation,False,-4.333333333333334,-0.6666666666666667,3.6666666666666665,False,0.235,True,ok
+picture,2,111,0,response,-20.0,-0.8146681927753301,suppression,activation,True,-20.0,-20.0,0.0,True,0.0,False,lag censored at search edge
+picture,3,345,0,response,-6.0,0.9173759450973418,activation,activation,False,-7.333333333333333,-3.6666666666666665,3.6666666666666665,False,0.005,True,ok
+picture,4,259,0,response,-18.0,0.7889327924372177,activation,activation,False,-20.0,-16.666666666666664,3.3333333333333335,False,0.0,True,ok
+picture,5,64,0,response,-6.333333333333334,0.9430718136325719,activation,activation,False,-8.333333333333332,-4.666666666666667,3.6666666666666665,False,0.01,True,ok
+picture,6,50,0,response,-12.666666666666668,0.9259971464888425,activation,activation,False,-14.333333333333334,-10.991666666666674,3.341666666666659,False,0.0,True,ok
+picture,7,246,0,response,-7.000000000000001,0.9725445628101996,activation,activation,False,-8.333333333333332,-5.333333333333334,3.0,False,0.0,True,ok
+picture,8,13,0,response,-20.0,-0.5846767083324872,suppression,activation,True,-20.0,-20.0,0.0,True,0.005,False,lag censored at search edge
+picture,9,13,0,response,-20.0,0.5181726003384046,activation,activation,False,-20.0,-19.666666666666664,0.33333333333333337,True,0.005,False,lag censored at search edge
+reading,1,123,0,response,-5.333333333333334,0.9843271478129956,activation,activation,False,-7.333333333333333,-4.0,3.3333333333333335,False,0.005,True,ok
+reading,2,111,0,response,-20.0,-0.6583884833751401,suppression,activation,True,-20.0,-20.0,0.0,True,0.0,False,lag censored at search edge
+reading,3,345,0,response,-3.6666666666666665,0.9672381184466122,activation,activation,False,-5.666666666666666,-2.3333333333333335,3.3333333333333335,False,0.045,True,ok
+reading,4,259,0,response,-10.333333333333334,0.7296651822225325,activation,activation,False,-12.333333333333334,-9.0,3.3333333333333335,False,0.0,True,ok
+reading,5,64,0,response,-6.333333333333334,0.9776888305413254,activation,activation,False,-8.333333333333332,-4.666666666666667,3.6666666666666665,False,0.005,True,ok
+reading,6,50,0,response,-10.666666666666668,0.959745931501052,activation,activation,False,-13.0,-9.333333333333334,3.6666666666666665,False,0.0,True,ok
+reading,7,246,0,response,-5.0,0.9849651093285524,activation,activation,False,-6.674999999999999,-3.6666666666666665,3.008333333333333,False,0.01,True,ok
+reading,8,13,0,response,-20.0,-0.45633781615600544,suppression,activation,True,-20.0,-19.650000000000016,0.3499999999999848,True,0.045,False,lag censored at search edge
+reading,9,13,0,response,8.666666666666668,-0.6379735764369299,suppression,activation,True,-1.0,10.674999999999994,11.674999999999992,False,0.045,True,ok
