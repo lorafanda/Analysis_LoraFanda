@@ -2,19 +2,22 @@
 """
 render_cnmf_glassbrains.py — per-component glassbrains for the graded decomposition.
 
-Notebook 252 renders these for a normal clustering run, but it needs a Jupyter kernel and
-keys off the hard cluster column. This does the same job headlessly, using the project's
-own meshes, cameras, colours and window size from lf_recon_shared / _config, so the output
-sits beside every other glassbrain in the project and looks the same.
+THIS SCRIPT OWNS ONE FOLDER: by_loading/.
 
-TWO VIEWS PER COMPONENT, and they mean different things:
+    by_condition/   <- notebook 252, argmax, the project look
+    by_patient/     <- notebook 252, per-patient colours
+    by_loading/     <- HERE. The GRADED view: every contact, opacity and radius
+                       scaled by its loading on this component. With ~66% of
+                       electrodes having no majority component the argmax discards
+                       most of the signal, and this is what it discards. 252 cannot
+                       draw it, because it keys off the hard cluster column.
 
-    by_condition/   the ARGMAX  — contacts whose leading component is this one.
-                    Directly comparable to a 252 render of any clustering run.
-    by_loading/     the GRADED view — every contact, opacity and radius scaled by its
-                    loading on this component. With 59% of electrodes having no majority
-                    component the argmax discards most of the signal, and this is what it
-                    discards.
+It renders through pyvista while 252 renders through MNE/PySurfer add_foci. They read
+the same colour constants and cameras but NOT the same engine, so their output is
+visibly different — a cooler surface and smaller dots here. When this script also wrote
+by_condition/ the folder no longer said which tool had made its contents; 252 then
+skipped those files because they already existed, and FIG C.3 panel B2 kept the wrong
+renderer's output without any error. Hence one folder, one owner, enforced at write time.
 
 The camera keys in lf_recon_shared_config are left/right/dorsal/frontal; the filenames the
 rest of the project expects are lateral_L/lateral_R/dorsal/frontal, so they are mapped.
@@ -50,14 +53,18 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default=None, help="run dir (default: newest cnmf/concat_hg)")
     ap.add_argument("--scale", type=int, default=2, help="screenshot supersampling")
-    # DEFAULT IS 'loading', NOT 'both'. This script is a pyvista reimplementation;
-    # notebook 252 renders with MNE/PySurfer Brain.add_foci. They share the colour
-    # constants but not the engine, so the pyvista output has a cooler surface and
-    # small flat dots instead of 252's warm mauve brain and shaded foci. Running
-    # this with 'both' OVERWRITES by_condition/ and visibly degrades panel B2 of
-    # FIG C.3, which is what happened on 2026-08-18. by_loading/ is the graded view
-    # that 252 cannot produce, and is the only thing this script should own.
-    ap.add_argument("--which", choices=["both", "argmax", "loading"], default="loading",
+    # THE ARGMAX OPTION IS GONE ON PURPOSE. by_condition/ belongs to notebook 252,
+    # which renders it through MNE/PySurfer Brain.add_foci. This script is a pyvista
+    # reimplementation and produces a visibly different brain from the same colour
+    # constants. When both wrote by_condition/ the folder said nothing about which
+    # tool made its contents, 252 then SKIPPED the files because they already
+    # existed, and FIG C.3 panel B2 silently kept the wrong renderer's output.
+    #
+    # One folder, one owner:
+    #     by_condition/  <- 252   (argmax, the project look)
+    #     by_patient/    <- 252   (per-patient colours)
+    #     by_loading/    <- here  (graded, which 252 cannot produce)
+    ap.add_argument("--which", choices=["loading"], default="loading",
                     help="which of the two renders to (re)draw")
     a = ap.parse_args()
 
@@ -100,6 +107,10 @@ def main() -> int:
                         opacity=float(np.clip(0.15 + 0.85 * w, 0, 1)))
         pl.camera_position = cams[VIEW_MAP[view]]
         pl.reset_camera_clipping_range()
+        if out_png.parent.name != "by_loading":
+            raise RuntimeError(
+                f"refusing to write {out_png.parent.name}/ - this script only owns "
+                f"by_loading/; by_condition/ and by_patient/ belong to notebook 252")
         out_png.parent.mkdir(parents=True, exist_ok=True)
         pl.screenshot(str(out_png), transparent_background=C.TRANSPARENT_BG, scale=a.scale)
         pl.close()
@@ -119,12 +130,7 @@ def main() -> int:
     for j in range(K):
         rgb = tuple(pal[j % 10])
         cd = rd / "recon" / f"cluster_{j:02d}"
-        if a.which in ("both", "argmax"):
-            # ARGMAX — what 252 would draw
-            m = df[ccol].to_numpy() == j
-            for v in VIEW_MAP:
-                shot(xyz[m], rgb, np.ones(m.sum()), cd / "by_condition" / f"{v}.png", v)
-        if a.which in ("both", "loading"):
+        if a.which == "loading":
             # GRADED — what the argmax throws away
             keep = Wn[:, j] > LOADING_FLOOR
             for v in VIEW_MAP:
@@ -135,7 +141,7 @@ def main() -> int:
               f"above {LOADING_FLOOR} loading (max {Wn[:, j].max():.2f} of {GMAX:.2f})")
 
     print(f"\n  -> {rd / 'recon'}")
-    print("  by_condition/ = argmax (comparable to 252) · by_loading/ = graded")
+    print("  by_loading/ = graded. by_condition/ and by_patient/ are 252's to write.")
     return 0
 
 
