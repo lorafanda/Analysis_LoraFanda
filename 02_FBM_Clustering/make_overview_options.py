@@ -24,8 +24,15 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
+import sys
+sys.path.insert(0, str(ROOT / "functions"))
+import lf_runs as LR  # noqa: E402
 DEC = ROOT / "outputs" / "clustering" / "decomposition"
-RUN = ROOT / "outputs" / "clustering" / "kmeans" / "concat_hg" / "runs" / "20260803_175417"
+# Resolved, not pinned. This used to hard-code runs/20260803_175417; after the
+# cohort moved to 1266 electrodes / 27 patients, re-running reproduced the OLD
+# cohort in a figure dated today. lf_runs.provenance() stamps the run id, the
+# cohort size and the render date onto the output so that cannot recur silently.
+RUN = LR.newest_run("kmeans", "concat_hg")
 OUT = ROOT / "outputs" / "clustering" / "story"
 INK, MUTED, ACC, WARN, GOOD = "#1b232c", "#68727d", "#1f77b4", "#c1121f", "#2a9d8f"
 CONDS = ["audio", "picture", "reading"]

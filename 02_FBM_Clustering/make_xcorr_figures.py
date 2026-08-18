@@ -36,9 +36,16 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
+import sys
+sys.path.insert(0, str(ROOT / "functions"))
+import lf_runs as LR  # noqa: E402
 sys.path.insert(0, str(ROOT / "functions"))
 
-RUN = ROOT / "outputs" / "clustering" / "kmeans" / "concat_hg" / "runs" / "20260803_175417"
+# Resolved, not pinned. This used to hard-code runs/20260803_175417; after the
+# cohort moved to 1266 electrodes / 27 patients, re-running reproduced the OLD
+# cohort in a figure dated today. lf_runs.provenance() stamps the run id, the
+# cohort size and the render date onto the output so that cannot recur silently.
+RUN = LR.newest_run("kmeans", "concat_hg")
 # +/-47% of the trial. 150 response bins, int(150 * (1 - 0.06)) = 141, 141/300 = 47.0%.
 FULLRANGE_MIN_OVERLAP = 0.06
 

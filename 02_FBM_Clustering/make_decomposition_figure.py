@@ -36,8 +36,19 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
-DEC = ROOT / "outputs" / "clustering" / "decomposition"
-RUN = ROOT / "outputs" / "clustering" / "kmeans" / "concat_hg" / "runs" / "20260803_175417"
+import sys
+sys.path.insert(0, str(ROOT / "functions"))
+import lf_runs as LR  # noqa: E402
+# The decomposition is now written per FEATURE SET. The flat folder it used to
+# read still exists from before the split and holds the 1027-cohort files, so
+# reading it would quietly rebuild the old figure.
+FSET = "concat_hg"
+DEC = ROOT / "outputs" / "clustering" / "decomposition" / FSET
+# Resolved, not pinned. This used to hard-code runs/20260803_175417; after the
+# cohort moved to 1266 electrodes / 27 patients, re-running reproduced the OLD
+# cohort in a figure dated today. lf_runs.provenance() stamps the run id, the
+# cohort size and the render date onto the output so that cannot recur silently.
+RUN = LR.newest_run("kmeans", "concat_hg")
 CNMF = ROOT / "outputs" / "clustering" / "cnmf" / "concat_hg" / "runs"
 COORDS = (ROOT / "outputs" / "250_recon" / "fsaverage" / "coords"
           / "ALL_PATIENTS_contacts_fsaverage.csv")
@@ -270,9 +281,16 @@ def main() -> int:
         ax.text(0.045, y - 0.095, b_, fontsize=8.2, color=MUTED, va="top")
         y -= 0.245
 
-    fig.suptitle("Graded decomposition of the concatenated cohort  ·  convex NMF, K=7  ·  "
-                 "1027 electrodes, 24 patients, run 20260803_175417",
-                 fontsize=12.5, x=0.055, ha="left", y=0.985, color=INK)
+    import json as _json
+    _mp = DEC / "meta.json"
+    _m = _json.loads(_mp.read_text(encoding="utf-8")) if _mp.exists() else {}
+    _stamp = (f"convex NMF, K={_m.get('K', '?')}  ·  "
+              f"{_m.get('n_electrodes', '?')} electrodes, "
+              f"{_m.get('n_patients', '?')} patients  ·  {FSET}  ·  "
+              f"source {_m.get('source_run', '?').split('/')[-1]}  ·  "
+              f"{LR.provenance(RUN)}")
+    fig.suptitle("Graded decomposition of the concatenated cohort  ·  " + _stamp,
+                 fontsize=10.5, x=0.055, ha="left", y=0.985, color=INK)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT, dpi=150, bbox_inches="tight", facecolor="white")
     print(f"  wrote {OUT}  ({OUT.stat().st_size/1e6:.2f} MB)")
