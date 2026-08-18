@@ -50,7 +50,14 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default=None, help="run dir (default: newest cnmf/concat_hg)")
     ap.add_argument("--scale", type=int, default=2, help="screenshot supersampling")
-    ap.add_argument("--which", choices=["both", "argmax", "loading"], default="both",
+    # DEFAULT IS 'loading', NOT 'both'. This script is a pyvista reimplementation;
+    # notebook 252 renders with MNE/PySurfer Brain.add_foci. They share the colour
+    # constants but not the engine, so the pyvista output has a cooler surface and
+    # small flat dots instead of 252's warm mauve brain and shaded foci. Running
+    # this with 'both' OVERWRITES by_condition/ and visibly degrades panel B2 of
+    # FIG C.3, which is what happened on 2026-08-18. by_loading/ is the graded view
+    # that 252 cannot produce, and is the only thing this script should own.
+    ap.add_argument("--which", choices=["both", "argmax", "loading"], default="loading",
                     help="which of the two renders to (re)draw")
     a = ap.parse_args()
 
