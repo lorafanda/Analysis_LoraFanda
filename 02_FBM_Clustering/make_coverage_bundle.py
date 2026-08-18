@@ -391,11 +391,29 @@ def main() -> int:
                   f"{f', {multi} multi-label' if multi else ''} | {mb:.1f} MB")
 
     # per-run label vector over the GLOBAL contact table, for the electrode overlay
+    contacts_json["loadings"] = {}
     for L in loaded:
         m = co_all["key"].map(L["lab"].dropna(subset=[L["ccol"]]).groupby("key")[L["ccol"]]
                               .apply(lambda s: sorted({int(v) for v in s})).to_dict())
         contacts_json["runs"][L["entry"]["id"]] = [
             None if not isinstance(v, list) else v for v in m]
+
+        # GRADED MEMBERSHIP, where the run has it. Only the convex-NMF runs carry
+        # w0..wK-1; k-means and Ward are hard partitions where every contact's
+        # membership is 1.0 by construction, so exporting a loading for them would
+        # invite a control that looks live and cannot mean anything.
+        wcols = sorted((c for c in L["lab"].columns
+                        if c.startswith("w") and c[1:].isdigit()),
+                       key=lambda c: int(c[1:]))
+        if not wcols:
+            continue
+        top = L["lab"][wcols].max(axis=1)
+        d = (L["lab"].assign(_top=top).dropna(subset=["_top"])
+             .groupby("key")["_top"].max().to_dict())
+        vals = co_all["key"].map(d)
+        contacts_json["loadings"][L["entry"]["id"]] = [
+            None if v != v else round(float(v), 3) for v in vals]
+        L["entry"]["has_loadings"] = True
 
     manifest = {
         "radii_mm": [f"{r:g}" for r in a.radii],

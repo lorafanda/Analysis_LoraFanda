@@ -435,26 +435,15 @@
       "figures": {
         "per_cluster": {
           "0": {
-            "glass": {
-              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
-              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
-              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
-              "frontal": "recon/cluster_00/by_condition/frontal.png"
-            },
+            "glass": {},
             "centroid": "cluster_centroids/cluster_00.png"
           },
           "1": {
-            "glass": {
-              "lateral_L": "recon/cluster_01/by_condition/lateral_L.png",
-              "lateral_R": "recon/cluster_01/by_condition/lateral_R.png",
-              "dorsal": "recon/cluster_01/by_condition/dorsal.png",
-              "frontal": "recon/cluster_01/by_condition/frontal.png"
-            },
+            "glass": {},
             "centroid": "cluster_centroids/cluster_01.png"
           },
           "2": {
             "glass": {
-              "lateral_L": "recon/cluster_02/by_condition/lateral_L.png",
               "lateral_R": "recon/cluster_02/by_condition/lateral_R.png",
               "dorsal": "recon/cluster_02/by_condition/dorsal.png",
               "frontal": "recon/cluster_02/by_condition/frontal.png"
@@ -508,7 +497,8 @@
             "title": "Consensus heatmap"
           }
         ]
-      }
+      },
+      "has_loadings": true
     },
     {
       "id": "cnmf__concat_rawds__20260818_112941",
@@ -822,7 +812,8 @@
           }
         },
         "overview": []
-      }
+      },
+      "has_loadings": true
     },
     {
       "id": "kmeans__concat_hg__20260817_171544",
