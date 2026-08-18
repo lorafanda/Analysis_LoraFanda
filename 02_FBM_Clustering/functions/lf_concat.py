@@ -66,7 +66,17 @@ DEFAULT_FMAX = 500.0
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30
 # Ungated source cache (separate from the gated canonical cache: different params).
-DEFAULT_CONCAT_CACHE = Path(__file__).resolve().parents[1] / "outputs" / "_dataset" / "concat_source"
+#
+# VERSIONED, because params.json does not record WHICH patients went into a cube:
+# it captures the build parameters, so a cache stays "valid" even after the set of
+# available patients changes. The 08-03 cache (concat_source) was built while the
+# dash rule in lf_dataset was silently discarding EL034 entirely and 4 of EL046's
+# contacts, so it holds 26 patients / 8361 rows and would have been re-used
+# unchanged after that fix. Bump the suffix whenever the eligible cohort changes;
+# old caches are kept so any published run can still be reproduced.
+#   concat_source     2026-08-03  26 patients, 8361 rows  (pre dash-fix)
+#   concat_source_v2  2026-08-17  + EL034, + EL046's Fp_L-5..8
+DEFAULT_CONCAT_CACHE = Path(__file__).resolve().parents[1] / "outputs" / "_dataset" / "concat_source_v2"
 
 
 def normalize_label(s) -> str:

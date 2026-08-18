@@ -79,11 +79,17 @@ def parse_electrode_from_filename(fname: str) -> str:
 def is_non_neural_electrode(label: str) -> bool:
     """Match non-neural channel name patterns: PHOTO, MRK, ECG, AUDIO, AINP
     (Blackrock analog input — photodiode / mic / trigger), EKG/EMG,
-    X / X1..X8 / E1..E8, or anything with '+' or '-' in the label."""
+    X / X1..X8 / E1..E8, or anything with '+' in the label."""
     if label is None:
         return False
-    s = str(label).strip().upper()
-    if "+" in s or "-" in s:
+    # Treat '-' like '_' before the checks, matching lf_io_utils._is_non_neural.
+    # Dash-separated names (Cing-L1, OFG-L15, Fp_L-5, ...) are legitimate neural
+    # channels in the dykstra-style recon naming, not bipolar markers. Testing
+    # for '-' silently discarded ALL 58 of EL034's contacts (losing the patient
+    # outright) and 4 of EL046's; measured across the cohort, 62 of 3089 contacts
+    # contain '-' and not one of them is a bipolar pair.
+    s = str(label).strip().upper().replace("-", "_")
+    if "+" in s:
         return True
     # AINP1/2/3... are the Blackrock analog inputs (photodiode, microphone, trigger).
     # They were slipping through and being clustered as if they were brain channels.

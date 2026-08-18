@@ -1,0 +1,16 @@
+{
+  "groups": [
+    "kmeans_concat_hg",
+    "hier_concat_hg",
+    "cnmf_lead",
+    "role"
+  ],
+  "features": [
+    "peak_lat",
+    "onset_lat"
+  ],
+  "n_perm": 500,
+  "n_rows": 9241,
+  "n_patients": 29,
+  "written": "2026-08-18 13:28:43"
+}

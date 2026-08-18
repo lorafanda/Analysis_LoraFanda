@@ -118,6 +118,24 @@ LOOKUP_ANATOMY_DIRS = {
     "EL048": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL048\anatomy",
 }
 
+# ---- TEMPORARY manual WM reference -------------------------------------------
+# PAT_6953 has neither a BIDS electrodes TSV nor a Lookup workbook, so neither
+# automatic WM route can fire. These contacts were identified by eye on the
+# reconstruction (2026-08-17) purely so the patient can be pre-processed; they
+# are NOT a substitute for a real anatomy table:
+#   * 9 WM channels is a THIN reference (the rest of the cohort runs 5-41), so
+#     the common-mode estimate is noisier for this patient than for any other.
+#   * Nothing here feeds the recon, the glassbrains or MOBA's 3-D brain, and
+#     PAT_6953 still cannot be parcellated, LanA-labelled or Unknown-filtered.
+# Delete the entry as soon as a real electrodes table exists, and re-run 140.
+# Names are matched through normalize_label(), so AD7 / AD-7 / ad_7 all resolve
+# to the same channel; wm_indices_for_patient() logs how many of the requested
+# names were actually found, so a naming mismatch is visible, not silent.
+MANUAL_WM_CHANNELS = {
+    "PAT_6953": ["AD7", "AD8", "HPD4", "HPD5", "TPD5", "TPD6", "TPD7",
+                 "IPD8", "IPD9"],
+}
+
 # Contacts flagged isOut=TRUE in the Lookup sit OUTSIDE the brain, so they are
 # bad channels rather than data. Only PLUGGED contacts are listed -- an
 # unplugged contact was never recorded and cannot be excluded from a signal it

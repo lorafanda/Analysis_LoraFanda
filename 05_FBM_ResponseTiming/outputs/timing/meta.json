@@ -1,0 +1,48 @@
+{
+  "rt_root": "\\\\nasac-m2.unige.ch\\m-HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda\\01_FBM_Analysis\\outputs\\05_ERSP_LM_RAWONLY_RealTime",
+  "band": [
+    70.0,
+    150.0
+  ],
+  "thr_db": 1.0,
+  "min_ms": 100.0,
+  "resp_window": [
+    0.0,
+    5.0
+  ],
+  "grid_step_s": 0.02,
+  "rt_window": [
+    -2.5,
+    5.0
+  ],
+  "t0_is": "GO cue (stimulus offset); there is no speech-onset event in this dataset",
+  "cubes_found": 9241,
+  "rows_built": 9241,
+  "failed": 0,
+  "n_patients": 29,
+  "per_condition": {
+    "reading": 3128,
+    "audio": 3083,
+    "picture": 3030
+  },
+  "electrodes_per_condition": {
+    "audio": 1485,
+    "picture": 1302,
+    "reading": 1372
+  },
+  "label_coverage": {
+    "kmeans_concat_hg": 3626,
+    "kmeans_concat_rawds": 3626,
+    "hier_concat_hg": 3626,
+    "hier_concat_rawds": 3626,
+    "cnmf_lead": 3626,
+    "role": 7580
+  },
+  "source_runs": {
+    "kmeans_concat_hg": "02_FBM_Clustering/outputs/clustering/kmeans/concat_hg/runs/20260817_171544",
+    "kmeans_concat_rawds": "02_FBM_Clustering/outputs/clustering/kmeans/concat_rawds/runs/20260817_171634",
+    "hier_concat_hg": "02_FBM_Clustering/outputs/clustering/hierarchical/concat_hg/runs/20260817_171627",
+    "hier_concat_rawds": "02_FBM_Clustering/outputs/clustering/hierarchical/concat_rawds/runs/20260817_171733"
+  },
+  "written": "2026-08-18 13:27:12"
+}

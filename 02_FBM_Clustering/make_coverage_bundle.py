@@ -70,10 +70,12 @@ DEFAULT_RADIUS = 10.0
 # them pinned at K=20 = the sweep ceiling) and hierarchical/concat_rawds (K=20 for the
 # same reason, and the largest payload of the set).
 TRACKS = [
-    ("cnmf/concat_hg", "Convex NMF - graded (argmax)", "1027-electrode concat cohort"),
-    ("kmeans/concat_hg", "K-means · concatenated", "1027-electrode concat cohort"),
-    ("hierarchical/concat_hg", "Ward · concatenated", "1027-electrode concat cohort"),
-    ("kmeans/concat_rawds", "K-means · concat 15-band", "1027-electrode concat cohort"),
+    ("cnmf/concat_hg", "Convex NMF - graded (argmax)", "1266-electrode concat cohort"),
+    ("cnmf/concat_rawds", "Convex NMF 15-band - graded (argmax)", "1266-electrode concat cohort"),
+    ("kmeans/concat_hg", "K-means · concatenated", "1266-electrode concat cohort"),
+    ("hierarchical/concat_hg", "Ward · concatenated", "1266-electrode concat cohort"),
+    ("kmeans/concat_rawds", "K-means · concat 15-band", "1266-electrode concat cohort"),
+    ("hierarchical/concat_rawds", "Ward · concat 15-band", "1266-electrode concat cohort"),
     ("kmeans/hg", "K-means · per-condition", "2026-07-19 per-task cohort"),
     ("hierarchical/hg", "Ward · per-condition", "2026-07-19 per-task cohort"),
     ("kmeans/rawds", "K-means · per-condition 15-band", "2026-07-19 per-task cohort"),

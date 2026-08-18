@@ -28,20 +28,36 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
 DEC = ROOT / "outputs" / "clustering" / "decomposition"
-SRC = ROOT / "outputs" / "clustering" / "kmeans" / "concat_hg" / "runs" / "20260803_175417"
 CLUST = ROOT / "outputs" / "clustering"
-METHOD, FSET = "cnmf", "concat_hg"
+METHOD = "cnmf"
 METHOD_LABEL = "Convex NMF (graded)"
-FSET_LABEL = "Concatenated HG [a|p|r]"
+FSET_LABELS = {
+    "concat_hg": "Concatenated HG [a|p|r]",
+    "concat_rawds": "Concatenated raw-ds [a|p|r]",
+}
+# SRC is no longer hard-coded. It is read from the decomposition's own meta.json,
+# because pinning it to one run is what let the loadings and the labels drift onto
+# different cohorts (1266 weights against a 1027-row labels.csv).
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--feature-set", default="concat_hg", choices=sorted(FSET_LABELS))
     a = ap.parse_args()
 
-    G = np.load(DEC / "G_loadings.npy")
-    C = np.load(DEC / "components.npy")
+    FSET = a.feature_set
+    FSET_LABEL = FSET_LABELS[FSET]
+    dec = DEC / FSET
+    if not (dec / "meta.json").exists():
+        print(f"  !! no decomposition at {dec} - run run_decomposition.py first",
+              file=sys.stderr)
+        return 1
+    meta_in = json.loads((dec / "meta.json").read_text(encoding="utf-8"))
+    SRC = ROOT / meta_in["source_run"]
+
+    G = np.load(dec / "G_loadings.npy")
+    C = np.load(dec / "components.npy")
     K = G.shape[1]
     Gn = G / np.maximum(G.sum(1, keepdims=True), 1e-12)
     lab = pd.read_csv(SRC / "labels.csv")
@@ -94,7 +110,7 @@ def main() -> int:
             "n_samples": int(len(out)), "n_features": int(C.shape[1]),
             "n_clusters": K, "best_k": K,
             "silhouette_overall": None,
-            "held_out_variance_explained": 0.5435,
+            "held_out_variance_explained": meta_in.get("in_sample_var_explained"),
             "frac_no_majority": float((top < 0.5).mean()),
             "frac_dominant": float((top >= 0.8).mean()),
             "median_top_weight": float(np.median(top)),
@@ -133,10 +149,12 @@ def main() -> int:
 
     print(f"\n  -> {rd}")
     print("  STILL REQUIRED, and silent if skipped:")
-    print("    1. notebook 252 with RUN_FILTER = [{'feature_set': 'concat_hg', 'method': 'cnmf'}]")
+    print(f"    1. notebook 252 with RUN_FILTER = "
+          f"[{{'feature_set': '{FSET}', 'method': 'cnmf'}}]")
     print("       — fit_and_save never writes recon/, so MOBA's 3-D brain stays empty without it")
-    print(f"    2. append (\"{METHOD}/{FSET}\", \"Convex NMF - graded\", \"1027-electrode concat cohort\")")
-    print("       to TRACKS in make_coverage_bundle.py, then regenerate the whole bundle")
+    print(f"    2. append (\"{METHOD}/{FSET}\", \"Convex NMF - graded\", "
+          f"\"{len(out)}-electrode concat cohort\") to TRACKS in make_coverage_bundle.py")
+    print("       then regenerate the whole bundle")
     return 0
 
 

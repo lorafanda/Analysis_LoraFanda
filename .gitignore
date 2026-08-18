@@ -67,6 +67,15 @@ outputs/
 # force-includes them, so re-deny explicitly here. (Keeps the small _by_band/_by_time variants.)
 03_FBM_Classifying/outputs/classification/**/feature_importance.csv
 
+# Allow the response-timing tree (timing table, group stats, RT-T figures).
+# All small and all text/PNG: the timing table is one row per electrode x condition,
+# not per trial. The RealTime CUBES it is derived from live under 01_FBM_Analysis and
+# stay out of git — 9241 npy files, several GB.
+!05_FBM_ResponseTiming/outputs/
+!05_FBM_ResponseTiming/outputs/**
+05_FBM_ResponseTiming/outputs/**/*.npy
+05_FBM_ResponseTiming/outputs/**/*.parquet
+
 # Allow the pooling manifest tree (overlays, pool/anatomy run artifacts) — NOT renders
 !04_FBM_Pooling/outputs/
 !04_FBM_Pooling/outputs/pooling/

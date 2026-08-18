@@ -14,6 +14,7 @@ def collect_trials(
     outlier_method="IQR",
     iqr_k=1.5,
     min_stim_s=0.5,
+    min_post_s=1.0,
     max_post_s=5.0,
     condition_aliases=None,
     z_low=None, z_high=None,
@@ -33,6 +34,11 @@ def collect_trials(
         Sampling rate in Hz.
     min_stim_s : float
         Minimum stimulus duration (offset - onset) in seconds.
+    min_post_s : float
+        Minimum post-stimulus duration (trial_end - offset) in seconds. A response
+        shorter than this is not a real response. Defaulted here rather than routed
+        through cfg because the notebooks do not pass min_stim_s either -- a cfg
+        value they never read would look effective and do nothing.
     max_post_s : float
         Maximum post-stimulus duration (trial_end - offset) in seconds.
     outlier_method : {"IQR","zscore","percentile"}
@@ -185,9 +191,9 @@ def collect_trials(
         stim_s = (off - on) / float(fs_hz)
         post_s = (tend - off) / float(fs_hz)
 
-        # 1) min stimulus + max post-stimulus duration filters
-        # 1) min stimulus + max post-stimulus duration filters
-        keep = (stim_s >= float(min_stim_s)) & (post_s <= float(max_post_s)) & ra_keep
+        # 1) min stimulus + min/max post-stimulus duration filters
+        keep = (stim_s >= float(min_stim_s)) & (post_s >= float(min_post_s)) \
+             & (post_s <= float(max_post_s)) & ra_keep
         
         # 2) outlier filter on post durations (applied after hard limits)
         lo = hi = np.nan
@@ -258,7 +264,10 @@ def collect_trials(
             if np.isfinite(lo): _plt.axvline(lo, color="blue", ls="--", label=f"low={lo:.2f}s")
             if np.isfinite(hi): _plt.axvline(hi, color="blue", ls="--", label=f"high={hi:.2f}s")
             _plt.axvline(float(max_post_s), color="orange", ls="--", label=f"max_post={max_post_s:.1f}s")
-            _plt.title(f"{patient_id} | {cond} | stim≥{min_stim_s:.2f}s | post≤{max_post_s:.1f}s | {method_norm}")
+            if float(min_post_s) > 0:
+                _plt.axvline(float(min_post_s), color="orange", ls="--", label=f"min_post={min_post_s:.1f}s")
+            _plt.title(f"{patient_id} | {cond} | stim≥{min_stim_s:.2f}s | "
+                       f"{min_post_s:.1f}s≤post≤{max_post_s:.1f}s | {method_norm}")
             _plt.xlabel("Post duration (s)"); _plt.ylabel("Count"); _plt.legend(); _plt.tight_layout()
             out_png = os.path.join(qc_dir, f"{patient_id}_{cond}_{method_norm}_postDur_QC.png")
             _plt.savefig(out_png, dpi=160); _plt.close()
@@ -269,6 +278,7 @@ def collect_trials(
             stim_min=float(stim_s.min()), stim_med=float(np.median(stim_s)), stim_max=float(stim_s.max()),
             post_min=float(post_s.min()), post_med=float(np.median(post_s)), post_max=float(post_s.max()),
             outlier_method=str(outlier_method),
+            min_post_s=float(min_post_s),
             max_post_s=float(max_post_s),
             z_low=z_low_used, z_high=z_high_used,
             pct_low=pct_low_used, pct_high=pct_high_used,

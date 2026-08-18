@@ -242,6 +242,20 @@ def wm_labels_for_patient(patient_id: str, *,
     (used for MicroEPI .mat patients whose TSV lives outside the standard
     cohort layout). Returns an empty set if the TSV cannot be located.
     """
+    # A manual override wins over both automatic routes. Opt-in per patient via
+    # cfg.MANUAL_WM_CHANNELS and used only where no anatomy table exists at all
+    # (PAT_6953); every other patient is untouched. See the config block for why
+    # this is temporary.
+    try:
+        from functions import config as _cfg0
+        _manual = (getattr(_cfg0, "MANUAL_WM_CHANNELS", {}) or {}).get(str(patient_id))
+    except Exception:
+        _manual = None
+    if _manual:
+        log(f"[WM] {patient_id}: MANUAL override (temporary, no anatomy table) "
+            f"-> {len(_manual)} requested: {', '.join(map(str, _manual))}")
+        return {normalize_label(n) for n in _manual}
+
     pattern = electrodes_tsv_pattern or electrodes_tsv_path_for_patient(patient_id)
     try:
         names = derive_wm_channels_from_electrodes_tsv(pattern)
@@ -278,7 +292,21 @@ def wm_indices_for_patient(patient_id: str, channel_names, *,
     if not want:
         return []
     lookup = {normalize_label(nm): i for i, nm in enumerate(channel_names)}
-    return sorted([lookup[l] for l in want if l in lookup])
+    idx = sorted([lookup[l] for l in want if l in lookup])
+    # For a hand-written WM list, report how many of the requested names were
+    # actually present in the recording. Without this a typo, or a shaft renamed
+    # between recon and recording, would just yield a thinner reference with no
+    # sign that anything had gone wrong.
+    try:
+        from functions import config as _cfg1
+        if str(patient_id) in (getattr(_cfg1, "MANUAL_WM_CHANNELS", {}) or {}):
+            missing = sorted(w for w in want if w not in lookup)
+            log(f"[WM] {patient_id}: manual list matched {len(idx)}/{len(want)} "
+                f"channels in the recording"
+                + (f"; NOT FOUND: {', '.join(missing)}" if missing else ""))
+    except Exception:
+        pass
+    return idx
 
 
 # ---- "Unknown" parcellation: drop electrodes that have no anatomical label ----
