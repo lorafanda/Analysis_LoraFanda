@@ -70,6 +70,11 @@ def _glass(ax, glass_dir, j: int, sub: str, prompt: str, fig, is_middle: bool,
     same view by construction rather than by two scripts agreeing about a convention.
     """
     ax.axis("off")
+    # B2 reads by_cluster/, not by_condition/. by_condition/ is 252's and 252 skips
+    # files that already exist, so it stayed empty after the argmax renders that had
+    # been written there were removed. by_cluster/ is the same argmax content in the
+    # restored look (sphere opacity capped below 1, see render_cnmf_glassbrains).
+    sub = "by_cluster" if sub == "by_condition" else sub
     png = (glass_dir / f"cluster_{j:02d}" / sub / "lateral_L.png") if glass_dir else None
     if png is not None and png.exists():
         a = np.asarray(plt.imread(png))
