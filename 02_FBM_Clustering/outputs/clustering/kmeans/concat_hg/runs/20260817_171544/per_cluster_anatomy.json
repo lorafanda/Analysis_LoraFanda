@@ -1,0 +1,128 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 80,
+    "n_unknown": 20,
+    "top_3": [
+      [
+        "superiortemporal",
+        0.633
+      ],
+      [
+        "insula",
+        0.167
+      ],
+      [
+        "bankssts",
+        0.067
+      ]
+    ],
+    "entropy_bits": 1.7836336962436294,
+    "purity": 0.6333333333333333
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 678,
+    "n_unknown": 192,
+    "top_3": [
+      [
+        "middletemporal",
+        0.218
+      ],
+      [
+        "inferiortemporal",
+        0.152
+      ],
+      [
+        "rostralmiddlefrontal",
+        0.078
+      ]
+    ],
+    "entropy_bits": 3.9948441800851464,
+    "purity": 0.21810699588477367
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 51,
+    "n_unknown": 11,
+    "top_3": [
+      [
+        "inferiortemporal",
+        0.425
+      ],
+      [
+        "middletemporal",
+        0.375
+      ],
+      [
+        "fusiform",
+        0.075
+      ]
+    ],
+    "entropy_bits": 1.900800226448687,
+    "purity": 0.425
+  },
+  "3": {
+    "cluster_id": 3,
+    "n_total": 213,
+    "n_unknown": 95,
+    "top_3": [
+      [
+        "middletemporal",
+        0.441
+      ],
+      [
+        "inferiortemporal",
+        0.195
+      ],
+      [
+        "postcentral",
+        0.136
+      ]
+    ],
+    "entropy_bits": 2.493247000310891,
+    "purity": 0.4406779661016949
+  },
+  "4": {
+    "cluster_id": 4,
+    "n_total": 117,
+    "n_unknown": 28,
+    "top_3": [
+      [
+        "middletemporal",
+        0.393
+      ],
+      [
+        "inferiortemporal",
+        0.27
+      ],
+      [
+        "superiortemporal",
+        0.067
+      ]
+    ],
+    "entropy_bits": 2.68429176140113,
+    "purity": 0.39325842696629215
+  },
+  "5": {
+    "cluster_id": 5,
+    "n_total": 127,
+    "n_unknown": 44,
+    "top_3": [
+      [
+        "lateraloccipital",
+        0.169
+      ],
+      [
+        "precentral",
+        0.108
+      ],
+      [
+        "fusiform",
+        0.084
+      ]
+    ],
+    "entropy_bits": 3.9220645841825252,
+    "purity": 0.1686746987951807
+  }
+}

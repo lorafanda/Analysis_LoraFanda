@@ -1,0 +1,86 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 202,
+    "n_unknown": 42,
+    "top_3": [
+      [
+        "middletemporal",
+        0.388
+      ],
+      [
+        "inferiortemporal",
+        0.244
+      ],
+      [
+        "superiortemporal",
+        0.075
+      ]
+    ],
+    "entropy_bits": 2.8613375588028496,
+    "purity": 0.3875
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 664,
+    "n_unknown": 208,
+    "top_3": [
+      [
+        "middletemporal",
+        0.184
+      ],
+      [
+        "inferiortemporal",
+        0.112
+      ],
+      [
+        "rostralmiddlefrontal",
+        0.083
+      ]
+    ],
+    "entropy_bits": 4.211783286234535,
+    "purity": 0.18421052631578946
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 50,
+    "n_unknown": 6,
+    "top_3": [
+      [
+        "superiortemporal",
+        0.773
+      ],
+      [
+        "insula",
+        0.114
+      ],
+      [
+        "bankssts",
+        0.091
+      ]
+    ],
+    "entropy_bits": 1.0825366850702893,
+    "purity": 0.7727272727272727
+  },
+  "3": {
+    "cluster_id": 3,
+    "n_total": 350,
+    "n_unknown": 134,
+    "top_3": [
+      [
+        "middletemporal",
+        0.319
+      ],
+      [
+        "inferiortemporal",
+        0.25
+      ],
+      [
+        "postcentral",
+        0.079
+      ]
+    ],
+    "entropy_bits": 3.0845184481411407,
+    "purity": 0.3194444444444444
+  }
+}

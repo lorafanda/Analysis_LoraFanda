@@ -1,0 +1,24 @@
+cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean
+0,48,5,1.5332375122462247,0.5348837209302325,middletemporal,0.535,"[[""middletemporal"", 0.535], [""inferiortemporal"", 0.349], [""fusiform"", 0.07]]",0.0,3.4765635182956367
+1,40,7,1.689573656632333,0.45454545454545453,inferiortemporal,0.455,"[[""inferiortemporal"", 0.455], [""middletemporal"", 0.394], [""parahippocampal"", 0.061]]",0.0,3.417176478177371
+2,30,3,1.4536769856038911,0.5555555555555556,middletemporal,0.556,"[[""middletemporal"", 0.556], [""inferiortemporal"", 0.333], [""fusiform"", 0.074]]",0.0,3.271874183272048
+3,34,7,1.6158175946759328,0.5925925925925926,middletemporal,0.593,"[[""middletemporal"", 0.593], [""inferiortemporal"", 0.148], [""entorhinal"", 0.148]]",0.0,3.335496265194869
+4,48,32,2.311278124459133,0.375,lateraloccipital,0.375,"[[""lateraloccipital"", 0.375], [""inferiorparietal"", 0.188], [""fusiform"", 0.188]]",0.0,3.4743929640046805
+5,128,48,2.984599180561822,0.35,middletemporal,0.35,"[[""middletemporal"", 0.35], [""inferiortemporal"", 0.175], [""entorhinal"", 0.087]]",0.0,3.728894419290783
+6,22,0,1.090652803252992,0.6818181818181818,superiortemporal,0.682,"[[""superiortemporal"", 0.682], [""insula"", 0.273], [""middletemporal"", 0.045]]",0.0,3.1320617112326397
+7,108,26,2.894215050564107,0.36585365853658536,middletemporal,0.366,"[[""middletemporal"", 0.366], [""inferiortemporal"", 0.171], [""postcentral"", 0.122]]",0.0,3.7003966859129442
+8,58,45,2.103909910282364,0.3076923076923077,superiortemporal,0.308,"[[""superiortemporal"", 0.308], [""inferiortemporal"", 0.308], [""insula"", 0.231]]",0.0,3.5305033959783456
+9,34,12,1.3420192178195207,0.5,middletemporal,0.5,"[[""middletemporal"", 0.5], [""inferiortemporal"", 0.409], [""fusiform"", 0.091]]",0.0,3.3450209193836287
+10,17,3,3.182005814760214,0.21428571428571427,postcentral,0.214,"[[""postcentral"", 0.214], [""supramarginal"", 0.143], [""precentral"", 0.143]]",0.782,2.94361105362488
+11,57,6,3.484878529174669,0.13725490196078433,superiorfrontal,0.137,"[[""superiorfrontal"", 0.137], [""middletemporal"", 0.118], [""superiortemporal"", 0.118]]",0.41,3.528267618321837
+12,24,0,1.9653472755846206,0.4166666666666667,middletemporal,0.417,"[[""middletemporal"", 0.417], [""superiortemporal"", 0.292], [""inferiortemporal"", 0.167]]",0.0,3.158721059573665
+13,36,5,2.5146591198888,0.3225806451612903,inferiortemporal,0.323,"[[""inferiortemporal"", 0.323], [""middletemporal"", 0.226], [""fusiform"", 0.129]]",0.0,3.3817218749953017
+14,41,0,2.653634837837653,0.3170731707317073,rostralmiddlefrontal,0.317,"[[""rostralmiddlefrontal"", 0.317], [""insula"", 0.195], [""parsopercularis"", 0.195]]",0.002,3.402146175663729
+15,54,7,3.6241834058648594,0.1702127659574468,postcentral,0.17,"[[""postcentral"", 0.17], [""supramarginal"", 0.106], [""superiortemporal"", 0.106]]",0.686,3.512689138936723
+16,32,13,2.325331460128806,0.47368421052631576,superiortemporal,0.474,"[[""superiortemporal"", 0.474], [""fusiform"", 0.105], [""entorhinal"", 0.105]]",0.0,3.3090466822578537
+17,33,33,,,unknown,1.0,"[[""unknown"", 1.0]]",,
+18,58,46,1.6140054628542202,0.5833333333333334,inferiortemporal,0.583,"[[""inferiortemporal"", 0.583], [""middletemporal"", 0.167], [""insula"", 0.167]]",0.0,3.534070604339887
+19,163,36,4.077584656805393,0.12598425196850394,rostralmiddlefrontal,0.126,"[[""rostralmiddlefrontal"", 0.126], [""parahippocampal"", 0.102], [""inferiortemporal"", 0.094]]",1.0,3.7575111416849625
+20,51,37,2.074164743022575,0.42857142857142855,inferiortemporal,0.429,"[[""inferiortemporal"", 0.429], [""precentral"", 0.214], [""supramarginal"", 0.143]]",0.0,3.498897418976597
+21,68,7,3.311910437846806,0.22950819672131148,middletemporal,0.23,"[[""middletemporal"", 0.23], [""lateralorbitofrontal"", 0.148], [""insula"", 0.115]]",0.08,3.5821324005840984
+22,82,12,2.9156187161467884,0.37142857142857144,middletemporal,0.371,"[[""middletemporal"", 0.371], [""bankssts"", 0.143], [""insula"", 0.1]]",0.0,3.6398130170391334
