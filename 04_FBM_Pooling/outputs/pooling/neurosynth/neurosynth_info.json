@@ -3,25 +3,25 @@
     "color": "#1f77b4",
     "img": "region_cards/auditory.png",
     "n": 34,
-    "n_members": 51
+    "n_members": 53
   },
   "visual": {
     "color": "#2ca02c",
     "img": "region_cards/visual.png",
-    "n": 148,
-    "n_members": 189
+    "n": 144,
+    "n_members": 186
   },
   "motor control": {
     "color": "#d62728",
     "img": "region_cards/motor_control.png",
-    "n": 36,
-    "n_members": 39
+    "n": 41,
+    "n_members": 44
   },
   "phonological": {
     "color": "#9467bd",
     "img": "region_cards/phonological.png",
-    "n": 205,
-    "n_members": 256
+    "n": 203,
+    "n_members": 261
   },
   "lexical": {
     "color": "#ff7f0e",
@@ -32,14 +32,14 @@
   "semantic": {
     "color": "#8c564b",
     "img": "region_cards/semantic.png",
-    "n": 281,
-    "n_members": 421
+    "n": 274,
+    "n_members": 420
   },
   "broca": {
     "color": "#888888",
     "img": "region_cards/broca.png",
-    "n": 58,
-    "n_members": 67
+    "n": 56,
+    "n_members": 69
   },
   "recall": {
     "color": "#888888",
