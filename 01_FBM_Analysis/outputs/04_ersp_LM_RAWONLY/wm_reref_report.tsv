@@ -1,2 +1,2 @@
 pid_raw	patient_id	status	n_channels_in	n_channels_neural	n_channels_unknown_dropped	n_channels_used	n_wm_used	wm_channels_used	wm_channels_excluded_as_bad	error
-EL044	EL044	ok	161	137	0	0	0	CAR:P(6), Pa(55), T(48), postP(15)	Pa1|Pa37|Pa44|Pa48|Pa51|Pa53|Pa60|Pa63|T10|T39|T57|T9|postP1	
+6953	PAT_6953	ok	193	182	0	0	9	AD7|AD8|HPD4|HPD5|IPD8|IPD9|TPD5|TPD6|TPD7		
