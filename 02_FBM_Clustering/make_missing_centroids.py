@@ -66,6 +66,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default=None)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--force", action="store_true",
+                    help="redraw even where centroids already exist")
     a = ap.parse_args()
 
     idx = json.loads((CLUST / "index.json").read_text(encoding="utf-8"))
@@ -80,7 +82,7 @@ def main() -> int:
             continue
         if not (rd / "X_train.npy").exists() or not (rd / "labels.csv").exists():
             continue
-        if needs(rd):
+        if a.force or needs(rd):
             todo.append((r["method"], r["feature_set"], rd))
 
     if not todo:

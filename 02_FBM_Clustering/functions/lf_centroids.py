@@ -39,8 +39,39 @@ import matplotlib.pyplot as plt
 # Fixed y-limits for HG line plots — matches cfg.hg_vmin/vmax (±6.5 dB) so
 # every HG centroid shares one amplitude scale across clusters, K cuts, runs.
 HG_YLIM_DEFAULT = (-6.5, 6.5)
-FIGSIZE_DEFAULT = (2.4, 1.7)
+# Bigger than the old (2.4, 1.7): these are shown large in the run report and the
+# axes need room. dpi 220 rather than 90 for the same reason.
+FIGSIZE_DEFAULT = (3.4, 2.1)
 
+
+
+def shared_hg_ylim(X: np.ndarray, labels: np.ndarray, *, pad: float = 1.08) -> tuple:
+    """One symmetric y range for every cluster of a run, fitted to the data.
+
+    The fixed +/-6.5 default was set for the per-condition 'hg' features. On the
+    concatenated set the centroids only reach 2.1 (cnmf) to 3.1 (k-means), so half
+    the axis was empty and every centroid looked flat.
+
+    Fitted PER RUN and shared across its clusters, so clusters stay comparable with
+    each other; the limit is printed on the axis, so comparison ACROSS runs is done
+    by reading the number rather than by assuming a constant.
+    """
+    X = np.asarray(X, dtype=float)
+    labels = np.asarray(labels)
+    hi = 0.0
+    for k in np.unique(labels):
+        M = X[labels == k]
+        if not len(M):
+            continue
+        m = M.mean(axis=0)
+        sem = M.std(axis=0, ddof=1) / np.sqrt(len(M)) if len(M) > 1 else 0.0
+        hi = max(hi, float(np.abs(m + sem).max()), float(np.abs(m - sem).max()))
+    if not np.isfinite(hi) or hi <= 0:
+        return HG_YLIM_DEFAULT
+    hi *= pad
+    step = 0.5 if hi < 5 else 1.0
+    hi = float(np.ceil(hi / step) * step)
+    return (-hi, hi)
 
 # ============================================================
 # Rendering primitives
@@ -48,8 +79,10 @@ FIGSIZE_DEFAULT = (2.4, 1.7)
 def render_hg_centroid(ax, cluster_samples: np.ndarray, *,
                        ylim: Tuple[float, float] = HG_YLIM_DEFAULT,
                        line_color: str = "black",
-                       sem_color: str = "#888888",
-                       show_axes: bool = False):
+                       sem_color: str = "#4a6fa5",
+                       show_axes: bool = False,
+                       n_blocks: int = 1,
+                       cond_names=("audio", "picture", "reading")):
     """
     Draw a high-gamma cluster centroid as mean line + SEM shaded band.
 
@@ -70,18 +103,53 @@ def render_hg_centroid(ax, cluster_samples: np.ndarray, *,
     mean = M.mean(axis=0)
     sem = M.std(axis=0, ddof=1) / np.sqrt(n) if n > 1 else np.zeros(T)
 
-    ax.axhline(0, color="#999", lw=0.35, alpha=0.7, zorder=1)
+    ax.axhline(0, color="#999", lw=0.5, alpha=0.8, zorder=1)
+
+    # GO CUE, one per condition. Each block is one condition warped to 0-100% of its
+    # trial, and 50% IS the GO cue (cfg.proportions = (0.0, 0.5, 0.5)), so the marker
+    # belongs at the midpoint of every block rather than once in the middle of the row.
+    per = T / max(n_blocks, 1)
+    for b in range(max(n_blocks, 1)):
+        ax.axvline((b + 0.5) * per, color="#9aa3ab", lw=0.9, ls=(0, (4, 3)), zorder=2)
+
+    # SEM band, drawn so it is actually visible: a filled band plus hairlines at the
+    # edges. For a singleton cluster SEM is 0 and only the mean line shows - that is a
+    # real statement about n, not a rendering failure.
     ax.fill_between(x, mean - sem, mean + sem,
-                    color=sem_color, alpha=0.35, lw=0, zorder=2)
-    ax.plot(x, mean, color=line_color, lw=1.1, zorder=3)
+                    color=sem_color, alpha=0.30, lw=0, zorder=3)
+    ax.plot(x, mean - sem, color=sem_color, lw=0.5, alpha=0.85, zorder=4)
+    ax.plot(x, mean + sem, color=sem_color, lw=0.5, alpha=0.85, zorder=4)
+    ax.plot(x, mean, color=line_color, lw=1.3, zorder=5)
 
     if ylim is not None:
         ax.set_ylim(ylim)
     ax.set_xlim(0, max(1, T - 1))
+
     if not show_axes:
         ax.set_xticks([]); ax.set_yticks([])
-        for s in ax.spines.values():
-            s.set_visible(False)
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+        return
+
+    # Minimal axes, and the y range is the SHARED one (HG_YLIM_DEFAULT) so a centroid
+    # can be compared against any other cluster, K cut or run by eye.
+    lo, hi = ax.get_ylim()
+    ax.set_yticks([lo, 0, hi])
+    ax.set_yticklabels([f"{lo:g}", "0", f"{hi:g}"], fontsize=6.5)
+    ax.set_ylabel("HG (dB)", fontsize=7, labelpad=1)
+    ax.set_xticks([(b + 0.5) * per for b in range(max(n_blocks, 1))])
+    ax.set_xticklabels(list(cond_names)[:max(n_blocks, 1)] if n_blocks > 1 else ["trial"],
+                       fontsize=6.5)
+    ax.tick_params(length=2, width=0.6, pad=1.5, colors="#68727d")
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_linewidth(0.6)
+        ax.spines[side].set_color("#c8cfd6")
+    # the label sits ON the dashed line, so say once what the line is
+    ax.text(0.5, -0.30, "dashed = GO cue (50% of each condition)",
+            transform=ax.transAxes, ha="center", va="top",
+            fontsize=5.8, color="#9aa3ab")
 
 
 def render_heatmap_centroid(ax, mean_vec: np.ndarray, centroid_shape, *,
@@ -103,6 +171,15 @@ def render_heatmap_centroid(ax, mean_vec: np.ndarray, centroid_shape, *,
 # ============================================================
 # One-cluster writer
 # ============================================================
+def _labels_for(run_dir, method):
+    """The run's own cluster column, for fitting one y range across its clusters."""
+    import pandas as _pd
+    lab = _pd.read_csv(Path(run_dir) / "labels.csv")
+    col = next((c for c in lab.columns
+                if c.startswith("cluster_") and not c.endswith("_ranked")), None)
+    return lab[col].to_numpy() if col else np.zeros(len(lab), dtype=int)
+
+
 def _is_line_feature_set(feature_set: str) -> bool:
     """Feature sets whose centroid is a 1-D time course (line + SEM) rather than a
     2-D ERSP heatmap: the per-condition HG track and its concatenated counterpart."""
@@ -128,16 +205,15 @@ def _write_one(out_path: Path, X_cluster: np.ndarray, feature_set: str, *,
     fig, ax = plt.subplots(figsize=figsize)
     nb = _n_condition_blocks(feature_set)
     if _is_line_feature_set(feature_set):
-        render_hg_centroid(ax, X_cluster, ylim=hg_ylim)
+        render_hg_centroid(ax, X_cluster, ylim=hg_ylim, show_axes=True, n_blocks=nb)
         _draw_block_seams(ax, nb, np.asarray(X_cluster).shape[1], heatmap=False)
     else:
         render_heatmap_centroid(ax, np.asarray(X_cluster, float).mean(axis=0),
                                 centroid_shape, vlim=vlim)
         if centroid_shape is not None:
             _draw_block_seams(ax, nb, centroid_shape[1], heatmap=True)
-    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=90, bbox_inches="tight", pad_inches=0)
+    fig.savefig(out_path, dpi=220, bbox_inches="tight", pad_inches=0.02)
     plt.close(fig)
 
 
@@ -162,7 +238,7 @@ def save_per_cluster_centroids(
     method: str,
     *,
     centroid_shape: Optional[Tuple[int, int]] = None,
-    hg_ylim: Tuple[float, float] = HG_YLIM_DEFAULT,
+    hg_ylim="auto",
     vlim: Optional[float] = None,
     figsize: Tuple[float, float] = FIGSIZE_DEFAULT,
     write_per_k: bool = True,
@@ -195,6 +271,12 @@ def save_per_cluster_centroids(
     root = run_dir / "cluster_centroids"
     written: Dict[str, int] = {}
 
+    if isinstance(hg_ylim, str) and hg_ylim == "auto":
+        hg_ylim = (shared_hg_ylim(X, _labels_for(run_dir, method))
+                   if _is_line_feature_set(feature_set) else HG_YLIM_DEFAULT)
+        if verbose:
+            print(f"  [{feature_set}] shared y range fitted to the run: "
+                  f"{hg_ylim[0]:g} to {hg_ylim[1]:g} dB")
     if vlim is None and not _is_line_feature_set(feature_set):
         vlim = float(np.percentile(np.abs(X), 99)) or 1.0
 
