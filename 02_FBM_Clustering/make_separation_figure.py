@@ -70,7 +70,19 @@ INK, MUTED = "#1b232c", "#68727d"
 
 
 def compute():
-    from sklearn.cluster import KMeans
+    """Silhouette for each method in BOTH spaces, each against its own matched null.
+
+    THE SPACE IS PART OF THE METHOD. X_train.npy is raw dB; convex NMF unit-norms
+    per electrode before fitting (see its manifest), k-means and Ward do not. An
+    earlier version of this figure scored all three in dB and concluded cNMF did not
+    separate - it had simply been scored in a space it never optimised in. Measured
+    both ways, cNMF goes 0.046 in dB to 0.094 in unit-norm, and k-means goes 0.113
+    in dB to -0.004 in unit-norm. Neither number alone is the answer.
+
+    Unit-norm removes amplitude, so it asks about response SHAPE. Raw dB keeps
+    amplitude, so part of what k-means separates is loud electrodes from quiet ones.
+    """
+    from sklearn.cluster import KMeans, AgglomerativeClustering
     from sklearn.metrics import (silhouette_score, adjusted_rand_score,
                                  normalized_mutual_info_score)
     import lf_decompose as LD
@@ -84,9 +96,13 @@ def compute():
         "k-means": pd.read_csv(RUNS["k-means"] / "cluster_labels_by_k.csv")[f"k_{K}"].to_numpy(),
         "Ward": pd.read_csv(RUNS["Ward"] / "cluster_labels_by_k.csv")[f"k_{K}"].to_numpy(),
     }
+    HOME = {"cNMF argmax": "unit-norm", "k-means": "dB", "Ward": "dB"}
 
-    # one-blob surrogates: the data's own covariance, no cluster structure
-    rng = np.random.default_rng(0)
+    def unit(A):
+        return A / np.maximum(np.linalg.norm(A, axis=1, keepdims=True), 1e-12)
+
+    spaces = {"dB": X, "unit-norm": unit(X)}
+
     Xc = X - X.mean(0)
     n = len(X)
     U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
@@ -95,29 +111,42 @@ def compute():
         Z = np.random.default_rng(seed).standard_normal((n, len(S)))
         return (Z * (S / np.sqrt(n - 1))) @ Vt
 
-    km_null = [silhouette_score(Y, KMeans(K, n_init=10, random_state=i).fit_predict(Y))
-               for i, Y in ((i, surrogate(100 + i)) for i in range(N_NULL_KM))]
-    cn_null = []
-    for i in range(N_NULL_CNMF):
-        Y = surrogate(200 + i)
+    def fit(alg, Y, seed):
+        if alg == "k-means":
+            return KMeans(K, n_init=10, random_state=seed).fit_predict(Y)
+        if alg == "Ward":
+            return AgglomerativeClustering(n_clusters=K, linkage="ward").fit_predict(Y)
         Gy = LD.convex_nmf(Y, K, n_iter=300)[1]
-        Gy = Gy / np.maximum(Gy.sum(1, keepdims=True), 1e-12)
-        cn_null.append(silhouette_score(Y, Gy.argmax(1)))
+        return (Gy / np.maximum(Gy.sum(1, keepdims=True), 1e-12)).argmax(1)
 
-    # k-means and Ward are both compactness partitions, so they share the k-means null
-    nulls = {"cNMF argmax": cn_null, "k-means": km_null, "Ward": km_null}
+    nulls = {}
+    for alg in labels:
+        for sp in spaces:
+            reps = N_NULL_CNMF if alg == "cNMF argmax" else N_NULL_KM
+            vals = []
+            for i in range(reps):
+                Y = surrogate(400 + i)
+                Y = unit(Y) if sp == "unit-norm" else Y
+                vals.append(silhouette_score(Y, fit(alg, Y, i)))
+            nulls[(alg, sp)] = vals
+            print(f"      null {alg:<12} {sp:<10} {np.mean(vals):.4f} +/- {np.std(vals):.4f}")
 
     stats = {"K": K, "n_electrodes": int(n), "n_features": int(X.shape[1]),
-             "methods": {}, "ari": {}, "bicv": {}, "per_component": {}}
+             "home_space": HOME, "methods": {}, "ari": {}, "bicv": {},
+             "per_component": {}}
     for m, lab in labels.items():
-        nl = np.array(nulls[m])
-        s = float(silhouette_score(X, lab))
-        stats["methods"][m] = dict(
-            silhouette=s, null_mean=float(nl.mean()), null_sd=float(nl.std()),
-            z=float((s - nl.mean()) / max(nl.std(), 1e-9)),
-            n_null=len(nl),
-            sizes=[int(v) for v in np.bincount(lab, minlength=K)],
-            largest_share=float(np.bincount(lab, minlength=K).max() / n))
+        e = {"sizes": [int(v) for v in np.bincount(lab, minlength=K)],
+             "largest_share": float(np.bincount(lab, minlength=K).max() / n),
+             "home": HOME[m], "spaces": {}}
+        for sp, A in spaces.items():
+            nl = np.array(nulls[(m, sp)])
+            sv = float(silhouette_score(A, lab))
+            e["spaces"][sp] = dict(silhouette=sv, null_mean=float(nl.mean()),
+                                   null_sd=float(nl.std()),
+                                   z=float((sv - nl.mean()) / max(nl.std(), 1e-9)),
+                                   n_null=len(nl))
+        stats["methods"][m] = e
+
     names = list(labels)
     for i, a in enumerate(names):
         for b in names[i + 1:]:
@@ -131,15 +160,14 @@ def compute():
                      "mean": [float(v) for v in g.mean()],
                      "se": [float(v) for v in g.std() / np.sqrt(g.count())]}
 
-    # per-component effect sizes, cNMF
     cn = labels["cNMF argmax"]
     shares, maxd = [], []
     for j in range(K):
-        m = cn == j
-        a, b = X[m], X[~m]
-        sp = np.sqrt(((len(a) - 1) * a.var(0, ddof=1) + (len(b) - 1) * b.var(0, ddof=1))
-                     / (len(a) + len(b) - 2))
-        d = np.abs((a.mean(0) - b.mean(0)) / np.maximum(sp, 1e-9))
+        m_ = cn == j
+        a, b = X[m_], X[~m_]
+        sp_ = np.sqrt(((len(a) - 1) * a.var(0, ddof=1) + (len(b) - 1) * b.var(0, ddof=1))
+                      / (len(a) + len(b) - 2))
+        d = np.abs((a.mean(0) - b.mean(0)) / np.maximum(sp_, 1e-9))
         shares.append(float((d > 0.8).mean() * 100))
         maxd.append(float(d.max()))
     stats["per_component"] = {"share_large_pct": shares, "max_abs_d": maxd,
@@ -148,37 +176,52 @@ def compute():
 
 
 def draw(stats, out_png):
-    fig = plt.figure(figsize=(11.2, 6.8), dpi=200)
+    # The header is nine lines now, so it needs its own strip rather than being
+    # squeezed above a top=0.775 grid - it was landing on the A and B titles.
+    fig = plt.figure(figsize=(11.2, 8.1), dpi=200)
     gs = GridSpec(2, 2, width_ratios=[1, 1], height_ratios=[1, 1],
-                  wspace=0.30, hspace=0.62, left=0.075, right=0.975,
-                  top=0.775, bottom=0.085)
+                  wspace=0.30, hspace=0.60, left=0.075, right=0.975,
+                  top=0.700, bottom=0.075)
     names = list(stats["methods"])
 
-    # ---- A: silhouette against each method's own null
+    # ---- A: silhouette in BOTH spaces, each against its own null
     ax = fig.add_subplot(gs[0, 0])
+    SPACES = ["dB", "unit-norm"]
+    w = 0.36
     for i, m in enumerate(names):
-        d = stats["methods"][m]
-        ax.bar(i, d["silhouette"], width=0.55, color=COL[m], zorder=3)
-        lo, hi = d["null_mean"] - d["null_sd"], d["null_mean"] + d["null_sd"]
-        ax.add_patch(plt.Rectangle((i - 0.36, lo), 0.72, max(hi - lo, 1e-4),
-                                   color="#c1121f", alpha=0.22, zorder=4))
-        ax.plot([i - 0.36, i + 0.36], [d["null_mean"]] * 2, color="#c1121f",
-                lw=1.4, zorder=5)
-        ax.text(i, d["silhouette"] + 0.006, f"z = {d['z']:+.1f}", ha="center",
-                fontsize=8.5, color=INK if d["z"] > 2 else "#c1121f",
-                fontweight="bold" if d["z"] < 2 else "normal")
+        for si, sp in enumerate(SPACES):
+            d = stats["methods"][m]["spaces"][sp]
+            home = stats["methods"][m]["home"] == sp
+            x = i + (si - 0.5) * w
+            ax.bar(x, max(d["silhouette"], 0), width=w * 0.9, color=COL[m],
+                   alpha=1.0 if home else 0.32, zorder=3,
+                   edgecolor=INK if home else "none", lw=1.1)
+            lo = d["null_mean"] - d["null_sd"]
+            ax.add_patch(plt.Rectangle((x - w * 0.45, lo), w * 0.9,
+                                       max(2 * d["null_sd"], 1e-4),
+                                       color="#c1121f", alpha=0.22, zorder=4))
+            ax.plot([x - w * 0.45, x + w * 0.45], [d["null_mean"]] * 2,
+                    color="#c1121f", lw=1.2, zorder=5)
+            ax.text(x, max(d["silhouette"], 0) + 0.004, f"{d['z']:+.0f}",
+                    ha="center", fontsize=7.6,
+                    color=INK if d["z"] > 2 else "#c1121f",
+                    fontweight="bold" if home else "normal")
     ax.set_xticks(range(len(names)))
-    ax.set_xticklabels(names, fontsize=8.5)
+    ax.set_xticklabels([f"{m}\n(fits in {stats['methods'][m]['home']})" for m in names],
+                       fontsize=8)
     ax.set_ylabel("silhouette", fontsize=9)
-    ax.set_ylim(0, max(v["silhouette"] for v in stats["methods"].values()) * 1.32)
+    ax.set_ylim(0, 0.135)
     ax.tick_params(labelsize=7.5, length=2, colors=MUTED)
-    for sp in ("top", "right"):
-        ax.spines[sp].set_visible(False)
-    ax.set_title("A — the partition, against its own null", fontsize=10.5,
-                 loc="left", color=INK, pad=6)
-    ax.text(0.0, -0.235, "red line and band = the SAME method run on one-blob data "
-            "with this dataset's covariance (mean ± 1 SD)",
-            transform=ax.transAxes, fontsize=7, color="#c1121f", va="top")
+    for sp_ in ("top", "right"):
+        ax.spines[sp_].set_visible(False)
+    ax.set_title("A — each method separates, but only in its own space",
+                 fontsize=10.5, loc="left", color=INK, pad=6)
+    ax.text(0.0, -0.30,
+            "left bar of each pair = dB, right = unit-norm; SOLID + outlined is the space that "
+            "method actually fits in.\n"
+            "Numbers are z against the SAME method run on one-blob data "
+            "in that space (red line, ±1 SD).",
+            transform=ax.transAxes, fontsize=7, color=MUTED, va="top")
 
     # ---- B: the decomposition itself does generalise
     axb = fig.add_subplot(gs[0, 1])
@@ -230,7 +273,7 @@ def draw(stats, out_png):
     order = np.argsort(-sh)
     axd.bar(range(K), sh[order], width=0.62, color="#1b7837", zorder=3)
     axd.axhline(15, color="#c1121f", lw=1.0, ls="--")
-    axd.text(-0.42, 16, "15%", fontsize=7, color="#c1121f", ha="left")
+    axd.text(K - 0.45, 17.0, "15%", fontsize=7, color="#c1121f", ha="right")
     for i, j in enumerate(order):
         axd.text(i, sh[j] + 1.4, f"{stats['per_component']['max_abs_d'][j]:.1f}",
                  ha="center", fontsize=6.6, color=MUTED)
@@ -249,18 +292,26 @@ def draw(stats, out_png):
 
     fig.suptitle("Is the K=7 partition a separation?", x=0.075, y=0.965,
                  ha="left", fontsize=14, color=INK)
-    cn = stats["methods"]["cNMF argmax"]
-    fig.text(0.075, 0.905,
-             f"All three methods on the same {stats['n_electrodes']} × "
-             f"{stats['n_features']} matrix, at K={K}, each against ITS OWN null — "
-             f"k-means optimises compactness and convex NMF does not,\n"
-             f"so scoring cNMF against a k-means null would be rigged. The null is a "
-             f"Gaussian with this dataset's covariance: correlated, smooth, one blob.\n\n"
-             f"A and B are both true. The decomposition generalises (B); the partition "
-             f"taken from it does not separate (A): cNMF's argmax scores "
-             f"{cn['silhouette']:.3f} against {cn['null_mean']:.3f} for the same "
-             f"procedure on structureless data.",
-             fontsize=8.6, color=MUTED, va="top", linespacing=1.4)
+    cu = stats["methods"]["cNMF argmax"]["spaces"]["unit-norm"]
+    cd = stats["methods"]["cNMF argmax"]["spaces"]["dB"]
+    ku = stats["methods"]["k-means"]["spaces"]["unit-norm"]
+    hdr = "".join([chr(10)]).join([
+        "Yes — but which space you measure in decides the answer, and the space is "
+        "part of the method. Convex NMF unit-norms each electrode before fitting;",
+        "k-means and Ward do not.",
+        "",
+        f"In its OWN space cNMF scores {cu['silhouette']:.3f} against a null of "
+        f"{cu['null_mean']:.3f} (z = {cu['z']:+.0f}). Measured in dB instead it scores "
+        f"{cd['silhouette']:.3f}, and k-means goes the other way: {ku['silhouette']:+.3f} "
+        "in unit-norm.",
+        "",
+        "Unit-norm removes amplitude, so it asks about response SHAPE; raw dB keeps it, "
+        "so part of what k-means separates is loud electrodes from quiet ones. That is",
+        "also why the two agree so weakly (panel C): they describe different structure, "
+        "rather than disagreeing about the same structure.",
+    ])
+    fig.text(0.075, 0.925, hdr, fontsize=8.5, color=MUTED, va="top",
+             linespacing=1.4)
     fig.savefig(out_png, dpi=200, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
@@ -281,10 +332,13 @@ def main() -> int:
         stats = compute()
         js.write_text(json.dumps(stats, indent=2), encoding="utf-8")
 
-    for m, d in stats["methods"].items():
-        print(f"    {m:<12} silhouette {d['silhouette']:.4f}  "
-              f"null {d['null_mean']:.4f}+/-{d['null_sd']:.4f}  z {d['z']:+.1f}  "
-              f"largest cluster {100*d['largest_share']:.0f}%")
+    for m, e in stats["methods"].items():
+        for sp, d in e["spaces"].items():
+            mark = "  <- its own space" if sp == e["home"] else ""
+            print(f"    {m:<12} {sp:<10} silhouette {d['silhouette']:+.4f}  "
+                  f"null {d['null_mean']:.4f}+/-{d['null_sd']:.4f}  "
+                  f"z {d['z']:+6.1f}{mark}")
+        print(f"    {'':<12} largest cluster {100*e['largest_share']:.0f}% of all")
     for p, v in stats["ari"].items():
         print(f"    {p:<28} ARI {v['ari']:+.3f}")
     draw(stats, OUT / "C7_separation.png")
