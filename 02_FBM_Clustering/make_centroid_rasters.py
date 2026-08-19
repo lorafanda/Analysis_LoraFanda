@@ -16,13 +16,19 @@ views here answer that question, each in the way its feature set allows:
 
   concat_rawds a sample is 1350 features (15 bands x 3 conditions x 30 bins) and
                has no single time axis, so a per-sample raster is not available.
-               This is the ordinary centroid heatmap with the agreement written
-               into it instead: each time x frequency bin keeps its colour where
-               the cluster's electrodes agree and fades toward grey where they
-               do not. A plain mean cannot separate "the whole cluster sits near
-               zero here" from "the cluster is split here and the average
-               cancels" - both come out white. With the tint the first stays
-               white and the second turns grey.
+               This is the ordinary centroid heatmap, annotated: one dot per
+               time x frequency bin, invisible where the cluster's electrodes
+               agree and darkening to grey where they do not. A plain mean cannot
+               separate "the whole cluster sits near zero here" from "the cluster
+               is split here and the average cancels" - both come out white. The
+               first keeps a clear bin, the second gets a dark dot.
+
+               The dot sits ON the mean rather than tinting it, so the colour
+               read off the scale bar is still the value. Its scale is pooled
+               over EVERY run of the feature set, not per cluster and not per
+               run: X_train is the same matrix whichever method partitioned it,
+               so a dot means the same disagreement on convex NMF, k-means and
+               Ward, which is the comparison anyone will actually make.
 
 MEMBERSHIP STRENGTH IS NOT THE SAME QUANTITY ACROSS METHODS, and only the hg
 raster is sorted by it. Convex NMF has a loading on the sample's own component;
@@ -64,10 +70,12 @@ METHODS = ("cnmf", "kmeans", "hierarchical")
 FEATURE_SETS = ("concat_hg", "concat_rawds")
 
 COND_NAMES = ("audio", "picture", "reading")
-# Grey the rawds centroid fades toward where its electrodes disagree, and how far
-# it is allowed to go. Short of 1.0 so the sign of a bin is never lost entirely.
-TINT_RGB = (0.60, 0.60, 0.60)
-TINT_MAX = 0.85
+# The disagreement dot: dark grey, fading in from fully transparent. It sits ON the
+# centroid rather than tinting it, so the colour read off the scale bar is still the
+# mean. DOT_FILL is the fraction of a bin the dot spans at its widest.
+DOT_RGB = (0.20, 0.20, 0.20)
+DOT_MAX_ALPHA = 0.92
+DOT_FILL = 0.62
 CMAP = "bwr"                   # the project's diverging map for signed dB
 
 
@@ -203,19 +211,34 @@ def raster_line(out_png, Xc, strength_c, vlim, n_blocks, cid, sname):
     return n
 
 
-def sd_scale(X, labels, ids):
-    """The run's own low/high within-cluster SD, used to scale every cluster's tint.
+def sd_scale(feature_set, targets):
+    """Low/high within-cluster SD, pooled over EVERY run of this feature set.
 
-    Taken across all clusters so the grey means the same thing on each of them: a
-    tight cluster has to look tighter than a loose one, which it cannot do if each
-    is stretched over its own range. The 10th and 90th percentiles rather than
-    min/max, so one extreme bin cannot flatten the whole scale.
+    Not per cluster, and not per run either. X_train is the same matrix for a given
+    feature set whichever method partitioned it, so pooling across the runs makes a
+    dot mean the same amount of disagreement whether you are looking at convex NMF,
+    k-means or Ward - which is the comparison anyone will actually make. Scaling per
+    cluster would do the opposite: every cluster would show its own worst bin as
+    fully dark and a tight cluster would look exactly as uncertain as a loose one.
+
+    The 10th and 90th percentiles rather than min/max, so one extreme bin cannot
+    flatten the scale for everything else.
     """
     sds = []
-    for cid in ids:
-        Xc = X[labels == cid]
-        if len(Xc) > 1:
-            sds.append(Xc.std(axis=0, ddof=1))
+    for tag, rd in targets:
+        if rd.parent.parent.name != feature_set or not (rd / "X_train.npy").exists():
+            continue
+        X = np.load(rd / "X_train.npy")
+        lab = pd.read_csv(rd / "labels.csv")
+        ccol = next((c for c in lab.columns
+                     if c.startswith("cluster_") and not c.endswith("_ranked")), None)
+        if ccol is None:
+            continue
+        L = pd.to_numeric(lab[ccol], errors="coerce").to_numpy()
+        for cid in sorted({int(v) for v in L[np.isfinite(L)] if int(v) >= 0}):
+            Xc = X[L == cid]
+            if len(Xc) > 1:
+                sds.append(Xc.std(axis=0, ddof=1))
     if not sds:
         return 0.0, 1.0
     A = np.concatenate(sds)
@@ -223,20 +246,31 @@ def sd_scale(X, labels, ids):
     return lo, (hi if hi > lo else lo + 1e-6)
 
 
-def centroid_tinted(out_png, Xc, vlim, grid, cid, sd_lo, sd_hi):
-    """concat_rawds: the cluster mean, greyed wherever its electrodes disagree.
+def _dot_size(fig, ax, ncols, nrows):
+    """Marker area in points^2, from the axes as actually laid out.
 
-    This is the ordinary centroid heatmap, not a raster. What it adds is that the
-    confidence in each time x frequency bin is carried by how much colour that bin
-    keeps: where the electrodes in the cluster agree the bin stays saturated, where
-    they disagree it fades toward grey. A plain mean cannot separate "the whole
-    cluster sits near zero here" from "the cluster is split here and the average
-    cancels"; both come out white. With the tint the first stays white and the
-    second turns grey.
+    Hard-coding a size breaks whenever the figure or the grid changes: concat_rawds
+    is 90 columns wide, so a bin is about 3 points across and a dot sized for a
+    10-column plot would cover its neighbours.
+    """
+    fig.canvas.draw()
+    bb = ax.get_window_extent()
+    col_pt = (bb.width * 72.0 / fig.dpi) / max(ncols, 1)
+    row_pt = (bb.height * 72.0 / fig.dpi) / max(nrows, 1)
+    return (DOT_FILL * min(col_pt, row_pt)) ** 2
 
-    The SD is the spread ACROSS ELECTRODES in the cluster, the same quantity the
-    HG centroid draws as its +/-1 SD band, and it is scaled on the run's range
-    rather than the cluster's - see sd_scale.
+
+def centroid_dotted(out_png, Xc, vlim, grid, cid, sd_lo, sd_hi):
+    """concat_rawds: the plain centroid heatmap, with a dot marking disagreement.
+
+    The heatmap is the cluster mean exactly as it always was. Over it sits one dot
+    per time x frequency bin, invisible where the cluster's electrodes agree and
+    darkening to grey where they do not - so the mean is never altered, only
+    annotated. An earlier version tinted the bins themselves, which changed the
+    colour being read off the scale bar; a dot leaves the value alone.
+
+    The SD is the spread ACROSS ELECTRODES, the same quantity the HG centroid draws
+    as its +/-1 SD band, on a scale pooled across every run of this feature set.
     """
     bands, conds, times = grid
     nb, nc, nt = len(bands), len(conds), len(times)
@@ -245,51 +279,61 @@ def centroid_tinted(out_png, Xc, vlim, grid, cid, sd_lo, sd_hi):
     sd = (Xc.std(axis=0, ddof=1) if n > 1
           else np.zeros(Xc.shape[1])).reshape(nb, nc * nt)
 
-    # bwr on the mean, then pulled toward grey by the local SD.
-    rgb = plt.get_cmap(CMAP)((np.clip(mean, -vlim, vlim) / vlim + 1) / 2)[..., :3]
-    w = (np.clip((sd - sd_lo) / (sd_hi - sd_lo), 0, 1) * TINT_MAX)[..., None]
-    img = rgb * (1 - w) + np.asarray(TINT_RGB) * w
-
-    # hspace is a fraction of the AVERAGE axes height, and with a 13:1 split the
-    # average is dominated by the heatmap - so a value that looks small here still
-    # has to leave room for the condition labels without stranding the legend.
     fig = plt.figure(figsize=(5.2, 2.75), dpi=220)
     gs = GridSpec(2, 2, width_ratios=[40, 1.4], height_ratios=[13, 0.8],
                   wspace=0.05, hspace=0.30, left=0.15, right=0.89,
                   top=0.87, bottom=0.16)
     ax = fig.add_subplot(gs[0, 0])
-    ax.imshow(img, aspect="auto", origin="lower", interpolation="nearest")
+    im = ax.imshow(mean, aspect="auto", cmap=CMAP, vmin=-vlim, vmax=vlim,
+                   origin="lower", interpolation="nearest")
+
+    yy, xx = np.mgrid[0:nb, 0:(nc * nt)]
+    a = np.clip((sd - sd_lo) / (sd_hi - sd_lo), 0, 1) * DOT_MAX_ALPHA
+    rgba = np.zeros((sd.size, 4))
+    rgba[:, :3] = DOT_RGB
+    rgba[:, 3] = a.ravel()
+    ax.scatter(xx.ravel(), yy.ravel(), s=_dot_size(fig, ax, nc * nt, nb),
+               c=rgba, marker="o", linewidths=0, zorder=4)
+
     _decorate_x(ax, nc * nt, nc, heatmap=True, labels_on=True)
     tick_at = sorted({0, nb // 3, 2 * nb // 3, nb - 1})
     ax.set_yticks(tick_at)
     ax.set_yticklabels([bands[t] for t in tick_at], fontsize=6)
     ax.tick_params(length=2, width=0.6, pad=1.5, colors="#68727d")
+    ax.set_xlim(-0.5, nc * nt - 0.5)
+    ax.set_ylim(-0.5, nb - 0.5)
     for sp in ax.spines.values():
         sp.set_linewidth(0.6); sp.set_color("#c8cfd6")
-    ax.set_title(f"cluster {cid} centroid — {n} electrodes, greyed where they disagree",
+    ax.set_title(f"cluster {cid} centroid — {n} electrodes, dots mark disagreement",
                  fontsize=8.5, loc="left", pad=4)
 
     cax = fig.add_subplot(gs[0, 1])
-    sm = plt.cm.ScalarMappable(cmap=CMAP, norm=plt.Normalize(-vlim, vlim))
-    cb = fig.colorbar(sm, cax=cax)
+    cb = fig.colorbar(im, cax=cax)
     cb.set_label("power (dB)", fontsize=6.5)
     cb.ax.tick_params(labelsize=6, length=2, width=0.5)
 
-    # The tint legend shows the fade applied to a fully saturated bin, which is
-    # what the reader has to judge: how much colour loss means how much SD.
+    # The legend is the dot itself fading in, on white, so the reader compares like
+    # with like rather than translating a colour ramp into a dot.
     axl = fig.add_subplot(gs[1, 0])
-    lw = np.linspace(0, 1, 256)[:, None] * TINT_MAX
-    base = np.asarray(plt.get_cmap(CMAP)(1.0)[:3])[None, :]
-    strip = base * (1 - lw) + np.asarray(TINT_RGB)[None, :] * lw
-    axl.imshow(strip[None, :, :], aspect="auto")
+    steps = 26
+    la = np.linspace(0, 1, steps) * DOT_MAX_ALPHA
+    lrgba = np.zeros((steps, 4))
+    lrgba[:, :3] = DOT_RGB
+    lrgba[:, 3] = la
+    axl.scatter(np.arange(steps), np.zeros(steps),
+                s=_dot_size(fig, axl, steps, 1) * 0.55,
+                c=lrgba, marker="o", linewidths=0)
+    axl.set_xlim(-0.5, steps - 0.5)
+    axl.set_ylim(-0.5, 0.5)
     axl.set_yticks([])
-    axl.set_xticks([0, 255])
+    axl.set_xticks([0, steps - 1])
     axl.set_xticklabels([f"{sd_lo:.2f}", f"{sd_hi:.2f}"], fontsize=6)
     axl.tick_params(length=2, width=0.5, pad=1.5, colors="#68727d")
-    axl.set_xlabel("within-cluster SD across electrodes (dB) — greyer = less agreement",
+    axl.set_xlabel("within-cluster SD across electrodes (dB), one scale for every "
+                   "cluster and run — darker = less agreement",
                    fontsize=6, labelpad=1.5, color="#68727d")
     for sp in axl.spines.values():
-        sp.set_linewidth(0.5); sp.set_color("#c8cfd6")
+        sp.set_visible(False)
 
     fig.text(0.15, 0.012, f"{nb} bands, low frequency at bottom  ·  "
                           f"dashed = GO cue  ·  solid = condition boundary",
@@ -310,6 +354,11 @@ def main() -> int:
     a = ap.parse_args()
 
     targets = newest_per_track(a)
+    # The dot scale is pooled over every run of a feature set, so it must not change
+    # depending on which subset --run happens to select. Resolve the full set once.
+    import copy
+    all_targets = newest_per_track(copy.copy(type("A", (), dict(
+        run=None, method=None, feature_set=None))()))
     if not targets:
         print("  no run matched", file=sys.stderr)
         return 1
@@ -333,9 +382,10 @@ def main() -> int:
         if not line and grid is None:
             print(f"\n  {tag}: no usable feature grid, skipped")
             continue
-        sd_lo, sd_hi = (0.0, 1.0) if line else sd_scale(X, labels, ids)
+        sd_lo, sd_hi = (0.0, 1.0) if line else sd_scale(feature_set, all_targets)
         detail = ("sorted by %s" % sname if line
-                  else "grey tint over SD %.2f-%.2f dB" % (sd_lo, sd_hi))
+                  else "dots over SD %.2f-%.2f dB, pooled across this feature set"
+                       % (sd_lo, sd_hi))
         out_dir = rd / "cluster_rasters"
         print(f"\n  {tag}/{rd.name}: {X.shape[0]} samples x {X.shape[1]} features, "
               f"K={len(ids)}, colour +/-{vlim:g} dB, {detail}")
@@ -351,7 +401,7 @@ def main() -> int:
                 n = raster_line(out, Xc, sc, vlim, n_blocks, cid, sname)
                 print(f"    cluster {cid}: {n} samples")
             else:
-                nn = centroid_tinted(out, Xc, vlim, grid, cid, sd_lo, sd_hi)
+                nn = centroid_dotted(out, Xc, vlim, grid, cid, sd_lo, sd_hi)
                 print(f"    cluster {cid}: {nn} electrodes")
         print(f"    -> {out_dir}")
 
