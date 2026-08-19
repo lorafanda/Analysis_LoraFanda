@@ -2723,7 +2723,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "has_loadings": true
@@ -2926,8 +2955,38 @@
         }
       },
       "figures": {
-        "per_cluster": {},
-        "overview": []
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       }
     },
     {
@@ -3119,8 +3178,42 @@
         }
       },
       "figures": {
-        "per_cluster": {},
-        "overview": []
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "cluster_cards.png",
+            "title": "Cluster cards \u2014 waveform, glass brains, anatomy"
+          },
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       }
     },
     {
