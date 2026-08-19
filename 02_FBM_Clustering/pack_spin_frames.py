@@ -16,8 +16,14 @@ Two reductions, in this order:
   2. JPEG. These are photographic renders with soft gradients; JPEG at 82 is
      visually indistinguishable here and roughly a quarter the size.
 
-    python pack_spin_frames.py                  # newest cnmf/concat_hg run
+    python pack_spin_frames.py                  # every run that has spin/ PNGs
+    python pack_spin_frames.py --run <run dir>  # just this one
     python pack_spin_frames.py --keep-png       # don't delete the sources
+
+It used to take the newest cnmf/concat_hg run and nothing else, matching what
+render_cnmf_glassbrains.py could produce at the time. Both now cover every run,
+which matters because the report fetches .jpg: leaving a run's frames as .png
+means its rotation stays blank on the page with the renders sitting on disk.
 """
 from __future__ import annotations
 
@@ -30,7 +36,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent
-BASE = ROOT / "outputs" / "clustering" / "cnmf" / "concat_hg" / "runs"
+CLUST = ROOT / "outputs" / "clustering"
 
 
 def union_box(paths, thresh=6):
@@ -62,15 +68,22 @@ def main() -> int:
     ap.add_argument("--keep-png", action="store_true")
     a = ap.parse_args()
 
-    rd = Path(a.run) if a.run else sorted(d for d in BASE.iterdir() if d.is_dir())[-1]
-    spin = rd / "recon" / "spin"
-    if not spin.is_dir():
-        print(f"  no spin/ under {rd.name} - run render_cnmf_glassbrains.py --which spin",
+    if a.run:
+        runs = [Path(a.run)]
+    else:
+        runs = sorted({q.parent.parent for q in CLUST.glob("*/*/runs/*/recon/spin")})
+    runs = [r for r in runs if (r / "recon" / "spin").is_dir()]
+    if not runs:
+        print("  no spin/ anywhere - run render_cnmf_glassbrains.py --which spin",
               file=sys.stderr)
         return 1
 
+    todo = [(r, cd) for r in runs
+            for cd in sorted(d for d in (r / "recon" / "spin").iterdir() if d.is_dir())]
+    print(f"  {len(runs)} run(s), {len(todo)} cluster folder(s)")
+
     before = after = 0
-    for cd in sorted(d for d in spin.iterdir() if d.is_dir()):
+    for rd, cd in todo:
         pngs = sorted(cd.glob("f*.png"))
         if not pngs:
             continue
@@ -94,11 +107,11 @@ def main() -> int:
             after += q.stat().st_size
             if not a.keep_png:
                 p.unlink()
-        print(f"  {cd.name}: {len(pngs)} frames, box {x1-x0+1}x{y1-y0+1}")
+        tag = f"{rd.parent.parent.parent.name}/{rd.parent.parent.name}/{rd.name}"
+        print(f"  {tag} {cd.name}: {len(pngs)} frames, box {x1-x0+1}x{y1-y0+1}")
 
     print(f"\n  {before/1e6:.1f} MB PNG -> {after/1e6:.1f} MB JPEG "
           f"({100*(1-after/max(before,1)):.0f}% smaller)")
-    print(f"  -> {spin}")
     return 0
 
 
