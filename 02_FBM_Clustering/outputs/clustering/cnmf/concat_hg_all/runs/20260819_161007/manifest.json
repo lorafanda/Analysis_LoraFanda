@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "method": "cnmf",
+  "method_label": "Convex NMF (graded)",
+  "feature_set": "concat_hg_all",
+  "feature_set_label": "Concatenated HG, ungated [a|p|r]",
+  "run_id": "20260819_161007",
+  "created_at": "2026-08-19T16:10:08Z",
+  "params": {
+    "k": 7,
+    "n_iter": 300,
+    "random_state": 0,
+    "preprocessing": "unit-norm per electrode",
+    "algorithm": "convex NMF (Ding, Li & Jordan 2010)"
+  },
+  "summary": {
+    "n_samples": 2946,
+    "n_features": 900,
+    "n_clusters": 7,
+    "best_k": 7,
+    "silhouette_overall": null,
+    "held_out_variance_explained": 0.4766017699892946,
+    "frac_no_majority": 0.8041412084181941,
+    "frac_dominant": 0.0033944331296673455,
+    "median_top_weight": 0.384595605390491
+  },
+  "predictor_type": "loadings",
+  "artifacts": {
+    "labels": "labels.csv",
+    "X_train": "X_train.npy",
+    "components": "components.npy",
+    "loadings": "G_loadings.npy"
+  },
+  "notebook": "235_concat_decomposition.ipynb",
+  "note": "Graded decomposition. The cluster column is the ARGMAX of the loadings and is a lossy summary: most electrodes have no majority component. Use w0..w6 plus top_weight and margin for the real membership.",
+  "derived_from": "outputs/clustering/kmeans/concat_hg_all/runs/20260819_180120"
+}

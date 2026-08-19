@@ -1,0 +1,51 @@
+{
+  "feature_set": "concat_hg_all",
+  "K": 7,
+  "source_run": "outputs/clustering/kmeans/concat_hg_all/runs/20260819_180120",
+  "n_electrodes": 2946,
+  "n_features": 900,
+  "n_patients": 27,
+  "conditions": [
+    "audio",
+    "picture",
+    "reading"
+  ],
+  "bands": [
+    "hg"
+  ],
+  "n_time": 300,
+  "in_sample_var_explained": 0.4766017699892946,
+  "mixture": {
+    "n": 2946,
+    "frac_dominant": 0.0033944331296673455,
+    "frac_contested": 0.1924643584521385,
+    "frac_no_majority": 0.8041412084181941,
+    "median_top_weight": 0.384595605390491
+  },
+  "argmax_spatial_coherence": [
+    0.27627181581878946,
+    1.8597442851607902
+  ],
+  "consensus_spatial_coherence": [
+    0.3437059041960639,
+    1.4633876412044173
+  ],
+  "consensus_sizes": [
+    190,
+    890,
+    332,
+    827,
+    181,
+    3,
+    523
+  ],
+  "lopo_real_mean": 0.759376624988892,
+  "lopo_real_min": 0.4334012515559666,
+  "lopo_degenerate_folds": 0,
+  "lopo_null_min_mean": 0.5565107664671985,
+  "lopo_null_min_std": 0.09031007363655275,
+  "lopo_z": -1.3631869619183183,
+  "replication_mean": 0.6327372026615093,
+  "quick": false,
+  "written": "2026-08-19 18:10:06"
+}
