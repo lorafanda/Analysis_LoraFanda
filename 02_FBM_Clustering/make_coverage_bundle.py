@@ -250,10 +250,21 @@ def main() -> int:
         print("  no usable runs", file=sys.stderr)
         return 1
 
-    # group runs that share a patient set — there are only a couple, so coverage stays cheap
+    # Group runs that share a patient set AND a declared cohort name. The patient set
+    # alone was enough while every cohort differed by which patients were in it, and it is
+    # not enough any more: concat_hg_all has the SAME 27 patients as the gated concat
+    # cohort but 2946 electrodes instead of 1266, so grouping on patients alone merged
+    # them and every ungated run was labelled "1266-electrode concat cohort".
+    #
+    # The coverage NUMBERS were not affected, and it is worth being precise about why:
+    # coverage is computed from the cohort patients' contacts in the coordinate file, not
+    # from the electrode subset a run happens to cluster, so both cohorts legitimately
+    # give 1748 lh / 1863 rh. What was wrong was the identity and the label the report
+    # prints - a 2946-electrode run describing itself as the 1266-electrode cohort.
     cohorts, order = {}, []
     for L in loaded:
-        cid = next((c for c in order if cohorts[c]["pats"] == L["pats"]), None)
+        cid = next((c for c in order if cohorts[c]["pats"] == L["pats"]
+                    and cohorts[c]["label"] == L["cohort_name"]), None)
         if cid is None:
             cid = f"cohort{len(order) + 1}_n{len(L['pats'])}"
             cohorts[cid] = {"pats": L["pats"], "label": L["cohort_name"], "runs": []}
