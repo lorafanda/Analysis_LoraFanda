@@ -59,7 +59,21 @@ SOURCES = {
 # K per feature set. 7 for concat_hg is the established choice (knee of the
 # held-out curve is 5->6; 7 was validated in 236). concat_rawds gets its own
 # entry because it is a different feature space - do not inherit it silently.
-KS_DEFAULT = {"concat_hg": 7, "concat_rawds": 7}
+KS_DEFAULT = {"concat_hg": 7, "concat_rawds": 7, "concat_hg_all": 7}
+
+# concat_hg_all has no run id until 237 has been run, so pinning it here would mean
+# editing this file after every rebuild - the drift lf_runs exists to prevent.
+FEATURE_SETS = sorted(set(SOURCES) | {"concat_hg_all"})
+
+
+def source_for(fset):
+    """The k-means run whose X_train the decomposition is fitted on."""
+    p = SOURCES.get(fset)
+    if p is not None:
+        return p
+    sys.path.insert(0, str(ROOT / "functions"))
+    import lf_runs as LR
+    return LR.newest_run("kmeans", fset)
 
 
 def parse_schema(src: Path):
@@ -84,7 +98,7 @@ def parse_schema(src: Path):
 
 
 def load(fset: str):
-    src = SOURCES[fset]
+    src = source_for(fset)
     X = np.load(src / "X_train.npy").astype(np.float64)
     lab = pd.read_csv(src / "labels.csv")
     conds, bands, nt = parse_schema(src)
@@ -301,11 +315,11 @@ def run(fset: str, k, quick: bool) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--feature-set", choices=sorted(SOURCES), action="append")
+    ap.add_argument("--feature-set", choices=FEATURE_SETS, action="append")
     ap.add_argument("--k", type=int, default=None)
     ap.add_argument("--quick", action="store_true")
     a = ap.parse_args()
-    sets = a.feature_set or sorted(SOURCES)
+    sets = a.feature_set or sorted(SOURCES)   # the default stays the two published sets
     metas = {}
     for fs in sets:
         metas[fs] = run(fs, a.k, a.quick)

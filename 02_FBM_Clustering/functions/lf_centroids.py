@@ -187,7 +187,7 @@ def _labels_for(run_dir, method):
 def _is_line_feature_set(feature_set: str) -> bool:
     """Feature sets whose centroid is a 1-D time course (line + SEM) rather than a
     2-D ERSP heatmap: the per-condition HG track and its concatenated counterpart."""
-    return feature_set == "hg" or feature_set == "concat_hg"
+    return feature_set in ("hg", "concat_hg", "concat_hg_all")
 
 
 def _n_condition_blocks(feature_set: str) -> int:

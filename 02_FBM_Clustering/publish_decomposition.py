@@ -34,6 +34,7 @@ METHOD_LABEL = "Convex NMF (graded)"
 FSET_LABELS = {
     "concat_hg": "Concatenated HG [a|p|r]",
     "concat_rawds": "Concatenated raw-ds [a|p|r]",
+    "concat_hg_all": "Concatenated HG, ungated [a|p|r]",
 }
 # SRC is no longer hard-coded. It is read from the decomposition's own meta.json,
 # because pinning it to one run is what let the loadings and the labels drift onto

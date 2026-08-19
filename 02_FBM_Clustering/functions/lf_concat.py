@@ -246,7 +246,9 @@ def concat_feature_names(kind: str, *, n_blocks: int = 3,
                          n_time_block: int = 300) -> List[str]:
     """Human-readable column names, e.g. 'audio|70-150Hz|t012'."""
     conds = list(conditions)[:n_blocks]
-    if kind == "concat_hg":
+    if kind in ("concat_hg", "concat_hg_all"):
+        # concat_hg_all is the SAME representation on the ungated electrode set, so the
+        # columns are identical and every downstream reshape keeps working.
         return [f"{c}|hg|t{t:03d}" for c in conds for t in range(n_time_block)]
     if kind == "concat_rawds":
         bands = [f"{int(lo)}-{int(hi)}" for lo, hi in FREQ_BANDS_15_TO_400HZ]

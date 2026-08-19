@@ -67,7 +67,7 @@ CLUST = ROOT / "outputs" / "clustering"
 
 # The runs asked for: convex NMF, k-means and Ward, on both concat feature sets.
 METHODS = ("cnmf", "kmeans", "hierarchical")
-FEATURE_SETS = ("concat_hg", "concat_rawds")
+FEATURE_SETS = ("concat_hg", "concat_rawds", "concat_hg_all")
 
 COND_NAMES = ("audio", "picture", "reading")
 # The disagreement dot: dark grey, fading in from fully transparent. It sits ON the
