@@ -2441,14 +2441,14 @@
       }
     },
     {
-      "id": "cnmf__concat_hg_all__20260819_161007",
+      "id": "cnmf__concat_hg_all__20260819_220417",
       "track": "cnmf/concat_hg_all",
       "track_label": "Convex NMF - ungated (argmax)",
       "cohort": "ungated concat cohort",
       "cohort_id": "cohort2_n27",
-      "run": "20260819_161007",
-      "path": "cnmf/concat_hg_all/runs/20260819_161007",
-      "dir": "runs/cnmf__concat_hg_all__20260819_161007",
+      "run": "20260819_220417",
+      "path": "cnmf/concat_hg_all/runs/20260819_220417",
+      "dir": "runs/cnmf__concat_hg_all__20260819_220417",
       "k": 7,
       "clusters": [
         0,
@@ -2753,19 +2753,24 @@
             "centroid": "cluster_centroids/cluster_06.png"
           }
         },
-        "overview": []
+        "overview": [
+          {
+            "path": "cluster_cards.png",
+            "title": "Cluster cards \u2014 waveform, glass brains, anatomy"
+          }
+        ]
       },
       "has_loadings": true
     },
     {
-      "id": "kmeans__concat_hg_all__20260819_180120",
+      "id": "kmeans__concat_hg_all__20260819_235524",
       "track": "kmeans/concat_hg_all",
       "track_label": "K-means \u00b7 concatenated, ungated",
       "cohort": "ungated concat cohort",
       "cohort_id": "cohort2_n27",
-      "run": "20260819_180120",
-      "path": "kmeans/concat_hg_all/runs/20260819_180120",
-      "dir": "runs/kmeans__concat_hg_all__20260819_180120",
+      "run": "20260819_235524",
+      "path": "kmeans/concat_hg_all/runs/20260819_235524",
+      "dir": "runs/kmeans__concat_hg_all__20260819_235524",
       "k": 4,
       "clusters": [
         0,
@@ -2975,6 +2980,10 @@
         },
         "overview": [
           {
+            "path": "cluster_cards.png",
+            "title": "Cluster cards \u2014 waveform, glass brains, anatomy"
+          },
+          {
             "path": "sweep_metrics.png",
             "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
           },
@@ -2990,14 +2999,14 @@
       }
     },
     {
-      "id": "hierarchical__concat_hg_all__20260819_180252",
+      "id": "hierarchical__concat_hg_all__20260819_235654",
       "track": "hierarchical/concat_hg_all",
       "track_label": "Ward \u00b7 concatenated, ungated",
       "cohort": "ungated concat cohort",
       "cohort_id": "cohort2_n27",
-      "run": "20260819_180252",
-      "path": "hierarchical/concat_hg_all/runs/20260819_180252",
-      "dir": "runs/hierarchical__concat_hg_all__20260819_180252",
+      "run": "20260819_235654",
+      "path": "hierarchical/concat_hg_all/runs/20260819_235654",
+      "dir": "runs/hierarchical__concat_hg_all__20260819_235654",
       "k": 4,
       "clusters": [
         0,
