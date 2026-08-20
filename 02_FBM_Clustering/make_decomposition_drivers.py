@@ -61,6 +61,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+from matplotlib.colors import ListedColormap
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
@@ -78,6 +79,14 @@ CMAP_LOAD = "magma_r"
 
 INK = "#1b232c"
 MUTED = "#68727d"
+# The two populations, once the responsiveness gate is lifted. Grey is deliberate:
+# the added electrodes are the ones the gate calls non-responsive, so they should
+# read as inactive rather than as a second category of interest.
+GATED_COL = "#4a6fa5"
+ADDED_COL = "#b0b7be"
+# FIXED so the gated and ungated figures can be read side by side. Covers the 99th
+# percentile of both runs (0.725 gated, 0.582 ungated) with room to spare.
+MARGIN_XLIM = 0.80
 
 
 def cnmf_runs(a):
@@ -114,7 +123,13 @@ def load(rd: Path):
     # electrode loads higher on everything. Normalised, a row is a mixture that
     # sums to 1 and "0.43" means the same thing on any electrode.
     Gn = G / np.maximum(G.sum(1, keepdims=True), 1e-12)
-    return X, G, Gn, comp, L, rd.parent.parent.name
+    # n_high_activity rides along in labels.csv: >0 means the electrode would have
+    # passed the responsiveness gate. On a gated run every row is True, which is
+    # correct rather than a special case.
+    gate = None
+    if "n_high_activity" in lab.columns:
+        gate = pd.to_numeric(lab["n_high_activity"], errors="coerce").fillna(0).to_numpy() > 0
+    return X, G, Gn, comp, L, rd.parent.parent.name, gate
 
 
 def grid_for(rd: Path, n_features: int):
@@ -173,7 +188,16 @@ def _blocks(ax, n_x, n_blocks, *, labels_on, heatmap=True):
 # ==============================================================================
 # D1 - membership structure
 # ==============================================================================
-def figure_membership(out_png, Gn, comp, L, tag, run_id):
+def figure_membership(out_png, Gn, comp, L, tag, run_id, gate=None):
+    """Membership structure. `gate` is a boolean per electrode: True = the electrode
+    would have passed the responsiveness gate, False = it is only here because the
+    gate was lifted. When it carries both classes the figure splits by it.
+
+    EVERY DATA AXIS IS FIXED (see the module constants), not fitted to the run, so
+    this figure can be read side by side with the gated one. The margin axis used to
+    be max(0.6, p99), which is exactly the kind of per-run fitting that makes two
+    panels look comparable while quietly using different scales.
+    """
     n, K = Gn.shape
     top = Gn.max(1)
     srt = np.sort(Gn, 1)
@@ -185,32 +209,51 @@ def figure_membership(out_png, Gn, comp, L, tag, run_id):
     bounds = np.searchsorted(ld, np.arange(K + 1))
     uniform = 1.0 / K
 
-    fig = plt.figure(figsize=(11.0, 7.2), dpi=200)
+    if gate is None:
+        gate = np.ones(n, dtype=bool)
+    gate = np.asarray(gate, dtype=bool)
+    split = bool(gate.any() and (~gate).any())
+    g_ord = gate[order]
+
+    # The header is up to five lines and sits above the panel TITLES, which need
+    # their own pad on top of that. At top=0.795 it landed on the B and C titles.
+    fig = plt.figure(figsize=(11.4, 8.6), dpi=200)
     # A's colourbar goes UNDER A, not in a column between B and C: there it collided
-    # with C's y-axis label and its own annotation had nowhere to sit.
-    gs = GridSpec(3, 3, width_ratios=[16, 5, 12], height_ratios=[1, 1, 0.05],
-                  wspace=0.34, hspace=0.60, left=0.085, right=0.965,
-                  top=0.795, bottom=0.075)
+    # with C's y-axis label and its own annotation had nowhere to sit. The extra narrow
+    # first column is the gate strip.
+    gs = GridSpec(3, 4, width_ratios=[0.55, 16, 5, 12], height_ratios=[1, 1, 0.05],
+                  wspace=0.30, hspace=0.60, left=0.075, right=0.965,
+                  top=0.745, bottom=0.065)
+
+    # ---- the gate strip, in the same row order as A
+    axg = fig.add_subplot(gs[0:2, 0])
+    axg.imshow(np.where(g_ord, 1, 0).reshape(-1, 1), aspect="auto",
+               cmap=ListedColormap([ADDED_COL, GATED_COL]), vmin=0, vmax=1,
+               interpolation="nearest")
+    axg.set_xticks([]); axg.set_yticks([])
+    for sp in axg.spines.values():
+        sp.set_linewidth(0.5); sp.set_color("#c8cfd6")
+    for j in range(K):
+        axg.text(-1.1, (bounds[j] + bounds[j + 1]) / 2, f"c{j}", fontsize=7.5,
+                 ha="right", va="center", color=INK)
+    axg.set_ylabel(f"{n} electrodes, grouped by argmax then top weight",
+                   fontsize=8.5, labelpad=26)
 
     # ---- (a) the membership matrix
-    ax = fig.add_subplot(gs[0:2, 0])
+    ax = fig.add_subplot(gs[0:2, 1], sharey=axg)
     im = ax.imshow(M, aspect="auto", cmap=CMAP_LOAD, vmin=0, vmax=1,
                    interpolation="nearest")
     for b in bounds[1:-1]:
         ax.axhline(b - 0.5, color="#2bb3c0", lw=1.0)
+        axg.axhline(b - 0.5, color="#2bb3c0", lw=1.0)
     ax.set_xticks(range(K))
     ax.set_xticklabels([f"c{j}" for j in range(K)], fontsize=7.5)
     ax.set_xlabel("weight on each component", fontsize=8.5)
-    ax.set_ylabel(f"{n} electrodes, grouped by argmax then top weight",
-                  fontsize=8.5, labelpad=22)
     ax.set_yticks([])
     ax.tick_params(length=2, width=0.6, colors=MUTED)
-    for j in range(K):
-        ax.text(-0.60, (bounds[j] + bounds[j + 1]) / 2, f"c{j}", fontsize=7.5,
-                ha="right", va="center", color=INK)
     ax.set_title("A — every electrode's mixture, not its membership",
                  fontsize=10, loc="left", color=INK, pad=6)
-    cax = fig.add_subplot(gs[2, 0])
+    cax = fig.add_subplot(gs[2, 1])
     cb = fig.colorbar(im, cax=cax, orientation="horizontal")
     cb.set_label("weight on a component (each row sums to 1)", fontsize=7.5,
                  labelpad=2)
@@ -221,10 +264,11 @@ def figure_membership(out_png, Gn, comp, L, tag, run_id):
                transform=cb.ax.get_xaxis_transform())
 
     # ---- (b) how confident each of those assignments is
-    axm = fig.add_subplot(gs[0:2, 1], sharey=ax)
-    axm.barh(np.arange(n), mg, height=1.0, color="#4a6fa5", linewidth=0)
+    axm = fig.add_subplot(gs[0:2, 2], sharey=axg)
+    axm.barh(np.arange(n), mg, height=1.0, linewidth=0,
+             color=np.where(g_ord, GATED_COL, ADDED_COL))
     axm.axvline(0.05, color="#c1121f", lw=0.9, ls="--")
-    axm.set_xlim(0, max(0.6, float(np.percentile(margin, 99))))
+    axm.set_xlim(0, MARGIN_XLIM)
     axm.invert_yaxis()
     axm.set_xlabel("1st − 2nd weight", fontsize=8.5)
     axm.tick_params(labelsize=6.5, length=2, colors=MUTED)
@@ -232,16 +276,35 @@ def figure_membership(out_png, Gn, comp, L, tag, run_id):
     for sp in ("top", "right"):
         axm.spines[sp].set_visible(False)
     near = int((margin < 0.05).sum())
-    axm.set_title(f"B — {near} electrodes ({100*near/n:.0f}%)\nare near-ties",
+    if split:
+        n_g = int((margin[gate] < 0.05).sum())
+        n_a = int((margin[~gate] < 0.05).sum())
+        # B is narrow, so the breakdown goes INSIDE it: as a second title line it
+        # overran into C's title.
+        axm.text(0.97, 0.995,
+                 "%.0f%% of gated" % (100*n_g/max(gate.sum(), 1)),
+                 transform=axm.transAxes, fontsize=6.8, color=GATED_COL,
+                 ha="right", va="top")
+        axm.text(0.97, 0.975,
+                 "%.0f%% of added" % (100*n_a/max((~gate).sum(), 1)),
+                 transform=axm.transAxes, fontsize=6.8, color="#8e969e",
+                 ha="right", va="top")
+    axm.set_title(f"B — {near} near-ties ({100*near/n:.0f}%)",
                   fontsize=10, loc="left", color=INK, pad=6)
     axm.text(0.05, 0.012, " 0.05", transform=axm.get_xaxis_transform(),
              fontsize=6, color="#c1121f", ha="left", va="bottom")
 
     # ---- (c) how much of the weight the winner actually takes
-    axc = fig.add_subplot(gs[0, 2])
+    axc = fig.add_subplot(gs[0, 3])
     ts = np.linspace(uniform, 1.0, 200)
-    frac = [(top > t).mean() * 100 for t in ts]
-    axc.plot(ts, frac, color=INK, lw=1.6)
+    axc.plot(ts, [(top > t).mean() * 100 for t in ts], color=INK, lw=1.8,
+             label="all" if split else None, zorder=5)
+    if split:
+        axc.plot(ts, [(top[gate] > t).mean() * 100 for t in ts], color=GATED_COL,
+                 lw=1.4, label=f"passes gate (n={int(gate.sum())})")
+        axc.plot(ts, [(top[~gate] > t).mean() * 100 for t in ts], color=ADDED_COL,
+                 lw=1.4, label=f"added by ungating (n={int((~gate).sum())})")
+        axc.legend(fontsize=6.4, frameon=False, loc="upper right")
     axc.axvline(uniform, color="#2bb3c0", lw=1.0)
     axc.axvline(0.5, color="#c1121f", lw=1.0, ls="--")
     axc.text(uniform, 102, f" even split {uniform:.2f}", fontsize=6.5,
@@ -249,9 +312,9 @@ def figure_membership(out_png, Gn, comp, L, tag, run_id):
     axc.text(0.5, 102, " majority 0.50", fontsize=6.5, color="#c1121f",
              ha="left", va="bottom")
     maj = (top > 0.5).mean() * 100
-    axc.plot([0.5], [maj], "o", ms=4.5, color="#c1121f")
-    axc.annotate(f"{maj:.0f}% of electrodes have a\nmajority component",
-                 xy=(0.5, maj), xytext=(0.60, min(88, maj + 26)),
+    axc.plot([0.5], [maj], "o", ms=4.5, color="#c1121f", zorder=6)
+    axc.annotate(f"{maj:.0f}% have a\nmajority component",
+                 xy=(0.5, maj), xytext=(0.58, min(74, maj + 22)),
                  fontsize=7, color=INK,
                  arrowprops=dict(arrowstyle="-", lw=0.7, color=MUTED))
     axc.set_xlim(uniform - 0.02, 1.0)
@@ -265,7 +328,8 @@ def figure_membership(out_png, Gn, comp, L, tag, run_id):
                   fontsize=10, loc="left", color=INK, pad=6)
 
     # ---- (d) are the components even distinct from each other
-    axk = fig.add_subplot(gs[1, 2])
+    axk = fig.add_subplot(gs[1, 3])
+    wi = wj = None
     if comp is not None:
         Cn = comp / np.maximum(np.linalg.norm(comp, axis=1, keepdims=True), 1e-12)
         R = Cn @ Cn.T
@@ -296,17 +360,52 @@ def figure_membership(out_png, Gn, comp, L, tag, run_id):
         axk.tick_params(length=0)
 
     fig.suptitle(f"How the decomposition assigns electrodes — {tag} · {run_id}",
-                 x=0.085, y=0.975, ha="left", fontsize=13.5, color=INK)
-    fig.text(0.085, 0.935,
-             "Convex NMF fits K additive profiles and gives every electrode a weight on each: "
-             "X ≈ G(W′X). It never partitions anything.\n"
-             "The cluster label used everywhere else is an argmax over these weights, taken "
-             "afterwards — panels A and B are what that step discards.",
-             fontsize=8.4, color=MUTED, va="top")
+                 x=0.075, y=0.975, ha="left", fontsize=13.5, color=INK)
+    head = ["Convex NMF fits K additive profiles and gives every electrode a weight on "
+            "each: X ≈ G(W′X). It never partitions anything.",
+            "The cluster label used everywhere else is an argmax over these weights, "
+            "taken afterwards — panels A and B are what that step discards."]
+    if split:
+        head.append("")
+        head.append(f"The strip left of A marks the two populations: "
+                    f"{int(gate.sum())} electrodes that would pass the responsiveness "
+                    f"gate (blue) and {int((~gate).sum())} that only appear because it "
+                    f"was lifted (grey).")
+        head.append("Every axis here is fixed to the same range as the gated figure, so "
+                    "the two can be read side by side.")
+    fig.text(0.075, 0.945, "\n".join(head), fontsize=8.4, color=MUTED, va="top",
+             linespacing=1.45)
     fig.savefig(out_png, dpi=200, bbox_inches="tight", facecolor="white")
     plt.close(fig)
-    return dict(median_top=float(np.median(top)), pct_majority=float(maj),
-                near_ties=int(near))
+
+    out = dict(median_top=float(np.median(top)), pct_majority=float(maj),
+               near_ties=int(near), n=int(n), K=int(K))
+    if wi is not None:
+        out["worst_pair"] = [int(wi), int(wj)]
+        out["worst_r"] = float(R[wi, wj])
+    if split:
+        head.append("")
+        head.append(f"The strip left of A marks the two populations: "
+                    f"{int(gate.sum())} electrodes that would pass the "
+                    f"responsiveness gate (blue) and {int((~gate).sum())} that only")
+        head.append("appear because it was lifted (grey). Every axis is fixed to the "
+                    "same range as the gated figure, so the two read side by side.")
+    else:
+        # Pad so both figures keep the SAME geometry - the point of the pair is that
+        # they are read against each other.
+        head += ["", "", ""]
+    if split:
+        out["gate"] = dict(
+            n_gated=int(gate.sum()), n_added=int((~gate).sum()),
+            median_top_gated=float(np.median(top[gate])),
+            median_top_added=float(np.median(top[~gate])),
+            median_margin_gated=float(np.median(margin[gate])),
+            median_margin_added=float(np.median(margin[~gate])),
+            pct_majority_gated=float((top[gate] > 0.5).mean() * 100),
+            pct_majority_added=float((top[~gate] > 0.5).mean() * 100),
+            pct_nearties_gated=float((margin[gate] < 0.05).mean() * 100),
+            pct_nearties_added=float((margin[~gate] < 0.05).mean() * 100))
+    return out
 
 
 # ==============================================================================
@@ -446,16 +545,27 @@ def main() -> int:
         return 0
 
     for tag, rd in targets:
-        X, G, Gn, comp, L, feature_set = load(rd)
+        X, G, Gn, comp, L, feature_set, gate = load(rd)
         grid = None if LC._is_line_feature_set(feature_set) else grid_for(rd, X.shape[1])
         out = rd / "decomposition_drivers"
         out.mkdir(parents=True, exist_ok=True)
         print(f"\n  {tag}/{rd.name}: X {X.shape}, G {G.shape}")
 
-        s = figure_membership(out / "D1_membership.png", Gn, comp, L, tag, rd.name)
+        s = figure_membership(out / "D1_membership.png", Gn, comp, L, tag, rd.name,
+                              gate=gate)
         print(f"    D1: median top weight {s['median_top']:.2f}, "
               f"{s['pct_majority']:.0f}% with a majority component, "
               f"{s['near_ties']} near-ties")
+        if "gate" in s:
+            g = s["gate"]
+            print(f"        gated  n={g['n_gated']:<5d} median top {g['median_top_gated']:.3f}"
+                  f"  majority {g['pct_majority_gated']:.0f}%"
+                  f"  near-ties {g['pct_nearties_gated']:.0f}%")
+            print(f"        added  n={g['n_added']:<5d} median top {g['median_top_added']:.3f}"
+                  f"  majority {g['pct_majority_added']:.0f}%"
+                  f"  near-ties {g['pct_nearties_added']:.0f}%")
+        (out / "membership_stats.json").write_text(json.dumps(s, indent=2),
+                                                   encoding="utf-8")
 
         ag = figure_drivers(out / "D2_drivers.png", X, Gn, comp, L, tag, rd.name,
                             feature_set, grid)

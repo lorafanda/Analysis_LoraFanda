@@ -1,0 +1,24 @@
+{
+  "median_top": 0.384595605390491,
+  "pct_majority": 19.585879158180582,
+  "near_ties": 725,
+  "n": 2946,
+  "K": 7,
+  "worst_pair": [
+    1,
+    3
+  ],
+  "worst_r": -0.8061636126838024,
+  "gate": {
+    "n_gated": 1267,
+    "n_added": 1679,
+    "median_top_gated": 0.3972408348196346,
+    "median_top_added": 0.37682100267986324,
+    "median_margin_gated": 0.14034787111127056,
+    "median_margin_added": 0.1126371696349453,
+    "pct_majority_gated": 22.967640094711918,
+    "pct_majority_added": 17.03394877903514,
+    "pct_nearties_gated": 21.310181531176006,
+    "pct_nearties_added": 27.099463966646812
+  }
+}
