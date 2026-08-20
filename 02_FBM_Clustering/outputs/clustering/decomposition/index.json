@@ -118,7 +118,7 @@
   "concat_hg_all": {
     "feature_set": "concat_hg_all",
     "K": 7,
-    "source_run": "outputs/clustering/kmeans/concat_hg_all/runs/20260819_180120",
+    "source_run": "outputs/clustering/kmeans/concat_hg_all/runs/20260819_235524",
     "n_electrodes": 2946,
     "n_features": 900,
     "n_patients": 27,
@@ -164,6 +164,6 @@
     "lopo_z": -1.3631869619183183,
     "replication_mean": 0.6327372026615093,
     "quick": false,
-    "written": "2026-08-19 18:10:06"
+    "written": "2026-08-20 00:04:16"
   }
 }
