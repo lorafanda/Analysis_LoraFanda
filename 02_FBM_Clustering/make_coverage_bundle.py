@@ -58,6 +58,11 @@ MESHES = FS / "meshes"
 COORDS = FS / "coords" / "ALL_PATIENTS_contacts_fsaverage.csv"
 OUT = FS / "coverage_viz"
 CLUSTERING = ROOT / "outputs" / "clustering"
+# The cuts the K control offers. Narrower than what a run's sweep holds (4..23) on
+# purpose: 5..12 spans every K anyone has argued for here, and each extra cut is a
+# labels vector per run to ship and a stability fit to compute.
+SWEEP_KS = tuple(range(5, 13))
+PART_BYTES = 4 * 1024 * 1024   # keep every emitted .bin under the 5 MB commit guard
 RADII_MM = (6.0, 10.0, 15.0)   # the radius is a smoothing kernel; the page lets you vary it
 DEFAULT_RADIUS = 10.0
 
@@ -151,6 +156,70 @@ def write_counts(arr: np.ndarray, path_stem: Path) -> tuple[str, str]:
     f = path_stem.with_name(path_stem.name + "_u16.bin")
     arr.astype(np.uint16).tofile(f)
     return f.name, "uint16"
+
+
+def write_neighbour_index(verts_by_hemi, xyz, hemi, radii, out: Path) -> dict:
+    """Which contacts lie within R mm of each vertex, as CSR - and nothing about K.
+
+    The per-run clusters_*.bin files are K-shaped: K bytes per vertex, so K=6 costs
+    5.9 MB and K=23 costs 22.6 MB, per run. That is affordable while a run publishes one
+    K and impossible the moment a K control exists - K=5..12 across six runs would be
+    roughly 380 MB.
+
+    This is the same neighbourhood, stored once. It is pure geometry: it does not depend
+    on K, on the clustering, or on which run is being viewed, so ONE copy serves every
+    cut of every run, now and later. Measured on this cohort it is 44 MB for all three
+    radii against 116 MB of per-run counts it can replace.
+
+    Layout, per radius per hemisphere:
+        nbr_r{R}_{h}_off.bin   uint32, nverts+1   CSR row offsets
+        nbr_r{R}_{h}_idx.bin   uint16, nnz        GLOBAL contact indices
+
+    Global rather than per-hemisphere indices so a reader never needs a second mapping
+    table; there are 5247 contacts, comfortably inside uint16.
+    """
+    from scipy.spatial import cKDTree
+    out.mkdir(parents=True, exist_ok=True)
+    xyz = np.asarray(xyz, dtype=float)
+    hemi = np.asarray(hemi)
+    if len(xyz) > 65535:
+        raise SystemExit(f"  !! {len(xyz)} contacts exceeds uint16 - widen nbr idx dtype")
+
+    index = {}
+    for h in ("lh", "rh"):
+        gidx = np.where(hemi == h)[0].astype(np.uint16)
+        tree = cKDTree(xyz[gidx])
+        V = verts_by_hemi[h]
+        for r in radii:
+            nb = tree.query_ball_point(V, r=r)
+            lens = np.fromiter((len(x) for x in nb), dtype=np.int64, count=len(nb))
+            off = np.zeros(len(nb) + 1, dtype=np.uint32)
+            off[1:] = np.cumsum(lens).astype(np.uint32)
+            flat = (np.concatenate([np.asarray(x, dtype=np.int64) for x in nb])
+                    if off[-1] else np.zeros(0, dtype=np.int64))
+            idx = gidx[flat] if len(flat) else np.zeros(0, dtype=np.uint16)
+            fo = out / f"nbr_r{r:g}_{h}_off.bin"
+            off.tofile(fo)
+            # SPLIT. r=15 lh is 7.6M pairs = 15 MB in one file, and .githooks/pre-commit
+            # refuses anything over 5 MB - a guard worth keeping rather than bypassing,
+            # since it is the only thing standing between this repo and render bloat.
+            # Parts concatenate back to one Uint16Array in the reader.
+            iu = idx.astype(np.uint16)
+            per = PART_BYTES // 2
+            parts = []
+            n_parts = max(1, -(-len(iu) // per))
+            for j in range(n_parts):
+                fp = out / f"nbr_r{r:g}_{h}_idx.p{j:02d}.bin"
+                iu[j * per:(j + 1) * per].tofile(fp)
+                parts.append(fp.name)
+            index.setdefault(f"{r:g}", {})[h] = {
+                "off": fo.name, "idx_parts": parts,
+                "n_vertices": int(len(nb)), "nnz": int(off[-1]),
+            }
+            mb = (fo.stat().st_size + sum((out / q).stat().st_size for q in parts)) / 1048576
+            print(f"    index r{r:g} {h}: {int(off[-1]):,} pairs, {mb:.1f} MB "
+                  f"in {len(parts)} part(s)")
+    return index
 
 
 def discover_runs(explicit: str | None, per_track: int) -> list[tuple[str, str, str, Path]]:
@@ -293,6 +362,16 @@ def main() -> int:
     contacts_json["hemi"] = ["lh" if r == "L" else "rh" for r in co_all["hemi1"]]
     contacts_json["patient"] = [str(p) for p in co_all["patient"]]
 
+    # ── K-independent neighbourhood index, written once for every run and every K
+    print("  neighbourhood index (shared by every run and every K):")
+    # FULL-PRECISION coordinates, not contacts_json["xyz"]. That one is rounded to
+    # 0.1 mm for transport, and rounding moves contacts across the radius boundary: built
+    # from it, the index disagreed with the counts by up to 27 at r=15.
+    nbr_index = write_neighbour_index(
+        verts_by_hemi, co_all[["x", "y", "z"]].to_numpy(float),
+        np.asarray(["lh" if t == "L" else "rh" for t in co_all["hemi1"]]),
+        a.radii, OUT)
+
     total_mb = 0.0
     for cid in order:
         C = cohorts[cid]
@@ -412,6 +491,45 @@ def main() -> int:
         contacts_json["runs"][L["entry"]["id"]] = [
             None if not isinstance(v, list) else v for v in m]
 
+        # PER-K LABELS. Same vector as above, once per cut in the run's own sweep, so
+        # the K control has something to switch to without refitting anything. Written
+        # beside the run's counts rather than into contacts.json: it is only needed once
+        # a run is selected, and contacts.json is fetched on every page load.
+        lbk = L["run"] / "cluster_labels_by_k.csv"
+        if lbk.exists():
+            sw = pd.read_csv(lbk)
+            if len(sw) == len(L["lab"]):
+                keys = L["lab"]["key"].to_numpy()
+                payload, ks_have = {}, []
+                for c in sw.columns:
+                    if not c.startswith("k_") or not c[2:].isdigit():
+                        continue
+                    kk = int(c[2:])
+                    if kk not in SWEEP_KS:
+                        continue
+                    # a LIST, duplicates kept. On an electrode x condition run the same
+                    # electrode can land in one cluster under two conditions, and the
+                    # counts those files carry are per sample, not per electrode.
+                    # contacts.json["runs"] dedupes to a set, which is why rebuilding a
+                    # multi-label run from it undercounts; per-K labels must not repeat
+                    # that.
+                    per = {}
+                    for key, v in zip(keys, sw[c].to_numpy()):
+                        per.setdefault(key, []).append(int(v))
+                    mk = co_all["key"].map({q: sorted(w) for q, w in per.items()})
+                    payload[str(kk)] = [None if not isinstance(v, list) else v for v in mk]
+                    ks_have.append(kk)
+                if payload:
+                    rdir = OUT / "runs" / f"{L['key'].replace('/', '__')}__{L['run'].name}"
+                    rdir.mkdir(parents=True, exist_ok=True)
+                    (rdir / "labels_by_k.json").write_text(json.dumps(payload),
+                                                           encoding="utf-8")
+                    L["entry"]["sweep"] = {"ks": sorted(ks_have),
+                                           "labels": "labels_by_k.json"}
+            else:
+                print(f"      !! {L['run'].name}: sweep has {len(sw)} rows vs "
+                      f"{len(L['lab'])} labels - per-K labels skipped")
+
         # GRADED MEMBERSHIP, where the run has it. Only the convex-NMF runs carry
         # w0..wK-1; k-means and Ward are hard partitions where every contact's
         # membership is 1.0 by construction, so exporting a loading for them would
@@ -439,6 +557,11 @@ def main() -> int:
         "hemis": {h: {"nvert": nverts[h]} for h in ("lh", "rh")},
         "cohorts": manifest_cohorts,
         "contacts_file": "contacts.json",
+        # geometry only: which contacts are within R mm of each vertex, CSR, global
+        # contact indices. Lets a reader build the counts for ANY labelling, which is
+        # what makes a K control possible without shipping counts per K.
+        "neighbours": nbr_index,
+        "sweep_ks": list(SWEEP_KS),
         "runs": [L["entry"] for L in loaded],
         "patient_palette": PALETTE,
         "note": ("counts within radius_mm of each vertex, restricted to the patients of "

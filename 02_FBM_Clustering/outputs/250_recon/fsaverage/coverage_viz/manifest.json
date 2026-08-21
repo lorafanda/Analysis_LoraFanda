@@ -274,6 +274,80 @@
     }
   },
   "contacts_file": "contacts.json",
+  "neighbours": {
+    "6": {
+      "lh": {
+        "off": "nbr_r6_lh_off.bin",
+        "idx_parts": [
+          "nbr_r6_lh_idx.p00.bin"
+        ],
+        "n_vertices": 163842,
+        "nnz": 862470
+      },
+      "rh": {
+        "off": "nbr_r6_rh_off.bin",
+        "idx_parts": [
+          "nbr_r6_rh_idx.p00.bin"
+        ],
+        "n_vertices": 163842,
+        "nnz": 815781
+      }
+    },
+    "10": {
+      "lh": {
+        "off": "nbr_r10_lh_off.bin",
+        "idx_parts": [
+          "nbr_r10_lh_idx.p00.bin",
+          "nbr_r10_lh_idx.p01.bin"
+        ],
+        "n_vertices": 163842,
+        "nnz": 2702287
+      },
+      "rh": {
+        "off": "nbr_r10_rh_off.bin",
+        "idx_parts": [
+          "nbr_r10_rh_idx.p00.bin",
+          "nbr_r10_rh_idx.p01.bin"
+        ],
+        "n_vertices": 163842,
+        "nnz": 2484046
+      }
+    },
+    "15": {
+      "lh": {
+        "off": "nbr_r15_lh_off.bin",
+        "idx_parts": [
+          "nbr_r15_lh_idx.p00.bin",
+          "nbr_r15_lh_idx.p01.bin",
+          "nbr_r15_lh_idx.p02.bin",
+          "nbr_r15_lh_idx.p03.bin"
+        ],
+        "n_vertices": 163842,
+        "nnz": 7586726
+      },
+      "rh": {
+        "off": "nbr_r15_rh_off.bin",
+        "idx_parts": [
+          "nbr_r15_rh_idx.p00.bin",
+          "nbr_r15_rh_idx.p01.bin",
+          "nbr_r15_rh_idx.p02.bin",
+          "nbr_r15_rh_idx.p03.bin"
+        ],
+        "n_vertices": 163842,
+        "nnz": 6879660
+      }
+    }
+  },
+  "sweep_ks": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
   "runs": [
     {
       "id": "cnmf__concat_hg__20260818_112939",
@@ -592,6 +666,19 @@
             "title": "Consensus heatmap"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       },
       "has_loadings": true
     },
@@ -913,6 +1000,19 @@
           }
         ]
       },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
+      },
       "has_loadings": true
     },
     {
@@ -1214,6 +1314,19 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -1429,6 +1542,19 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -2016,6 +2142,19 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -2438,6 +2577,19 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -2996,6 +3148,19 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -3223,6 +3388,19 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -3598,6 +3776,18 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -4031,6 +4221,18 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -4462,6 +4664,14 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     },
     {
@@ -4824,6 +5034,14 @@
             "title": "Centroid distance matrix"
           }
         ]
+      },
+      "sweep": {
+        "ks": [
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json"
       }
     }
   ],
