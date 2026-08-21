@@ -547,6 +547,29 @@ def main() -> int:
                         "cluster_patient_counts": comp_k,
                     }
 
+                # PER-K GRADED WEIGHTS, for the runs that have them. The published
+                # w0..wK-1 columns describe one cut; driving the loading gate and the
+                # size/grey ramp with them at another K would size electrodes by a
+                # partition that is not on screen. sweep_decomposition writes
+                # loadings_by_k/G_kNN.npy, already row-normalised.
+                loads = {}
+                gdir = L["run"] / "loadings_by_k"
+                if gdir.is_dir():
+                    for kk in sorted(payload):
+                        gp = gdir / f"G_k{int(kk):02d}.npy"
+                        if not gp.exists():
+                            continue
+                        G = np.load(gp)
+                        if len(G) != len(L["lab"]):
+                            print(f"      !! {L['run'].name}: G_k{int(kk):02d} has {len(G)} "
+                                  f"rows vs {len(L['lab'])} labels - skipped")
+                            continue
+                        topk = pd.Series(G.max(axis=1), index=L["lab"].index)
+                        dk = (L["lab"].assign(_t=topk).dropna(subset=["_t"])
+                              .groupby("key")["_t"].max().to_dict())
+                        vk = co_all["key"].map(dk)
+                        loads[kk] = [None if v != v else round(float(v), 3) for v in vk]
+
                 if payload:
                     rdir = OUT / "runs" / f"{L['key'].replace('/', '__')}__{L['run'].name}"
                     rdir.mkdir(parents=True, exist_ok=True)
@@ -557,6 +580,10 @@ def main() -> int:
                     L["entry"]["sweep"] = {"ks": sorted(ks_have),
                                            "labels": "labels_by_k.json",
                                            "stats": "sweep_stats.json"}
+                    if loads:
+                        (rdir / "loadings_by_k.json").write_text(json.dumps(loads),
+                                                                 encoding="utf-8")
+                        L["entry"]["sweep"]["loadings"] = "loadings_by_k.json"
             else:
                 print(f"      !! {L['run'].name}: sweep has {len(sw)} rows vs "
                       f"{len(L['lab'])} labels - per-K labels skipped")

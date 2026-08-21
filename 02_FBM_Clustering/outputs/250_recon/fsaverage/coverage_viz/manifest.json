@@ -679,7 +679,8 @@
           12
         ],
         "labels": "labels_by_k.json",
-        "stats": "sweep_stats.json"
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
       },
       "has_loadings": true
     },
@@ -1013,7 +1014,8 @@
           12
         ],
         "labels": "labels_by_k.json",
-        "stats": "sweep_stats.json"
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
       },
       "has_loadings": true
     },
