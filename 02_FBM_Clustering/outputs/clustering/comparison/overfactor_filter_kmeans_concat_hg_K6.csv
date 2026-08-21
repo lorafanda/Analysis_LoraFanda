@@ -1,0 +1,7 @@
+component,n,bootstrap_J,pass_bootstrap,init_J,pass_init,patient_max,pass_patient,interpret
+0,208,0.414,False,0.892,True,0.356,True,False
+1,676,0.427,False,0.734,False,0.188,True,False
+2,128,0.298,False,0.583,False,0.203,True,False
+3,86,0.317,False,0.628,False,0.186,True,False
+4,117,0.513,False,0.844,True,0.274,True,False
+5,51,0.356,False,0.911,True,0.843,False,False
