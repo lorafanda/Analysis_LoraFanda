@@ -1,0 +1,8 @@
+component,method,feature_set,K,n,boot_J,boot_lo,boot_hi,boot_sd,pass_bootstrap,null_p95,above_null,init_J,pass_init,patient_max,pass_patient,interpret,n_boot,measure,scoring
+0,hierarchical,concat_hg,7,283,0.444,0.419,0.468,0.122,False,0.429,False,,True,0.343,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag
+1,hierarchical,concat_hg,7,45,0.499,0.458,0.54,0.208,False,0.429,True,,True,0.644,False,False,100,hennig_bootstrap_jaccard_inbag,in-bag
+2,hierarchical,concat_hg,7,84,0.386,0.337,0.435,0.245,False,0.429,False,,True,0.238,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag
+3,hierarchical,concat_hg,7,50,0.417,0.375,0.46,0.214,False,0.429,False,,True,0.18,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag
+4,hierarchical,concat_hg,7,580,0.582,0.562,0.603,0.105,False,0.429,True,,True,0.21,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag
+5,hierarchical,concat_hg,7,67,0.553,0.5,0.606,0.268,False,0.429,True,,True,0.791,False,False,100,hennig_bootstrap_jaccard_inbag,in-bag
+6,hierarchical,concat_hg,7,157,0.402,0.368,0.436,0.171,False,0.429,False,,True,0.223,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag

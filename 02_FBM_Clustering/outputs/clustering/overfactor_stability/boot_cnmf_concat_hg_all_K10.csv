@@ -1,0 +1,11 @@
+component,method,feature_set,K,n,boot_J,boot_lo,boot_hi,boot_sd,pass_bootstrap,null_p95,above_null,init_J,pass_init,patient_max,pass_patient,interpret,n_boot,measure,scoring,pct_added
+0,cnmf,concat_hg_all,10,339,0.745,0.721,0.769,0.121,True,0.429,True,0.844,True,0.14,True,True,100,hennig_bootstrap_jaccard_inbag,in-bag,60.5
+1,cnmf,concat_hg_all,10,233,0.755,0.736,0.774,0.095,True,0.429,True,0.822,True,0.14,True,True,100,hennig_bootstrap_jaccard_inbag,in-bag,37.8
+2,cnmf,concat_hg_all,10,305,0.504,0.468,0.54,0.179,False,0.429,True,0.637,False,0.195,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag,67.5
+3,cnmf,concat_hg_all,10,240,0.625,0.607,0.644,0.093,True,0.429,True,0.723,False,0.174,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag,55.0
+4,cnmf,concat_hg_all,10,432,0.64,0.615,0.664,0.123,True,0.429,True,0.727,False,0.189,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag,32.2
+5,cnmf,concat_hg_all,10,175,0.699,0.659,0.738,0.198,True,0.429,True,0.812,True,0.305,True,True,100,hennig_bootstrap_jaccard_inbag,in-bag,65.7
+6,cnmf,concat_hg_all,10,266,0.463,0.423,0.503,0.202,False,0.429,False,0.411,False,0.099,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag,72.6
+7,cnmf,concat_hg_all,10,282,0.623,0.6,0.646,0.117,False,0.429,True,0.726,False,0.075,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag,57.1
+8,cnmf,concat_hg_all,10,293,0.652,0.626,0.678,0.13,True,0.429,True,0.698,False,0.122,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag,63.5
+9,cnmf,concat_hg_all,10,381,0.612,0.58,0.644,0.162,False,0.429,True,0.755,True,0.172,True,False,100,hennig_bootstrap_jaccard_inbag,in-bag,66.7

@@ -1,0 +1,5 @@
+component,method,feature_set,K,n,boot_J,boot_lo,boot_hi,boot_sd,pass_bootstrap,null_p95,above_null,init_J,pass_init,patient_max,pass_patient,interpret,n_boot,measure,scoring
+0,cnmf,concat_hg,4,289,0.765,0.739,0.79,0.128,True,0.677,True,0.987,True,0.184,True,True,100,hennig_bootstrap_jaccard_inbag,in-bag
+1,cnmf,concat_hg,4,412,0.796,0.768,0.823,0.138,True,0.677,True,0.992,True,0.145,True,True,100,hennig_bootstrap_jaccard_inbag,in-bag
+2,cnmf,concat_hg,4,248,0.927,0.918,0.935,0.041,True,0.677,True,0.998,True,0.086,True,True,100,hennig_bootstrap_jaccard_inbag,in-bag
+3,cnmf,concat_hg,4,317,0.817,0.794,0.84,0.115,True,0.677,True,0.986,True,0.144,True,True,100,hennig_bootstrap_jaccard_inbag,in-bag
