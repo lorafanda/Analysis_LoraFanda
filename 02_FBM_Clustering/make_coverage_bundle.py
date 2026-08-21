@@ -519,13 +519,44 @@ def main() -> int:
                     mk = co_all["key"].map({q: sorted(w) for q, w in per.items()})
                     payload[str(kk)] = [None if not isinstance(v, list) else v for v in mk]
                     ks_have.append(kk)
+                # Cluster sizes and patient composition PER K, computed the same way the
+                # published entry computes its own - over the run's rows, not over the
+                # localised contacts. Recomputing these in the browser from
+                # labels_by_k.json would silently switch denominator: this run has 1266
+                # rows but only 1035 contacts with coordinates, so the sizes would not
+                # sum to the run and would disagree with every published figure.
+                stats = {}
+                pid = L["lab"]["patient_id"].astype(str)
+                for c in sw.columns:
+                    if not c.startswith("k_") or not c[2:].isdigit():
+                        continue
+                    kk = int(c[2:])
+                    if kk not in SWEEP_KS:
+                        continue
+                    col = sw[c].to_numpy()
+                    ids = sorted({int(v) for v in col})
+                    comp_k = {}
+                    for j in ids:
+                        vc = pid[col == j].value_counts()
+                        comp_k[str(j)] = {q: int(n) for q, n in vc.items()}
+                    stats[str(kk)] = {
+                        "clusters": ids,
+                        "cluster_sizes": {str(j): int((col == j).sum()) for j in ids},
+                        "cluster_patients": {str(j): int(pid[col == j].nunique())
+                                             for j in ids},
+                        "cluster_patient_counts": comp_k,
+                    }
+
                 if payload:
                     rdir = OUT / "runs" / f"{L['key'].replace('/', '__')}__{L['run'].name}"
                     rdir.mkdir(parents=True, exist_ok=True)
                     (rdir / "labels_by_k.json").write_text(json.dumps(payload),
                                                            encoding="utf-8")
+                    (rdir / "sweep_stats.json").write_text(json.dumps(stats),
+                                                           encoding="utf-8")
                     L["entry"]["sweep"] = {"ks": sorted(ks_have),
-                                           "labels": "labels_by_k.json"}
+                                           "labels": "labels_by_k.json",
+                                           "stats": "sweep_stats.json"}
             else:
                 print(f"      !! {L['run'].name}: sweep has {len(sw)} rows vs "
                       f"{len(L['lab'])} labels - per-K labels skipped")

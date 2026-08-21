@@ -678,7 +678,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       },
       "has_loadings": true
     },
@@ -1011,7 +1012,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       },
       "has_loadings": true
     },
@@ -1326,7 +1328,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -1554,7 +1557,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -2154,7 +2158,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -2589,7 +2594,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -3160,7 +3166,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -3400,7 +3407,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -3787,7 +3795,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -4232,7 +4241,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -4671,7 +4681,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     },
     {
@@ -5041,7 +5052,8 @@
           11,
           12
         ],
-        "labels": "labels_by_k.json"
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
       }
     }
   ],
