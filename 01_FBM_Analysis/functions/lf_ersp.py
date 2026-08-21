@@ -301,6 +301,43 @@ def apply_wm_reference_with_exclusions(
 # ----------------------------
 # ERSP (Avg over trials)
 # ----------------------------
+# ----------------------------------------------------------------------------
+# Split-half reliability support
+# ----------------------------------------------------------------------------
+# The responsiveness gate downstream thresholds on AMPLITUDE, which cannot tell a
+# small-but-repeatable response from a large-but-random one. The principled
+# replacement is split-half reliability: average the trials twice from disjoint
+# halves and correlate. Norman-Haignere et al. (2019) select their 271 electrodes
+# exactly this way (split-half r > 0.2, Results "Electrode decomposition") and reuse
+# the same quantity to noise-correct their variance explained (Fig 1E), so it buys
+# two things at once.
+#
+# ODD/EVEN, not first-half/second-half. Interleaving balances drift, fatigue,
+# electrode impedance change and block structure across the two halves; a
+# chronological split confounds reliability with all of them. Norman-Haignere split
+# on odd and even runs for the same reason.
+#
+# THE HALVES ARE NOT NaN-FILLED, unlike avg_db. Filling is an imputation, and
+# imputing the same bins in both halves from their own neighbours would push the
+# split-half correlation up for reasons that have nothing to do with the response.
+# Consumers must mask non-finite pairs instead.
+def _halves(stack, avg_like, reducer):
+    """(half1, half2) from an odd/even split of a per-trial stack.
+
+    `reducer` collapses a subset the same way the full average was produced, so the
+    halves are the same quantity as avg_db - just computed from half the trials.
+    Returns all-NaN for a half with no trials rather than raising: a single-trial
+    channel has no second half, and that is a missing measurement, not an error.
+    """
+    n = len(stack)
+    idx = np.arange(n)
+    h1, h2 = idx[idx % 2 == 0], idx[idx % 2 == 1]
+    nan = np.full_like(np.asarray(avg_like, float), np.nan)
+    A = reducer(h1) if h1.size else nan
+    B = reducer(h2) if h2.size else nan
+    return A, B, int(h1.size), int(h2.size)
+
+
 def compute_ersp(
     signals: np.ndarray,  # (n_samples, n_channels)
     fs: float,
@@ -399,6 +436,13 @@ def compute_ersp(
         avg_db[:, -1] = np.nan
         avg_z[:,  -1] = np.nan
 
+        # extra outputs only - avg_db above is untouched
+        db_h1, db_h2, n_h1, n_h2 = _halves(
+            trials_db, avg_db, lambda sel: _regrid([trials_db[i] for i in sel]))
+        for _H in (db_h1, db_h2):
+            if np.isfinite(_H).any():
+                _H[:, -1] = np.nan
+
         if offsets is not None and len(offsets) == len(onsets) and len(onsets) > 0:
             stim_dur = float(np.mean((np.asarray(offsets) - np.asarray(onsets)) / float(fs)))
         else:
@@ -412,10 +456,12 @@ def compute_ersp(
 
         return dict(
             avg_db=avg_db, avg_z=avg_z, f=f_first, x=x,
+            avg_db_h1=db_h1, avg_db_h2=db_h2,
             markers=markers,
             meta=dict(mode="RT", align=("go" if go_aligned else "onset"),
                       time_window=tuple(float(v) for v in time_window),
                       mean_stim_dur=stim_dur, n_trials=int(len(centres)),
+                      n_trials_h1=n_h1, n_trials_h2=n_h2,
                       n_baseline_fallback=int(n_base_fallback),
                       fs_in=float(fs), fs_ds=float(fs_ds), scale=float(scale))
         )
@@ -503,13 +549,20 @@ def compute_ersp(
         avg_db = np.nanmean(warped_db, 0)
         avg_z  = np.nanmean(warped_z,  0)
 
+        # extra outputs only - avg_db above is untouched
+        db_h1, db_h2, n_h1, n_h2 = _halves(
+            warped_db, avg_db, lambda sel: np.nanmean(warped_db[sel], 0))
+
     sys.stdout.write("*"); sys.stdout.flush()
 
     return dict(
         avg_db=avg_db, avg_z=avg_z, f=f_common, x=x,
+        avg_db_h1=db_h1, avg_db_h2=db_h2,
         markers=dict(onset=100.0*(pB), offset=100.0*(pB+pS)),
         meta=dict(mode="TN", fs_in=float(fs), fs_ds=float(fs_ds), scale=float(scale),
-                  proportions=(pB,pS,pP), bins=(nB,nS,nP))
+                  proportions=(pB,pS,pP), bins=(nB,nS,nP),
+                  n_trials=int(warped_db.shape[0]),
+                  n_trials_h1=n_h1, n_trials_h2=n_h2)
     )
 
 # ----------------------------
