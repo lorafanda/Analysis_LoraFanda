@@ -68,7 +68,13 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
 
 CLUST = ROOT / "outputs" / "clustering"
-OUT = CLUST / "comparison"
+# Its own folder, shared with notebook 238. Two other things in this project are also
+# called per-cluster "Jaccard stability" and are NOT on the same scale: the Monti
+# consensus scores written into each run dir as per_cluster_stability.csv (mean pairwise
+# co-occurrence under subsampling without replacement), and the pre-correction runs left
+# in comparison/. Hennig's 0.60 and 0.75 apply to what is written here and nothing else.
+OUT = CLUST / "overfactor_stability"
+MEASURE = "hennig_bootstrap_jaccard_inbag"
 RUN = CLUST / "cnmf/concat_hg/runs/20260818_112939"
 
 
@@ -342,6 +348,7 @@ def main() -> int:
     stats = {"run": str(RUN.relative_to(CLUST)), "K": K, "n": int(n),
              "n_boot": a.boot, "n_seeds": a.seeds, "ks_compared": a.ks,
              "n_null": a.null, "null_p95": null_level,
+             "measure": MEASURE,
              "bootstrap_scoring": "in-bag (Hennig); perfect recovery = 1.0",
              "clusters": {}}
     for j in ids:
@@ -358,7 +365,7 @@ def main() -> int:
             silhouette=sil_by[j])
 
     OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / f"cluster_stability_K{K}.json").write_text(json.dumps(stats, indent=2),
+    (OUT / f"boot_cluster_stability_K{K}.json").write_text(json.dumps(stats, indent=2),
                                                       encoding="utf-8")
 
     print()
@@ -386,7 +393,7 @@ def main() -> int:
         print(f"  K={K}, so a cluster below that is at chance whatever Hennig says.")
     print("  Cross-K is the best Jaccard against the clusters found when a different")
     print("  number of them is requested.")
-    print(f"  -> {OUT / f'cluster_stability_K{K}.json'}")
+    print(f"  -> {OUT / f'boot_cluster_stability_K{K}.json'}")
     return 0
 
 

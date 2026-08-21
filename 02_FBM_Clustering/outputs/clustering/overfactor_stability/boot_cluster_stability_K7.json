@@ -337,5 +337,6 @@
       "cross_k_mean": 0.6975755773062928,
       "silhouette": 0.11267394000543689
     }
-  }
+  },
+  "measure": "hennig_bootstrap_jaccard_inbag"
 }
