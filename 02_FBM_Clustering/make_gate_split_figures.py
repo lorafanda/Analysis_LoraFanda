@@ -22,11 +22,23 @@ the error that made an earlier version of the separation figure wrong, and
 silhouette is not a space-free quantity.
 
 The result this was built to check: on the hard partitions there IS such a cluster -
-k-means c2 holds 1696 electrodes at 74% added and Ward c3 holds 2075 at 71% - while
-convex NMF has none, its most extreme cluster being 69% against a 57% baseline. The
-hard methods in dB are partly separating responsive from non-responsive electrodes,
-which is exactly the failure the gate exists to prevent, and the silhouette makes it
-visible: for k-means and Ward the ADDED electrodes score HIGHER than the gated ones.
+k-means c2 is 74% added and Ward c3 is 71%, while convex NMF has none, its most extreme
+being 69% against a 57% baseline. The hard methods in dB are partly separating
+responsive from non-responsive electrodes, which is the failure the gate exists to
+prevent.
+
+TWO THINGS IN THIS FIGURE ARE K=4 AND DO NOT GENERALISE, checked at matched K:
+
+  * the cluster SIZES. k-means c2 holds 58% of all electrodes and Ward c3 holds 70%,
+    but at K=7 the largest falls to 38.7% and 36.1%. Read composition, not size.
+
+  * the SILHOUETTE comparison. At K=4 the added electrodes score higher than the gated
+    ones (0.137 vs 0.080, 0.175 vs 0.085) and an earlier version of this docstring
+    called that the diagnostic. It is a wash at K=7 and REVERSES at K=10. Withdrawn.
+
+What is robust at K=4, 7 and 10: the most-added cluster stays at 74-78%, and the
+least-added cluster gets purer as K rises, reaching 0.0% added at K=7 and K=10 for
+both hard methods.
 
     python make_gate_split_figures.py
 """
@@ -162,22 +174,20 @@ def figure_g1(data, out_png, stats):
     fig.suptitle("Is any cluster mostly electrodes the gate would have removed?",
                  x=0.055, y=0.975, ha="left", fontsize=14, color=INK)
     base = stats["baseline_pct_added"]
-    fig.text(0.055, 0.925, "\n".join([
-        f"All three run on the same {stats['n']} ungated electrodes. "
-        f"{GATED_COL and ''}Blue = would pass the responsiveness gate, "
-        f"grey = only present because it was lifted;",
-        f"{base:.0f}% of the whole set is grey, so a cluster is only notable if it "
-        f"departs from that. Each method is scored in the space it fits in - "
-        f"silhouette is not space-free.",
+    fig.text(0.055, 0.925, chr(10).join([
+        f"All three run on the same {stats['n']} ungated electrodes. Blue = would pass "
+        f"the responsiveness gate, grey = only present because it was lifted; "
+        f"{base:.0f}% of the whole set is grey,",
+        "so a cluster is only notable if it departs from that. Each method is scored in "
+        "the space it fits in - silhouette is not space-free.",
         "",
         "Convex NMF has no such cluster: its most extreme is "
-        f"{stats['methods']['cNMF']['max_added_pct']:.0f}% against the {base:.0f}% "
-        "baseline. The hard partitions do, and in both directions - a very large",
-        "cluster of mostly-added electrodes and a small almost-purely-gated one. For "
-        "k-means and Ward the ADDED electrodes score HIGHER silhouette than the gated "
-        "ones, which is the",
-        "shape of a partition that is separating responsive from non-responsive rather "
-        "than one response type from another.",
+        f"{stats['methods']['cNMF']['max_added_pct']:.0f}% against the {base:.0f}% baseline. "
+        "The hard partitions have one in each direction - a cluster built from the added",
+        "electrodes and one that excludes them almost entirely. Checked at matched K, the "
+        "COMPOSITION is robust (most-added stays 74-78% at K=4, 7, 10; least-added reaches",
+        "0.0% at K=7 and K=10) but the cluster SIZES here are K=4 and are not - at K=7 the "
+        "largest falls from 58% to 39% (k-means) and 70% to 36% (Ward).",
     ]), fontsize=8.4, color=MUTED, va="top", linespacing=1.45)
     fig.savefig(out_png, dpi=200, bbox_inches="tight", facecolor="white")
     plt.close(fig)

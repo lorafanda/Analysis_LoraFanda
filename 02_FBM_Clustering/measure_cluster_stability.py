@@ -66,6 +66,65 @@ def fit_labels(Xu, K, seed):
     return (G / np.maximum(G.sum(1, keepdims=True), 1e-12)).argmax(1)
 
 
+# Methods differ in the space they fit in, and silhouette is not space-free -
+# scoring all of them in dB is the error that made the first separation figure wrong.
+SPACE = {"cnmf": "unit-norm", "kmeans": "dB", "hierarchical": "dB"}
+
+
+def resolve(method, feature_set):
+    """(newest run dir, space) for a track, from index.json."""
+    idx = json.loads((CLUST / "index.json").read_text(encoding="utf-8"))
+    runs = idx["runs"] if isinstance(idx, dict) else idx
+    best = None
+    for r in runs:
+        if r["method"] != method or r["feature_set"] != feature_set:
+            continue
+        rd = CLUST / method / feature_set / "runs" / r["run_id"]
+        if (rd / "X_train.npy").exists() and (best is None or r["run_id"] > best[0]):
+            best = (r["run_id"], rd)
+    if best is None:
+        raise FileNotFoundError(f"no run with X_train for {method}/{feature_set}")
+    return best[1], SPACE[method]
+
+
+def fit_any(A, K, seed, method):
+    """Labels at K, by whichever method - so the same filters apply to all three.
+
+    Ward is DETERMINISTIC: it has no random initialisation, so its init-stability
+    score is 1.0 by construction and means nothing. The notebook says so rather than
+    reporting it as if it had passed a test.
+    """
+    if method == "kmeans":
+        from sklearn.cluster import KMeans
+        return KMeans(K, n_init=10, random_state=seed).fit_predict(A)
+    if method == "hierarchical":
+        from sklearn.cluster import AgglomerativeClustering
+        return AgglomerativeClustering(n_clusters=K, linkage="ward").fit_predict(A)
+    return fit_labels(A, K, seed)
+
+
+def patient_share(labels, patients, Gn=None):
+    """Largest single-patient share of each cluster.
+
+    Convex NMF has loadings, so the share is of component WEIGHT, matching
+    Norman-Haignere Fig 1F. A hard partition has no weights, so it is the share of
+    MEMBERS instead. The two are not the same quantity and the threshold carries over
+    only loosely.
+    """
+    ids = sorted(set(int(v) for v in labels))
+    pats = sorted(set(patients))
+    out = {}
+    for j in ids:
+        if Gn is not None:
+            w = np.array([Gn[patients == p, j].sum() for p in pats])
+        else:
+            m = labels == j
+            w = np.array([float((patients[m] == p).sum()) for p in pats])
+        w = w / max(w.sum(), 1e-12)
+        out[j] = (float(w.max()), pats[int(w.argmax())])
+    return out
+
+
 def jaccard(a_idx, b_idx):
     a, b = set(a_idx.tolist()), set(b_idx.tolist())
     u = len(a | b)

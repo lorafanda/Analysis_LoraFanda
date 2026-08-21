@@ -1,0 +1,17 @@
+component,n,bootstrap_J,pass_bootstrap,init_J,pass_init,patient_max,pass_patient,interpret
+0,42,0.402,False,0.66,False,0.247,True,False
+1,59,0.221,False,0.251,False,0.213,True,False
+2,117,0.545,False,0.848,True,0.186,True,False
+3,63,0.509,False,0.817,True,0.348,True,False
+4,115,0.367,False,0.598,False,0.142,True,False
+5,129,0.441,False,0.659,False,0.502,False,False
+6,73,0.236,False,0.315,False,0.142,True,False
+7,99,0.506,False,0.8,True,0.279,True,False
+8,92,0.187,False,0.245,False,0.223,True,False
+9,61,0.346,False,0.496,False,0.115,True,False
+10,56,0.27,False,0.442,False,0.213,True,False
+11,63,0.209,False,0.321,False,0.143,True,False
+12,54,0.533,False,0.871,True,0.562,False,False
+13,67,0.346,False,0.459,False,0.237,True,False
+14,72,0.407,False,0.672,False,0.794,False,False
+15,104,0.533,False,0.862,True,0.351,True,False
