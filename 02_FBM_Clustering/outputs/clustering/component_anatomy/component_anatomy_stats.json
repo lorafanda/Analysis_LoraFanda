@@ -1,0 +1,26 @@
+{
+  "run": "cnmf/concat_hg/runs/20260818_112939",
+  "source": "cnmf_concat_hg_20260818_112939__with_fsaverage.csv",
+  "n_contacts": 1029,
+  "K": 7,
+  "n_patients": 25,
+  "frame": "fsaverage",
+  "grid_step_mm": 2.0,
+  "cube_mm": 10.0,
+  "min_contacts": 3,
+  "n_voxels": 14927,
+  "n_perm": 10000,
+  "fdr_q": 0.05,
+  "expected_by_chance": 746,
+  "p_floor": 0.0001,
+  "maxstat_threshold_within_patient": [
+    0.7285177395789665,
+    0.7309148775225703,
+    0.7505927779188115,
+    0.7549813954615868,
+    0.8496718321572153,
+    0.6484103591385223,
+    0.8104478477687069
+  ],
+  "n_survive_correction": 5
+}

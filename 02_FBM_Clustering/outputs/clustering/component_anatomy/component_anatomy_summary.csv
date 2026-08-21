@@ -1,0 +1,8 @@
+component,vox_sig_global,vox_sig_within_patient,vox_sig_fdr,vox_sig_maxstat,survives_correction,n_contacts_uncorrected,n_contacts_corrected,n_patients_uncorrected,peak_x,peak_y,peak_z,peak_median_loading,maxstat_threshold,top_network,top_network_frac,medial_wall_frac
+0,1914,1961,127,0,True,222,41,23,56.0,-14.0,-34.0,0.7019,0.7285,limbic,0.195,0.707
+1,2345,2153,708,0,True,252,100,22,-56.0,-30.0,4.0,0.7299,0.7309,somatomotor,0.51,0.0
+2,2201,2024,30,0,True,237,12,21,-32.0,22.0,4.0,0.7155,0.7506,ventral attn,0.5,0.333
+3,1774,1663,0,0,False,243,0,21,-32.0,4.0,-26.0,0.7146,0.755,,,
+4,1223,1438,0,75,True,262,3,22,40.0,26.0,12.0,0.9106,0.8497,frontoparietal,1.0,0.0
+5,2027,1788,242,0,True,255,111,24,-70.0,-34.0,-18.0,0.5823,0.6484,default,0.811,0.0
+6,2335,1678,0,0,False,278,0,21,52.0,-44.0,-26.0,0.7558,0.8104,,,
