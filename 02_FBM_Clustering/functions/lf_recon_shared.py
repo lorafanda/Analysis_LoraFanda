@@ -670,13 +670,44 @@ def batch_export_contacts_tkrras_and_mosaics(
 # -------------------------
 # Talairach + mgz helpers
 # -------------------------
+# Only the voxel-to-RAS geometry is read from these, and every volume produced by
+# one FreeSurfer/FastSurfer run for a subject shares it - verified on EL046 and
+# EL048, where aseg.mgz and aseg.presurf.mgz give byte-identical vox2ras and
+# vox2ras_tkr. The first three are the classic recon-all outputs and stay first, so
+# no subject that resolves today resolves differently; the rest are what a FastSurfer
+# subject has instead. EL046 and EL048 ship none of the first three, which is the
+# whole reason 251 skipped them with "Missing brainmask/T1/orig".
+_MGZ_CANDIDATES = [
+    "mri/brainmask.mgz", "mri/T1.mgz", "mri/orig.mgz",          # classic recon-all
+    "mri/aseg.mgz", "mri/aseg.presurf.mgz",                      # FastSurfer
+    "mri/aparc.DKTatlas+aseg.mapped.mgz", "mri/aparc.DKTatlas+aseg.deep.mgz",
+]
+
+
 def load_mgz_matrices(subj_dir: Path) -> Tuple[np.ndarray, np.ndarray, Path]:
-    for p in [subj_dir / "mri/brainmask.mgz", subj_dir / "mri/T1.mgz", subj_dir / "mri/orig.mgz"]:
+    for rel in _MGZ_CANDIDATES:
+        p = subj_dir / rel
         if p.exists():
             img = nib.load(str(p))
             hdr = img.header
             return np.array(hdr.get_vox2ras(), float), np.array(hdr.get_vox2ras_tkr(), float), p
-    raise FileNotFoundError(f"No mgz found in {subj_dir}/mri (brainmask/T1/orig)")
+    raise FileNotFoundError(
+        f"No usable mgz in {subj_dir}/mri; tried {', '.join(_MGZ_CANDIDATES)}")
+
+
+def subject_talairach_xfm(subj_dir: Path) -> Path:
+    """talairach.xfm, whichever folder this subject's pipeline used.
+
+    recon-all writes mri/transforms/ (plural); the FastSurfer subjects here write
+    mri/transform/ (singular). Plural is tried first so nothing that resolves today
+    changes. Only the SUBJECT side varies - fsaverage keeps the classic layout, so
+    those call sites are left alone.
+    """
+    for sub in ("transforms", "transform"):
+        p = subj_dir / "mri" / sub / "talairach.xfm"
+        if p.exists():
+            return p
+    return subj_dir / "mri/transforms/talairach.xfm"   # canonical path for the error
 
 
 def parse_talairach_xfm(xfm_path: Path) -> np.ndarray:
@@ -721,7 +752,7 @@ def tkr_to_scanner(points_tkr: np.ndarray, vox2ras: np.ndarray, vox2ras_tkr: np.
 def subject_tkr_to_fsaverage_tkr(pid: str, points_tkr_subj: np.ndarray) -> Tuple[np.ndarray, Dict[str, str]]:
     subj_dir = patient_freesurfer_dir(pid)
     vox2ras_subj, vox2ras_tkr_subj, subj_mgz = load_mgz_matrices(subj_dir)
-    tal_subj = parse_talairach_xfm(subj_dir / "mri/transforms/talairach.xfm")
+    tal_subj = parse_talairach_xfm(subject_talairach_xfm(subj_dir))
 
     vox2ras_fs, vox2ras_tkr_fs, fs_mgz = load_mgz_matrices(C.FSAVERAGE_DIR)
     tal_fs = parse_talairach_xfm(C.FSAVERAGE_DIR / "mri/transforms/talairach.xfm")
@@ -736,7 +767,7 @@ def subject_tkr_to_fsaverage_tkr(pid: str, points_tkr_subj: np.ndarray) -> Tuple
         "pid": pid,
         "subj_dir": str(subj_dir),
         "subj_mgz_used": str(subj_mgz),
-        "subj_tal": str(subj_dir / "mri/transforms/talairach.xfm"),
+        "subj_tal": str(subject_talairach_xfm(subj_dir)),
         "fs_mgz_used": str(fs_mgz),
         "fs_tal": str(C.FSAVERAGE_DIR / "mri/transforms/talairach.xfm"),
         "input_space": "subj_tkrRAS",
@@ -747,7 +778,7 @@ def subject_tkr_to_fsaverage_tkr(pid: str, points_tkr_subj: np.ndarray) -> Tuple
 
 def subject_scanner_to_fsaverage_tkr(pid: str, points_scanner_subj: np.ndarray) -> Tuple[np.ndarray, Dict[str, str]]:
     subj_dir = patient_freesurfer_dir(pid)
-    tal_subj = parse_talairach_xfm(subj_dir / "mri/transforms/talairach.xfm")
+    tal_subj = parse_talairach_xfm(subject_talairach_xfm(subj_dir))
 
     vox2ras_fs, vox2ras_tkr_fs, fs_mgz = load_mgz_matrices(C.FSAVERAGE_DIR)
     tal_fs = parse_talairach_xfm(C.FSAVERAGE_DIR / "mri/transforms/talairach.xfm")
@@ -760,7 +791,7 @@ def subject_scanner_to_fsaverage_tkr(pid: str, points_scanner_subj: np.ndarray) 
     prov = {
         "pid": pid,
         "subj_dir": str(subj_dir),
-        "subj_tal": str(subj_dir / "mri/transforms/talairach.xfm"),
+        "subj_tal": str(subject_talairach_xfm(subj_dir)),
         "fs_mgz_used": str(fs_mgz),
         "fs_tal": str(C.FSAVERAGE_DIR / "mri/transforms/talairach.xfm"),
         "input_space": "subj_scannerRAS",
@@ -802,7 +833,7 @@ def build_atlas_inputs(run_id_230: str, run_id_recon: Optional[str] = None, clus
     for pid in patient_ids:
         try:
             subj_dir = patient_freesurfer_dir(pid)
-            tal = subj_dir / "mri/transforms/talairach.xfm"
+            tal = subject_talairach_xfm(subj_dir)
             if not tal.exists():
                 raise FileNotFoundError(f"Missing talairach.xfm: {tal}")
 
