@@ -114,8 +114,10 @@ bad_channels_manual = {
 # picks by CONTENT, not by filename; these entries only say which folder.
 LOOKUP_ANATOMY_PATIENTS = {"EL046", "EL048"}
 LOOKUP_ANATOMY_DIRS = {
-    "EL046": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL046\anatomy\raw",
-    "EL048": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL048\anatomy",
+    # the workbooks sit in raw/overview/, and the finder does not recurse -
+    # pointing at raw/ gave "Lookup fallback failed" and no WM channels at all
+    "EL046": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL046\anatomy\raw\overview",
+    "EL048": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL048\anatomy\overview",
 }
 
 # ---- TEMPORARY manual WM reference -------------------------------------------
@@ -277,10 +279,10 @@ hg_vmax      = 6.5
 PAT_PATIENTS = [] #[2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780]
 
 PAT_PRESETS = {
-    2868: dict(trig="PHOTO",  flip=False, time_range=(140, 1500), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    2868: dict(trig="PHOTO",  flip=True, time_range=(140, 1500), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3066: dict(trig="Xe1",   flip=False, time_range=(260, 1900), invalid_trials=[0,1,2,53,54,55,104,105,106,112], trial_ids=["picture"]*54 + ["auditory"]*50 + ["reading"]*53, fake_trials=[155], manual_trig=None),
     3301: dict(trig="PHOTO",  flip=False, time_range=(0, 1900),   invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig="PAT_3301__FLM_picture__triggerPD.tsv"),
-    3390: dict(trig="PHOTO",  flip=False, time_range=(170, 1222), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    3390: dict(trig="PHOTO",  flip=True, time_range=(170, 1222), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3415: dict(trig="photo",  flip=False, time_range=(30, 1500),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3455: dict(trig="photo",  flip=False, time_range=(250, 1836), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3965: dict(trig="x1",    flip=False, time_range=(40, 1295),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
