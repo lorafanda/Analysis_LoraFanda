@@ -34,8 +34,12 @@ threshold is on the raw split-half correlation, so both are reported and the gat
 applied on the raw value to match them.
 
 BAND. Reliability is computed over the whole time-frequency cube AND over the
-high-gamma band alone, because the amplitude gate is HG-based and comparing a
-whole-cube reliability against an HG-band amplitude would confound band with measure.
+high-gamma band alone, and the whole-cube version is the one that matches the gate.
+An earlier version of this note said the amplitude gate is HG-based. It is not:
+prepare_dataset counts bins over threshold across the FULL 0-400 Hz cube (129 x 300 =
+38,700 bins), so a whole-cube reliability is the like-for-like comparison and the
+HG-band version is the secondary one. The HG band is what the clustering FEATURES use,
+which is a different thing from what the gate measures.
 
     python make_reliability_gate.py
     python make_reliability_gate.py --r-min 0.2 --band hg
