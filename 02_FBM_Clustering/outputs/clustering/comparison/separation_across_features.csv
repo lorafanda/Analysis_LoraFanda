@@ -1,0 +1,19 @@
+feature_set,feature_label,method,method_label,space,home,n,p,silhouette,null_mean,null_sd,z,n_null
+concat_hg,"high gamma, gated",cnmf,convex NMF,dB,False,1266,900,0.0463417556,0.0430647341,0.0035746673,0.9167346867,10
+concat_hg,"high gamma, gated",cnmf,convex NMF,unit-norm,True,1266,900,0.0936547504,0.0450637089,0.0044484731,10.92308324,10
+concat_hg,"high gamma, gated",kmeans,k-means,dB,True,1266,900,0.1129987321,0.0837057588,0.0028814536,10.1660401099,10
+concat_hg,"high gamma, gated",kmeans,k-means,unit-norm,False,1266,900,-0.0036082237,0.0809950734,0.0033315827,-25.3943260933,10
+concat_hg,"high gamma, gated",hierarchical,Ward,dB,True,1266,900,0.1150565413,0.0469162527,0.0045005686,15.1403733757,10
+concat_hg,"high gamma, gated",hierarchical,Ward,unit-norm,False,1266,900,-0.0095864112,0.0509554442,0.0057167865,-10.5901900001,10
+concat_hg_all,"high gamma, gate lifted",cnmf,convex NMF,dB,False,2946,900,0.0135167556,0.0383348978,0.0046313446,-5.358733649,10
+concat_hg_all,"high gamma, gate lifted",cnmf,convex NMF,unit-norm,True,2946,900,0.047776683,0.0380671304,0.0035708659,2.7191030797,10
+concat_hg_all,"high gamma, gate lifted",kmeans,k-means,dB,True,2946,900,0.0714553336,0.0710516975,0.0012532386,0.3220744216,10
+concat_hg_all,"high gamma, gate lifted",kmeans,k-means,unit-norm,False,2946,900,-0.0438992105,0.0683340702,0.001544703,-72.6568670774,10
+concat_hg_all,"high gamma, gate lifted",hierarchical,Ward,dB,True,2946,900,0.0414551639,0.0345582363,0.0036090516,1.9110083088,10
+concat_hg_all,"high gamma, gate lifted",hierarchical,Ward,unit-norm,False,2946,900,-0.0650084071,0.0362362903,0.0055364392,-18.2869700613,10
+concat_rawds,15 bands x time,cnmf,convex NMF,dB,False,1266,1350,0.0445684687,0.0280754073,0.0011278679,14.6232207016,10
+concat_rawds,15 bands x time,cnmf,convex NMF,unit-norm,True,1266,1350,0.0732767707,0.0320456586,0.0018297156,22.5341644896,10
+concat_rawds,15 bands x time,kmeans,k-means,dB,True,1266,1350,0.0755433936,0.0480185663,0.0018589408,14.8067259777,10
+concat_rawds,15 bands x time,kmeans,k-means,unit-norm,False,1266,1350,0.0540816947,0.0466913047,0.0021009523,3.5176382121,10
+concat_rawds,15 bands x time,hierarchical,Ward,dB,True,1266,1350,0.0530261725,0.0221343281,0.0015526096,19.8967241151,10
+concat_rawds,15 bands x time,hierarchical,Ward,unit-norm,False,1266,1350,0.0181785675,0.0202459002,0.0063945535,-0.3232958612,10
