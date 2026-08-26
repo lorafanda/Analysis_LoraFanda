@@ -40,12 +40,12 @@ import lf_concat as CC          # noqa: E402
 import lf_dataset as LD         # noqa: E402
 
 CACHE_ROOT = ROOT / "outputs" / "_dataset"
-NEW_CACHE = CACHE_ROOT / "concat_source_v3"
-OLD_CACHE = CACHE_ROOT / "concat_source_v2"
+NEW_CACHE = CACHE_ROOT / "concat_source_v4"
+OLD_CACHE = CACHE_ROOT / "concat_source_v3"
 INPUT_DIR = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM"
                  r"\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY")
 CONDITIONS = ("audio", "picture", "reading")
-OUT = ROOT / "outputs" / "clustering" / "cohort_v3"
+OUT = ROOT / "outputs" / "clustering" / "cohort_v4"
 
 
 def main() -> int:
@@ -100,22 +100,22 @@ def main() -> int:
             oldg = (old_meta[old_meta.get("high_activity", False).astype(bool)]
                     .assign(cn=lambda d: d["electrode"].map(CC.normalize_label))
                     .drop_duplicates(["patient_id", "cn"])
-                    .groupby("patient_id").size().rename("gated_v2"))
+                    .groupby("patient_id").size().rename("gated_prev"))
             per = per.join(oldg)
-            per["delta"] = per.gated - per.gated_v2
+            per["delta"] = per.gated - per.gated_prev
         except Exception as e:
             print(f"  (could not read v2 for comparison: {type(e).__name__}: {e})")
 
-    per.to_csv(OUT / "cohort_v3_per_patient.csv")
+    per.to_csv(OUT / "cohort_v4_per_patient.csv")
     print("\nper patient:")
     print(per.to_string())
     if "delta" in per.columns:
         ch = per[per.delta.fillna(0) != 0]
         print(f"\npatients whose GATED count moved vs v2: {len(ch)}")
         if len(ch):
-            print(ch[["gated_v2", "gated", "delta"]].to_string())
+            print(ch[["gated_prev", "gated", "delta"]].to_string())
 
-    (OUT / "cohort_v3_summary.json").write_text(json.dumps(dict(
+    (OUT / "cohort_v4_summary.json").write_text(json.dumps(dict(
         input_dir=str(inp), cache=str(NEW_CACHE),
         n_gated=int(len(df)), n_ungated=int(len(df_all)),
         n_patients=int(df["patient_id"].nunique()),

@@ -97,7 +97,10 @@ def spearman_brown(r):
 def half_pairs():
     """[(patient, condition, contact, half1_path, half2_path)] found on disk."""
     out = []
-    for p1 in sorted(ERSP.glob("*/LM/ERSP_matrix/*/*_half1.npy")):
+    # ERSP_halves, not ERSP_matrix: the halves were moved out so that the
+    # cube consumers, which glob ERSP_matrix/<cond>/*.npy, stop ingesting
+    # them as if each half were a separate electrode.
+    for p1 in sorted(ERSP.glob("*/LM/ERSP_halves/*/*_half1.npy")):
         p2 = Path(str(p1)[: -len("_half1.npy")] + "_half2.npy")
         if not p2.exists():
             continue
