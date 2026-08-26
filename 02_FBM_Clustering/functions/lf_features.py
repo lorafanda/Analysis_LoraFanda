@@ -67,6 +67,34 @@ FREQ_BANDS_15_TO_400HZ: List[Tuple[float, float]] = [
     (360.0, 400.0),    # top
 ]
 
+# 5 bands, each one a UNION of contiguous 15-band edges so the two sets are directly
+# comparable - every 5-band edge lands on a 15-band edge, and nothing is split.
+#
+# WHY THESE EDGES. Two different things decide whether a merge is free, and they are
+# easy to conflate. REDUNDANCY: adjacent bands correlating at r = 0.94 (1-4 | 4-8) say
+# the same thing, so fusing them costs nothing. INFORMATIVENESS: eta2, the share of a
+# band's variance that cluster identity explains. A merge is safe when the bands it
+# fuses are redundant OR uninformative, and expensive only when they are both distinct
+# and informative.
+#
+# That is why 20-70 Hz is one band here despite holding the two LEAST redundant
+# boundaries in the whole spectrum (20-30 | 30-50 at r = 0.51 and 30-50 | 50-70 at
+# r = 0.48). Those same bands rank 14th and 15th of 15 on eta2 (0.14 and 0.11), so what
+# they do not share is not cluster-relevant. Reading the correlation matrix alone would
+# have said keep them apart, and it would have been wrong.
+#
+# The 170 | 270 split is load-bearing and is why this is five bands and not four.
+# Folding 170-400 into one band is measurably worse on anatomical coherence
+# (p = 0.034 over 6 seeds); keeping the split is indistinguishable from all 15
+# (p = 0.44) at a third of the features. compare_band_schemes.py is that test.
+FREQ_BANDS_5_TO_400HZ: List[Tuple[float, float]] = [
+    (  1.0,  20.0),    # delta + theta + alpha + low beta
+    ( 20.0,  70.0),    # high beta + low/mid gamma - the least informative stretch
+    ( 70.0, 170.0),    # high gamma, the classic band
+    (170.0, 270.0),    # HFO low
+    (270.0, 400.0),    # HFO high
+]
+
 
 # ============================================================
 # Single-sample downsample

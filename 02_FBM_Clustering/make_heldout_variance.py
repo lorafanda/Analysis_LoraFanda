@@ -151,7 +151,8 @@ def bicv(X, ks, method, *, n_row_folds=4, n_col_folds=4, n_iter=150, seed=0,
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--feature-set", nargs="+", default=["concat_hg", "concat_rawds"])
+    ap.add_argument("--feature-set", nargs="+",
+                    default=["concat_hg", "concat_rawds", "concat_bands5"])
     ap.add_argument("--ks", nargs="+", type=int, default=DEFAULT_KS)
     ap.add_argument("--spaces", choices=["home", "unit", "both"], default="both")
     # three parallel kernels each sweep ONE method and write their own files, so they

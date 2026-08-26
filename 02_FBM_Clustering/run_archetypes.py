@@ -35,7 +35,8 @@ import lf_archetypes as AA  # noqa: E402
 
 CLUST = ROOT / "outputs" / "clustering"
 FS_LABEL = {"concat_hg": "Concatenated HG [a|p|r]",
-            "concat_rawds": "Concatenated bands x time [a|p|r]",
+            "concat_rawds": "Concatenated 15 bands x time [a|p|r]",
+            "concat_bands5": "Concatenated 5 bands x time [a|p|r]",
             "concat_hg_all": "Concatenated HG, gate lifted"}
 DEFAULT_KS = list(range(5, 31))
 
@@ -168,7 +169,8 @@ def run(fset: str, ks, kpub: int, n_iter: int, seed: int, source: Path) -> Path:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--feature-set", nargs="+", default=["concat_hg", "concat_rawds"])
+    ap.add_argument("--feature-set", nargs="+",
+                    default=["concat_hg", "concat_rawds", "concat_bands5"])
     ap.add_argument("--ks", type=int, nargs="+", default=DEFAULT_KS)
     ap.add_argument("--k", type=int, default=None,
                     help="the published K; default = this feature set's cNMF peak")

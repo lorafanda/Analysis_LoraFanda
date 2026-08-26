@@ -52,6 +52,7 @@ MCOL = {"k-means": "#4a6fa5", "Ward": "#e08214", "convex NMF": "#5b2c83"}
 K_MARK = 8                       # overwritten per feature set from peak_k.json
 FS_LABEL = {"concat_hg": "concat_hg  ·  high gamma, gate APPLIED",
             "concat_rawds": "concat_rawds  ·  same electrodes  ·  15 bands x time",
+            "concat_bands5": "concat_bands5  ·  same electrodes  ·  5 bands x time",
             "concat_hg_all": "concat_hg_all  ·  gate LIFTED"}
 SCHEME_LABEL = {"home": "each method in its HOME space — compare SHAPE, not height",
                 "unit-norm": "every method in UNIT-NORM — heights comparable"}
@@ -148,7 +149,8 @@ def main() -> int:
     if not meta and (OUT / "part2_meta.json").exists():
         meta = json.loads((OUT / "part2_meta.json").read_text())
 
-    fsets = [x for x in ("concat_hg", "concat_rawds") if x in set(df.feature_set)]
+    fsets = [x for x in ("concat_hg", "concat_rawds", "concat_bands5")
+             if x in set(df.feature_set)]
     schemes = [x for x in ("home", "unit-norm") if x in set(df.scheme)]
     if not fsets:
         raise SystemExit("feature sets not present in the CSV yet")

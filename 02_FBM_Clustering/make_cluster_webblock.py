@@ -46,6 +46,10 @@ FS_NOTE = {
                   "bins = 900 features"),
     "concat_rawds": ("15 frequency bands &times; 3 conditions &times; 30 downsampled "
                      "bins = 1350 features, the SAME electrodes described more fully"),
+    "concat_bands5": ("5 frequency bands &times; 3 conditions &times; 30 downsampled "
+                      "bins = 450 features &mdash; the same spectrum as "
+                      "<code>concat_rawds</code> at a third of the width, each band a "
+                      "union of contiguous 15-band edges"),
     "concat_hg_all": "high gamma, responsiveness gate LIFTED",
 }
 
@@ -69,7 +73,8 @@ def discover():
         if f.exists():
             out.append((d, json.loads(f.read_text())))
     # concat_hg before concat_rawds, which is the order the argument runs in
-    rank = {"concat_hg": 0, "concat_rawds": 1, "concat_hg_all": 2}
+    rank = {"concat_hg": 0, "concat_rawds": 1, "concat_bands5": 2,
+            "concat_hg_all": 3}
     out.sort(key=lambda t: rank.get(t[1].get("feature_set", ""), 9))
     return out
 

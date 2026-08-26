@@ -64,12 +64,16 @@ SOURCES: dict = {}
 # K per feature set. 7 for concat_hg is the established choice (knee of the
 # held-out curve is 5->6; 7 was validated in 236). concat_rawds gets its own
 # entry because it is a different feature space - do not inherit it silently.
-KS_DEFAULT = {"concat_hg": 7, "concat_rawds": 7, "concat_hg_all": 7}
+KS_DEFAULT = {"concat_hg": 7, "concat_rawds": 7, "concat_hg_all": 7,
+              # concat_bands5 gets its own entry rather than inheriting: KS_DEFAULT[fset]
+              # is a bare lookup, so a missing key is a KeyError at fit time rather
+              # than a quiet fallback to somebody else's K.
+              "concat_bands5": 7}
 
 # concat_hg_all has no run id until 237 has been run, so pinning it here would mean
 # editing this file after every rebuild - the drift lf_runs exists to prevent.
-FEATURE_SETS = ["concat_hg", "concat_hg_all", "concat_rawds"]
-DEFAULT_SETS = ["concat_hg", "concat_rawds"]
+FEATURE_SETS = ["concat_hg", "concat_hg_all", "concat_rawds", "concat_bands5"]
+DEFAULT_SETS = ["concat_hg", "concat_rawds", "concat_bands5"]
 
 
 def source_for(fset):

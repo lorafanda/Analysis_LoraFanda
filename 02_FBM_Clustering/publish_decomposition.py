@@ -34,6 +34,10 @@ METHOD_LABEL = "Convex NMF (graded)"
 FSET_LABELS = {
     "concat_hg": "Concatenated HG [a|p|r]",
     "concat_rawds": "Concatenated raw-ds [a|p|r]",
+    # --feature-set is argparse `choices=sorted(FSET_LABELS)`, so a set missing from
+    # this dict is REJECTED at the command line rather than defaulted - which is the
+    # right behaviour, and the reason this entry has to exist.
+    "concat_bands5": "Concatenated 5 bands [a|p|r]",
     "concat_hg_all": "Concatenated HG, ungated [a|p|r]",
 }
 # SRC is no longer hard-coded. It is read from the decomposition's own meta.json,

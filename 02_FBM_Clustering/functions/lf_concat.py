@@ -22,6 +22,11 @@ Three feature sets, mirroring the per-condition tracks:
     concat_hg     1 x 900   HG line (70-150 Hz mean) per condition, stitched
     concat_rawds  15 x 90   15 canonical bands x 30 time bins per condition (the
                             SAME grid stage-04 pooling matches roles on)
+    concat_bands5 5 x 90    the SAME grid coarsened to 5 bands, each a union of
+                            contiguous 15-band edges. Averages the ORIGINAL frequency
+                            bins, so it is bandwidth-weighted rather than a mean of
+                            pre-averaged bands - and it is the same builder with
+                            different edges, not a second code path.
     concat_raw    129 x 900 full-resolution ERSP, stitched (baseline; very high-dim)
 
 Feed the flattened matrix to lf_cluster_run.fit_and_save(feature_set='concat_*').
@@ -42,7 +47,8 @@ import pandas as pd
 
 from functions.lf_dataset import (prepare_dataset, is_non_neural_electrode,
                                   is_micro_electrode, is_grid_electrode)
-from functions.lf_features import FREQ_BANDS_15_TO_400HZ, downsample_ersp_to_bands
+from functions.lf_features import (FREQ_BANDS_15_TO_400HZ, FREQ_BANDS_5_TO_400HZ,
+                                   downsample_ersp_to_bands)
 from functions.lf_hg import build_hg_feature_matrix
 
 DEFAULT_CONDITIONS: Tuple[str, ...] = ("audio", "picture", "reading")
@@ -234,6 +240,28 @@ def concat_rawds_features(X_concat: np.ndarray, *, n_blocks: int = 3,
     return np.stack(out).reshape(n, -1).astype(np.float32)
 
 
+def concat_bands5_features(X_concat: np.ndarray, *, n_blocks: int = 3,
+                           fmax_hz: float = DEFAULT_FMAX,
+                           time_bins_out: int = DEFAULT_DS_TIME_BINS) -> np.ndarray:
+    """(n, 5 * n_blocks*30): concat_rawds coarsened from 15 bands to 5.
+
+    SAME BUILDER, DIFFERENT EDGES. This is concat_rawds_features with
+    FREQ_BANDS_5_TO_400HZ, which matters for two reasons. It averages the ORIGINAL
+    frequency bins rather than averaging the 15 pre-averaged bands, so a wide band is
+    weighted by the number of bins it actually contains instead of giving a 3 Hz
+    sub-band the same say as a 40 Hz one. And every 5-band edge lands on a 15-band
+    edge, so the two feature sets are nested and any difference between them is the
+    resolution and nothing else.
+
+    Why five and why these edges is argued at FREQ_BANDS_5_TO_400HZ; the short version
+    is that it is indistinguishable from all 15 bands on anatomical coherence at a
+    third of the features, while four bands is measurably worse.
+    """
+    return concat_rawds_features(X_concat, n_blocks=n_blocks,
+                                 freq_band_edges=FREQ_BANDS_5_TO_400HZ,
+                                 fmax_hz=fmax_hz, time_bins_out=time_bins_out)
+
+
 def concat_raw_features(X_concat: np.ndarray) -> np.ndarray:
     """(n, n_freq * 3*n_time): full-resolution flatten. Very high-dimensional —
     the per-condition `raw` track already scores worst on silhouette; kept as the
@@ -250,8 +278,10 @@ def concat_feature_names(kind: str, *, n_blocks: int = 3,
         # concat_hg_all is the SAME representation on the ungated electrode set, so the
         # columns are identical and every downstream reshape keeps working.
         return [f"{c}|hg|t{t:03d}" for c in conds for t in range(n_time_block)]
-    if kind == "concat_rawds":
-        bands = [f"{int(lo)}-{int(hi)}" for lo, hi in FREQ_BANDS_15_TO_400HZ]
+    if kind in ("concat_rawds", "concat_bands5"):
+        edges = (FREQ_BANDS_5_TO_400HZ if kind == "concat_bands5"
+                 else FREQ_BANDS_15_TO_400HZ)
+        bands = [f"{int(lo)}-{int(hi)}" for lo, hi in edges]
         return [f"{c}|{b}Hz|t{t:02d}" for b in bands for c in conds
                 for t in range(DEFAULT_DS_TIME_BINS)]
     if kind == "concat_raw":
