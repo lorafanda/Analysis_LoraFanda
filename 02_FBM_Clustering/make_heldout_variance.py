@@ -154,6 +154,16 @@ def main() -> int:
     ap.add_argument("--feature-set", nargs="+", default=["concat_hg", "concat_rawds"])
     ap.add_argument("--ks", nargs="+", type=int, default=DEFAULT_KS)
     ap.add_argument("--spaces", choices=["home", "unit", "both"], default="both")
+    # three parallel kernels each sweep ONE method and write their own files, so they
+    # can never race on a shared CSV
+    ap.add_argument("--method", nargs="+", default=None,
+                    choices=["kmeans", "hierarchical", "cnmf"])
+    ap.add_argument("--tag", default=None, help="suffix for the output files")
+    # SOURCES below pins the OLD run ids. After the cohort is rebuilt those runs no
+    # longer describe the data, so the sweep reads X straight from the dataset cache
+    # instead and depends on no run at all.
+    ap.add_argument("--from-cache", default=None,
+                    help="dataset cache dir, e.g. outputs/_dataset/concat_source_v3")
     ap.add_argument("--row-folds", type=int, default=4)
     ap.add_argument("--col-folds", type=int, default=4)
     ap.add_argument("--n-iter", type=int, default=150)
@@ -161,13 +171,31 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
 
     passes = {"home": ["home"], "unit": ["unit-norm"], "both": ["home", "unit-norm"]}[a.spaces]
+    methods = a.method or ORDER
+    tag = a.tag or ("_".join(methods) if a.method else "all")
+    cached = None
+    if a.from_cache:
+        import lf_concat as CC
+        inp = (ROOT.parent / "01_FBM_Analysis" / "outputs" / "04_ersp_LM_RAWONLY")
+        df_c, Xc = CC.build_concat_dataset(inp, conditions=("audio", "picture", "reading"),
+                                           require_high_activity=True,
+                                           cache_dir=Path(a.from_cache), verbose=False)
+        cached = {"concat_hg": CC.concat_hg_features(Xc, hg_band=(70.0, 150.0), fmax=500.0),
+                  "concat_rawds": CC.concat_rawds_features(Xc, n_blocks=3, fmax_hz=500.0)}
+        print(f"X from cache {a.from_cache}: "
+              + "  ".join(f"{k}={v.shape}" for k, v in cached.items()))
+
     allrows = []
     for fs in a.feature_set:
-        run = SOURCES[fs]
-        X0 = np.load(run / "X_train.npy").astype(float)
+        if cached is not None:
+            X0 = np.asarray(cached[fs], dtype=float)
+            run = Path(a.from_cache)
+        else:
+            run = SOURCES[fs]
+            X0 = np.load(run / "X_train.npy").astype(float)
         print(f"\n=== {fs}  X={X0.shape}  (source {run.name}) ===")
         for scheme in passes:
-            for m in ORDER:
+            for m in methods:
                 space = MS.SPACE[m] if scheme == "home" else "unit-norm"
                 A = MS.unit(X0) if space == "unit-norm" else X0
                 print(f"  {LABEL[m]:<11} scheme={scheme:<9} space={space}")
@@ -177,13 +205,13 @@ def main() -> int:
                 d["method_label"], d["space"], d["scheme"] = LABEL[m], space, scheme
                 d["n"], d["p"] = X0.shape
                 allrows.append(d)
-                pd.concat(allrows).to_csv(OUT / "part2_heldout_variance.csv", index=False)
+                pd.concat(allrows).to_csv(OUT / f"heldout_variance_{tag}.csv", index=False)
 
     df = pd.concat(allrows)
-    df.to_csv(OUT / "part2_heldout_variance.csv", index=False)
+    df.to_csv(OUT / f"heldout_variance_{tag}.csv", index=False)
     g = (df.groupby(["feature_set", "scheme", "method_label", "k"])["var_explained"]
            .agg(["mean", "std", "count"]).reset_index())
-    g.to_csv(OUT / "part2_heldout_variance_summary.csv", index=False)
+    g.to_csv(OUT / f"heldout_variance_summary_{tag}.csv", index=False)
 
     # where does each curve peak, and does it turn over at all?
     peaks = []
@@ -195,9 +223,10 @@ def main() -> int:
                           at_k8=float(s.loc[s.k == 8, "mean"].iloc[0]) if (s.k == 8).any() else None,
                           monotone=bool(s["mean"].is_monotonic_increasing),
                           k_max_tested=int(s["k"].max())))
-    pd.DataFrame(peaks).to_csv(OUT / "part2_heldout_peaks.csv", index=False)
-    (OUT / "part2_meta.json").write_text(json.dumps(dict(
+    pd.DataFrame(peaks).to_csv(OUT / f"heldout_peaks_{tag}.csv", index=False)
+    (OUT / f"heldout_meta_{tag}.json").write_text(json.dumps(dict(
         ks=a.ks, row_folds=a.row_folds, col_folds=a.col_folds, n_iter=a.n_iter,
+        methods=methods,
         feature_sets=a.feature_set, spaces=a.spaces,
         sources={k: str(v.relative_to(CLUST)) for k, v in SOURCES.items()
                  if k in a.feature_set},
