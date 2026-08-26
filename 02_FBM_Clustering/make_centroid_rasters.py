@@ -67,7 +67,8 @@ CLUST = ROOT / "outputs" / "clustering"
 
 # The runs asked for: convex NMF, k-means and Ward, on both concat feature sets.
 METHODS = ("cnmf", "kmeans", "hierarchical")
-FEATURE_SETS = ("concat_hg", "concat_rawds", "concat_bands5", "concat_hg_all")
+FEATURE_SETS = ("concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z",
+                "concat_hg_all")
 
 COND_NAMES = ("audio", "picture", "reading")
 # The disagreement dot: dark grey, fading in from fully transparent. It sits ON the
@@ -77,6 +78,21 @@ DOT_RGB = (0.20, 0.20, 0.20)
 DOT_MAX_ALPHA = 0.92
 DOT_FILL = 0.62
 CMAP = "bwr"                   # the project's diverging map for signed dB
+
+
+FSET_NOW = "concat_rawds"       # set per run before anything is drawn
+
+
+def units_for(feature_set: str) -> str:
+    """The unit a value in this feature set is in.
+
+    concat_bands5z divides each band by the cohort's spread in it, so its values are
+    standard deviations WITHIN A BAND, not decibels. The colour limits auto-derive from
+    the data and so are right either way; it is the axis labels that would be wrong,
+    and a mislabelled unit on an otherwise plausible figure is the hardest kind of
+    error to catch afterwards.
+    """
+    return "SD" if str(feature_set).endswith("z") else "dB"
 
 
 def newest_per_track(a):
@@ -200,7 +216,7 @@ def raster_line(out_png, Xc, strength_c, vlim, n_blocks, cid, sname):
     ax.set_title(f"cluster {cid} — every sample", fontsize=8.5, loc="left", pad=4)
     cax = fig.add_subplot(gs[0, 1])
     cb = fig.colorbar(im, cax=cax)
-    cb.set_label("HG (dB)", fontsize=6.5)
+    cb.set_label(f"HG ({units_for(FSET_NOW)})", fontsize=6.5)
     cb.ax.tick_params(labelsize=6, length=2, width=0.5)
     fig.text(0.13, 0.045, "dashed = GO cue (50% of each condition)  ·  "
                           "solid = condition boundary",
@@ -309,7 +325,7 @@ def centroid_dotted(out_png, Xc, vlim, grid, cid, sd_lo, sd_hi):
 
     cax = fig.add_subplot(gs[0, 1])
     cb = fig.colorbar(im, cax=cax)
-    cb.set_label("power (dB)", fontsize=6.5)
+    cb.set_label(f"power ({units_for(FSET_NOW)})", fontsize=6.5)
     cb.ax.tick_params(labelsize=6, length=2, width=0.5)
 
     # The legend is the dot itself fading in, on white, so the reader compares like
@@ -329,7 +345,7 @@ def centroid_dotted(out_png, Xc, vlim, grid, cid, sd_lo, sd_hi):
     axl.set_xticks([0, steps - 1])
     axl.set_xticklabels([f"{sd_lo:.2f}", f"{sd_hi:.2f}"], fontsize=6)
     axl.tick_params(length=2, width=0.5, pad=1.5, colors="#68727d")
-    axl.set_xlabel("within-cluster SD across electrodes (dB), one scale for every "
+    axl.set_xlabel(f"within-cluster SD across electrodes ({units_for(FSET_NOW)}), one scale for every "
                    "cluster and run — darker = less agreement",
                    fontsize=6, labelpad=1.5, color="#68727d")
     for sp in axl.spines.values():
@@ -382,13 +398,18 @@ def main() -> int:
         if not line and grid is None:
             print(f"\n  {tag}: no usable feature grid, skipped")
             continue
+        global FSET_NOW
+        FSET_NOW = feature_set
         sd_lo, sd_hi = (0.0, 1.0) if line else sd_scale(feature_set, all_targets)
-        detail = ("sorted by %s" % sname if line
-                  else "dots over SD %.2f-%.2f dB, pooled across this feature set"
-                       % (sd_lo, sd_hi))
+        # an f-string, not % concatenation: splicing units_for() into the middle left
+        # the % binding to the LAST literal, which carries no format specifiers, so it
+        # parsed cleanly and raised only when a heatmap run was actually reached
+        detail = (f"sorted by {sname}" if line
+                  else f"dots over SD {sd_lo:.2f}-{sd_hi:.2f} "
+                       f"{units_for(feature_set)}, pooled across this feature set")
         out_dir = rd / "cluster_rasters"
         print(f"\n  {tag}/{rd.name}: {X.shape[0]} samples x {X.shape[1]} features, "
-              f"K={len(ids)}, colour +/-{vlim:g} dB, {detail}")
+              f"K={len(ids)}, colour +/-{vlim:g} {units_for(feature_set)}, {detail}")
 
         for cid in ids:
             m = labels == cid

@@ -27,6 +27,10 @@ Three feature sets, mirroring the per-condition tracks:
                             bins, so it is bandwidth-weighted rather than a mean of
                             pre-averaged bands - and it is the same builder with
                             different edges, not a second code path.
+    concat_bands5z 5 x 90   the same five bands, each z-scored to equal weight. The
+                            single biggest lever in the feature definition: raw against
+                            z-scored changes the partition more (ARI 0.37) than changing
+                            the algorithm does.
     concat_raw    129 x 900 full-resolution ERSP, stitched (baseline; very high-dim)
 
 Feed the flattened matrix to lf_cluster_run.fit_and_save(feature_set='concat_*').
@@ -262,6 +266,44 @@ def concat_bands5_features(X_concat: np.ndarray, *, n_blocks: int = 3,
                                  fmax_hz=fmax_hz, time_bins_out=time_bins_out)
 
 
+def concat_bands5z_features(X_concat: np.ndarray, *, n_blocks: int = 3,
+                            fmax_hz: float = DEFAULT_FMAX,
+                            time_bins_out: int = DEFAULT_DS_TIME_BINS) -> np.ndarray:
+    """concat_bands5 with each band z-scored to equal weight across the cohort.
+
+    WHAT THIS FIXES. Euclidean distance has no idea that 1/f exists. In concat_rawds the
+    four lowest of fifteen bands hold 55% of the total sum of squares, and in
+    concat_bands5 the 1-20 Hz band alone holds 44%, so k-means spends most of its budget
+    on low-frequency power whether or not that is where the structure is. Measured: the
+    partition follows 8-13 / 13-20 / 4-8 Hz when the features are raw, and 270-320 /
+    170-220 / 220-270 Hz once the bands are equalised.
+
+    HOW BIG THE EFFECT IS. Raw against z-scored gives ARI 0.37 on the same electrodes at
+    the same K - a LARGER change than swapping the algorithm (k-means against Ward and
+    convex NMF agree at 0.25-0.36). Normalisation is not a detail here; it is the biggest
+    single lever in the feature definition, which is why it gets its own feature set
+    rather than a flag on another one.
+
+    ONE MEAN AND ONE SD PER BAND, over every electrode, condition and time bin - a
+    COHORT-LEVEL transform, so it is deterministic given the cohort and identical for
+    every electrode. Per-electrode z-scoring would be a different thing entirely: it
+    would erase how strongly a contact responds, which is a large part of what
+    distinguishes the clusters.
+
+    THE UNITS ARE NO LONGER dB. Values are standard deviations within a band, so a
+    centroid heatmap of this feature set must not be read against a dB scale bar.
+    """
+    X = concat_bands5_features(X_concat, n_blocks=n_blocks, fmax_hz=fmax_hz,
+                               time_bins_out=time_bins_out).astype(np.float64)
+    n_cols = n_blocks * time_bins_out
+    n_bands = X.shape[1] // n_cols
+    for b in range(n_bands):
+        sl = slice(b * n_cols, (b + 1) * n_cols)
+        blk = X[:, sl]
+        X[:, sl] = (blk - blk.mean()) / max(blk.std(), 1e-12)
+    return X.astype(np.float32)
+
+
 def concat_raw_features(X_concat: np.ndarray) -> np.ndarray:
     """(n, n_freq * 3*n_time): full-resolution flatten. Very high-dimensional —
     the per-condition `raw` track already scores worst on silhouette; kept as the
@@ -278,8 +320,10 @@ def concat_feature_names(kind: str, *, n_blocks: int = 3,
         # concat_hg_all is the SAME representation on the ungated electrode set, so the
         # columns are identical and every downstream reshape keeps working.
         return [f"{c}|hg|t{t:03d}" for c in conds for t in range(n_time_block)]
-    if kind in ("concat_rawds", "concat_bands5"):
-        edges = (FREQ_BANDS_5_TO_400HZ if kind == "concat_bands5"
+    if kind in ("concat_rawds", "concat_bands5", "concat_bands5z"):
+        # bands5z is bands5 rescaled, so the columns are identical and every reshape,
+        # grid and centroid renderer downstream keeps working unchanged
+        edges = (FREQ_BANDS_5_TO_400HZ if kind.startswith("concat_bands5")
                  else FREQ_BANDS_15_TO_400HZ)
         bands = [f"{int(lo)}-{int(hi)}" for lo, hi in edges]
         return [f"{c}|{b}Hz|t{t:02d}" for b in bands for c in conds

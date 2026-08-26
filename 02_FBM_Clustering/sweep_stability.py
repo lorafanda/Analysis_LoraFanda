@@ -64,9 +64,11 @@ CLUST = ROOT / "outputs" / "clustering"
 # re-publish does not leave this pointing at a superseded id.
 NEW_CONCAT_TRACKS = [
     ("cnmf", "concat_hg"), ("cnmf", "concat_rawds"), ("cnmf", "concat_bands5"),
+    ("cnmf", "concat_bands5z"),
     ("kmeans", "concat_hg"), ("kmeans", "concat_rawds"), ("kmeans", "concat_bands5"),
+    ("kmeans", "concat_bands5z"),
     ("hierarchical", "concat_hg"), ("hierarchical", "concat_rawds"),
-    ("hierarchical", "concat_bands5"),
+    ("hierarchical", "concat_bands5"), ("hierarchical", "concat_bands5z"),
 ]
 
 

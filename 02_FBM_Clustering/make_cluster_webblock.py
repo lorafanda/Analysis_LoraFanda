@@ -50,6 +50,10 @@ FS_NOTE = {
                       "bins = 450 features &mdash; the same spectrum as "
                       "<code>concat_rawds</code> at a third of the width, each band a "
                       "union of contiguous 15-band edges"),
+    "concat_bands5z": ("the same 5 bands with each one z-scored to equal weight "
+                       "&mdash; <b>units are SD within a band, not dB</b>. Raw against "
+                       "z-scored changes the partition more (ARI 0.37) than changing "
+                       "the algorithm does"),
     "concat_hg_all": "high gamma, responsiveness gate LIFTED",
 }
 
@@ -74,7 +78,7 @@ def discover():
             out.append((d, json.loads(f.read_text())))
     # concat_hg before concat_rawds, which is the order the argument runs in
     rank = {"concat_hg": 0, "concat_rawds": 1, "concat_bands5": 2,
-            "concat_hg_all": 3}
+            "concat_bands5z": 3, "concat_hg_all": 4}
     out.sort(key=lambda t: rank.get(t[1].get("feature_set", ""), 9))
     return out
 

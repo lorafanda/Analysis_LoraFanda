@@ -38,6 +38,7 @@ FSET_LABELS = {
     # this dict is REJECTED at the command line rather than defaulted - which is the
     # right behaviour, and the reason this entry has to exist.
     "concat_bands5": "Concatenated 5 bands [a|p|r]",
+    "concat_bands5z": "Concatenated 5 bands, z-scored [a|p|r]",
     "concat_hg_all": "Concatenated HG, ungated [a|p|r]",
 }
 # SRC is no longer hard-coded. It is read from the decomposition's own meta.json,
