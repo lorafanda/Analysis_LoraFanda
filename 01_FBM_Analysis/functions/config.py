@@ -113,6 +113,7 @@ bad_channels_manual = {
 # populated. EL046 is the other way round. derive_wm_channels_from_lookup()
 # picks by CONTENT, not by filename; these entries only say which folder.
 LOOKUP_ANATOMY_PATIENTS = {"EL046", "EL048"}
+LOOKUP_ANATOMY_PATIENTS = {}
 LOOKUP_ANATOMY_DIRS = {
     # the workbooks sit in raw/overview/, and the finder does not recurse -
     # pointing at raw/ gave "Lookup fallback failed" and no WM channels at all
@@ -134,8 +135,8 @@ LOOKUP_ANATOMY_DIRS = {
 # to the same channel; wm_indices_for_patient() logs how many of the requested
 # names were actually found, so a naming mismatch is visible, not silent.
 MANUAL_WM_CHANNELS = {
-    "PAT_6953": ["AD7", "AD8", "HPD4", "HPD5", "TPD5", "TPD6", "TPD7",
-                 "IPD8", "IPD9"],
+    # "PAT_6953": ["AD7", "AD8", "HPD4", "HPD5", "TPD5", "TPD6", "TPD7",
+    #              "IPD8", "IPD9"],
 }
 
 # Contacts flagged isOut=TRUE in the Lookup sit OUTSIDE the brain, so they are
@@ -285,10 +286,10 @@ PAT_PRESETS = {
     3390: dict(trig="PHOTO",  flip=True, time_range=(170, 1222), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3415: dict(trig="photo",  flip=False, time_range=(30, 1500),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3455: dict(trig="photo",  flip=False, time_range=(250, 1836), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
-    3965: dict(trig="x1",    flip=False, time_range=(40, 1295),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    3965: dict(trig="x1",    flip=True, time_range=(40, 1311),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3975: dict(trig="E2",    flip=False, time_range=(200, 1550), invalid_trials=[], trial_ids=["picture"]*50 + ["auditory"]*50 + ["reading"]*51, fake_trials=[], manual_trig="PAT_3975__FLM_all.tsv"),
     3780: dict(trig="X2",    flip=False, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig="PAT_3780_FLM_all.tsv"),
-    6953: dict(trig="X2",    flip=False, time_range=(188, 1180),     invalid_trials=[59,92], trial_ids=["picture"]*51 + ["auditory"]*65 + ["reading"]*53, fake_trials=[52, 59, 60, 62, 63,89,98, 113, 117,118,119,120], manual_trig=None),
+    6953: dict(trig="X2", flip=False, time_range=(189, 1182),     invalid_trials=[59,92], trial_ids=["picture"]*51 + ["auditory"]*60 + ["reading"]*53, fake_trials=[52, 59, 60, 62, 63,84+5,93+6,106+7,117,118,119,120], manual_trig=None), #92,93, 113, 117
 }
 
 # PAT_PRESETS is keyed by INT (3455) but patient_ids supplies STRINGS (PAT_3455),
@@ -314,7 +315,7 @@ EL_PRESETS = {
     "EL039": dict(trig="DC6", flip=True, time_range=(0, 1458),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL040": dict(trig="DC6", flip=True, time_range=(100, 1900), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL042": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*55 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
-    "EL043": dict(trig="DC6", flip=True, time_range=(260, 3710), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    "EL043": dict(trig="DC6", flip=True, time_range=(1810, 3710), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids= ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     # "EL043": dict(trig="DC6", flip=True, time_range=(31, 863), invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig=None),
     "EL044": dict(trig="DC6", flip=False, time_range=(2478, 4290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
     "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),

@@ -1,0 +1,3 @@
+feature_set,scheme,method_label,k_peak,peak,at_k8,monotone,k_max_tested
+concat_hg,home,Ward,30,0.5819369968425119,0.44931007248713134,True,30
+concat_rawds,home,Ward,30,0.441839305420317,0.31412948978301236,True,30

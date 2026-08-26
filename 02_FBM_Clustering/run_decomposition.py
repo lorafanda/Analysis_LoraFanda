@@ -52,10 +52,15 @@ COORDS = ROOT / "outputs" / "250_recon" / "fsaverage" / "coords" / "ALL_PATIENTS
 
 # Source of X for each feature set. The k-means run is used purely as the carrier
 # of X_train.npy and the electrode order; its cluster labels are not read.
-SOURCES = {
-    "concat_hg":    CLUST / "kmeans" / "concat_hg" / "runs" / "20260817_171544",
-    "concat_rawds": CLUST / "kmeans" / "concat_rawds" / "runs" / "20260817_171634",
-}
+#
+# RESOLVED AT RUN TIME, NOT PINNED. These used to name 20260817_171544 and
+# 20260817_171634 explicitly. After the cohort was rebuilt (concat_source_v4, 1693
+# electrodes) those runs still existed and still loaded, so this script silently fitted
+# the decomposition on the OLD 1266-electrode X while k-means and Ward had already moved
+# to the new one - and the mismatch only surfaced later, in the statistics script's
+# same-cohort assertion. The comment below about concat_hg_all already said pinning is
+# the drift lf_runs exists to prevent; it applies to all three.
+SOURCES: dict = {}
 # K per feature set. 7 for concat_hg is the established choice (knee of the
 # held-out curve is 5->6; 7 was validated in 236). concat_rawds gets its own
 # entry because it is a different feature space - do not inherit it silently.
@@ -63,7 +68,8 @@ KS_DEFAULT = {"concat_hg": 7, "concat_rawds": 7, "concat_hg_all": 7}
 
 # concat_hg_all has no run id until 237 has been run, so pinning it here would mean
 # editing this file after every rebuild - the drift lf_runs exists to prevent.
-FEATURE_SETS = sorted(set(SOURCES) | {"concat_hg_all"})
+FEATURE_SETS = ["concat_hg", "concat_hg_all", "concat_rawds"]
+DEFAULT_SETS = ["concat_hg", "concat_rawds"]
 
 
 def source_for(fset):
@@ -319,7 +325,7 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=None)
     ap.add_argument("--quick", action="store_true")
     a = ap.parse_args()
-    sets = a.feature_set or sorted(SOURCES)   # the default stays the two published sets
+    sets = a.feature_set or DEFAULT_SETS      # the default stays the two published sets
     metas = {}
     for fs in sets:
         metas[fs] = run(fs, a.k, a.quick)
