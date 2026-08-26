@@ -132,6 +132,36 @@ ENTRIES = [
                "diagonal blocks")],
     ),
     dict(
+        id="kiss-native",
+        label="Why the cNMF stability number was wrong",
+        q="The stability figure quoted for the convex-NMF runs was about half what it "
+          "should be. What was it actually measuring?",
+        body=[
+            "The resampler above refits each subsample and asks who lands together. "
+            "The question is <b>refits it with WHAT</b>.",
+            "It always refitted with <b>k-means</b>. On a k-means or Ward run that is "
+            "right by definition. On a convex-NMF run it was measuring <i>how "
+            "reproducibly k-means partitions the space the decomposition was fitted "
+            "in</i> &mdash; which is a different question &mdash; and it did it in the "
+            "wrong space as well, raw dB instead of the unit-normed space convex NMF "
+            "actually fits in.",
+            "Refitting with the run's own method changes the answer by a lot. At the "
+            "published K on <code>concat_hg</code>: <b>0.658 natively against 0.332</b>. "
+            "The old number sits below Hennig's 0.60 rule of thumb, which reads as "
+            "&ldquo;not a real cluster&rdquo;; the native one sits above it. Ward was "
+            "understated too, by about 0.07.",
+            "<b>The check that makes this a correction rather than just a different "
+            "number:</b> on a k-means run the native refit IS the old refit, so the two "
+            "must agree exactly &mdash; and they do, bit-identical at every K on both "
+            "feature sets. If they had not, the new estimator would have been wrong "
+            "somewhere and the disagreement on the cNMF runs would have proved nothing.",
+            "The old column is kept rather than overwritten. It is what was published, "
+            "and a number that silently changes meaning is worse than a number that is "
+            "wrong next to a number that is right.",
+        ],
+        figs=[],
+    ),
+    dict(
         id="kiss-distinctions",
         label="Three easy confusions",
         q="Threshold vs argmax, convex NMF vs semi-NMF, graded vs convex &mdash; "
@@ -231,7 +261,7 @@ def build() -> str:
                  f'<b>The question.</b> {e["q"]}</div>')
         for para in e["body"]:
             P.append(f'    <p style="margin:0 0 8px">{para}</p>')
-        for num, title, img, alt in e["figs"]:
+        for num, title, img, alt in e.get("figs", []):
             P.append(f"""
     <figure><div class="cap"><div class="fignum">FIG {num}</div>
       <h4>{title}</h4>
