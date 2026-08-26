@@ -70,8 +70,32 @@ GATED_COL, ADDED_COL = "#4a6fa5", "#b0b7be"
 # scatter uses the darker grey the existing FIG C.8 already uses for this population.
 ADDED_DOT = "#8e969e"
 RED, GREEN, GREY = "#c1121f", "#1b7837", "#c9ced4"
-PAL = ["#4a6fa5", "#c1121f", "#1b7837", "#8c564b", "#9467bd",
-       "#e08214", "#17a5b4", "#d64f9a"]
+# THE VISUALIZER'S PALETTE, not a parallel one. clustering_visualizer.html's
+# clusterRGB() spreads hues across THIS run's K rather than indexing a fixed table:
+#
+#     h = (360 * idx / K) / 360,  s = 0.62,  l = 0.52,  then HSL -> RGB
+#
+# so a cluster is the same colour in these figures, in the report and on the 3-D brain.
+# Transcribing the JS and comparing against colorsys across every hue at K = 7, 8, 11,
+# 12 and 30 gives an exact match on all of them, cluster 0 being (208, 57, 57).
+#
+# It also removes the reason this script used to die at K > 8: the old PAL held exactly
+# eight hex strings and PAL[j] ran off the end on the ninth cluster.
+import colorsys                                  # noqa: E402
+
+
+def cluster_col(idx: int, k: int):
+    """The colour clustering_visualizer.html paints cluster `idx` of `k`."""
+    return colorsys.hls_to_rgb(idx / max(k, 1), 0.52, 0.62)
+
+
+class _Pal:
+    """PAL[j] still works, but resolves against the CURRENT K."""
+    def __getitem__(self, j):
+        return cluster_col(int(j), K)
+
+
+PAL = _Pal()
 
 ORDER = ["kmeans", "hierarchical", "cnmf"]
 TAG = {"kmeans": "a", "hierarchical": "b", "cnmf": "c"}
@@ -99,10 +123,10 @@ def confidence(method, X, lab, run):
 
 
 def panel_A(ax, method, hv):
-    """Held-out variance vs K, bi-cross-validated. Marks K=8 and the peak."""
+    """Held-out variance vs K, bi-cross-validated. Marks the chosen K and the peak."""
     if hv is None or hv.empty:
         ax.text(.5, .5, "held-out variance not computed yet\n"
-                        "(make_heldout_variance.py --feature-set concat_hg_all)",
+                        f"(make_heldout_variance.py --feature-set {FSET})",
                 ha="center", va="center", fontsize=8, color=RED, transform=ax.transAxes)
         ax.set_xticks([]); ax.set_yticks([])
         ax.set_title("A · held-out variance vs K", fontsize=9.5, loc="left", color=INK)
@@ -122,14 +146,14 @@ def panel_A(ax, method, hv):
                             color=INK, alpha=0.12, lw=0)
             pk = s.loc[s["mean"].idxmax()]
             ax.axvline(K, color=RED, ls="--", lw=1.0)
-            ax.annotate(f"K=8\n{s.loc[s.k == K, 'mean'].iloc[0]:.3f}"
-                        if (s.k == K).any() else "K=8",
+            ax.annotate(f"K={K}\n{s.loc[s.k == K, 'mean'].iloc[0]:.3f}"
+                        if (s.k == K).any() else f"K={K}",
                         xy=(K, ax.get_ylim()[0]), fontsize=7, color=RED,
                         ha="center", va="bottom")
             if int(pk.k) != K:
                 ax.annotate(f"peak k={int(pk.k)}", xy=(pk.k, pk["mean"]),
-                            xytext=(4, 6), textcoords="offset points",
-                            fontsize=7, color=GREEN)
+                            xytext=(-6, -14), textcoords="offset points",
+                            ha="right", fontsize=7, color=GREEN)
     ax.set_xlabel("K (components / clusters)", fontsize=8.5)
     ax.set_ylabel("held-out variance explained", fontsize=8.5)
     ax.legend(fontsize=6.8, frameon=False, loc="lower right")
@@ -156,10 +180,10 @@ def panel_B1(axes, X, lab, nb):
         ax.axhline(0, color=MUTED, lw=0.5)
         ax.set_ylim(lo - 0.05 * (hi - lo), hi + 0.05 * (hi - lo))
         ax.set_xticks([])
-        if j:                                  # keep the dB scale on the first panel only
+        if j % 8:                              # dB scale on the first panel of each row
             ax.set_yticks([])
         ax.set_title(f"c{j}  n={int(sel.sum())}", fontsize=7.6, color=PAL[j], pad=2)
-        if j == 0:
+        if j % 8 == 0:
             ax.set_ylabel("dB", fontsize=7.5)
             ax.tick_params(labelsize=6.5, colors=MUTED)
         ax.spines[["top", "right"]].set_visible(False)
@@ -187,7 +211,7 @@ def panel_B2(axes, xyz, lab):
         # bottom-left, not centred-top: centred it sat on the electrodes themselves
         ax.text(0.02, 0.02, f"n={int(sel.sum())}", transform=ax.transAxes, ha="left",
                 va="bottom", fontsize=7.2, color=PAL[j])
-        if j == 0:
+        if j % 8 == 0:
             ax.set_ylabel("sagittal", fontsize=6.8, color=MUTED)
 
 
@@ -263,18 +287,33 @@ def panel_E(ax, method, lopo, summ):
 
 
 def fig_c3(method, X, lab, xyz, nb, hv, lopo, summ, sep, sizes):
-    fig = plt.figure(figsize=(15.4, 12.2), dpi=170)
-    # top is low on purpose: the header is four wrapped lines and an earlier version
-    # let panel C's two-line title collide with it.
-    gs = GridSpec(3, K, figure=fig, height_ratios=[1.50, 0.90, 0.78],
+    # WRAPPING LAYOUT. This used to be GridSpec(3, K) - one column per cluster - which
+    # assumed K = 8. At K = 11 or 12 that is eleven very narrow columns, and the top row
+    # hard-coded its spans as 0:3 / 3:6 / 6:8. The cluster panels now wrap onto as many
+    # rows as they need, and the top row spans a fixed 12-column grid independent of K.
+    NC = 8                                        # clusters per row
+    nb1 = -(-K // NC)                             # ceil
+    nrows = 1 + nb1 * 2
+    fig = plt.figure(figsize=(15.4, 7.2 + 1.7 * nb1 * 2), dpi=170)
+    hr = [1.50] + [0.86] * nb1 + [0.60] * nb1
+    gs = GridSpec(nrows, NC * 3, figure=fig, height_ratios=hr,
                   hspace=0.62, wspace=0.30, left=0.05, right=0.98,
-                  top=0.800, bottom=0.035)
-    panel_A(fig.add_subplot(gs[0, 0:3]), method, hv)
+                  top=1.0 - 2.3 / (7.2 + 1.7 * nb1 * 2), bottom=0.035)
+    span = (NC * 3) // 3
+    panel_A(fig.add_subplot(gs[0, 0:span]), method, hv)
     vals, xlabel, ref, note = confidence(method, X, lab, RUNS[method])
-    panel_C(fig.add_subplot(gs[0, 3:6]), vals, lab, xlabel, ref, note)
-    panel_E(fig.add_subplot(gs[0, 6:8]), method, lopo, summ)
-    ax_b1 = [fig.add_subplot(gs[1, j]) for j in range(K)]
-    ax_b2 = [fig.add_subplot(gs[2, j]) for j in range(K)]
+    panel_C(fig.add_subplot(gs[0, span:2 * span]), vals, lab, xlabel, ref, note)
+    panel_E(fig.add_subplot(gs[0, 2 * span:]), method, lopo, summ)
+
+    def grid(row0):
+        out = []
+        for j in range(K):
+            r, c = divmod(j, NC)
+            out.append(fig.add_subplot(gs[row0 + r, c * 3:(c + 1) * 3]))
+        return out
+
+    ax_b1 = grid(1)
+    ax_b2 = grid(1 + nb1)
     panel_B1(ax_b1, X, lab, nb)
     panel_B2(ax_b2, xyz, lab)
     # Row captions placed from the axes' OWN positions - hard-coded y values put them
@@ -306,8 +345,9 @@ def head(fig, method, sep, sizes, summ, n_fallback):
                  x=0.05, y=0.988, ha="left", fontsize=16, color=INK)
     bits = [
         f"All three C.3 figures are drawn on the SAME {n} electrodes, "
-        f"{npat} patients, feature set concat_hg_all "
-        f"(ungated high gamma, 3 conditions x 300 bins). The three runs were checked "
+        f"{npat} patients, feature set {FSET} "
+        f"({'gate LIFTED' if FSET.endswith('_all') else 'gate applied'}, 3 conditions "
+        f"x 300 bins). The three runs were checked "
         f"to carry a bit-identical X_train in the identical electrode order, so any "
         f"difference between C.3a, C.3b and C.3c is the METHOD and nothing else.",
     ]
@@ -321,7 +361,8 @@ def head(fig, method, sep, sizes, summ, n_fallback):
     bits.append(
         "Panels D (anatomical coherence) and F (split-half replication) are dropped by "
         "request; they are reported as statistics instead. B3 (loading-weighted "
-        "glassbrain) is convex-NMF-only and needs a K=8 pyvista render that does not "
+        f"glassbrain) is convex-NMF-only and needs a K={K} pyvista render that does "
+        f"not "
         "exist, so it is not drawn for any method rather than for one.")
     fig.text(0.05, 0.958, "\n".join(textwrap.fill(b, width=168) for b in bits),
              fontsize=8.5, color=MUTED, va="top", linespacing=1.5)
@@ -362,7 +403,7 @@ def fig_c8(method, X, lab, is_gated, sizes, base_pct):
     # clusters (c3 at 119 and c4 at 54 overlapped illegibly). It lives in the bar panel
     # below, which has room for it; only the cluster id is kept here, staggered.
     lo, hi = ax.get_ylim()
-    for j, (cx, _) in enumerate(centres):
+    for j, (cx, _) in enumerate(centres):        # staggered: at K=12 they would collide
         ax.text(cx, hi - (hi - lo) * (0.015 + 0.055 * (j % 2)), f"c{j}", ha="center",
                 va="top", fontsize=8.4, color=PAL[j], fontweight="bold")
     ax.set_ylabel(xlabel, fontsize=9)
@@ -403,7 +444,7 @@ def fig_c8(method, X, lab, is_gated, sizes, base_pct):
                  f"what the responsiveness gate was removing",
                  x=0.055, y=0.985, ha="left", fontsize=15.5, color=INK)
     body = (
-        f"concat_hg_all IS the ungated set: {int(is_gated.sum())} electrodes would pass "
+        f"{FSET}: {int(is_gated.sum())} electrodes would pass "
         f"the responsiveness gate and {int((~is_gated).sum())} are present only because "
         f"it was lifted, so {base_pct:.1f}% added is the cohort baseline every cluster "
         f"is read against. A cluster far above that line is partly separating RESPONSIVE "
