@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -42,11 +43,24 @@ def newest(method, fset, pat="20260826_*"):
     return r[-1] if r else None
 
 
+def tracked_set():
+    """Every path git knows about.
+
+    EXISTING ON DISK IS NOT ENOUGH. The site fetches figures from raw.githubusercontent,
+    so a file that is present locally but never committed renders as a 404 - which is
+    exactly what the first version of this gallery shipped: S.1-S.4 happened to be
+    committed already and worked, S.5-S.14 existed here and did not.
+    """
+    out = subprocess.run(["git", "-C", str(ROOT.parent), "ls-files"],
+                         capture_output=True, text=True)
+    return set(out.stdout.splitlines()) if out.returncode == 0 else None
+
+
 def esc(s):
     return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def build(peak):
+def build(peak, tracked=None):
     R = {(m, f): newest(m, f) for m in ("kmeans", "hierarchical", "cnmf")
          for f in ("concat_hg", "concat_rawds")}
     KH, KR = peak.get("concat_hg", 11), peak.get("concat_rawds", 12)
@@ -262,10 +276,13 @@ def build(peak):
          "from.</p>",
          "    </div>"]
 
-    missing = []
+    missing, untracked = [], []
     for fid, num, title, run, sub, bullets, alt in items:
         if run is None or not (run / sub).exists():
             missing.append(f"{fid}: {sub}")
+            continue
+        if tracked is not None and rel(run, sub) not in tracked:
+            untracked.append((fid, num, rel(run, sub)))
             continue
         li = "".join(f"<li>{b}</li>" for b in bullets)
         rid = f"{run.relative_to(CLUST).as_posix()}"
@@ -281,8 +298,12 @@ def build(peak):
         P.append('    <div class="method" style="border-left:4px solid #c1121f">'
                  "<b>Not generated yet:</b> " +
                  ", ".join(f"<code>{esc(m)}</code>" for m in missing) + "</div>")
+    if untracked:
+        P.append('    <div class="method" style="border-left:4px solid #c1121f">'
+                 "<b>Generated but not committed</b>, so the page cannot fetch them: " +
+                 ", ".join(f"<code>{esc(u[1])}</code>" for u in untracked) + "</div>")
     P.append(END)
-    return "\n".join(P), missing
+    return "\n".join(P), missing, untracked
 
 
 def main() -> int:
@@ -292,7 +313,10 @@ def main() -> int:
 
     pk = CLUST / "bsf_comparison" / "peak_k.json"
     peak = json.loads(pk.read_text()) if pk.exists() else {}
-    html, missing = build(peak)
+    tracked = tracked_set()
+    if tracked is None:
+        print("  (not a git checkout - skipping the tracked check)")
+    html, missing, untracked = build(peak, tracked)
 
     out = CLUST / "statistics" / "webblock_s2gallery.html"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -300,7 +324,13 @@ def main() -> int:
     n = html.count("<figure")
     print(f"-> {out}   ({n} figures, {len(html):,} chars)")
     for m in missing:
-        print(f"   MISSING {m}")
+        print(f"   MISSING   {m}")
+    for fid, num, path in untracked:
+        print(f"   UNTRACKED {num}  {path}")
+    if untracked:
+        print("\n  commit these or the site will 404 on them:")
+        for _, _, path in untracked:
+            print(f"    {path}")
     if not a.insert:
         print("\n(pass --insert to splice it into the site)")
         return 0
