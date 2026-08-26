@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, FancyArrowPatch
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent / "E5_sweep_stability.png"
+OUT = (Path(__file__).resolve().parent / "outputs" / "clustering"
+       / "explainers" / "E5_sweep_stability.png")
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 BLUE, RED, GREEN, ORANGE = "#4a6fa5", "#c1121f", "#1b7837", "#e08214"
 MONO = {"family": "DejaVu Sans Mono"}
@@ -146,6 +147,7 @@ ax.text(0.4, -1.01, "measure_cluster_stability.py refits the decomposition itsel
         "is a different statistic and belongs in its own column.",
         fontsize=8.8, color=RED)
 
+OUT.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(OUT, dpi=170, bbox_inches="tight", facecolor="white")
 print(f"cluster A {jac[0]:.3f}   cluster B {jac[1]:.3f}")
 print(f"-> {OUT}")

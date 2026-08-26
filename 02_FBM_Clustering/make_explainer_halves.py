@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, Rectangle
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent / "E4_what_the_halves_are.png"
+OUT = (Path(__file__).resolve().parent / "outputs" / "clustering"
+       / "explainers" / "E4_what_the_halves_are.png")
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 BLUE, RED, GREEN, ORANGE = "#4a6fa5", "#c1121f", "#1b7837", "#e08214"
 MONO = {"family": "DejaVu Sans Mono"}
@@ -176,5 +177,6 @@ ax.text(9.6, 0.68, "The cohort did not really triple. Two thirds of it is the sa
 ax.text(9.6, 0.16, "EL033 checks out exactly: 74 real channels × 3 conditions × 3 files = 666 .npy",
         fontsize=8.4, color=MUTED)
 
+OUT.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(OUT, dpi=170, bbox_inches="tight", facecolor="white")
 print(f"-> {OUT}")

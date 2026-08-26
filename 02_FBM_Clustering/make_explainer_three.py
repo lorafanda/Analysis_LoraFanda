@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Polygon
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent / "E6_three_distinctions.png"
+OUT = (Path(__file__).resolve().parent / "outputs" / "clustering"
+       / "explainers" / "E6_three_distinctions.png")
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 BLUE, RED, GREEN, ORANGE, PURPLE = "#4a6fa5", "#c1121f", "#1b7837", "#e08214", "#5b2c83"
 COMP = [PURPLE, BLUE, GREEN]
@@ -208,6 +209,7 @@ ax.text(0.4, 0.28, "And semi-NMF is graded WITHOUT being convex — which makes 
         "test of whether the convex constraint buys anything beyond the graded loadings.",
         fontsize=9.2, color=PURPLE)
 
+OUT.parent.mkdir(parents=True, exist_ok=True)
 fig.savefig(OUT, dpi=165, bbox_inches="tight", facecolor="white")
 print(f"argmax sizes {sizes_a} total {sum(sizes_a)}   threshold sizes {sizes_t} total {sum(sizes_t)}")
 print(f"-> {OUT}")
