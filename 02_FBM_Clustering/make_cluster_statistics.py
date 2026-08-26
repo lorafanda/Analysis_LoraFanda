@@ -82,7 +82,7 @@ GATED_FSET = "concat_hg"
 import lf_runs as LR                            # noqa: E402
 RUNS: dict = {}
 GATED_RUN = None
-LABEL = {"kmeans": "k-means  (BSF)", "hierarchical": "Ward", "cnmf": "convex NMF"}
+LABEL = {"kmeans": "k-means", "hierarchical": "Ward", "cnmf": "convex NMF"}
 ORDER = ["kmeans", "hierarchical", "cnmf"]
 
 

@@ -49,10 +49,10 @@ OUT = ROOT / "outputs" / "clustering" / "bsf_comparison"
 INK, MUTED = "#1b232c", "#68727d"
 RED, GREEN = "#c1121f", "#1b7837"
 MCOL = {"k-means": "#4a6fa5", "Ward": "#e08214", "convex NMF": "#5b2c83"}
-K_MARK = 8
-FS_LABEL = {"concat_hg": "concat_hg  ·  SBSF cohort  ·  high gamma, gate APPLIED",
-            "concat_rawds": "concat_rawds  ·  same 1266 electrodes  ·  15 bands x time",
-            "concat_hg_all": "concat_hg_all  ·  BSF cohort  ·  gate LIFTED (Part 1)"}
+K_MARK = 8                       # overwritten per feature set from peak_k.json
+FS_LABEL = {"concat_hg": "concat_hg  ·  high gamma, gate APPLIED",
+            "concat_rawds": "concat_rawds  ·  same electrodes  ·  15 bands x time",
+            "concat_hg_all": "concat_hg_all  ·  gate LIFTED"}
 SCHEME_LABEL = {"home": "each method in its HOME space — compare SHAPE, not height",
                 "unit-norm": "every method in UNIT-NORM — heights comparable"}
 
@@ -73,7 +73,7 @@ def one(ax, sub, title, show_legend):
         if not mono:
             ax.plot([pk.k], [pk["mean"]], marker="v", ms=7, color=c, zorder=4)
     ax.axvline(K_MARK, color=RED, ls="--", lw=1.0, zorder=1)
-    ax.annotate("K=8", xy=(K_MARK, ax.get_ylim()[0]), xytext=(2, 2),
+    ax.annotate(f"K={K_MARK}", xy=(K_MARK, ax.get_ylim()[0]), xytext=(2, 2),
                 textcoords="offset points", fontsize=7.4, color=RED)
     ax.set_xlabel("K  (components / clusters)", fontsize=8.5)
     ax.set_ylabel("held-out variance explained", fontsize=8.5)
@@ -86,30 +86,118 @@ def one(ax, sub, title, show_legend):
     txt = []
     for ml, kp, pv, mono, v8 in sorted(peaks):
         turn = f"peak k={kp}" if not mono else f"still rising at k={kp}"
-        txt.append(f"{ml:<11} K=8 {v8:.3f}   {turn} ({pv:.3f})")
+        txt.append(f"{ml:<11} K={K_MARK} {v8:.3f}   {turn} ({pv:.3f})")
     ax.text(0.015, 0.975, "\n".join(txt), transform=ax.transAxes, va="top",
             fontsize=6.8, color=INK, linespacing=1.45, family="DejaVu Sans Mono",
             bbox=dict(facecolor="white", alpha=0.82, lw=0, pad=2.4))
     return peaks
 
 
+def _krange(ks):
+    """5..30, rather than twenty-six comma-separated integers."""
+    ks = sorted(set(int(k) for k in ks))
+    if len(ks) > 3 and ks == list(range(ks[0], ks[-1] + 1)):
+        return f"{ks[0]}..{ks[-1]} in steps of 1"
+    return ", ".join(str(k) for k in ks)
+
+
+def _turnovers(df, fsets, schemes):
+    """How many curves turn over inside the range - WITHOUT drawing anything.
+
+    The caption quotes this number, and the caption has to be wrapped before the
+    figure can be sized, so it cannot wait for the axes to exist.
+    """
+    tot = turn = 0
+    for fs in fsets:
+        for sc in schemes:
+            sub = df[(df.feature_set == fs) & (df.scheme == sc)]
+            for _, d in sub.groupby("method_label"):
+                m = d.groupby("k")["var_explained"].mean().sort_index()
+                tot += 1
+                turn += 0 if m.is_monotonic_increasing else 1
+    return turn, tot
+
+
 def main() -> int:
-    f = OUT / "part2_heldout_variance.csv"
+    # 249 merges the three sweeps into heldout_variance_ALL.csv. PREFER IT: the older
+    # part2_heldout_variance.csv is the 25-Aug sweep on the pre-fix 1266-electrode
+    # cohort, and reading it here was the last place a stale cohort still reached the
+    # site. Kept as the fallback so tab 07's own Part 2 figure can still be rebuilt.
+    f = OUT / "heldout_variance_ALL.csv"
+    new = f.exists()
+    if not new:
+        f = OUT / "part2_heldout_variance.csv"
     if not f.exists():
         raise SystemExit("run make_heldout_variance.py first")
     df = pd.read_csv(f)
-    meta = json.loads((OUT / "part2_meta.json").read_text()) \
-        if (OUT / "part2_meta.json").exists() else {}
+    print(f"reading {f.name}  ({df.n.iloc[0]} electrodes, "
+          f"K={df.k.min()}..{df.k.max()}, schemes: {sorted(set(df.scheme))})")
+
+    # K is no longer one number for the whole figure: each feature set is cut at its
+    # OWN convex-NMF peak, which 249 writes here.
+    pkf = OUT / "peak_k.json"
+    PEAK = json.loads(pkf.read_text()) if (new and pkf.exists()) else {}
+
+    # one meta per --tag; they agree on folds / n_iter / ks
+    meta = {}
+    for m in (("cnmf", "kmeans", "hierarchical") if new else ()):
+        g = OUT / f"heldout_meta_{m}.json"
+        if g.exists():
+            meta = json.loads(g.read_text())
+            break
+    if not meta and (OUT / "part2_meta.json").exists():
+        meta = json.loads((OUT / "part2_meta.json").read_text())
 
     fsets = [x for x in ("concat_hg", "concat_rawds") if x in set(df.feature_set)]
     schemes = [x for x in ("home", "unit-norm") if x in set(df.scheme)]
     if not fsets:
-        raise SystemExit("part 2 feature sets not present in the CSV yet")
+        raise SystemExit("feature sets not present in the CSV yet")
 
-    fig = plt.figure(figsize=(7.4 * len(schemes), 4.9 * len(fsets)), dpi=175)
+    n_turn, n_tot = _turnovers(df, fsets, schemes)
+    body = [
+        "Bi-cross-validation, not the electrode-only scheme. A block of ROWS and a "
+        "block of COLUMNS is held out; the method is fitted on the remaining block; "
+        "each held-out electrode's loadings come from the TRAIN columns only and are "
+        "scored on the TEST columns. The loadings therefore never see the values they "
+        "are graded on, so an extra component has to earn its place. The curve "
+        "elsewhere on the site holds out electrodes only and refits them across the "
+        "full feature set, which makes it monotone in K by construction and useless "
+        "for choosing K or for comparing methods.",
+        "The only thing that differs between the three methods is how a held-out "
+        "electrode's loadings are obtained - NNLS against the components for convex "
+        "NMF, nearest centroid for k-means and Ward - which is exactly what "
+        "distinguishes them. Everything else, including the folds, is identical, and "
+        "all three read the same X_train, verified bit-identical.",
+        f"{meta.get('row_folds','?')}x{meta.get('col_folds','?')} folds, "
+        f"n_iter={meta.get('n_iter','?')} for convex NMF, "
+        f"K = {_krange(df.k)}, n={int(df.n.iloc[0])} electrodes. "
+        f"A triangle marks a curve that TURNS OVER inside the tested range; "
+        f"{n_turn} of {n_tot} do, and the dashed line is the K this feature set is "
+        f"cut at. A curve still rising at the largest K tested has not been shown to "
+        f"have an optimum - it has been shown that this range did not find one.",
+    ]
+
+    # SIZE THE FIGURE AROUND THE CAPTION rather than guessing a fraction of it. The
+    # old top=0.995-0.115*rows assumed the text wrapped over TWO columns; with only
+    # the home scheme swept there is one column, the same words wrap to twice as many
+    # lines, and the header ran straight through panel A1's title.
+    W = 7.4 * len(schemes)
+    cap = "\n".join(textwrap.fill(b, width=int(15.6 * W)) for b in body)
+    cap_in = (cap.count("\n") + 1) * 8.4 * 1.5 / 72 + 0.66        # + the suptitle
+    H = 4.9 * len(fsets) + cap_in
+
+    fig = plt.figure(figsize=(W, H), dpi=175)
     gs = GridSpec(len(fsets), len(schemes), figure=fig, hspace=0.46, wspace=0.22,
                   left=0.065, right=0.98,
-                  top=0.995 - 0.115 * len(fsets), bottom=0.075)
+                  top=1.0 - (cap_in + 0.34) / H, bottom=0.075)
+    fig.suptitle("FIG C.13   \u00b7   Held-out variance explained over components   "
+                 "\u00b7   three algorithms, one cohort",
+                 x=0.065, y=1.0 - 0.10 / H, ha="left", va="top",
+                 fontsize=15.5, color=INK)
+    fig.text(0.065, 1.0 - 0.52 / H, cap, fontsize=8.4, color=MUTED, va="top",
+             linespacing=1.5)
+
+    global K_MARK
     allpk = []
     for r, fs in enumerate(fsets):
         for c, sc in enumerate(schemes):
@@ -118,50 +206,26 @@ def main() -> int:
                 continue
             ax = fig.add_subplot(gs[r, c])
             n = int(sub["n"].iloc[0])
-            title = (f"{'AB'[c]}{r+1} · {FS_LABEL.get(fs, fs)}   n={n}\n"
+            K_MARK = int(PEAK.get(fs, 8))
+            title = (f"{'AB'[c]}{r+1} \u00b7 {FS_LABEL.get(fs, fs)}   n={n}\n"
                      f"{SCHEME_LABEL[sc]}")
-            for ml, kp, pv, mono, v8 in one(ax, sub, title, show_legend=(r == 0 and c == 0)):
+            for ml, kp, pv, mono, vm in one(ax, sub, title,
+                                            show_legend=(r == 0 and c == 0)):
                 allpk.append(dict(feature_set=fs, scheme=sc, method_label=ml,
-                                  k_peak=kp, peak=pv, at_k8=v8, monotone=mono))
+                                  k_peak=kp, peak=pv, k_mark=K_MARK, at_k_mark=vm,
+                                  monotone=mono))
 
     pk = pd.DataFrame(allpk)
-    pk.to_csv(OUT / "part2_peaks_figure.csv", index=False)
-
-    fig.suptitle("FIG C.13   ·   Held-out variance explained over components   ·   "
-                 "three algorithms, one cohort",
-                 x=0.065, y=0.995, ha="left", fontsize=15.5, color=INK)
-    n_mono = int((~pk.monotone).sum())
-    body = [
-        f"Bi-cross-validation, not the electrode-only scheme. A block of ROWS and a "
-        f"block of COLUMNS is held out; the method is fitted on the remaining block; "
-        f"each held-out electrode's loadings come from the TRAIN columns only and are "
-        f"scored on the TEST columns. The loadings therefore never see the values they "
-        f"are graded on, so an extra component has to earn its place. The curve already "
-        f"on the site holds out electrodes only and refits them across the full feature "
-        f"set, which makes it monotone in K by construction and useless for choosing K "
-        f"or comparing methods.",
-        f"The only thing that differs between the three methods is how a held-out "
-        f"electrode's loadings are obtained - NNLS against the components for convex "
-        f"NMF, nearest centroid for k-means and Ward - which is exactly what "
-        f"distinguishes them. Everything else, including the folds, is identical, and "
-        f"all three read the same X_train, verified bit-identical.",
-        f"{meta.get('row_folds','?')}x{meta.get('col_folds','?')} folds, "
-        f"n_iter={meta.get('n_iter','?')} for convex NMF, "
-        f"K = {', '.join(str(k) for k in meta.get('ks', []))}. "
-        f"A triangle marks a curve that TURNS OVER inside the tested range; "
-        f"{n_mono} of {len(pk)} curves do. A curve still rising at the largest K tested "
-        f"has not been shown to have an optimum - it has been shown that this range did "
-        f"not find one.",
-    ]
-    fig.text(0.065, 0.950, "\n".join(textwrap.fill(b, width=int(23 * len(schemes) * 4.6))
-                                     for b in body),
-             fontsize=8.4, color=MUTED, va="top", linespacing=1.5)
-    p = OUT / "C13_heldout_variance.png"
+    DEST = (ROOT / "outputs" / "clustering" / "statistics") if new else OUT
+    DEST.mkdir(parents=True, exist_ok=True)
+    pk.to_csv(DEST / "heldout_peaks_figure.csv", index=False)
+    p = DEST / "C13_heldout_variance.png"
     fig.savefig(p, dpi=175, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(pk.to_string(index=False))
     print(f"\n-> {p}")
     return 0
+
 
 
 if __name__ == "__main__":

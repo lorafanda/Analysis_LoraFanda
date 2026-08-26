@@ -1,0 +1,7 @@
+feature_set,scheme,method_label,k_peak,peak,k_mark,at_k_mark,monotone
+concat_hg,home,Ward,30,0.5819369968425119,11,0.49315686768793454,True
+concat_hg,home,convex NMF,11,0.551852076948371,11,0.551852076948371,False
+concat_hg,home,k-means,30,0.5889688728873199,11,0.5013348878546339,True
+concat_rawds,home,Ward,30,0.44183930542031696,12,0.35569868338076666,True
+concat_rawds,home,convex NMF,12,0.4627446691552228,12,0.4627446691552228,False
+concat_rawds,home,k-means,30,0.44023795305855695,12,0.36090014643493845,False

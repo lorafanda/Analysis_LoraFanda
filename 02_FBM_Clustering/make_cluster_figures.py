@@ -99,7 +99,7 @@ PAL = _Pal()
 
 ORDER = ["kmeans", "hierarchical", "cnmf"]
 TAG = {"kmeans": "a", "hierarchical": "b", "cnmf": "c"}
-LABEL = {"kmeans": "k-means  —  BSF", "hierarchical": "Ward", "cnmf": "convex NMF"}
+LABEL = {"kmeans": "k-means", "hierarchical": "Ward", "cnmf": "convex NMF"}
 # resolved at run time: the cohort was rebuilt, so pinned run ids are meaningless
 import lf_runs as LR                            # noqa: E402
 FSET = "concat_hg"
