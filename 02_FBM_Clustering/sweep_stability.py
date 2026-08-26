@@ -30,10 +30,19 @@ figure. If you want a genuinely cNMF-native stability, measure_cluster_stability
 refits the decomposition itself - that is a different statistic and belongs in its own
 column, not in place of this one.
 
+--native SETTLES THAT, without moving anything.
+Passing --native makes the resampler refit with the method the run was ACTUALLY fitted
+by, and in that method's own space - convex NMF unit-normed, k-means and Ward in raw dB.
+It writes to stability_by_k_native/ and stability_by_k_native.csv, ALONGSIDE the files
+above rather than over them, so the published k-means-resampler number keeps reproducing
+and the two can be shown side by side and labelled. On a k-means run the two are the same
+statistic and agreeing is the check that the wiring is right.
+
     python sweep_stability.py --run outputs/clustering/cnmf/concat_hg/runs/20260818_112939
     python sweep_stability.py --new-concat            # the six 2026-08 concat runs
     python sweep_stability.py --new-concat --n-runs 20   # faster, coarser
     python sweep_stability.py --new-concat --dry-run
+    python sweep_stability.py --new-concat --native --ks 11 12   # the native column
 """
 from __future__ import annotations
 
@@ -60,6 +69,38 @@ NEW_CONCAT_TRACKS = [
 ]
 
 
+def native_fit_fn(method: str, n_iter: int):
+    """A refit that matches how the run was actually produced.
+
+    THE SPACE IS PART OF THE METHOD. convex NMF fits unit-normed and X_train.npy is
+    raw dB, so a cnmf refit that skipped the normalisation would be measuring
+    something else again - a second wrong number rather than the right one.
+    """
+    if method == "cnmf":
+        import lf_decompose as LD
+
+        def fit(X_run, k, seed):
+            Xu = X_run / np.maximum(np.linalg.norm(X_run, axis=1, keepdims=True), 1e-12)
+            G = LD.convex_nmf(Xu, k, n_iter=n_iter, random_state=seed)[1]
+            return (G / np.maximum(G.sum(1, keepdims=True), 1e-12)).argmax(1)
+        return fit
+    if method == "hierarchical":
+        from sklearn.cluster import AgglomerativeClustering
+
+        def fit(X_run, k, seed):        # deterministic: the subsample is the only draw
+            return AgglomerativeClustering(n_clusters=k, linkage="ward").fit_predict(X_run)
+        return fit
+    return None                          # kmeans: the default IS native
+
+
+def method_of(rd: Path) -> str:
+    """The track a run dir belongs to - .../clustering/<method>/<fset>/runs/<id>."""
+    try:
+        return rd.resolve().relative_to(CLUST).parts[0]
+    except ValueError:
+        return rd.parent.parent.parent.name
+
+
 def newest(method: str, fset: str):
     base = CLUST / method / fset / "runs"
     if not base.is_dir():
@@ -68,7 +109,8 @@ def newest(method: str, fset: str):
     return runs[-1] if runs else None
 
 
-def sweep_one(rd: Path, ks, n_runs: int, frac: float, dry: bool) -> int:
+def sweep_one(rd: Path, ks, n_runs: int, frac: float, dry: bool,
+              native: bool = False, n_iter: int = 300) -> int:
     lbk = rd / "cluster_labels_by_k.csv"
     xtr = rd / "X_train.npy"
     if not lbk.exists():
@@ -104,17 +146,26 @@ def sweep_one(rd: Path, ks, n_runs: int, frac: float, dry: bool) -> int:
         shown = rd.resolve().relative_to(CLUST)
     except ValueError:
         shown = rd
-    print(f"  {shown}  K={want}  n_runs={n_runs} frac={frac}")
+    meth = method_of(rd)
+    fit_fn = native_fit_fn(meth, n_iter) if native else None
+    sub = "stability_by_k_native" if native else "stability_by_k"
+    tag = ""
+    if native:
+        tag = (f"  NATIVE ({meth}"
+               + (f", unit-normed, n_iter={n_iter}" if meth == "cnmf" else "")
+               + (", already native" if fit_fn is None else "") + ")")
+    print(f"  {shown}  K={want}  n_runs={n_runs} frac={frac}{tag}")
     if dry:
         return 0
 
     rows = []
     for k in want:
         lab = df[have[k]].to_numpy()
-        out = rd / "stability_by_k" / f"k_{k:02d}"
+        out = rd / sub / f"k_{k:02d}"
         out.mkdir(parents=True, exist_ok=True)
         S.save_consensus_artifacts(out, X, lab, n_runs=n_runs,
-                                   subsample_frac=frac, verbose=False)
+                                   subsample_frac=frac, verbose=False,
+                                   fit_fn=fit_fn)
         js = json.loads((out / "stability_summary.json").read_text(encoding="utf-8"))
         rows.append(dict(k=k,
                          mean_jaccard=js.get("mean_jaccard"),
@@ -125,7 +176,39 @@ def sweep_one(rd: Path, ks, n_runs: int, frac: float, dry: bool) -> int:
         print(f"    K={k:<3d} mean={js.get('mean_jaccard'):.3f} "
               f"worst={js.get('min_jaccard'):.3f}")
 
-    pd.DataFrame(rows).to_csv(rd / "stability_by_k.csv", index=False)
+    for r in rows:
+        r["estimator"] = ("native:" + meth) if native else "kmeans"
+        r["n_iter"] = n_iter if (native and meth == "cnmf") else None
+    new = pd.DataFrame(rows)
+
+    # MERGE, DO NOT CLOBBER. Re-running a couple of Ks at a different n_iter must not
+    # wipe the rest of the sweep - the K control offers every K in this file, and a
+    # file holding only the two Ks last recomputed would silently shrink the control.
+    dest = rd / f"{sub}.csv"
+    if dest.exists():
+        old = pd.read_csv(dest)
+        for c in new.columns:
+            if c not in old.columns:
+                old[c] = None
+        keep = old[~old.k.isin(new.k)]
+        new = pd.concat([keep, new], ignore_index=True).sort_values("k")
+    new.to_csv(dest, index=False)
+
+    # A NATIVE SWEEP MUST NOT BE COMPARED TO THE RUN'S PUBLISHED NUMBER - they are
+    # different statistics, and "DIFFERS by 0.2" would read as a fault rather than as
+    # the finding.
+    if native:
+        old = rd / "stability_by_k.csv"
+        if old.exists():
+            o = pd.read_csv(old).set_index("k")
+            print("    K    native   kmeans-resampler   difference")
+            for r in rows:
+                if r["k"] in o.index:
+                    d = r["mean_jaccard"] - float(o.loc[r["k"], "mean_jaccard"])
+                    print(f"    {r['k']:<4d} {r['mean_jaccard']:.3f}    "
+                          f"{float(o.loc[r['k'],'mean_jaccard']):.3f}"
+                          f"              {d:+.3f}")
+        return len(rows)
 
     # Does the sweep agree with the run's own published number at its own K? If not,
     # the two were computed differently and the report must not present them together.
@@ -151,6 +234,11 @@ def main() -> int:
     ap.add_argument("--n-runs", type=int, default=50)
     ap.add_argument("--subsample-frac", type=float, default=0.8)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--native", action="store_true",
+                    help="resample with the method the run was fitted by, in its own "
+                         "space; writes stability_by_k_native/ alongside")
+    ap.add_argument("--n-iter", type=int, default=300,
+                    help="convex NMF iterations per native refit")
     a = ap.parse_args()
 
     if a.run:
@@ -163,7 +251,8 @@ def main() -> int:
 
     total = 0
     for rd in targets:
-        total += sweep_one(rd, a.ks, a.n_runs, a.subsample_frac, a.dry_run)
+        total += sweep_one(rd, a.ks, a.n_runs, a.subsample_frac, a.dry_run,
+                           native=a.native, n_iter=a.n_iter)
     print(f"\n  {total} (run, K) stability fits written")
     return 0
 

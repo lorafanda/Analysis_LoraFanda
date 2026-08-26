@@ -72,10 +72,21 @@ def compute_consensus_matrix(
     n_init: int = 10,
     subsample_frac: float = 1.0,
     verbose: bool = True,
+    fit_fn=None,
 ) -> np.ndarray:
     """
-    Run KMeans n_runs times with different random_state offsets, accumulate
+    Refit n_runs times with different random_state offsets, accumulate
     the per-pair co-clustering frequency.
+
+    fit_fn : callable(X_run, k, seed) -> labels, or None.
+        None keeps the KMeans refit this function has always used, unchanged, so
+        every number already published from it reproduces exactly. Pass a callable
+        to resample with the method the run was ACTUALLY fitted by. That matters
+        for the convex-NMF runs: with the default, this measures how reproducibly
+        K-MEANS partitions the space a decomposition was fitted in, which is a
+        different statistic from how reproducible the decomposition is. It is also
+        the wrong SPACE - convex NMF fits unit-normed and X_train is raw dB - so a
+        native fit_fn has to normalise before it fits.
 
     Parameters
     ----------
@@ -133,8 +144,14 @@ def compute_consensus_matrix(
             sub_idx = None
             X_run = X
 
-        km = KMeans(n_clusters=int(k), random_state=seed, n_init=n_init).fit(X_run)
-        lbl = km.labels_
+        if fit_fn is None:
+            lbl = KMeans(n_clusters=int(k), random_state=seed,
+                         n_init=n_init).fit(X_run).labels_
+        else:
+            lbl = np.asarray(fit_fn(X_run, int(k), seed))
+            if lbl.shape[0] != X_run.shape[0]:
+                raise ValueError(f"fit_fn returned {lbl.shape[0]} labels for "
+                                 f"{X_run.shape[0]} rows")
         # Indicator: same cluster -> add 1 to (i,j) for all pairs in same group.
         # Vectorized: for each cluster c, get its sample indices, set their
         # outer product block to +=1. Faster than pairwise comparison.
@@ -208,6 +225,7 @@ def save_consensus_artifacts(
     random_state: int = 0,
     subsample_frac: float = 1.0,
     verbose: bool = True,
+    fit_fn=None,
 ):
     """
     Compute the consensus matrix + per-cluster Jaccard stability for an
@@ -235,7 +253,8 @@ def save_consensus_artifacts(
               f"subsample_frac={subsample_frac}, n={n}")
 
     M = compute_consensus_matrix(X, k, n_runs=n_runs, random_state=random_state,
-                                  subsample_frac=subsample_frac, verbose=verbose)
+                                 subsample_frac=subsample_frac, verbose=verbose,
+                                 fit_fn=fit_fn)
     np.save(run_dir / "consensus_matrix.npy", M)
 
     jacc = per_cluster_jaccard(labels, M)

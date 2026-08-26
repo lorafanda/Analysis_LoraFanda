@@ -157,16 +157,67 @@ def render_hg_centroid(ax, cluster_samples: np.ndarray, *,
 
 
 def render_heatmap_centroid(ax, mean_vec: np.ndarray, centroid_shape, *,
-                            vlim: float = 5.0, cmap: str = "bwr"):
-    """Draw a 2D ERSP centroid heatmap. Falls back to a 1×N strip if the
-    flat vector doesn't match centroid_shape."""
+                            vlim: float = 5.0, cmap: str = "bwr",
+                            sd_vec: np.ndarray = None, sd_ref: float = None,
+                            dot_max: float = 0.58, dot_color: str = "#12181f"):
+    """Draw a 2D ERSP centroid heatmap - the cluster's AVERAGED ERSP.
+
+    Falls back to a 1xN strip if the flat vector doesn't match centroid_shape, which
+    is the smear centroid_shape_for() exists to prevent.
+
+    sd_vec : the per-bin standard deviation ACROSS THE ELECTRODES in this cluster,
+        same length as mean_vec. When given, every time-frequency bin carries a dot
+        whose AREA is proportional to that bin's SD. This is the heatmap counterpart
+        of the +/-1 SD band render_hg_centroid draws on a time course, and it reads
+        the same way in both: BIGGER MEANS THE ELECTRODES DISAGREE MORE. A colour
+        that is strong but heavily dotted is a bin where the mean is not describing
+        the members.
+
+        SD cannot be drawn as a second colour axis without fighting the first, and
+        contours would imply a smoothness the 15-band grid does not have.
+
+    sd_ref : (lo, hi) - the SDs that map to no dot and to the largest dot. A scalar
+        is read as (0, hi). Pass the SAME pair for every cluster in a run, otherwise
+        each chip normalises to its own worst bin and a tight cluster and a loose one
+        look identical, which is the opposite of what the dots are for.
+        save_per_cluster_centroids computes it once per run.
+
+        BOTH ENDS MATTER. Anchoring the low end at zero was the first version and it
+        failed: the real SD here spans p5=0.38 to p95=1.40, so every dot came out
+        between 52% and 100% of full size and the grid read as uniform texture.
+        Spanning the observed range instead puts the whole dot-size range over the
+        variation that actually exists.
+    """
     v = np.asarray(mean_vec, dtype=float).ravel()
-    if centroid_shape is not None and centroid_shape[0] * centroid_shape[1] == v.size:
-        img = v.reshape(centroid_shape)
-    else:
-        img = v.reshape(1, -1)
+    ok = centroid_shape is not None and centroid_shape[0] * centroid_shape[1] == v.size
+    img = v.reshape(centroid_shape) if ok else v.reshape(1, -1)
     ax.imshow(img, aspect="auto", origin="lower", cmap=cmap,
               vmin=-abs(vlim), vmax=abs(vlim), interpolation="nearest")
+
+    if sd_vec is not None:
+        sd = np.asarray(sd_vec, dtype=float).ravel()
+        if sd.size == v.size and np.isfinite(sd).any():
+            S = sd.reshape(centroid_shape) if ok else sd.reshape(1, -1)
+            nr, nc = S.shape
+            if sd_ref is None:
+                lo, hi = float(np.nanpercentile(S, 5)), float(np.nanpercentile(S, 95))
+            elif np.ndim(sd_ref) == 0:
+                lo, hi = 0.0, float(sd_ref)
+            else:
+                lo, hi = float(sd_ref[0]), float(sd_ref[1])
+            if hi > lo:
+                # dot AREA proportional to where this bin's SD sits in the run's own
+                # range, capped at dot_max of a cell so the ERSP stays readable under it
+                frac = np.clip((S - lo) / (hi - lo), 0.0, 1.0)
+                # a cell in points: the axes width in points divided by the columns
+                fig = ax.get_figure()
+                bb = ax.get_window_extent(fig.canvas.get_renderer())                     if fig.canvas.get_renderer is not None else None
+                cell_pt = (bb.width / fig.dpi * 72.0 / max(nc, 1)) if bb else 3.0
+                smax = (dot_max * cell_pt) ** 2
+                yy, xx = np.mgrid[0:nr, 0:nc]
+                m = frac > 0.06                    # below this a dot is sub-pixel
+                ax.scatter(xx[m], yy[m], s=smax * frac[m], c=dot_color,
+                           alpha=0.45, linewidths=0, zorder=4)
     ax.set_xticks([]); ax.set_yticks([])
     for s in ax.spines.values():
         s.set_visible(False)
@@ -205,15 +256,22 @@ def _draw_block_seams(ax, n_blocks: int, n_x: int, *, heatmap: bool):
 
 
 def _write_one(out_path: Path, X_cluster: np.ndarray, feature_set: str, *,
-               centroid_shape, hg_ylim, vlim, figsize):
+               centroid_shape, hg_ylim, vlim, figsize, sd_ref=None):
     fig, ax = plt.subplots(figsize=figsize)
     nb = _n_condition_blocks(feature_set)
     if _is_line_feature_set(feature_set):
         render_hg_centroid(ax, X_cluster, ylim=hg_ylim, show_axes=True, n_blocks=nb)
         _draw_block_seams(ax, nb, np.asarray(X_cluster).shape[1], heatmap=False)
     else:
-        render_heatmap_centroid(ax, np.asarray(X_cluster, float).mean(axis=0),
-                                centroid_shape, vlim=vlim)
+        M = np.asarray(X_cluster, float)
+        if M.ndim == 1:
+            M = M[None, :]
+        # SD ACROSS ELECTRODES, the same quantity the hg band draws. A singleton
+        # cluster has none, and then the chip is a bare heatmap - a statement about
+        # n rather than a rendering failure.
+        sd = M.std(axis=0, ddof=1) if len(M) > 1 else None
+        render_heatmap_centroid(ax, M.mean(axis=0), centroid_shape, vlim=vlim,
+                                sd_vec=sd, sd_ref=sd_ref)
         if centroid_shape is not None:
             _draw_block_seams(ax, nb, centroid_shape[1], heatmap=True)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -225,10 +283,27 @@ def _write_group(out_dir: Path, X: np.ndarray, labels: np.ndarray, feature_set: 
                  centroid_shape, hg_ylim, vlim, figsize) -> int:
     labels = np.asarray(labels)
     uniq = sorted(int(c) for c in np.unique(labels))
+
+    # ONE SD REFERENCE FOR THE WHOLE RUN. Per-chip normalisation would make every
+    # cluster's worst bin the biggest dot, so a tight cluster and a loose one would
+    # come out looking the same - which is exactly what the dots are meant to tell
+    # apart. The 95th percentile rather than the max, so one bin cannot set the scale.
+    sd_ref = None
+    if not _is_line_feature_set(feature_set):
+        pool = [np.asarray(X[np.where(labels == c)[0]], float).std(axis=0, ddof=1)
+                for c in uniq if (labels == c).sum() > 1]
+        if pool:
+            allsd = np.concatenate(pool)
+            # percentiles, not min/max, so one extreme bin cannot set the scale for
+            # the whole run
+            sd_ref = (float(np.nanpercentile(allsd, 5)),
+                      float(np.nanpercentile(allsd, 95)))
+
     for c in uniq:
         idx = np.where(labels == c)[0]
         _write_one(out_dir / f"cluster_{c:02d}.png", X[idx], feature_set,
-                   centroid_shape=centroid_shape, hg_ylim=hg_ylim, vlim=vlim, figsize=figsize)
+                   centroid_shape=centroid_shape, hg_ylim=hg_ylim, vlim=vlim,
+                   figsize=figsize, sd_ref=sd_ref)
     return len(uniq)
 
 
