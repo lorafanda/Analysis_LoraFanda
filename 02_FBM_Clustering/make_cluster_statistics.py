@@ -77,6 +77,19 @@ K = 8                      # overridden by --k
 FSET = "concat_hg"          # overridden by --feature-set
 GATED_FSET = "concat_hg"
 
+# THE CACHE IS DERIVED, NOT ASSERTED. This was the literal "concat_source_v3" while the
+# notebooks had already moved to v4, so every cluster_statistics.json - and the run
+# report that displays it - claimed a provenance that was one cohort out of date. The
+# newest concat_source_v* on disk is what rebuild_concat_cache.py last built and what
+# 240/241/242 read.
+def _cohort_cache() -> str:
+    d = ROOT / "outputs" / "_dataset"
+    c = sorted(p.name for p in d.glob("concat_source_v*") if p.is_dir()) if d.is_dir() else []
+    return c[-1] if c else "unknown"
+
+
+COHORT_CACHE = _cohort_cache()
+
 # Resolved at run time, not pinned: the cohort was rebuilt, so the old run ids no
 # longer describe the data. lf_runs.newest_run picks the run each notebook just wrote.
 import lf_runs as LR                            # noqa: E402
@@ -360,7 +373,7 @@ def main() -> int:
             schema=1, feature_set=FSET, K=K, method=m, method_label=LABEL[m],
             valid_only_at_K=True,
             n_electrodes=int(X.shape[0]), n_patients=int(len(np.unique(pats))),
-            cohort_cache="concat_source_v3",
+            cohort_cache=COHORT_CACHE,
             separation=(dict(
                 space=str(sp_home.iloc[0].space),
                 silhouette=float(sp_home.iloc[0].silhouette),

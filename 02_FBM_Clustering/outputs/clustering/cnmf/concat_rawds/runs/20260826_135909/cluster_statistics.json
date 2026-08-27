@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "feature_set": "concat_rawds",
+  "K": 12,
+  "method": "cnmf",
+  "method_label": "convex NMF",
+  "valid_only_at_K": true,
+  "n_electrodes": 1693,
+  "n_patients": 27,
+  "cohort_cache": "concat_source_v4",
+  "separation": {
+    "space": "unit-norm",
+    "silhouette": 0.0793374837542602,
+    "null_mean": 0.01658124068261657,
+    "null_sd": 0.001843442129000477,
+    "z": 34.04296890278316,
+    "n_null": 50,
+    "other_space": "dB",
+    "other_space_z": 6.137423140641217
+  },
+  "anatomical_coherence": {
+    "neighbours_sharing_label": 0.270114122681883,
+    "over_chance": 2.7738509430507237
+  },
+  "lopo": {
+    "real_mean": 0.615661990308358,
+    "real_min": 0.520092853365123,
+    "null_min_mean": 0.5186398940120518,
+    "null_min_sd": 0.032308045057667344,
+    "z": 0.04497206037932024,
+    "degenerate": 0
+  },
+  "agreement_with": {
+    "k-means  (BSF)": {
+      "ari": 0.3642889143535319,
+      "nmi": 0.5304678522109862
+    },
+    "Ward": {
+      "ari": 0.25294979453987054,
+      "nmi": 0.47209438731848763
+    }
+  },
+  "cluster_sizes": [
+    140,
+    144,
+    199,
+    146,
+    194,
+    111,
+    150,
+    78,
+    57,
+    103,
+    140,
+    231
+  ],
+  "written": "2026-08-26 17:19:23"
+}
