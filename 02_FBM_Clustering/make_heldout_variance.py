@@ -182,8 +182,25 @@ def main() -> int:
         df_c, Xc = CC.build_concat_dataset(inp, conditions=("audio", "picture", "reading"),
                                            require_high_activity=True,
                                            cache_dir=Path(a.from_cache), verbose=False)
-        cached = {"concat_hg": CC.concat_hg_features(Xc, hg_band=(70.0, 150.0), fmax=500.0),
-                  "concat_rawds": CC.concat_rawds_features(Xc, n_blocks=3, fmax_hz=500.0)}
+        # BUILD ONLY WHAT WAS ASKED FOR. This used to be a fixed dict of the two
+        # original sets, so --feature-set concat_bands5 died on a KeyError after the
+        # cache had already been read - and it built both sets every time even when
+        # only one was wanted.
+        builders = {
+            "concat_hg": lambda: CC.concat_hg_features(Xc, hg_band=(70.0, 150.0),
+                                                       fmax=500.0),
+            "concat_rawds": lambda: CC.concat_rawds_features(Xc, n_blocks=3,
+                                                             fmax_hz=500.0),
+            "concat_bands5": lambda: CC.concat_bands5_features(Xc, n_blocks=3,
+                                                               fmax_hz=500.0),
+            "concat_bands5z": lambda: CC.concat_bands5z_features(Xc, n_blocks=3,
+                                                                 fmax_hz=500.0),
+        }
+        unknown = [f for f in a.feature_set if f not in builders]
+        if unknown:
+            raise SystemExit(f"--from-cache cannot build {unknown}; known: "
+                             f"{sorted(builders)}")
+        cached = {f: builders[f]() for f in a.feature_set}
         print(f"X from cache {a.from_cache}: "
               + "  ".join(f"{k}={v.shape}" for k, v in cached.items()))
 
