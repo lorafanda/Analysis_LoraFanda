@@ -179,6 +179,8 @@ def main() -> int:
     ap.add_argument("--n-iter", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--source", default=None, help="run dir to take X_train from")
+    ap.add_argument("--force", action="store_true",
+                    help="refit a feature set that already has a run covering --ks")
     a = ap.parse_args()
 
     peaks = {}
@@ -197,6 +199,22 @@ def main() -> int:
                   file=sys.stderr)
             continue
         ks = sorted(set(list(a.ks) + [kpub]))
+
+        # REFITTING SUPERSEDES, IT DOES NOT UPDATE. Run ids are timestamps and every
+        # resolver takes the newest, so a second pass over a feature set strands the
+        # first run's outputs on a directory nothing looks at any more.
+        if not a.force:
+            base = CLUST / "archetypes" / fs / "runs"
+            prev = sorted(base.glob("*")) if base.is_dir() else []
+            if prev:
+                have = {int(p.stem.split("_k")[-1])
+                        for p in (prev[-1] / "loadings_by_k").glob("A_k*.npy")}
+                if set(ks).issubset(have):
+                    print(f"\n=== {fs}: SKIPPED - {prev[-1].name} already covers "
+                          f"K={min(ks)}..{max(ks)}  (--force to refit)")
+                    continue
+                print(f"\n=== {fs}: refitting - {prev[-1].name} is missing "
+                      f"K={sorted(set(ks) - have)}")
         run(fs, ks, kpub, a.n_iter, a.seed, src)
     return 0
 
