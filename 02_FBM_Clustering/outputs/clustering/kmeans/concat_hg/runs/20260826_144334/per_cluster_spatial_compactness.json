@@ -1,0 +1,97 @@
+{
+  "0": {
+    "cluster_id": 0,
+    "n_total": 466,
+    "n_with_coords": 171,
+    "n_missing": 295,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 48.24039404227507,
+    "centroid_xyz": [
+      -42.86541947426154,
+      -17.60908610691801,
+      0.6382054292667679
+    ],
+    "spread_xyz": [
+      13.930513175897646,
+      25.07211116936312,
+      25.190170484244106
+    ]
+  },
+  "1": {
+    "cluster_id": 1,
+    "n_total": 130,
+    "n_with_coords": 27,
+    "n_missing": 103,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 40.91414855996035,
+    "centroid_xyz": [
+      -47.396417405870224,
+      -16.548299701125533,
+      -0.61264388649552
+    ],
+    "spread_xyz": [
+      11.106540587267858,
+      13.24889050198019,
+      27.40576480154218
+    ]
+  },
+  "2": {
+    "cluster_id": 2,
+    "n_total": 160,
+    "n_with_coords": 73,
+    "n_missing": 87,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 66.33188858166947,
+    "centroid_xyz": [
+      -32.10852206243228,
+      -20.07905805325263,
+      11.96132333311316
+    ],
+    "spread_xyz": [
+      13.42550272423405,
+      39.136005861098454,
+      30.980262203242933
+    ]
+  },
+  "3": {
+    "cluster_id": 3,
+    "n_total": 142,
+    "n_with_coords": 63,
+    "n_missing": 79,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 41.06699811657292,
+    "centroid_xyz": [
+      -49.547635078430176,
+      -21.174138465334497,
+      -13.450207659412944
+    ],
+    "spread_xyz": [
+      12.470225454571574,
+      22.96033886760213,
+      20.21343066930254
+    ]
+  },
+  "4": {
+    "cluster_id": 4,
+    "n_total": 795,
+    "n_with_coords": 395,
+    "n_missing": 400,
+    "metric": "mean_pairwise",
+    "mirror_to": "left",
+    "distance_mm": 55.5946430256824,
+    "centroid_xyz": [
+      -36.98720780203614,
+      4.148722529930027,
+      2.78860910367928
+    ],
+    "spread_xyz": [
+      14.274883242857339,
+      31.68075452679302,
+      26.051543290110306
+    ]
+  }
+}

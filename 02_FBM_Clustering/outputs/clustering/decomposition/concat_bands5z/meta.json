@@ -1,0 +1,55 @@
+{
+  "feature_set": "concat_bands5z",
+  "K": 7,
+  "source_run": "outputs/clustering/kmeans/concat_bands5z/runs/20260827_021738",
+  "n_electrodes": 1693,
+  "n_features": 450,
+  "n_patients": 27,
+  "conditions": [
+    "audio",
+    "picture",
+    "reading"
+  ],
+  "bands": [
+    "1-20Hz",
+    "20-70Hz",
+    "70-170Hz",
+    "170-270Hz",
+    "270-400Hz"
+  ],
+  "n_time": 30,
+  "in_sample_var_explained": 0.4783085059334592,
+  "mixture": {
+    "n": 1693,
+    "frac_dominant": 0.01594802126402835,
+    "frac_contested": 0.26520968694624925,
+    "frac_no_majority": 0.7188422917897224,
+    "median_top_weight": 0.4087457410117543
+  },
+  "argmax_spatial_coherence": [
+    0.28873038516405136,
+    1.8419675562532707
+  ],
+  "consensus_spatial_coherence": [
+    0.31804564907275323,
+    1.645873320537428
+  ],
+  "consensus_sizes": [
+    293,
+    15,
+    182,
+    133,
+    470,
+    232,
+    368
+  ],
+  "lopo_real_mean": 0.863169489707763,
+  "lopo_real_min": 0.7218801671455078,
+  "lopo_degenerate_folds": 0,
+  "lopo_null_min_mean": 0.7160646264416847,
+  "lopo_null_min_std": 0.043440083956399464,
+  "lopo_z": 0.1338749876648534,
+  "replication_mean": 0.5580464626941677,
+  "quick": false,
+  "written": "2026-08-27 11:56:34"
+}

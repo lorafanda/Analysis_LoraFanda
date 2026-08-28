@@ -86,6 +86,21 @@ TRACKS = [
     ("hierarchical/concat_hg", "Ward · concatenated", "gated concat cohort"),
     ("kmeans/concat_rawds", "K-means · concat 15-band", "gated concat cohort"),
     ("hierarchical/concat_rawds", "Ward · concat 15-band", "gated concat cohort"),
+    # THE 5-BAND SETS. A track missing from this list is invisible to the visualizer
+    # however complete its runs are - which is exactly what happened to concat_bands5
+    # and concat_bands5z: fitted on all three methods and unreachable from the page.
+    ("cnmf/concat_bands5", "Convex NMF 5-band - graded (argmax)", "gated concat cohort"),
+    ("cnmf/concat_bands5z", "Convex NMF 5-band z - graded (argmax)", "gated concat cohort"),
+    ("kmeans/concat_bands5", "K-means · concat 5-band", "gated concat cohort"),
+    ("kmeans/concat_bands5z", "K-means · concat 5-band, z-scored", "gated concat cohort"),
+    ("hierarchical/concat_bands5", "Ward · concat 5-band", "gated concat cohort"),
+    ("hierarchical/concat_bands5z", "Ward · concat 5-band, z-scored", "gated concat cohort"),
+    # archetypal analysis, the fourth method. Listed for all four feature sets; a track
+    # with no runs yet is skipped, so these populate as 243 produces them.
+    ("archetypes/concat_hg", "Archetypes · concatenated", "gated concat cohort"),
+    ("archetypes/concat_rawds", "Archetypes · concat 15-band", "gated concat cohort"),
+    ("archetypes/concat_bands5", "Archetypes · concat 5-band", "gated concat cohort"),
+    ("archetypes/concat_bands5z", "Archetypes · concat 5-band, z-scored", "gated concat cohort"),
     ("cnmf/concat_hg_all", "Convex NMF - ungated (argmax)", "ungated concat cohort"),
     ("kmeans/concat_hg_all", "K-means · concatenated, ungated", "ungated concat cohort"),
     ("hierarchical/concat_hg_all", "Ward · concatenated, ungated", "ungated concat cohort"),

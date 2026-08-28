@@ -1,0 +1,31 @@
+condition,cluster,n,ref,window,peak_lag_pct,peak_r,polarity,ref_polarity,anti,ci_lo_pct,ci_hi_pct,ci_width_pct,at_edge,p_shuffle,interpretable,reason
+audio,0,123,4,response,-14.000000000000002,0.8510107245098743,activation,activation,False,-17.666666666666668,-12.666666666666668,5.0,False,0.0,True,ok
+audio,1,295,4,response,14.000000000000002,-0.9233403694511458,suppression,activation,True,12.991666666666667,16.674999999999994,3.683333333333325,False,0.0,True,ok
+audio,2,296,4,response,-20.0,-0.644698341387906,suppression,activation,True,-20.0,-20.0,0.0,True,0.005,False,lag censored at search edge
+audio,3,80,4,response,-7.000000000000001,0.930121619515717,activation,activation,False,-8.341666666666667,-5.0,3.3416666666666663,False,0.01,True,ok
+audio,5,3,4,response,-20.0,-0.8200005919644556,suppression,activation,True,-20.0,-19.0,1.0,True,0.05,False,lag censored at search edge
+audio,6,90,4,response,-5.666666666666666,0.9461813971276216,activation,activation,False,-7.000000000000001,-3.3333333333333335,3.6666666666666665,False,0.01,True,ok
+audio,7,285,4,response,-5.333333333333334,0.9471958255348242,activation,activation,False,-7.666666666666666,-4.333333333333334,3.3333333333333335,False,0.005,True,ok
+audio,8,95,4,response,-20.0,-0.9143756663077133,suppression,activation,True,-20.0,-20.0,0.0,True,0.005,False,lag censored at search edge
+audio,9,377,4,response,-8.333333333333332,0.8999208495796848,activation,activation,False,-9.666666666666666,-4.666666666666667,5.0,False,0.0,True,ok
+audio,10,7,4,response,-19.666666666666664,0.7908757438325804,activation,activation,False,-20.0,-16.0,4.0,True,0.04,False,lag censored at search edge
+picture,0,123,4,response,-18.333333333333332,0.054450245202422295,activation,activation,False,-20.0,-6.666666666666667,13.333333333333334,False,0.0,False,shapes differ (|r|<0.30)
+picture,1,295,4,response,-12.666666666666668,0.8786071821258621,activation,activation,False,-14.674999999999999,-10.0,4.674999999999999,False,0.0,True,ok
+picture,2,296,4,response,-1.0,0.9327511968471277,activation,activation,False,-3.0,0.6666666666666667,3.6666666666666665,False,0.33,True,ok
+picture,3,80,4,response,-7.333333333333333,0.9648030929992248,activation,activation,False,-9.0,-6.0,3.0,False,0.005,True,ok
+picture,5,3,4,response,-19.333333333333332,-0.94232141294307,suppression,activation,True,-20.0,-18.333333333333332,1.6666666666666667,False,0.04,True,ok
+picture,6,90,4,response,-2.666666666666667,0.9756229437787765,activation,activation,False,-4.666666666666667,-1.3333333333333335,3.3333333333333335,False,0.145,True,ok
+picture,7,285,4,response,-7.000000000000001,0.9752821248094222,activation,activation,False,-8.666666666666668,-5.666666666666666,3.0,False,0.0,True,ok
+picture,8,95,4,response,-20.0,-0.9171011951123814,suppression,activation,True,-20.0,-20.0,0.0,True,0.0,False,lag censored at search edge
+picture,9,377,4,response,-7.666666666666666,0.9274498363878806,activation,activation,False,-10.0,-6.0,4.0,False,0.0,True,ok
+picture,10,7,4,response,-20.0,0.4579224010248772,activation,activation,False,-20.0,-19.341666666667265,0.6583333333327346,True,0.01,False,lag censored at search edge
+reading,0,123,4,response,-10.333333333333334,0.41031356369096855,activation,activation,False,-18.666666666666668,-8.0,10.666666666666668,False,0.005,True,ok
+reading,1,295,4,response,-6.666666666666667,0.9186043227300643,activation,activation,False,-9.666666666666666,-5.333333333333334,4.333333333333334,False,0.0,True,ok
+reading,2,296,4,response,-20.0,-0.6437998812328753,suppression,activation,True,-20.0,20.0,40.0,True,0.005,False,lag censored at search edge
+reading,3,80,4,response,-7.000000000000001,0.9641200775951395,activation,activation,False,-8.666666666666668,-4.666666666666667,4.0,False,0.0,True,ok
+reading,5,3,4,response,-16.0,-0.8170596289029867,suppression,activation,True,-16.666666666666664,-14.333333333333334,2.3333333333333335,False,0.175,True,ok
+reading,6,90,4,response,-5.333333333333334,0.9880093522738059,activation,activation,False,-7.008333333333333,-3.6666666666666665,3.3416666666666663,False,0.015,True,ok
+reading,7,285,4,response,-5.333333333333334,0.9858095017890787,activation,activation,False,-7.000000000000001,-4.0,3.0,False,0.01,True,ok
+reading,8,95,4,response,-20.0,-0.7598463382710681,suppression,activation,True,-20.0,-19.333333333333332,0.6666666666666667,True,0.005,False,lag censored at search edge
+reading,9,377,4,response,-4.666666666666667,0.9524239515338426,activation,activation,False,-6.333333333333334,-2.658333333333341,3.6749999999999923,False,0.015,True,ok
+reading,10,7,4,response,8.0,-0.7337455981965785,suppression,activation,True,-19.0,9.008333333333326,28.008333333333326,False,0.125,False,CI too wide

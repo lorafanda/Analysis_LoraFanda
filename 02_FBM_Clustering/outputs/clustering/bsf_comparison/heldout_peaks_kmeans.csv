@@ -1,3 +1,5 @@
 feature_set,scheme,method_label,k_peak,peak,at_k8,monotone,k_max_tested
+concat_bands5,home,k-means,30,0.5211137336126467,0.38817270078825733,False,30
+concat_bands5z,home,k-means,30,0.5335580800515477,0.38596451747364396,False,30
 concat_hg,home,k-means,30,0.5889688728873199,0.46458106764485724,True,30
 concat_rawds,home,k-means,30,0.44023795305855695,0.32432516281467666,False,30

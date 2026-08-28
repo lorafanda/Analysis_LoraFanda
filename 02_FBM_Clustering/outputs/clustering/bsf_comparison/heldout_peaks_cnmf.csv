@@ -1,3 +1,5 @@
 feature_set,scheme,method_label,k_peak,peak,at_k8,monotone,k_max_tested
+concat_bands5,home,convex NMF,14,0.5556761755566839,0.49853299784564975,False,30
+concat_bands5z,home,convex NMF,13,0.5359919075774284,0.4901591235570308,False,30
 concat_hg,home,convex NMF,11,0.551852076948371,0.5473187147233854,False,30
 concat_rawds,home,convex NMF,12,0.4627446691552228,0.43790662540381753,False,30
