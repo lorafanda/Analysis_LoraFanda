@@ -42,7 +42,9 @@ from matplotlib.gridspec import GridSpec
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
 
-CACHE = ROOT / "outputs" / "_dataset" / "concat_source_v2" / "df_meta.parquet"
+# v4, not v2: v2 was deleted on 2026-08-28 and this is the only script that read it
+# directly rather than through build_concat_dataset.
+CACHE = ROOT / "outputs" / "_dataset" / "concat_source_v4" / "df_meta.parquet"
 OUT = ROOT / "outputs" / "clustering" / "gate_examples"
 
 THR_P, MIN_P, THR_N, MIN_N = 2.2, 0.02, -3.0, 0.04

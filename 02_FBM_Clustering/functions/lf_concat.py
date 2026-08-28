@@ -85,8 +85,14 @@ DEFAULT_DS_TIME_BINS = 30
 # unchanged after that fix. Bump the suffix whenever the eligible cohort changes;
 # old caches are kept so any published run can still be reproduced.
 #   concat_source     2026-08-03  26 patients, 8361 rows  (pre dash-fix)
-#   concat_source_v2  2026-08-17  + EL034, + EL046's Fp_L-5..8
-DEFAULT_CONCAT_CACHE = Path(__file__).resolve().parents[1] / "outputs" / "_dataset" / "concat_source_v2"
+#   concat_source_v2  2026-08-17  + EL034, + EL046's Fp_L-5..8   (deleted 2026-08-28)
+#   concat_source_v3  2026-08-25  the split-half bug - 19,380 phantom rows (deleted)
+#   concat_source_v4  2026-08-26  27 patients, 1693 gated / 2959 ungated
+# The default follows the CURRENT cache. v2 and v3 were removed on 2026-08-28: v3
+# was the cohort with split-half files counted as electrodes, and keeping a default
+# pointed at a deleted directory would fail at the first caller that did not pass
+# cache_dir explicitly.
+DEFAULT_CONCAT_CACHE = Path(__file__).resolve().parents[1] / "outputs" / "_dataset" / "concat_source_v4"
 
 
 def normalize_label(s) -> str:

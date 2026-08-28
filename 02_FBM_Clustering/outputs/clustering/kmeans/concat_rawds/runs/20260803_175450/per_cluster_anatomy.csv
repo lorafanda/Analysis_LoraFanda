@@ -1,7 +1,0 @@
-cluster_id,n_total,n_unknown,entropy_bits,purity,top_region,top_proportion,top_3_json,p_entropy_lower_tail,null_entropy_mean
-0,166,132,2.765273036450054,0.4117647058823529,middletemporal,0.412,"[[""middletemporal"", 0.412], [""inferiortemporal"", 0.206], [""precentral"", 0.059]]",0.0,4.122546196087295
-1,109,23,3.4949302494668775,0.16279069767441862,rostralmiddlefrontal,0.163,"[[""rostralmiddlefrontal"", 0.163], [""insula"", 0.128], [""parsopercularis"", 0.128]]",0.0,4.060380935112196
-2,163,129,3.0641102671482447,0.2647058823529412,middletemporal,0.265,"[[""middletemporal"", 0.265], [""postcentral"", 0.176], [""insula"", 0.118]]",0.0,4.124051894447415
-3,126,50,3.455650997488004,0.2236842105263158,middletemporal,0.224,"[[""middletemporal"", 0.224], [""inferiortemporal"", 0.184], [""superiortemporal"", 0.118]]",0.0,4.085237825945199
-4,414,148,4.158527731756928,0.14661654135338345,middletemporal,0.147,"[[""middletemporal"", 0.147], [""inferiortemporal"", 0.098], [""insula"", 0.098]]",0.03,4.210319012152462
-5,49,39,1.3609640474436813,0.5,superiortemporal,0.5,"[[""superiortemporal"", 0.5], [""bankssts"", 0.4], [""middletemporal"", 0.1]]",0.0,3.8229092954107387
