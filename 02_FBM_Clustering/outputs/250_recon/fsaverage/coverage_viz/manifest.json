@@ -22,7 +22,7 @@
   },
   "cohorts": {
     "cohort1_n27": {
-      "label": "1266-electrode concat cohort",
+      "label": "1693-electrode gated concat cohort",
       "patients": [
         "EL030",
         "EL033",
@@ -106,7 +106,7 @@
       }
     },
     "cohort2_n27": {
-      "label": "ungated concat cohort",
+      "label": "2946-electrode ungated concat cohort",
       "patients": [
         "EL030",
         "EL033",
@@ -190,7 +190,7 @@
       }
     },
     "cohort3_n26": {
-      "label": "2026-07-19 per-task cohort",
+      "label": "2102-electrode 2026-07-19 per-task cohort",
       "patients": [
         "EL030",
         "EL033",
@@ -353,7 +353,7 @@
       "id": "cnmf__concat_hg__20260826_135016",
       "track": "cnmf/concat_hg",
       "track_label": "Convex NMF - graded (argmax)",
-      "cohort": "1266-electrode concat cohort",
+      "cohort": "1693-electrode gated concat cohort",
       "cohort_id": "cohort1_n27",
       "run": "20260826_135016",
       "path": "cnmf/concat_hg/runs/20260826_135016",
@@ -610,7 +610,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -634,7 +663,7 @@
       "id": "cnmf__concat_rawds__20260826_135909",
       "track": "cnmf/concat_rawds",
       "track_label": "Convex NMF 15-band - graded (argmax)",
-      "cohort": "1266-electrode concat cohort",
+      "cohort": "1693-electrode gated concat cohort",
       "cohort_id": "cohort1_n27",
       "run": "20260826_135909",
       "path": "cnmf/concat_rawds/runs/20260826_135909",
@@ -891,7 +920,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -915,7 +973,7 @@
       "id": "kmeans__concat_hg__20260826_144334",
       "track": "kmeans/concat_hg",
       "track_label": "K-means \u00b7 concatenated",
-      "cohort": "1266-electrode concat cohort",
+      "cohort": "1693-electrode gated concat cohort",
       "cohort_id": "cohort1_n27",
       "run": "20260826_144334",
       "path": "kmeans/concat_hg/runs/20260826_144334",
@@ -1125,8 +1183,47 @@
         }
       },
       "figures": {
-        "per_cluster": {},
-        "overview": []
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       },
       "sweep": {
         "ks": [
@@ -1147,7 +1244,7 @@
       "id": "hierarchical__concat_hg__20260826_144346",
       "track": "hierarchical/concat_hg",
       "track_label": "Ward \u00b7 concatenated",
-      "cohort": "1266-electrode concat cohort",
+      "cohort": "1693-electrode gated concat cohort",
       "cohort_id": "cohort1_n27",
       "run": "20260826_144346",
       "path": "hierarchical/concat_hg/runs/20260826_144346",
@@ -1339,8 +1436,51 @@
         }
       },
       "figures": {
-        "per_cluster": {},
-        "overview": []
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       },
       "sweep": {
         "ks": [
@@ -1361,7 +1501,7 @@
       "id": "kmeans__concat_rawds__20260826_144504",
       "track": "kmeans/concat_rawds",
       "track_label": "K-means \u00b7 concat 15-band",
-      "cohort": "1266-electrode concat cohort",
+      "cohort": "1693-electrode gated concat cohort",
       "cohort_id": "cohort1_n27",
       "run": "20260826_144504",
       "path": "kmeans/concat_rawds/runs/20260826_144504",
@@ -1774,8 +1914,139 @@
         }
       },
       "figures": {
-        "per_cluster": {},
-        "overview": []
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          },
+          "7": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_07.png"
+          },
+          "8": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_08.png"
+          },
+          "9": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_09.png"
+          },
+          "10": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_10.png"
+          },
+          "11": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_11.png"
+          },
+          "12": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_12.png"
+          },
+          "13": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_13.png"
+          },
+          "14": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_14.png"
+          },
+          "15": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_15.png"
+          },
+          "16": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_16.png"
+          },
+          "17": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_17.png"
+          },
+          "18": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_18.png"
+          },
+          "19": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_19.png"
+          },
+          "20": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_20.png"
+          },
+          "21": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_21.png"
+          },
+          "22": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_22.png"
+          },
+          "23": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_23.png"
+          },
+          "24": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_24.png"
+          },
+          "25": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_25.png"
+          },
+          "26": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_26.png"
+          },
+          "27": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_27.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       },
       "sweep": {
         "ks": [
@@ -1796,7 +2067,7 @@
       "id": "hierarchical__concat_rawds__20260826_144357",
       "track": "hierarchical/concat_rawds",
       "track_label": "Ward \u00b7 concat 15-band",
-      "cohort": "1266-electrode concat cohort",
+      "cohort": "1693-electrode gated concat cohort",
       "cohort_id": "cohort1_n27",
       "run": "20260826_144357",
       "path": "hierarchical/concat_rawds/runs/20260826_144357",
@@ -2114,8 +2385,123 @@
         }
       },
       "figures": {
-        "per_cluster": {},
-        "overview": []
+        "per_cluster": {
+          "0": {
+            "glass": {
+              "lateral_L": "recon/cluster_00/by_condition/lateral_L.png",
+              "lateral_R": "recon/cluster_00/by_condition/lateral_R.png",
+              "dorsal": "recon/cluster_00/by_condition/dorsal.png",
+              "frontal": "recon/cluster_00/by_condition/frontal.png"
+            },
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          },
+          "7": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_07.png"
+          },
+          "8": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_08.png"
+          },
+          "9": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_09.png"
+          },
+          "10": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_10.png"
+          },
+          "11": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_11.png"
+          },
+          "12": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_12.png"
+          },
+          "13": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_13.png"
+          },
+          "14": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_14.png"
+          },
+          "15": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_15.png"
+          },
+          "16": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_16.png"
+          },
+          "17": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_17.png"
+          },
+          "18": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_18.png"
+          },
+          "19": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_19.png"
+          },
+          "20": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_20.png"
+          },
+          "21": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_21.png"
+          },
+          "22": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_22.png"
+          },
+          "23": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_23.png"
+          }
+        },
+        "overview": [
+          {
+            "path": "sweep_metrics.png",
+            "title": "K sweep \u2014 silhouette, CH, DB, cluster sizes"
+          },
+          {
+            "path": "centroids.png",
+            "title": "Cluster centroids"
+          },
+          {
+            "path": "centroid_distance_heatmap.png",
+            "title": "Centroid distance matrix"
+          }
+        ]
       },
       "sweep": {
         "ks": [
@@ -2136,7 +2522,7 @@
       "id": "cnmf__concat_hg_all__20260819_220417",
       "track": "cnmf/concat_hg_all",
       "track_label": "Convex NMF - ungated (argmax)",
-      "cohort": "ungated concat cohort",
+      "cohort": "2946-electrode ungated concat cohort",
       "cohort_id": "cohort2_n27",
       "run": "20260819_220417",
       "path": "cnmf/concat_hg_all/runs/20260819_220417",
@@ -2458,7 +2844,7 @@
       "id": "kmeans__concat_hg_all__20260819_235524",
       "track": "kmeans/concat_hg_all",
       "track_label": "K-means \u00b7 concatenated, ungated",
-      "cohort": "ungated concat cohort",
+      "cohort": "2946-electrode ungated concat cohort",
       "cohort_id": "cohort2_n27",
       "run": "20260819_235524",
       "path": "kmeans/concat_hg_all/runs/20260819_235524",
@@ -2708,7 +3094,7 @@
       "id": "hierarchical__concat_hg_all__20260819_235654",
       "track": "hierarchical/concat_hg_all",
       "track_label": "Ward \u00b7 concatenated, ungated",
-      "cohort": "ungated concat cohort",
+      "cohort": "2946-electrode ungated concat cohort",
       "cohort_id": "cohort2_n27",
       "run": "20260819_235654",
       "path": "hierarchical/concat_hg_all/runs/20260819_235654",
@@ -2949,7 +3335,7 @@
       "id": "kmeans__hg__20260719_153420",
       "track": "kmeans/hg",
       "track_label": "K-means \u00b7 per-condition",
-      "cohort": "2026-07-19 per-task cohort",
+      "cohort": "2102-electrode 2026-07-19 per-task cohort",
       "cohort_id": "cohort3_n26",
       "run": "20260719_153420",
       "path": "kmeans/hg/runs/20260719_153420",
@@ -3337,7 +3723,7 @@
       "id": "hierarchical__hg__20260719_153443",
       "track": "hierarchical/hg",
       "track_label": "Ward \u00b7 per-condition",
-      "cohort": "2026-07-19 per-task cohort",
+      "cohort": "2102-electrode 2026-07-19 per-task cohort",
       "cohort_id": "cohort3_n26",
       "run": "20260719_153443",
       "path": "hierarchical/hg/runs/20260719_153443",
@@ -3783,7 +4169,7 @@
       "id": "kmeans__rawds__20260719_155034",
       "track": "kmeans/rawds",
       "track_label": "K-means \u00b7 per-condition 15-band",
-      "cohort": "2026-07-19 per-task cohort",
+      "cohort": "2102-electrode 2026-07-19 per-task cohort",
       "cohort_id": "cohort3_n26",
       "run": "20260719_155034",
       "path": "kmeans/rawds/runs/20260719_155034",
@@ -4223,7 +4609,7 @@
       "id": "hierarchical__rawds__20260719_155101",
       "track": "hierarchical/rawds",
       "track_label": "Ward \u00b7 per-condition 15-band",
-      "cohort": "2026-07-19 per-task cohort",
+      "cohort": "2102-electrode 2026-07-19 per-task cohort",
       "cohort_id": "cohort3_n26",
       "run": "20260719_155101",
       "path": "hierarchical/rawds/runs/20260719_155101",

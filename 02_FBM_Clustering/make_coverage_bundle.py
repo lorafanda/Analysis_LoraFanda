@@ -74,13 +74,18 @@ DEFAULT_RADIUS = 10.0
 # Deliberately absent: every *_raw track (~6 GB, no consensus/ranking/stability, three of
 # them pinned at K=20 = the sweep ceiling) and hierarchical/concat_rawds (K=20 for the
 # same reason, and the largest payload of the set).
+# The third field is the cohort IDENTITY, not its display label. It is the grouping
+# key, so it has to be stable - and it must not carry an electrode count, because the
+# count is a property of whatever cohort was last built. Every gated concat run said
+# "1266-electrode concat cohort" while holding 1693. The count is composed back in
+# after grouping, from the runs.
 TRACKS = [
-    ("cnmf/concat_hg", "Convex NMF - graded (argmax)", "1266-electrode concat cohort"),
-    ("cnmf/concat_rawds", "Convex NMF 15-band - graded (argmax)", "1266-electrode concat cohort"),
-    ("kmeans/concat_hg", "K-means · concatenated", "1266-electrode concat cohort"),
-    ("hierarchical/concat_hg", "Ward · concatenated", "1266-electrode concat cohort"),
-    ("kmeans/concat_rawds", "K-means · concat 15-band", "1266-electrode concat cohort"),
-    ("hierarchical/concat_rawds", "Ward · concat 15-band", "1266-electrode concat cohort"),
+    ("cnmf/concat_hg", "Convex NMF - graded (argmax)", "gated concat cohort"),
+    ("cnmf/concat_rawds", "Convex NMF 15-band - graded (argmax)", "gated concat cohort"),
+    ("kmeans/concat_hg", "K-means · concatenated", "gated concat cohort"),
+    ("hierarchical/concat_hg", "Ward · concatenated", "gated concat cohort"),
+    ("kmeans/concat_rawds", "K-means · concat 15-band", "gated concat cohort"),
+    ("hierarchical/concat_rawds", "Ward · concat 15-band", "gated concat cohort"),
     ("cnmf/concat_hg_all", "Convex NMF - ungated (argmax)", "ungated concat cohort"),
     ("kmeans/concat_hg_all", "K-means · concatenated, ungated", "ungated concat cohort"),
     ("hierarchical/concat_hg_all", "Ward · concatenated, ungated", "ungated concat cohort"),
@@ -333,13 +338,33 @@ def main() -> int:
     cohorts, order = {}, []
     for L in loaded:
         cid = next((c for c in order if cohorts[c]["pats"] == L["pats"]
-                    and cohorts[c]["label"] == L["cohort_name"]), None)
+                    and cohorts[c]["identity"] == L["cohort_name"]), None)
         if cid is None:
             cid = f"cohort{len(order) + 1}_n{len(L['pats'])}"
-            cohorts[cid] = {"pats": L["pats"], "label": L["cohort_name"], "runs": []}
+            cohorts[cid] = {"pats": L["pats"], "identity": L["cohort_name"],
+                            "label": L["cohort_name"], "runs": []}
             order.append(cid)
         cohorts[cid]["runs"].append(L)
         L["cohort_id"] = cid
+
+    # THE DISPLAYED LABEL IS COMPOSED HERE, from the runs that ended up in the cohort,
+    # so it cannot describe a cohort size that no longer exists. Runs in one cohort share
+    # an electrode set; if they somehow do not, say so rather than picking one count and
+    # presenting it as the cohort's.
+    for cid in order:
+        c = cohorts[cid]
+        # len(lab), not L["n_electrodes"]: that key is only added later, when the
+        # manifest entry is built, and this runs before it
+        ns = sorted({int(len(L["lab"])) for L in c["runs"] if L.get("lab") is not None})
+        if len(ns) == 1:
+            c["label"] = f"{ns[0]}-electrode {c['identity']}"
+        elif ns:
+            c["label"] = (f"{c['identity']} ({min(ns)}-{max(ns)} electrodes, "
+                          f"NOT one electrode set)")
+            print(f"  !! {cid}: runs disagree on electrode count {ns} - they should not "
+                  f"share a cohort", file=sys.stderr)
+        else:
+            c["label"] = c["identity"]
 
     print(f"  {len(loaded)} run(s), {len(order)} cohort(s), radii {[f'{r:g}' for r in a.radii]}")
     for cid in order:
