@@ -199,6 +199,73 @@ ENTRIES = [
                "graded membership versus convex components")],
     ),
     dict(
+        id="kiss-pipeline",
+        label="Rebuilding the whole thing",
+        q="Which files do I actually have to run, and in what order, to rebuild "
+          "everything from the raw signal to the visualizer?",
+        body=[
+            "The chart below is read off the scripts rather than remembered: every arrow "
+            "is a dependency the code really has &mdash; the target reads what the source "
+            "wrote.",
+            "<b>Solid arrows are hard dependencies. Dashed arrows are the ones that catch "
+            "people out</b>, because the steps look independent and are not. There are "
+            "two: <code>move_halves_out_of_ersp_matrix.py</code> must run after the ERSP "
+            "or the cohort triples, and <b>242 and 243 read 240's run</b>, so for a NEW "
+            "feature set the three notebooks are not parallel.",
+            "<b>Two things are valid only at one K</b> and the chart says so in red: "
+            "every statistic in 249 is scored against a null refitted at that K, and "
+            "re-running a feature set does not update its run &mdash; it supersedes it, "
+            "because run ids are timestamps and every resolver takes the newest.",
+            "<b>And committing is a step, not tidying up afterwards.</b> The site and the "
+            "visualizer fetch everything over HTTP from the repository, so a figure or a "
+            "CSV that exists only on your disk is a 404 to both. That is exactly what "
+            "&ldquo;No metrics published for K=9&rdquo; was.",
+            "The box at the bottom is the seven-line version for when nothing has changed "
+            "but the cohort.",
+        ],
+        figs=[("E.9", "every file, in the order the data forces",
+               "E9_pipeline_flowchart.png",
+               "flowchart of the full pipeline from raw sEEG and prep0 TSVs through the "
+               "ERSP, the cohort cache, the four clustering notebooks, the statistics "
+               "notebook, the per-run assets, the coverage bundle and the website, with "
+               "hard dependencies as solid arrows and easily-missed orderings dashed")],
+    ),
+    dict(
+        id="kiss-bands",
+        label="The spectral feature sets",
+        q="What is the difference between concat_rawds, concat_bands5 and "
+          "concat_bands5z?",
+        body=[
+            "All three describe the same electrodes over the same three conditions. They "
+            "differ in <b>how finely the spectrum is cut</b>, and whether the bands are "
+            "put on an equal footing.",
+            "<b><code>concat_rawds</code></b> &mdash; 15 bands &times; 3 conditions "
+            "&times; 30 bins = 1350 features. The published set.",
+            "<b><code>concat_bands5</code></b> &mdash; the same spectrum in 5 bands "
+            "(1&ndash;20, 20&ndash;70, 70&ndash;170, 170&ndash;270, 270&ndash;400 Hz), "
+            "450 features. Every edge lands on a 15-band edge, so the two are nested. "
+            "It is <b>statistically indistinguishable from all 15 on anatomical "
+            "coherence</b> (p&nbsp;=&nbsp;0.35 over 6 seeds) at a third of the width. "
+            "Four bands is measurably worse, so the 170&nbsp;|&nbsp;270 split is doing "
+            "real work.",
+            "<b><code>concat_bands5z</code></b> &mdash; the same five, each z-scored to "
+            "equal weight. <b>Units are SD within a band, not dB.</b> Euclidean distance "
+            "has no idea 1/f exists: the 1&ndash;20&nbsp;Hz band alone holds 44% of the "
+            "sum of squares, so the fit spends most of its budget on low-frequency power "
+            "whether the structure is there or not.",
+            "<b>Normalisation is the biggest lever in the whole feature definition.</b> "
+            "Raw against z-scored gives ARI 0.37 on the same electrodes at the same K "
+            "&mdash; a larger change than swapping k-means for Ward or convex NMF, which "
+            "agree at 0.25&ndash;0.36.",
+        ],
+        figs=[("E.8", "the same ERSP through all four representations",
+               "E8_band_schemes.png",
+               "one electrode's ERSP at full resolution, as concat_rawds, as "
+               "concat_bands5 and as concat_bands5z, the first three on a shared dB "
+               "scale, plus a second electrode showing that z-scoring moves different "
+               "electrodes by different factors")],
+    ),
+    dict(
         id="kiss-corr",
         label="Spearman or Pearson",
         q="What is the difference between Spearman and Pearson for skewed data?",
