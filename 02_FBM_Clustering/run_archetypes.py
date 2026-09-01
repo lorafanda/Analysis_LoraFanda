@@ -164,6 +164,36 @@ def run(fset: str, ks, kpub: int, n_iter: int, seed: int, source: Path) -> Path:
                    loadings="loadings_by_k"),
     )
     (rd / "manifest.json").write_text(json.dumps(man, indent=2), encoding="utf-8")
+
+    # REGISTER IN index.json. A per-run manifest is not enough: index.json is the
+    # registry make_missing_centroids and make_centroid_rasters iterate, so a run that
+    # is missing from it silently gets no centroid chips and no rasters, while
+    # make_coverage_bundle - which globs TRACKS instead - still publishes it. The run
+    # then appears in the visualizer with empty cluster cards.
+    ip = CLUST / "index.json"
+    if ip.exists():
+        idx = json.loads(ip.read_text(encoding="utf-8"))
+        if not any(m["id"] == "archetypes" for m in idx.get("methods", [])):
+            idx.setdefault("methods", []).append(
+                {"id": "archetypes", "label": "Archetypal analysis"})
+        if not any(f["id"] == fset for f in idx.get("feature_sets", [])):
+            idx.setdefault("feature_sets", []).append(
+                {"id": fset, "label": FS_LABEL.get(fset, fset)})
+        # one entry per track, newest wins - the same rule publish_decomposition uses
+        idx["runs"] = [r for r in idx.get("runs", [])
+                       if not (r.get("method") == "archetypes"
+                               and r.get("feature_set") == fset)]
+        idx["runs"].append({
+            "method": "archetypes", "feature_set": fset, "run_id": rid,
+            "created_at": man["created_at"],
+            "n_samples": int(n), "n_clusters": int(kpub), "silhouette": None,
+            "path": f"archetypes/{fset}/runs/{rid}", "has_ranking": False,
+        })
+        idx.setdefault("latest", {}).setdefault("archetypes", {})[fset] = rid
+        idx["updated_at"] = man["created_at"]
+        ip.write_text(json.dumps(idx, indent=2), encoding="utf-8")
+        print(f"  registered in index.json ({len(idx['runs'])} runs)")
+
     print(f"  -> {rd}")
     return rd
 

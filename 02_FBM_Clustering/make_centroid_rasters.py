@@ -66,7 +66,7 @@ import lf_centroids as LC  # noqa: E402   (read only - conventions, not modified
 CLUST = ROOT / "outputs" / "clustering"
 
 # The runs asked for: convex NMF, k-means and Ward, on both concat feature sets.
-METHODS = ("cnmf", "kmeans", "hierarchical")
+METHODS = ("cnmf", "kmeans", "hierarchical", "archetypes")
 FEATURE_SETS = ("concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z",
                 "concat_hg_all")
 
@@ -129,18 +129,25 @@ def read_run(rd: Path):
     feature_set = rd.parent.parent.name
     method = rd.parent.parent.parent.name
 
+    # convex NMF writes G_loadings, archetypal analysis writes A_loadings. Without
+    # the second name an archetype run falls through to the silhouette branch and its
+    # graded membership - the thing it exists to produce - is thrown away silently.
     gpath = rd / "G_loadings.npy"
-    if gpath.exists():
-        G = np.load(gpath)
+    apath = rd / "A_loadings.npy"
+    if gpath.exists() or apath.exists():
+        graded = apath.exists() and not gpath.exists()
+        G = np.load(apath if graded else gpath)
         # Row-normalised, then each sample's weight on the component it was
         # assigned to. Raw G is not comparable between samples: a loud electrode
-        # loads higher on everything.
+        # loads higher on everything. Archetypal A rows ALREADY sum to 1 - that is
+        # the constraint, not a post-hoc step - so this is a no-op there, and doing
+        # it unconditionally keeps the two paths identical.
         Gn = G / np.maximum(G.sum(1, keepdims=True), 1e-12)
         ok = np.isfinite(labels) & (labels >= 0) & (labels < Gn.shape[1])
         strength = np.full(len(labels), np.nan)
         idx = labels[ok].astype(int)
         strength[ok] = Gn[np.where(ok)[0], idx]
-        name = "loading on this component"
+        name = "weight on this archetype" if graded else "loading on this component"
     else:
         from sklearn.metrics import silhouette_samples
         good = np.isfinite(labels)
