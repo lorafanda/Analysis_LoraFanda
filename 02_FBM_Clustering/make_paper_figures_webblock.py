@@ -105,8 +105,37 @@ def fig2_bullets(png: Path):
     return b
 
 
+def fig3_bullets(png: Path):
+    """What FIG 3 found, from the per-cluster table written beside it."""
+    stem = png.with_suffix("").name
+    f = FIGDIR / f"{stem}_clusters.csv"
+    if not f.exists():
+        return []
+    d = pd.read_csv(f)
+    top = d.loc[d.mean_P.idxmax()]
+    base = float(d.baseline_P.iloc[0])
+    b = [f"<b>{int((d.q_mean < 0.05).sum())} of {len(d)}</b> clusters sit in more LanA "
+         f"than a within-patient permutation of the same electrodes would give "
+         f"(q &lt; 0.05). The cohort mean is {base:.3f}.",
+         f"Most language-aligned: <b>c{int(top.cluster)}</b> at {top.mean_P:.3f} "
+         f"(q = {top.q_mean:.2g}); least: c{int(d.loc[d.mean_P.idxmin(), 'cluster'])} "
+         f"at {d.mean_P.min():.3f}.",
+         f"<b>{int((d.q_rho < 0.05).sum())} of {len(d)}</b> loading-vs-P(LanA) "
+         f"correlations survive FDR, and none is large "
+         f"(|rho| at most {d.rho.abs().max():.2f}) &mdash; belonging more strongly to a "
+         f"cluster barely predicts sitting further into language cortex."]
+    thin = d[d.coverage < 0.70]
+    b.append(f"LanA covers {100*d.n_lana.sum()/d.n.sum():.0f}% of the electrodes; the "
+             f"missing ones are whole patients the atlas run predates"
+             + (f", and c{int(thin.cluster.iloc[0])} is only "
+                f"{100*thin.coverage.min():.0f}% covered, so its mean is not comparable "
+                f"with the rest." if len(thin) else "."))
+    return b
+
+
 def build():
-    figs = sorted(FIGDIR.glob("FIG1*.png")) + sorted(FIGDIR.glob("FIG2*.png"))
+    figs = (sorted(FIGDIR.glob("FIG1*.png")) + sorted(FIGDIR.glob("FIG2*.png"))
+            + sorted(FIGDIR.glob("FIG3*.png")))
     figs = [f for f in figs if " - Copy" not in f.name]
     tracked = tracked_files()
 
@@ -120,6 +149,11 @@ def build():
          "provenance, and the numbers behind every panel as CSV. The bullets below are "
          "read from those files when this section is generated, so a verdict here "
          "cannot outlive the figure it describes.",
+         "      <p style='margin:8px 0 0'><b>FIG 3 asks a different question and its "
+         "answer is mostly negative</b> &mdash; where the clusters sit relative to the "
+         "LanA probabilistic language atlas. LanA is a prior about a LOCATION, not a "
+         "measurement in a patient, so a cluster scoring high sits where language "
+         "cortex usually is; whether it responded to language is FIG 1.</p>",
          "      <p style='margin:8px 0 0'><b>FIG 1 is cut at two K.</b> The held-out "
          "peak per feature set (11 / 12 / 14 / 13) and <b>K = 8</b>. They disagree, and "
          "the disagreement is the point &mdash; held-out variance cannot see a cluster "
@@ -140,11 +174,18 @@ def build():
             alt = (f"four panels: held-out variance vs K, a schematic key, a "
                    f"generalization curve, and one block per cluster with its mean, "
                    f"two hemisphere renders and its patient composition")
-        else:
+        elif stem.startswith("FIG2"):
             num, title = f"2 &middot; K={k}", f"agreement, K = {k}"
             bullets = fig2_bullets(png)
             alt = ("six panels: pairwise agreement, per-cluster agreement and "
                    "per-electrode agreement, for feature sets and for algorithms")
+        else:
+            fset = stem.split("_K")[0][len("FIG3_lana_"):]
+            num, title = f"3 &middot; K={k}", f"LanA language atlas, {fset}, K = {k}"
+            bullets = fig3_bullets(png)
+            alt = ("four panels: clusters ranked by LanA probability, per-cluster "
+                   "loading against LanA, those correlations ranked, and LanA on this "
+                   "electrode coverage")
         if tracked is not None and rel(png) not in tracked:
             untracked.append(rel(png))
             continue

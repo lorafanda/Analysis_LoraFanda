@@ -316,6 +316,63 @@ def electrode_agreement_null(sols, ref_i, order, n_perm=200, seed=0):
     return f / max(f.sum(), 1)
 
 
+def self_stability(sol, k):
+    """A solution's agreement with ITSELF: mean per-cluster Jaccard over 50 refits on
+    80% subsamples, from sweep_stability --native. None where no sweep exists.
+
+    The ceiling on every number in B/E. Cross-solution agreement cannot exceed what a
+    method manages against its own refits, so a Jaccard of 0.4 against a ceiling of
+    0.55 and the same 0.4 against a ceiling of 0.90 are different results.
+    """
+    for nm in ("stability_by_k_native.csv", "stability_by_k.csv"):
+        f = sol["run"] / nm
+        if not f.exists():
+            continue
+        d = pd.read_csv(f)
+        r = d[d.k == k] if "k" in d.columns else d
+        if len(r) and "mean_jaccard" in r.columns:
+            return float(r.mean_jaccard.iloc[0]), nm.replace(".csv", "")
+    return None, None
+
+
+def cluster_jaccard_null(sols, ref_i, order, n_perm=200, seed=1):
+    """A null Jaccard for EVERY CELL, not one line for the panel.
+
+    Chance overlap between two clusters depends on their sizes, so a single threshold
+    would be too strict for the big rows and too lax for the small ones. Each
+    non-reference solution's labels are permuted with its cluster sizes preserved and
+    re-matched to the reference the way the real ones are; the cell's null is the mean
+    of that, and its p is the share of permutations reaching the observed value.
+    """
+    from scipy.optimize import linear_sum_assignment
+    rng = np.random.default_rng(seed)
+    ref = sols[ref_i]
+    rl = ref["lab"]
+    K = int(rl.max()) + 1
+    null = np.zeros((K, len(sols)))
+    for c, sol in enumerate(sols):
+        if c == ref_i:
+            null[:, c] = np.nan
+            continue
+        for _ in range(n_perm):
+            pl = rng.permutation(sol["lab"])
+            Cm = np.bincount(pl * K + rl, minlength=K * K).reshape(K, K)
+            r_, c_ = linear_sum_assignment(-Cm)
+            m = np.empty(K, int)
+            m[r_] = c_                        # permuted cluster -> reference cluster
+            inv = np.full(K, -1, int)
+            inv[m] = np.arange(K)             # reference cluster -> permuted cluster
+            for p in range(K):
+                r0 = int(order[p])
+                A = pl == inv[r0]
+                B = rl == r0
+                u = float((A | B).sum())
+                j = float((A & B).sum()) / u if u else 0.0
+                null[p, c] += j
+        null[:, c] /= n_perm
+    return null, n_perm
+
+
 def one_patient_clusters(lab, patient, k, danger=0.50):
     """How many clusters are more than `danger` one patient - FIG 1 panel D's number."""
     codes, _ = pd.factorize(patient)
@@ -421,7 +478,7 @@ def panel_ari(ax, M, names, groups, chars, k, curve):
 
 
 def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
-                   thresh=0.30):
+                   nullJ, selfstab, thresh=0.30):
     """Every reference cluster against its match, with the reference column dropped.
 
     NOT 'which clusters survive'. Every number here is agreement with ONE reference, so
@@ -432,13 +489,23 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
     """
     keep = [c for c in range(J.shape[1]) if c != ref_i]
     Jk, nk = J[:, keep], [names[c] for c in keep]
+    Nk = nullJ[:, keep]
     K = Jk.shape[0]
+    # each column's own ceiling, printed under its name: cross-solution agreement
+    # cannot exceed what a method manages against its own refits
+    nk = [f"{n}\nself {selfstab[c][0]:.2f}" if selfstab[c][0] is not None
+          else f"{n}\nself --" for n, c in zip(nk, keep)]
     axM.imshow(Jk, cmap="Blues", vmin=0, vmax=vmax, aspect="auto")
     for p in range(K):
         for c in range(Jk.shape[1]):
             v = Jk[p, c]
             axM.text(c, p, f"{v:.2f}", ha="center", va="center", fontsize=8.2,
                      color="white" if v > 0.62 * vmax else (RED if v < thresh else INK))
+            # does not beat a size-matched permutation of the same two clusters
+            if np.isfinite(Nk[p, c]) and v <= Nk[p, c]:
+                axM.add_patch(Rectangle((c - 0.5, p - 0.5), 1, 1, fill=False,
+                                        hatch="////", ec="white", lw=0, alpha=0.85,
+                                        zorder=3))
     axM.set_xticks(range(len(nk))); axM.set_yticks(range(K))
     axM.xaxis.tick_top()
     axM.set_xticklabels(nk, fontsize=8.0, rotation=26, ha="left")
@@ -477,6 +544,9 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
 
     lost = int((worst < thresh).sum())
     flip = int(((worst < thresh) & (others > 2 * worst) & (others > thresh)).sum())
+    at_chance = int(np.sum(np.isfinite(Nk) & (Jk <= Nk)))
+    ceil = [f"{n.split(chr(10))[0]} {selfstab[c][0]:.2f}" for n, c in zip(nk, keep)
+            if selfstab[c][0] is not None]
     gone = [f"p{p} (c{int(order[p])}, n={int(sizes[int(order[p])])})"
             for p in range(K) if worst[p] < thresh]
     txt = (f"Jaccard against the 1:1 match, reference column dropped, scale 0-{vmax:.2f}."
@@ -489,7 +559,12 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
             txt += f", and {len(gone) - 4} more"
     txt += (f".  OTHERS = best agreement between two non-reference solutions on that "
             f"row; {flip} row(s), outlined green, are low only because the REFERENCE "
-            f"disagrees.")
+            f"disagrees.  {at_chance} of {Jk.size} cells, hatched, do not beat a "
+            f"size-matched permutation of their own two clusters.")
+    if ceil:
+        txt += ("  SELF under each column is that solution's agreement with ITSELF over "
+                "50 refits on 80% of the electrodes - the ceiling every number here is "
+                "read against: " + ", ".join(ceil) + ".")
     summary_under(axM, txt, chars, colour=RED if lost else MUTED)
 
 
@@ -629,7 +704,11 @@ def figure_2(k: int, algo_fset: str):
     al_J, al_maps, al_oth = cluster_agreement(al_sols, al_ref, al_order)
     fs_cnt, _ = electrode_agreement(fs_sols, fs_ref, fs_maps, fs_order)
     al_cnt, _ = electrode_agreement(al_sols, al_ref, al_maps, al_order)
-    print("    permutation null for the electrode agreement ...")
+    print("    permutation nulls (per-cluster Jaccard, and the electrode count) ...")
+    fs_null_J, _ = cluster_jaccard_null(fs_sols, fs_ref, fs_order)
+    al_null_J, _ = cluster_jaccard_null(al_sols, al_ref, al_order)
+    fs_self = [self_stability(x, k) for x in fs_sols]
+    al_self = [self_stability(x, k) for x in al_sols]
     fs_null = electrode_agreement_null(fs_sols, fs_ref, fs_order)
     al_null = electrode_agreement_null(al_sols, al_ref, al_order)
     ks = list(range(5, 31))
@@ -656,12 +735,14 @@ def figure_2(k: int, algo_fset: str):
     halves = (
         dict(ari=fs_ari, J=fs_J, cnt=fs_cnt, names=fs_names, sols=fs_sols, ref=fs_ref,
              oth=fs_oth, order=fs_order, sizes=fs_sizes, null=fs_null,
+             nullJ=fs_null_J, self=fs_self,
              curve=fs_curve, onepat=n_op_fs,
              refname=FS_SHORT.get(REF_FSET, REF_FSET), tags="ABC",
              head=f"FEATURE SETS   ·   convex NMF on four representations   ·   "
                   f"reference {FS_SHORT.get(REF_FSET, REF_FSET)}"),
         dict(ari=al_ari, J=al_J, cnt=al_cnt, names=al_names, sols=al_sols, ref=al_ref,
              oth=al_oth, order=al_order, sizes=al_sizes, null=al_null,
+             nullJ=al_null_J, self=al_self,
              curve=al_curve, onepat=n_op_al,
              refname=f"{METHOD_LABEL[REF_METHOD]} on {algo_fset}", tags="DEF",
              head=f"ALGORITHMS   ·   four methods on {algo_fset}   ·   "
@@ -679,7 +760,8 @@ def figure_2(k: int, algo_fset: str):
                                      wspace=0.08)
         axM = fig.add_subplot(cB[0])
         panel_clusters(axM, fig.add_subplot(cB[1]), h["J"], h["oth"], h["names"],
-                       h["order"], h["sizes"], h["ref"], 104, vmax)
+                       h["order"], h["sizes"], h["ref"], 104, vmax, h["nullJ"],
+                       h["self"])
 
         cC = GridSpecFromSubplotSpec(2, 2, gs[row, 15:24], height_ratios=[1.0, 0.30],
                                      hspace=0.16, wspace=0.03)
@@ -736,13 +818,13 @@ def figure_2(k: int, algo_fset: str):
               (fs_ari, fs_J, fs_cnt, fs_names, fs_sols, fs_dropped, fs_order,
                fs_oth, fs_null, fs_curve, n_op_fs),
               (al_ari, al_J, al_cnt, al_names, al_sols, al_dropped, al_order,
-               al_oth, al_null, al_curve, n_op_al), vmax)
+               al_oth, al_null, al_curve, n_op_al), vmax, fs_self, al_self)
     print(f"  {time.time()-t0:.0f}s  -> {p.name}")
     return p
 
 
 # ---- the caption -------------------------------------------------------------
-def caption_2(path, k, d, algo_fset, fs, al, vmax):
+def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self):
     (fs_ari, fs_J, fs_cnt, fs_names, fs_sols, fs_dropped, fs_order, fs_oth,
      fs_null, fs_curve, n_op_fs) = fs
     (al_ari, al_J, al_cnt, al_names, al_sols, al_dropped, al_order, al_oth,
@@ -820,6 +902,30 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax):
     A("the reference is the odd one out and the cluster survived elsewhere; those rows")
     A("are outlined green. On the algorithm half this is not hypothetical - k-means and")
     A("Ward can agree with each other more than either agrees with convex NMF.")
+    A("")
+    A("THE CEILING. sweep_stability --native refits a solution on 50 subsamples of 80%")
+    A("of the electrodes and reports the mean per-cluster Jaccard - the SAME quantity")
+    A("this panel measures, so it sits under each column name as `self`. Cross-solution")
+    A("agreement cannot exceed what a method manages against its own refits, and reading")
+    A("these numbers without it is the difference between 'the solutions disagree' and")
+    A("'this is most of what the solution can offer'.")
+    A("")
+    for nm, sols_, self_ in (("feature sets", fs_sols, fs_self),
+                             ("algorithms", al_sols, al_self)):
+        A(f"  {nm}")
+        for so, (v, src) in zip(sols_, self_):
+            who = f"{so['method']}/{so['fset']}"
+            A(f"    {who:<30} " + (f"{v:.3f}   ({src})" if v is not None
+                                   else "no stability sweep at this K"))
+    A("")
+    A("ARI in A and D is a different scale and has no ceiling available, so none is")
+    A("drawn there; putting a Jaccard on an ARI axis would be a units error.")
+    A("")
+    A("THE PER-CELL NULL. A chance Jaccard depends on the two clusters' sizes, so one")
+    A("threshold would be too strict for the big rows and too lax for the small ones.")
+    A("Each non-reference solution's labels are permuted with its cluster sizes")
+    A("preserved and re-matched to the reference the way the real ones are; a cell that")
+    A("does not reach the mean of that null is HATCHED. 200 permutations.")
     A("")
     A(f"The colour scale runs 0 to {vmax:.2f}, shared by both halves and set from the")
     A("data: 0-1 left most of the bar unused once the reference column was dropped, and")

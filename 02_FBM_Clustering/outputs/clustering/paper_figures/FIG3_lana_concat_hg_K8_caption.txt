@@ -1,0 +1,119 @@
+FIG 3   ·   LanA language atlas   ·   concat_hg   ·   K = 8
+====================================================================================================
+
+WHAT P_lana IS
+----------------------------------------------------------------------------------------------------
+The LanA probabilistic language atlas sampled at each contact's fsaverage
+position: the fraction of that atlas's subjects whose language network covers
+this point. It is an ATLAS PRIOR ABOUT A LOCATION, not a measurement in this
+patient. A high value means the contact sits where language cortex usually is;
+it does not mean the contact responded to language, and a low value does not
+mean it did not. Nothing in this figure is evidence that a cluster IS or IS NOT
+language-responsive - only that it does or does not sit where LanA is.
+
+COVERAGE, AND WHY IT IS NOT A DETAIL
+----------------------------------------------------------------------------------------------------
+  electrodes with a LanA value   1396 of 1693 (82.5%)
+  atlas table used               lana_all/20260802_pbins
+  tables checked against it      lana_all/20260802_pbins, lana_all/20260802_thr0p05, lana_all/20260802_thr0p1, lana_concat/20260802_pbins, lana_concat/20260802_thr0p05, lana_concat/20260802_thr0p1, lana_inout/20260728_lana_p05_thr010
+  largest disagreement between them   5e-05 (tolerance 0.001)
+
+The tables are written on different dates and round to different precision in
+CSV, so they are compared with a tolerance rather than for exact equality, and
+only where BOTH have a value - a contact the atlas could not sample is a
+coverage difference, not a disagreement about a number.
+
+The missing electrodes are NOT missing at random: the atlas run predates part of
+the cohort, so whole patients have no value at all. A cluster drawn mostly from
+those patients would look like it sits outside language cortex when in truth it
+has not been measured against the atlas. Per-cluster coverage is printed under
+every bar in panel A and anything below 70% is marked in red.
+
+  electrodes with no LanA value, by patient:
+    PAT_6953      156 of 156    (the whole patient)
+    EL046          86 of 86     (the whole patient)
+    EL034          55 of 55     (the whole patient)
+
+THE NULL, AND WHY IT IS WITHIN PATIENT
+----------------------------------------------------------------------------------------------------
+Contacts on one shaft sit millimetres apart, share a patient, and share an atlas
+neighbourhood, so a correlation across ~1400 electrodes has nothing like 1400
+degrees of freedom. Every null here permutes P_lana WITHIN EACH PATIENT: that
+keeps each patient's own atlas values and coverage exactly as they are and
+breaks only the link between a contact's position and its cluster. A null that
+shuffled across patients would also destroy the fact that patients are implanted
+in different places, and would be far too easy to beat.
+
+Confidence intervals BOOTSTRAP PATIENTS, not electrodes, for the same reason: an
+electrode bootstrap treats contacts on one shaft as independent draws and returns
+intervals several times too narrow.
+
+  1000 permutations, 1000 bootstraps, patients resampled with replacement
+
+MULTIPLE COMPARISONS
+----------------------------------------------------------------------------------------------------
+K clusters is 8 tests per panel, and the figure RANKS them - which is exactly
+the arrangement that manufactures an impressive-looking best one. Both panels are
+corrected with Benjamini-Hochberg and a star means q < 0.05, not p < 0.05.
+
+PANEL A - clusters ranked by how much LanA they sit in
+----------------------------------------------------------------------------------------------------
+Mean P_lana of a cluster's electrodes, most to least. Grey dash = the
+within-patient null, dotted line = the cohort mean, % under each bar = coverage.
+
+  cohort mean P_lana             0.1434
+  most  c3  0.2260 [0.1664, 0.3543]  null 0.1497  q=0.00799
+  least c2  0.1006 [0.0863, 0.1113]  null 0.1259  q=0.998
+  clusters above the null at q<0.05   1 of 8
+
+PANEL B and C - loading against P_lana
+----------------------------------------------------------------------------------------------------
+Spearman rho between an electrode's LOADING on a cluster and its P_lana, across
+EVERY electrode with a LanA value - not only the cluster's own members, because
+the question is whether belonging more strongly to this cluster goes with sitting
+further into language cortex, and that is a statement about all of them.
+
+Spearman, not Pearson: P_lana is a bounded, heavily right-skewed probability and
+the loadings are not normal either, so a rank correlation is the honest choice.
+
+THE K CORRELATIONS ARE NOT INDEPENDENT OF EACH OTHER, and this is the easiest
+number in the figure to over-read. A convex-NMF loading vector is normalised to
+sum to 1, so the K loadings of one electrode live on a simplex: if one cluster's
+loading rises with P_lana, the others MUST fall, whatever they are describing.
+A negative rho is therefore 'not this cluster' and not 'this cluster avoids
+language cortex' - the two are indistinguishable from this panel. Only the
+POSITIVE end is interpretable on its own, and even the ranking among negatives is
+partly an artefact of how strong the leader is. Verified on synthetic data where
+one cluster was planted to track the atlas: every other cluster went negative
+without being planted to do anything at all.
+
+The within-patient null does not remove this. It is computed on the same
+normalised loadings, so it prices in the simplex for EACH cluster separately -
+it says whether that cluster's rho exceeds chance, not whether the K rhos are
+mutually consistent.
+
+  c3   rho +0.097 [+0.032, +0.172]   null +0.009   p=0.000999  q=0.00799   meanP 0.2260   coverage 91%
+  c7   rho +0.026 [-0.062, +0.102]   null +0.034   p=0.686  q=0.686   meanP 0.1665   coverage 91%
+  c4   rho -0.041 [-0.110, +0.016]   null -0.003   p=0.048  q=0.128   meanP 0.1373   coverage 82%
+  c6   rho -0.019 [-0.095, +0.045]   null +0.024   p=0.638  q=0.686   meanP 0.1363   coverage 74%
+  c1   rho +0.010 [-0.074, +0.110]   null +0.012   p=0.67  q=0.686   meanP 0.1319   coverage 81%
+  c5   rho -0.023 [-0.089, +0.057]   null -0.004   p=0.287  q=0.459   meanP 0.1268   coverage 91%
+  c0   rho +0.037 [-0.059, +0.124]   null +0.015   p=0.176  q=0.352   meanP 0.1209   coverage 62%
+  c2   rho -0.091 [-0.167, -0.011]   null -0.037   p=0.00899  q=0.036   meanP 0.1006   coverage 90%
+
+  2 of 8 correlations survive FDR.
+A rho near zero means the cluster is placed independently of the atlas. That is a
+result, not a failure - it says the clustering found structure the atlas does not
+describe.
+
+WHAT THIS FIGURE DOES NOT SHOW
+----------------------------------------------------------------------------------------------------
+  - Not evidence of language responsiveness. LanA is a prior about where language
+    cortex usually sits, sampled at a coordinate. The response itself is FIG 1.
+  - Not corrected for the fact that LanA is left-lateralised and sEEG coverage is
+    not symmetric. A cluster that happens to be left-heavy will score higher for
+    that reason alone; the within-patient null does not remove it, because it is
+    a property of where a cluster is, not of which patients it draws on.
+  - Not a statement about K. The clusters are whatever this K produced.
+  - The 297 electrodes with no LanA value are excluded from every number here,
+    not counted as zero.

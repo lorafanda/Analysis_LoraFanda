@@ -58,6 +58,33 @@ the reference is the odd one out and the cluster survived elsewhere; those rows
 are outlined green. On the algorithm half this is not hypothetical - k-means and
 Ward can agree with each other more than either agrees with convex NMF.
 
+THE CEILING. sweep_stability --native refits a solution on 50 subsamples of 80%
+of the electrodes and reports the mean per-cluster Jaccard - the SAME quantity
+this panel measures, so it sits under each column name as `self`. Cross-solution
+agreement cannot exceed what a method manages against its own refits, and reading
+these numbers without it is the difference between 'the solutions disagree' and
+'this is most of what the solution can offer'.
+
+  feature sets
+    cnmf/concat_hg                 0.547   (stability_by_k_native)
+    cnmf/concat_rawds              0.898   (stability_by_k_native)
+    cnmf/concat_bands5             no stability sweep at this K
+    cnmf/concat_bands5z            no stability sweep at this K
+  algorithms
+    cnmf/concat_hg                 0.547   (stability_by_k_native)
+    kmeans/concat_hg               0.823   (stability_by_k_native)
+    hierarchical/concat_hg         0.699   (stability_by_k_native)
+    archetypes/concat_hg           no stability sweep at this K
+
+ARI in A and D is a different scale and has no ceiling available, so none is
+drawn there; putting a Jaccard on an ARI axis would be a units error.
+
+THE PER-CELL NULL. A chance Jaccard depends on the two clusters' sizes, so one
+threshold would be too strict for the big rows and too lax for the small ones.
+Each non-reference solution's labels are permuted with its cluster sizes
+preserved and re-matched to the reference the way the real ones are; a cell that
+does not reach the mean of that null is HATCHED. 200 permutations.
+
 The colour scale runs 0 to 0.79, shared by both halves and set from the
 data: 0-1 left most of the bar unused once the reference column was dropped, and
 every difference looked smaller than it was.
@@ -111,7 +138,7 @@ PROVENANCE
     archetypes    concat_hg        archetypes/concat_hg/runs/20260826_180756   (graded)
   geometry and block order from concat_bands5 (cnmf) at K=8
   built by      00_paper2_figures2_2.py --k 8 --algo-feature-set concat_hg
-  built on      2026-09-01 16:34
+  built on      2026-09-01 18:36
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
