@@ -1,0 +1,304 @@
+FIG 1a   ·   high gamma (70-150 Hz) x time   ·   convex NMF   ·   K = 11
+====================================================================================================
+
+WHAT THE FIGURE IS
+----------------------------------------------------------------------------------------------------
+Convex NMF (Ding, Li & Jordan 2010) fitted to 1693 electrodes from 27 patients, in the
+high gamma (70-150 Hz) x time feature set (900 features = 3 conditions x 1 band x 300 time bins).
+Cut at K = 11. Cluster sizes: [195, 213, 189, 181, 153, 88, 101, 156, 162, 139, 116] (largest 12.6% of the cohort).
+
+PROVENANCE
+----------------------------------------------------------------------------------------------------
+  run            cnmf/concat_hg/runs/20260826_135016
+  cohort cache   concat_source_v4
+  loadings       loadings_by_k/G_k11.npy  (1693 x 11)
+  features       X_train.npy, raw dB vs baseline (NOT the unit-norm space cNMF fits in)
+  coordinates    outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
+  surfaces       outputs/250_recon/fsaverage/meshes/fsaverage_[lr]h.gii
+  render         pyvista/VTK offscreen, material constants read live from
+                 functions/lf_recon_shared_config.py (the visualizer's own)
+  built by       00_Paper2_Figures.py --figure 1 --feature-set concat_hg
+  built on       2026-09-01 14:49
+
+HOW K WAS CHOSEN
+----------------------------------------------------------------------------------------------------
+Bi-cross-validation (Owen & Perry 2009): both ROWS (electrodes) and COLUMNS
+(features) are held out, so the score can fall as well as rise and the curve can
+turn over. A curve that only rises cannot choose a K. Each feature set is scored
+in its own home space, so heights are comparable WITHIN a curve and the shape
+and the peak are what compare ACROSS curves.
+
+  feature set        peak K    held-out variance at peak
+  concat_hg             11    0.5519   <- this figure
+  concat_rawds          12    0.4627
+  concat_bands5         14    0.5557
+  concat_bands5z        13    0.5360
+
+This figure is cut at K = 11
+
+PANEL A - held-out variance vs K
+----------------------------------------------------------------------------------------------------
+All four feature sets, convex NMF only. Each point is the mean over the
+bi-cross-validation folds; the shaded band on the emphasised curve is +/- 1 SD
+across folds. The triangle on each curve marks that curve's own peak. The red
+dashed line is the K this figure is cut at (11).
+The panel is IDENTICAL in FIG 1a, 1b, 1c and 1d except for which curve is
+emphasised, so the four figures can be laid side by side.
+
+PANEL C - how to read a cluster mean
+----------------------------------------------------------------------------------------------------
+ABOVE IT, A TRIAL STRIP: what was on the screen, over the time it was there.
+Read off the paradigm figure (Figure1_FBM_v1.png). Each condition runs
+fixation -> stimulus -> "?", the "?" being the response cue. The stimulus box
+spans 0-50% of the block and the "?" box spans 50-100%, so the boundary between
+them falls exactly on the dashed GO-cue line.
+
+THE FIXATION SCREEN IS DELIBERATELY ABSENT from the strip. The paradigm has
+three screens per trial; these panels show two, because the warp is proportions
+(0.0, 0.5, 0.5) and the fixation phase is given NO time bins. It has not been
+dropped for tidiness - it occupies no part of the x axis. The baseline every dB
+value is expressed against (-0.6 to -0.1 s) does come from it.
+
+The audio, reading and "?" icons are drawn as vectors and stay sharp at any
+print size. The picture stimulus is a real line drawing: if a crop of it exists
+at stim_picture.png in the paper_figures/assets/ folder it is used, and
+otherwise a framed-image glyph stands in, so the figure builds either way.
+
+BELOW THE STRIP, A SCHEMATIC. It is not any real cluster and contains no data - a low-frequency
+decrease and a high-frequency increase locked to the GO cue, with amplitude
+growing across the three conditions purely so the blocks are distinguishable.
+It exists to name the parts: the condition over each block, the GO cue at 50%,
+the percent-of-trial axis, and the dB axis.
+
+PANEL D - does this K generalize?
+----------------------------------------------------------------------------------------------------
+Computed at EVERY K the run was swept at, not only the published one. For each K,
+the electrodes are assigned by argmax of that K's loadings and two numbers are
+taken:
+
+  red     the share of CLUSTERS more than 50% of whose electrodes come from
+          one patient
+  orange  the share of ELECTRODES sitting inside those clusters
+
+They answer different questions and can disagree: two of twenty small clusters
+failing is not the same as two of five big ones, and only the second number tells
+them apart. The grey curve on the right axis is panel A's held-out variance for
+this feature set, on the same x.
+
+WHY BOTH CURVES HAVE TO BE ON ONE PANEL. Held-out variance cannot see this
+failure. Splitting a cohort until each patient has their own component fits
+held-out data perfectly well - the components are real, they are just components
+of individuals rather than of a population. So the held-out peak nominates a K
+and this curve says what that K costs; where they disagree is a decision, not a
+computation.
+
+  at K = 11:  2 of 11 clusters (18%), holding 15% of the electrodes
+  best K on this criterion: 5  (0 of 5 clusters, 0% of electrodes)
+  range over K=5..30: 0% to 63% of electrodes in one-patient clusters
+
+PER-CLUSTER PATIENT COMPOSITION at the published K, against a SIZE-MATCHED
+RANDOM DRAW - the same number of electrodes sampled without replacement from the
+same cohort, averaged over 400 permutations, so the reference inherits the
+cohort's own patient imbalance instead of assuming it away. Read it as a CEILING,
+not a floor: a real anatomical cluster SHOULD draw on fewer patients than a random
+draw, because sEEG coverage is patient-specific. What matters is the other end.
+
+  patients per cluster        10-19  (median 16)   random draw 25.2 of 27
+  largest patient's share     16%-80%  (median 36%)   random draw 11%
+  clusters with under 5 patients 0 of 11
+  WORST: c5 is 80% one patient (70 of its 88 electrodes), drawing on 10 patients.
+
+Written alongside the figure as FIG1a_concat_hg_cnmf_K11_patients.csv (per cluster) and
+FIG1a_concat_hg_cnmf_K11_generalization.csv (per K).
+
+PANEL B, TOP OF EACH BLOCK - the cluster mean
+----------------------------------------------------------------------------------------------------
+BLOCK ORDER IS NOT CLUSTER ORDER.  Order used: matched to concat_bands5 (cnmf) by loading correlation.
+
+Every run labels the SAME 1693 electrodes in the SAME order, so two solutions at
+one K can be matched 1:1 by Hungarian assignment, and block position can be made
+to mean the same cluster in every figure. concat_bands5 (cnmf)
+defines the sequence; its own blocks are ordered by how alike a cluster's three
+condition profiles look, most alike first.
+
+THE REFERENCE IS TAKEN AT THIS FIGURE'S OWN K, so both sides of the match have
+equal K by construction - which 1:1 assignment requires. It follows that a set of
+figures drawn at DIFFERENT K (the held-out peaks: 11, 12, 14, 13) is matched to a
+different reference solution in each figure, and their positions are NOT
+comparable with one another. Only a set drawn at one shared K is.
+
+CLUSTER IDS, COLOURS AND EVERY NUMBER ARE UNCHANGED. c3 is c3 in panel D, in the
+CSVs, in the run report and on the 3-D brain; it just appears somewhere else on
+this page. Renumbering to match the page would have broken that correspondence.
+
+THE ORDER IS A SORT KEY, NOT A RESULT. Correlation is scale-free, so two
+conditions with the same shape and very different amplitude score high. That is
+what "looks the same" means for a shape compared by eye, and it is not what it
+would mean if this were reported as a measure of modality invariance. Nothing is
+computed from it and nothing is claimed by it.
+
+  order drawn   c7 c4 c2 c1 c0 c10 c9 c3 c8 c5 c6
+  similarity    +0.89 +0.47 +0.80 +0.95 +0.91 +0.13 +0.22 +0.38 +0.60 +0.52 +0.31
+  ref cluster    6  5  8  2  3  7  4  9 10  1  0
+  jaccard       0.27 0.24 0.45 0.12 0.14 0.17 0.12 0.39 0.36 0.70 0.39
+
+  matched on loading correlation; the Jaccard above is always on the HARD labels, so
+  the quality number means one thing whichever basis was used.
+  weakest match: c1 at Jaccard 0.12   median 0.27
+
+  A 1:1 assignment ALWAYS returns a partner for every cluster, whether or not
+  one exists. A low Jaccard is a cluster that has no real counterpart and was
+  paired anyway; position implies a correspondence that the number denies.
+  The matched ids and these overlaps are deliberately NOT drawn on the figure
+  - which clusters agree, and which are left out, is Figure 2's subject.
+  Per-cluster values are written alongside as ..._matching.csv.
+
+Every cluster gets ONE BLOCK, three rows deep: its mean on top; underneath, the
+two hemisphere renders of the electrodes that carry it; and under those, WHO THE
+CLUSTER IS MADE OF - one horizontal bar, one colour-coded segment per patient,
+width proportional to that patient's electrodes in the cluster, widest first. A
+cluster that is one patient's electrode strip is a single block of colour there;
+a cluster drawn from the cohort is a fine stripe. Patient colours come from
+tab20 + tab20b and are stable across the whole figure, so a patient is the same
+colour in every cluster - but they are NOT stable across figures 1a-1d, because
+each figure sorts the patients present in its own run.
+
+The mean spans the full block width - twice a single render - so both fit under
+it. A cluster whose largest patient is over 50% is titled in red, with that share.
+
+The mean is drawn in the representation the feature set was actually clustered
+in. Each panel holds the three conditions (audio, picture, reading (sentences)) concatenated left to right,
+separated by a solid line. Each condition is time-normalised to 300 bins spanning
+0-100% of its own trial, and the GO cue is at 50% of every block (the dashed
+line) because the warp uses proportions (0.0, 0.5, 0.5). THERE IS NO ABSOLUTE
+TIME AXIS: trials differ in length and were warped to a common proportion, so
+the axis is percent-of-trial and not seconds.
+
+concat_hg is a single band (70-150 Hz mean), so the cluster mean is a LINE:
+the mean over the cluster's electrodes, in dB vs baseline, with a shaded
+band at +/- 1 STANDARD DEVIATION ACROSS THOSE ELECTRODES.
+
+SD, NOT SEM. With 50-400 electrodes a cluster the SEM is a hairline and says
+only that the mean is well estimated, which was never in doubt. The SD says
+whether the cluster is a tight family or a loose one - a wide band on a large
+mean is a cluster whose members do not look like their own centroid. Same
+convention, and the same alphas, as lf_centroids.render_hg_centroid, so a
+paper panel and a run-report chip cannot disagree about what shading means.
+A singleton cluster has no SD and draws no band; that is a statement about n.
+
+  median SD over all clusters and time bins   0.618 dB
+  widest cluster (mean SD)  c10   0.803 dB
+  tightest cluster (mean SD) c5   0.545 dB
+
+All 11 panels share one y-axis (-2.467 to +3.531), spanning
+mean +/- SD so the band never clips, so cluster amplitudes and spreads can
+both be compared by eye.
+
+DISPERSION ACROSS ELECTRODES is shown on every cluster mean, and it is the
+same quantity in both representations: +/- 1 STANDARD DEVIATION across the
+electrodes in the cluster, at each point.
+
+  concat_hg     a shaded band at mean +/- 1 SD
+  the band sets an OUTLINE enclosing the time-frequency bins where |mean| > SD,
+                i.e. exactly the bins where that band would not span zero
+
+The outline is drawn on CELL EDGES, never between them. A contour would
+interpolate between band centres and imply a resolution a 5- or 15-band grid
+does not have - the reason lf_centroids.render_heatmap_centroid uses SD dots
+instead of contours. Condition blocks are treated as non-adjacent, so a region
+cannot appear to run from the end of one trial into the start of the next.
+
+The block title carries the share of bins inside the outline: "agree NN%".
+
+  agreement per cluster   0% - 27%  (median 18%)
+  tightest c3 at 27%   loosest c9 at 0%
+
+WHAT AGREEMENT IS NOT. It is not a test: there is no null, and no correction
+over the 900 bins it is evaluated on per cluster. And it is NOT
+evidence that a cluster generalises - the opposite, if anything. Electrodes on
+one patient's electrode strip are highly correlated, so a cluster that is mostly
+one person will tend to show MORE agreement, not less. Agreement asks whether
+the members look like their own centroid; panel D asks whether the members are
+more than one person. A cluster can score well here and still be one patient.
+A singleton cluster is given NO agreement rather than total agreement, because
+there is no dispersion evidence in a sample of one.
+
+Cluster colours are the visualizer's own palette - hue = 360*j/K, s = 0.62,
+l = 0.52 - so a cluster is the same colour here, in the run report and on the
+3-D brain.
+
+PANEL B, BOTTOM OF EACH BLOCK - where those electrodes are
+----------------------------------------------------------------------------------------------------
+Two 3-D surface renders per cluster, on the fsaverage pial surface, produced by
+pyvista/VTK offscreen with the same material constants the coverage and cluster
+renders use - read live from functions/lf_recon_shared_config.py, not copied, so
+these figures cannot drift away from every other render in the project.
+
+THE LEFT HEMISPHERE IS SEEN FROM THE LEFT AND THE RIGHT FROM THE RIGHT, so each
+is a true lateral view: anterior falls on the LEFT of the left render and on the
+RIGHT of the right one. Drawing both from the same side, as an earlier version
+did, shows one hemisphere from inside the head. Each render holds only that
+hemisphere's electrodes; an electrode never appears in both.
+
+  electrodes with fsaverage coordinates   1402 / 1693
+  left render                             694
+  right render                            708
+
+COLOUR AND SIZE, THE VISUALIZER'S OWN RULE. This is transcribed from
+clustering_visualizer.html's updateElectrodes(), not invented here, so these
+renders and the brains on the site read the same way.
+
+      colour: FULL cluster colour at a loading of 0.50 or above; below
+              that, mixed toward grey 148 and reaching it exactly at a flat 1/K
+              mixture -   g = clip((w - 1/K) / (0.50 - 1/K), 0, 1)
+      size:   t = clip((w - 1/K) / (0.70 - 1/K), 0, 1)
+              radius = 1.5 * (1.02 + 1.20 * t) mm
+      opacity: 0.10 at a loading of zero, rising linearly to fully
+              opaque at 0.70 -   a = 0.10 + 0.90 * clip(w / 0.70, 0, 1)
+              measured from ZERO, not from 1/K, unlike the other two: this
+              channel exists to sink the uninvolved population into the
+              background, and a floor at 1/K would leave everything below a flat
+              mixture invisible and everything just above it nearly solid
+
+where w is the electrode's convex-NMF loading on this cluster after its loading
+vector has been normalised to sum to 1. THREE CHANNELS FOR THREE QUESTIONS:
+colour says whether the electrode is expressing this component at all, size says
+how strongly, opacity sinks the rest of the cohort into the background. An
+earlier version ramped colour across the whole range instead, so a typical
+loading - the median is around a third - landed a third of the way out of grey
+and every render came out muddy.
+
+EVERY ELECTRODE OF THE HEMISPHERE IS DRAWN BY THIS ONE RULE, applied to its own
+loading on this cluster. There is no separate background layer and no special
+case for the argmax winner: an electrode's appearance says what it expresses,
+not which column happened to be largest. Order-independent transparency (VTK
+depth peeling) is enabled, or a faint sphere in front of a solid one would erase
+it depending only on draw order.
+
+Both are RENDERING choices. They change how a loading is drawn, never the
+loading, the label, or any number reported anywhere.
+
+  median t over all 1693 electrodes at their own cluster   0.384
+  electrodes at or above 0.50 (drawn in full cluster colour)   147  (8.7%)
+  electrodes at or above the 0.70 size cap                     5  (0.3%)
+  median normalised loading at an electrode's own cluster 0.325
+
+WHAT THIS FIGURE DOES NOT SHOW
+----------------------------------------------------------------------------------------------------
+  - No statistical test of the clustering. Separation against a matched null,
+    anatomical coherence and leave-one-patient-out are reported separately, and
+    are valid at ONE K only because each is scored against a null refitted at
+    that K. At the time of writing they exist for concat_hg and concat_rawds
+    only; concat_bands5 and concat_bands5z have no statistics at any K.
+  - Panel D and the patient bars are about PATIENT COMPOSITION, which is
+    necessary for a cluster to be a population response type and is not
+    sufficient. A cluster can draw on every patient and still not replicate.
+  - The 50% line in panel D is a convention, not a test. It is not
+    calibrated against a null; it is a threshold chosen to be readable. So is
+    the 1-SD line the agreement outline draws.
+  - No comparison against k-means, Ward or archetypal analysis. Panel A is
+    convex NMF only.
+  - The renders collapse depth: an electrode deep in the temporal lobe and one
+    on the lateral surface can overlap in the image.
+  - The cluster label is an argmax of a GRADED loading. The fade is there
+    precisely because that argmax hides how weak most memberships are.
