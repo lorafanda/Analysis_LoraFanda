@@ -15,12 +15,20 @@ it, seen from each hemisphere's own side. Then the three tests the paper puts th
 how many, do they survive other methods, are they anatomy - each answered with one
 number. Then the sentence the paper is about.
 
-The four type NAMES are descriptive labels read off the centroid shapes (a rise after
-the GO cue in every condition is "production"; a sharp onset at the start of the audio
+The type NAMES are descriptive labels read off the centroid shapes (a rise after the
+GO cue in every condition is "production"; a sharp onset at the start of the audio
 block is "auditory onset"; a dip below baseline during the stimulus is "suppression"; a
-response in the reading block only is "reading only"). They are not computed and the
-caption says so. The cluster ids they attach to are checked against the FIG 1a patient
-table, so a re-fit that renumbered the clusters fails here rather than mislabelling.
+response in the reading block only is "reading only"), and the caption says so. One is
+MEASURED rather than read: "ramp to cue" is the cluster whose mean rises most over the
+stretch before the GO cue, averaged over conditions, and the script refuses to run if
+the cluster drawn under that name is not the one the measurement picks. The eye picked
+the wrong cluster for it the first time, which is why. The cluster ids in SHOW are also
+checked against the FIG 1a patient table, so a re-fit that renumbered the clusters
+fails here rather than mislabelling.
+
+The ramp cluster is the candidate premotor type. It is named by what it does because the
+coordinate table has no gyral labels and because naming a type by its anatomy would
+contradict the sentence at the bottom of the abstract.
 """
 from __future__ import annotations
 
@@ -47,7 +55,9 @@ INK, MUTED, GREY, RED, GREEN = P2.INK, P2.MUTED, P2.GREY, P2.RED, P2.GREEN
 FSET, K = "concat_hg", 8
 PX = 1200                                  # Cell Reports: 1200 x 1200, minimal text
 # cluster id -> the label its shape earns. Checked against FIG 1a below.
-SHOW = [(1, "Production"), (3, "Auditory onset"), (4, "Suppression"), (5, "Reading only")]
+SHOW = [(1, "Production"), (3, "Auditory onset"), (6, "Ramp to cue"),
+        (4, "Suppression"), (5, "Reading only")]
+RAMP_ID = 6     # "Ramp to cue" is checked against a MEASURED ramp index in main()
 TILE_BG, TILE_EC = "#f6f7f9", "#dde2e8"
 
 
@@ -109,6 +119,19 @@ def main() -> int:
     vlim = float(np.percentile(np.abs(means), 99.0))
     ylim = (float((means - sds).min()) * 1.06, float((means + sds).max()) * 1.06)
 
+    # THE PRE-CUE RAMP, MEASURED: the mean over the last fifth of the block before the
+    # GO cue minus the mean over its first fifth, averaged over the three conditions.
+    # The cluster labelled "Ramp to cue" must be the one this picks, or the label is
+    # an eye's opinion - and the eye picked the wrong cluster the first time (c7's rise
+    # is AT the cue and its pre-cue slope is negative; c6 rises before it in all three).
+    nt = d["nt"]
+    g0, g1 = int(0.20 * nt), int(0.50 * nt)
+    ramp = np.array([(means[j][:, 0, int(0.30 * nt):g1].mean(1)
+                      - means[j][:, 0, :g0].mean(1)).mean() for j in range(K)])
+    if int(ramp.argmax()) != RAMP_ID:
+        raise SystemExit(f"largest pre-cue ramp is c{int(ramp.argmax())}, not "
+                         f"c{RAMP_ID} - relabel SHOW before drawing")
+
     # the labels in SHOW belong to THIS numbering: refuse to draw if the run has moved
     pc = pd.read_csv(need(OUT / f"FIG1a_{FSET}_cnmf_K{K}_patients.csv"))
     sizes = np.bincount(d["lab"], minlength=K)
@@ -131,17 +154,17 @@ def main() -> int:
     P2.trial_strip(fig.add_axes([0.17, 0.828, 0.66, 0.062]), d)
 
     # ---- four of the eight types -------------------------------------------------
-    fig.text(0.05, 0.792, f"Four of the {K} types", fontsize=13, weight="bold",
+    fig.text(0.05, 0.792, f"Five of the {K} types", fontsize=13, weight="bold",
              color=INK, va="bottom")
     fig.text(0.95, 0.792, "mean ± 1 SD across electrodes   ·   dashed = GO cue   ·   "
              "each hemisphere from its own side", fontsize=9, color=MUTED, ha="right",
              va="bottom")
-    gap, x0, x1 = 0.024, 0.05, 0.95
-    w = (x1 - x0 - 3 * gap) / 4
+    gap, x0, x1 = 0.016, 0.05, 0.95
+    w = (x1 - x0 - (len(SHOW) - 1) * gap) / len(SHOW)
     for i, (j, name) in enumerate(SHOW):
         bx = x0 + i * (w + gap)
         col = P2.cluster_col(j, K)
-        fig.text(bx, 0.770, name, fontsize=13.5, weight="bold", color=col, va="bottom")
+        fig.text(bx, 0.770, name, fontsize=12.2, weight="bold", color=col, va="bottom")
         fig.text(bx + w, 0.770, f"c{j}", fontsize=9, color=MUTED, ha="right",
                  va="bottom")
         axc = fig.add_axes([bx, 0.640, w, 0.098])
@@ -259,6 +282,16 @@ def main() -> int:
         "TYPE LABELS are descriptive, read off the centroid shapes, not computed:",
         f"  {names}",
         "  Cluster ids were checked against FIG1a_..._patients.csv (sizes match).",
+        "",
+        "'Ramp to cue' is the one label that is MEASURED, not read: the mean over the",
+        "last fifth of the block before the GO cue minus the mean over its first fifth,",
+        "averaged over the three conditions. The cluster drawn under that name must be",
+        f"the largest, or this script refuses to run. Ranked (dB):",
+        "  " + "   ".join(f"c{j} {ramp[j]:+.2f}" for j in np.argsort(-ramp)),
+        f"  c{RAMP_ID} is also the only cluster whose ramp is positive in all three "
+        "conditions. It is the candidate premotor type; the coordinate table carries",
+        "  no gyral labels, so that stays a candidate. By mean MNI position it is the",
+        "  most dorsal cluster and sits near y = 0, left-leaning.",
         "",
         "NUMBERS and where each comes from:",
         f"  K = {K}; held-out peak K = {n['k_peak']}      heldout_peaks_cnmf.csv",

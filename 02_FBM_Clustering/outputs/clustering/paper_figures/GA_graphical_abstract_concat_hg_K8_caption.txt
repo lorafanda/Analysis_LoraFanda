@@ -3,8 +3,17 @@ GRAPHICAL ABSTRACT   ·   1200 x 1200 px   ·   concat_hg, convex NMF, K = 8
 Built from the same run, centroids, renders and palette as FIG 1a (00_Paper2_Figures.py imported directly). Nothing on it is typed in.
 
 TYPE LABELS are descriptive, read off the centroid shapes, not computed:
-  c1 = Production, c3 = Auditory onset, c4 = Suppression, c5 = Reading only
+  c1 = Production, c3 = Auditory onset, c6 = Ramp to cue, c4 = Suppression, c5 = Reading only
   Cluster ids were checked against FIG1a_..._patients.csv (sizes match).
+
+'Ramp to cue' is the one label that is MEASURED, not read: the mean over the
+last fifth of the block before the GO cue minus the mean over its first fifth,
+averaged over the three conditions. The cluster drawn under that name must be
+the largest, or this script refuses to run. Ranked (dB):
+  c6 +0.24   c5 -0.01   c0 -0.04   c2 -0.12   c1 -0.15   c7 -0.20   c3 -0.23   c4 -0.40
+  c6 is also the only cluster whose ramp is positive in all three conditions. It is the candidate premotor type; the coordinate table carries
+  no gyral labels, so that stays a candidate. By mean MNI position it is the
+  most dorsal cluster and sits near y = 0, left-leaning.
 
 NUMBERS and where each comes from:
   K = 8; held-out peak K = 11      heldout_peaks_cnmf.csv
