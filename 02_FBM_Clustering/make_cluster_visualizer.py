@@ -232,6 +232,15 @@ def build_html(order):
         "      label: `#${i + 1} · Cluster ${k} — P(cluster ${k} | electrode here)  ·  n=${size}`,",
         "cluster label")
 
+    # ---- no readout box ---------------------------------------------------------------
+    # The bottom-left panel that explained the selected map. Hidden, not removed: the
+    # render path writes its title, definition and note into it on every redraw, and a
+    # missing element would throw there.
+    sub("  #readout { bottom:16px; left:14px; width:352px; font-size:11.5px; line-height:1.45; }",
+        "  #readout { bottom:16px; left:14px; width:352px; font-size:11.5px; line-height:1.45;\n"
+        "             display:none !important; }   /* cluster_visualizer: no readout box */",
+        "hide readout")
+
     # ---- coverage: hidden in the dropdown, gone from the report ----------------------
     sub('    id: "coverage", group: "Sampling", label: "Coverage — P(patient sampled here)",',
         '    id: "coverage", hidden: true, group: "Sampling", label: "Coverage — P(patient sampled here)",',
@@ -263,6 +272,39 @@ def build_html(order):
         '        this one answers "which cluster is where", on one brain rather than ${K} apart.</p>',
         '        framed in the same box as every other turn in this report. It answers "which\n'
         '        cluster is where", on one brain rather than ${K} apart.</p>', "glass hint")
+
+    # ---- report images: de-duplicate on the FINISHED document, not at build time ------
+    # srcAttr() registered an image the first time any fragment was built and emitted a
+    # data-mirror for every later identical one. The K panel builds the current cut's
+    # cells early and that HTML is rebuilt later, so the first registration never
+    # reached the file and 40 mirrors in a real report pointed at nothing - every
+    # centroid, every contacts still, some dorsals. Emitting full srcs and de-duplicating
+    # the assembled document in document order makes a dangling mirror impossible: the
+    # source is, by construction, the first occurrence in the file.
+    sub("function srcAttr(data) {\n"
+        "  const prev = _srcSeen.get(data);\n"
+        "  if (prev) return `data-mirror=\"${prev}\"`;\n"
+        "  const id = \"i\" + (++_srcN);\n"
+        "  _srcSeen.set(data, id);\n"
+        "  return `src=\"${data}\" data-src-id=\"${id}\"`;\n"
+        "}",
+        "function srcAttr(data) {\n"
+        "  // full src always; dedupeImages() turns later duplicates into mirrors once the\n"
+        "  // whole document exists, so a mirror can only ever point at an earlier tag\n"
+        "  return `src=\"${data}\"`;\n"
+        "}\n"
+        "function dedupeImages(doc) {\n"
+        "  const seen = new Map(); let n = 0;\n"
+        "  return doc.replace(/<img\\b([^>]*?)\\ssrc=\"(data:[^\"]+)\"([^>]*)>/g, (m, pre, data, post) => {\n"
+        "    const id = seen.get(data);\n"
+        "    if (id) return `<img${pre} data-mirror=\"${id}\"${post}>`;\n"
+        "    const nid = \"i\" + (++n); seen.set(data, nid);\n"
+        "    return `<img${pre} src=\"${data}\" data-src-id=\"${nid}\"${post}>`;\n"
+        "  });\n"
+        "}", "srcAttr -> post-pass dedupe")
+    sub("    const blob = new Blob([html], { type: \"text/html;charset=utf-8\" });",
+        "    const blob = new Blob([dedupeImages(html)], { type: \"text/html;charset=utf-8\" });",
+        "dedupe before save")
 
     left = re.findall(r"\b(covShots|covSpin|densSpin|covStats|covMax)\b", s)
     if left:

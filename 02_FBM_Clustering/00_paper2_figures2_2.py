@@ -14,11 +14,14 @@ TWO HALVES, THE SAME THREE QUESTIONS EACH.
     bottom  ALGORITHMS     convex NMF / k-means / Ward / archetypes on one feature set -
                            does the method change the answer?
 
-    A / D   how much any two solutions agree at all           (pairwise ARI)
+    A / D   how much any two solutions agree at all           (.1 mean pairwise ARI
+                                                               across K, .2 the full
+                                                               ARI / NMI matrix)
     B / E   each CLUSTER against the reference, and what        (Jaccard, plus what
             the other solutions think of the same cluster       the others think)
     C / F   which ELECTRODES are placed consistently          (per-electrode agreement,
-                                                               on the brain)
+                                                               on the brain: left, from
+                                                               above, right)
 
 THIS FIGURE IS ABOUT WHAT IS LEFT OUT. A 1:1 assignment always returns a partner for
 every cluster whether or not one exists, so B and E report the Jaccard of every pair and
@@ -30,7 +33,9 @@ The matching machinery is IMPORTED from 00_Paper2_Figures.py rather than reimple
 so FIG 1's block order and FIG 2's correspondence can never disagree about which cluster
 is which.
 
-NO CAPTION IS DRAWN ON THE FIGURE - it gets a sibling <name>_caption.txt, plus
+NO CAPTION IS DRAWN ON THE FIGURE, and no reading under the panels either: every
+paragraph a panel function generates is returned and written to the caption under that
+panel's heading. The figure gets a sibling <name>_caption.txt, plus
 _cluster_agreement.csv and _electrode_agreement.csv.
 """
 from __future__ import annotations
@@ -456,16 +461,6 @@ def one_patient_clusters(lab, patient, k, danger=0.50):
 GROUP_COL = {"graded": "#5b2c83", "hard": "#e08214"}
 
 
-def wrap(text, chars):
-    return textwrap.fill(text, chars)
-
-
-def summary_under(ax, text, chars, colour=None):
-    """A wrapped summary directly under a panel, in that panel's own width."""
-    ax.text(0, -0.055, wrap(text, chars), transform=ax.transAxes, va="top", ha="left",
-            fontsize=7.4, color=colour or MUTED, linespacing=1.5)
-
-
 def lum(c):
     return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]
 
@@ -493,60 +488,71 @@ def ari_summary(M, names, groups):
     return "  ·  ".join(parts)
 
 
-def panel_ari(ax, M, Mn, names, groups, chars, k, curve):
-    """Lower triangle only - the other ten cells of a 4x4 repeat these six.
+def panel_ari(axK, axM, M, Mn, names, groups, k, curve):
+    """The K curve above, the FULL matrix below.
 
-    The empty upper triangle carries the K curve, because a single K read on its own
-    cannot say whether the agreement here is typical or an artefact of where it was
-    cut - the lesson FIG 1 panel D exists to make.
+    The matrix is symmetric, so the upper triangle repeats the lower. It is drawn
+    anyway: a full matrix reads at a glance as 'every pair', and a reader looking up
+    one pair finds it in either order. The diagonal is the identity and is marked as
+    such rather than printed as a number.
+
+    The curve has its own axes rather than sitting in an empty triangle, because a
+    single K read on its own cannot say whether the agreement here is typical or an
+    artefact of where it was cut - the lesson FIG 1 panel D exists to make.
     """
     n = len(M)
-    show = np.full_like(M, np.nan)
+    axM.imshow(M, cmap="Blues", vmin=0, vmax=1.0)          # 0-1, like every matrix here
     for i in range(n):
-        for j in range(i):
-            show[i, j] = M[i, j]
-    ax.imshow(show, cmap="Blues", vmin=0, vmax=max(0.6, np.nanmax(show) * 1.05))
-    for i in range(n):
-        for j in range(i):
+        for j in range(n):
+            if i == j:
+                axM.text(j, i, "=", ha="center", va="center", fontsize=9.0,
+                         color="white", alpha=0.75)
+                continue
             col = "white" if M[i, j] > 0.42 else INK
-            ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="bottom", fontsize=8.6,
-                    color=col)
-            ax.text(j, i, f"{Mn[i, j]:.2f}", ha="center", va="top", fontsize=6.8,
-                    color=col, alpha=0.85)
-    ax.set_xticks(range(n - 1)); ax.set_yticks(range(1, n))
-    ax.xaxis.tick_top()
-    ax.set_xticklabels(names[:-1], fontsize=7.8, rotation=26, ha="left")
-    ax.set_yticklabels(names[1:], fontsize=7.8)
+            axM.text(j, i, f"{M[i, j]:.2f}", ha="center", va="bottom", fontsize=8.6,
+                     color=col)
+            axM.text(j, i, f"{Mn[i, j]:.2f}", ha="center", va="top", fontsize=6.8,
+                     color=col, alpha=0.85)
+    axM.set_xticks(range(n)); axM.set_yticks(range(n))
+    axM.xaxis.tick_top()
+    axM.set_xticklabels(names, fontsize=7.8, rotation=26, ha="left")
+    axM.set_yticklabels(names, fontsize=7.8)
     if groups is not None and len(set(groups)) == 2:
-        for t, gname in zip(ax.get_xticklabels(), groups[:-1]):
+        for t, gname in zip(axM.get_xticklabels(), groups):
             t.set_color(GROUP_COL[gname])
-        for t, gname in zip(ax.get_yticklabels(), groups[1:]):
+        for t, gname in zip(axM.get_yticklabels(), groups):
             t.set_color(GROUP_COL[gname])
-    ax.tick_params(length=0, colors=MUTED)
-    ax.set_anchor("N")
-    for s_ in ax.spines.values():
+    axM.tick_params(length=0, colors=MUTED)
+    axM.set_anchor("N")
+    for s_ in axM.spines.values():
         s_.set_visible(False)
 
     extra = ""
     if curve is not None:
         ks, vs = curve
-        ins = ax.inset_axes([0.46, 0.52, 0.52, 0.38])
-        ins.plot(ks, vs, "-", lw=1.4, color=INK)
-        ins.axvline(k, color=RED, ls="--", lw=1.0)
-        ins.set_title("mean pairwise ARI vs K", fontsize=6.6, color=MUTED, pad=2)
-        ins.tick_params(labelsize=6.0, colors=MUTED, length=2)
-        ins.set_ylim(0, max(0.6, vs.max() * 1.12))
-        ins.spines[["top", "right"]].set_visible(False)
+        axK.plot(ks, vs, "-", lw=1.4, color=INK)
+        axK.axvline(k, color=RED, ls="--", lw=1.0)
+        axK.set_ylim(0, max(0.6, float(vs.max()) * 1.15))
+        axK.set_ylabel("mean pairwise ARI", fontsize=6.8, color=MUTED)
+        axK.set_xlabel("K", fontsize=6.8, color=MUTED, labelpad=1)
+        axK.tick_params(labelsize=6.2, colors=MUTED, length=2)
+        axK.spines[["top", "right"]].set_visible(False)
         best = int(ks[int(np.argmax(vs))])
         here = float(vs[list(ks).index(k)]) if k in list(ks) else float("nan")
+        axK.text(k + 0.4, axK.get_ylim()[1] * 0.97, f"K={k}: {here:.2f}", fontsize=6.4,
+                 color=RED, va="top", ha="left")
         extra = (f"  ·  ACROSS K: agreement peaks at K={best} ({vs.max():.2f}); "
                  f"at K={k} it is {here:.2f}")
-    summary_under(ax, "Upper number ADJUSTED RAND, lower NMI - reported together "
-                  "because ARI is dominated by the large clusters and NMI is not.  "
-                  + ari_summary(M, names, groups) + extra, chars)
+    else:
+        axK.axis("off")
+        axK.text(0.5, 0.5, "no labels-by-K table for these runs", ha="center",
+                 va="center", fontsize=7.0, color=MUTED, transform=axK.transAxes)
+    return ("Upper number ADJUSTED RAND, lower NMI - reported together because ARI is "
+            "dominated by the large clusters and NMI is not.  "
+            + ari_summary(M, names, groups) + extra)
 
 
-def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
+def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, vmax,
                    nullJ, selfstab, pacs, splits, thresh=0.30):
     """Every reference cluster against its match, with the reference column dropped.
 
@@ -647,7 +653,7 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
         txt += ("  SELF under each column is that solution's agreement with ITSELF over "
                 "50 refits on 80% of the electrodes - the ceiling every number here is "
                 "read against: " + ", ".join(ceil) + ".")
-    summary_under(axM, txt, chars, colour=RED if lost else MUTED)
+    return txt
 
 
 def agreement_colours(n):
@@ -656,7 +662,11 @@ def agreement_colours(n):
 
 
 def stacked_agreement(ax, cnt, N, cols, null_frac):
-    """Observed against chance, as two bars that double as the colour key."""
+    """Observed against chance, as two bars; the colour is explained ONCE, above them.
+
+    The segments used to say '2 of 4' in every one of them. Now they carry only their
+    share, and the key above the bars says what each colour means.
+    """
     h = np.bincount(cnt, minlength=N + 1)[1:N + 1].astype(float)
     obs = h / max(h.sum(), 1)
     for row, (frac, y, hgt, tag) in enumerate(
@@ -666,49 +676,56 @@ def stacked_agreement(ax, cnt, N, cols, null_frac):
             ax.barh(y, frac[i], left=x, height=hgt, color=cols[i], lw=0.8, ec="white",
                     alpha=1.0 if row == 0 else 0.45)
             if frac[i] > 0.05:
-                ax.text(x + frac[i] / 2, y, f"{i+1} of {N}\n{100*frac[i]:.0f}%"
-                        if row == 0 else f"{100*frac[i]:.0f}%",
-                        ha="center", va="center", fontsize=7.0 if row == 0 else 6.2,
+                ax.text(x + frac[i] / 2, y, f"{100*frac[i]:.0f}%", ha="center",
+                        va="center", fontsize=7.0 if row == 0 else 6.2,
                         color="white" if (row == 0 and lum(cols[i]) < 0.62) else INK)
             elif frac[i] > 0.002 and row == 0:
                 # a sliver with no room for a label is exactly the case a reader wants
                 # to read, so it gets one above the bar with a leader
-                ax.annotate(f"{i+1} of {N}: {100*frac[i]:.0f}%",
+                ax.annotate(f"{100*frac[i]:.0f}%",
                             xy=(x + frac[i] / 2, y + hgt / 2),
-                            xytext=(x + frac[i] / 2, y + hgt / 2 + 0.55),
+                            xytext=(x + frac[i] / 2, y + hgt / 2 + 0.42),
                             ha="center", va="bottom", fontsize=6.2, color=INK,
                             arrowprops=dict(arrowstyle="-", lw=0.6, color=MUTED))
             x += frac[i]
         ax.text(-0.006, y, tag, ha="right", va="center", fontsize=6.6, color=MUTED,
                 transform=ax.get_yaxis_transform())
-    ax.set_xlim(0, 1); ax.set_ylim(-1.05, 1.05)
+    # the key
+    ax.text(0, 1.34, f"how many of the {N} agree:", ha="left", va="center",
+            fontsize=6.6, color=MUTED)
+    x0 = 0.27
+    for i in range(N):
+        ax.add_patch(Rectangle((x0 + i * 0.075, 1.20), 0.026, 0.28, color=cols[i],
+                               lw=0))
+        ax.text(x0 + i * 0.075 + 0.032, 1.34, f"{i + 1}", ha="left", va="center",
+                fontsize=6.6, color=INK)
+    ax.set_xlim(0, 1); ax.set_ylim(-1.05, 1.62)
     ax.set_xticks([]); ax.set_yticks([])
     for s_ in ax.spines.values():
         s_.set_visible(False)
 
 
-def panel_electrodes(axL, axR, axBar, cnt, N, d, chars, null_frac, n_onepat, k,
+def panel_electrodes(axL, axT, axR, axBar, cnt, N, d, null_frac, n_onepat, k,
                      ref_name):
     cols = agreement_colours(N)
-    for ax, side in ((axL, "L"), (axR, "R")):
+    for ax, side, tag in ((axL, "L", "left"), (axT, "T", "from above"),
+                          (axR, "R", "right")):
         img, nsel = render_counts(side, d, cnt, cols)
         ax.imshow(img)
         ax.set_xticks([]); ax.set_yticks([])
         for s_ in ax.spines.values():
             s_.set_visible(False)
-        ax.text(0.02, 0.02, f"{side}  {nsel}", transform=ax.transAxes, ha="left",
+        ax.text(0.02, 0.02, f"{tag}  {nsel}", transform=ax.transAxes, ha="left",
                 va="bottom", fontsize=7.0, color=MUTED)
     stacked_agreement(axBar, cnt, N, cols, null_frac)
     obs_all = float((cnt == N).mean())
-    summary_under(axBar,
-                  f"How many of the {N} solutions put each electrode in the same "
-                  f"cluster - the MODAL assignment, so nothing privileges the "
-                  f"reference.  {100*obs_all:.0f}% are placed the same way by all {N}, "
-                  f"against {100*null_frac[-1]:.0f}% when the other solutions are "
-                  f"PERMUTED and re-matched; {100*(cnt <= 1).mean():.0f}% by no two.  "
-                  f"Red = 1, green = {N}.  AGREEMENT IS NOT CORRECTNESS: at K={k}, "
-                  f"{n_onepat} of {k} clusters in {ref_name} are over half one patient "
-                  f"(FIG 1 panel D).", chars)
+    return (f"How many of the {N} solutions put each electrode in the same cluster - "
+            f"the MODAL assignment, so nothing privileges the reference.  "
+            f"{100*obs_all:.0f}% are placed the same way by all {N}, against "
+            f"{100*null_frac[-1]:.0f}% when the other solutions are PERMUTED and "
+            f"re-matched; {100*(cnt <= 1).mean():.0f}% by no two.  Red = 1, green = "
+            f"{N}.  AGREEMENT IS NOT CORRECTNESS: at K={k}, {n_onepat} of {k} clusters "
+            f"in {ref_name} are over half one patient (FIG 1 panel D).")
 
 
 def render_counts(side, d, cnt, cols):
@@ -799,20 +816,23 @@ def figure_2(k: int, algo_fset: str):
     al_null = electrode_agreement_null(al_sols, al_ref, al_order)
     ks = list(range(5, 31))
     fs_curve, al_curve = ari_by_k(fs_sols, ks), ari_by_k(al_sols, ks)
-    # ONE Jaccard scale for both halves, set from the data: 0-1 left half the bar
-    # unused once the reference column was dropped, so every difference looked smaller
-    vmax = float(max(0.35, np.nanmax([np.delete(fs_J, fs_ref, axis=1).max(),
-                                      np.delete(al_J, al_ref, axis=1).max()])))
+    # EVERY MATRIX RUNS 0 TO 1 - Jaccard, worst-of, others, and the ARI/NMI matrices
+    # in A.2/D.2 - so a shade means the same thing wherever it appears, and the four
+    # FIG 2 variants compare with each other as well as the two halves of each.
+    vmax = 1.0
     n_op_fs = one_patient_clusters(fs_sols[fs_ref]["lab"], d["patient"], k)
     n_op_al = one_patient_clusters(ar["lab"], d["patient"], k)
 
-    fig = plt.figure(figsize=(17.6, 9.6), dpi=190)
-    gs = GridSpec(2, 24, figure=fig, hspace=0.78, wspace=1.1,
-                  left=0.055, right=0.985, top=0.788, bottom=0.050)
+    # No reading under the panels any more, so the rows sit closer together; the
+    # A column is now two stacked axes and the C column three views, so the figure
+    # is a little taller than it was.
+    fig = plt.figure(figsize=(17.6, 10.8), dpi=190)
+    gs = GridSpec(2, 24, figure=fig, hspace=0.62, wspace=1.1,
+                  left=0.055, right=0.985, top=0.800, bottom=0.045)
     fig.suptitle(f"FIG 2   ·   agreement   ·   K = {k}   ·   "
                  f"{len(d['X'])} electrodes, {d['n_patients']} patients",
-                 x=0.055, y=0.975, ha="left", fontsize=15.5, color=INK)
-    fig.text(0.055, 0.945,
+                 x=0.055, y=0.982, ha="left", fontsize=15.5, color=INK)
+    fig.text(0.055, 0.958,
              "Does the answer depend on how the data are represented, or on which "
              "algorithm is used?  Each row asks that three ways: overall, per cluster, "
              "per electrode.",
@@ -836,40 +856,49 @@ def figure_2(k: int, algo_fset: str):
              head=f"ALGORITHMS   ·   four methods on {algo_fset}   ·   "
                   f"reference {METHOD_LABEL[REF_METHOD]}"),
     )
-    labelled = []
+    labelled, notes = [], {}
     for row, h in enumerate(halves):
         groups = ["graded" if x["G"] is not None else "hard" for x in h["sols"]]
         t1, t2, t3 = h["tags"]
 
-        axA = fig.add_subplot(gs[row, 0:5])
-        panel_ari(axA, h["ari"], h["nmi"], h["names"], groups, 62, k, h["curve"])
+        # .1 the K curve above, .2 the full matrix below
+        cA = GridSpecFromSubplotSpec(2, 1, gs[row, 0:5], height_ratios=[0.42, 1.0],
+                                     hspace=1.05)
+        axK, axA = fig.add_subplot(cA[0]), fig.add_subplot(cA[1])
+        notes[t1] = panel_ari(axK, axA, h["ari"], h["nmi"], h["names"], groups, k,
+                              h["curve"])
 
         cB = GridSpecFromSubplotSpec(1, 2, gs[row, 6:14], width_ratios=[5.4, 2.0],
                                      wspace=0.08)
         axM = fig.add_subplot(cB[0])
-        panel_clusters(axM, fig.add_subplot(cB[1]), h["J"], h["oth"], h["names"],
-                       h["order"], h["sizes"], h["ref"], 104, vmax, h["nullJ"],
-                       h["self"], h["pac"], h["split"])
+        notes[t2] = panel_clusters(axM, fig.add_subplot(cB[1]), h["J"], h["oth"],
+                                   h["names"], h["order"], h["sizes"], h["ref"], vmax,
+                                   h["nullJ"], h["self"], h["pac"], h["split"])
 
-        cC = GridSpecFromSubplotSpec(2, 2, gs[row, 15:24], height_ratios=[1.0, 0.30],
+        # left, from above, right; the bar under all three
+        cC = GridSpecFromSubplotSpec(2, 3, gs[row, 15:24], height_ratios=[1.0, 0.34],
                                      hspace=0.16, wspace=0.03)
         axL = fig.add_subplot(cC[0, 0])
-        panel_electrodes(axL, fig.add_subplot(cC[0, 1]), fig.add_subplot(cC[1, :]),
-                         h["cnt"], len(h["sols"]), d, 118, h["null"], h["onepat"], k,
-                         h["refname"])
+        notes[t3] = panel_electrodes(axL, fig.add_subplot(cC[0, 1]),
+                                     fig.add_subplot(cC[0, 2]),
+                                     fig.add_subplot(cC[1, :]), h["cnt"],
+                                     len(h["sols"]), d, h["null"], h["onepat"], k,
+                                     h["refname"])
 
         labelled.append((
-            [(axA, f"{t1}  ·  how much any two agree"),
+            [(axK, f"{t1}.1  ·  mean pairwise ARI across K"),
              (axM, f"{t2}  ·  each cluster against the reference"),
-             (axL, f"{t3}  ·  which electrodes are placed consistently")], h["head"]))
+             (axL, f"{t3}  ·  which electrodes are placed consistently")],
+            [(axA, f"{t1}.2  ·  how much any two agree")], h["head"]))
 
-    # MEASURE, THEN PLACE. One draw settles every tick label, so the row's three
-    # labels can share one line above the tallest panel instead of each floating at
-    # whatever height its own decorations happen to reach.
+    # MEASURE, THEN PLACE. One draw settles every tick label, so the row's labels can
+    # share one line above the tallest panel instead of each floating at whatever
+    # height its own decorations happen to reach. The lower panel of the stacked A
+    # column is the exception: it is labelled above its own tight box.
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
-    for panels, head in labelled:
+    for panels, inner, head in labelled:
         top = max(inv.transform((0, ax.get_tightbbox(r).y1))[1] for ax, _ in panels)
         for ax, label in panels:
             # the PLOT area's left edge, not the tight bbox's - the tight bbox
@@ -878,6 +907,10 @@ def figure_2(k: int, algo_fset: str):
             fig.text(ax.get_position().x0, top + 0.010, label, fontsize=10.4,
                      color=INK, va="bottom")
         fig.text(0.055, top + 0.040, head, fontsize=11.0, color=INK, va="bottom")
+        for ax, label in inner:
+            t_ = inv.transform((0, ax.get_tightbbox(r).y1))[1]
+            fig.text(ax.get_position().x0, t_ + 0.006, label, fontsize=9.6,
+                     color=INK, va="bottom")
 
     OUT.mkdir(parents=True, exist_ok=True)
     # the feature set the ALGORITHM half was run on is in the name, so the four
@@ -908,13 +941,13 @@ def figure_2(k: int, algo_fset: str):
               (fs_ari, fs_J, fs_cnt, fs_names, fs_sols, fs_dropped, fs_order,
                fs_oth, fs_null, fs_curve, n_op_fs),
               (al_ari, al_J, al_cnt, al_names, al_sols, al_dropped, al_order,
-               al_oth, al_null, al_curve, n_op_al), vmax, fs_self, al_self)
+               al_oth, al_null, al_curve, n_op_al), vmax, fs_self, al_self, notes)
     print(f"  {time.time()-t0:.0f}s  -> {p.name}")
     return p
 
 
 # ---- the caption -------------------------------------------------------------
-def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self):
+def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self, notes):
     (fs_ari, fs_J, fs_cnt, fs_names, fs_sols, fs_dropped, fs_order, fs_oth,
      fs_null, fs_curve, n_op_fs) = fs
     (al_ari, al_J, al_cnt, al_names, al_sols, al_dropped, al_order, al_oth,
@@ -954,8 +987,9 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self):
     A("also dominated by the large clusters, so a low ARI can coexist with the big")
     A("structure agreeing.")
     A("")
-    A("THE INSET IS MEAN PAIRWISE ARI AT EVERY K, with this K marked. Agreement read at")
-    A("one K cannot say whether that K is a good place to be comparing; the inset can.")
+    A("A.1 AND D.1 ARE MEAN PAIRWISE ARI AT EVERY K, with this K marked. Agreement read")
+    A("at one K cannot say whether that K is a good place to be comparing; the curve can.")
+    A("A.2 and D.2 are the full matrix: upper number ARI, lower NMI, '=' on the diagonal.")
     for nm, cv in (("feature sets", fs_curve), ("algorithms", al_curve)):
         if cv is not None:
             kk, vv = cv
@@ -967,6 +1001,11 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self):
         off = M[~np.eye(len(M), dtype=bool)]
         A(f"  {nm:<14} off-diagonal {off.min():.3f} to {off.max():.3f}, "
           f"median {np.median(off):.3f}")
+    A("")
+    A("  the reading under each panel:")
+    for t_ in ("A", "D"):
+        A(textwrap.fill(f"{t_}: {notes[t_]}", 100, initial_indent="  ",
+                        subsequent_indent="     "))
     A("")
     A("PANELS B and E - each cluster against the reference, and what the others think")
     A("-" * 100)
@@ -1030,9 +1069,9 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self):
     A("preserved and re-matched to the reference the way the real ones are; a cell that")
     A("does not reach the mean of that null is HATCHED. 200 permutations.")
     A("")
-    A(f"The colour scale runs 0 to {vmax:.2f}, shared by both halves and set from the")
-    A("data: 0-1 left most of the bar unused once the reference column was dropped, and")
-    A("every difference looked smaller than it was.")
+    A("EVERY MATRIX RUNS 0 TO 1 - ARI and NMI in A.2/D.2, the Jaccard matrices in B/E and")
+    A("their worst-of and others columns - so a shade means the same thing wherever it")
+    A("appears, on both halves and across the four FIG 2 variants.")
     A("")
     for nm, J in (("feature sets", fs_J), ("algorithms", al_J)):
         w = J[:, 1:].min(axis=1) if J.shape[1] > 1 else J[:, 0]
@@ -1042,12 +1081,20 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self):
         A(f"  {'':<14} below 0.30 somewhere: "
           + (", ".join(bad) if bad else "none"))
     A("")
+    A("  the reading under each panel:")
+    for t_ in ("B", "E"):
+        A(textwrap.fill(f"{t_}: {notes[t_]}", 100, initial_indent="  ",
+                        subsequent_indent="     "))
+    A("")
     A("PANELS C and F - which electrodes are placed consistently")
     A("-" * 100)
     A("Every solution's labels are translated into the reference's numbering, then each")
     A("electrode is scored by the size of the largest group of solutions that agree on")
     A("it. The count runs 1..N: N means every solution puts it in the same cluster, 1")
-    A("means no two do. Red is 1, green is N.")
+    A("means no two do. Red is 1, green is N. Drawn on the left hemisphere, from above")
+    A("(anterior up, left on the left), and on the right; the bar under the three is the")
+    A("share of electrodes at each count, observed and by chance, with the colour key")
+    A("above it.")
     A("")
     A("IT IS THE MODAL ASSIGNMENT, NOT 'AGREES WITH THE REFERENCE'. Nothing privileges")
     A("one solution, so an electrode where the reference is the odd one out still reads")
@@ -1076,6 +1123,11 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self):
     A("patient's electrode strip.")
     A(f"  clusters over half one patient   feature half {n_op_fs} of {k}   "
       f"algorithm half {n_op_al} of {k}   (FIG 1 panel D)")
+    A("")
+    A("  the reading under each panel:")
+    for t_ in ("C", "F"):
+        A(textwrap.fill(f"{t_}: {notes[t_]}", 100, initial_indent="  ",
+                        subsequent_indent="     "))
     A("")
     A("PROVENANCE")
     A("-" * 100)

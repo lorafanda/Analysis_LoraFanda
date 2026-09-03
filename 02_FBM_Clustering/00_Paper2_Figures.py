@@ -322,7 +322,7 @@ def hemi_mesh(side: str) -> pv.PolyData:
 
 
 def _scene(side: str, d: dict, zoom: float):
-    """The BRAIN only, built once per side and kept.
+    """The BRAIN only, built once per view and kept. side is "L", "R" or "T" (top).
 
     The electrodes are not in here: every one of them now depends on which cluster is
     being drawn, so they go on as a single actor that is added and removed around each
@@ -332,26 +332,48 @@ def _scene(side: str, d: dict, zoom: float):
     if side in _PLOTTER:
         return _PLOTTER[side]
     xyz, hemi = d["xyz"], d["hemi"]
-    mesh = hemi_mesh(side)
-    ok = np.isfinite(xyz).all(1) & (hemi == side)
+    finite = np.isfinite(xyz).all(1)
+    if side == "T":
+        # THE TOP VIEW: both hemispheres, seen from above, anterior at the top of the
+        # image and the left hemisphere on the left - the same neurological convention
+        # the two lateral views follow, so the three read as one brain.
+        meshes, ok = [hemi_mesh("L"), hemi_mesh("R")], finite
+    else:
+        meshes, ok = [hemi_mesh(side)], finite & (hemi == side)
     pl = pv.Plotter(off_screen=True, window_size=RENDER_PX)
-    pl.add_mesh(mesh, color=RC.BRAIN_COLOR, opacity=RC.BRAIN_OPACITY_CLEAN,
-                smooth_shading=True, specular=RC.BRAIN_SPECULAR,
-                specular_power=RC.BRAIN_SPECULAR_POWER, ambient=RC.BRAIN_AMBIENT,
-                diffuse=RC.BRAIN_DIFFUSE)
+    for mesh in meshes:
+        pl.add_mesh(mesh, color=RC.BRAIN_COLOR, opacity=RC.BRAIN_OPACITY_CLEAN,
+                    smooth_shading=True, specular=RC.BRAIN_SPECULAR,
+                    specular_power=RC.BRAIN_SPECULAR_POWER, ambient=RC.BRAIN_AMBIENT,
+                    diffuse=RC.BRAIN_DIFFUSE)
     # per-electrode opacity needs order-independent transparency, or a faint sphere in
     # front of a solid one erases it depending only on draw order
     try:
         pl.enable_depth_peeling(12)
     except Exception:
         pass
-    b = mesh.bounds
+    bb = np.array([m.bounds for m in meshes])
+    b = (bb[:, 0].min(), bb[:, 1].max(), bb[:, 2].min(), bb[:, 3].max(),
+         bb[:, 4].min(), bb[:, 5].max())
     cx, cy, cz = (b[0] + b[1]) / 2, (b[2] + b[3]) / 2, (b[4] + b[5]) / 2
     dist = 2.4 * max(b[1] - b[0], b[3] - b[2], b[5] - b[4])
-    eye = (cx - dist if side == "L" else cx + dist, cy, cz)
-    pl.camera_position = (eye, (cx, cy, cz), (0, 0, 1))
+    if side == "T":
+        eye, up = (cx, cy, cz + dist), (0, 1, 0)
+    else:
+        eye, up = (cx - dist if side == "L" else cx + dist, cy, cz), (0, 0, 1)
+    pl.camera_position = (eye, (cx, cy, cz), up)
     pl.enable_parallel_projection()
-    pl.camera.zoom(zoom)
+    # FIT BEFORE ZOOMING. pyvista sets the parallel scale from the camera distance,
+    # not from what is in view, so a fixed zoom that suits a lateral view - 127 mm of
+    # brain top to bottom - clips a top view, which puts 174 mm of brain front to
+    # back on the same vertical axis. The zoom is capped at what leaves a margin on
+    # both axes of this view; the lateral views are well inside it and unchanged.
+    W, H = RENDER_PX
+    up_ext, across_ext = ((b[3] - b[2], b[1] - b[0]) if side == "T"
+                          else (b[5] - b[4], b[3] - b[2]))
+    vis = 2.0 * pl.camera.parallel_scale          # mm visible top-to-bottom at zoom 1
+    fit = min(vis / (1.06 * up_ext), vis * (W / H) / (1.06 * across_ext))
+    pl.camera.zoom(min(zoom, fit))
     _PLOTTER[side] = (pl, ok)
     return _PLOTTER[side]
 

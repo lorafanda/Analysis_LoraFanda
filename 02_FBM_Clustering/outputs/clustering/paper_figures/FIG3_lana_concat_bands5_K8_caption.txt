@@ -1,6 +1,14 @@
 FIG 3   ·   LanA language atlas   ·   concat_bands5   ·   K = 8
 ====================================================================================================
 
+AXES SHARED ACROSS FEATURE SETS
+----------------------------------------------------------------------------------------------------
+A's y axis, B's x axis and C's x and y axes run to the same limits in every FIG 3
+at this K, so the four can be laid side by side and a bar that looks taller is
+taller. The limits are the maximum reached in: concat_hg, concat_rawds, concat_bands5, concat_bands5z.
+  A top 0.4497   B |rho| 0.2332   C loading 0.9895   C P_lana 0.7965   (each drawn with a small margin)
+  recorded in FIG3_extents_K08.json; --all rebuilds every feature set on one set
+
 WHAT P_lana IS
 ----------------------------------------------------------------------------------------------------
 The LanA probabilistic language atlas sampled at each contact's fsaverage
@@ -57,7 +65,7 @@ THE SECOND NULL, KEPT FOR COMPARISON
 ----------------------------------------------------------------------------------------------------
 Contacts on one shaft sit millimetres apart, share a patient, and share an atlas
 neighbourhood, so a correlation across ~1400 electrodes has nothing like 1400
-degrees of freedom. Every null here permutes P_lana WITHIN EACH PATIENT: that
+degrees of freedom. The weaker null permutes P_lana WITHIN EACH PATIENT: that
 keeps each patient's own atlas values and coverage exactly as they are and
 breaks only the link between a contact's position and its cluster. A null that
 shuffled across patients would also destroy the fact that patients are implanted
@@ -82,8 +90,9 @@ corrected with Benjamini-Hochberg and a star means q < 0.05, not p < 0.05.
 
 PANEL A - clusters ranked by how much LanA they sit in
 ----------------------------------------------------------------------------------------------------
-Mean P_lana of a cluster's electrodes, most to least. Grey dash = the
-within-patient null, dotted line = the cohort mean, % under each bar = coverage.
+Mean P_lana of a cluster's electrodes, most to least. Dark dash = the shaft-shift
+null, pale dash = the within-patient null, dotted line = the cohort mean, % under
+each bar = coverage.
 
   cohort mean P_lana             0.1434
   most  c1  0.2100 [0.1612, 0.4497]  shaft null 0.2066 q=0.613  (within-patient null 0.1568 q=0.00799)
@@ -91,7 +100,7 @@ within-patient null, dotted line = the cohort mean, % under each bar = coverage.
   clusters above the SHAFT-SHIFT null at q<0.05   0 of 8
   above the weaker within-patient null              1 of 8
 
-PANEL B and C - loading against P_lana
+PANELS C and B - loading against P_lana (C every electrode, B the rhos ranked)
 ----------------------------------------------------------------------------------------------------
 Spearman rho between an electrode's LOADING on a cluster and its P_lana, across
 EVERY electrode with a LanA value - not only the cluster's own members, because
@@ -134,6 +143,37 @@ mutually consistent.
 A rho near zero means the cluster is placed independently of the atlas. That is a
 result, not a failure - it says the clustering found structure the atlas does not
 describe.
+
+PANEL D - LanA on this coverage
+----------------------------------------------------------------------------------------------------
+Every electrode with a LanA value, coloured by it, on the left hemisphere, the
+right, and both from above (anterior up, left on the left). The scale runs 0 to
+the 98th percentile of the values present, so one bright outlier cannot flatten
+the rest.
+
+HOW TO READ THIS FIGURE
+----------------------------------------------------------------------------------------------------
+P(LanA) is an ATLAS PRIOR about a location - the fraction of LanA's subjects whose language network
+covers this point. It is not a measurement in this patient. A cluster high in panel A sits where
+language cortex usually is; whether it RESPONDED to language is FIG 1, not this.
+
+Against the SHAFT-SHIFT null, which preserves the spatial smoothness of the atlas, 0 of 8 clusters
+sit in more LanA than chance and 0 of 8 correlations pass. Against the weaker within-patient null it
+is 1 and 2. Where those differ, the smoothness was doing the work.
+
+The largest |rho| is 0.14. Significance here is nearly free at this sample size; the effect size is
+the result.
+
+Only 82% of electrodes have a LanA value, and the missing ones are WHOLE PATIENTS rather than a
+random scatter - the atlas run predates part of the cohort. Every cluster is above the coverage
+floor here.
+
+The K correlations are NOT independent: loadings sum to 1, so one cluster tracking the atlas forces
+the others negative by arithmetic. Only the positive end is interpretable alone.
+
+LanA is left-lateralised and sEEG coverage is not symmetric, so a left-heavy cluster scores higher
+for that reason alone. Neither null removes it: it is a property of where a cluster is, not of which
+patients it draws on.
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------

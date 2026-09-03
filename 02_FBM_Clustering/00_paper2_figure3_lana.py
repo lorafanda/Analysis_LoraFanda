@@ -5,13 +5,17 @@
     python 00_paper2_figure3_lana.py                     K = 8, concat_hg
     python 00_paper2_figure3_lana.py --k 11 --feature-set concat_hg
     python 00_paper2_figure3_lana.py --feature-set concat_bands5 --n-perm 2000
+    python 00_paper2_figure3_lana.py --all --k 8       all four feature sets, SHARED AXES
 
     A   clusters RANKED by how much LanA probability their electrodes sit in,
-        most to least, against a within-patient permutation null
-    B   per cluster, LOADING vs P_lana across every electrode - does belonging more
+        most to least, against two nulls
+    B   those correlations ranked, with confidence intervals and FDR
+    C   per cluster, LOADING vs P_lana across every electrode - does belonging more
         strongly to this cluster mean sitting further into language cortex?
-    C   those correlations ranked, with confidence intervals and FDR
-    D   what LanA looks like on this coverage, so A-C are not read in a vacuum
+    D   what LanA looks like on this coverage - left, right and from above - so
+        A to C are not read in a vacuum
+
+Four panels, one per corner: A above B on the narrow left, C above D on the right.
 
 WHAT P_lana IS. The LanA probabilistic language atlas (Lipkin et al.) sampled at each
 contact's fsaverage position: the fraction of that atlas's subjects whose language
@@ -23,10 +27,11 @@ TWO THINGS THIS FIGURE REFUSES TO DO QUIETLY.
 
   Electrodes are not independent. Contacts on one shaft sit millimetres apart, share a
   patient and share an atlas neighbourhood, so a correlation across 1400 electrodes has
-  nothing like 1400 degrees of freedom. Every null here permutes P_lana WITHIN PATIENT,
-  which keeps each patient's coverage and its atlas values intact and asks only whether
-  the CLUSTERING lines up with them. Confidence intervals bootstrap PATIENTS, not
-  electrodes, for the same reason.
+  nothing like 1400 degrees of freedom. Two nulls: a SHAFT-SHIFT that rolls each
+  shaft's labels along itself, keeping the spatial smoothness that makes neighbouring
+  contacts alike, and a within-patient shuffle of P_lana that does not. The first is
+  the one that counts. Confidence intervals bootstrap PATIENTS, not electrodes, for the
+  same reason.
 
   LanA coverage is not complete and not missing at random. The atlas run predates part
   of the cohort, so whole patients have no value at all. Per-cluster coverage is drawn
@@ -40,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import json
 import importlib.util
 import sys
 import time
@@ -303,7 +309,7 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
 
 
 # ---- panels ------------------------------------------------------------------
-def panel_rank(ax, R, d, chars):
+def panel_rank(ax, R, d, chars, ext):
     K = d["k"]
     x = np.arange(len(R))
     cols = [P2.cluster_col(int(c), K) for c in R.cluster]
@@ -322,11 +328,11 @@ def panel_rank(ax, R, d, chars):
     ax.set_xticklabels([f"c{int(c)}\nn={int(n)}" for c, n in zip(R.cluster, R.n_lana)],
                        fontsize=7.2)
     ax.set_ylabel("mean P(LanA) of its electrodes", fontsize=8.6)
-    ax.set_ylim(0, max(R.mean_P_hi.max(), R.mean_P.max()) * 1.22)
+    ax.set_ylim(0, ext["A_top"] * 1.22)           # shared across feature sets
     ax.tick_params(labelsize=7.4, colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
     thin = [f"c{int(r.cluster)}" for _, r in R.iterrows() if r.coverage < MIN_COVERAGE]
-    ax.text(0, -0.42, _wrap(
+    ax.text(0, -0.20, _wrap(
         f"Ranked most to least. Bars are the mean LanA probability of a cluster's "
         f"electrodes; whiskers are a 95% interval from bootstrapping PATIENTS. The "
         f"dotted line is the cohort mean ({R.baseline_P.iloc[0]:.3f}). TWO NULLS: the "
@@ -335,13 +341,15 @@ def panel_rank(ax, R, d, chars):
         f"that counts (*); the pale dash only shuffles within patient, which destroys "
         f"that smoothness and is too easy to beat ((*) = passes only that one). Both "
         f"Benjamini-Hochberg over {K}. The % under each bar is how much of that "
-        f"cluster HAS a LanA value" + (f"; {', '.join(thin)} fall below {100*MIN_COVERAGE:.0f}% and their "
-                    f"means are not comparable with the rest." if thin else "."),
+        f"cluster HAS a LanA value"
+        + (f"; {', '.join(thin)} fall{'' if len(thin) > 1 else 's'} below "
+           f"{100*MIN_COVERAGE:.0f}% and {'their means are' if len(thin) > 1 else 'its mean is'} "
+           f"not comparable with the rest." if thin else "."),
         chars), transform=ax.transAxes, va="top", fontsize=7.4, color=MUTED,
         linespacing=1.5)
 
 
-def panel_scatter(axes, R, Gh, Ph, labh, d):
+def panel_scatter(axes, R, Gh, Ph, labh, d, ext):
     K = d["k"]
     for ax, (_, r) in zip(axes, R.iterrows()):
         j = int(r.cluster)
@@ -356,11 +364,12 @@ def panel_scatter(axes, R, Gh, Ph, labh, d):
         ax.set_title(f"c{j}   rho {r.rho:+.2f}"
                      + ("*" if r.q_rho_sh < 0.05 else ""), fontsize=7.8,
                      color=INK if abs(r.rho) >= 0.1 else col, loc="left", pad=2.2)
+        ax.set_xlim(0, ext["C_x"] * 1.04); ax.set_ylim(0, ext["C_y"] * 1.04)
         ax.tick_params(labelsize=6.2, colors=MUTED)
         ax.spines[["top", "right"]].set_visible(False)
 
 
-def panel_rho(ax, R, d, chars):
+def panel_rho(ax, R, d, chars, ext):
     """Effect size first. With n in the thousands a q-value is nearly free and says
     almost nothing; the magnitude is the result, so the magnitude leads."""
     K = d["k"]
@@ -374,7 +383,7 @@ def panel_rho(ax, R, d, chars):
                 ecolor=INK, elinewidth=1.0, capsize=2.4, zorder=3)
     ax.plot(R.null_rho_sh, y, "|", ms=13, color=INK, mew=1.8, zorder=4)
     ax.axvline(0, color=INK, lw=0.8, zorder=1)
-    lim = max(0.16, float(np.nanmax(np.abs([R.rho_lo.min(), R.rho_hi.max()]))) * 1.35)
+    lim = max(0.16, ext["B_abs"] * 1.35)          # shared across feature sets
     ax.set_xlim(-lim, lim)
     for i, (_, r) in enumerate(R.iterrows()):
         mark = "*" if r.q_rho_sh < 0.05 else ("(*)" if r.q_rho < 0.05 else "")
@@ -403,20 +412,22 @@ def panel_rho(ax, R, d, chars):
         fontsize=7.4, color=MUTED, linespacing=1.5)
 
 
-BR = chr(10)
-
-
 def _wrap(t, chars):
     import textwrap
     return textwrap.fill(t, chars)
 
 
-def panel_brain(axL, axR, d, chars):
-    """What LanA looks like on THIS coverage - the context A to C are read against."""
+def panel_brain(axL, axR, axT, axKey, d, chars):
+    """What LanA looks like on THIS coverage - the context A to C are read against.
+
+    Left, right, and from above, on FIG 1's own brain scenes; the fourth cell, which
+    the top view leaves free, carries the colour scale and what the colour means.
+    """
     P, has = d["P_lana"], d["has"]
     vmax = float(np.nanpercentile(P[has], 98)) or 1.0
     cm = plt.get_cmap("magma")
-    for ax, side in ((axL, "L"), (axR, "R")):
+    for ax, side, tag in ((axL, "L", "left"), (axR, "R", "right"),
+                          (axT, "T", "from above")):
         pl, ok = P2._scene(side, d, 1.30)
         m = ok & has
         actor = None
@@ -439,111 +450,194 @@ def panel_brain(axL, axR, d, chars):
         ax.set_xticks([]); ax.set_yticks([])
         for s_ in ax.spines.values():
             s_.set_visible(False)
-        ax.text(0.02, 0.02, f"{side}  {int(m.sum())}", transform=ax.transAxes,
+        ax.text(0.02, 0.02, f"{tag}  {int(m.sum())}", transform=ax.transAxes,
                 ha="left", va="bottom", fontsize=7.0, color=MUTED)
-    axL.text(0, -0.09, _wrap(
-        f"Every electrode with a LanA value, coloured by it (dark = low, bright = high, "
-        f"scaled to the 98th percentile, {vmax:.2f}). An ATLAS PRIOR about a location, "
-        f"not a measurement in this patient: a bright contact is somewhere language "
-        f"cortex usually is, which is not the same as having responded to language.",
-        chars), transform=axL.transAxes, va="top", fontsize=7.4, color=MUTED,
+    # the scale and the reading, in the cell the top view leaves free
+    from matplotlib.cm import ScalarMappable
+    from matplotlib.colors import Normalize
+    axKey.axis("off")
+    cax = axKey.inset_axes([0.04, 0.82, 0.62, 0.055])
+    cb = axKey.figure.colorbar(ScalarMappable(norm=Normalize(0, vmax), cmap=cm),
+                               cax=cax, orientation="horizontal")
+    cb.set_label(f"P(LanA), 0 to the 98th percentile ({vmax:.2f})", fontsize=7.2,
+                 color=MUTED, labelpad=3)
+    cb.ax.tick_params(labelsize=6.4, colors=MUTED, length=2)
+    cb.outline.set_visible(False)
+    axKey.text(0.04, 0.60, _wrap(
+        f"Every electrode with a LanA value, coloured by it - dark is low, bright is "
+        f"high. An ATLAS PRIOR about a location, not a measurement in this patient: "
+        f"a bright contact is somewhere language cortex usually is, which is not the "
+        f"same as having responded to language. LanA is left-lateralised and this "
+        f"coverage is not symmetric; the view from above shows both at once.", chars),
+        transform=axKey.transAxes, va="top", ha="left", fontsize=7.4, color=MUTED,
         linespacing=1.5)
 
 
+def reading_notes(R, d):
+    """The paragraphs that used to sit on the figure as a fourth-row panel.
+
+    Generated from the data, so the caption cannot describe a figure that has since
+    changed. They go to the caption now because the figure is four panels, one per
+    corner, and has no room for a fifth.
+    """
+    K = d["k"]
+    thin = [f"c{int(r.cluster)}" for _, r in R.iterrows() if r.coverage < MIN_COVERAGE]
+    return [
+        "P(LanA) is an ATLAS PRIOR about a location - the fraction of LanA's subjects "
+        "whose language network covers this point. It is not a measurement in this "
+        "patient. A cluster high in panel A sits where language cortex usually is; "
+        "whether it RESPONDED to language is FIG 1, not this.",
+        f"Against the SHAFT-SHIFT null, which preserves the spatial smoothness of the "
+        f"atlas, {int((R.q_mean_sh < 0.05).sum())} of {K} clusters sit in more LanA "
+        f"than chance and {int((R.q_rho_sh < 0.05).sum())} of {K} correlations pass. "
+        f"Against the weaker within-patient null it is {int((R.q_mean < 0.05).sum())} "
+        f"and {int((R.q_rho < 0.05).sum())}. Where those differ, the smoothness was "
+        f"doing the work.",
+        f"The largest |rho| is {R.rho.abs().max():.2f}. Significance here is nearly "
+        f"free at this sample size; the effect size is the result.",
+        f"Only {100*d['has'].mean():.0f}% of electrodes have a LanA value, and the "
+        f"missing ones are WHOLE PATIENTS rather than a random scatter - the atlas run "
+        f"predates part of the cohort. "
+        + (f"Coverage is below {100*MIN_COVERAGE:.0f}% for {', '.join(thin)}, whose "
+           f"{'means are' if len(thin) > 1 else 'mean is'} not comparable with the rest."
+           if thin else "Every cluster is above the coverage floor here."),
+        "The K correlations are NOT independent: loadings sum to 1, so one cluster "
+        "tracking the atlas forces the others negative by arithmetic. Only the "
+        "positive end is interpretable alone.",
+        "LanA is left-lateralised and sEEG coverage is not symmetric, so a left-heavy "
+        "cluster scores higher for that reason alone. Neither null removes it: it is a "
+        "property of where a cluster is, not of which patients it draws on.",
+    ]
+
+
+# ---- shared axes ---------------------------------------------------------------
+EXT_KEYS = ("A_top", "B_abs", "C_x", "C_y")
+
+
+def extents_of(R, Gh, Ph):
+    """What this feature set's panels reach: A's top (mean or whisker), B's largest
+    |rho| including its interval, C's largest loading and largest P(LanA)."""
+    return dict(A_top=float(max(R.mean_P_hi.max(), R.mean_P.max())),
+                B_abs=float(np.nanmax(np.abs([R.rho_lo.min(), R.rho_hi.max()]))),
+                C_x=float(np.nanmax(Gh)), C_y=float(np.nanmax(Ph)))
+
+
+def merge_extents(exts):
+    return {key: max(float(e[key]) for e in exts.values()) for key in EXT_KEYS}
+
+
+def extents_path(k):
+    return OUT / f"FIG3_extents_K{k:02d}.json"
+
+
+def resolve_extents(fset, k, own):
+    """The axes this figure draws on: the maximum over every feature set that has
+    recorded its extents at this K, plus this one. Records this one for the others."""
+    p = extents_path(k)
+    exts = {}
+    if p.exists():
+        try:
+            exts = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            exts = {}
+    exts[fset] = own
+    P2.save_text(json.dumps(exts, indent=1) + "\n", p)
+    return merge_extents(exts), sorted(exts)
+
+
+def prepare(fset, k, n_perm, n_boot):
+    d = load(fset, k)
+    if d["has"].sum() < 50:
+        raise SystemExit("too few electrodes carry a LanA value to say anything")
+    print(f"  {n_perm} permutations of each null, {n_boot} patient bootstraps ...")
+    R, Ph, Gh, labh = analyse(d, n_perm, n_boot)
+    return d, R, Ph, Gh, labh
+
+
+def figure_3_all(fsets, k, n_perm, n_boot):
+    """All feature sets in one process: analyse each, take the global extents, then
+    render each on them. The only way to get four figures on one set of axes without
+    running everything twice."""
+    pre = {}
+    for f in fsets:
+        print(f"\n=== {f} ===")
+        pre[f] = prepare(f, k, n_perm, n_boot)
+    exts = {f: extents_of(R, Gh, Ph) for f, (d, R, Ph, Gh, labh) in pre.items()}
+    P2.save_text(json.dumps(exts, indent=1) + "\n", extents_path(k))
+    ext = merge_extents(exts)
+    print("\n  shared axes: " + "  ".join(f"{q} {v:.3f}" for q, v in ext.items()))
+    out = []
+    for f in fsets:
+        print(f"\n=== {f}: render ===")
+        out.append(figure_3(f, k, n_perm, n_boot, ext=ext, pre=pre[f],
+                            shared_with=list(fsets)))
+    return out
+
+
 # ---- the figure --------------------------------------------------------------
-def figure_3(fset, k, n_perm, n_boot):
+def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     t0 = time.time()
     for _pl, _ in P2._PLOTTER.values():
         _pl.close()
     P2._PLOTTER.clear()
-    d = load(fset, k)
-    if d["has"].sum() < 50:
-        raise SystemExit("too few electrodes carry a LanA value to say anything")
-    print(f"  {n_perm} within-patient permutations, {n_boot} patient bootstraps ...")
-    R, Ph, Gh, labh = analyse(d, n_perm, n_boot)
+    d, R, Ph, Gh, labh = pre if pre is not None else prepare(fset, k, n_perm, n_boot)
+    own = extents_of(R, Gh, Ph)
+    if ext is None:
+        ext, shared_with = resolve_extents(fset, k, own)
+    print("  axes shared with: " + ", ".join(shared_with))
 
-    ncol = min(len(R), 8)
-    nrow = int(np.ceil(len(R) / ncol))
-    fig = plt.figure(figsize=(17.6, 9.8 + 1.4 * (nrow - 1)), dpi=190)
-    gs = GridSpec(3, 24, figure=fig, height_ratios=[1.25, 0.90 * nrow, 1.15],
-                  hspace=1.35, wspace=1.2, left=0.055, right=0.985,
-                  top=0.855, bottom=0.045)
+    # FOUR PANELS, ONE PER CORNER. The left column is the narrow one (A above B) and
+    # the right the wide one (C above D); the bottom row is the taller, so that D -
+    # three views of the coverage - can actually be read.
+    nrow = 2
+    ncol = int(np.ceil(len(R) / nrow))
+    fig = plt.figure(figsize=(17.6, 15.6), dpi=190)
+    gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 2.3], hspace=0.48,
+                  wspace=1.2, left=0.055, right=0.985, top=0.905, bottom=0.030)
     fig.suptitle(f"FIG 3   ·   LanA language atlas   ·   {fset}   ·   K = {k}   ·   "
                  f"{int(d['has'].sum())} of {len(d['X'])} electrodes have a LanA value",
-                 x=0.055, y=0.972, ha="left", fontsize=15.5, color=INK)
-    fig.text(0.055, 0.938,
+                 x=0.055, y=0.978, ha="left", fontsize=15.5, color=INK)
+    fig.text(0.055, 0.955,
              "How far into the LanA probabilistic language atlas each cluster sits, and "
              "whether belonging more strongly to a cluster goes with sitting further "
-             "in.  Every null permutes P(LanA) WITHIN PATIENT; every interval "
-             "bootstraps patients.",
+             "in.  Two nulls per test: a SHAFT-SHIFT that keeps spatial smoothness (*) "
+             "and a within-patient shuffle ((*)); every interval bootstraps patients.",
              fontsize=9.8, color=MUTED, va="top")
 
-    axA = fig.add_subplot(gs[0, 0:13])
-    panel_rank(axA, R, d, 118)
-    cD = GridSpecFromSubplotSpec(1, 2, gs[0, 14:24], wspace=0.03)
-    axD = fig.add_subplot(cD[0])
-    panel_brain(axD, fig.add_subplot(cD[1]), d, 96)
+    axA = fig.add_subplot(gs[0, 0:7])
+    panel_rank(axA, R, d, 66, ext)
 
-    sub = GridSpecFromSubplotSpec(nrow, ncol, gs[1, :], hspace=0.55, wspace=0.30)
+    sub = GridSpecFromSubplotSpec(nrow, ncol, gs[0, 8:24], hspace=0.62, wspace=0.34)
     axes = [fig.add_subplot(sub[i // ncol, i % ncol]) for i in range(len(R))]
-    panel_scatter(axes, R, Gh, Ph, labh, d)
-    axes[0].set_ylabel("P(LanA)", fontsize=7.6)
-    for a in axes:
-        a.set_xlabel("loading", fontsize=7.0)
+    panel_scatter(axes, R, Gh, Ph, labh, d, ext)
+    for i, a in enumerate(axes):
+        if i % ncol == 0:
+            a.set_ylabel("P(LanA)", fontsize=7.6)
+        if i + ncol >= len(R):                       # the last row, ragged or not
+            a.set_xlabel("loading", fontsize=7.0)
 
-    axC = fig.add_subplot(gs[2, 0:11])
-    panel_rho(axC, R, d, 104)
-    # the right half of this row was empty. The reading notes go there, generated from
-    # the data so they cannot describe a figure that has since changed.
-    axN = fig.add_subplot(gs[2, 12:24]); axN.axis("off")
-    thin = [f"c{int(r.cluster)}" for _, r in R.iterrows()
-            if r.coverage < MIN_COVERAGE]
-    axN.text(0, 1.0, "HOW TO READ THIS FIGURE" + BR + BR
-             + _wrap("P(LanA) is an ATLAS PRIOR about a location - the fraction of "
-                     "LanA's subjects whose language network covers this point. It is "
-                     "not a measurement in this patient. A cluster high in panel A sits "
-                     "where language cortex usually is; whether it RESPONDED to language "
-                     "is FIG 1, not this.", 92) + BR + BR
-             + _wrap(f"Against the SHAFT-SHIFT null, which preserves the spatial "
-                     f"smoothness of the atlas, {int((R.q_mean_sh < 0.05).sum())} of "
-                     f"{d['k']} clusters sit in more LanA than chance and "
-                     f"{int((R.q_rho_sh < 0.05).sum())} of {d['k']} correlations pass. "
-                     f"Against the weaker within-patient null it is "
-                     f"{int((R.q_mean < 0.05).sum())} and "
-                     f"{int((R.q_rho < 0.05).sum())}. Where those differ, the "
-                     f"smoothness was doing the work.", 92) + BR + BR
-             + _wrap(f"No correlation reaches |rho| = 0.10. Significance here is nearly "
-                     f"free at this sample size; the effect size is the result.", 92)
-             + BR + BR
-             + _wrap(f"Only {100*d['has'].mean():.0f}% of electrodes have a LanA value, "
-                     f"and the missing ones are WHOLE PATIENTS rather than a random "
-                     f"scatter - the atlas run predates part of the cohort. "
-                     + (f"Coverage is below {100*MIN_COVERAGE:.0f}% for "
-                        f"{', '.join(thin)}, whose means are not comparable with the "
-                        f"rest." if thin else
-                        "Every cluster is above the coverage floor here."), 92)
-             + BR + BR
-             + _wrap("The K correlations are NOT independent: loadings sum to 1, so one "
-                     "cluster tracking the atlas forces the others negative by "
-                     "arithmetic. Only the positive end is interpretable alone.", 92)
-             + BR + BR
-             + _wrap("LanA is left-lateralised and sEEG coverage is not symmetric, so a "
-                     "left-heavy cluster scores higher for that reason alone. The "
-                     "within-patient null does not remove it: it is a property of where "
-                     "a cluster is, not of which patients it draws on.", 92),
-             transform=axN.transAxes, va="top", ha="left", fontsize=7.6, color=MUTED,
-             linespacing=1.6)
+    cB = GridSpecFromSubplotSpec(2, 1, gs[1, 0:7], height_ratios=[1.0, 0.80],
+                                 hspace=0.0)
+    axB = fig.add_subplot(cB[0])
+    panel_rho(axB, R, d, 66, ext)
+
+    cD = GridSpecFromSubplotSpec(2, 2, gs[1, 8:24], hspace=0.08, wspace=0.03)
+    axDL, axDR = fig.add_subplot(cD[0, 0]), fig.add_subplot(cD[0, 1])
+    axDT, axDK = fig.add_subplot(cD[1, 0]), fig.add_subplot(cD[1, 1])
+    panel_brain(axDL, axDR, axDT, axDK, d, 70)
 
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
-    for ax, label in ((axA, "A  ·  clusters ranked by how much LanA they sit in"),
-                      (axD, "D  ·  LanA on this coverage"),
-                      (axes[0], "B  ·  loading vs P(LanA), every electrode"),
-                      (axC, "C  ·  those correlations, ranked")):
-        top = inv.transform((0, ax.get_tightbbox(r).y1))[1]
-        fig.text(ax.get_position().x0, top + 0.008, label, fontsize=10.4, color=INK,
-                 va="bottom")
+    # one line of labels per row, above the taller of its two panels
+    for row_ in (((axA, "A  ·  clusters ranked by how much LanA they sit in"),
+                  (axes[0], "C  ·  loading vs P(LanA), every electrode")),
+                 ((axB, "B  ·  those correlations, ranked"),
+                  (axDL, "D  ·  LanA on this coverage: left, right, from above"))):
+        top = max(inv.transform((0, ax.get_tightbbox(r).y1))[1] for ax, _ in row_)
+        for ax, label in row_:
+            fig.text(ax.get_position().x0, top + 0.006, label, fontsize=10.4,
+                     color=INK, va="bottom")
 
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / f"FIG3_lana_{fset}_K{k}.png"
@@ -554,16 +648,26 @@ def figure_3(fset, k, n_perm, n_boot):
         patient=d["patient"], electrode=d["meta"]["electrode"], cluster=d["lab"],
         P_lana=d["P_lana"], has_lana=d["has"])).to_csv(index=False),
         p.with_name(p.stem + "_electrodes.csv"))
-    caption_3(p.with_name(p.stem + "_caption.txt"), d, R, k, fset, n_perm, n_boot)
+    caption_3(p.with_name(p.stem + "_caption.txt"), d, R, k, fset, n_perm, n_boot,
+              ext, shared_with)
     print(f"  {time.time()-t0:.0f}s  -> {p.name}")
     return p
 
 
-def caption_3(path, d, R, k, fset, n_perm, n_boot):
+def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     L = []
     A = L.append
     A(f"FIG 3   ·   LanA language atlas   ·   {fset}   ·   K = {k}")
     A("=" * 100)
+    A("")
+    A("AXES SHARED ACROSS FEATURE SETS")
+    A("-" * 100)
+    A("A's y axis, B's x axis and C's x and y axes run to the same limits in every FIG 3")
+    A("at this K, so the four can be laid side by side and a bar that looks taller is")
+    A(f"taller. The limits are the maximum reached in: {', '.join(shared_with)}.")
+    A(f"  A top {ext['A_top']:.4f}   B |rho| {ext['B_abs']:.4f}   C loading {ext['C_x']:.4f}"
+      f"   C P_lana {ext['C_y']:.4f}   (each drawn with a small margin)")
+    A(f"  recorded in {extents_path(k).name}; --all rebuilds every feature set on one set")
     A("")
     A("WHAT P_lana IS")
     A("-" * 100)
@@ -625,7 +729,7 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot):
     A("-" * 100)
     A("Contacts on one shaft sit millimetres apart, share a patient, and share an atlas")
     A("neighbourhood, so a correlation across ~1400 electrodes has nothing like 1400")
-    A("degrees of freedom. Every null here permutes P_lana WITHIN EACH PATIENT: that")
+    A("degrees of freedom. The weaker null permutes P_lana WITHIN EACH PATIENT: that")
     A("keeps each patient's own atlas values and coverage exactly as they are and")
     A("breaks only the link between a contact's position and its cluster. A null that")
     A("shuffled across patients would also destroy the fact that patients are implanted")
@@ -650,8 +754,9 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot):
     A("")
     A("PANEL A - clusters ranked by how much LanA they sit in")
     A("-" * 100)
-    A("Mean P_lana of a cluster's electrodes, most to least. Grey dash = the")
-    A("within-patient null, dotted line = the cohort mean, % under each bar = coverage.")
+    A("Mean P_lana of a cluster's electrodes, most to least. Dark dash = the shaft-shift")
+    A("null, pale dash = the within-patient null, dotted line = the cohort mean, % under")
+    A("each bar = coverage.")
     A("")
     A(f"  cohort mean P_lana             {R.baseline_P.iloc[0]:.4f}")
     A(f"  most  c{int(R.cluster.iloc[0])}  {R.mean_P.iloc[0]:.4f} "
@@ -666,7 +771,7 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot):
     A(f"  above the weaker within-patient null              "
       f"{int((R.q_mean < 0.05).sum())} of {k}")
     A("")
-    A("PANEL B and C - loading against P_lana")
+    A("PANELS C and B - loading against P_lana (C every electrode, B the rhos ranked)")
     A("-" * 100)
     A("Spearman rho between an electrode's LOADING on a cluster and its P_lana, across")
     A("EVERY electrode with a LanA value - not only the cluster's own members, because")
@@ -708,6 +813,18 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot):
     A("result, not a failure - it says the clustering found structure the atlas does not")
     A("describe.")
     A("")
+    A("PANEL D - LanA on this coverage")
+    A("-" * 100)
+    A("Every electrode with a LanA value, coloured by it, on the left hemisphere, the")
+    A("right, and both from above (anterior up, left on the left). The scale runs 0 to")
+    A("the 98th percentile of the values present, so one bright outlier cannot flatten")
+    A("the rest.")
+    A("")
+    A("HOW TO READ THIS FIGURE")
+    A("-" * 100)
+    for para in reading_notes(R, d):
+        A(_wrap(para, 100))
+        A("")
     A("WHAT THIS FIGURE DOES NOT SHOW")
     A("-" * 100)
     A("  - Not evidence of language responsiveness. LanA is a prior about where language")
@@ -728,9 +845,12 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=8)
     ap.add_argument("--n-perm", type=int, default=N_PERM)
     ap.add_argument("--n-boot", type=int, default=N_BOOT)
+    ap.add_argument("--all", action="store_true",
+                    help="every feature set, on one shared set of axes")
     a = ap.parse_args()
     print(f"=== FIGURE 3 ===  {a.feature_set}  K={a.k}")
-    figure_3(a.feature_set, a.k, a.n_perm, a.n_boot)
+    (figure_3_all(P2.FSETS, a.k, a.n_perm, a.n_boot) if a.all
+     else figure_3(a.feature_set, a.k, a.n_perm, a.n_boot))
     return 0
 
 

@@ -48,6 +48,41 @@ def rel(p: Path) -> str:
     return p.relative_to(ROOT.parent).as_posix()
 
 
+def fig0_bullets(png: Path):
+    """The cohort, from the per-patient table and the two electrodes at the line."""
+    stem = png.with_suffix("").name
+    b = []
+    pt = FIGDIR / f"{stem}_patients.csv"
+    ex = FIGDIR / f"{stem}_examples.csv"
+    if pt.exists():
+        t = pd.read_csv(pt)
+        big, small = t.iloc[0], t.iloc[-1]
+        b.append(f"<b>{int(t.n_gated.sum())} electrodes</b> from {len(t)} patients came "
+                 f"through the gate; the largest patient is {big.patient} with "
+                 f"{int(big.n_gated)} ({100*big.n_gated/t.n_gated.sum():.0f}%), the "
+                 f"smallest {small.patient} with {int(small.n_gated)}.")
+        none = t[t.n_lana == 0]
+        b.append(f"The LanA atlas covers <b>{int(t.n_lana.sum())} of "
+                 f"{int(t.n_gated.sum())}</b> ({100*t.n_lana.sum()/t.n_gated.sum():.0f}%)"
+                 + (f"; {len(none)} patient{'s' if len(none) != 1 else ''} "
+                    f"({', '.join(none.patient)}) "
+                    f"{'have' if len(none) != 1 else 'has'} no value at all &mdash; the "
+                    f"atlas run predates {'them' if len(none) != 1 else 'it'}."
+                    if len(none) else "."))
+    if ex.exists():
+        e = pd.read_csv(ex)
+        kept = e[(e.side == "kept") & e.passes]
+        disc = e[e.side == "discarded"]
+        if len(kept) and len(disc):
+            k0 = kept.iloc[0]
+            d0 = disc.loc[disc.margin.idxmax()]
+            b.append(f"At the line: <b>{k0.patient} {k0.electrode}</b> is kept on "
+                     f"{k0.condition} with {int(k0.bins_pos)} of the {int(k0.need_pos)} "
+                     f"bins the gate needs; <b>{d0.electrode}</b> is discarded, its best "
+                     f"condition ({d0.condition}) reaching {int(d0.bins_pos)}.")
+    return b
+
+
 def fig1_bullets(png: Path):
     """The numbers behind one FIG 1, read from the CSVs written beside it."""
     stem = png.with_suffix("").name
@@ -134,21 +169,34 @@ def fig3_bullets(png: Path):
 
 
 def build():
-    figs = (sorted(FIGDIR.glob("FIG1*.png")) + sorted(FIGDIR.glob("FIG2*.png"))
-            + sorted(FIGDIR.glob("FIG3*.png")))
+    figs = (sorted(FIGDIR.glob("FIG0*.png")) + sorted(FIGDIR.glob("FIG1*.png"))
+            + sorted(FIGDIR.glob("FIG2*.png")) + sorted(FIGDIR.glob("FIG3*.png")))
     figs = [f for f in figs if " - Copy" not in f.name]
+    # the un-suffixed FIG2_agreement_K<k>.png predates the per-feature-set naming and
+    # is the concat_hg variant under its old name: when the named one exists, list only
+    # it - the file stays in the repo, the site just stops showing a superseded copy
+    named = {f.name for f in figs}
+    figs = [f for f in figs
+            if not (f.name.startswith("FIG2_agreement_K")
+                    and f.name.replace("FIG2_agreement_K", "FIG2_agreement_concat_hg_K")
+                    in named)]
     tracked = tracked_files()
 
     P = [BEGIN,
          '    <h3 id="paper2figs">Paper 2 figures</h3>',
          '    <div class="method" style="border-left:4px solid var(--s2)">',
-         "      <b>Built by <code>00_Paper2_Figures.py</code> and "
-         "<code>00_paper2_figures2_2.py</code>, driven and explained by "
+         "      <b>Built by <code>00_paper2_figure0_coverage.py</code>, "
+         "<code>00_Paper2_Figures.py</code>, <code>00_paper2_figures2_2.py</code> and "
+         "<code>00_paper2_figure3_lana.py</code>, driven and explained by "
          "<code>000_Paper2_figures.ipynb</code>.</b> Nothing is written on a figure: "
          "each one ships a <code>_caption.txt</code> beside it with the full "
          "provenance, and the numbers behind every panel as CSV. The bullets below are "
          "read from those files when this section is generated, so a verdict here "
          "cannot outlive the figure it describes.",
+         "      <p style='margin:8px 0 0'><b>FIG 0 comes first because everything else "
+         "is computed on it</b> &mdash; who the cohort is, how much of it the atlas can "
+         "see, and what the responsiveness gate is deciding at the line: one bin in "
+         "38,700 separates an electrode that is kept from one that is not.</p>",
          "      <p style='margin:8px 0 0'><b>FIG 3 asks a different question and its "
          "answer is mostly negative</b> &mdash; where the clusters sit relative to the "
          "LanA probabilistic language atlas. LanA is a prior about a LOCATION, not a "
@@ -165,8 +213,15 @@ def build():
     for png in figs:
         stem = png.with_suffix("").name
         is1 = stem.startswith("FIG1")
-        k = int(stem.split("_K")[-1])
-        if is1:
+        # FIG 0 has no K in its name: the cohort is the same at every K
+        k = None if stem.startswith("FIG0") else int(stem.split("_K")[-1])
+        if stem.startswith("FIG0"):
+            num, title = "0", "the cohort"
+            bullets = fig0_bullets(png)
+            alt = ("four panels: electrodes through the gate per patient, of those the "
+                   "ones with a LanA value, and two electrodes at the gate's line - one "
+                   "just kept, one just discarded")
+        elif is1:
             tag = stem[4]
             fset = stem.split("_cnmf_")[0][6:]
             num, title = f"1{tag} &middot; K={k}", f"{fset}, convex NMF, K = {k}"

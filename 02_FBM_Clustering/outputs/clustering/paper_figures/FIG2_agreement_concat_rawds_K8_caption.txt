@@ -25,13 +25,25 @@ partition and says nothing about WHICH clusters agree - that is B and E. It is
 also dominated by the large clusters, so a low ARI can coexist with the big
 structure agreeing.
 
-THE INSET IS MEAN PAIRWISE ARI AT EVERY K, with this K marked. Agreement read at
-one K cannot say whether that K is a good place to be comparing; the inset can.
+A.1 AND D.1 ARE MEAN PAIRWISE ARI AT EVERY K, with this K marked. Agreement read
+at one K cannot say whether that K is a good place to be comparing; the curve can.
+A.2 and D.2 are the full matrix: upper number ARI, lower NMI, '=' on the diagonal.
   feature sets   peaks at K=29 (0.488); at K=8 it is 0.328
   algorithms     peaks at K=7 (0.421); at K=8 it is 0.345
 
   feature sets   off-diagonal 0.164 to 0.533, median 0.313
   algorithms     off-diagonal 0.171 to 0.612, median 0.340
+
+  the reading under each panel:
+  A: Upper number ADJUSTED RAND, lower NMI - reported together because ARI is dominated by the large
+     clusters and NMI is not.  strongest 15 bands-5 bands 0.53  ·  weakest HG-15 bands 0.16  ·  HG
+     agrees least with the rest (0.20, a mean of 3)  ·  ACROSS K: agreement peaks at K=29 (0.49); at
+     K=8 it is 0.33
+  D: Upper number ADJUSTED RAND, lower NMI - reported together because ARI is dominated by the large
+     clusters and NMI is not.  strongest convex NMF-archetypes 0.61  ·  weakest convex NMF-Ward 0.17
+     ·  Ward agrees least with the rest (0.25, a mean of 3)  ·  WITHIN a kind 0.49 vs ACROSS the
+     graded/hard divide 0.27 (labels: purple = graded, orange = hard)  ·  ACROSS K: agreement peaks
+     at K=7 (0.42); at K=8 it is 0.34
 
 PANELS B and E - each cluster against the reference, and what the others think
 ----------------------------------------------------------------------------------------------------
@@ -98,21 +110,48 @@ Each non-reference solution's labels are permuted with its cluster sizes
 preserved and re-matched to the reference the way the real ones are; a cell that
 does not reach the mean of that null is HATCHED. 200 permutations.
 
-The colour scale runs 0 to 0.81, shared by both halves and set from the
-data: 0-1 left most of the bar unused once the reference column was dropped, and
-every difference looked smaller than it was.
+EVERY MATRIX RUNS 0 TO 1 - ARI and NMI in A.2/D.2, the Jaccard matrices in B/E and
+their worst-of and others columns - so a shade means the same thing wherever it
+appears, on both halves and across the four FIG 2 variants.
 
   feature sets   weakest match per cluster: 0.03 to 0.71, median 0.40
                  below 0.30 somewhere: pos 4 (c5), pos 6 (c0), pos 7 (c7)
   algorithms     weakest match per cluster: 0.00 to 0.60, median 0.36
                  below 0.30 somewhere: pos 0 (c2), pos 4 (c5), pos 6 (c0)
 
+  the reading under each panel:
+  B: Jaccard against the 1:1 match, reference column dropped, scale 0-1.00.  A LOW VALUE IS THE
+     FINDING: assignment always returns a partner, so it means paired-because-it-had-to-be.  6 of 8
+     fall below 0.30 somewhere: p0 (c2, n=325), p1 (c4, n=199), p3 (c3, n=240), p4 (c5, n=182), and
+     2 more.  /n IN A CELL MEANS THE REFERENCE CLUSTER SPLIT into that many of the solution's
+     clusters (each holding at least 25% of it) - a clean correspondence a 1:1 assignment has to
+     score as one good match and one failure; 3 of the low cells are splits, not disagreements.
+     OTHERS = best agreement between two non-reference solutions on that row; 3 row(s), outlined
+     green, are low only because the REFERENCE disagrees.  2 of 24 cells, hatched, do not beat a
+     size-matched permutation of their own two clusters.  SELF under each column is that solution's
+     agreement with ITSELF over 50 refits on 80% of the electrodes - the ceiling every number here
+     is read against: HG 0.55, 15 bands 0.90.
+  E: Jaccard against the 1:1 match, reference column dropped, scale 0-1.00.  A LOW VALUE IS THE
+     FINDING: assignment always returns a partner, so it means paired-because-it-had-to-be.  3 of 8
+     fall below 0.30 somewhere: p0 (c6, n=341), p4 (c0, n=177), p6 (c1, n=162).  /n IN A CELL MEANS
+     THE REFERENCE CLUSTER SPLIT into that many of the solution's clusters (each holding at least
+     25% of it) - a clean correspondence a 1:1 assignment has to score as one good match and one
+     failure; 4 of the low cells are splits, not disagreements.  OTHERS = best agreement between two
+     non-reference solutions on that row; 1 row(s), outlined green, are low only because the
+     REFERENCE disagrees.  1 of 24 cells, hatched, do not beat a size-matched permutation of their
+     own two clusters.  SELF under each column is that solution's agreement with ITSELF over 50
+     refits on 80% of the electrodes - the ceiling every number here is read against: k-means 0.72,
+     Ward 0.68.
+
 PANELS C and F - which electrodes are placed consistently
 ----------------------------------------------------------------------------------------------------
 Every solution's labels are translated into the reference's numbering, then each
 electrode is scored by the size of the largest group of solutions that agree on
 it. The count runs 1..N: N means every solution puts it in the same cluster, 1
-means no two do. Red is 1, green is N.
+means no two do. Red is 1, green is N. Drawn on the left hemisphere, from above
+(anterior up, left on the left), and on the right; the bar under the three is the
+share of electrodes at each count, observed and by chance, with the colour key
+above it.
 
 IT IS THE MODAL ASSIGNMENT, NOT 'AGREES WITH THE REFERENCE'. Nothing privileges
 one solution, so an electrode where the reference is the odd one out still reads
@@ -137,6 +176,17 @@ AGREEMENT IS NOT CORRECTNESS. Four representations can agree perfectly on one
 patient's electrode strip.
   clusters over half one patient   feature half 1 of 8   algorithm half 1 of 8   (FIG 1 panel D)
 
+  the reading under each panel:
+  C: How many of the 4 solutions put each electrode in the same cluster - the MODAL assignment, so
+     nothing privileges the reference.  22% are placed the same way by all 4, against 0% when the
+     other solutions are PERMUTED and re-matched; 4% by no two.  Red = 1, green = 4.  AGREEMENT IS
+     NOT CORRECTNESS: at K=8, 1 of 8 clusters in 5 bands are over half one patient (FIG 1 panel D).
+  F: How many of the 4 solutions put each electrode in the same cluster - the MODAL assignment, so
+     nothing privileges the reference.  37% are placed the same way by all 4, against 1% when the
+     other solutions are PERMUTED and re-matched; 2% by no two.  Red = 1, green = 4.  AGREEMENT IS
+     NOT CORRECTNESS: at K=8, 1 of 8 clusters in convex NMF on concat_rawds are over half one
+     patient (FIG 1 panel D).
+
 PROVENANCE
 ----------------------------------------------------------------------------------------------------
   feature sets
@@ -151,7 +201,7 @@ PROVENANCE
     archetypes    concat_rawds     archetypes/concat_rawds/runs/20260826_183725   (graded)
   geometry and block order from concat_bands5 (cnmf) at K=8
   built by      00_paper2_figures2_2.py --k 8 --algo-feature-set concat_rawds
-  built on      2026-09-03 17:18
+  built on      2026-09-03 19:48
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
