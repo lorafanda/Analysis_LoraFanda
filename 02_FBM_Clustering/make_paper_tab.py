@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import subprocess
 import sys
 from pathlib import Path
 
@@ -445,11 +446,14 @@ SECTIONS = [
 # ---------------------------------------------------------------------------
 # THE EXAMPLES
 #
-# Two per field, for the Introduction and the three figure sections. Written in the
-# paper's voice: short sentences, direct, one idea each. A and B take different angles
-# on the same prompt rather than rewording each other. Numbers are from the K=8 run of
-# 2026-09-03 (FIG1a concat_hg, FIG2, FIG3 concat_hg); [REF] marks a citation to add and
-# [brackets] a value only the author has. Keys must be field ids - main() checks.
+# Two per field, for every field. Written in the paper's voice: short sentences,
+# direct, one idea each. A and B take different angles on the same prompt rather than
+# rewording each other. Numbers are from the K=8 run of 2026-09-03 (FIG1a concat_hg,
+# FIG2, FIG3 concat_hg) - the Results examples describe the HIGH-GAMMA solution, and
+# will need rewriting if the paper's standard becomes the 5-band z-scored one. [REF]
+# marks a citation to add and [brackets] a value only the author has. The highlights
+# are within 85 characters and both summaries within 150 words, counted. Keys must be
+# field ids - main() checks.
 # ---------------------------------------------------------------------------
 EXAMPLES = {
     # ---- 1 - epilepsy surgery and the need for mapping ------------------------
@@ -833,7 +837,602 @@ EXAMPLES = {
         "counts, and it is near zero for every type. The response types are defined by "
         "what the electrodes do, not by where the atlas says language should be.",
     ],
+    "results.extra": [
+        "The same analysis on the other three feature sets - 15 bands, 5 bands, and 5 "
+        "bands z-scored - gives eight types at K = 8 in each (Figure S[n]), matched to "
+        "the reference solution. Where a type is recovered by all four it carries the "
+        "same name; where it is not, it is left unnamed. The 5-band z-scored solution "
+        "is the one the paper reports as its standard, with high gamma as the "
+        "comparison the field starts from.",
+        "Two controls a reviewer will ask for. The clustering repeated with the "
+        "response window excluded, to show the production type is not an artefact of "
+        "the time warp: [result]. And the clustering repeated on each hemisphere "
+        "alone, to show the types are not a left-right split in disguise: [result].",
+    ],
+    # ---- FRONT MATTER ----------------------------------------------------------
+    "front.title": [
+        "Language responses in human cortex fall into a small number of stable types",
+        "A taxonomy of intracranial language responses, and what does not survive it",
+    ],
+    "front.running": [
+        "Response types in language cortex",
+        "Clustering intracranial language responses",
+    ],
+    "front.authors": [
+        "Lora Fanda 1, [co-author] 2, [co-author] 1, [senior author] 1,2,*   1 Human "
+        "Neuron Lab, [department], University of Geneva, Geneva, Switzerland   2 "
+        "[Neurosurgery / Neurology], Geneva University Hospitals, Geneva, Switzerland   "
+        "* Lead contact",
+        "Order to settle before writing, not after review: first author (analysis, "
+        "writing), then the clinicians who recorded and mapped, then engineering, "
+        "senior author last. Affiliations numbered by first appearance. ORCIDs for "
+        "everyone.",
+    ],
+    "front.lead": [
+        "[Senior author name], [institutional email that will outlast the postdoc]",
+        "Further information and requests for resources should be directed to and will "
+        "be fulfilled by the lead contact, [name] ([email]).",
+    ],
+    "front.keywords": [
+        "intracranial EEG; stereo-EEG; high-gamma; language mapping; functional "
+        "mapping; epilepsy surgery; clustering; non-negative matrix factorization; "
+        "electrical stimulation mapping; language atlas",
+        "sEEG; passive language mapping; response types; convex NMF; cluster "
+        "stability; LanA; presurgical evaluation",
+    ],
+    # ---- HIGHLIGHTS & eTOC (85 characters each, counted) ---------------------------
+    "high.h1": [
+        "Intracranial language responses cluster into eight recurring types",
+        "sEEG responses to language fall into a few types shared across patients",
+    ],
+    "high.h2": [
+        "Held-out fit picks a K at which clusters are single patients",
+        "The number of clusters cannot be chosen by fit alone",
+    ],
+    "high.h3": [
+        "Types recur across feature sets and algorithms; the weak ones do not",
+        "An auditory-onset type is recovered by every method tested",
+    ],
+    "high.h4": [
+        "No type sits in language-atlas cortex beyond a spatial null",
+        "Response types are defined by what electrodes do, not where they sit",
+    ],
+    "high.etoc": [
+        "Fanda et al. record intracranial responses to spoken, pictured and written "
+        "language in 27 epilepsy patients and find eight recurring response types. "
+        "Most survive changes of features and algorithm; none is placed by the "
+        "language atlas.",
+        "Passive language mapping scores each electrode as active or silent. Fanda et "
+        "al. ask what kinds of response exist, cluster 1693 electrodes from 27 "
+        "patients into eight types, and show which of them survive the analysis "
+        "choices that produced them.",
+    ],
+    "high.graphical": [
+        "The abstract condenses FIG 1B. Top: the task - one output, three inputs - as "
+        "the stimulus-and-cue strip from panel C. Middle: five of the eight response "
+        "types, each as its mean high-gamma time course over the three conditions with "
+        "±1 SD, the GO cue dashed, and its electrodes on both hemispheres seen from "
+        "their own sides: production (a rise after the cue in every condition), "
+        "auditory onset (a sharp rise at the start of the audio block), ramp to cue "
+        "(activity that climbs toward the cue in every condition), suppression (a dip "
+        "below baseline during the stimulus), and reading-only. Bottom: the three "
+        "tests as one number each. How many: K = 8, with the curve showing why the "
+        "held-out peak at 11 is not the answer. Other methods: 22% of electrodes are "
+        "placed identically by all four feature sets (chance 0.4%), and the "
+        "auditory-onset type by every method. Anatomy: no - 0 of 8 types sit above a "
+        "null that keeps each shaft intact. Closing line: a response type is what an "
+        "electrode does, not where it sits.",
+        "One panel. The five named types as small traces over the three conditions, "
+        "each with its electrodes on both hemispheres. Below them, three one-number "
+        "verdicts: K = 8; 22% placed alike by all feature sets; 0 of 8 above the "
+        "spatial atlas null. One sentence: a response type is what an electrode does, "
+        "not where it sits. Nothing else - no panel letters, no axes a reader has to "
+        "decode at thumbnail size.",
+    ],
+    # ---- SUMMARY (150 words; both counted) -----------------------------------------
+    "summary.body": [
+        "Resective surgery for drug-resistant epilepsy depends on knowing where "
+        "language lives in the individual patient. Electrical stimulation mapping is "
+        "the standard and is slow, incomplete and binary; passive mapping from "
+        "intracranial recordings is faster but reduces each electrode to active or "
+        "silent. We asked whether language responses instead fall into a small number "
+        "of recurring types. In 27 patients performing auditory, picture and reading "
+        "tasks, we clustered high-gamma responses from 1693 electrodes with convex "
+        "non-negative matrix factorization and found eight types, including "
+        "production-locked, auditory-onset, ramp-to-cue and suppressed responses. "
+        "Held-out fit favoured more clusters, but the extra ones were single patients. "
+        "Most types were recovered across feature sets and algorithms; the weakest "
+        "were not. None sat in language-atlas cortex beyond a null that preserves the "
+        "spatial structure of the recordings. Language responses form types defined by "
+        "what an electrode does, not where it sits.",
+        "Passive language mapping from intracranial recordings tells a surgeon which "
+        "electrodes respond, not what they do. We asked whether the responses "
+        "themselves recur. Across 1693 electrodes from 27 patients, recorded during "
+        "listening, picture naming and reading, convex non-negative matrix "
+        "factorization found eight response types that differ in when they respond "
+        "and whether they care which input it was. The number of types was set by "
+        "patient generalisation rather than held-out fit, which rewards clusters that "
+        "are one patient's electrodes. Most types survived changes of feature set and "
+        "algorithm. None was enriched in language-atlas cortex once the spatial "
+        "structure of the recordings was respected. Response types are a property of "
+        "what an electrode does, and a passive map can report them.",
+    ],
+    # ---- DISCUSSION -----------------------------------------------------------------
+    "disc.summary": [
+        "Language responses recorded intracranially fall into a small number of "
+        "types. Eight were found; five have a shape a reader can name and recur across "
+        "feature sets and algorithms; three are weak and do not. The types are not "
+        "placed by the language atlas. That is the finding, and it is narrower than a "
+        "taxonomy of language cortex: it is a taxonomy of what an electrode in "
+        "language cortex does during a task.",
+        "Three claims are supported. Responses recur: the same profiles appear in many "
+        "patients and under different analyses. The number of types is a modelling "
+        "choice with a defensible answer, and the standard criterion gives the wrong "
+        "one. And the types are functional, not anatomical: where an electrode sits in "
+        "the atlas does not predict which type it belongs to. One claim is not "
+        "supported by this study: that the types matter for surgical outcome.",
+    ],
+    "disc.prior": [
+        "Passive high-gamma mapping has been validated against stimulation as a "
+        "detector [REF]. Our results do not alter that; they add a dimension to it. "
+        "The auditory-onset and production types match the two response classes "
+        "reported in earlier descriptions of superior temporal and precentral "
+        "electrodes [REF]; the suppression type has been described but rarely counted "
+        "[REF]. What is new is that these appear as clusters in an unsupervised "
+        "analysis of the whole array, and that the weak types do not.",
+        "Earlier work chose the response classes by hand and asked electrodes to fit "
+        "them. We let the electrodes propose the classes. The two approaches agree "
+        "where the signal is strong: onset-locked auditory responses and "
+        "production-locked responses are found either way [REF]. They differ at the "
+        "margins, which is where hand-chosen classes are least trustworthy and where "
+        "our agreement analysis says the clusters are least stable too.",
+    ],
+    "disc.mechanism": [
+        "The types separate along two axes: when in the trial an electrode responds, "
+        "and whether it distinguishes the inputs. Input-locked types - auditory onset, "
+        "reading-only, picture - are the modality-specific entry points; the "
+        "production and ramp types are the shared output stage; suppression is the "
+        "mirror of engagement elsewhere. This is speculation drawn as a diagram, and "
+        "it predicts something testable: the ramp-to-cue type should be the one that "
+        "moves with response latency.",
+        "A ramp that grows toward the GO cue in every condition is what a preparatory "
+        "or premotor population would look like. The ramp type is the most dorsal "
+        "cluster and leans left. Without gyral labels this stays a hypothesis; with "
+        "them, and with reaction times, it becomes a test.",
+    ],
+    "disc.clinical": [
+        "The Introduction named a gap: a passive map reports active or silent. This "
+        "study shows the responses carry more than that, and that the extra "
+        "information is stable enough to report. It does not show that reporting it "
+        "changes an outcome. Before a type label could enter a surgical decision it "
+        "would need a within-patient comparison against stimulation, type by type, and "
+        "a cohort with post-operative language follow-up. Neither exists here.",
+        "For the clinic the immediate use is descriptive: the same task that says "
+        "whether a contact responds can say what kind of response it gives, at no "
+        "extra cost. Whether an input-locked contact and an output-locked contact "
+        "should be treated differently at the margin of a resection is a surgical "
+        "question this dataset cannot answer, and we do not claim it can.",
+    ],
+    "disc.future": [
+        "The decisive experiment is within-patient: type labels from the passive map "
+        "against stimulation results at the same contacts, for the patients who had "
+        "both. It answers whether the types predict what stimulation finds, and it is "
+        "the study this one was designed to make possible.",
+        "Two things next. A native stability sweep on every feature set with identical "
+        "settings, so the choice of representation rests on the same numbers. And "
+        "anatomical labels per contact, so the ramp-to-cue type can be tested as "
+        "premotor rather than described as dorsal.",
+    ],
+    # ---- LIMITATIONS ----------------------------------------------------------------
+    "limits.cohort": [
+        "Electrodes were placed for clinical reasons. Coverage is dense in the "
+        "temporal lobe, sparse in frontal and parietal cortex, and absent where no "
+        "patient needed a contact. A type that lives in uncovered cortex cannot appear "
+        "here, and the relative sizes of the types reflect where electrodes are as "
+        "much as what cortex does.",
+        "Twenty-seven patients is enough to find recurring types and not enough to say "
+        "the list is complete. No patient samples the whole language network, so every "
+        "type is assembled across people, and the assembly assumes the network is "
+        "organised the same way in each.",
+    ],
+    "limits.patients": [
+        "At K = 8 no high-gamma cluster is more than half one patient, but the worst "
+        "is 46%, and at the held-out peak two of eleven are. Generalisation was used "
+        "as a criterion, not demonstrated as a result; a held-out cohort would be the "
+        "demonstration.",
+        "The three weak types are the least stable and the least shared. We have kept "
+        "them in the count rather than merged them, because merging by hand is the "
+        "thing the method was meant to avoid, but a reader should treat eight as an "
+        "upper bound on the number of types this cohort supports.",
+    ],
+    "limits.k": [
+        "There is no correct K. We report the largest K at which every cluster draws "
+        "on many patients, which is one criterion among several; held-out fit gives 11 "
+        "to 14, and a different threshold on patient dominance would give a different "
+        "number. The types that survive across K are more trustworthy than the count.",
+        "K = 8 was chosen on high gamma and applied to the other feature sets. At "
+        "K = 8 one cluster in each of the 15-band and 5-band solutions is more than "
+        "half one patient, so the same K is not equally clean everywhere.",
+    ],
+    "limits.method": [
+        "Every result is conditional on convex NMF, on high-gamma power, and on a time "
+        "warp that places the GO cue at the midpoint of every trial and discards "
+        "absolute time. Response latencies, and any type defined by them, are "
+        "invisible by construction.",
+        "The self-agreement of a method sets the ceiling on every cross-method number, "
+        "and for convex NMF on high gamma that ceiling is 0.55. Some of the "
+        "disagreement between methods is therefore the method disagreeing with itself. "
+        "[The sweep that measures this was run with identical settings on all four "
+        "feature sets - update once it has been.]",
+    ],
+    "limits.atlas": [
+        "LanA covers 82% of the electrodes; the missing 18% are three whole patients. "
+        "The atlas is built from fMRI in neurologically typical adults, and it gives a "
+        "probability for a location, not a measurement in this patient. A negative "
+        "result here says the types are not placed by a group prior; it does not say "
+        "they are not language.",
+        "The spatial null shifts labels along each electrode shaft and cannot break a "
+        "shaft that is one type throughout; such shafts contribute no randomness. The "
+        "test is conservative in the right direction, and it is still a test of one "
+        "atlas at one resolution.",
+    ],
+    "limits.esm": [
+        "This study does not compare response types with stimulation at the same "
+        "contacts. The types are therefore validated against each other and against "
+        "resampling, not against the clinical standard. That comparison is the next "
+        "study, not this one.",
+        "Without stimulation ground truth, 'language cortex' in this paper means "
+        "cortex that responded during a language task, which is a wider set than "
+        "cortex whose disruption impairs language.",
+    ],
+    "limits.other": [
+        "The task uses overt responses, so the production type contains motor and "
+        "auditory-feedback components we cannot separate. A silent-naming control "
+        "would.",
+        "Patients were on anti-seizure medication and recorded between seizures; "
+        "neither the drugs nor the interictal state can be assumed neutral for "
+        "high-gamma responses.",
+    ],
+    # ---- STAR METHODS ---------------------------------------------------------------
+    "methods.krt": [
+        "Software: Python 3.11; NumPy, SciPy, scikit-learn, pandas, matplotlib, "
+        "PyVista [versions]. Atlases: LanA probabilistic language atlas (Lipkin et al. "
+        "2022); fsaverage surface (FreeSurfer [version]). Deposited data: [repository, "
+        "accession]. Code: github.com/lorafanda/Analysis_LoraFanda, tagged [release].",
+        "One row per resource: convex NMF implementation (this paper, lf_decompose); "
+        "stability sweep (this paper, sweep_stability); archetypal analysis (this "
+        "paper); LanA; fsaverage; electrode coordinates in fsaverage space (this "
+        "paper); the task stimuli [where deposited].",
+    ],
+    "methods.lead": [
+        "[Senior author] ([email])",
+        "Further information and requests for resources should be directed to the "
+        "lead contact, [name] ([email]).",
+    ],
+    "methods.materials": [
+        "This study did not generate new unique reagents.",
+        "No new materials were generated; the task stimuli are available from the "
+        "lead contact on request.",
+    ],
+    "methods.data_code": [
+        "De-identified per-electrode feature matrices and cluster assignments are "
+        "deposited at [repository] under [accession]. Raw intracranial recordings "
+        "contain identifying information and are available from the lead contact "
+        "under a data-use agreement approved by [ethics committee]. All analysis code "
+        "is at github.com/lorafanda/Analysis_LoraFanda; the commit that produced the "
+        "figures is tagged [tag]. Any additional information is available from the "
+        "lead contact on request.",
+        "Data: the 1693-electrode feature matrices, the loadings at every K, electrode "
+        "coordinates in fsaverage space, and the per-electrode atlas values, at "
+        "[repository]. Recordings: on request, under agreement. Code: public, with the "
+        "figure scripts and the notebook that runs them.",
+    ],
+    "methods.participants": [
+        "Twenty-seven patients with drug-resistant focal epilepsy undergoing "
+        "stereo-EEG monitoring at Geneva University Hospitals between [dates]. Age "
+        "[range, median]; [n] women, [n] men; handedness [n right-handed]; language "
+        "dominance by [Wada / fMRI / clinical assessment] where available. Electrode "
+        "placement was decided solely on clinical grounds. Sex was [self-reported / "
+        "taken from the record]; ethnicity was not recorded.",
+        "Inclusion: sEEG implantation for presurgical evaluation, ability to perform "
+        "the task, [language] as first language. Exclusion: [criteria]. Per-patient "
+        "electrode counts before and after gating are in Table S[n].",
+    ],
+    "methods.ethics": [
+        "The study was approved by [committee, protocol number]. All patients gave "
+        "written informed consent before participation, separately from consent for "
+        "the clinical procedure.",
+        "[Committee] approval [number]; written informed consent from every "
+        "participant; the task added [minutes] to monitoring and no clinical decision "
+        "depended on it.",
+    ],
+    "methods.recording": [
+        "Depth electrodes ([manufacturer]; [contacts per shaft]; [spacing] mm) were "
+        "recorded with [amplifier] at [rate] Hz, referenced to [reference]. Stimulus "
+        "onsets were marked by [trigger / photodiode] on the same clock. Contacts were "
+        "localised on post-implantation CT co-registered to pre-implantation MRI and "
+        "projected to fsaverage.",
+        "Hardware and rates are as in the companion paper [REF]; nothing was changed "
+        "for this study. Contact coordinates in fsaverage space and hemisphere "
+        "assignments are deposited with the data.",
+    ],
+    "methods.task": [
+        "Each trial: fixation, stimulus, GO cue, overt response. Three conditions in "
+        "[blocked / interleaved] order: a spoken [word / sentence], a picture to name, "
+        "a written sentence to read. [n] trials per condition; stimulus durations "
+        "[range]; the GO cue at [time] after stimulus onset; response window [s]. "
+        "Stimuli are listed in Table S[n].",
+        "The paradigm is the companion paper's [REF]. What matters for this analysis: "
+        "every trial ends in a spoken response after a cue, so the output stage is "
+        "shared; the input differs by condition; and the trial phases have known "
+        "onsets, which the time warp uses.",
+    ],
+    "methods.preproc": [
+        "Recordings were [notch / band-pass] filtered, re-referenced to [scheme], and "
+        "inspected for artefacts; channels meeting [criteria] were removed. Contacts "
+        "were kept if they lay in cortical grey matter (distance to the pial surface "
+        "at most [mm], not in white matter) and if [signal-quality criterion]. Of [N] "
+        "contacts, 1693 met both.",
+        "Gating: a contact enters the analysis if it is cortical and if its recording "
+        "passes [criterion]. These two rules determine the 1693, and every result is "
+        "conditional on them; loosening either adds contacts whose responses are "
+        "dominated by noise, which the clustering then spends a component on.",
+    ],
+    "methods.features": [
+        "High-gamma power (70-150 Hz) was estimated by [method] and expressed in dB "
+        "relative to a pre-stimulus baseline (-0.6 to -0.1 s). Each trial was "
+        "time-warped to fixed proportions (stimulus 0-50%, response 50-100%; fixation "
+        "given no bins), resampled to 300 bins per condition, and averaged over "
+        "trials. An electrode's feature vector is its three conditions concatenated "
+        "(900 values). For the band-set representations the same was done in 5 or 15 "
+        "bands at 30 bins per condition, with or without z-scoring per band.",
+        "Four representations of the same 1693 electrodes: high gamma alone, 15 "
+        "bands, 5 bands, and 5 bands z-scored. All are trial-averaged dB time courses "
+        "on the same warped time axis, so the feature sets differ in frequency content "
+        "and normalisation only.",
+    ],
+    "methods.cluster": [
+        "Convex NMF (Ding et al. 2010) was fitted to the unit-normed feature matrix "
+        "for K = 5 to 30 with [n] random restarts and [n] iterations, keeping the "
+        "lowest-error solution. Loadings were normalised to sum to 1 per electrode; "
+        "the hard label is the argmax. K was chosen as the largest value at which no "
+        "cluster drew more than half its electrodes from one patient. k-means, Ward's "
+        "method and archetypal analysis were run on the same matrices for comparison.",
+        "Why convex NMF: its centroids are convex combinations of actual electrodes, "
+        "so every type is something an electrode did; and its loadings are graded, so "
+        "an electrode can be mostly one type and partly another, which is what the "
+        "brains are coloured by.",
+    ],
+    "methods.stats": [
+        "n is electrodes (1693) unless stated; per-cluster n in Figure 1. Centroids "
+        "are means with ±1 SD across electrodes. Agreement between partitions: "
+        "adjusted Rand index and normalised mutual information; per cluster, Jaccard "
+        "after Hungarian matching. Cluster-atlas relations: Spearman rho between "
+        "loading and P(LanA), with bootstrap 95% CIs over electrodes. Permutation "
+        "p-values as (count + 1)/(n + 1); Benjamini-Hochberg across the 8 clusters; "
+        "alpha = 0.05 on q.",
+        "Every comparison in Figures 2 and 3 is scored against a null and the null is "
+        "named in the legend. Where two nulls answer different questions - "
+        "within-patient and shaft-shift - both are reported and the conservative one "
+        "leads.",
+    ],
+    "methods.nulls": [
+        "Patient composition: 400 size-matched random draws of electrodes without "
+        "replacement, per cluster. Self-agreement: 50 refits on 80% subsamples with "
+        "the run's own method, per-cluster Jaccard (Hennig 2007); PAC from the "
+        "consensus matrix. Cross-solution agreement: 200 size-matched permutations per "
+        "cluster pair. Atlas: 1000 within-patient permutations of P(LanA), and 1000 "
+        "shaft-shift permutations that roll cluster labels and loadings within each "
+        "electrode shaft, leaving P(LanA) in place.",
+        "The shaft-shift null keeps what the within-patient null destroys: the run "
+        "structure of labels along a shaft. Neighbouring contacts share an atlas "
+        "neighbourhood, so a null that scatters them overstates the evidence. Shafts "
+        "that are one cluster throughout are unchanged by a shift and contribute no "
+        "randomness; their count is reported.",
+    ],
+    # ---- FIGURES & LEGENDS ----------------------------------------------------------
+    "figs.f1": [
+        "Figure 1. Eight response types at K = 8. (A) Held-out variance explained by "
+        "bi-cross-validation against K for all four feature sets; markers at each "
+        "curve's peak; dashed line at K = 8. (B) One block per type: mean response "
+        "(dB vs baseline, ±1 SD across electrodes) over the three conditions, GO cue "
+        "dashed at 50%; below, the electrodes carrying the type on each hemisphere "
+        "seen from its own side, colour and size by loading; below that, patient "
+        "composition, one segment per patient, widest first. (C) Key to a block. (D) "
+        "Share of clusters, and of electrodes, in clusters more than half one patient, "
+        "against K. n = 1693 electrodes, 27 patients.",
+        "Figure 1. Response types. (A) How the number of types was chosen and (D) why "
+        "the held-out peak was not used; (B) the types themselves, with (C) the key. "
+        "Block order is by cross-condition similarity; cluster ids are unchanged.",
+    ],
+    "figs.f2": [
+        "Figure 2. Agreement across feature sets (A-C) and algorithms (D-F) at K = 8. "
+        "(A, D) Pairwise adjusted Rand index (upper) and NMI (lower); inset, ARI "
+        "against K. (B, E) Per-cluster Jaccard against the reference solution after "
+        "Hungarian matching; self-agreement and PAC under each column; /n marks a "
+        "reference cluster split into n; hatched cells do not exceed a size-matched "
+        "permutation. (C, F) Per electrode, the number of solutions placing it in the "
+        "same cluster, on both hemispheres, with the observed distribution against "
+        "chance.",
+        "Figure 2. What survives a change of method. Rows: feature sets, then "
+        "algorithms. Columns: overall, per cluster, per electrode. The reference for "
+        "matching is convex NMF on [feature set]; the self-agreement ceiling is the "
+        "Jaccard a method reaches against its own refits.",
+    ],
+    "figs.f3": [
+        "Figure 3. Response types against the LanA language atlas. (A) Clusters ranked "
+        "by mean P(LanA) with 95% bootstrap CI, cohort mean as a line, and both nulls "
+        "(dark, shaft-shift; pale, within-patient); star, q < 0.05. (B) Loading "
+        "against P(LanA) per cluster. (C) Spearman rho per cluster with CI; shaded, "
+        "|rho| < 0.10. (D) P(LanA) over the covered electrodes. 1396 of 1693 "
+        "electrodes have an atlas value.",
+        "Figure 3. Are the types anatomy? Under the liberal null one cluster is "
+        "enriched; under the spatial null none is. Panel C is the effect size, which "
+        "is what the reader should take away.",
+    ],
+    "figs.f4": [
+        "Figure 4. [Reserved: the ramp-to-cue type against reaction time / the "
+        "within-patient stimulation comparison / the band-set solutions matched to "
+        "the reference.]",
+        "Figure 4. The four feature sets side by side at K = 8, matched to the "
+        "reference: which types are shared by name, which are split, which appear in "
+        "one representation only.",
+    ],
+    "figs.supp": [
+        "Figure S1, held-out curves per feature set with the one-patient share; S2, "
+        "the four solutions at their own held-out peaks; S3, Figure 2 with the "
+        "algorithm half run on each of the other feature sets; S4, Figure 3 for the "
+        "other feature sets; S5, the archetypal-analysis solution; Table S1, "
+        "per-patient electrode counts before and after gating.",
+        "Everything in the carousel above that is not the standard slide goes to the "
+        "supplement, one figure per candidate, in the same layout, so a reviewer can "
+        "flip between them the way you can here.",
+    ],
+    # ---- BACK MATTER ------------------------------------------------------------------
+    "back.ack": [
+        "We thank the patients, who gave their time during a difficult week. We thank "
+        "the clinical neurophysiology and neurosurgery teams at Geneva University "
+        "Hospitals for the recordings and the electrode localisation, and [names] for "
+        "[roles]. Funded by [agency, grant number] to [PI]; L.F. was supported by "
+        "[fellowship].",
+        "[Funder] grant [number] ([PI]); [funder] [number]; computing at [facility]. "
+        "[Name] built the recording setup; [name] localised the electrodes; [name] "
+        "commented on the manuscript.",
+    ],
+    "back.credit": [
+        "Conceptualization, L.F. and [S.A.]; Methodology, L.F.; Software, L.F.; Formal "
+        "analysis, L.F.; Investigation, [clinicians]; Resources, [S.A., hospital]; "
+        "Data curation, L.F. and [name]; Writing - original draft, L.F.; Writing - "
+        "review & editing, all authors; Visualization, L.F.; Supervision, [S.A.]; "
+        "Funding acquisition, [S.A.].",
+        "Same roles, but decide now who is Investigation (who sat with the patients) "
+        "and who is Resources (who provided the patients and the hardware); those two "
+        "are where author disputes start.",
+    ],
+    "back.interests": [
+        "The authors declare no competing interests.",
+        "The authors declare no competing interests. [Or name any patent, consultancy "
+        "or equity related to intracranial mapping.]",
+    ],
+    "back.supplement": [
+        "Supplemental information includes Figures S1-S5 and Table S1, referenced in "
+        "the main text as (Figure S1) and so on, and Methods S1 describing the time "
+        "warp with a worked example.",
+        "Keep the supplement to what a reviewer needs to check the main figures: the "
+        "other feature sets, the other K, the archetype solution, and the per-patient "
+        "table.",
+    ],
 }
+
+
+# ---------------------------------------------------------------------------
+# THE CAROUSELS
+#
+# Above a Results or Figures box: every candidate version of that figure, with
+# left/right arrows between them. The STANDARD is convex NMF on 5 bands z-scored; HG
+# is the state of the art the paper starts from; the other two are candidates; the
+# held-out-peak versions of FIG 1 are there for the K argument. A slide whose file is
+# not on disk, or is on disk but not committed (the site fetches from
+# raw.githubusercontent, so that is a silent 404), is drawn as a placeholder carrying
+# the command that makes it - the set of candidates is the set even before every
+# member exists. The first slide is the standard.
+# ---------------------------------------------------------------------------
+ROOT = Path(__file__).resolve().parent
+FIGDIR = ROOT / "outputs" / "clustering" / "paper_figures"
+FIGDIR_REL = "02_FBM_Clustering/outputs/clustering/paper_figures"
+FS_ORDER = ["concat_bands5z", "concat_hg", "concat_rawds", "concat_bands5"]
+FS_ROLE = {"concat_bands5z": "standard", "concat_hg": "state of the art",
+           "concat_rawds": "candidate", "concat_bands5": "candidate"}
+FS_NAME = {"concat_hg": "HG (70-150 Hz)", "concat_rawds": "15 bands",
+           "concat_bands5": "5 bands", "concat_bands5z": "5 bands, z-scored"}
+FIG1_TAG = {"concat_hg": "a", "concat_rawds": "b", "concat_bands5": "c",
+            "concat_bands5z": "d"}
+PEAK_K = {"concat_hg": 11, "concat_rawds": 12, "concat_bands5": 14, "concat_bands5z": 13}
+
+
+def _tracked():
+    """What git has. Anything else is a 404 on the published site."""
+    try:
+        out = subprocess.run(["git", "ls-files", FIGDIR_REL], cwd=str(ROOT.parent),
+                             text=True, capture_output=True, timeout=180)
+        return set(out.stdout.split()) if out.returncode == 0 else None
+    except Exception:
+        return None
+
+
+def _slide(label, fname, role, make, tracked, fallback=None):
+    """One slide. `fallback` is an older filename that means the same figure."""
+    f = FIGDIR / fname
+    if not f.exists() and fallback and (FIGDIR / fallback).exists():
+        fname = fallback
+        f = FIGDIR / fname
+    rel = f"{FIGDIR_REL}/{fname}"
+    state = ("missing" if not f.exists()
+             else "untracked" if (tracked is not None and rel not in tracked)
+             else "ok")
+    return {"label": label, "rel": rel, "role": role, "make": make, "state": state}
+
+
+def carousels():
+    tr = _tracked()
+    fig1, fig2, fig3 = [], [], []
+    for fs in FS_ORDER:
+        t, r, nm = FIG1_TAG[fs], FS_ROLE[fs], FS_NAME[fs]
+        fig1.append(_slide(f"FIG 1{t}  ·  {nm}  ·  K = 8",
+                           f"FIG1{t}_{fs}_cnmf_K8.png", r,
+                           f"00_Paper2_Figures.py --feature-set {fs} --k 8", tr))
+        fig2.append(_slide(f"FIG 2  ·  algorithms on {nm}  ·  K = 8",
+                           f"FIG2_agreement_{fs}_K8.png", r,
+                           f"00_paper2_figures2_2.py --k 8 --algo-feature-set {fs}", tr,
+                           fallback="FIG2_agreement_K8.png" if fs == "concat_hg"
+                           else None))
+        fig3.append(_slide(f"FIG 3  ·  LanA  ·  {nm}  ·  K = 8",
+                           f"FIG3_lana_{fs}_K8.png", r,
+                           f"00_paper2_figure3_lana.py --feature-set {fs} --k 8", tr))
+    for fs in FS_ORDER:
+        t, nm, pk = FIG1_TAG[fs], FS_NAME[fs], PEAK_K[fs]
+        fig1.append(_slide(f"FIG 1{t}  ·  {nm}  ·  held-out peak K = {pk}",
+                           f"FIG1{t}_{fs}_cnmf_K{pk}.png", "held-out peak",
+                           f"00_Paper2_Figures.py --feature-set {fs}", tr))
+    ga = [_slide("Graphical abstract  ·  HG  ·  K = 8",
+                 "GA_graphical_abstract_concat_hg_K8.png", "state of the art",
+                 "make_graphical_abstract.py", tr)]
+    return {"results.f1": fig1, "results.f2": fig2, "results.f3": fig3,
+            "figs.f1": fig1, "figs.f2": fig2, "figs.f3": fig3, "high.graphical": ga}
+
+
+_CAR = None
+
+
+def carousel_html(fid):
+    global _CAR
+    if _CAR is None:
+        _CAR = carousels()
+    sl = _CAR.get(fid)
+    if not sl:
+        return ""
+    items = []
+    for i, s in enumerate(sl):
+        role = (f'<span class="pf-role {s["role"].split()[0]}">'
+                f'{esc(s["role"])}</span>')
+        if s["state"] == "ok":
+            body = (f'<img data-fig="{esc(s["rel"])}" alt="{esc(s["label"])}" '
+                    f'loading="lazy">')
+        else:
+            why = ("not generated yet" if s["state"] == "missing"
+                   else "on disk but not committed - the site would 404")
+            body = (f'<div class="pf-missing"><b>{why}</b><br>'
+                    f'<code>python {esc(s["make"])}</code></div>')
+        items.append(f'<div class="pf-slide" data-i="{i}">{body}'
+                     f'<div class="pf-slide-cap">{role}{esc(s["label"])}</div></div>')
+    n = len(sl)
+    return (f'<div class="pf-car" data-car="{esc(fid)}" data-n="{n}">'
+            f'<button type="button" class="pf-car-btn prev" aria-label="previous">'
+            f'&#8249;</button><div class="pf-car-view">{"".join(items)}</div>'
+            f'<button type="button" class="pf-car-btn next" aria-label="next">'
+            f'&#8250;</button><div class="pf-car-dots">'
+            + "".join(f'<span data-i="{i}"></span>' for i in range(n))
+            + '</div></div>')
 
 
 # ---------------------------------------------------------------------------
@@ -874,7 +1473,7 @@ def field_html(b):
                f'{limattr} rows="{b["rows"]}" placeholder="{ph}"></textarea>')
     return (f'<div class="pf-block" data-block="{esc(fid)}">'
             f'<div class="pf-head"><label for="pf-{esc(fid)}">{b["h"]}</label>{hint}</div>'
-            f'{prompt}{examples_html(fid)}{box}</div>')
+            f'{prompt}{carousel_html(fid)}{examples_html(fid)}{box}</div>')
 
 
 def build():
@@ -888,10 +1487,12 @@ def build():
          '    <h2 class="title">Paper 2 &middot; Cell Reports</h2>',
          '    <p class="lead">A writing scaffold. One subtab per section of a Cell '
          'Reports research article, each holding the questions that section has to '
-         'answer and a box to answer them in. Under the Introduction and the three '
-         'figure sections, two example answers sit above each box &mdash; drafts to '
-         'react to, in the paper&rsquo;s voice, with the current run&rsquo;s numbers. '
-         'They are a starting point, not the text.</p>',
+         'answer and a box to answer them in. Two example answers sit above every '
+         'box &mdash; drafts to react to, in the paper&rsquo;s voice, with the '
+         'current run&rsquo;s numbers; they are a starting point, not the text. Above '
+         'each figure box, a carousel of every candidate version of that figure: the '
+         '<b>standard</b> is convex NMF on 5 bands z-scored, <b>state of the art</b> '
+         'is high gamma, the rest are candidates. Arrow keys work.</p>',
          '',
          '    <div class="pf-warn">',
          '      <b>Your writing is saved in this browser only.</b> It is not in git, not '
@@ -1002,6 +1603,32 @@ CSS = CSS_BEGIN + """
     white-space:nowrap;margin-top:1px}
   .pf-ex-use:hover{background:var(--chip)}
   @media(max-width:700px){.pf-ex-item{grid-template-columns:22px 1fr}.pf-ex-use{grid-column:2}}
+  .pf-car{margin:4px 0 10px;background:#fbfcfd;border:1px solid var(--line);border-radius:10px;
+    padding:8px 44px 24px;position:relative;outline:none}
+  .pf-car:focus-visible{box-shadow:0 0 0 3px rgba(184,51,106,.18)}
+  .pf-car-view{position:relative;min-height:120px}
+  .pf-slide{display:none} .pf-slide.on{display:block}
+  .pf-slide img{display:block;max-width:100%;height:auto;margin:0 auto;border-radius:6px;
+    box-shadow:0 1px 2px rgba(20,30,45,.06)}
+  .pf-slide-cap{margin:8px 0 0;font-size:12.5px;color:var(--ink);text-align:center}
+  .pf-role{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;
+    text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:8px;
+    background:var(--chip);color:var(--muted);vertical-align:1px}
+  .pf-role.standard{background:#e5f5ee;color:var(--ok)}
+  .pf-role.state{background:#eef5fb;color:var(--accent2)}
+  .pf-role.held-out{background:#fbeede;color:var(--warn)}
+  .pf-car-btn{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:44px;
+    border:1px solid var(--line);background:var(--panel);border-radius:8px;font:inherit;
+    font-size:24px;line-height:1;color:var(--accent2);cursor:pointer;padding:0}
+  .pf-car-btn.prev{left:6px} .pf-car-btn.next{right:6px}
+  .pf-car-btn:hover{background:var(--chip)}
+  .pf-car-dots{position:absolute;left:0;right:0;bottom:7px;text-align:center;line-height:1}
+  .pf-car-dots span{display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:var(--line);margin:0 3px;cursor:pointer}
+  .pf-car-dots span.on{background:#b8336a}
+  .pf-missing{padding:34px 16px;text-align:center;color:var(--muted);font-size:13px;
+    background:#f4f6f9;border:1px dashed var(--line);border-radius:8px}
+  .pf-missing code{margin-top:8px;display:inline-block}
 """ + CSS_END
 
 JS_BEGIN = "// BEGIN paper2 js, generated by make_paper_tab.py"
@@ -1076,6 +1703,30 @@ JS = JS_BEGIN + r"""
   tabs.forEach(b => b.onclick = () => openPane(b.dataset.pt));
   let last = ""; try { last = localStorage.getItem(KEY + "_tab") || ""; } catch(e){}
   openPane(tabs.some(t => t.dataset.pt === last) ? last : tabs[0].dataset.pt);
+
+  // carousels: one slide at a time; arrows, dots, keyboard; the slide is remembered
+  document.querySelectorAll(".pf-car").forEach(car => {
+    const slides = Array.from(car.querySelectorAll(".pf-slide"));
+    const dots = Array.from(car.querySelectorAll(".pf-car-dots span"));
+    if (!slides.length) return;
+    const key = KEY + "_car." + car.dataset.car;
+    let i = 0; try { i = parseInt(localStorage.getItem(key) || "0", 10) || 0; } catch(e){}
+    function go(n){
+      i = ((n % slides.length) + slides.length) % slides.length;
+      slides.forEach((s, k) => s.classList.toggle("on", k === i));
+      dots.forEach((d, k) => d.classList.toggle("on", k === i));
+      try { localStorage.setItem(key, String(i)); } catch(e){}
+    }
+    car.querySelector(".prev").onclick = () => go(i - 1);
+    car.querySelector(".next").onclick = () => go(i + 1);
+    dots.forEach((d, k) => d.onclick = () => go(k));
+    car.tabIndex = 0;
+    car.addEventListener("keydown", ev => {
+      if (ev.key === "ArrowLeft"){ go(i - 1); ev.preventDefault(); }
+      if (ev.key === "ArrowRight"){ go(i + 1); ev.preventDefault(); }
+    });
+    go(i);
+  });
 
   // "Use as draft": copy an example into its box - never over text already there
   document.querySelectorAll(".pf-ex-use").forEach(btn => btn.onclick = () => {

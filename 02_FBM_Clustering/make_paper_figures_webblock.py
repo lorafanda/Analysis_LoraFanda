@@ -175,7 +175,10 @@ def build():
                    f"generalization curve, and one block per cluster with its mean, "
                    f"two hemisphere renders and its patient composition")
         elif stem.startswith("FIG2"):
-            num, title = f"2 &middot; K={k}", f"agreement, K = {k}"
+            # FIG2_agreement_<fset>_K8; the older FIG2_agreement_K8 was concat_hg
+            rest = stem[len("FIG2_agreement_"):]
+            fset = rest.split("_K")[0] if "_K" in rest else "concat_hg"
+            num, title = f"2 &middot; K={k}", f"agreement, algorithms on {fset}, K = {k}"
             bullets = fig2_bullets(png)
             alt = ("six panels: pairwise agreement, per-cluster agreement and "
                    "per-electrode agreement, for feature sets and for algorithms")

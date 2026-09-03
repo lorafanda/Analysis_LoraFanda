@@ -339,8 +339,15 @@ def pac(sol, k, lo=0.1, hi=0.9):
     Read from the consensus matrix sweep_stability already writes at this K - not
     recomputed, so it cannot disagree with the sweep it came from.
     """
-    f = sol["run"] / "stability_by_k" / f"k_{k:02d}" / "consensus_matrix.npy"
-    if not f.exists():
+    # the NATIVE sweep first, so PAC and the self-agreement printed beside it come
+    # from the same resampling; the k-means resampler only where no native sweep exists
+    f = None
+    for sub in ("stability_by_k_native", "stability_by_k"):
+        cand = sol["run"] / sub / f"k_{k:02d}" / "consensus_matrix.npy"
+        if cand.exists():
+            f = cand
+            break
+    if f is None:
         return None
     C = np.load(f, mmap_mode="r")
     if C.ndim != 2 or C.shape[0] != C.shape[1]:
@@ -873,7 +880,9 @@ def figure_2(k: int, algo_fset: str):
         fig.text(0.055, top + 0.040, head, fontsize=11.0, color=INK, va="bottom")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / f"FIG2_agreement_K{k}.png"
+    # the feature set the ALGORITHM half was run on is in the name, so the four
+    # variants can sit side by side instead of overwriting one another
+    p = OUT / f"FIG2_agreement_{algo_fset}_K{k}.png"
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
