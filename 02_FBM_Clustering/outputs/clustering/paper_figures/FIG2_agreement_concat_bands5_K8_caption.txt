@@ -1,0 +1,167 @@
+FIG 2   ·   agreement   ·   K = 8
+====================================================================================================
+
+WHAT THE FIGURE IS
+----------------------------------------------------------------------------------------------------
+Two halves asking the same three questions. The top half varies the FEATURE SET
+with the method fixed at cnmf; the bottom varies the ALGORITHM with the
+feature set fixed at concat_bands5. If a result only exists in one representation
+or under one method, this is the figure that says so.
+
+  concat_bands5 carries the algorithm half because it is the only feature set with
+  an archetype run - concat_bands5 and concat_bands5z have none, so using FIG 1's
+  reference here would have silently dropped a whole algorithm.
+
+EVERY SOLUTION LABELS THE SAME ELECTRODES IN THE SAME ORDER. That is what makes
+any of this comparable, and it is checked rather than assumed: a solution that is
+absent, at a different K, or over a different electrode set is dropped with a
+message instead of being compared.
+  dropped from the algorithms half:
+    archetypes/concat_bands5 - no run, or no solution at this K
+
+PANELS A and D - how much any two solutions agree at all
+----------------------------------------------------------------------------------------------------
+Adjusted Rand index between every pair of partitions. Chance-corrected, so 0 is
+'no better than random' and 1 is identical. It is a single number for a whole
+partition and says nothing about WHICH clusters agree - that is B and E. It is
+also dominated by the large clusters, so a low ARI can coexist with the big
+structure agreeing.
+
+THE INSET IS MEAN PAIRWISE ARI AT EVERY K, with this K marked. Agreement read at
+one K cannot say whether that K is a good place to be comparing; the inset can.
+  feature sets   peaks at K=29 (0.488); at K=8 it is 0.328
+  algorithms     peaks at K=30 (0.377); at K=8 it is 0.263
+
+  feature sets   off-diagonal 0.164 to 0.533, median 0.313
+  algorithms     off-diagonal 0.244 to 0.295, median 0.249
+
+PANELS B and E - each cluster against the reference, and what the others think
+----------------------------------------------------------------------------------------------------
+Each solution's clusters are matched 1:1 to the reference's by Hungarian
+assignment - on the correlation between loading columns where both sides are
+graded, on shared electrode counts where either is a hard partition - using the
+same match_clusters() FIG 1 orders its blocks with, so the two figures cannot
+disagree about which cluster is which. Rows are the reference's clusters in FIG
+1's block order, so row p here is the cluster drawn at block position p there.
+
+THE NUMBER IS A JACCARD: shared electrodes over the union of the two clusters, on
+the hard labels whichever basis the match used, so it means one thing everywhere.
+
+A 1:1 ASSIGNMENT ALWAYS RETURNS A PARTNER, whether or not one exists. A low value
+is therefore the interesting case: a cluster that was paired with something
+because it had to be, not because the two describe the same electrodes.
+
+THIS IS NOT 'WHICH CLUSTERS SURVIVE', AND THE PANEL NO LONGER SAYS SO. Every
+number in the matrix is agreement with ONE reference, so a cluster the reference
+alone missed and a cluster nobody else found look identical from these columns.
+The OTHERS column separates them: it is the strongest agreement between two
+NON-reference solutions about the same row. A low row beside a high OTHERS means
+the reference is the odd one out and the cluster survived elsewhere; those rows
+are outlined green. On the algorithm half this is not hypothetical - k-means and
+Ward can agree with each other more than either agrees with convex NMF.
+
+THE CEILING. sweep_stability --native refits a solution on 50 subsamples of 80%
+of the electrodes and reports the mean per-cluster Jaccard - the SAME quantity
+this panel measures, so it sits under each column name as `self`. Cross-solution
+agreement cannot exceed what a method manages against its own refits, and reading
+these numbers without it is the difference between 'the solutions disagree' and
+'this is most of what the solution can offer'.
+
+  feature sets
+    cnmf/concat_hg                 0.547   (stability_by_k_native)
+    cnmf/concat_rawds              0.898   (stability_by_k_native)
+    cnmf/concat_bands5             no stability sweep at this K
+    cnmf/concat_bands5z            no stability sweep at this K
+  algorithms
+    cnmf/concat_bands5             no stability sweep at this K
+    kmeans/concat_bands5           no stability sweep at this K
+    hierarchical/concat_bands5     no stability sweep at this K
+
+PAC - PROPORTION OF AMBIGUOUS CLUSTERING - sits beside it. It is the share of
+consensus values that are neither near 0 nor near 1: entries where the resampling
+disagrees with itself about whether two electrodes belong together. LOWER IS
+BETTER, and it is the standard one-number robustness score in this literature
+(SC3, Nature Methods 2017). It is read from the consensus matrix sweep_stability
+already writes at this K, not recomputed, so it cannot drift from that sweep.
+
+SPLITS. A 1:1 assignment cannot represent one solution's cluster being another's
+two - the commonest way two clusterings differ, and a clean correspondence rather
+than a failure. Every cell carries /n where n is how many of that solution's
+clusters hold at least 25% of the reference cluster; n = 1 is a clean pairing and
+n >= 2 is a split. A low Jaccard beside /2 means the cluster survived, divided.
+
+ARI in A and D is a different scale and has no ceiling available, so none is
+drawn there; putting a Jaccard on an ARI axis would be a units error.
+
+THE PER-CELL NULL. A chance Jaccard depends on the two clusters' sizes, so one
+threshold would be too strict for the big rows and too lax for the small ones.
+Each non-reference solution's labels are permuted with its cluster sizes
+preserved and re-matched to the reference the way the real ones are; a cell that
+does not reach the mean of that null is HATCHED. 200 permutations.
+
+The colour scale runs 0 to 0.79, shared by both halves and set from the
+data: 0-1 left most of the bar unused once the reference column was dropped, and
+every difference looked smaller than it was.
+
+  feature sets   weakest match per cluster: 0.03 to 0.71, median 0.40
+                 below 0.30 somewhere: pos 4 (c5), pos 6 (c0), pos 7 (c7)
+  algorithms     weakest match per cluster: 0.00 to 0.52, median 0.27
+                 below 0.30 somewhere: pos 4 (c5), pos 5 (c1), pos 6 (c0), pos 7 (c7)
+
+PANELS C and F - which electrodes are placed consistently
+----------------------------------------------------------------------------------------------------
+Every solution's labels are translated into the reference's numbering, then each
+electrode is scored by the size of the largest group of solutions that agree on
+it. The count runs 1..N: N means every solution puts it in the same cluster, 1
+means no two do. Red is 1, green is N.
+
+IT IS THE MODAL ASSIGNMENT, NOT 'AGREES WITH THE REFERENCE'. Nothing privileges
+one solution, so an electrode where the reference is the odd one out still reads
+as agreement among the rest.
+
+WHY THIS IS NOT THE SAME QUESTION AS B AND E. A cluster can match well on average
+and still be assembled from electrodes that no other solution groups together;
+the Jaccard is a property of a cluster, this is a property of an electrode.
+
+  feature sets   all 4 agree: 21.7%   (chance 0.4%)   no two agree: 4.3%   median count 3
+  algorithms     all 3 agree: 27.7%   (chance 2.5%)   no two agree: 17.8%   median count 2
+
+THE CHANCE BASELINE is a permutation: each non-reference solution's labels are
+shuffled - keeping its cluster sizes exactly - and then RE-MATCHED to the
+reference, the way the real ones are. Re-matching is the point: the observed
+pipeline optimises the alignment before counting, so a null that skipped that
+step would be far too easy to beat and the panel would overstate itself. The
+overlap basis is used throughout, because a permuted partition has no loadings
+left to correlate. 200 permutations.
+
+AGREEMENT IS NOT CORRECTNESS. Four representations can agree perfectly on one
+patient's electrode strip.
+  clusters over half one patient   feature half 1 of 8   algorithm half 1 of 8   (FIG 1 panel D)
+
+PROVENANCE
+----------------------------------------------------------------------------------------------------
+  feature sets
+    cnmf          concat_hg        cnmf/concat_hg/runs/20260826_135016   (graded)
+    cnmf          concat_rawds     cnmf/concat_rawds/runs/20260826_135909   (graded)
+    cnmf          concat_bands5    cnmf/concat_bands5/runs/20260827_094931   (graded)
+    cnmf          concat_bands5z   cnmf/concat_bands5z/runs/20260827_095637   (graded)
+  algorithms
+    cnmf          concat_bands5    cnmf/concat_bands5/runs/20260827_094931   (graded)
+    kmeans        concat_bands5    kmeans/concat_bands5/runs/20260827_021650   (hard labels)
+    hierarchical  concat_bands5    hierarchical/concat_bands5/runs/20260827_021649   (hard labels)
+  geometry and block order from concat_bands5 (cnmf) at K=8
+  built by      00_paper2_figures2_2.py --k 8 --algo-feature-set concat_bands5
+  built on      2026-09-03 17:18
+
+WHAT THIS FIGURE DOES NOT SHOW
+----------------------------------------------------------------------------------------------------
+  - Nothing here is a statistical test. ARI, Jaccard and the agreement count are
+    descriptive; none is scored against a null, and the 0.30 line in B and E is a
+    readable convention, not a threshold with a false-positive rate.
+  - 1:1 matching needs EQUAL K. Every solution here is cut at the same K, which
+    is why this figure exists at one K at a time. Solutions at different K have
+    no 1:1 correspondence and cannot be put on these panels at all.
+  - Agreement is not correctness. Four representations can agree on a cluster
+    that is one patient's electrode strip; FIG 1 panel D is what answers that.
+  - The archetype runs cover concat_hg and concat_rawds only, so the algorithm
+    half cannot currently be drawn on the 5-band feature sets.
