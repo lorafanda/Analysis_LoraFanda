@@ -1,0 +1,231 @@
+% paper2_references.bib - the methods this paper leans on, most relevant first.
+% Written 2026-09-03 from memory of the papers; every entry carries a DOI so Overleaf
+% (or doi.org) can confirm it. Check each resolves before submission.
+% The annotated version - what each is and how we used it - is paper2_references.md.
+
+% ---- 1. the clustering model ------------------------------------------------
+@article{dingLiJordan2010,
+  author  = {Ding, Chris H. Q. and Li, Tao and Jordan, Michael I.},
+  title   = {Convex and semi-nonnegative matrix factorizations},
+  journal = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  year    = {2010},
+  volume  = {32},
+  number  = {1},
+  pages   = {45--55},
+  doi     = {10.1109/TPAMI.2008.277}
+}
+
+% ---- 2. held-out variance vs K -----------------------------------------------
+@article{owenPerry2009,
+  author  = {Owen, Art B. and Perry, Patrick O.},
+  title   = {Bi-cross-validation of the {SVD} and the nonnegative matrix factorization},
+  journal = {The Annals of Applied Statistics},
+  year    = {2009},
+  volume  = {3},
+  number  = {2},
+  pages   = {564--594},
+  doi     = {10.1214/08-AOAS227}
+}
+
+% ---- 3. the language atlas ---------------------------------------------------
+@article{lipkin2022lana,
+  author  = {Lipkin, Benjamin and Tuckute, Greta and Affourtit, Josef and Small, Hannah and Mineroff, Zachary and Kean, Hope and Jouravlev, Olessia and Rakocevic, Lara and Pritchett, Brianna and Siegelman, Matthew and Hoeflin, Caitlyn and Pongos, Alvinc{\'e} and Blank, Idan A. and Struhl, Melissa Kline and Ivanova, Anna and Shannon, Steven and Sathe, Aalok and Hoffmann, Malte and Nieto-Casta{\~n}{\'o}n, Alfonso and Fedorenko, Evelina},
+  title   = {Probabilistic atlas for the language network based on precision {fMRI} data from {$>$}800 individuals},
+  journal = {Scientific Data},
+  year    = {2022},
+  volume  = {9},
+  pages   = {529},
+  doi     = {10.1038/s41597-022-01645-3}
+}
+
+% ---- 4. adjusted Rand index --------------------------------------------------
+@article{hubertArabie1985,
+  author  = {Hubert, Lawrence and Arabie, Phipps},
+  title   = {Comparing partitions},
+  journal = {Journal of Classification},
+  year    = {1985},
+  volume  = {2},
+  number  = {1},
+  pages   = {193--218},
+  doi     = {10.1007/BF01908075}
+}
+
+% ---- 5. cluster-wise Jaccard stability, and the 0.6 rule of thumb ------------
+@article{hennig2007,
+  author  = {Hennig, Christian},
+  title   = {Cluster-wise assessment of cluster stability},
+  journal = {Computational Statistics \& Data Analysis},
+  year    = {2007},
+  volume  = {52},
+  number  = {1},
+  pages   = {258--271},
+  doi     = {10.1016/j.csda.2006.11.025}
+}
+
+% ---- 6. consensus clustering -------------------------------------------------
+@article{monti2003consensus,
+  author  = {Monti, Stefano and Tamayo, Pablo and Mesirov, Jill and Golub, Todd},
+  title   = {Consensus clustering: a resampling-based method for class discovery and visualization of gene expression microarray data},
+  journal = {Machine Learning},
+  year    = {2003},
+  volume  = {52},
+  number  = {1--2},
+  pages   = {91--118},
+  doi     = {10.1023/A:1023949509487}
+}
+
+% ---- 7. PAC, the proportion of ambiguous clustering --------------------------
+@article{senbabaoglu2014pac,
+  author  = {{\c{S}}enbabao{\u{g}}lu, Yasin and Michailidis, George and Li, Jun Z.},
+  title   = {Critical limitations of consensus clustering in class discovery},
+  journal = {Scientific Reports},
+  year    = {2014},
+  volume  = {4},
+  pages   = {6207},
+  doi     = {10.1038/srep06207}
+}
+
+% ---- 8. the spin test: why a spatial null ------------------------------------
+@article{alexanderBloch2018spin,
+  author  = {Alexander-Bloch, Aaron F. and Shou, Haochang and Liu, Siyuan and Satterthwaite, Theodore D. and Glahn, David C. and Shinohara, Russell T. and Vandekar, Simon N. and Raznahan, Armin},
+  title   = {On testing for spatial correspondence between maps of human brain structure and function},
+  journal = {NeuroImage},
+  year    = {2018},
+  volume  = {178},
+  pages   = {540--551},
+  doi     = {10.1016/j.neuroimage.2018.05.070}
+}
+
+% ---- 9. normalized mutual information ----------------------------------------
+@article{vinh2010nmi,
+  author  = {Vinh, Nguyen Xuan and Epps, Julien and Bailey, James},
+  title   = {Information theoretic measures for clusterings comparison: variants, properties, normalization and correction for chance},
+  journal = {Journal of Machine Learning Research},
+  year    = {2010},
+  volume  = {11},
+  pages   = {2837--2854}
+}
+
+% ---- 10. archetypal analysis -------------------------------------------------
+@article{cutlerBreiman1994,
+  author  = {Cutler, Adele and Breiman, Leo},
+  title   = {Archetypal analysis},
+  journal = {Technometrics},
+  year    = {1994},
+  volume  = {36},
+  number  = {4},
+  pages   = {338--347},
+  doi     = {10.1080/00401706.1994.10485840}
+}
+
+% ---- 11. false discovery rate ------------------------------------------------
+@article{benjaminiHochberg1995,
+  author  = {Benjamini, Yoav and Hochberg, Yosef},
+  title   = {Controlling the false discovery rate: a practical and powerful approach to multiple testing},
+  journal = {Journal of the Royal Statistical Society: Series B (Methodological)},
+  year    = {1995},
+  volume  = {57},
+  number  = {1},
+  pages   = {289--300},
+  doi     = {10.1111/j.2517-6161.1995.tb02031.x}
+}
+
+% ---- 12. the Hungarian assignment --------------------------------------------
+@article{kuhn1955hungarian,
+  author  = {Kuhn, Harold W.},
+  title   = {The {H}ungarian method for the assignment problem},
+  journal = {Naval Research Logistics Quarterly},
+  year    = {1955},
+  volume  = {2},
+  number  = {1--2},
+  pages   = {83--97},
+  doi     = {10.1002/nav.3800020109}
+}
+
+% ---- 13-14. the comparison algorithms ----------------------------------------
+@article{ward1963,
+  author  = {Ward, Joe H.},
+  title   = {Hierarchical grouping to optimize an objective function},
+  journal = {Journal of the American Statistical Association},
+  year    = {1963},
+  volume  = {58},
+  number  = {301},
+  pages   = {236--244},
+  doi     = {10.1080/01621459.1963.10500845}
+}
+
+@article{lloyd1982kmeans,
+  author  = {Lloyd, Stuart P.},
+  title   = {Least squares quantization in {PCM}},
+  journal = {IEEE Transactions on Information Theory},
+  year    = {1982},
+  volume  = {28},
+  number  = {2},
+  pages   = {129--137},
+  doi     = {10.1109/TIT.1982.1056489}
+}
+
+% ---- 15. SC3 - consensus clustering as the field standard --------------------
+@article{kiselev2017sc3,
+  author  = {Kiselev, Vladimir Yu and Kirschner, Kristina and Schaub, Michael T. and Andrews, Tallulah and Yiu, Andrew and Chandra, Tamir and Natarajan, Kedar N. and Reik, Wolf and Barahona, Mauricio and Green, Anthony R. and Hemberg, Martin},
+  title   = {{SC3}: consensus clustering of single-cell {RNA}-seq data},
+  journal = {Nature Methods},
+  year    = {2017},
+  volume  = {14},
+  number  = {5},
+  pages   = {483--486},
+  doi     = {10.1038/nmeth.4236}
+}
+
+% ---- 16. BrainSMASH - the spatial null we did NOT use, named for contrast ----
+@article{burt2020brainsmash,
+  author  = {Burt, Joshua B. and Helmer, Markus and Shinn, Maxwell and Anticevic, Alan and Murray, John D.},
+  title   = {Generative modeling of brain maps with spatial autocorrelation},
+  journal = {NeuroImage},
+  year    = {2020},
+  volume  = {220},
+  pages   = {117038},
+  doi     = {10.1016/j.neuroimage.2020.117038}
+}
+
+% ---- 17. anatomical labels (earlier pipeline stage) --------------------------
+@article{desikan2006,
+  author  = {Desikan, Rahul S. and S{\'e}gonne, Florent and Fischl, Bruce and Quinn, Brian T. and Dickerson, Bradford C. and Blacker, Deborah and Buckner, Randy L. and Dale, Anders M. and Maguire, R. Paul and Hyman, Bradley T. and Albert, Marilyn S. and Killiany, Ronald J.},
+  title   = {An automated labeling system for subdividing the human cerebral cortex on {MRI} scans into gyral based regions of interest},
+  journal = {NeuroImage},
+  year    = {2006},
+  volume  = {31},
+  number  = {3},
+  pages   = {968--980},
+  doi     = {10.1016/j.neuroimage.2006.01.021}
+}
+
+% ---- 18-20. software, for the key resources table ----------------------------
+@article{pedregosa2011sklearn,
+  author  = {Pedregosa, Fabian and Varoquaux, Ga{\"e}l and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and Vanderplas, Jake and Passos, Alexandre and Cournapeau, David and Brucher, Matthieu and Perrot, Matthieu and Duchesnay, {\'E}douard},
+  title   = {Scikit-learn: machine learning in {P}ython},
+  journal = {Journal of Machine Learning Research},
+  year    = {2011},
+  volume  = {12},
+  pages   = {2825--2830}
+}
+
+@article{virtanen2020scipy,
+  author  = {Virtanen, Pauli and Gommers, Ralf and Oliphant, Travis E. and Haberland, Matt and Reddy, Tyler and Cournapeau, David and Burovski, Evgeni and Peterson, Pearu and Weckesser, Warren and Bright, Jonathan and others},
+  title   = {{SciPy} 1.0: fundamental algorithms for scientific computing in {P}ython},
+  journal = {Nature Methods},
+  year    = {2020},
+  volume  = {17},
+  pages   = {261--272},
+  doi     = {10.1038/s41592-019-0686-2}
+}
+
+@article{harris2020numpy,
+  author  = {Harris, Charles R. and Millman, K. Jarrod and van der Walt, St{\'e}fan J. and Gommers, Ralf and Virtanen, Pauli and Cournapeau, David and Wieser, Eric and Taylor, Julian and Berg, Sebastian and Smith, Nathaniel J. and others},
+  title   = {Array programming with {NumPy}},
+  journal = {Nature},
+  year    = {2020},
+  volume  = {585},
+  pages   = {357--362},
+  doi     = {10.1038/s41586-020-2649-2}
+}

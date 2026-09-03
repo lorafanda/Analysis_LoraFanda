@@ -1,0 +1,17 @@
+GRAPHICAL ABSTRACT   ·   1200 x 1200 px   ·   concat_hg, convex NMF, K = 8
+
+Built from the same run, centroids, renders and palette as FIG 1a (00_Paper2_Figures.py imported directly). Nothing on it is typed in.
+
+TYPE LABELS are descriptive, read off the centroid shapes, not computed:
+  c1 = Production, c3 = Auditory onset, c4 = Suppression, c5 = Reading only
+  Cluster ids were checked against FIG1a_..._patients.csv (sizes match).
+
+NUMBERS and where each comes from:
+  K = 8; held-out peak K = 11      heldout_peaks_cnmf.csv
+  first K with a one-patient cluster = 9   FIG1a_..._generalization.csv (also the red curve)
+  21.7% of electrodes placed alike by all 4 feature sets   FIG2_..._electrode_agreement.csv
+  chance 0.4%                              FIG2_..._caption.txt
+  c3 mean P(LanA) 0.2260, shaft null 0.2206, q = 0.452, cohort 0.1434   FIG3_..._clusters.csv
+  0 of 8 above the shaft null at q < 0.05; largest |rho| = 0.097   FIG3_..._clusters.csv
+
+'The auditory-onset type is found by every feature set and algorithm' is FIG 2B/E read by eye (c3 is the one row with no low cell); re-check if FIG 2 is re-run.
