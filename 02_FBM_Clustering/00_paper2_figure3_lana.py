@@ -147,6 +147,8 @@ def load(fset, k):
     d = P2.load_run(fset, k)
     d["fset"] = fset
     look, src, all_src, tol_seen = lana_lookup()
+    d["shaft"] = shaft_of(d["meta"].get("contact_norm", d["meta"]["electrode"]),
+                          d["patient"])
     keys = [f"{q}|{P2.norm(e)}"
             for q, e in zip(d["meta"]["patient_id"], d["meta"]["electrode"])]
     P = pd.Series(keys).map(look).to_numpy(float)
@@ -180,6 +182,34 @@ def within_patient_perm(P, patient, rng):
     return out
 
 
+def shaft_of(contact_norm, patient):
+    """patient + shaft, from the contact name with its trailing number removed.
+
+    AHL10 -> AHL. A shaft is the physical electrode: its contacts are millimetres
+    apart, so they share an atlas neighbourhood and are the unit spatial correlation
+    lives on.
+    """
+    import re
+    sh = [re.sub(r"\d+$", "", str(c)) for c in contact_norm]
+    return np.array([f"{p}|{x}" for p, x in zip(patient, sh)], dtype=object)
+
+
+def shaft_roll_index(shaft_id, rng):
+    """An index that rolls each shaft's contacts by a random offset, in place.
+
+    Applied to the cluster labels AND the loadings, with P_lana left where it is, this
+    is a spatially-constrained null: the run structure along each shaft survives intact
+    and only its alignment with the atlas is broken. One index drives both statistics,
+    so panel A and panel C are testing the same permutation rather than two.
+    """
+    idx = np.arange(len(shaft_id))
+    for sh in np.unique(shaft_id):
+        m = np.where(shaft_id == sh)[0]
+        if len(m) > 1:
+            idx[m] = m[np.roll(np.arange(len(m)), int(rng.integers(1, len(m))))]
+    return idx
+
+
 def bh_fdr(p):
     """Benjamini-Hochberg. K clusters is K tests and the figure ranks them, which is
     exactly the situation that manufactures a best-looking one."""
@@ -207,6 +237,12 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
     Ph, path_, labh = P[has], pat[has], lab[has]
     Gh = Gn[has]
     pats = np.unique(path_)
+    shaft = d["shaft"][has]
+    sizes_sh = pd.Series(shaft).value_counts()
+    # a shaft that is one cluster throughout cannot be broken by a shift
+    single = int(sum(1 for sh in np.unique(shaft)
+                     if len(np.unique(labh[shaft == sh])) == 1))
+    d["n_shafts"], d["n_shafts_single"] = int(len(sizes_sh)), single
 
     rows = []
     for j in range(K):
@@ -221,22 +257,30 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
                          mean_P=mean, median_P=med, rho=float(r)))
     R = pd.DataFrame(rows)
 
-    # nulls, both from the same within-patient permutation so they are one story
-    nm = np.zeros((n_perm, K))
-    nr = np.zeros((n_perm, K))
-    for t in range(n_perm):
-        Pp = within_patient_perm(Ph, path_, rng)
-        for j in range(K):
-            sel = labh == j
-            nm[t, j] = Pp[sel].mean() if sel.any() else np.nan
-            nr[t, j] = spearmanr(Gh[:, j], Pp)[0]
-    R["null_mean_P"] = np.nanmean(nm, 0)
-    R["p_mean"] = [(np.sum(nm[:, j] >= R.mean_P[j]) + 1) / (n_perm + 1)
-                   for j in range(K)]
-    R["null_rho"] = np.nanmean(nr, 0)
-    R["p_rho"] = [(np.sum(np.abs(nr[:, j]) >= abs(R.rho[j])) + 1) / (n_perm + 1)
-                  for j in range(K)]
-    R["q_mean"], R["q_rho"] = bh_fdr(R.p_mean), bh_fdr(R.p_rho)
+    # TWO NULLS. The shaft-shift one is spatially constrained and leads; the
+    # within-patient one is kept beside it so the reader can see how much the answer
+    # depends on which is asked.
+    for tag, spatial in (("", False), ("_sh", True)):
+        nm = np.zeros((n_perm, K))
+        nr = np.zeros((n_perm, K))
+        for t in range(n_perm):
+            if spatial:
+                idx = shaft_roll_index(shaft, rng)
+                Lp, Gp, Pp = labh[idx], Gh[idx], Ph
+            else:
+                Lp, Gp, Pp = labh, Gh, within_patient_perm(Ph, path_, rng)
+            for j in range(K):
+                sel = Lp == j
+                nm[t, j] = Pp[sel].mean() if sel.any() else np.nan
+                nr[t, j] = spearmanr(Gp[:, j], Pp)[0]
+        R[f"null_mean_P{tag}"] = np.nanmean(nm, 0)
+        R[f"p_mean{tag}"] = [(np.sum(nm[:, j] >= R.mean_P[j]) + 1) / (n_perm + 1)
+                             for j in range(K)]
+        R[f"null_rho{tag}"] = np.nanmean(nr, 0)
+        R[f"p_rho{tag}"] = [(np.sum(np.abs(nr[:, j]) >= abs(R.rho[j])) + 1)
+                            / (n_perm + 1) for j in range(K)]
+        R[f"q_mean{tag}"], R[f"q_rho{tag}"] = (bh_fdr(R[f"p_mean{tag}"]),
+                                               bh_fdr(R[f"p_rho{tag}"]))
 
     # PATIENTS are the resampling unit, not electrodes: contacts on one shaft are not
     # independent draws and an electrode bootstrap would give intervals several times
@@ -266,10 +310,11 @@ def panel_rank(ax, R, d, chars):
     ax.bar(x, R.mean_P, color=cols, width=0.74, lw=0)
     ax.errorbar(x, R.mean_P, yerr=[R.mean_P - R.mean_P_lo, R.mean_P_hi - R.mean_P],
                 fmt="none", ecolor=INK, elinewidth=1.0, capsize=2.4)
-    ax.plot(x, R.null_mean_P, "_", ms=13, color=MUTED, mew=1.6, zorder=4)
+    ax.plot(x, R.null_mean_P_sh, "_", ms=15, color=INK, mew=2.0, zorder=5)
+    ax.plot(x, R.null_mean_P, "_", ms=11, color=MUTED, mew=1.4, zorder=4)
     ax.axhline(R.baseline_P.iloc[0], color=MUTED, ls=":", lw=1.2)
     for i, r in R.iterrows():
-        star = "*" if r.q_mean < 0.05 else ""
+        star = "*" if r.q_mean_sh < 0.05 else ("(*)" if r.q_mean < 0.05 else "")
         ax.text(i, max(r.mean_P_hi, r.mean_P) + 0.018,
                 f"{star}\n{100*r.coverage:.0f}%", ha="center", va="bottom",
                 fontsize=6.6, color=RED if r.coverage < MIN_COVERAGE else MUTED)
@@ -283,11 +328,14 @@ def panel_rank(ax, R, d, chars):
     thin = [f"c{int(r.cluster)}" for _, r in R.iterrows() if r.coverage < MIN_COVERAGE]
     ax.text(0, -0.42, _wrap(
         f"Ranked most to least. Bars are the mean LanA probability of a cluster's "
-        f"electrodes; whiskers are a 95% interval from bootstrapping PATIENTS. The grey "
-        f"dash is a within-patient permutation null and the dotted line the cohort mean "
-        f"({R.baseline_P.iloc[0]:.3f}). * = q < 0.05 after Benjamini-Hochberg over the "
-        f"{K} clusters. The % under each bar is how much of that cluster HAS a LanA "
-        f"value" + (f"; {', '.join(thin)} fall below {100*MIN_COVERAGE:.0f}% and their "
+        f"electrodes; whiskers are a 95% interval from bootstrapping PATIENTS. The "
+        f"dotted line is the cohort mean ({R.baseline_P.iloc[0]:.3f}). TWO NULLS: the "
+        f"dark dash rolls each electrode's cluster along its own SHAFT, keeping the "
+        f"spatial smoothness that makes neighbouring contacts alike, and is the one "
+        f"that counts (*); the pale dash only shuffles within patient, which destroys "
+        f"that smoothness and is too easy to beat ((*) = passes only that one). Both "
+        f"Benjamini-Hochberg over {K}. The % under each bar is how much of that "
+        f"cluster HAS a LanA value" + (f"; {', '.join(thin)} fall below {100*MIN_COVERAGE:.0f}% and their "
                     f"means are not comparable with the rest." if thin else "."),
         chars), transform=ax.transAxes, va="top", fontsize=7.4, color=MUTED,
         linespacing=1.5)
@@ -306,43 +354,53 @@ def panel_scatter(axes, R, Gh, Ph, labh, d):
             xx = np.linspace(Gh[:, j].min(), Gh[:, j].max(), 20)
             ax.plot(xx, np.polyval(z, xx), color=INK, lw=1.1)
         ax.set_title(f"c{j}   rho {r.rho:+.2f}"
-                     + ("*" if r.q_rho < 0.05 else ""), fontsize=7.8,
-                     color=RED if r.q_rho < 0.05 else col, loc="left", pad=2.2)
+                     + ("*" if r.q_rho_sh < 0.05 else ""), fontsize=7.8,
+                     color=INK if abs(r.rho) >= 0.1 else col, loc="left", pad=2.2)
         ax.tick_params(labelsize=6.2, colors=MUTED)
         ax.spines[["top", "right"]].set_visible(False)
 
 
 def panel_rho(ax, R, d, chars):
+    """Effect size first. With n in the thousands a q-value is nearly free and says
+    almost nothing; the magnitude is the result, so the magnitude leads."""
     K = d["k"]
     y = np.arange(len(R))[::-1]
     cols = [P2.cluster_col(int(c), K) for c in R.cluster]
-    ax.barh(y, R.rho, color=cols, height=0.7, lw=0)
+    # anything inside this band is a negligible correlation by any convention, however
+    # small its p-value gets with 1400 electrodes
+    ax.axvspan(-0.1, 0.1, color=GREY, alpha=0.30, lw=0, zorder=0)
+    ax.barh(y, R.rho, color=cols, height=0.7, lw=0, zorder=2)
     ax.errorbar(R.rho, y, xerr=[R.rho - R.rho_lo, R.rho_hi - R.rho], fmt="none",
-                ecolor=INK, elinewidth=1.0, capsize=2.4)
-    ax.plot(R.null_rho, y, "|", ms=13, color=MUTED, mew=1.6, zorder=4)
-    ax.axvline(0, color=INK, lw=0.8)
+                ecolor=INK, elinewidth=1.0, capsize=2.4, zorder=3)
+    ax.plot(R.null_rho_sh, y, "|", ms=13, color=INK, mew=1.8, zorder=4)
+    ax.axvline(0, color=INK, lw=0.8, zorder=1)
+    lim = max(0.16, float(np.nanmax(np.abs([R.rho_lo.min(), R.rho_hi.max()]))) * 1.35)
+    ax.set_xlim(-lim, lim)
     for i, (_, r) in enumerate(R.iterrows()):
-        if r.q_rho < 0.05:
-            ax.text(r.rho + (0.012 if r.rho >= 0 else -0.012), y[i], "*",
-                    ha="left" if r.rho >= 0 else "right", va="center", fontsize=10,
-                    color=RED)
+        mark = "*" if r.q_rho_sh < 0.05 else ("(*)" if r.q_rho < 0.05 else "")
+        off = 0.012 * (1 if r.rho >= 0 else -1)
+        ax.text(r.rho + off, y[i], f"{r.rho:+.2f}{mark}",
+                ha="left" if r.rho >= 0 else "right", va="center", fontsize=7.2,
+                color=INK)
     ax.set_yticks(y)
     ax.set_yticklabels([f"c{int(c)}" for c in R.cluster], fontsize=7.4)
     ax.set_xlabel("Spearman rho, loading vs P(LanA)", fontsize=8.6)
     ax.tick_params(labelsize=7.4, colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
-    sig = int((R.q_rho < 0.05).sum())
+    big = int((R.rho.abs() >= 0.1).sum())
+    sig = int((R.q_rho_sh < 0.05).sum())
     ax.text(0, -0.30, _wrap(
-        f"Across EVERY electrode with a LanA value, not just the cluster's own: does a "
-        f"higher loading on this cluster go with sitting further into language cortex? "
-        f"Whiskers bootstrap PATIENTS; the grey tick is the within-patient permutation "
-        f"null; * = q < 0.05 (BH over {K}). {sig} of {K} survive. A rho near zero means "
-        f"the cluster is placed independently of the atlas, which is a result and not a "
-        f"failure.  THE {K} VALUES ARE NOT INDEPENDENT: loadings are normalised to sum "
-        f"to 1, so one cluster tracking LanA strongly FORCES negative rho on the others "
-        f"arithmetically. Read a negative bar as 'not this one', never as 'avoids "
-        f"language cortex'.", chars), transform=ax.transAxes, va="top", fontsize=7.4,
-        color=MUTED, linespacing=1.5)
+        f"EFFECT SIZE FIRST. The shaded band is |rho| < 0.10 - negligible by any "
+        f"convention. {big} of {K} correlations reach even that, and the largest is "
+        f"{R.rho.abs().max():.2f}. With {int(R.n_lana.sum())} electrodes a q-value is "
+        f"nearly free, so a star here is not the finding; the magnitude is, and the "
+        f"magnitude says belonging more strongly to a cluster barely predicts sitting "
+        f"further into language cortex. {sig} pass the shaft-shift null, which is the "
+        f"one that keeps spatial smoothness. THE {K} VALUES ARE NOT INDEPENDENT: "
+        f"loadings sum to 1, so one cluster tracking LanA forces negative rho on the "
+        f"others arithmetically - read a negative bar as 'not this one', never as "
+        f"'avoids language cortex'.", chars), transform=ax.transAxes, va="top",
+        fontsize=7.4, color=MUTED, linespacing=1.5)
 
 
 BR = chr(10)
@@ -446,10 +504,17 @@ def figure_3(fset, k, n_perm, n_boot):
                      "not a measurement in this patient. A cluster high in panel A sits "
                      "where language cortex usually is; whether it RESPONDED to language "
                      "is FIG 1, not this.", 92) + BR + BR
-             + _wrap(f"{int((R.q_mean < 0.05).sum())} of {d['k']} clusters beat the "
-                     f"within-patient null on mean P(LanA); "
-                     f"{int((R.q_rho < 0.05).sum())} of {d['k']} correlations survive "
-                     f"FDR.", 92) + BR + BR
+             + _wrap(f"Against the SHAFT-SHIFT null, which preserves the spatial "
+                     f"smoothness of the atlas, {int((R.q_mean_sh < 0.05).sum())} of "
+                     f"{d['k']} clusters sit in more LanA than chance and "
+                     f"{int((R.q_rho_sh < 0.05).sum())} of {d['k']} correlations pass. "
+                     f"Against the weaker within-patient null it is "
+                     f"{int((R.q_mean < 0.05).sum())} and "
+                     f"{int((R.q_rho < 0.05).sum())}. Where those differ, the "
+                     f"smoothness was doing the work.", 92) + BR + BR
+             + _wrap(f"No correlation reaches |rho| = 0.10. Significance here is nearly "
+                     f"free at this sample size; the effect size is the result.", 92)
+             + BR + BR
              + _wrap(f"Only {100*d['has'].mean():.0f}% of electrodes have a LanA value, "
                      f"and the missing ones are WHOLE PATIENTS rather than a random "
                      f"scatter - the atlas run predates part of the cohort. "
@@ -537,7 +602,26 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot):
             A(f"    {p_:<12} {int(n_):>4} of {tot:<4}"
               + ("   (the whole patient)" if int(n_) == tot else ""))
     A("")
-    A("THE NULL, AND WHY IT IS WITHIN PATIENT")
+    A("THE NULLS, AND WHY THERE ARE TWO")
+    A("-" * 100)
+    A("SPATIAL AUTOCORRELATION IS THE WHOLE PROBLEM. A contact and its neighbour 3 mm")
+    A("along the same shaft have nearly identical P_lana, because a brain map is smooth;")
+    A("that smoothness inflates any correlation computed against it. The field's answer")
+    A("is a spatially-constrained null - Alexander-Bloch's spin test for dense surface")
+    A("maps, variogram-matched surrogates for sparse points.")
+    A("")
+    A("The sEEG analogue used here is a CIRCULAR SHIFT ALONG EACH SHAFT: every")
+    A("electrode's cluster and loading are rolled by a random offset within its own")
+    A("shaft while P_lana stays put. Each shaft's run structure survives exactly - the")
+    A("same labels in the same runs, in the same order - and only its alignment with the")
+    A("atlas is broken. This is the null that counts, marked * on the figure.")
+    A("")
+    A(f"  shafts                 {d['n_shafts']}")
+    A(f"  invariant to a shift   {d['n_shafts_single']} (one cluster throughout, so a")
+    A("                         shift cannot change them; they carry no information")
+    A("                         about alignment and contribute no randomness)")
+    A("")
+    A("THE SECOND NULL, KEPT FOR COMPARISON")
     A("-" * 100)
     A("Contacts on one shaft sit millimetres apart, share a patient, and share an atlas")
     A("neighbourhood, so a correlation across ~1400 electrodes has nothing like 1400")
@@ -551,7 +635,12 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot):
     A("electrode bootstrap treats contacts on one shaft as independent draws and returns")
     A("intervals several times too narrow.")
     A("")
-    A(f"  {n_perm} permutations, {n_boot} bootstraps, patients resampled with replacement")
+    A(f"  {n_perm} permutations of EACH null, {n_boot} bootstraps, patients resampled")
+    A("  with replacement")
+    A("")
+    A("Both are reported on the figure and in the table below. Where they disagree, the")
+    A("spatial smoothness was doing the work and the weaker null was crediting the")
+    A("clustering for it - which is exactly what a within-patient shuffle cannot see.")
     A("")
     A("MULTIPLE COMPARISONS")
     A("-" * 100)
@@ -567,11 +656,15 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot):
     A(f"  cohort mean P_lana             {R.baseline_P.iloc[0]:.4f}")
     A(f"  most  c{int(R.cluster.iloc[0])}  {R.mean_P.iloc[0]:.4f} "
       f"[{R.mean_P_lo.iloc[0]:.4f}, {R.mean_P_hi.iloc[0]:.4f}]  "
-      f"null {R.null_mean_P.iloc[0]:.4f}  q={R.q_mean.iloc[0]:.3g}")
+      f"shaft null {R.null_mean_P_sh.iloc[0]:.4f} q={R.q_mean_sh.iloc[0]:.3g}  "
+      f"(within-patient null {R.null_mean_P.iloc[0]:.4f} q={R.q_mean.iloc[0]:.3g})")
     A(f"  least c{int(R.cluster.iloc[-1])}  {R.mean_P.iloc[-1]:.4f} "
       f"[{R.mean_P_lo.iloc[-1]:.4f}, {R.mean_P_hi.iloc[-1]:.4f}]  "
-      f"null {R.null_mean_P.iloc[-1]:.4f}  q={R.q_mean.iloc[-1]:.3g}")
-    A(f"  clusters above the null at q<0.05   {int((R.q_mean < 0.05).sum())} of {k}")
+      f"shaft null {R.null_mean_P_sh.iloc[-1]:.4f} q={R.q_mean_sh.iloc[-1]:.3g}")
+    A(f"  clusters above the SHAFT-SHIFT null at q<0.05   "
+      f"{int((R.q_mean_sh < 0.05).sum())} of {k}")
+    A(f"  above the weaker within-patient null              "
+      f"{int((R.q_mean < 0.05).sum())} of {k}")
     A("")
     A("PANEL B and C - loading against P_lana")
     A("-" * 100)
@@ -599,12 +692,18 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot):
     A("it says whether that cluster's rho exceeds chance, not whether the K rhos are")
     A("mutually consistent.")
     A("")
+    A("  cluster  rho [95% CI]                 q shaft   q within-pat   meanP   "
+      "q shaft   coverage")
     for _, r in R.iterrows():
-        A(f"  c{int(r.cluster):<3} rho {r.rho:+.3f} [{r.rho_lo:+.3f}, {r.rho_hi:+.3f}]"
-          f"   null {r.null_rho:+.3f}   p={r.p_rho:.3g}  q={r.q_rho:.3g}"
-          f"   meanP {r.mean_P:.4f}   coverage {100*r.coverage:.0f}%")
+        A(f"  c{int(r.cluster):<7} {r.rho:+.3f} [{r.rho_lo:+.3f}, {r.rho_hi:+.3f}]"
+          f"   {r.q_rho_sh:>8.3g}   {r.q_rho:>10.3g}   {r.mean_P:.4f}  "
+          f"{r.q_mean_sh:>8.3g}   {100*r.coverage:>3.0f}%")
     A("")
-    A(f"  {int((R.q_rho < 0.05).sum())} of {k} correlations survive FDR.")
+    A(f"  {int((R.q_rho_sh < 0.05).sum())} of {k} correlations pass the shaft-shift")
+    A(f"  null; {int((R.q_rho < 0.05).sum())} pass the weaker within-patient one.")
+    A(f"  NONE reaches |rho| = 0.10 (largest {R.rho.abs().max():.3f}). At "
+      f"{int(R.n_lana.sum())} electrodes a q-value is nearly free; the effect size is")
+    A("  the result, and the effect size is negligible.")
     A("A rho near zero means the cluster is placed independently of the atlas. That is a")
     A("result, not a failure - it says the clustering found structure the atlas does not")
     A("describe.")

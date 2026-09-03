@@ -53,7 +53,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 from matplotlib.patches import Rectangle
-from sklearn.metrics import adjusted_rand_score
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
@@ -194,6 +194,19 @@ def pairwise_ari(sols):
     return M
 
 
+def pairwise_nmi(sols):
+    """NMI beside ARI. They are conventionally reported together and disagree
+    informatively - ARI is dominated by the large clusters and NMI is not, so a pair
+    that agrees on the big structure and not the small shows a gap between them."""
+    n = len(sols)
+    M = np.eye(n)
+    for i in range(n):
+        for j in range(i + 1, n):
+            M[i, j] = M[j, i] = normalized_mutual_info_score(sols[i]["lab"],
+                                                             sols[j]["lab"])
+    return M
+
+
 def ari_by_k(sols, ks):
     """Mean pairwise ARI at every K, so one K is never read in isolation.
 
@@ -316,6 +329,51 @@ def electrode_agreement_null(sols, ref_i, order, n_perm=200, seed=0):
     return f / max(f.sum(), 1)
 
 
+def pac(sol, k, lo=0.1, hi=0.9):
+    """Proportion of Ambiguous Clustering: the share of consensus values in (lo, hi).
+
+    A consensus entry near 1 means two electrodes always cluster together across
+    resamples and near 0 means they never do; anything between is the resampling
+    disagreeing with itself. PAC is the fraction that sits in between, so LOWER IS
+    BETTER, and it is the standard one-number robustness score in this literature.
+    Read from the consensus matrix sweep_stability already writes at this K - not
+    recomputed, so it cannot disagree with the sweep it came from.
+    """
+    f = sol["run"] / "stability_by_k" / f"k_{k:02d}" / "consensus_matrix.npy"
+    if not f.exists():
+        return None
+    C = np.load(f, mmap_mode="r")
+    if C.ndim != 2 or C.shape[0] != C.shape[1]:
+        return None
+    iu = np.triu_indices(C.shape[0], 1)
+    u = np.asarray(C[iu], dtype=float)
+    return float(np.mean((u > lo) & (u < hi)))
+
+
+def split_counts(sols, ref_i, order, share=0.25):
+    """How many of each solution's clusters hold a real share of a reference cluster.
+
+    1 is a clean correspondence. 2 or more is a SPLIT - the reference cluster is that
+    solution's two clusters put together, which a 1:1 assignment has to score as one
+    good match and one failure. `share` is how much of the reference cluster a partner
+    must hold to count; 0.25 is a readable convention, not a test.
+    """
+    ref = sols[ref_i]
+    K = int(ref["lab"].max()) + 1
+    out = np.ones((K, len(sols)), int)
+    for c, sol in enumerate(sols):
+        if c == ref_i:
+            continue
+        for p in range(K):
+            m = ref["lab"] == int(order[p])
+            n = int(m.sum())
+            if not n:
+                continue
+            cnt = np.bincount(sol["lab"][m], minlength=K)
+            out[p, c] = int((cnt / n >= share).sum())
+    return out
+
+
 def self_stability(sol, k):
     """A solution's agreement with ITSELF: mean per-cluster Jaccard over 50 refits on
     80% subsamples, from sweep_stability --native. None where no sweep exists.
@@ -428,7 +486,7 @@ def ari_summary(M, names, groups):
     return "  ·  ".join(parts)
 
 
-def panel_ari(ax, M, names, groups, chars, k, curve):
+def panel_ari(ax, M, Mn, names, groups, chars, k, curve):
     """Lower triangle only - the other ten cells of a 4x4 repeat these six.
 
     The empty upper triangle carries the K curve, because a single K read on its own
@@ -443,8 +501,11 @@ def panel_ari(ax, M, names, groups, chars, k, curve):
     ax.imshow(show, cmap="Blues", vmin=0, vmax=max(0.6, np.nanmax(show) * 1.05))
     for i in range(n):
         for j in range(i):
-            ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", fontsize=9.0,
-                    color="white" if M[i, j] > 0.42 else INK)
+            col = "white" if M[i, j] > 0.42 else INK
+            ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="bottom", fontsize=8.6,
+                    color=col)
+            ax.text(j, i, f"{Mn[i, j]:.2f}", ha="center", va="top", fontsize=6.8,
+                    color=col, alpha=0.85)
     ax.set_xticks(range(n - 1)); ax.set_yticks(range(1, n))
     ax.xaxis.tick_top()
     ax.set_xticklabels(names[:-1], fontsize=7.8, rotation=26, ha="left")
@@ -473,12 +534,13 @@ def panel_ari(ax, M, names, groups, chars, k, curve):
         here = float(vs[list(ks).index(k)]) if k in list(ks) else float("nan")
         extra = (f"  ·  ACROSS K: agreement peaks at K={best} ({vs.max():.2f}); "
                  f"at K={k} it is {here:.2f}")
-    summary_under(ax, "adjusted Rand, chance-corrected.  " +
-                  ari_summary(M, names, groups) + extra, chars)
+    summary_under(ax, "Upper number ADJUSTED RAND, lower NMI - reported together "
+                  "because ARI is dominated by the large clusters and NMI is not.  "
+                  + ari_summary(M, names, groups) + extra, chars)
 
 
 def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
-                   nullJ, selfstab, thresh=0.30):
+                   nullJ, selfstab, pacs, splits, thresh=0.30):
     """Every reference cluster against its match, with the reference column dropped.
 
     NOT 'which clusters survive'. Every number here is agreement with ONE reference, so
@@ -493,14 +555,22 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
     K = Jk.shape[0]
     # each column's own ceiling, printed under its name: cross-solution agreement
     # cannot exceed what a method manages against its own refits
-    nk = [f"{n}\nself {selfstab[c][0]:.2f}" if selfstab[c][0] is not None
-          else f"{n}\nself --" for n, c in zip(nk, keep)]
+    Sk = splits[:, keep]
+    nk = [n + "\n" + ("self " + (f"{selfstab[c][0]:.2f}" if selfstab[c][0] is not None
+                                 else "--"))
+          + ("  PAC " + (f"{pacs[c]:.2f}" if pacs[c] is not None else "--"))
+          for n, c in zip(nk, keep)]
     axM.imshow(Jk, cmap="Blues", vmin=0, vmax=vmax, aspect="auto")
     for p in range(K):
         for c in range(Jk.shape[1]):
             v = Jk[p, c]
             axM.text(c, p, f"{v:.2f}", ha="center", va="center", fontsize=8.2,
                      color="white" if v > 0.62 * vmax else (RED if v < thresh else INK))
+            # a low cell that is low because the reference cluster SPLIT is a clean
+            # correspondence a 1:1 assignment cannot express, not a failure
+            if Sk[p, c] > 1:
+                axM.text(c + 0.40, p - 0.34, f"/{Sk[p, c]}", ha="right", va="top",
+                         fontsize=6.4, color=INK, alpha=0.75)
             # does not beat a size-matched permutation of the same two clusters
             if np.isfinite(Nk[p, c]) and v <= Nk[p, c]:
                 axM.add_patch(Rectangle((c - 0.5, p - 0.5), 1, 1, fill=False,
@@ -557,7 +627,12 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, chars, vmax,
         txt += ": " + ", ".join(gone[:4])
         if len(gone) > 4:
             txt += f", and {len(gone) - 4} more"
-    txt += (f".  OTHERS = best agreement between two non-reference solutions on that "
+    n_split = int(np.sum((Jk < thresh) & (Sk > 1)))
+    txt += (f".  /n IN A CELL MEANS THE REFERENCE CLUSTER SPLIT into that many of the "
+            f"solution's clusters (each holding at least 25% of it) - a clean "
+            f"correspondence a 1:1 assignment has to score as one good match and one "
+            f"failure; {n_split} of the low cells are splits, not disagreements.  "
+            f"OTHERS = best agreement between two non-reference solutions on that "
             f"row; {flip} row(s), outlined green, are low only because the REFERENCE "
             f"disagrees.  {at_chance} of {Jk.size} cells, hatched, do not beat a "
             f"size-matched permutation of their own two clusters.")
@@ -709,6 +784,10 @@ def figure_2(k: int, algo_fset: str):
     al_null_J, _ = cluster_jaccard_null(al_sols, al_ref, al_order)
     fs_self = [self_stability(x, k) for x in fs_sols]
     al_self = [self_stability(x, k) for x in al_sols]
+    fs_pac, al_pac = [pac(x, k) for x in fs_sols], [pac(x, k) for x in al_sols]
+    fs_split = split_counts(fs_sols, fs_ref, fs_order)
+    al_split = split_counts(al_sols, al_ref, al_order)
+    fs_nmi, al_nmi = pairwise_nmi(fs_sols), pairwise_nmi(al_sols)
     fs_null = electrode_agreement_null(fs_sols, fs_ref, fs_order)
     al_null = electrode_agreement_null(al_sols, al_ref, al_order)
     ks = list(range(5, 31))
@@ -721,8 +800,8 @@ def figure_2(k: int, algo_fset: str):
     n_op_al = one_patient_clusters(ar["lab"], d["patient"], k)
 
     fig = plt.figure(figsize=(17.6, 9.6), dpi=190)
-    gs = GridSpec(2, 24, figure=fig, hspace=0.75, wspace=1.1,
-                  left=0.055, right=0.985, top=0.820, bottom=0.055)
+    gs = GridSpec(2, 24, figure=fig, hspace=0.78, wspace=1.1,
+                  left=0.055, right=0.985, top=0.788, bottom=0.050)
     fig.suptitle(f"FIG 2   ·   agreement   ·   K = {k}   ·   "
                  f"{len(d['X'])} electrodes, {d['n_patients']} patients",
                  x=0.055, y=0.975, ha="left", fontsize=15.5, color=INK)
@@ -735,14 +814,16 @@ def figure_2(k: int, algo_fset: str):
     halves = (
         dict(ari=fs_ari, J=fs_J, cnt=fs_cnt, names=fs_names, sols=fs_sols, ref=fs_ref,
              oth=fs_oth, order=fs_order, sizes=fs_sizes, null=fs_null,
-             nullJ=fs_null_J, self=fs_self,
+             nullJ=fs_null_J, self=fs_self, pac=fs_pac, split=fs_split,
+             nmi=fs_nmi,
              curve=fs_curve, onepat=n_op_fs,
              refname=FS_SHORT.get(REF_FSET, REF_FSET), tags="ABC",
              head=f"FEATURE SETS   ·   convex NMF on four representations   ·   "
                   f"reference {FS_SHORT.get(REF_FSET, REF_FSET)}"),
         dict(ari=al_ari, J=al_J, cnt=al_cnt, names=al_names, sols=al_sols, ref=al_ref,
              oth=al_oth, order=al_order, sizes=al_sizes, null=al_null,
-             nullJ=al_null_J, self=al_self,
+             nullJ=al_null_J, self=al_self, pac=al_pac, split=al_split,
+             nmi=al_nmi,
              curve=al_curve, onepat=n_op_al,
              refname=f"{METHOD_LABEL[REF_METHOD]} on {algo_fset}", tags="DEF",
              head=f"ALGORITHMS   ·   four methods on {algo_fset}   ·   "
@@ -754,14 +835,14 @@ def figure_2(k: int, algo_fset: str):
         t1, t2, t3 = h["tags"]
 
         axA = fig.add_subplot(gs[row, 0:5])
-        panel_ari(axA, h["ari"], h["names"], groups, 62, k, h["curve"])
+        panel_ari(axA, h["ari"], h["nmi"], h["names"], groups, 62, k, h["curve"])
 
         cB = GridSpecFromSubplotSpec(1, 2, gs[row, 6:14], width_ratios=[5.4, 2.0],
                                      wspace=0.08)
         axM = fig.add_subplot(cB[0])
         panel_clusters(axM, fig.add_subplot(cB[1]), h["J"], h["oth"], h["names"],
                        h["order"], h["sizes"], h["ref"], 104, vmax, h["nullJ"],
-                       h["self"])
+                       h["self"], h["pac"], h["split"])
 
         cC = GridSpecFromSubplotSpec(2, 2, gs[row, 15:24], height_ratios=[1.0, 0.30],
                                      hspace=0.16, wspace=0.03)
@@ -917,6 +998,19 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self):
             who = f"{so['method']}/{so['fset']}"
             A(f"    {who:<30} " + (f"{v:.3f}   ({src})" if v is not None
                                    else "no stability sweep at this K"))
+    A("")
+    A("PAC - PROPORTION OF AMBIGUOUS CLUSTERING - sits beside it. It is the share of")
+    A("consensus values that are neither near 0 nor near 1: entries where the resampling")
+    A("disagrees with itself about whether two electrodes belong together. LOWER IS")
+    A("BETTER, and it is the standard one-number robustness score in this literature")
+    A("(SC3, Nature Methods 2017). It is read from the consensus matrix sweep_stability")
+    A("already writes at this K, not recomputed, so it cannot drift from that sweep.")
+    A("")
+    A("SPLITS. A 1:1 assignment cannot represent one solution's cluster being another's")
+    A("two - the commonest way two clusterings differ, and a clean correspondence rather")
+    A("than a failure. Every cell carries /n where n is how many of that solution's")
+    A("clusters hold at least 25% of the reference cluster; n = 1 is a clean pairing and")
+    A("n >= 2 is a split. A low Jaccard beside /2 means the cluster survived, divided.")
     A("")
     A("ARI in A and D is a different scale and has no ceiling available, so none is")
     A("drawn there; putting a Jaccard on an ARI axis would be a units error.")

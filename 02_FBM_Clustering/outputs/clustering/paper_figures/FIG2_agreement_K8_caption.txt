@@ -76,6 +76,19 @@ these numbers without it is the difference between 'the solutions disagree' and
     hierarchical/concat_hg         0.699   (stability_by_k_native)
     archetypes/concat_hg           no stability sweep at this K
 
+PAC - PROPORTION OF AMBIGUOUS CLUSTERING - sits beside it. It is the share of
+consensus values that are neither near 0 nor near 1: entries where the resampling
+disagrees with itself about whether two electrodes belong together. LOWER IS
+BETTER, and it is the standard one-number robustness score in this literature
+(SC3, Nature Methods 2017). It is read from the consensus matrix sweep_stability
+already writes at this K, not recomputed, so it cannot drift from that sweep.
+
+SPLITS. A 1:1 assignment cannot represent one solution's cluster being another's
+two - the commonest way two clusterings differ, and a clean correspondence rather
+than a failure. Every cell carries /n where n is how many of that solution's
+clusters hold at least 25% of the reference cluster; n = 1 is a clean pairing and
+n >= 2 is a split. A low Jaccard beside /2 means the cluster survived, divided.
+
 ARI in A and D is a different scale and has no ceiling available, so none is
 drawn there; putting a Jaccard on an ARI axis would be a units error.
 
@@ -138,7 +151,7 @@ PROVENANCE
     archetypes    concat_hg        archetypes/concat_hg/runs/20260826_180756   (graded)
   geometry and block order from concat_bands5 (cnmf) at K=8
   built by      00_paper2_figures2_2.py --k 8 --algo-feature-set concat_hg
-  built on      2026-09-01 18:36
+  built on      2026-09-03 14:27
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
