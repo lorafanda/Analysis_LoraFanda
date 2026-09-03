@@ -20,6 +20,12 @@ Because the text is browser-local it is NOT in git and NOT on another machine. T
 says so at the top, keeps a visible saved/unsaved state, and carries Export (Markdown,
 copy or download) and Import (read a previously exported file back). Export is the only
 thing that makes the writing durable.
+
+EXAMPLES. Under the Introduction and the three figure sections, two example answers sit
+above each box (EXAMPLES below, keyed by field id). They are drafts to react to, written
+in the paper's voice with the numbers from the current run, and a "Use as draft" button
+copies one into the box. Every number in them was read off the figures' CSVs and captions
+when they were written; [REF] and [brackets] mark what only the author can fill.
 """
 from __future__ import annotations
 
@@ -437,8 +443,418 @@ SECTIONS = [
 
 
 # ---------------------------------------------------------------------------
+# THE EXAMPLES
+#
+# Two per field, for the Introduction and the three figure sections. Written in the
+# paper's voice: short sentences, direct, one idea each. A and B take different angles
+# on the same prompt rather than rewording each other. Numbers are from the K=8 run of
+# 2026-09-03 (FIG1a concat_hg, FIG2, FIG3 concat_hg); [REF] marks a citation to add and
+# [brackets] a value only the author has. Keys must be field ids - main() checks.
+# ---------------------------------------------------------------------------
+EXAMPLES = {
+    # ---- 1 - epilepsy surgery and the need for mapping ------------------------
+    "intro.epilepsy": [
+        "Epilepsy affects about one person in a hundred [REF]. In a third of them the "
+        "drugs do not work [REF]. When the seizures start from one place, that place can "
+        "be removed, and for the right patient surgery is the only treatment that offers "
+        "seizure freedom. About two in three become seizure-free after temporal lobe "
+        "resection [REF]. The condition is common, the drugs often fail, and the "
+        "operation works. The difficulty is deciding what to cut.",
+        "Around a third of people with epilepsy keep having seizures on medication "
+        "[REF]. Where the seizures arise from a single region, resective surgery can "
+        "stop them, and in most patients it does [REF]. The benefit is large and "
+        "lasting. The procedure is still underused, and one reason is the cost of "
+        "getting the boundary wrong.",
+    ],
+    "intro.tradeoff": [
+        "Two goals pull against each other. Remove enough tissue to stop the seizures. "
+        "Leave enough to keep the patient who they are. The seizure focus does not "
+        "respect functional boundaries. It can sit in, or next to, the cortex that "
+        "supports speech, comprehension, movement or memory. Cut too little and the "
+        "seizures continue. Cut too much and the patient wakes up unable to speak. "
+        "Functional mapping exists to draw that line before the operation, not after.",
+        "Every resection is a bet. The tissue removed should contain the focus and "
+        "nothing the patient cannot spare. The two are often neighbours. A few "
+        "millimetres separate a cure from a permanent deficit, and the decision is made "
+        "once. That is why function is mapped in each patient before surgery, and why "
+        "the quality of that map matters more than almost anything else in the "
+        "procedure.",
+    ],
+    "intro.whylanguage": [
+        "Language is the function most at risk and the hardest to predict. The textbook "
+        "puts it in Broca's and Wernicke's areas, on the left. Individual patients are "
+        "not the textbook. Language sites are found well outside the classical areas "
+        "[REF], the dominant hemisphere is not always the left [REF], and years of "
+        "seizures can move function away from a lesion [REF]. An atlas gives a "
+        "probability. The surgeon needs a location. Postoperative aphasia is rare when "
+        "mapping is done and common when it is skipped [REF]. When it happens it is "
+        "permanent.",
+        "Motor cortex is predictable. Language cortex is not. Its extent, its hemisphere "
+        "and its exact position differ between people, and they differ more in people "
+        "with epilepsy [REF]. A group map built from healthy brains cannot resolve this "
+        "for one patient. A wrong guess costs naming, reading or comprehension, and the "
+        "loss does not recover. This is the function mapping has to get right.",
+    ],
+    # ---- 2 - ESM --------------------------------------------------------------
+    "intro.esm_what": [
+        "Electrical stimulation mapping (ESM) is the clinical standard. A brief current "
+        "is passed between two implanted contacts while the patient performs a task, "
+        "usually naming or counting. If the task breaks down during stimulation and "
+        "recovers when it stops, the site is marked as eloquent. The logic is causal: "
+        "the current disrupted the function, so the tissue supports it. The output is a "
+        "map of sites that must be spared.",
+        "In ESM the surgeon stimulates cortex and watches the patient. Current is "
+        "applied to a pair of contacts for a few seconds during a language task. Speech "
+        "arrest, anomia or a comprehension error in that window marks the site as "
+        "critical. Nothing is measured. The function is switched off and the effect is "
+        "observed. Because it is an intervention rather than a recording, ESM is treated "
+        "as the ground truth against which every other method is judged.",
+    ],
+    "intro.esm_good": [
+        "ESM has real strengths. It is causal. It tests the tissue that will be cut, in "
+        "the patient who will be operated on, with the function that matters. It has "
+        "decades of surgical validation behind it [REF]: resections that respect "
+        "ESM-positive sites rarely produce new deficits. Every epilepsy surgeon "
+        "understands it, and its output maps directly onto a surgical decision. No "
+        "recording method can claim all of that.",
+        "The case for ESM is simple. It answers the surgical question directly: will "
+        "removing this tissue cause a deficit? A positive site is a site to leave alone. "
+        "The method is focal, it can be repeated within a session, and its value for "
+        "predicting outcome has been shown across thousands of patients [REF]. Any "
+        "alternative has to be measured against this, not against nothing.",
+    ],
+    "intro.esm_lacks": [
+        "The limits are just as real. ESM is slow. Each pair of contacts is tested in "
+        "turn, and a full map takes hours the patient may not tolerate. Stimulation "
+        "triggers afterdischarges and sometimes seizures, which end the session or "
+        "invalidate the site [REF]. Only the pairs that were tested are known; "
+        "everything else is a gap. The read-out is binary, eloquent or not, with no "
+        "measure of how much a site contributes. Task batteries differ between centres "
+        "[REF], and whether a pause counts as speech arrest is a judgement call. Some "
+        "patients cannot cooperate. Some regions cannot safely be stimulated. Each of "
+        "these is a site that goes unmapped, or is mapped wrongly.",
+        "Four problems follow the method everywhere. Time: contacts are tested one pair "
+        "at a time, and coverage is limited by what the patient can endure. Safety: "
+        "current induces afterdischarges and seizures, which cut testing short [REF]. "
+        "Resolution: the answer at each site is yes or no, and nothing between. "
+        "Consistency: tasks, thresholds and scoring vary between centres and between "
+        "examiners [REF]. Together they mean the map is incomplete in a way that is hard "
+        "to see, because a site that was never tested looks the same as a site that was "
+        "tested and found silent.",
+    ],
+    "intro.gap": [
+        "What a clinician cannot currently get is a complete map of language function, "
+        "in every implanted patient, without stimulating. The electrodes are already in "
+        "place and the patient is already there for days. A method that read function "
+        "from the recording, at every contact at once, would remove the time cost, the "
+        "seizure risk and the coverage gaps in one step. That is the gap.",
+        "The clinical need is a passive map: function at every implanted contact, from "
+        "a task the patient can do in twenty minutes, with no current applied. ESM "
+        "cannot provide it and was never designed to. The rest of this paper is about "
+        "whether the recorded signal can.",
+    ],
+    # ---- 3 - passive mapping ---------------------------------------------------
+    "intro.passive": [
+        "The alternative is to record. The patient performs a language task while the "
+        "implanted electrodes capture cortical activity, and the response at each "
+        "contact is read out. The signal that carries it is high-frequency broadband "
+        "activity, 70 to 150 Hz, which tracks local population firing [REF] and rises "
+        "within tens of milliseconds of a stimulus. Every contact is measured at once. "
+        "The cost to the patient is the length of the task.",
+        "Passive mapping turns the problem around. Instead of disrupting function and "
+        "looking for a deficit, it presents a task and looks for a response. In "
+        "intracranial recordings that response is a rise in high-gamma power: focal, "
+        "time-locked to the event, and a well-established proxy for local neuronal "
+        "activity [REF]. The whole array is mapped in one session, with no stimulation "
+        "and no induced seizures.",
+    ],
+    "intro.prior": [
+        "The approach is not new. High-gamma responses to language tasks have been "
+        "compared with ESM in several cohorts [REF]. The agreement is good but not "
+        "complete. Most ESM-positive sites show a high-gamma response, and many "
+        "high-gamma sites are ESM-negative. Sensitivity is usually reported above 80% "
+        "and specificity lower [REF]. What is accepted is that the recording contains "
+        "the information. What is not settled is how to read it.",
+        "Passive high-gamma mapping has been tested against ESM in naming, reading and "
+        "listening tasks, in adults and in children [REF]. It finds the ESM-positive "
+        "sites. It also finds more. Whether the extra sites are false positives or real "
+        "function that stimulation missed is still argued [REF]. Some centres now use "
+        "it alongside ESM. None uses it instead.",
+    ],
+    "intro.unresolved": [
+        "Three things remain open. First, the threshold. Each study picks its own "
+        "criterion for what counts as a response, and the map changes with it. Second, "
+        "the summary. Most methods reduce an electrode to one number, a peak or a mean, "
+        "and discard the shape of the response in time. Third, the vocabulary. There is "
+        "no agreed set of response types that a language electrode can show. Without "
+        "one, two studies cannot compare their maps, and a clinician cannot say what "
+        "kind of site an electrode is. This paper is about the third problem.",
+        "The literature agrees that language cortex responds and disagrees about what a "
+        "response is. Definitions vary by study, by task and by frequency band. An "
+        "electrode is scored active or not, on one number, and the time course of its "
+        "activity is not used. No taxonomy of language responses exists. Whether the "
+        "responses fall into a small number of recurring kinds, or lie on a continuum "
+        "with no natural joints, has not been asked directly. It is the question this "
+        "study asks.",
+    ],
+    # ---- 4 - our paradigm and paper 1 ------------------------------------------
+    "intro.paradigm": [
+        "Our paradigm presents language in three forms. The patient listens to speech, "
+        "sees a picture to name, or reads a sentence, and after a cue responds. The "
+        "three conditions share the output and differ in the input. Auditory "
+        "comprehension, object recognition and reading each take a different route into "
+        "the same response. Recording all three at the same contacts lets us ask which "
+        "responses are modality-specific and which are shared. One condition alone "
+        "cannot separate those.",
+        "The task has three conditions and one structure: fixation, stimulus, GO cue, "
+        "response. In the auditory condition the stimulus is spoken. In the picture "
+        "condition it is an image to name. In the reading condition it is a written "
+        "sentence. Every trial ends with a response after the cue, so the output stage "
+        "is common to all three and the input is what differs. An electrode's profile "
+        "across the three conditions becomes a signature: the same in all three, or "
+        "different, and if different, how.",
+    ],
+    "intro.paper1": [
+        "In the companion paper [REF] we showed that this task maps language cortex in "
+        "the clinical setting. High-gamma responses were found at [n]% of implanted "
+        "contacts, agreed with ESM at [x]% of stimulated sites, and were obtained in "
+        "[minutes] at the bedside. That paper asked which electrodes respond. It "
+        "established the recording as a mapping tool.",
+        "The first paper [REF] used this paradigm to identify responsive electrodes and "
+        "compared the result with stimulation. It reported [sensitivity] and "
+        "[specificity] against ESM, from a fraction of the time. The pipeline, the "
+        "cohort and the gating criteria used here come from that work. What it did not "
+        "do is look at what the responses were.",
+    ],
+    "intro.pivot": [
+        "Finding a responsive electrode is not the same as knowing what it does. Two "
+        "contacts can both pass a threshold and carry different signals: one rising at "
+        "the sound of the word, the other only at the onset of speech. The first paper "
+        "treated both as language sites. This paper asks whether that is enough. If "
+        "responses come in a few distinct kinds, a map that ignores the kind is "
+        "discarding the most useful thing in the signal.",
+        "The pivot is from where to what. A binary map says which contacts respond. It "
+        "does not say whether the response is to the input, to the output, to one "
+        "modality or to all three. Those are the distinctions a surgeon would want, and "
+        "they are not in the first paper because the first paper did not need them. "
+        "Answering the second question takes a different analysis, not a larger version "
+        "of the first.",
+    ],
+    # ---- 5 - the question ------------------------------------------------------
+    "intro.q_types": [
+        "The central question is whether language responses form a small number of "
+        "natural types. We treat this as a hypothesis that can fail. If it is false, "
+        "the electrodes will spread along a continuum with no stable structure, "
+        "clustering will keep improving as the number of clusters grows, and each "
+        "cluster it produces will belong to a single patient. If it is true, a few "
+        "clusters will capture the responses, each will draw on many patients, and "
+        "adding more will only split them.",
+        "We ask a simple question. Across 1693 electrodes from 27 patients, do the "
+        "responses repeat? A response type is a temporal profile that many electrodes "
+        "share and that is not tied to one person or one implant. The alternative is "
+        "that each electrode is its own case. Both outcomes are possible and the "
+        "analysis has to be able to return either. A clustering algorithm always "
+        "returns clusters. The test is whether they survive.",
+    ],
+    "intro.q_stable": [
+        "A cluster is only a type if it is still there when the analysis changes. We "
+        "test that three ways. Across feature representations: the same electrodes "
+        "described by high gamma alone, by five frequency bands, or by the full "
+        "spectrum. Across algorithms: convex NMF, k-means and hierarchical clustering on "
+        "the same features. Across patients: whether each cluster draws on many people "
+        "or on one. A type that appears under one setting and vanishes under another is "
+        "an artefact of the setting. We spend a full figure on this because the "
+        "taxonomy claim rests on it.",
+        "Any partition can be produced. The question is which partitions agree. We hold "
+        "the electrodes fixed and vary everything else: the features, the algorithm and "
+        "the number of clusters. Agreement across those choices is the evidence for a "
+        "type, and disagreement the evidence against. We report it per cluster and per "
+        "electrode, against chance, and against the ceiling set by how well each method "
+        "agrees with itself.",
+    ],
+    "intro.q_anatomy": [
+        "If the types are real, they should sit somewhere. We compare each cluster with "
+        "LanA, a probabilistic atlas of language cortex built from fMRI in over 800 "
+        "people [REF]. LanA gives the probability that a location is language-responsive "
+        "in a typical brain. It is a prior about a place, not a measurement in the "
+        "patient. A cluster that concentrates in high-probability cortex sits where "
+        "language usually is. A cluster that does not may still be language, in this "
+        "patient, at this contact. The comparison can support a type. It cannot refute "
+        "one.",
+        "We also ask whether the types respect known anatomy. The reference is the LanA "
+        "atlas [REF], which assigns each cortical location a probability of belonging "
+        "to the language network. This is a group prior, not a per-patient truth. We "
+        "test whether any cluster sits in higher-probability cortex than a null that "
+        "preserves the spatial structure of the recordings. A negative result is "
+        "informative. It means the types are defined by what the electrodes do, not by "
+        "where they are.",
+    ],
+    "intro.q_clinical": [
+        "The clinical stake is the gap named above. Today a passive map says active or "
+        "silent. If responses come in stable kinds, the map can say which kind: "
+        "input-locked, output-locked, modality-specific, suppressed. A surgeon deciding "
+        "on a margin would treat those differently. That use is not established by this "
+        "paper and we do not claim it. What the paper establishes is whether the kinds "
+        "exist and whether they are trustworthy enough to build on.",
+        "A taxonomy of responses would change what a passive map can say. It would "
+        "separate contacts that respond to hearing from contacts that respond to "
+        "speaking, and both from contacts that shut down during the task. Whether that "
+        "distinction predicts surgical outcome is a question for a later study. This "
+        "one asks the prior question: is there a stable set of types to distinguish at "
+        "all.",
+    ],
+    # ---- 6 - roadmap -----------------------------------------------------------
+    "intro.roadmap": [
+        "We clustered the responses of 1693 electrodes from 27 patients under three "
+        "language conditions. Eight response types were found. We then tested whether "
+        "they held when the features, the algorithm and the number of clusters were "
+        "changed, and found that some did and some did not. Finally we compared the "
+        "types with the LanA atlas and found that none was placed by anatomy. A small "
+        "number of response types exist, not all of them generalise, and the ones that "
+        "do are defined by what the electrodes do rather than by where they sit.",
+        "The paper proceeds in three steps. First we describe the response types that "
+        "clustering finds, and show why the number of clusters cannot be chosen by fit "
+        "alone. Second we test the types against every analysis choice we could vary, "
+        "and report where the agreement is and where it is not. Third we ask whether "
+        "the types have an anatomical basis in the language atlas, and find that they "
+        "do not. Each step is one figure.",
+    ],
+    # ---- RESULTS ---------------------------------------------------------------
+    "results.cohort": [
+        "We recorded from 27 patients implanted with depth electrodes for presurgical "
+        "evaluation. After gating for signal quality and cortical location, 1693 "
+        "electrodes remained (criteria in STAR Methods). No patient contributes more "
+        "than 9.2% of the cohort. Coverage was set by clinical need and is densest in "
+        "temporal and frontal cortex, bilaterally. Every result below refers to these "
+        "1693 electrodes.",
+        "The cohort is 27 patients and 1693 gated electrodes. No patient holds more "
+        "than a tenth of the data. Placement followed clinical need, so coverage is "
+        "dense in the temporal lobe and sparse elsewhere, and no single patient samples "
+        "the whole language network. Each electrode is described by its high-gamma "
+        "response in three conditions, time-warped so that the GO cue falls at the same "
+        "point in every trial.",
+    ],
+    "results.f1": [
+        "At K = 8, convex NMF separates the electrodes into eight types (Figure 1). The "
+        "largest, c1 (n = 436), rises after the GO cue in all three conditions and "
+        "returns to baseline before the next trial: a production response, indifferent "
+        "to the input. c3 (n = 199) adds a sharp onset at the start of the auditory "
+        "block, locked to the sound, and then the same rise at production; it is the "
+        "tightest type, with its mean clearing one standard deviation in 28% of time "
+        "bins, the most of any cluster. c4 (n = 228) is the inverse: suppression below "
+        "baseline during the stimulus in every condition. c5 (n = 162) responds only to "
+        "reading and sits mostly on the left (91 electrodes to 53). c2 (n = 185) "
+        "responds mainly to the picture. The remaining three, c0, c6 and c7, carry "
+        "little signal, and c7 is the one cluster that leans on a single patient.",
+        "Eight types emerge and they differ in two ways: when they respond and whether "
+        "they care which condition it is. Three are condition-general. c1 responds at "
+        "production, c3 at the auditory stimulus and again at production, and c4 is "
+        "suppressed during the stimulus. Two are condition-specific: c5 for reading, c2 "
+        "for pictures. Three carry little signal. Figure 1 shows each type as its mean "
+        "response with one standard deviation, the electrodes that carry it, and the "
+        "patients it draws on. The element that recurs is a peak after the GO cue. The "
+        "types differ in what happens before it.",
+    ],
+    "results.f1_k": [
+        "Held-out variance, estimated by bi-cross-validation, peaks at K = 11 for high "
+        "gamma and at 12 to 14 for the other feature sets (Figure 1A). We do not use "
+        "those values. At K = 11, two of eleven clusters draw more than half their "
+        "electrodes from one patient; at K = 14 on the five-band features, one cluster "
+        "is 75 of a single patient's 77 electrodes. Across feature sets, 15 to 45% of "
+        "the electrodes sit in one-patient clusters at the held-out peak (Figure 1D). "
+        "Held-out variance cannot see this. Splitting a cohort until each patient has "
+        "their own component fits held-out data perfectly well. We cut at K = 8, the "
+        "largest K at which no high-gamma cluster is dominated by one patient and at "
+        "most one is in any other feature set.",
+        "The number of clusters is a choice, and the standard criterion gives the wrong "
+        "answer. Bi-cross-validated fit rises to a peak near K = 11 and falls slowly "
+        "after (Figure 1A). But the share of electrodes in clusters that belong to one "
+        "patient starts rising at K = 9 and reaches 60% by K = 30 (Figure 1D). A "
+        "cluster that is one patient's electrode strip explains held-out variance as "
+        "well as a real one. It is not a response type. K = 8 is the last value at "
+        "which every high-gamma cluster draws on many patients. That is the K we "
+        "report, and we show the held-out peak beside it so the reader can see what was "
+        "traded.",
+    ],
+    "results.f2": [
+        "Figure 2 asks whether the eight types depend on how the electrodes were "
+        "described or on which algorithm was used. Between feature sets, the adjusted "
+        "Rand index ranges from 0.16 to 0.53, median 0.31. Between algorithms on the "
+        "same features it ranges from 0.16 to 0.45, median 0.18. Per electrode, all "
+        "four feature sets agree on the cluster for 21.7% of electrodes, against 0.4% "
+        "by chance; all four algorithms agree for 24.7%, against 1.1%. The ceiling "
+        "matters. Convex NMF on high gamma agrees with itself, on resamples of the same "
+        "data, at a Jaccard of only 0.55. K-means reaches 0.82. No cross-method "
+        "agreement can exceed what a method reproduces on its own.",
+        "The types are partly stable. Feature sets agree at a median ARI of 0.31 and "
+        "algorithms at 0.18, both far above chance and far below 1. Per cluster the "
+        "picture is uneven (Figure 2B, E). c3, the auditory type, is recovered by every "
+        "feature set and every algorithm. c0, c5 and c7 are missed by at least one. "
+        "Several low cells are splits rather than disagreements: the reference cluster "
+        "is two clusters in the other solution, which a one-to-one matching scores as a "
+        "failure and is not one. Agreement across K peaks at K = 29 for feature sets, "
+        "which is where most clusters are one patient. High agreement between two "
+        "methods is not evidence of a real type when both have found the same patient.",
+    ],
+    "results.f2_left": [
+        "The agreement figures also say what is not stable. For 4.3% of electrodes no "
+        "two feature sets agree on a cluster, and for 10.2% no two algorithms do. These "
+        "are not evenly spread. They concentrate in the three weak types, c0, c6 and "
+        "c7, and at the borders between the strong ones. Roughly one electrode in five "
+        "belongs to a type that every method finds. The rest belong to a type that some "
+        "methods find. The taxonomy claim holds for the first group and is provisional "
+        "for the second.",
+        "Not every electrode has a type. Figure 2C and F colour each electrode by how "
+        "many methods place it in the same cluster. About a fifth are placed "
+        "identically by all four. A tenth are placed differently by every algorithm. "
+        "The unstable electrodes are the weak responders, and the unstable clusters are "
+        "the ones with the least signal. This is the expected failure mode and the "
+        "honest one. The clustering is uncertain where the data are uncertain, not "
+        "where they are clear.",
+    ],
+    "results.f3": [
+        "Figure 3 compares the eight types with the LanA language atlas. 1396 of 1693 "
+        "electrodes fall within atlas coverage; the missing 297 are three whole "
+        "patients whose scans predate the atlas registration. Ranked by mean LanA "
+        "probability, c3 sits highest at 0.226 against a cohort mean of 0.143, and c2 "
+        "lowest at 0.101. Against a within-patient permutation, c3 is enriched "
+        "(q = 0.008). Against a null that preserves the spatial structure of each "
+        "electrode shaft, it is not (q = 0.45), and no cluster is. The correlation "
+        "between an electrode's loading on a cluster and its atlas probability is below "
+        "|rho| = 0.10 for every type. The clusters are not placed by the atlas.",
+        "The atlas comparison is negative, and the reason is instructive. Under a "
+        "liberal null that shuffles atlas values within each patient, one cluster, c3, "
+        "appears enriched in language cortex. Under a null that shifts labels along "
+        "each electrode shaft, keeping neighbouring contacts together, the enrichment "
+        "disappears: 0 of 8 clusters pass at q < 0.05. Neighbouring contacts on a shaft "
+        "have nearly identical atlas values, so the liberal null inflates every "
+        "comparison. The largest correlation between loading and atlas probability is "
+        "0.097. At 1396 electrodes a q-value is almost free; the effect size is what "
+        "counts, and it is near zero for every type. The response types are defined by "
+        "what the electrodes do, not by where the atlas says language should be.",
+    ],
+}
+
+
+# ---------------------------------------------------------------------------
 # rendering
 # ---------------------------------------------------------------------------
+def examples_html(fid):
+    """The two example answers above a box, each with a button that copies it in."""
+    ex = EXAMPLES.get(fid)
+    if not ex:
+        return ""
+    items = "".join(
+        f'<div class="pf-ex-item"><span class="pf-ex-tag">{tag}</span>'
+        f'<p>{esc(t)}</p>'
+        f'<button type="button" class="pf-ex-use">Use as draft</button></div>'
+        for tag, t in zip("AB", ex))
+    return ('<div class="pf-ex"><div class="pf-ex-h">Two ways to answer it'
+            '<span>drafts to react to, not text to keep &middot; numbers are from the '
+            'current run &middot; [REF] and [brackets] are yours</span></div>'
+            + items + '</div>')
+
+
 def field_html(b):
     fid = b["id"]
     lim = b["limit"]
@@ -458,7 +874,7 @@ def field_html(b):
                f'{limattr} rows="{b["rows"]}" placeholder="{ph}"></textarea>')
     return (f'<div class="pf-block" data-block="{esc(fid)}">'
             f'<div class="pf-head"><label for="pf-{esc(fid)}">{b["h"]}</label>{hint}</div>'
-            f'{prompt}{box}</div>')
+            f'{prompt}{examples_html(fid)}{box}</div>')
 
 
 def build():
@@ -470,10 +886,12 @@ def build():
          '  <section id="paper">',
          '    <div class="eyebrow">Manuscript</div>',
          '    <h2 class="title">Paper 2 &middot; Cell Reports</h2>',
-         '    <p class="lead">A writing scaffold, not a draft. One subtab per section '
-         'of a Cell Reports research article, each holding the questions that section '
-         'has to answer and an empty box to answer them in. Nothing here writes prose '
-         'for you.</p>',
+         '    <p class="lead">A writing scaffold. One subtab per section of a Cell '
+         'Reports research article, each holding the questions that section has to '
+         'answer and a box to answer them in. Under the Introduction and the three '
+         'figure sections, two example answers sit above each box &mdash; drafts to '
+         'react to, in the paper&rsquo;s voice, with the current run&rsquo;s numbers. '
+         'They are a starting point, not the text.</p>',
          '',
          '    <div class="pf-warn">',
          '      <b>Your writing is saved in this browser only.</b> It is not in git, not '
@@ -566,6 +984,24 @@ CSS = CSS_BEGIN + """
   .pf-in:focus{outline:none;border-color:var(--accent);background:var(--panel);
     box-shadow:0 0 0 3px rgba(31,119,180,.10)}
   .pf-in::placeholder{color:#aeb6be}
+  .pf-ex{margin:2px 0 10px;padding:9px 12px 4px;background:#f4f6f9;border:1px solid var(--line);
+    border-left:3px solid #b8336a;border-radius:0 8px 8px 0}
+  .pf-ex-h{font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+    color:#b8336a;margin:0 0 4px}
+  .pf-ex-h span{font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted);
+    margin-left:8px}
+  .pf-ex-item{display:grid;grid-template-columns:22px 1fr auto;gap:9px;align-items:start;
+    padding:7px 0;border-top:1px solid #e6eaef}
+  .pf-ex-h+.pf-ex-item{border-top:0}
+  .pf-ex-tag{font-size:11px;font-weight:700;color:#b8336a;background:var(--panel);
+    border:1px solid #e8c9d6;border-radius:5px;width:20px;height:20px;display:inline-flex;
+    align-items:center;justify-content:center;margin-top:2px}
+  .pf-ex-item p{margin:0;font-size:13.2px;line-height:1.58;color:#39434e;max-width:82ch}
+  .pf-ex-use{font:inherit;font-size:11.5px;color:var(--accent2);background:var(--panel);
+    border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer;
+    white-space:nowrap;margin-top:1px}
+  .pf-ex-use:hover{background:var(--chip)}
+  @media(max-width:700px){.pf-ex-item{grid-template-columns:22px 1fr}.pf-ex-use{grid-column:2}}
 """ + CSS_END
 
 JS_BEGIN = "// BEGIN paper2 js, generated by make_paper_tab.py"
@@ -640,6 +1076,21 @@ JS = JS_BEGIN + r"""
   tabs.forEach(b => b.onclick = () => openPane(b.dataset.pt));
   let last = ""; try { last = localStorage.getItem(KEY + "_tab") || ""; } catch(e){}
   openPane(tabs.some(t => t.dataset.pt === last) ? last : tabs[0].dataset.pt);
+
+  // "Use as draft": copy an example into its box - never over text already there
+  document.querySelectorAll(".pf-ex-use").forEach(btn => btn.onclick = () => {
+    const block = btn.closest(".pf-block");
+    const box = block && block.querySelector(".pf-in[data-pf]");
+    const p = btn.parentElement && btn.parentElement.querySelector("p");
+    if (!box || !p) return;
+    const t = p.textContent.trim();
+    if (box.value.trim() && box.value.trim() !== t){
+      if (!confirm("This box already has text.\n\nReplace it with the example?")) return;
+    }
+    box.value = t;
+    box.dispatchEvent(new Event("input", {bubbles: true}));
+    box.focus();
+  });
 
   // ---- export / import ----
   function markdown(){
@@ -747,10 +1198,19 @@ def main() -> int:
     dup = {i for i in ids if ids.count(i) > 1}
     if dup:
         raise SystemExit(f"duplicate field ids, which would share one box: {sorted(dup)}")
+    # an example keyed to a field that does not exist would silently render nowhere
+    orphan = sorted(set(EXAMPLES) - set(ids))
+    if orphan:
+        raise SystemExit(f"EXAMPLES keyed to fields that do not exist: {orphan}")
+    short = sorted(k for k, v in EXAMPLES.items() if len(v) != 2)
+    if short:
+        raise SystemExit(f"every field needs exactly two examples: {short}")
+    nex = sum(len(v) for v in EXAMPLES.values())
 
     if not a.insert:
         print(block)
-        print(f"\n<!-- {len(SECTIONS)} subtabs, {nfields} fields -->")
+        print(f"\n<!-- {len(SECTIONS)} subtabs, {nfields} fields, "
+              f"{nex} examples on {len(EXAMPLES)} of them -->")
         print("(pass --insert to splice it into the site)")
         return 0
 
@@ -769,7 +1229,8 @@ def main() -> int:
     site.write_text(s, encoding="utf-8")
     for m in (m1, m2, m3, m4):
         print("  " + m)
-    print(f"-> {site}  ({len(SECTIONS)} subtabs, {nfields} fields)")
+    print(f"-> {site}  ({len(SECTIONS)} subtabs, {nfields} fields, "
+          f"{nex} examples on {len(EXAMPLES)} of them)")
     return 0
 
 
