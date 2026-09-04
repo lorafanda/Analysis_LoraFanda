@@ -238,8 +238,9 @@ def render_set(side, xyz, hemi, rgba, radius):
     return P2._crop_alpha(np.asarray(img)), int(ok.sum())
 
 
-def panel_brains(axes, xyz, hemi, rgba, radius, key):
-    """Left, from above, right; the count drawn under each; the key on the first."""
+def panel_brains(axes, xyz, hemi, rgba, radius):
+    """Left, from above, right; the count drawn under each. The colour key goes on the
+    panel's label line, not on the image, where the frontal pole's spheres clip it."""
     _fresh_scenes()
     n = {}
     for ax, side, tag in zip(axes, ("L", "T", "R"), ("left", "from above", "right")):
@@ -250,8 +251,6 @@ def panel_brains(axes, xyz, hemi, rgba, radius, key):
             s_.set_visible(False)
         ax.text(0.02, 0.02, f"{tag}  {n[side]}", transform=ax.transAxes, ha="left",
                 va="bottom", fontsize=7.0, color=MUTED)
-    axes[0].text(0.02, 0.98, key, transform=axes[0].transAxes, ha="left", va="top",
-                 fontsize=7.4, color=MUTED, linespacing=1.4)
     return n
 
 
@@ -412,14 +411,14 @@ def figure_0(fset, k):
     panel_bars(axA, order, tot, kep, pcol, "electrodes: seen (hatched), kept (solid)")
     cB = GridSpecFromSubplotSpec(1, 3, gs[1], wspace=0.03)
     axB = [fig.add_subplot(cB[0, i]) for i in range(3)]
-    nB = panel_brains(axB, uxyz, uhemi, rgba_u, rad_u,
-                      "kept: the patient's colour\nrejected by the gate: grey")
+    nB = panel_brains(axB, uxyz, uhemi, rgba_u, rad_u)
+    keyB = "kept: the patient's colour   ·   rejected by the gate: grey"
     axC = fig.add_subplot(gs[2])
     panel_bars(axC, order, kep, lan, pcol, "kept electrodes: all (hatched), with LanA")
     cD = GridSpecFromSubplotSpec(1, 3, gs[3], wspace=0.03)
     axD = [fig.add_subplot(cD[0, i]) for i in range(3)]
-    nD = panel_brains(axD, d["xyz"], d["hemi"], rgba_c, rad_c,
-                      "kept, with a LanA value: orange\nwithout one: grey")
+    nD = panel_brains(axD, d["xyz"], d["hemi"], rgba_c, rad_c)
+    keyD = "kept, with a LanA value: orange   ·   without one: grey"
 
     ex = {}
     for tag, row, ok, cell in (("E", a, True, gs[4]), ("F", b, False, gs[5])):
@@ -439,21 +438,21 @@ def figure_0(fset, k):
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
-    for ax, label, verdict, col in (
-            (axA, "A  ·  electrodes the gate saw, and kept, per patient", "", INK),
-            (axB[0], "B  ·  the same electrodes on the brain", "", INK),
-            (axC, "C  ·  of the kept electrodes, those with a LanA value", "", INK),
-            (axD[0], "D  ·  the same on the brain", "", INK),
+    for ax, label, right, col, bold in (
+            (axA, "A  ·  electrodes the gate saw, and kept, per patient", "", INK, False),
+            (axB[0], "B  ·  the same electrodes on the brain", keyB, MUTED, False),
+            (axC, "C  ·  of the kept electrodes, those with a LanA value", "", INK, False),
+            (axD[0], "D  ·  the same on the brain", keyD, MUTED, False),
             (ex["E"][0], "E  ·  just through the gate, and why", ex["E"][2]["verdict"],
-             GREEN),
-            (ex["F"][0], "F  ·  just not, and why", ex["F"][2]["verdict"], RED)):
+             GREEN, True),
+            (ex["F"][0], "F  ·  just not, and why", ex["F"][2]["verdict"], RED, True)):
         top = inv.transform((0, ax.get_tightbbox(r).y1))[1]
         # at the grid's left margin for every panel: a brain axes shrinks to its
         # image's aspect, so its own left edge would put B and D's labels indented
         fig.text(0.055, top + 0.004, label, fontsize=10.4, color=INK, va="bottom")
-        if verdict:
-            fig.text(0.945, top + 0.004, verdict, fontsize=9.2, color=col, va="bottom",
-                     ha="right", fontweight="bold")
+        if right:
+            fig.text(0.945, top + 0.004, right, fontsize=9.2 if bold else 8.8, color=col,
+                     va="bottom", ha="right", fontweight="bold" if bold else "normal")
 
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / "FIG0_cohort.png"

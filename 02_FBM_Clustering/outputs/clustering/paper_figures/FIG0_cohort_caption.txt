@@ -111,7 +111,7 @@ PROVENANCE
   coordinates     outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
   atlas           lana_all/20260802_pbins
   built by        00_paper2_figure0_coverage.py --feature-set concat_hg --k 8
-  built on        2026-09-03 19:48
+  built on        2026-09-04 11:59
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
