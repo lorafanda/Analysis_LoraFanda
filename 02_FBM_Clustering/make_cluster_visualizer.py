@@ -310,6 +310,10 @@ async function loadCentroids(runId) {
     const meta = await (await fetch(CENTROIDS + runId + ".json", { cache: "no-store" })).json();
     const W = meta.w_file ? new Uint16Array(await (await fetch(CENTROIDS + meta.w_file)).arrayBuffer()) : null;
     CEN = { meta, W };
+    // reachable from the console, so the report's image path can be checked without
+    // running a whole export: cvDebug.centroidImage(8, 3, "concat_hg", 0.4, 640, 300)
+    window.cvDebug = { centroidImage: (...a) => centroidImage(...a), cenMean: (...a) => cenMean(...a),
+                       cenX: (...a) => cenX(...a), reps: KROW_REPS };
     // "shown on": the run's own representation, plus every other one the bundle proved
     // row-aligned with it. The choice is kept across runs.
     const own = meta.feature_set;
@@ -323,14 +327,18 @@ async function loadCentroids(runId) {
   } catch (e) { console.warn("no live centroid for", runId, e); }
   drawCentroid();
 }
-function cenGeom() {
-  const g = CEN_INDEX.feature_sets[CEN_REP];
-  return { n: g.n, nc: g.conds.length, nb: g.bands.length, nt: g.nt, conds: g.conds,
+// the representations a report's K rows show, in this order
+const KROW_REPS = ["concat_hg", "concat_bands5z", "concat_rawds"];
+function cenGeom(rep) {
+  const r = rep || CEN_REP, g = CEN_INDEX.feature_sets[r];
+  if (!g) return null;
+  return { rep: r, n: g.n, nc: g.conds.length, nb: g.bands.length, nt: g.nt, conds: g.conds,
            F: g.conds.length * g.bands.length * g.nt,
            unit: g.unit || "dB", unitLong: g.unit_long || "" };
 }
-// weights per electrode for cluster j at K: the loading (graded) or membership (hard)
-function cenWeights(k, j, useMin, paper) {
+// weights per electrode for cluster j at K: the loading (graded) or membership (hard).
+// `min` is the minimum loading applied - the slider's, or the copy a report froze.
+function cenWeights(k, j, min, paper) {
   const m = CEN.meta, n = m.n, w = new Float32Array(n), lab = m.labels[String(k)];
   let nMembers = 0, nPass = 0;
   if (paper || !CEN.W || m.w_offsets[String(k)] === undefined) {
@@ -338,23 +346,24 @@ function cenWeights(k, j, useMin, paper) {
     for (let i = 0; i < n; i++) if (lab[i] === j) { w[i] = 1; nMembers++; nPass++; }
     return { w, nMembers, nPass, weighted: false };
   }
-  const off = m.w_offsets[String(k)], min = useMin ? state.minLoad : 0;
+  const off = m.w_offsets[String(k)];
   for (let i = 0; i < n; i++) {
     const v = CEN.W[off + i * k + j] * m.w_scale;
     if (lab && lab[i] === j) nMembers++;
-    if (v > 0 && v >= min) { w[i] = v; nPass++; }
+    if (v > 0 && v >= (min || 0)) { w[i] = v; nPass++; }
   }
   return { w, nMembers, nPass, weighted: true };
 }
-// the weighted mean of the chosen representation over the electrodes cenWeights picks;
-// the weighted SD too, but only for the single-band line, where it is drawn
-function cenMean(k, j, useMin, paper) {
-  const g = cenGeom(), X = _cenX.get(CEN_REP);
+// the weighted mean of representation `rep` over the electrodes cenWeights picks; the
+// weighted SD too, but only for the single-band line, where it is drawn
+function cenMean(k, j, min, paper, rep) {
+  const g = cenGeom(rep); if (!g) return null;
+  const X = _cenX.get(g.rep);
   if (!X || X.length !== g.n * g.F || g.n !== CEN.meta.n) return null;
-  const r = cenWeights(k, j, useMin, paper); if (!r) return null;
+  const r = cenWeights(k, j, min, paper); if (!r) return null;
   const mean = new Float32Array(g.F), sd = g.nb === 1 ? new Float32Array(g.F) : null;
   let sw = 0; for (let i = 0; i < g.n; i++) sw += r.w[i];
-  if (sw <= 0) return Object.assign(r, { mean, sd, empty: true });
+  if (sw <= 0) return Object.assign(r, { mean, sd, empty: true, g });
   const s = CEN_INDEX.x_scale;
   for (let i = 0; i < g.n; i++) { const wi = r.w[i]; if (!wi) continue; const b = i * g.F; for (let f = 0; f < g.F; f++) mean[f] += wi * X[b + f]; }
   for (let f = 0; f < g.F; f++) mean[f] = mean[f] * s / sw;
@@ -362,17 +371,18 @@ function cenMean(k, j, useMin, paper) {
     for (let i = 0; i < g.n; i++) { const wi = r.w[i]; if (!wi) continue; const b = i * g.F; for (let f = 0; f < g.F; f++) { const d = X[b + f] * s - mean[f]; sd[f] += wi * d * d; } }
     for (let f = 0; f < g.F; f++) sd[f] = Math.sqrt(sd[f] / sw);
   }
-  return Object.assign(r, { mean, sd, empty: false });
+  return Object.assign(r, { mean, sd, empty: false, g });
 }
 // GLOBAL scales, the same for every cluster of a run at this K on this representation,
 // so clusters are comparable. Heatmap: symmetric colour limit at the 99th percentile
 // of |argmax mean| over all clusters (FIG 1's rule). Line: the range of every cluster's
 // mean +/- SD (FIG 1's rule), so the band never clips.
-function cenLimits(k) {
-  const key = CEN.meta.id + ":" + CEN_REP + ":" + k; if (_cenLim.has(key)) return _cenLim.get(key);
+function cenLimits(k, rep) {
+  const g = cenGeom(rep); if (!g) return { vlim: 1, ylo: -1, yhi: 1 };
+  const key = CEN.meta.id + ":" + g.rep + ":" + k; if (_cenLim.has(key)) return _cenLim.get(key);
   const vals = []; let lo = 0, hi = 0;
   if (CEN.meta.labels[String(k)]) for (let j = 0; j < k; j++) {
-    const st = cenMean(k, j, false, true); if (!st || st.empty) continue;
+    const st = cenMean(k, j, 0, true, g.rep); if (!st || st.empty) continue;
     for (let f = 0; f < st.mean.length; f++) {
       const v = st.mean[f], s = st.sd ? st.sd[f] : 0; vals.push(Math.abs(v));
       if (v - s < lo) lo = v - s; if (v + s > hi) hi = v + s;
@@ -389,17 +399,102 @@ function rdbu_r(t) {
   const x = t * (RDBU.length - 1), i = Math.min(RDBU.length - 2, Math.floor(x)), f = x - i, a = RDBU[i], b = RDBU[i + 1];
   return [a[0] + (b[0]-a[0])*f, a[1] + (b[1]-a[1])*f, a[2] + (b[2]-a[2])*f];
 }
+// DRAWS cluster j at K on representation `rep` into any 2-D context, at any size:
+// the panel calls it on its canvas, the report on offscreen canvases. `min` is the
+// minimum loading applied, `paper` selects FIG 1's argmax-member mean, `scale` sizes
+// text and line widths (1 at the panel's 380 px). Returns the stats drawn, or null.
+function renderCentroid(ctx, Wd, Hd, k, j, rep, min, paper, scale) {
+  const st = cenMean(k, j, min, paper, rep); if (!st) return null;
+  const g = st.g, lim = cenLimits(k, g.rep), nc = g.nc, nb = g.nb, nt = g.nt, ncol = nc * nt, col = clusterCSS(j);
+  const S = scale || 1, font = px => `${Math.round(px * S)}px sans-serif`;
+  // the single-band HFA line is drawn on white, as the figures are; the heatmaps stay
+  // on a dark ground, where RdBu's white zero reads as "nothing"
+  const line = nb === 1;
+  const T = line ? { bg: "#ffffff", fg: "#1b232c", muted: "#68727d", grid: "#c9ced4", sep: "#1b232c", cue: "#68727d" }
+                 : { bg: "#0f1014", fg: "#e8e8ec", muted: "#9aa3ad", grid: "#3a3f47", sep: "#e8e8ec", cue: "#c9ced4" };
+  ctx.setLineDash([]); ctx.fillStyle = T.bg; ctx.fillRect(0, 0, Wd, Hd);
+  // a right gutter carries the GLOBAL scale: a colour bar for the heatmap, a y axis for
+  // the line, both labelled with the unit - the same for every cluster at this K
+  const padL = (line ? 40 : 6) * S, padR = (line ? 8 : 46) * S, padT = 8 * S, padB = 16 * S, w = Wd - padL - padR, h = Hd - padT - padB;
+  const unit = g.unit;
+  ctx.font = font(9); ctx.fillStyle = T.muted;
+  if (st.empty) { ctx.font = font(11); ctx.textAlign = "left"; ctx.fillText("no electrode passes the minimum", padL + 8 * S, Hd / 2); return st; }
+  if (!line) {
+    const img = ctx.createImageData(ncol, nb);
+    for (let b = 0; b < nb; b++) for (let c = 0; c < nc; c++) for (let t = 0; t < nt; t++) {
+      const f = (c * nb + b) * nt + t, rgb = rdbu_r((st.mean[f] + lim.vlim) / (2 * lim.vlim));
+      const o = ((nb - 1 - b) * ncol + c * nt + t) * 4;           // origin lower, as imshow
+      img.data[o] = rgb[0]; img.data[o+1] = rgb[1]; img.data[o+2] = rgb[2]; img.data[o+3] = 255;
+    }
+    const off = document.createElement("canvas"); off.width = ncol; off.height = nb;
+    off.getContext("2d").putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = false; ctx.drawImage(off, padL, padT, w, h);
+    // colour bar: -vlim (blue) at the bottom to +vlim (red) at the top
+    const bx = Wd - padR + 8 * S, bw = 9 * S;
+    for (let y = 0; y < h; y++) { const rgb = rdbu_r(1 - y / (h - 1)); ctx.fillStyle = `rgb(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0})`; ctx.fillRect(bx, padT + y, bw, 1); }
+    ctx.strokeStyle = T.grid; ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, padT + 0.5, bw - 1, h - 1);
+    ctx.fillStyle = T.muted; ctx.textAlign = "left";
+    ctx.fillText(`+${lim.vlim.toFixed(1)}`, bx + bw + 3 * S, padT + 8 * S);
+    ctx.fillText("0", bx + bw + 3 * S, padT + h / 2 + 3 * S);
+    ctx.fillText(`−${lim.vlim.toFixed(1)}`, bx + bw + 3 * S, padT + h - 1);
+    ctx.save(); ctx.translate(Wd - 3 * S, padT + h / 2); ctx.rotate(Math.PI / 2); ctx.textAlign = "center"; ctx.fillText(unit, 0, 0); ctx.restore();
+  } else {
+    const lo = lim.ylo, hi = lim.yhi, sy = v => padT + h * (1 - (v - lo) / (hi - lo));
+    // y axis with the global range and the unit
+    ctx.strokeStyle = T.grid; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(padL - 0.5, padT); ctx.lineTo(padL - 0.5, padT + h); ctx.stroke();
+    ctx.fillStyle = T.muted; ctx.textAlign = "right";
+    for (const v of [hi, 0, lo]) { const y = sy(v); ctx.beginPath(); ctx.moveTo(padL - 4 * S, y + 0.5); ctx.lineTo(padL - 0.5, y + 0.5); ctx.stroke(); ctx.fillText(v.toFixed(1), padL - 6 * S, y + 3 * S); }
+    ctx.save(); ctx.translate(9 * S, padT + h / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = "center"; ctx.fillText(unit, 0, 0); ctx.restore();
+    ctx.strokeStyle = T.grid; ctx.beginPath(); ctx.moveTo(padL, sy(0) + 0.5); ctx.lineTo(padL + w, sy(0) + 0.5); ctx.stroke();
+    for (let c = 0; c < nc; c++) {
+      const x0 = padL + w * c / nc, xw = w / nc, xt = t => x0 + xw * t / (nt - 1);
+      if (st.sd) {                                                // +/-1 SD, weighted - the line only
+        ctx.fillStyle = col; ctx.globalAlpha = 0.22; ctx.beginPath();
+        for (let t = 0; t < nt; t++) { const f = c * nt + t; if (!t) ctx.moveTo(xt(t), sy(st.mean[f] + st.sd[f])); else ctx.lineTo(xt(t), sy(st.mean[f] + st.sd[f])); }
+        for (let t = nt - 1; t >= 0; t--) { const f = c * nt + t; ctx.lineTo(xt(t), sy(st.mean[f] - st.sd[f])); }
+        ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+      }
+      ctx.strokeStyle = col; ctx.lineWidth = 1.4 * S; ctx.beginPath();
+      for (let t = 0; t < nt; t++) { const f = c * nt + t; if (!t) ctx.moveTo(xt(t), sy(st.mean[f])); else ctx.lineTo(xt(t), sy(st.mean[f])); }
+      ctx.stroke();
+    }
+  }
+  for (let c = 0; c < nc; c++) {                                  // blocks and the GO cue at 50%
+    const x0 = padL + w * c / nc, xm = x0 + w / nc / 2;
+    if (c) { ctx.strokeStyle = T.sep; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0 + 0.5, padT); ctx.lineTo(x0 + 0.5, padT + h); ctx.stroke(); }
+    ctx.strokeStyle = T.cue; ctx.setLineDash([4 * S, 3 * S]); ctx.beginPath(); ctx.moveTo(xm + 0.5, padT); ctx.lineTo(xm + 0.5, padT + h); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = T.muted; ctx.font = font(10); ctx.textAlign = "center"; ctx.fillText(g.conds[c], xm, Hd - 4 * S);
+  }
+  return st;
+}
+// a centroid as an image the report can embed - {data, w, h}, the shape tryImage
+// returns, plus the counts the caption needs. Always the weighted definition.
+function centroidImage(k, j, rep, min, w, h) {
+  if (!CEN || !CEN_INDEX) return { data: "", w: 0, h: 0 };
+  const c = document.createElement("canvas"); c.width = w || 760; c.height = h || 340;
+  const st = renderCentroid(c.getContext("2d"), c.width, c.height, k, j, rep, min, false, c.width / 380);
+  if (!st) return { data: "", w: 0, h: 0 };
+  return { data: c.toDataURL("image/png"), w: c.width, h: c.height,
+           n: st.nPass, members: st.nMembers, weighted: st.weighted, rep };
+}
+// the K rows: one cell per representation in KROW_REPS, or the single published chip
+// when the live centroids were not available
+function centroidCells(three, fallback) {
+  if (three && three.some(x => x && x.data))
+    return three.map((im, q) => cellImg(im, REP_LABEL[KROW_REPS[q]] || KROW_REPS[q])).join("");
+  return cellImg(fallback, "centroid") + "<div></div><div></div>";
+}
 function drawCentroid() {
   const P = $("centroidPanel"); if (!P) return;
   const d = curDef();
   if (!CEN || !CEN_INDEX || !d || d.cluster === undefined) { P.classList.add("hidden"); return; }
   const m = CEN.meta, k = Number(KSEL), j = Number(d.cluster);
   if (!m.ks.includes(k)) { P.classList.add("hidden"); return; }
-  const paper = !!$("cpPaper").checked;
-  const st = cenMean(k, j, true, paper);
+  const paper = !!$("cpPaper").checked, cv = $("cpCanvas");
+  const st = renderCentroid(cv.getContext("2d"), cv.width, cv.height, k, j, CEN_REP, state.minLoad, paper, 1);
   if (!st) { P.classList.add("hidden"); return; }
   P.classList.remove("hidden");
-  const g = cenGeom(), own = m.feature_set, cross = CEN_REP !== own;
+  const g = st.g, own = m.feature_set, cross = CEN_REP !== own;
   const pos = (RUN && RUN.clusters) ? RUN.clusters.map(Number).indexOf(j) + 1 : 0;
   $("cpTitle").textContent = `#${pos || "?"} · Cluster ${j} · ` + (st.weighted
     ? `n = ${st.nPass} of ${st.nMembers} members ≥ ${state.minLoad.toFixed(2)}`
@@ -412,66 +507,6 @@ function drawCentroid() {
     + sdTxt + ` · scale global across clusters at K=${k}`
     + (cross ? ` · clusters from ${REP_LABEL[own]}, data from ${REP_LABEL[CEN_REP]}` : "");
   $("cpPaperRow").style.display = CEN.W ? "" : "none";
-  const cv = $("cpCanvas"), ctx = cv.getContext("2d"), Wd = cv.width, Hd = cv.height;
-  const lim = cenLimits(k), nc = g.nc, nb = g.nb, nt = g.nt, ncol = nc * nt, col = clusterCSS(j);
-  // the single-band HFA line is drawn on white, as the figures are; the heatmaps stay
-  // on the page's dark ground, where RdBu's white zero reads as "nothing"
-  const line = nb === 1;
-  const T = line ? { bg: "#ffffff", fg: "#1b232c", muted: "#68727d", grid: "#c9ced4", sep: "#1b232c", cue: "#68727d" }
-                 : { bg: "#0f1014", fg: "#e8e8ec", muted: "#9aa3ad", grid: "#3a3f47", sep: "#e8e8ec", cue: "#c9ced4" };
-  ctx.setLineDash([]); ctx.fillStyle = T.bg; ctx.fillRect(0, 0, Wd, Hd);
-  // a right gutter carries the GLOBAL scale: a colour bar for the heatmap, a y axis for
-  // the line, both labelled with the unit - the same for every cluster at this K
-  const padL = line ? 40 : 6, padR = line ? 8 : 46, padT = 8, padB = 16, w = Wd - padL - padR, h = Hd - padT - padB;
-  const unit = g.unit;
-  ctx.font = "9px sans-serif"; ctx.fillStyle = T.muted;
-  if (st.empty) { ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.fillText("no electrode passes the minimum", padL + 8, Hd / 2); return; }
-  if (!line) {
-    const img = ctx.createImageData(ncol, nb);
-    for (let b = 0; b < nb; b++) for (let c = 0; c < nc; c++) for (let t = 0; t < nt; t++) {
-      const f = (c * nb + b) * nt + t, rgb = rdbu_r((st.mean[f] + lim.vlim) / (2 * lim.vlim));
-      const o = ((nb - 1 - b) * ncol + c * nt + t) * 4;           // origin lower, as imshow
-      img.data[o] = rgb[0]; img.data[o+1] = rgb[1]; img.data[o+2] = rgb[2]; img.data[o+3] = 255;
-    }
-    const off = document.createElement("canvas"); off.width = ncol; off.height = nb;
-    off.getContext("2d").putImageData(img, 0, 0);
-    ctx.imageSmoothingEnabled = false; ctx.drawImage(off, padL, padT, w, h);
-    // colour bar: -vlim (blue) at the bottom to +vlim (red) at the top
-    const bx = Wd - padR + 8, bw = 9;
-    for (let y = 0; y < h; y++) { const rgb = rdbu_r(1 - y / (h - 1)); ctx.fillStyle = `rgb(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0})`; ctx.fillRect(bx, padT + y, bw, 1); }
-    ctx.strokeStyle = T.grid; ctx.lineWidth = 1; ctx.strokeRect(bx + 0.5, padT + 0.5, bw - 1, h - 1);
-    ctx.fillStyle = T.muted; ctx.textAlign = "left";
-    ctx.fillText(`+${lim.vlim.toFixed(1)}`, bx + bw + 3, padT + 8);
-    ctx.fillText("0", bx + bw + 3, padT + h / 2 + 3);
-    ctx.fillText(`−${lim.vlim.toFixed(1)}`, bx + bw + 3, padT + h - 1);
-    ctx.save(); ctx.translate(Wd - 3, padT + h / 2); ctx.rotate(Math.PI / 2); ctx.textAlign = "center"; ctx.fillText(unit, 0, 0); ctx.restore();
-  } else {
-    const lo = lim.ylo, hi = lim.yhi, sy = v => padT + h * (1 - (v - lo) / (hi - lo));
-    // y axis with the global range and the unit
-    ctx.strokeStyle = T.grid; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(padL - 0.5, padT); ctx.lineTo(padL - 0.5, padT + h); ctx.stroke();
-    ctx.fillStyle = T.muted; ctx.textAlign = "right";
-    for (const v of [hi, 0, lo]) { const y = sy(v); ctx.beginPath(); ctx.moveTo(padL - 4, y + 0.5); ctx.lineTo(padL - 0.5, y + 0.5); ctx.stroke(); ctx.fillText(v.toFixed(1), padL - 6, y + 3); }
-    ctx.save(); ctx.translate(9, padT + h / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = "center"; ctx.fillText(unit, 0, 0); ctx.restore();
-    ctx.strokeStyle = T.grid; ctx.beginPath(); ctx.moveTo(padL, sy(0) + 0.5); ctx.lineTo(padL + w, sy(0) + 0.5); ctx.stroke();
-    for (let c = 0; c < nc; c++) {
-      const x0 = padL + w * c / nc, xw = w / nc, xt = t => x0 + xw * t / (nt - 1);
-      if (st.sd) {                                                // +/-1 SD, weighted - the line only
-        ctx.fillStyle = col; ctx.globalAlpha = 0.22; ctx.beginPath();
-        for (let t = 0; t < nt; t++) { const f = c * nt + t; if (!t) ctx.moveTo(xt(t), sy(st.mean[f] + st.sd[f])); else ctx.lineTo(xt(t), sy(st.mean[f] + st.sd[f])); }
-        for (let t = nt - 1; t >= 0; t--) { const f = c * nt + t; ctx.lineTo(xt(t), sy(st.mean[f] - st.sd[f])); }
-        ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
-      }
-      ctx.strokeStyle = col; ctx.lineWidth = 1.4; ctx.beginPath();
-      for (let t = 0; t < nt; t++) { const f = c * nt + t; if (!t) ctx.moveTo(xt(t), sy(st.mean[f])); else ctx.lineTo(xt(t), sy(st.mean[f])); }
-      ctx.stroke();
-    }
-  }
-  for (let c = 0; c < nc; c++) {                                  // blocks and the GO cue at 50%
-    const x0 = padL + w * c / nc, xm = x0 + w / nc / 2;
-    if (c) { ctx.strokeStyle = T.sep; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0 + 0.5, padT); ctx.lineTo(x0 + 0.5, padT + h); ctx.stroke(); }
-    ctx.strokeStyle = T.cue; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(xm + 0.5, padT); ctx.lineTo(xm + 0.5, padT + h); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = T.muted; ctx.font = "10px sans-serif"; ctx.textAlign = "center"; ctx.fillText(g.conds[c], xm, Hd - 4);
-  }
 }
 // NOTHING RUNS HERE AT LOAD: this block sits above the line that defines $, and a call
 // at module evaluation threw before boot() could start. The controls are wired in wireUI.
@@ -507,6 +542,89 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         "  if (keepPos >= 0 && RUN.clusters && RUN.clusters[keepPos] !== undefined)\n"
         "    state.map = \"c\" + RUN.clusters[keepPos];       // same block position, new run\n"
         "  location.hash = r.id;\n", "position: restore")
+
+    # ---- the report uses the LIVE centroids, at the minimum loading frozen at save ----
+    # Every centroid in the saved report is the loading-weighted mean over electrodes at
+    # or above the min-loading slider as it stood when Save was pressed (HFA with its
+    # +/-1 SD band), drawn by the same renderer as the panel. The per-cluster card keeps
+    # ONE centroid - the run's own representation. The K rows carry three: HFA, 5 bands
+    # z-scored, 15 bands (KROW_REPS). The published PNGs are used only if the bundle is
+    # not loaded, so a report can never come out empty.
+    sub("    surf: state.surf, map: state.map, glass: state.glass,\n  };",
+        "    surf: state.surf, map: state.map, glass: state.glass,\n"
+        "    minLoad: state.minLoad,             // every centroid below is computed at this\n"
+        "  };", "frozen minLoad")
+    sub('    <span class="chip">gamma <b>${frozen.gamma.toFixed(2)}</b></span>',
+        '    <span class="chip">gamma <b>${frozen.gamma.toFixed(2)}</b></span>\n'
+        '    <span class="chip">min loading <b>${frozen.minLoad.toFixed(2)}</b></span>',
+        "header chip: min loading")
+    sub("  radius ${frozen.radius} mm · gate n ≥ ${frozen.minN} · ${esc(frozen.surf)} surface ·",
+        "  radius ${frozen.radius} mm · gate n ≥ ${frozen.minN} · min loading "
+        "${frozen.minLoad.toFixed(2)} (centroids: loading-weighted mean over electrodes at or "
+        "above it; HFA with ±1 SD) · ${esc(frozen.surf)} surface ·", "footer: min loading")
+    sub(r"""      const centroid = kDir
+        ? await tryImage(`${runBase}cluster_centroids/${kDir}cluster_${cc}.png`, FIGW, false)
+        : (fig.centroid ? await tryImage(runBase + fig.centroid, FIGW, false)
+                        : { data: "", w: 0, h: 0 });""",
+        r"""      // THE LIVE CENTROID at the minimum loading frozen when Save was pressed, on the
+      // run's own representation; the published PNG only if the bundle is not loaded
+      const live = (CEN && CEN_INDEX)
+        ? centroidImage(KSEL, Number(d.cluster), CEN.meta.feature_set, frozen.minLoad, FIGW, Math.round(FIGW * 0.45))
+        : null;
+      const centroid = (live && live.data) ? live : (kDir
+        ? await tryImage(`${runBase}cluster_centroids/${kDir}cluster_${cc}.png`, FIGW, false)
+        : (fig.centroid ? await tryImage(runBase + fig.centroid, FIGW, false)
+                        : { data: "", w: 0, h: 0 }));
+      // the same cluster on the three representations the K rows show
+      const centroids3 = (CEN && CEN_INDEX)
+        ? KROW_REPS.map(rep => centroidImage(KSEL, Number(d.cluster), rep, frozen.minLoad, 640, 300))
+        : null;""", "card centroid: live")
+    sub("      blocks.push({ d, st, shots, centroid, raster, spinFrames,",
+        "      blocks.push({ d, st, shots, centroid, centroids3, raster, spinFrames,",
+        "card block carries centroids3")
+    sub(r"""      <div>${img(centroid, "cluster centroid — the mean response this cluster is defined by", "wide lite")}</div>""",
+        r"""      <div>${img(centroid, centroid.members !== undefined
+        ? `cluster centroid — loading-weighted mean of ${centroid.n} electrodes with loading ≥ ${frozen.minLoad.toFixed(2)} (of ${centroid.members} members), on ${REP_LABEL[centroid.rep] || centroid.rep}${centroid.rep === "concat_hg" ? ", band = ±1 SD" : ""}`
+        : "cluster centroid — the mean response this cluster is defined by", "wide lite")}</div>""",
+        "card caption")
+    sub(r"""      for (const k of KP.ks) {
+        btn.textContent = `Report: K panel ${k}…`;""",
+        r"""      if (CEN && CEN_INDEX) {                     // the three matrices the K rows draw on
+        btn.textContent = "Report: centroid data…";
+        try { await Promise.all(KROW_REPS.map(cenX)); } catch (e) { console.warn("centroid matrices", e); }
+      }
+      for (const k of KP.ks) {
+        btn.textContent = `Report: K panel ${k}…`;""", "K rows: preload the matrices")
+    sub(r"""        const chips = await Promise.all(ids.map(c =>
+          tryImage(`${runBase}cluster_centroids/k_${k}/`
+                   + `cluster_${String(c).padStart(2, "0")}.png`, 320, false)));""",
+        r"""        // LIVE centroids on the three representations, at the frozen minimum loading;
+        // the published chip only if the bundle is not loaded
+        const chips = (CEN && CEN_INDEX)
+          ? ids.map(c => KROW_REPS.map(rep => centroidImage(k, Number(c), rep, frozen.minLoad, 640, 300)))
+          : await Promise.all(ids.map(c =>
+              tryImage(`${runBase}cluster_centroids/k_${k}/`
+                       + `cluster_${String(c).padStart(2, "0")}.png`, 320, false)));""",
+        "K rows: chips")
+    sub("    const cardsRows = blocks.map(({ d, shots, glassShots, centroid }, i) => {",
+        "    const cardsRows = blocks.map(({ d, shots, glassShots, centroid, centroids3 }, i) => {",
+        "current-K row: destructure")
+    sub(r"""        ${cellImg(centroid, "centroid")}
+        ${cells}""",
+        r"""        ${centroidCells(centroids3, centroid)}
+        ${cells}""", "current-K row: cells")
+    sub(r"""            ${cellImg(B.chips[i], "centroid")}""",
+        r"""            ${centroidCells(Array.isArray(B.chips[i]) ? B.chips[i] : null, B.chips[i])}""",
+        "other-K row: cells")
+    sub(r"""        <div class="cardhead"><div></div><div>centroid</div>""",
+        r"""        <div class="cardhead"><div></div>${KROW_REPS.map(r => `<div>${REP_LABEL[r] || r}</div>`).join("")}""",
+        "K rows: header")
+    sub(".cardhead,.cardrow,.cardaxis{display:grid;grid-template-columns:30px .95fr 1.6fr 1.6fr 1.05fr 1.15fr;gap:9px;align-items:center}",
+        ".cardhead,.cardrow,.cardaxis{display:grid;grid-template-columns:30px 1fr 1fr 1fr 1.25fr 1.25fr .85fr 1.05fr;gap:8px;align-items:center}",
+        "K rows: eight columns")
+    sub(r"""        <div class="cardaxis"><div></div><div></div><div></div><div></div><div></div>""",
+        r"""        <div class="cardaxis"><div></div><div></div><div></div><div></div><div></div><div></div><div></div>""",
+        "K rows: axis row")
 
     # ---- coverage: hidden in the dropdown, gone from the report ----------------------
     sub('    id: "coverage", group: "Sampling", label: "Coverage — P(patient sampled here)",',
