@@ -314,9 +314,54 @@ def draw_cube(ax, A, conds, nf):
 
 
 # ---- panels: the paper -----------------------------------------------------------
-def panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys):
+# FIG 0 reads the third condition as "sentences"; the names are written over the first
+# exemplar only, so the three strips below it read as the same strip without saying so
+# three more times
+COND0 = {"audio": "audio", "picture": "picture", "reading": "sentences"}
+STRIP_H, STRIP_H_LABELLED = 0.30, 0.56      # strip height vs the cube: plain, worded
+
+
+def strip_0(ax, conds, labelled, ratio):
+    """FIG 0's trial strip: P2.trial_strip's boxes and icons, with the words handled
+    differently. Only the FIRST exemplar carries them - the condition name over each
+    block and "stimulus" / "response" over that block's two boxes.
+
+    `ratio` is this axis's height relative to the cube under it. The boxes are placed
+    in cube units and divided by it, so a worded strip (a taller axis) draws its boxes
+    at exactly the size the plain strips draw theirs, and the four strips line up.
+    """
+    from matplotlib.patches import Rectangle
+    ncond = len(conds)
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1)
+    ax.set_xticks([]); ax.set_yticks([])
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+    # P2.trial_strip's box band (0.10 to 0.88 of a STRIP_H-tall axis), in cube units
+    y0, yh = 0.10 * STRIP_H / ratio, 0.78 * STRIP_H / ratio
+    half = 1.0 / (2 * ncond)
+    for b, cond in enumerate(conds):
+        x0 = b / ncond
+        for k_, (bx0, bx1) in enumerate(((x0, x0 + half), (x0 + half, x0 + 2 * half))):
+            ax.add_patch(Rectangle((bx0 + 0.004, y0), (bx1 - bx0) - 0.008, yh,
+                                   fc="white", ec=GREY, lw=0.9, zorder=1))
+            a = P2._icon_axes(ax, bx0, bx1, y0=y0 + 0.03 / 0.78 * yh, h=0.70 / 0.78 * yh)
+            if k_ == 0:
+                P2.STIM_ICON[cond](a)
+            else:
+                P2._glyph_path(a, "?", INK, frac=0.66)
+        if labelled:
+            top = y0 + yh
+            for k_, word in enumerate(("stimulus", "response")):
+                ax.text(x0 + half * (k_ + 0.5), top + 0.02 / ratio, word, ha="center",
+                        va="bottom", fontsize=6.6, color=MUTED, transform=ax.transAxes)
+            ax.text(x0 + half, top + 0.11 / ratio, COND0[cond], ha="center", va="bottom",
+                    fontsize=8.4, color=INK, transform=ax.transAxes)
+
+
+def panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys, first):
     """One electrode: a header line, where it sits on its own hemisphere, and its
-    three conditions concatenated under the trial strip."""
+    three conditions concatenated under the trial strip. `first` says whether this
+    is the exemplar whose strip carries the words."""
     kind, patient, electrode, region, reading, col = ex
     conds = gp["conds"]
     A, arrs, rows, nf, nt = cube_of(t, patient, electrode, conds)
@@ -330,11 +375,9 @@ def panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys):
     img, _ = render_set(side, xyz, hemi, rgba_of(col)[None, :],
                         np.array([P2.BG_RADIUS * 3.2]))
     _show(axB, img)
-    axB.text(0.02, 0.02, f"{'left' if side == 'L' else 'right'} hemisphere",
+    axB.text(0.02, 0.02, "LH" if side == "L" else "RH",
              transform=axB.transAxes, ha="left", va="bottom", fontsize=6.8, color=MUTED)
-    # the header
-    # the strip below draws its condition labels ABOVE itself, into the bottom of this
-    # row, so the header's own text stays in the upper 60%
+    # the header; its text stays in the upper 60% so the strip has air above it
     axH.axis("off")
     axH.text(0, 0.86, kind.upper(), transform=axH.transAxes, ha="left", va="center",
              fontsize=10.2, color=col, fontweight="bold")
@@ -343,7 +386,7 @@ def panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys):
     axH.text(0.17, 0.56, reading, transform=axH.transAxes, ha="left", va="center",
              fontsize=8.2, color=MUTED, style="italic")
     # the strip and the cube
-    P2.trial_strip(axS, dict(conds=conds))
+    strip_0(axS, conds, first, STRIP_H_LABELLED if first else STRIP_H)
     draw_cube(axC, A, conds, nf)
     for s_ in axC.spines.values():
         s_.set_color(col); s_.set_linewidth(1.4)
@@ -368,10 +411,16 @@ def figure_0_paper(t, u, d, gp):
     rgba_u = np.where(kept[:, None], rgba_of(GREEN), rgba_of(P2.BG, 150)).astype(np.uint8)
     rad_u = np.where(kept, P2.BG_RADIUS * 1.25, P2.BG_RADIUS * 0.95)
 
-    ncell = max(len(exs), 1)
-    nrow_ex = int(np.ceil(ncell / 2))
-    fig = plt.figure(figsize=(17.6, 5.6 + 3.0 * nrow_ex), dpi=190)
-    gs = GridSpec(2, 1, figure=fig, height_ratios=[1.0 * nrow_ex, 1.15], hspace=0.30,
+    # ONE COLUMN, top to bottom. Every exemplar row is header + strip + cube; the first
+    # row's strip is taller because it carries the words, and the row heights follow so
+    # the four cubes come out the same height. The outer ratio for A includes the gaps
+    # between rows, which GridSpec takes out of A's share.
+    n_ex = max(len(exs), 1)
+    rows_h = [0.46 + (STRIP_H_LABELLED if i == 0 else STRIP_H) + 1.0 for i in range(n_ex)]
+    gapA = 0.22
+    A_units = sum(rows_h) + gapA * (n_ex - 1) * (sum(rows_h) / n_ex)
+    fig = plt.figure(figsize=(12.3, 5.4 + 2.95 * n_ex), dpi=190)
+    gs = GridSpec(2, 1, figure=fig, height_ratios=[A_units, 3.0], hspace=0.08,
                   left=0.055, right=0.945, top=0.905, bottom=0.04)
     fig.suptitle(f"FIG 0   ·   the task and the cohort   ·   the gate saw {len(u)} "
                  f"electrodes in {d['n_patients']} patients and kept {int(kept.sum())}",
@@ -379,20 +428,21 @@ def figure_0_paper(t, u, d, gp):
     fig.text(0.055, 0.950,
              "Three naming conditions - auditory, picture, written sentence - each with a "
              "stimulus and then a response cue (dashed), on the warped time axis every "
-             "later figure uses.  Four electrodes show what the recordings look like; the "
+             "later figure uses.\nFour electrodes show what the recordings look like; the "
              "brains below show every electrode the responsiveness gate saw.",
              fontsize=9.8, color=MUTED, va="top")
 
-    gA = GridSpecFromSubplotSpec(nrow_ex, 2, gs[0], hspace=0.40, wspace=0.10)
+    gA = GridSpecFromSubplotSpec(n_ex, 1, gs[0], hspace=gapA, height_ratios=rows_h)
     rows_out, firsts = [], []
     for i, ex in enumerate(exs):
-        cell = GridSpecFromSubplotSpec(3, 2, gA[i // 2, i % 2],
-                                       height_ratios=[0.46, 0.30, 1.0],
+        cell = GridSpecFromSubplotSpec(3, 2, gA[i, 0],
+                                       height_ratios=[0.46, STRIP_H_LABELLED if i == 0
+                                                      else STRIP_H, 1.0],
                                        width_ratios=[1.0, 2.5], hspace=0.06, wspace=0.16)
         axH = fig.add_subplot(cell[0, :])
         axB = fig.add_subplot(cell[1:, 0])
         axS, axC = fig.add_subplot(cell[1, 1]), fig.add_subplot(cell[2, 1])
-        rows_out.append(panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys))
+        rows_out.append(panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys, i == 0))
         firsts.append((axH, axC))
         print(f"    {ex[0]:<12} {ex[1]} {ex[2]}  {'in cohort' if rows_out[-1]['in_cohort'] else 'NOT in cohort'}")
 
@@ -663,8 +713,11 @@ def caption_paper(path, d, gp, u, ex_df, nB, n_noxyz):
     A("-" * 100)
     A("Not selected by any statistic and not a claim about the cohort: they show what the")
     A("recordings look like and what the three conditions do to a contact of each kind.")
-    A("Each is drawn alone on the lateral view of its own hemisphere, and its three")
-    A("conditions concatenated on the axis above, 0-400 Hz, on the project's +-7 dB scale.")
+    A("Each is drawn alone on the lateral view of its own hemisphere (LH / RH), and its")
+    A("three conditions concatenated on the axis above, 0-400 Hz, on the project's +-7 dB")
+    A("scale. Top to bottom in one column. The condition names - audio, picture,")
+    A("sentences - and the stimulus / response words over each pair of screens are")
+    A("written once, over the first electrode; the strips below it are the same strip.")
     A("")
     for r_ in ex_df.itertuples():
         A(f"  {r_.kind.upper():<12} {r_.patient} {r_.electrode}  {r_.region}  "
