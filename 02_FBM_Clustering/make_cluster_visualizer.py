@@ -271,7 +271,7 @@ def build_html(order):
         "  /* bottom-right, to the left of the colour bar (right:16px, 70px wide), above the hint */\n"
         "  #centroidPanel { bottom:28px; right:100px; left:auto; width:408px; font-size:11.5px; line-height:1.45; }\n"
         "  #centroidPanel #cpTitle { font-size:12px; font-weight:600; color:var(--fg); margin:0 0 6px; }\n"
-        "  #centroidPanel canvas { display:block; width:380px; height:170px; border-radius:6px; background:#0f1014; }\n"
+        "  #centroidPanel canvas { display:block; width:380px; height:170px; border-radius:6px; background:#ffffff; }\n"
         "  #centroidPanel #cpNote { color:var(--muted); margin:6px 0 0; }\n"
         "  #centroidPanel label { display:block; color:var(--muted); margin:6px 0 0; cursor:pointer; }\n"
         "  #centroidPanel select { width:auto; display:inline-block; padding:2px 6px; font-size:11px; margin:0 4px; }\n"
@@ -407,11 +407,11 @@ function renderCentroid(ctx, Wd, Hd, k, j, rep, min, paper, scale) {
   const st = cenMean(k, j, min, paper, rep); if (!st) return null;
   const g = st.g, lim = cenLimits(k, g.rep), nc = g.nc, nb = g.nb, nt = g.nt, ncol = nc * nt, col = clusterCSS(j);
   const S = scale || 1, font = px => `${Math.round(px * S)}px sans-serif`;
-  // the single-band HFA line is drawn on white, as the figures are; the heatmaps stay
-  // on a dark ground, where RdBu's white zero reads as "nothing"
+  // everything on white, as the figures are: a dark ground around a heatmap read as a
+  // black frame on the report's white page. The heatmap gets a thin grey frame instead,
+  // so its edge still shows where RdBu's white zero meets the page.
   const line = nb === 1;
-  const T = line ? { bg: "#ffffff", fg: "#1b232c", muted: "#68727d", grid: "#c9ced4", sep: "#1b232c", cue: "#68727d" }
-                 : { bg: "#0f1014", fg: "#e8e8ec", muted: "#9aa3ad", grid: "#3a3f47", sep: "#e8e8ec", cue: "#c9ced4" };
+  const T = { bg: "#ffffff", fg: "#1b232c", muted: "#68727d", grid: "#c9ced4", sep: "#1b232c", cue: "#68727d" };
   ctx.setLineDash([]); ctx.fillStyle = T.bg; ctx.fillRect(0, 0, Wd, Hd);
   // a right gutter carries the GLOBAL scale: a colour bar for the heatmap, a y axis for
   // the line, both labelled with the unit - the same for every cluster at this K
@@ -429,6 +429,7 @@ function renderCentroid(ctx, Wd, Hd, k, j, rep, min, paper, scale) {
     const off = document.createElement("canvas"); off.width = ncol; off.height = nb;
     off.getContext("2d").putImageData(img, 0, 0);
     ctx.imageSmoothingEnabled = false; ctx.drawImage(off, padL, padT, w, h);
+    ctx.strokeStyle = T.grid; ctx.lineWidth = 1; ctx.strokeRect(padL + 0.5, padT + 0.5, w - 1, h - 1);   // the plot's edge, on white
     // colour bar: -vlim (blue) at the bottom to +vlim (red) at the top
     const bx = Wd - padR + 8 * S, bw = 9 * S;
     for (let y = 0; y < h; y++) { const rgb = rdbu_r(1 - y / (h - 1)); ctx.fillStyle = `rgb(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0})`; ctx.fillRect(bx, padT + y, bw, 1); }
@@ -585,8 +586,23 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     sub(r"""      <div>${img(centroid, "cluster centroid — the mean response this cluster is defined by", "wide lite")}</div>""",
         r"""      <div>${img(centroid, centroid.members !== undefined
         ? `cluster centroid — loading-weighted mean of ${centroid.n} electrodes with loading ≥ ${frozen.minLoad.toFixed(2)} (of ${centroid.members} members), on ${REP_LABEL[centroid.rep] || centroid.rep}${centroid.rep === "concat_hg" ? ", band = ±1 SD" : ""}`
-        : "cluster centroid — the mean response this cluster is defined by", "wide lite")}</div>""",
+        : "cluster centroid — the mean response this cluster is defined by", "wide lite")}${
+        (centroids3 || []).filter(im => im && im.data && im.rep !== centroid.rep).length
+          ? `<div class="cluesub">${(centroids3 || []).filter(im => im && im.data && im.rep !== centroid.rep).slice(0, 2)
+              .map(im => img(im, `the same cluster on ${REP_LABEL[im.rep] || im.rep}`, "lite")).join("")}</div>`
+          : ""}</div>""",
         "card caption")
+    sub("    const clusterHTML = blocks.map(({ d, st, shots, glassShots, centroid,\n"
+        "                                 raster, spinFrames, glassSpin, climMax }, i) => {",
+        "    const clusterHTML = blocks.map(({ d, st, shots, glassShots, centroid, centroids3,\n"
+        "                                 raster, spinFrames, glassSpin, climMax }, i) => {",
+        "card: destructure centroids3")
+    # the two other representations, small, right under the main centroid
+    sub(".cluepair{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-top:16px}",
+        ".cluepair{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-top:16px}\n"
+        ".cluesub{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}\n"
+        ".cluesub figure{margin:0} .cluesub figcaption{font-size:10.5px}",
+        "card: sub-centroid css")
     sub(r"""      for (const k of KP.ks) {
         btn.textContent = `Report: K panel ${k}…`;""",
         r"""      if (CEN && CEN_INDEX) {                     // the three matrices the K rows draw on
