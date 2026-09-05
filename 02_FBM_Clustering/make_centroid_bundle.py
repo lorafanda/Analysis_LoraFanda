@@ -179,8 +179,24 @@ def main() -> int:
         print(f"  {rid:<46} {j['kind']:<6} K {have[0]}-{have[-1]}"
               + (f"  w.bin {off*2/1e6:.1f} MB" if graded else ""))
 
+    # ---- ONE ELECTRODE ORDER ACROSS FEATURE SETS, proven, so a clustering found on one
+    # representation can be averaged over another's matrix. The page offers the "shown
+    # on" selector only if this says so.
+    def norm(s):
+        return str(s).replace("_", "").replace("-", "").upper()
+    row_keys = {}
+    for method, fset, rid, stamp in runs:
+        lab = pd.read_csv(CLUST / method / fset / "runs" / stamp / "labels.csv")
+        row_keys[rid] = [f"{p}|{norm(e)}" for p, e in zip(lab["patient_id"], lab["electrode"])]
+    ref_id = runs[0][2]
+    aligned = all(v == row_keys[ref_id] for v in row_keys.values())
+    key_sha = hashlib.sha256("\n".join(row_keys[ref_id]).encode()).hexdigest()[:12]
+    print(f"  electrode order identical across all {len(row_keys)} runs: {aligned}  "
+          f"(key sha {key_sha})")
+
     verified_write(OUT / "index.json", json.dumps(dict(
         generated=dt.date.today().isoformat(), x_scale=X_SCALE, w_scale=W_SCALE,
+        rows_aligned=bool(aligned), row_key_sha=key_sha,
         feature_sets={f: {k: v for k, v in m.items() if k != "sha"} for f, m in xhash.items()},
         runs=index)).encode("utf-8"))
     total = sum(p.stat().st_size for p in OUT.iterdir())
