@@ -1389,6 +1389,15 @@ def carousels():
         fig3.append(_slide(f"FIG 3  ·  LanA  ·  {nm}  ·  K = 8",
                            f"FIG3_lana_{fs}_K8.png", r,
                            f"00_paper2_figure3_lana.py --feature-set {fs} --k 8", tr))
+    # the two hard partitions at the same K, after the cNMF K = 8 set and before the
+    # held-out peaks, so everything cut at 8 sits together
+    for method, algo in (("kmeans", "k-means"), ("hierarchical", "Ward")):
+        for fs in FS_ORDER:
+            t, nm = FIG1_TAG[fs], FS_NAME[fs]
+            fig1.append(_slide(f"FIG 1{t}  ·  {nm}  ·  {algo}  ·  K = 8",
+                               f"FIG1{t}_{fs}_{method}_K8.png", algo,
+                               f"00_Paper2_Figures.py --feature-set {fs} --k 8 "
+                               f"--method {method}", tr))
     for fs in FS_ORDER:
         t, nm, pk = FIG1_TAG[fs], FS_NAME[fs], PEAK_K[fs]
         fig1.append(_slide(f"FIG 1{t}  ·  {nm}  ·  held-out peak K = {pk}",

@@ -72,6 +72,14 @@ COORDS = (ROOT / "outputs" / "250_recon" / "fsaverage" / "coords"
 MESHES = ROOT / "outputs" / "250_recon" / "fsaverage" / "meshes"
 HELDOUT = CLUST / "bsf_comparison" / "heldout_variance_ALL.csv"
 PEAKS = CLUST / "bsf_comparison" / "heldout_peaks_cnmf.csv"
+# THE THREE ALGORITHMS FIG 1 CAN BE DRAWN FOR. cnmf is graded: every electrode has a
+# loading on every cluster, and the renders fade by it. k-means and Ward are HARD
+# partitions: an electrode is in one cluster and in no other, so its "loading" is 1
+# there and 0 everywhere else, and the one rendering rule below draws members in
+# full colour at full radius and every other electrode as the faint grey background.
+METHODS = ("cnmf", "kmeans", "hierarchical")
+HARD = {"kmeans", "hierarchical"}
+METHOD_LABEL = {"cnmf": "convex NMF", "kmeans": "k-means", "hierarchical": "Ward"}
 
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 RED, GREEN, BLUE = "#c1121f", "#1b7837", "#4a6fa5"
@@ -179,11 +187,16 @@ def loading_rgb(w, k, base):
 
 
 # ---- loading -----------------------------------------------------------------
-def load_run(fset: str, k: int | None):
-    run = LR.newest_run("cnmf", fset)
+def load_run(fset: str, k: int | None, method: str = "cnmf"):
+    if method not in METHODS:
+        raise SystemExit(f"unknown method {method!r}; one of {METHODS}")
+    run = LR.newest_run(method, fset)
     if run is None:
-        raise SystemExit(f"no cnmf run for {fset}")
+        raise SystemExit(f"no {method} run for {fset}")
     if k is None:
+        if method in HARD:
+            raise SystemExit(f"{METHOD_LABEL[method]} has no held-out peak table here; "
+                             "pass --k")
         pk = pd.read_csv(PEAKS)
         row = pk[pk.feature_set == fset]
         if row.empty:
@@ -191,14 +204,35 @@ def load_run(fset: str, k: int | None):
         k = int(row.k_peak.iloc[0])
 
     X = np.load(run / "X_train.npy").astype(float)
-    gf = run / "loadings_by_k" / f"G_k{k:02d}.npy"
-    if not gf.exists():
-        raise SystemExit(f"{gf} is missing - 242 did not sweep K={k} for {fset}")
-    G = np.load(gf).astype(float)
-    if G.shape != (len(X), k):
-        raise SystemExit(f"{gf.name} is {G.shape}, expected {(len(X), k)}")
-    Gn = G / np.maximum(G.sum(1, keepdims=True), 1e-12)
-    lab = Gn.argmax(1)
+    if method in HARD:
+        # the partition at this K is one column of the run's sweep table. It is
+        # written as a one-hot loading matrix so the renders, the matching and the
+        # captions read the same object they read for cNMF; G stays None because
+        # there is no graded loading to report.
+        lf = run / "cluster_labels_by_k.csv"
+        if not lf.exists():
+            raise SystemExit(f"{lf} is missing")
+        tab = pd.read_csv(lf)
+        col = f"k_{k}"
+        if col not in tab.columns:
+            raise SystemExit(f"{lf.name} has no column {col} - the sweep did not "
+                             f"include K={k} for {fset}")
+        lab = tab[col].to_numpy(int)
+        if len(lab) != len(X) or lab.min() < 0 or lab.max() >= k:
+            raise SystemExit(f"{lf.name} {col}: {len(lab)} labels in 0..{lab.max()}, "
+                             f"expected {len(X)} in 0..{k - 1}")
+        G = None
+        Gn = np.zeros((len(X), k))
+        Gn[np.arange(len(X)), lab] = 1.0
+    else:
+        gf = run / "loadings_by_k" / f"G_k{k:02d}.npy"
+        if not gf.exists():
+            raise SystemExit(f"{gf} is missing - 242 did not sweep K={k} for {fset}")
+        G = np.load(gf).astype(float)
+        if G.shape != (len(X), k):
+            raise SystemExit(f"{gf.name} is {G.shape}, expected {(len(X), k)}")
+        Gn = G / np.maximum(G.sum(1, keepdims=True), 1e-12)
+        lab = Gn.argmax(1)
 
     feats = json.loads((run / "feature_schema.json").read_text())["feature_names"]
     parts = [f.split("|") for f in feats]
@@ -225,6 +259,7 @@ def load_run(fset: str, k: int | None):
     miss = pd.isna(hemi) & np.isfinite(xyz[:, 0])
     hemi = np.where(miss, np.where(xyz[:, 0] < 0, "L", "R"), hemi)
     return dict(run=run, k=k, X=X, G=G, Gn=Gn, lab=lab, conds=conds, bands=bands,
+                method=method, hard=method in HARD,
                 nt=nt, xyz=xyz, hemi=hemi, n_hemi_from_x=int(miss.sum()),
                 patient=meta["patient_id"].to_numpy(),
                 n_patients=int(meta["patient_id"].nunique()), meta=meta)
@@ -470,9 +505,9 @@ def patient_bar(ax, d, j, pcol):
 
 
 # ---- panel A -----------------------------------------------------------------
-def panel_A(ax, fset, k):
+def panel_A(ax, fset, k, method="cnmf"):
     hv = pd.read_csv(HELDOUT)
-    hv = hv[(hv.method == "cnmf") & (hv.scheme == "home")]
+    hv = hv[(hv.method == method) & (hv.scheme == "home")]
     for fs in FSETS:
         s = (hv[hv.feature_set == fs].groupby("k")["var_explained"]
              .agg(["mean", "std"]).reset_index().sort_values("k"))
@@ -499,7 +534,8 @@ def panel_A(ax, fset, k):
     ax.legend(fontsize=7.6, frameon=False, loc="lower right", handlelength=1.6)
     ax.tick_params(labelsize=8, colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
-    ax.set_title("A  ·  held-out variance vs K, convex NMF, all four feature sets\n"
+    ax.set_title(f"A  ·  held-out variance vs K, {METHOD_LABEL[method]}, all four "
+                 "feature sets\n"
                  "bi-cross-validated (rows AND columns held out).  "
                  "Marker = each curve's own peak.",
                  fontsize=10.4, loc="left", color=INK, pad=6)
@@ -736,15 +772,21 @@ def block_order(means, d=None, how=None):
     own = np.argsort(-sim, kind="stable")
     if how == "cluster":
         return np.arange(K), sim, "numeric order", None
-    if how != "matched" or d is None or d.get("fset") == MATCH_REF_FSET:
-        why = ("this run defines the sequence" if d is not None
-               and d.get("fset") == MATCH_REF_FSET else "this run's own")
+    # only the reference METHOD on the reference feature set defines the sequence;
+    # k-means or Ward on concat_bands5 is matched to it like any other run
+    is_ref = (d is not None and d.get("fset") == MATCH_REF_FSET
+              and d.get("method", "cnmf") == MATCH_REF_METHOD)
+    if how != "matched" or d is None or is_ref:
+        why = "this run defines the sequence" if is_ref else "this run's own"
         return own, sim, f"condition similarity, {why}", None
     ref = reference_solution(K)
     if ref is None:
         return own, sim, ("condition similarity - "
                           f"no {MATCH_REF_FSET} solution at K={K} to match to"), None
-    m, jac, basis = match_clusters((d["Gn"], d["lab"]), (ref["Gn"], ref["lab"]))
+    # a hard partition has no loadings: pass None so the match falls back to shared
+    # electrodes, the same rule FIG 2 applies to k-means and Ward
+    m, jac, basis = match_clusters((None if d.get("hard") else d["Gn"], d["lab"]),
+                                   (ref["Gn"], ref["lab"]))
     inv = np.full(K, -1, int)
     inv[m] = np.arange(K)                       # reference cluster -> this run's cluster
     if (inv < 0).any():                         # cannot happen with a 1:1 assignment
@@ -940,6 +982,25 @@ def patient_composition(d, n_perm: int = N_PERM, seed: int = 0):
     return pd.DataFrame(rows)
 
 
+def labels_by_k(d):
+    """(K, hard labels) at every K the run was swept at, whichever kind of run it is.
+
+    cNMF: the argmax of each K's loadings (invariant to the row rescale). k-means
+    and Ward: the partition itself, one column of cluster_labels_by_k.csv. Either
+    way the caller sees the same thing, so panel D is computed by one function.
+    """
+    if d.get("hard"):
+        tab = pd.read_csv(d["run"] / "cluster_labels_by_k.csv")
+        for c in tab.columns:
+            if c.startswith("k_") and c[2:].isdigit() and len(tab) == len(d["patient"]):
+                yield int(c[2:]), tab[c].to_numpy(int)
+        return
+    for f in sorted((d["run"] / "loadings_by_k").glob("G_k*.npy")):
+        G = np.load(f).astype(float)
+        if G.shape[0] == len(d["patient"]):
+            yield int(f.stem.split("_k")[-1]), G.argmax(1)
+
+
 def generalization_by_k(d):
     """At EVERY K the run was swept at: how much of the solution is one patient.
 
@@ -958,14 +1019,9 @@ def generalization_by_k(d):
     codes, _ = pd.factorize(d["patient"])
     P = int(codes.max()) + 1
     rows = []
-    for f in sorted((d["run"] / "loadings_by_k").glob("G_k*.npy")):
-        k = int(f.stem.split("_k")[-1])
-        G = np.load(f).astype(float)
-        if G.shape[0] != len(codes):
-            continue
-        lab = G.argmax(1)                    # argmax is invariant to the row rescale
+    for k, lab in labels_by_k(d):
         share, size = [], []
-        for j in range(G.shape[1]):
+        for j in range(int(lab.max()) + 1):
             sel = lab == j
             n = int(sel.sum())
             if not n:
@@ -997,7 +1053,8 @@ def panel_D(ax, d, gk, fset):
     # the held-out curve on the same x, faint, because the whole point is that the two
     # criteria pull in opposite directions and the reader has to see both at once
     hv = pd.read_csv(HELDOUT)
-    hv = hv[(hv.method == "cnmf") & (hv.scheme == "home") & (hv.feature_set == fset)]
+    hv = hv[(hv.method == d.get("method", "cnmf")) & (hv.scheme == "home")
+            & (hv.feature_set == fset)]
     if not hv.empty:
         sv = hv.groupby("k")["var_explained"].mean().reset_index().sort_values("k")
         ax2 = ax.twinx()
@@ -1020,12 +1077,12 @@ def panel_D(ax, d, gk, fset):
 
 
 # ---- FIGURE 1 ----------------------------------------------------------------
-def figure_1(fset: str, k: int | None):
+def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     t0 = time.time()
     for _pl, _ in _PLOTTER.values():
         _pl.close()
     _PLOTTER.clear(); _BGGLYPH.clear()
-    d = load_run(fset, k)
+    d = load_run(fset, k, method)
     d["fset"] = fset
     K = d["k"]
     C = cube(d["X"], d)
@@ -1059,11 +1116,12 @@ def figure_1(fset: str, k: int | None):
                   top=1.0 - 0.95 / fig_h, bottom=0.022)
     R1 = 1                                                  # row 0 is the header
 
-    fig.suptitle(f"FIG 1{TAG[fset]}   ·   convex NMF   ·   {FS_LABEL[fset]}   ·   "
+    fig.suptitle(f"FIG 1{TAG[fset]}   ·   {METHOD_LABEL[method]}   ·   {FS_LABEL[fset]}"
+                 "   ·   "
                  f"K = {K}   ·   {len(d['X'])} electrodes, {d['n_patients']} patients",
                  x=0.045, y=1.0 - 0.28 / fig_h, ha="left", fontsize=15.5, color=INK)
 
-    panel_A(fig.add_subplot(gs[0, 0:8]), fset, K)
+    panel_A(fig.add_subplot(gs[0, 0:8]), fset, K, method)
     cC = GridSpecFromSubplotSpec(2, 1, gs[0, 9:15], height_ratios=[0.44, 1.0],
                                  hspace=0.06)
     panel_C(fig.add_subplot(cC[0]), fig.add_subplot(cC[1]), d, vlim, ylim)
@@ -1128,22 +1186,37 @@ def figure_1(fset: str, k: int | None):
     kh = bb2.height * 0.66
     ky = bb2.y0 + (bb2.height - kh) / 2.0
     kax = fig.add_axes([kx, ky, kw, kh])
-    lo, hi = 1 / K, max(LOAD_CAP, COLOR_FULL) * 1.12
-    tt = np.linspace(lo, hi, 256)
-    ramp = loading_rgb(tt, K, np.array(cluster_col(int(order[0]), K)))
-    kax.imshow(ramp[:, None, :], aspect="auto", origin="lower", extent=(0, 1, lo, hi))
-    kax.set_xticks([])
-    kax.set_yticks([lo, COLOR_FULL, LOAD_CAP])
-    kax.set_yticklabels(["1/K", f"{COLOR_FULL:.2f}", f"{LOAD_CAP:.2f}"],
-                        fontsize=5.8, color=MUTED)
+    base0 = np.array(cluster_col(int(order[0]), K))
+    if d["hard"]:
+        # a hard partition has two states, not a ramp, and the key says so: the grey
+        # every electrode outside the cluster is drawn in, and the full colour of
+        # every member
+        kax.imshow(np.stack([BG, base0])[:, None, :], aspect="auto", origin="lower",
+                   extent=(0, 1, 0, 2))
+        kax.set_xticks([])
+        kax.set_yticks([0.5, 1.5])
+        kax.set_yticklabels(["other", "member"], fontsize=5.8, color=MUTED)
+        kax.set_ylabel("membership (hard partition)", fontsize=6.2, color=MUTED,
+                       labelpad=1.5)
+    else:
+        lo, hi = 1 / K, max(LOAD_CAP, COLOR_FULL) * 1.12
+        tt = np.linspace(lo, hi, 256)
+        ramp = loading_rgb(tt, K, base0)
+        kax.imshow(ramp[:, None, :], aspect="auto", origin="lower",
+                   extent=(0, 1, lo, hi))
+        kax.set_xticks([])
+        kax.set_yticks([lo, COLOR_FULL, LOAD_CAP])
+        kax.set_yticklabels(["1/K", f"{COLOR_FULL:.2f}", f"{LOAD_CAP:.2f}"],
+                            fontsize=5.8, color=MUTED)
+        kax.set_ylabel("loading on this cluster", fontsize=6.2, color=MUTED,
+                       labelpad=1.5)
     kax.yaxis.tick_right()
     kax.tick_params(length=2, colors=MUTED, pad=1.4)
-    kax.set_ylabel("loading on this cluster", fontsize=6.2, color=MUTED, labelpad=1.5)
     for s_ in kax.spines.values():
         s_.set_color(GREY)
 
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / f"FIG1{TAG[fset]}_{fset}_cnmf_K{K}.png"
+    p = OUT / f"FIG1{TAG[fset]}_{fset}_{method}_K{K}.png"
     save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     save_text(pc.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))
@@ -1169,14 +1242,24 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     ok = np.isfinite(d["xyz"]).all(1)
     nL = int((ok & (d["hemi"] == "L")).sum())
     nR = int((ok & (d["hemi"] == "R")).sum())
-    pk = pd.read_csv(PEAKS)
-    pk = pk[pk.feature_set == fset].iloc[0]
+    method, hard = d["method"], d["hard"]
+    ML = METHOD_LABEL[method]
     hv = pd.read_csv(HELDOUT)
-    hv = hv[(hv.method == "cnmf") & (hv.scheme == "home")]
+    hv = hv[(hv.method == method) & (hv.scheme == "home")]
     curve = hv.groupby(["feature_set", "k"])["var_explained"].mean().reset_index()
     peaks = {f: (int(g.loc[g.var_explained.idxmax(), "k"]),
                  float(g.var_explained.max()))
              for f, g in curve.groupby("feature_set")}
+    # cNMF's peak is read from the table its figures were cut at; a hard method's
+    # from its own held-out curve, which is the same computation without a table
+    if method == "cnmf":
+        pk = pd.read_csv(PEAKS)
+        k_peak = int(pk[pk.feature_set == fset].k_peak.iloc[0])
+    else:
+        k_peak = peaks[fset][0] if fset in peaks else None
+    mf = d["run"] / "manifest.json"
+    fit = json.loads(mf.read_text()).get("params", {}) if mf.exists() else {}
+    fit = {a_: b_ for a_, b_ in fit.items() if a_ != "k_range"}
     w_own = d["Gn"][np.arange(n), d["lab"]]
     t = loading_t(w_own, K)
     ylim_lo = float((means - sds).min()) * 1.06
@@ -1186,13 +1269,22 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
 
     L = []
     A = L.append
-    A(f"FIG 1{TAG[fset]}   ·   {FS_LABEL[fset]}   ·   convex NMF   ·   K = {K}")
+    A(f"FIG 1{TAG[fset]}   ·   {FS_LABEL[fset]}   ·   {ML}   ·   K = {K}")
     A("=" * 100)
     A("")
     A("WHAT THE FIGURE IS")
     A("-" * 100)
-    A(f"Convex NMF (Ding, Li & Jordan 2010) fitted to {n} electrodes from "
-      f"{d['n_patients']} patients, in the")
+    if method == "kmeans":
+        A(f"k-means (best of {fit.get('n_init', '?')} restarts, seed "
+          f"{fit.get('random_state', '?')}) fitted to {n} electrodes from "
+          f"{d['n_patients']} patients, in the")
+    elif method == "hierarchical":
+        A(f"Ward's agglomerative clustering ({fit.get('linkage', 'ward')} linkage, "
+          f"{fit.get('metric', 'euclidean')} distance) cut at {K} clusters, "
+          f"{n} electrodes from {d['n_patients']} patients, in the")
+    else:
+        A(f"Convex NMF (Ding, Li & Jordan 2010) fitted to {n} electrodes from "
+          f"{d['n_patients']} patients, in the")
     A(f"{FS_LABEL[fset]} feature set ({d['X'].shape[1]} features = "
       f"{len(d['conds'])} conditions x {len(d['bands'])} band"
       f"{'s' if len(d['bands']) > 1 else ''} x {d['nt']} time bins).")
@@ -1203,16 +1295,24 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("-" * 100)
     A(f"  run            {d['run'].relative_to(CLUST).as_posix()}")
     A(f"  cohort cache   {cache[-1] if cache else 'unknown'}")
-    A(f"  loadings       loadings_by_k/G_k{K:02d}.npy  ({d['G'].shape[0]} x "
-      f"{d['G'].shape[1]})")
+    if hard:
+        A(f"  labels         cluster_labels_by_k.csv, column k_{K}  ({n} electrodes, "
+          f"the K = {K} cut of the run's own sweep)")
+        if fit:
+            A(f"  fit            {json.dumps(fit)}  (manifest.json)")
+    else:
+        A(f"  loadings       loadings_by_k/G_k{K:02d}.npy  ({d['G'].shape[0]} x "
+          f"{d['G'].shape[1]})")
     A(f"  features       X_train.npy, raw "
       f"{'per-band z-scores' if fset.endswith('z') else 'dB vs baseline'} "
-      f"(NOT the unit-norm space cNMF fits in)")
+      + ("(the matrix the run stores; the cluster means below are computed on it)"
+         if hard else "(NOT the unit-norm space cNMF fits in)"))
     A(f"  coordinates    {COORDS.relative_to(ROOT).as_posix()}")
     A("  surfaces       outputs/250_recon/fsaverage/meshes/fsaverage_[lr]h.gii")
     A("  render         pyvista/VTK offscreen, material constants read live from")
     A("                 functions/lf_recon_shared_config.py (the visualizer's own)")
-    A(f"  built by       00_Paper2_Figures.py --figure 1 --feature-set {fset}")
+    A(f"  built by       00_Paper2_Figures.py --figure 1 --feature-set {fset} "
+      f"--k {K} --method {method}")
     A(f"  built on       {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     A("")
     A("HOW K WAS CHOSEN")
@@ -1222,6 +1322,12 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("turn over. A curve that only rises cannot choose a K. Each feature set is scored")
     A("in its own home space, so heights are comparable WITHIN a curve and the shape")
     A("and the peak are what compare ACROSS curves.")
+    if hard:
+        A("")
+        A(f"For {ML} the held-out block is scored by NEAREST CENTROID (the run's own")
+        A("predictor) where convex NMF projects it onto its components: the same folds")
+        A("and the same score, so the curves are comparable in kind, and the values")
+        A("are read within an algorithm rather than across two.")
     A("")
     A("  feature set        peak K    held-out variance at peak")
     for f in FSETS:
@@ -1230,14 +1336,20 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
             A(f"  {f:<18} {kk:>5}    {vv:.4f}"
               + ("   <- this figure" if f == fset else ""))
     A("")
-    A(f"This figure is cut at K = {K}"
-      + ("" if K == int(pk.k_peak) else
-         f"  (NOTE: the peak for this feature set is K = {int(pk.k_peak)}; K was "
-         f"overridden on the command line)"))
+    if hard:
+        A(f"This figure is cut at K = {K}, set on the command line so the three "
+          f"algorithms are read at one K"
+          + (f"; {ML}'s own held-out peak for this feature set is K = {k_peak}."
+             if k_peak is not None else "."))
+    else:
+        A(f"This figure is cut at K = {K}"
+          + ("" if K == k_peak else
+             f"  (NOTE: the peak for this feature set is K = {k_peak}; K was "
+             f"overridden on the command line)"))
     A("")
     A("PANEL A - held-out variance vs K")
     A("-" * 100)
-    A("All four feature sets, convex NMF only. Each point is the mean over the")
+    A(f"All four feature sets, {ML} only. Each point is the mean over the")
     A("bi-cross-validation folds; the shaded band on the emphasised curve is +/- 1 SD")
     A("across folds. The triangle on each curve marks that curve's own peak. The red")
     A(f"dashed line is the K this figure is cut at ({K}).")
@@ -1273,8 +1385,12 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("PANEL D - does this K generalize?")
     A("-" * 100)
     A("Computed at EVERY K the run was swept at, not only the published one. For each K,")
-    A("the electrodes are assigned by argmax of that K's loadings and two numbers are")
-    A("taken:")
+    if hard:
+        A("the electrodes take that K's partition (one column of cluster_labels_by_k.csv)")
+        A("and two numbers are taken:")
+    else:
+        A("the electrodes are assigned by argmax of that K's loadings and two numbers are")
+        A("taken:")
     A("")
     A(f"  red     the share of CLUSTERS more than {100*DANGER:.0f}% of whose electrodes come from")
     A("          one patient")
@@ -1326,8 +1442,8 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
       f"{int(worst.n_patients)} patient{'s' if worst.n_patients != 1 else ''}.")
     A("")
     A("Written alongside the figure as "
-      f"FIG1{TAG[fset]}_{fset}_cnmf_K{K}_patients.csv (per cluster) and")
-    A(f"FIG1{TAG[fset]}_{fset}_cnmf_K{K}_generalization.csv (per K).")
+      f"FIG1{TAG[fset]}_{fset}_{method}_K{K}_patients.csv (per cluster) and")
+    A(f"FIG1{TAG[fset]}_{fset}_{method}_K{K}_generalization.csv (per K).")
     A("")
     A("PANEL B, TOP OF EACH BLOCK - the cluster mean")
     A("-" * 100)
@@ -1489,6 +1605,13 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("clustering_visualizer.html's updateElectrodes(), not invented here, so these")
     A("renders and the brains on the site read the same way.")
     A("")
+    if hard:
+        A("THIS IS A HARD PARTITION, so w is 1 for the electrodes in the cluster and 0 for")
+        A("every other electrode: members draw in full cluster colour, at full radius and")
+        A(f"fully opaque; the rest draw grey 148 at the smallest radius and {ALPHA_FLOOR:.2f}")
+        A("opacity. The rule below is the one the convex-NMF figures use, evaluated at")
+        A("those two values, so the brains of the three algorithms read alike.")
+        A("")
     A(f"      colour: FULL cluster colour at a loading of {COLOR_FULL:.2f} or above; below")
     A("              that, mixed toward grey 148 and reaching it exactly at a flat 1/K")
     A(f"              mixture -   g = clip((w - 1/K) / ({COLOR_FULL:.2f} - 1/K), 0, 1)")
@@ -1502,8 +1625,12 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("              background, and a floor at 1/K would leave everything below a flat")
     A("              mixture invisible and everything just above it nearly solid")
     A("")
-    A("where w is the electrode's convex-NMF loading on this cluster after its loading")
-    A("vector has been normalised to sum to 1. THREE CHANNELS FOR THREE QUESTIONS:")
+    if hard:
+        A("where w is 1 for the electrodes in this cluster and 0 for every other electrode")
+        A("(a hard partition has no graded loading). THREE CHANNELS FOR THREE QUESTIONS:")
+    else:
+        A("where w is the electrode's convex-NMF loading on this cluster after its loading")
+        A("vector has been normalised to sum to 1. THREE CHANNELS FOR THREE QUESTIONS:")
     A("colour says whether the electrode is expressing this component at all, size says")
     A("how strongly, opacity sinks the rest of the cohort into the background. An")
     A("earlier version ramped colour across the whole range instead, so a typical")
@@ -1520,12 +1647,17 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("Both are RENDERING choices. They change how a loading is drawn, never the")
     A("loading, the label, or any number reported anywhere.")
     A("")
-    A(f"  median t over all {n} electrodes at their own cluster   {np.median(t):.3f}")
-    A(f"  electrodes at or above {COLOR_FULL:.2f} (drawn in full cluster colour)   "
-      f"{int((w_own >= COLOR_FULL).sum())}  ({100*(w_own >= COLOR_FULL).mean():.1f}%)")
-    A(f"  electrodes at or above the {LOAD_CAP:.2f} size cap                     "
-      f"{int((w_own >= LOAD_CAP).sum())}  ({100*(w_own >= LOAD_CAP).mean():.1f}%)")
-    A(f"  median normalised loading at an electrode's own cluster {np.median(w_own):.3f}")
+    if hard:
+        A(f"  every one of the {n} electrodes draws at w = 1 in its own cluster and at")
+        A(f"  w = 0 in the other {K - 1}: full colour, full radius and opaque there;")
+        A("  grey, smallest and faint everywhere else.")
+    else:
+        A(f"  median t over all {n} electrodes at their own cluster   {np.median(t):.3f}")
+        A(f"  electrodes at or above {COLOR_FULL:.2f} (drawn in full cluster colour)   "
+          f"{int((w_own >= COLOR_FULL).sum())}  ({100*(w_own >= COLOR_FULL).mean():.1f}%)")
+        A(f"  electrodes at or above the {LOAD_CAP:.2f} size cap                     "
+          f"{int((w_own >= LOAD_CAP).sum())}  ({100*(w_own >= LOAD_CAP).mean():.1f}%)")
+        A(f"  median normalised loading at an electrode's own cluster {np.median(w_own):.3f}")
     A("")
     A("WHAT THIS FIGURE DOES NOT SHOW")
     A("-" * 100)
@@ -1540,12 +1672,18 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A(f"  - The {100*DANGER:.0f}% line in panel D is a convention, not a test. It is not")
     A("    calibrated against a null; it is a threshold chosen to be readable. So is")
     A("    the 1-SD line the agreement outline draws.")
-    A("  - No comparison against k-means, Ward or archetypal analysis. Panel A is")
-    A("    convex NMF only.")
+    others = ", ".join(METHOD_LABEL[m_] for m_ in METHODS if m_ != method)
+    A(f"  - No comparison against {others} or archetypal analysis within this")
+    A(f"    figure; FIG 2 is where the algorithms are compared. Panel A is {ML} only.")
     A("  - The renders collapse depth: an electrode deep in the temporal lobe and one")
     A("    on the lateral surface can overlap in the image.")
-    A("  - The cluster label is an argmax of a GRADED loading. The fade is there")
-    A("    precisely because that argmax hides how weak most memberships are.")
+    if hard:
+        A("  - The label is a HARD assignment: it says which cluster an electrode is in,")
+        A("    not how close it came to another. The run's per-electrode silhouette")
+        A("    (labels.csv) is not drawn.")
+    else:
+        A("  - The cluster label is an argmax of a GRADED loading. The fade is there")
+        A("    precisely because that argmax hides how weak most memberships are.")
     save_text("\n".join(L) + "\n", path)
 
 
@@ -1560,6 +1698,9 @@ def main() -> int:
     ap.add_argument("--feature-set", nargs="*", default=FSETS)
     ap.add_argument("--k", type=int, default=None,
                     help="override the held-out peak K (applies to every feature set)")
+    ap.add_argument("--method", choices=METHODS, default="cnmf",
+                    help="clustering algorithm to draw; k-means and Ward have no peak "
+                         "table, so pass --k with them")
     a = ap.parse_args()
     for nf in a.figure:
         if nf not in FIGURES:
@@ -1567,7 +1708,7 @@ def main() -> int:
             continue
         print(f"\n=== FIGURE {nf} ===")
         for fs in a.feature_set:
-            FIGURES[nf](fs, a.k)
+            FIGURES[nf](fs, a.k, a.method)
     return 0
 
 

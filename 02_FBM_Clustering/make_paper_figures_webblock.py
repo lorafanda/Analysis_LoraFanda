@@ -227,7 +227,9 @@ def build():
          "peak per feature set (11 / 12 / 14 / 13) and <b>K = 8</b>. They disagree, and "
          "the disagreement is the point &mdash; held-out variance cannot see a cluster "
          "that is one patient's electrode strip, because splitting a cohort until each "
-         "patient has their own component fits held-out data perfectly well.</p>",
+         "patient has their own component fits held-out data perfectly well. At K = 8 "
+         "the same layout is also drawn for <b>k-means</b> and <b>Ward</b> on every "
+         "feature set, so the three algorithms read side by side.</p>",
          "    </div>"]
 
     missing, untracked = [], []
@@ -249,8 +251,12 @@ def build():
                    "electrode the gate saw on the brain, active in green")
         elif is1:
             tag = stem[4]
-            fset = stem.split("_cnmf_")[0][6:]
-            num, title = f"1{tag} &middot; K={k}", f"{fset}, convex NMF, K = {k}"
+            # FIG1<tag>_<fset>_<method>_K<k>; the method has no underscore, the
+            # feature set does
+            fset, method = stem.rsplit("_K", 1)[0][6:].rsplit("_", 1)
+            algo = {"cnmf": "convex NMF", "kmeans": "k-means",
+                    "hierarchical": "Ward"}.get(method, method)
+            num, title = f"1{tag} &middot; K={k}", f"{fset}, {algo}, K = {k}"
             bullets = fig1_bullets(png)
             alt = (f"four panels: held-out variance vs K, a schematic key, a "
                    f"generalization curve, and one block per cluster with its mean, "
