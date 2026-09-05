@@ -199,7 +199,7 @@ PROVENANCE
     hierarchical  concat_bands5z   hierarchical/concat_bands5z/runs/20260827_021703   (hard labels)
   geometry and block order from concat_bands5 (cnmf) at K=8
   built by      00_paper2_figures2_2.py --k 8 --algo-feature-set concat_bands5z
-  built on      2026-09-03 19:49
+  built on      2026-09-05 20:57
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------

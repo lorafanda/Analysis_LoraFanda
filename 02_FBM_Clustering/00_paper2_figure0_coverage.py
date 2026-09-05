@@ -99,8 +99,8 @@ FATES = ("kept", "failed the gate", "grid contact", "microelectrode",
 EXEMPLARS = [
     ("auditory", "PAT_3455", "OTD7", "superior temporal gyrus",
      "selective to the auditory stimulus, and again when the patient speaks", BLUE),
-    ("visual", "PAT_3415", "OS1", "lateral occipital cortex",
-     "responds to the visual stimuli", PURPLE),
+    ("visual", "EL043", "IOG7", "inferior occipital gyrus",
+     "responds to the picture and the written sentence, not to the sound", PURPLE),
     ("motor", "PAT_6953", "TPD10", "sensorimotor cortex, around the central sulcus",
      "the verbal response: a burst after the cue in every condition, nothing to the stimulus", RED),
     ("preparatory", "PAT_6854", "IAG6", "anterior insula",
@@ -388,7 +388,7 @@ def figure_0_paper(t, u, d, gp):
     for i, ex in enumerate(exs):
         cell = GridSpecFromSubplotSpec(3, 2, gA[i // 2, i % 2],
                                        height_ratios=[0.46, 0.30, 1.0],
-                                       width_ratios=[1.0, 2.5], hspace=0.06, wspace=0.05)
+                                       width_ratios=[1.0, 2.5], hspace=0.06, wspace=0.16)
         axH = fig.add_subplot(cell[0, :])
         axB = fig.add_subplot(cell[1:, 0])
         axS, axC = fig.add_subplot(cell[1, 1]), fig.add_subplot(cell[2, 1])

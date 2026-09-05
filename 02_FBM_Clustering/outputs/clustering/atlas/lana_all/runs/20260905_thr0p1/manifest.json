@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "method": "atlas",
+  "method_label": "Fedorenko/LanA atlas",
+  "feature_set": "lana_all",
+  "feature_set_label": "LanA \u00b7 all electrodes",
+  "run_id": "20260905_thr0p1",
+  "created_at": "2026-09-05T18:43:31Z",
+  "params": {
+    "atlas": "langloc_n806_p_0.05_atlas.nii",
+    "threshold": 0.1,
+    "cohort": "lana_all",
+    "cluster_meaning": {
+      "0": "outside (P < 0.1)",
+      "1": "in network (P >= 0.1)"
+    }
+  },
+  "summary": {
+    "n_samples": 3253,
+    "n_clusters": 2,
+    "cluster_sizes": {
+      "0": 1972,
+      "1": 1281
+    }
+  },
+  "notebook": "make_lana_runs.py \u2014 rendered by 252",
+  "n_clusters": 2,
+  "artifacts": {
+    "labels": "labels.csv"
+  },
+  "silhouette": null
+}

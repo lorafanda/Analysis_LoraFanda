@@ -6,7 +6,7 @@ AXES SHARED ACROSS FEATURE SETS
 A's y axis, B's x axis and C's x and y axes run to the same limits in every FIG 3
 at this K, so the four can be laid side by side and a bar that looks taller is
 taller. The limits are the maximum reached in: concat_hg, concat_rawds, concat_bands5, concat_bands5z.
-  A top 0.4497   B |rho| 0.2332   C loading 0.9895   C P_lana 0.7965   (each drawn with a small margin)
+  A top 0.3851   B |rho| 0.2232   C loading 0.9895   C P_lana 0.7965   (each drawn with a small margin)
   recorded in FIG3_extents_K08.json; --all rebuilds every feature set on one set
 
 WHAT P_lana IS
@@ -21,10 +21,10 @@ language-responsive - only that it does or does not sit where LanA is.
 
 COVERAGE, AND WHY IT IS NOT A DETAIL
 ----------------------------------------------------------------------------------------------------
-  electrodes with a LanA value   1396 of 1693 (82.5%)
-  atlas table used               lana_all/20260802_pbins
-  tables checked against it      lana_all/20260802_pbins, lana_all/20260802_thr0p05, lana_all/20260802_thr0p1, lana_concat/20260802_pbins, lana_concat/20260802_thr0p05, lana_concat/20260802_thr0p1, lana_inout/20260728_lana_p05_thr010
-  largest disagreement between them   5e-05 (tolerance 0.001)
+  electrodes with a LanA value   1625 of 1693 (96.0%)
+  atlas table used               lana_all/20260905_pbins
+  tables checked against it      lana_all/20260905_pbins, lana_all/20260905_thr0p05, lana_all/20260905_thr0p1, lana_concat/20260905_pbins, lana_concat/20260905_thr0p05, lana_concat/20260905_thr0p1
+  largest disagreement between them   0 (tolerance 0.001)
 
 The tables are written on different dates and round to different precision in
 CSV, so they are compared with a tolerance rather than for exact equality, and
@@ -38,9 +38,11 @@ has not been measured against the atlas. Per-cluster coverage is printed under
 every bar in panel A and anything below 70% is marked in red.
 
   electrodes with no LanA value, by patient:
-    PAT_6953      156 of 156    (the whole patient)
-    EL046          86 of 86     (the whole patient)
-    EL034          55 of 55     (the whole patient)
+    EL046          19 of 86  
+    EL043          18 of 74  
+    PAT_6619       13 of 144 
+    EL034          12 of 55  
+    EL045           6 of 83  
 
 THE NULLS, AND WHY THERE ARE TWO
 ----------------------------------------------------------------------------------------------------
@@ -56,8 +58,8 @@ shaft while P_lana stays put. Each shaft's run structure survives exactly - the
 same labels in the same runs, in the same order - and only its alignment with the
 atlas is broken. This is the null that counts, marked * on the figure.
 
-  shafts                 226
-  invariant to a shift   105 (one cluster throughout, so a
+  shafts                 252
+  invariant to a shift   114 (one cluster throughout, so a
                          shift cannot change them; they carry no information
                          about alignment and contribute no randomness)
 
@@ -94,9 +96,9 @@ Mean P_lana of a cluster's electrodes, most to least. Dark dash = the shaft-shif
 null, pale dash = the within-patient null, dotted line = the cohort mean, % under
 each bar = coverage.
 
-  cohort mean P_lana             0.1434
-  most  c2  0.1718 [0.1314, 0.2714]  shaft null 0.1747 q=0.955  (within-patient null 0.1359 q=0.00799)
-  least c4  0.1122 [0.0977, 0.1260]  shaft null 0.1191 q=0.979
+  cohort mean P_lana             0.1365
+  most  c2  0.1783 [0.1348, 0.2702]  shaft null 0.1797 q=0.843  (within-patient null 0.1356 q=0.00799)
+  least c6  0.1094 [0.0845, 0.1385]  shaft null 0.1192 q=0.99
   clusters above the SHAFT-SHIFT null at q<0.05   0 of 8
   above the weaker within-patient null              1 of 8
 
@@ -127,18 +129,18 @@ it says whether that cluster's rho exceeds chance, not whether the K rhos are
 mutually consistent.
 
   cluster  rho [95% CI]                 q shaft   q within-pat   meanP   q shaft   coverage
-  c2       +0.112 [+0.013, +0.233]       0.44        0.004   0.1718     0.955    96%
-  c3       +0.056 [-0.034, +0.144]      0.647        0.342   0.1714     0.571    76%
-  c1       +0.103 [+0.030, +0.172]      0.645        0.004   0.1649     0.683    37%
-  c0       -0.013 [-0.101, +0.085]      0.805        0.469   0.1530     0.571    89%
-  c5       -0.048 [-0.138, +0.047]      0.901       0.0543   0.1318     0.571    77%
-  c7       -0.050 [-0.102, +0.009]      0.647       0.0543   0.1185     0.571    98%
-  c6       -0.090 [-0.164, -0.031]     0.0559      0.00799   0.1141     0.979    86%
-  c4       -0.017 [-0.084, +0.042]      0.647        0.469   0.1122     0.979    90%
+  c2       +0.124 [+0.023, +0.221]      0.024        0.004   0.1783     0.843    99%
+  c0       -0.006 [-0.088, +0.076]      0.637         0.69   0.1512     0.376    95%
+  c3       +0.053 [-0.025, +0.133]      0.172        0.186   0.1498     0.561    98%
+  c5       -0.039 [-0.118, +0.039]      0.511        0.145   0.1302     0.561    93%
+  c1       +0.050 [-0.040, +0.138]     0.0986       0.0506   0.1198     0.368    88%
+  c7       -0.038 [-0.093, +0.017]      0.637        0.145   0.1162     0.561    91%
+  c4       -0.013 [-0.077, +0.050]      0.511        0.606   0.1103      0.99    99%
+  c6       -0.082 [-0.143, -0.025]      0.024        0.004   0.1094      0.99   100%
 
-  0 of 8 correlations pass the shaft-shift
-  null; 3 pass the weaker within-patient one.
-  NONE reaches |rho| = 0.10 (largest 0.112). At 1396 electrodes a q-value is nearly free; the effect size is
+  2 of 8 correlations pass the shaft-shift
+  null; 2 pass the weaker within-patient one.
+  NONE reaches |rho| = 0.10 (largest 0.124). At 1625 electrodes a q-value is nearly free; the effect size is
   the result, and the effect size is negligible.
 A rho near zero means the cluster is placed independently of the atlas. That is a
 result, not a failure - it says the clustering found structure the atlas does not
@@ -158,15 +160,15 @@ covers this point. It is not a measurement in this patient. A cluster high in pa
 language cortex usually is; whether it RESPONDED to language is FIG 1, not this.
 
 Against the SHAFT-SHIFT null, which preserves the spatial smoothness of the atlas, 0 of 8 clusters
-sit in more LanA than chance and 0 of 8 correlations pass. Against the weaker within-patient null it
-is 1 and 3. Where those differ, the smoothness was doing the work.
+sit in more LanA than chance and 2 of 8 correlations pass. Against the weaker within-patient null it
+is 1 and 2. Where those differ, the smoothness was doing the work.
 
-The largest |rho| is 0.11. Significance here is nearly free at this sample size; the effect size is
+The largest |rho| is 0.12. Significance here is nearly free at this sample size; the effect size is
 the result.
 
-Only 82% of electrodes have a LanA value, and the missing ones are WHOLE PATIENTS rather than a
-random scatter - the atlas run predates part of the cohort. Coverage is below 70% for c1, whose mean
-is not comparable with the rest.
+Only 96% of electrodes have a LanA value, and the missing ones are WHOLE PATIENTS rather than a
+random scatter - the atlas run predates part of the cohort. Every cluster is above the coverage
+floor here.
 
 The K correlations are NOT independent: loadings sum to 1, so one cluster tracking the atlas forces
 the others negative by arithmetic. Only the positive end is interpretable alone.

@@ -1,5 +1,46 @@
-FIG 0   ·   the cohort
+FIG 0   ·   the task and the cohort
 ====================================================================================================
+
+THE TASK
+----------------------------------------------------------------------------------------------------
+Three naming conditions: an auditory stimulus, a picture, a written sentence. Each
+trial is stimulus, then a response cue. The time axis is WARPED, not clock time:
+stimulus and response each occupy half a block (proportions 0, 0.5, 0.5), the
+response cue falls at mid-block (dashed), and the fixation screen contributes no
+bins - the baseline every dB value is expressed against comes from it. This is the
+axis every centroid and every cube in the paper is drawn on.
+
+PANEL A - four electrodes, chosen by hand as illustrations
+----------------------------------------------------------------------------------------------------
+Not selected by any statistic and not a claim about the cohort: they show what the
+recordings look like and what the three conditions do to a contact of each kind.
+Each is drawn alone on the lateral view of its own hemisphere, and its three
+conditions concatenated on the axis above, 0-400 Hz, on the project's +-7 dB scale.
+
+  AUDITORY     PAT_3455 OTD7  superior temporal gyrus  (R, x 57  y -35  z 2)
+               selective to the auditory stimulus, and again when the patient speaks
+               gate margin  audio 5.70  picture 1.90  reading 1.13   (>= 1 passes)   peak +6.6 dB   in the analysed cohort
+
+  VISUAL       EL043 IOG7  inferior occipital gyrus  (L, x -27  y -100  z -3)
+               responds to the picture and the written sentence, not to the sound
+               gate margin  audio 1.30  picture 7.94  reading 7.30   (>= 1 passes)   peak +12.2 dB   in the analysed cohort
+
+  MOTOR        PAT_6953 TPD10  sensorimotor cortex, around the central sulcus  (R, x 38  y -18  z 36)
+               the verbal response: a burst after the cue in every condition, nothing to the stimulus
+               gate margin  audio 3.60  picture 3.61  reading 3.30   (>= 1 passes)   peak +6.7 dB   in the analysed cohort
+
+  PREPARATORY  PAT_6854 IAG6  anterior insula  (L, x -32  y 22  z 4)
+               activity building toward the response cue in every condition
+               gate margin  audio 1.84  picture 0.95  reading 2.42   (>= 1 passes)   peak +4.7 dB   in the analysed cohort
+
+PANEL B - every electrode the gate saw
+----------------------------------------------------------------------------------------------------
+Left, from above (anterior up, left on the left), right. Electrodes that passed
+the gate - the cohort every later figure is computed on - in green at full size;
+the ones it rejected smaller, grey and lighter.
+  seen 2959   kept 1693   rejected 1266
+  drawn   left 1285   from above 2891   right 1606
+  without fsaverage coordinates, so not drawn: 68 kept, 0 rejected
 
 THE GATE, as the cache that applied it recorded it
 ----------------------------------------------------------------------------------------------------
@@ -10,113 +51,19 @@ For each electrode-condition ERSP - 129 frequencies x 300 time-normalised bins =
 An electrode is KEPT if any of its three conditions passes. The rule counts bins
 over a threshold across the whole cube: it is not a high-gamma measure and it is
 not a test of whether the response repeats. Re-derived from the stored proportions,
-it reproduces the stored flag on every row of the table.
-
-WHAT 'TOTAL' MEANS, AND WHAT HAPPENED TO EVERY ELECTRODE IN THE TABLE
-----------------------------------------------------------------------------------------------------
-The total in A is what the gate SAW: the ungated table for the cohort's patients,
-minus what lf_concat removes before the gate - non-neural channels, grid and
-microelectrode contacts, excluded patients - and minus electrodes missing a
-condition, which the gate never sees whole. Those filters are the pipeline's own,
-imported, and the total splits exactly into the cohort and the gate's rejects:
-  kept                          1693
-  failed the gate               1266
-  grid contact                    64
-  microelectrode                   0
-  non-neural channel               0
-  missing a condition              0
-  patient not in the cohort      273
-  seen by the gate (A)          2959   = kept + failed the gate
-
-PANEL A - electrodes the gate saw, and kept, per patient
-----------------------------------------------------------------------------------------------------
-  27 patients in id order. Hatched = seen, solid = kept, label kept/seen.
-  seen 2959   kept 1693 (57.2%)
-  highest pass rate   EL033  74/74 (100%)
-  lowest              PAT_5515  12/150 (8%)
-
-PANEL B - the same electrodes on the brain
-----------------------------------------------------------------------------------------------------
-Left, from above (anterior up, left on the left), right. Kept electrodes in the
-patient's colour at full size; rejected ones smaller, grey, and lighter.
-  drawn   left 1211   from above 2644   right 1433
-  without fsaverage coordinates, so not drawn: 291 kept, 24 rejected
-
-PANEL C - of the kept electrodes, those with a LanA value
-----------------------------------------------------------------------------------------------------
-  1396 of 1693 (82.5%). Hatched = kept, solid = with a value, label with/kept.
-  no value at all   EL034, EL046, PAT_6953 - the atlas run predates them; FIG 3 excludes every one of their electrodes.
-
-PANEL D - the same on the brain
-----------------------------------------------------------------------------------------------------
-Kept electrodes only: orange with a LanA value, grey without.
-  drawn   left 694   from above 1402   right 708
-
-  patient        seen   kept   with LanA   pass rate   LanA coverage
-  EL030           96     77          77       80.2%        100.0%
-  EL033           74     74          74      100.0%        100.0%
-  EL034           58     55           0       94.8%          0.0%
-  EL035          110     40          40       36.4%        100.0%
-  EL036           48     26          26       54.2%        100.0%
-  EL037           92     51          51       55.4%        100.0%
-  EL038           72     72          72      100.0%        100.0%
-  EL040          123     30          30       24.4%        100.0%
-  EL042          108    103         103       95.4%        100.0%
-  EL043           74     74          74      100.0%        100.0%
-  EL045           92     83          83       90.2%        100.0%
-  EL046           86     86           0      100.0%          0.0%
-  PAT_2868        34      6           6       17.6%        100.0%
-  PAT_3066       152     28          28       18.4%        100.0%
-  PAT_3390        96     18          18       18.8%        100.0%
-  PAT_3415        18     18          18      100.0%        100.0%
-  PAT_3455        95     36          36       37.9%        100.0%
-  PAT_3780       116     47          47       40.5%        100.0%
-  PAT_3965       169     80          80       47.3%        100.0%
-  PAT_3975       155     67          67       43.2%        100.0%
-  PAT_5515       150     12          12        8.0%        100.0%
-  PAT_5533       169     41          41       24.3%        100.0%
-  PAT_6619       144    144         144      100.0%        100.0%
-  PAT_6684       123     77          77       62.6%        100.0%
-  PAT_6704       141     46          46       32.6%        100.0%
-  PAT_6854       184    146         146       79.3%        100.0%
-  PAT_6953       180    156           0       86.7%          0.0%
-
-PANELS E and F - at the line
-----------------------------------------------------------------------------------------------------
-Three conditions side by side on the warped axis every later figure uses (GO cue
-at the middle of each block, no fixation bins). Outlines are the bins the criterion
-counts: solid above the positive threshold, dotted below the negative one. Under
-each block, the count against the count it needed; the block that passes is bold.
-
-  E  KEPT  ·  PAT_6953 · TPD8  ·  audio: 774 bins above +2.2 dB, exactly the 774 needed
-  F  DISCARDED  ·  PAT_6953 · TPD4  ·  best is reading: 769 bins above +2.2 dB, 5 short of 774
-  chosen as: same shaft. Of the 1266 electrodes the gate rejected, F
-  is the one that came closest.
-  E  PAT_6953 · TPD8
-     audio     above:   774 of 774   below:    49 of 1548   PASSES
-     picture   above:   511 of 774   below:   107 of 1548   no
-     reading   above:   769 of 774   below:   162 of 1548   no
-  F  PAT_6953 · TPD4
-     audio     above:   307 of 774   below:    91 of 1548   no
-     picture   above:   464 of 774   below:    56 of 1548   no
-     reading   above:   769 of 774   below:   119 of 1548   no
+it reproduces the stored flag on every row; all 1693 cohort electrodes come out kept.
 
 PROVENANCE
 ----------------------------------------------------------------------------------------------------
-  cohort          concat_hg cnmf run at K=8 - the electrode set is the same at every K
   gate table      outputs/_dataset/concat_source_v4/df_meta.parquet
   gate params     outputs/_dataset/concat_source_v4/params.json
-  filters         lf_dataset.is_non_neural_electrode / is_grid_electrode /
-                  is_micro_electrode, lf_concat.DEFAULT_EXCLUDE_PATIENTS
   coordinates     outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
-  atlas           lana_all/20260802_pbins
-  built by        00_paper2_figure0_coverage.py --feature-set concat_hg --k 8
-  built on        2026-09-04 11:59
+  exemplars       EXEMPLARS in 00_paper2_figure0_coverage.py
+  built on        2026-09-05 20:56
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
-  - Whether the gate is the RIGHT gate. E and F show that at the line the kept and
-    the discarded look alike and one bin in tens of thousands decides it; whether a
-    reliability criterion should replace it is a separate analysis.
-  - Electrodes with no fsaverage coordinates are counted in A and C and absent from
-    B and D.
+  - Who the cohort is made of, patient by patient, how much of it the atlas covers,
+    and what the gate decides at the line: FIG S0, the supplement.
+  - Any claim that these four are typical. They are the clearest examples, picked
+    to explain the task.

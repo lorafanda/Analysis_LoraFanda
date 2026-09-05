@@ -18,7 +18,7 @@ PROVENANCE
   render         pyvista/VTK offscreen, material constants read live from
                  functions/lf_recon_shared_config.py (the visualizer's own)
   built by       00_Paper2_Figures.py --figure 1 --feature-set concat_hg
-  built on       2026-09-01 14:49
+  built on       2026-09-05 20:56
 
 HOW K WAS CHOSEN
 ----------------------------------------------------------------------------------------------------
@@ -240,9 +240,9 @@ RIGHT of the right one. Drawing both from the same side, as an earlier version
 did, shows one hemisphere from inside the head. Each render holds only that
 hemisphere's electrodes; an electrode never appears in both.
 
-  electrodes with fsaverage coordinates   1402 / 1693
-  left render                             694
-  right render                            708
+  electrodes with fsaverage coordinates   1625 / 1693
+  left render                             768
+  right render                            857
 
 COLOUR AND SIZE, THE VISUALIZER'S OWN RULE. This is transcribed from
 clustering_visualizer.html's updateElectrodes(), not invented here, so these
