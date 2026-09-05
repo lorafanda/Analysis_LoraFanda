@@ -42,7 +42,7 @@ TAG = {"kmeans": "a", "hierarchical": "b", "cnmf": "c"}
 GREEN, RED, MUTED, INK = "#1b7837", "#c1121f", "#68727d", "#1b232c"
 
 FS_NOTE = {
-    "concat_hg": ("high gamma only &mdash; 3 conditions &times; 300 time-normalised "
+    "concat_hg": ("high-frequency activity only &mdash; 3 conditions &times; 300 time-normalised "
                   "bins = 900 features"),
     "concat_rawds": ("15 frequency bands &times; 3 conditions &times; 30 downsampled "
                      "bins = 1350 features, the SAME electrodes described more fully"),
@@ -54,7 +54,7 @@ FS_NOTE = {
                        "&mdash; <b>units are SD within a band, not dB</b>. Raw against "
                        "z-scored changes the partition more (ARI 0.37) than changing "
                        "the algorithm does"),
-    "concat_hg_all": "high gamma, responsiveness gate LIFTED",
+    "concat_hg_all": "high-frequency activity, responsiveness gate LIFTED",
 }
 
 
@@ -537,7 +537,7 @@ def cross(found):
                 f"solution {how}. "
                 f"{'No method produces a degenerate cluster there' if best[0] else 'The degeneracy is milder there'}, "
                 f"and the methods agree with each other more. Describing the same "
-                f"electrodes with 15 bands instead of high gamma alone does not just add "
+                f"electrodes with 15 bands instead of high-frequency activity alone does not just add "
                 f"features &mdash; <b>it makes the three algorithms converge on something "
                 f"they can all see</b>.</p>")
 

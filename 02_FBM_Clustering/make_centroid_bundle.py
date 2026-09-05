@@ -52,6 +52,12 @@ METHODS = ["cnmf", "kmeans", "hierarchical", "archetypes"]
 COHORT = "cohort1_n27"
 X_SCALE = 0.001          # int16 -> dB
 W_SCALE = 1.0 / 65535    # uint16 -> loading
+# what a value IS, per feature set - the page labels its colour bar and y axis with it.
+# bands5z is a per-band z-score, so its values are standard deviations, not decibels.
+UNIT = {"concat_hg": "dB", "concat_rawds": "dB", "concat_bands5": "dB",
+        "concat_bands5z": "z"}
+UNIT_LONG = {"concat_hg": "dB vs baseline", "concat_rawds": "dB vs baseline",
+             "concat_bands5": "dB vs baseline", "concat_bands5z": "SD (per-band z-score)"}
 
 
 def verified_write(path: Path, data: bytes, tries: int = 6):
@@ -120,6 +126,7 @@ def main() -> int:
         q = np.round(cube / X_SCALE).astype("<i2")
         verified_write(OUT / f"x_{fset}.bin", q.tobytes())
         xhash[fset] = dict(n=n, conds=conds, bands=bands, nt=nt,
+                           unit=UNIT.get(fset, "dB"), unit_long=UNIT_LONG.get(fset, ""),
                            sha=hashlib.sha256(q.tobytes()).hexdigest()[:12])
         print(f"  x_{fset}.bin  {q.nbytes/1e6:.1f} MB  (n={n}, {len(conds)} conds x "
               f"{len(bands)} bands x {nt} bins; max |err| {X_SCALE/2:.4f} dB)")

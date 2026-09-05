@@ -74,7 +74,7 @@ def build(peak, tracked=None):
         ("g-hg-centroid", "S.1",
          "<code>concat_hg</code> &mdash; the centroid, mean dB with &plusmn;1 SD",
          R[("cnmf", "concat_hg")], f"cluster_centroids/k_{KH}/cluster_00.png",
-         ["The cluster's <b>mean high-gamma time course</b> in raw dB, audio | picture | "
+         ["The cluster's <b>mean high-frequency activity time course</b> in raw dB, audio | picture | "
           "reading laid end to end, on a y range fitted once across the whole run so the "
           "clusters are comparable to each other.",
           "The band is <b>&plusmn;1 standard deviation ACROSS ELECTRODES</b>, not the "
@@ -87,7 +87,7 @@ def build(peak, tracked=None):
           "statement about n, not a rendering failure.",
           "This is the chip the <a href='clustering_visualizer.html'>visualizer</a> "
           "embeds in each cluster card, one set per K from 5 to 30."],
-         "cluster centroid for concat high gamma: mean time course in dB with a plus "
+         "cluster centroid for concat high-frequency activity: mean time course in dB with a plus "
          "or minus one standard deviation band, three conditions side by side"),
 
         ("g-hg-raster", "S.2",
@@ -106,7 +106,7 @@ def build(peak, tracked=None):
           "The colour limit is the run's own 99th percentile rather than a fixed range: "
           "|dB| reaches 13 here but the 99th percentile is near 3, and a fixed "
           "&plusmn;6.5 would wash every raster out to pale blue."],
-         "per-sample raster for a concat high gamma cluster: every electrode as one row "
+         "per-sample raster for a concat high-frequency activity cluster: every electrode as one row "
          "of a heatmap, sorted by membership strength with the strongest at the top"),
 
         ("g-rawds-centroid", "S.3",

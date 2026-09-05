@@ -330,7 +330,7 @@ def build(d) -> str:
     <p><b>A different cohort on purpose.</b> Part 2 is <code>concat_hg</code> &mdash; the
       SBSF run, {ng} electrodes, gate APPLIED &mdash; and <code>concat_rawds</code>,
       which is the <b>same {ng} electrodes</b> described by 15 bands &times; 3 conditions
-      &times; 30 bins instead of high gamma alone. So the two feature sets here are one
+      &times; 30 bins instead of high-frequency activity alone. So the two feature sets here are one
       cohort seen two ways, and neither is mixed with Part 1's {n}.</p>
     {figure("c13", "C.13", "Held-out variance explained over components, three algorithms",
             f'''<p style="margin:0 0 8px"><b>Bi-cross-validation.</b> A block of ROWS and a

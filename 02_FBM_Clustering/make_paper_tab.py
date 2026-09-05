@@ -567,19 +567,19 @@ EXAMPLES = {
         "The cost to the patient is the length of the task.",
         "Passive mapping turns the problem around. Instead of disrupting function and "
         "looking for a deficit, it presents a task and looks for a response. In "
-        "intracranial recordings that response is a rise in high-gamma power: focal, "
+        "intracranial recordings that response is a rise in high-frequency activity power: focal, "
         "time-locked to the event, and a well-established proxy for local neuronal "
         "activity [REF]. The whole array is mapped in one session, with no stimulation "
         "and no induced seizures.",
     ],
     "intro.prior": [
-        "The approach is not new. High-gamma responses to language tasks have been "
+        "The approach is not new. High-frequency activity responses to language tasks have been "
         "compared with ESM in several cohorts [REF]. The agreement is good but not "
-        "complete. Most ESM-positive sites show a high-gamma response, and many "
-        "high-gamma sites are ESM-negative. Sensitivity is usually reported above 80% "
+        "complete. Most ESM-positive sites show a high-frequency activity response, and many "
+        "high-frequency activity sites are ESM-negative. Sensitivity is usually reported above 80% "
         "and specificity lower [REF]. What is accepted is that the recording contains "
         "the information. What is not settled is how to read it.",
-        "Passive high-gamma mapping has been tested against ESM in naming, reading and "
+        "Passive high-frequency activity mapping has been tested against ESM in naming, reading and "
         "listening tasks, in adults and in children [REF]. It finds the ESM-positive "
         "sites. It also finds more. Whether the extra sites are false positives or real "
         "function that stimulation missed is still argued [REF]. Some centres now use "
@@ -620,7 +620,7 @@ EXAMPLES = {
     ],
     "intro.paper1": [
         "In the companion paper [REF] we showed that this task maps language cortex in "
-        "the clinical setting. High-gamma responses were found at [n]% of implanted "
+        "the clinical setting. High-frequency activity responses were found at [n]% of implanted "
         "contacts, agreed with ESM at [x]% of stimulated sites, and were obtained in "
         "[minutes] at the bedside. That paper asked which electrodes respond. It "
         "established the recording as a mapping tool.",
@@ -663,7 +663,7 @@ EXAMPLES = {
     "intro.q_stable": [
         "A cluster is only a type if it is still there when the analysis changes. We "
         "test that three ways. Across feature representations: the same electrodes "
-        "described by high gamma alone, by five frequency bands, or by the full "
+        "described by high-frequency activity alone, by five frequency bands, or by the full "
         "spectrum. Across algorithms: convex NMF, k-means and hierarchical clustering on "
         "the same features. Across patients: whether each cluster draws on many people "
         "or on one. A type that appears under one setting and vanishes under another is "
@@ -734,7 +734,7 @@ EXAMPLES = {
         "The cohort is 27 patients and 1693 gated electrodes. No patient holds more "
         "than a tenth of the data. Placement followed clinical need, so coverage is "
         "dense in the temporal lobe and sparse elsewhere, and no single patient samples "
-        "the whole language network. Each electrode is described by its high-gamma "
+        "the whole language network. Each electrode is described by its high-frequency activity "
         "response in three conditions, time-warped so that the GO cue falls at the same "
         "point in every trial.",
     ],
@@ -768,7 +768,7 @@ EXAMPLES = {
         "the electrodes sit in one-patient clusters at the held-out peak (Figure 1D). "
         "Held-out variance cannot see this. Splitting a cohort until each patient has "
         "their own component fits held-out data perfectly well. We cut at K = 8, the "
-        "largest K at which no high-gamma cluster is dominated by one patient and at "
+        "largest K at which no high-frequency activity cluster is dominated by one patient and at "
         "most one is in any other feature set.",
         "The number of clusters is a choice, and the standard criterion gives the wrong "
         "answer. Bi-cross-validated fit rises to a peak near K = 11 and falls slowly "
@@ -776,7 +776,7 @@ EXAMPLES = {
         "patient starts rising at K = 9 and reaches 60% by K = 30 (Figure 1D). A "
         "cluster that is one patient's electrode strip explains held-out variance as "
         "well as a real one. It is not a response type. K = 8 is the last value at "
-        "which every high-gamma cluster draws on many patients. That is the K we "
+        "which every high-frequency activity cluster draws on many patients. That is the K we "
         "report, and we show the held-out peak beside it so the reader can see what was "
         "traded.",
     ],
@@ -787,7 +787,7 @@ EXAMPLES = {
         "same features it ranges from 0.16 to 0.45, median 0.18. Per electrode, all "
         "four feature sets agree on the cluster for 21.7% of electrodes, against 0.4% "
         "by chance; all four algorithms agree for 24.7%, against 1.1%. The ceiling "
-        "matters. Convex NMF on high gamma agrees with itself, on resamples of the same "
+        "matters. Convex NMF on high-frequency activity agrees with itself, on resamples of the same "
         "data, at a Jaccard of only 0.55. K-means reaches 0.82. No cross-method "
         "agreement can exceed what a method reproduces on its own.",
         "The types are partly stable. Feature sets agree at a median ARI of 0.31 and "
@@ -842,7 +842,7 @@ EXAMPLES = {
         "bands z-scored - gives eight types at K = 8 in each (Figure S[n]), matched to "
         "the reference solution. Where a type is recovered by all four it carries the "
         "same name; where it is not, it is left unnamed. The 5-band z-scored solution "
-        "is the one the paper reports as its standard, with high gamma as the "
+        "is the one the paper reports as its standard, with high-frequency activity as the "
         "comparison the field starts from.",
         "Two controls a reviewer will ask for. The clustering repeated with the "
         "response window excluded, to show the production type is not an artefact of "
@@ -874,7 +874,7 @@ EXAMPLES = {
         "be fulfilled by the lead contact, [name] ([email]).",
     ],
     "front.keywords": [
-        "intracranial EEG; stereo-EEG; high-gamma; language mapping; functional "
+        "intracranial EEG; stereo-EEG; high-frequency activity; language mapping; functional "
         "mapping; epilepsy surgery; clustering; non-negative matrix factorization; "
         "electrical stimulation mapping; language atlas",
         "sEEG; passive language mapping; response types; convex NMF; cluster "
@@ -910,7 +910,7 @@ EXAMPLES = {
     "high.graphical": [
         "The abstract condenses FIG 1B. Top: the task - one output, three inputs - as "
         "the stimulus-and-cue strip from panel C. Middle: five of the eight response "
-        "types, each as its mean high-gamma time course over the three conditions with "
+        "types, each as its mean high-frequency activity time course over the three conditions with "
         "±1 SD, the GO cue dashed, and its electrodes on both hemispheres seen from "
         "their own sides: production (a rise after the cue in every condition), "
         "auditory onset (a sharp rise at the start of the audio block), ramp to cue "
@@ -937,7 +937,7 @@ EXAMPLES = {
         "intracranial recordings is faster but reduces each electrode to active or "
         "silent. We asked whether language responses instead fall into a small number "
         "of recurring types. In 27 patients performing auditory, picture and reading "
-        "tasks, we clustered high-gamma responses from 1693 electrodes with convex "
+        "tasks, we clustered high-frequency activity responses from 1693 electrodes with convex "
         "non-negative matrix factorization and found eight types, including "
         "production-locked, auditory-onset, ramp-to-cue and suppressed responses. "
         "Held-out fit favoured more clusters, but the extra ones were single patients. "
@@ -973,7 +973,7 @@ EXAMPLES = {
         "supported by this study: that the types matter for surgical outcome.",
     ],
     "disc.prior": [
-        "Passive high-gamma mapping has been validated against stimulation as a "
+        "Passive high-frequency activity mapping has been validated against stimulation as a "
         "detector [REF]. Our results do not alter that; they add a dimension to it. "
         "The auditory-onset and production types match the two response classes "
         "reported in earlier descriptions of superior temporal and precentral "
@@ -1036,7 +1036,7 @@ EXAMPLES = {
         "organised the same way in each.",
     ],
     "limits.patients": [
-        "At K = 8 no high-gamma cluster is more than half one patient, but the worst "
+        "At K = 8 no high-frequency activity cluster is more than half one patient, but the worst "
         "is 46%, and at the held-out peak two of eleven are. Generalisation was used "
         "as a criterion, not demonstrated as a result; a held-out cohort would be the "
         "demonstration.",
@@ -1050,17 +1050,17 @@ EXAMPLES = {
         "on many patients, which is one criterion among several; held-out fit gives 11 "
         "to 14, and a different threshold on patient dominance would give a different "
         "number. The types that survive across K are more trustworthy than the count.",
-        "K = 8 was chosen on high gamma and applied to the other feature sets. At "
+        "K = 8 was chosen on high-frequency activity and applied to the other feature sets. At "
         "K = 8 one cluster in each of the 15-band and 5-band solutions is more than "
         "half one patient, so the same K is not equally clean everywhere.",
     ],
     "limits.method": [
-        "Every result is conditional on convex NMF, on high-gamma power, and on a time "
+        "Every result is conditional on convex NMF, on high-frequency activity power, and on a time "
         "warp that places the GO cue at the midpoint of every trial and discards "
         "absolute time. Response latencies, and any type defined by them, are "
         "invisible by construction.",
         "The self-agreement of a method sets the ceiling on every cross-method number, "
-        "and for convex NMF on high gamma that ceiling is 0.55. Some of the "
+        "and for convex NMF on high-frequency activity that ceiling is 0.55. Some of the "
         "disagreement between methods is therefore the method disagreeing with itself. "
         "[The sweep that measures this was run with identical settings on all four "
         "feature sets - update once it has been.]",
@@ -1091,7 +1091,7 @@ EXAMPLES = {
         "would.",
         "Patients were on anti-seizure medication and recorded between seizures; "
         "neither the drugs nor the interictal state can be assumed neutral for "
-        "high-gamma responses.",
+        "high-frequency activity responses.",
     ],
     # ---- STAR METHODS ---------------------------------------------------------------
     "methods.krt": [
@@ -1179,14 +1179,14 @@ EXAMPLES = {
         "dominated by noise, which the clustering then spends a component on.",
     ],
     "methods.features": [
-        "High-gamma power (70-150 Hz) was estimated by [method] and expressed in dB "
+        "High-frequency activity power (70-150 Hz) was estimated by [method] and expressed in dB "
         "relative to a pre-stimulus baseline (-0.6 to -0.1 s). Each trial was "
         "time-warped to fixed proportions (stimulus 0-50%, response 50-100%; fixation "
         "given no bins), resampled to 300 bins per condition, and averaged over "
         "trials. An electrode's feature vector is its three conditions concatenated "
         "(900 values). For the band-set representations the same was done in 5 or 15 "
         "bands at 30 bins per condition, with or without z-scoring per band.",
-        "Four representations of the same 1693 electrodes: high gamma alone, 15 "
+        "Four representations of the same 1693 electrodes: high-frequency activity alone, 15 "
         "bands, 5 bands, and 5 bands z-scored. All are trial-averaged dB time courses "
         "on the same warped time axis, so the feature sets differ in frequency content "
         "and normalisation only.",
@@ -1343,7 +1343,7 @@ FIGDIR_REL = "02_FBM_Clustering/outputs/clustering/paper_figures"
 FS_ORDER = ["concat_bands5z", "concat_hg", "concat_rawds", "concat_bands5"]
 FS_ROLE = {"concat_bands5z": "standard", "concat_hg": "state of the art",
            "concat_rawds": "candidate", "concat_bands5": "candidate"}
-FS_NAME = {"concat_hg": "HG (70-150 Hz)", "concat_rawds": "15 bands",
+FS_NAME = {"concat_hg": "HFA (70-150 Hz)", "concat_rawds": "15 bands",
            "concat_bands5": "5 bands", "concat_bands5z": "5 bands, z-scored"}
 FIG1_TAG = {"concat_hg": "a", "concat_rawds": "b", "concat_bands5": "c",
             "concat_bands5z": "d"}
@@ -1492,7 +1492,7 @@ def build():
          'current run&rsquo;s numbers; they are a starting point, not the text. Above '
          'each figure box, a carousel of every candidate version of that figure: the '
          '<b>standard</b> is convex NMF on 5 bands z-scored, <b>state of the art</b> '
-         'is high gamma, the rest are candidates. Arrow keys work.</p>',
+         'is high-frequency activity, the rest are candidates. Arrow keys work.</p>',
          '',
          '    <div class="pf-warn">',
          '      <b>Your writing is saved in this browser only.</b> It is not in git, not '
