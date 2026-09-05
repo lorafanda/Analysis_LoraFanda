@@ -1,42 +1,44 @@
 #!/usr/bin/env python3
 """
-00_paper2_figure0_coverage.py - FIG 0, the cohort: what the gate saw and what it kept,
-where those electrodes are, how much of them the atlas covers, and what the gate is
-deciding at the line.
+00_paper2_figure0_coverage.py - FIG 0, the task and the cohort, in two figures.
 
-    python 00_paper2_figure0_coverage.py                      the cohort every figure uses
+    python 00_paper2_figure0_coverage.py                      both figures
     python 00_paper2_figure0_coverage.py --k 8 --feature-set concat_hg
 
+THE PAPER'S FIG 0 (FIG0_cohort.png)
+    A   the task, shown through four electrodes: for each, where it is on its own
+        hemisphere, and its three conditions concatenated on the warped time axis
+        every later figure uses - stimulus, then the response cue at mid-block.
+        One auditory, one visual, one motor, one preparatory. HAND-PICKED
+        ILLUSTRATIONS, named in EXEMPLARS below with the reading Lora gave them;
+        the caption records each one's coordinates, gate margins and whether it is in
+        the analysed cohort.
+    B   every electrode the gate saw, on the brain - left, from above, right - the
+        ones it kept in green, the ones it rejected in grey.
+
+THE SUPPLEMENT (FIG0_cohort_supplement.png)
     A   electrodes per patient: the total the gate SAW (hatched) and the number that
-        came THROUGH it (solid), each patient in the colour FIG 1 draws it in, labelled
-        kept/total
-    B   the same electrodes on the brain - left, from above, right: kept in the
-        patient's colour, rejected by the gate in grey
+        came THROUGH it (solid), each patient in the colour FIG 1 draws it in
+    B   the same electrodes on the brain, kept in the patient's colour, rejected grey
     C   of the kept electrodes, the ones with a LanA value (solid) against all kept
-        (hatched), per patient, labelled with/kept
-    D   the same on the brain: kept electrodes with a LanA value in orange, without one
-        in grey
-    E   an electrode that JUST passed the gate: its three conditions concatenated, the
-        bins the criterion counts outlined, and the count that decided it
-    F   one that JUST failed - on the same shaft as E where such a pair exists, so the
-        two differ in nothing but that count
+    D   the same on the brain: with a LanA value in orange, without one in grey
+    E   an electrode that JUST passed the gate, and F one that JUST failed - on the
+        same shaft where such a pair exists - with the counted bins outlined and the
+        count that decided it
 
 WHAT 'TOTAL' MEANS. The electrodes the gate actually saw: the ungated table for the
 cohort's patients, minus what lf_concat removes BEFORE the gate - non-neural channels,
 grid and microelectrode contacts, excluded patients - and minus electrodes missing a
-condition, which the gate never sees whole. Those filters are IMPORTED from the
-pipeline rather than re-described, and the result is checked: the total must split
-exactly into the cohort and the gate's rejects, or the figure stops.
+condition. Those filters are IMPORTED from the pipeline, and the result is checked: the
+total must split exactly into the cohort and the gate's rejects, or the figure stops.
 
 THE GATE, read from the cache's own params.json rather than retyped. For each
 electrode-condition ERSP (n_freq x n_time bins, dB re the pre-stimulus baseline), the
 fraction of bins above thr_pos must reach min_prop_pos, OR the fraction below thr_neg
 must reach min_prop_neg. An electrode is kept if ANY of its three conditions passes.
-The rule is re-applied to the ungated table and must reproduce the stored flag on every
-row.
 
-NO CAPTION IS DRAWN ON THE FIGURE - it gets <name>_caption.txt, _patients.csv and
-_examples.csv beside it.
+NO CAPTION IS DRAWN ON EITHER FIGURE - each gets <name>_caption.txt, plus
+_exemplars.csv (paper) and _patients.csv / _examples.csv (supplement).
 """
 from __future__ import annotations
 
@@ -73,22 +75,37 @@ def _load(name, fname):
     return m
 
 
-# The cohort, its patient colours, the brain scenes and the writers come from FIG 1;
-# the atlas join from FIG 3. Nothing is reimplemented, so this figure cannot describe a
-# different cohort, colour a patient differently, or draw a different brain from the
-# figures that follow it.
+# The cohort, its patient colours, the brain scenes, the trial strip and the writers come
+# from FIG 1; the atlas join from FIG 3. Nothing is reimplemented, so this figure cannot
+# describe a different cohort, colour a patient differently, or draw a different brain
+# from the figures that follow it.
 P2 = _load("p2fig1", "00_Paper2_Figures.py")
 F3 = _load("p2fig3", "00_paper2_figure3_lana.py")
 
 CLUST, OUT = P2.CLUST, P2.OUT
 INK, MUTED, GREY = P2.INK, P2.MUTED, P2.GREY
-RED, GREEN = P2.RED, P2.GREEN
-ORANGE = "#e08214"
+RED, GREEN, BLUE = P2.RED, P2.GREEN, P2.BLUE
+ORANGE, PURPLE = "#e08214", "#5b2c83"
 CACHE_DIR = ROOT / "outputs" / "_dataset" / "concat_source_v4"
 VLIM = 7.0          # the project's own ERSP colour scale, dB
 FMAX = 400.0        # Hz, the top of the cube the gate counts over
 FATES = ("kept", "failed the gate", "grid contact", "microelectrode",
          "non-neural channel", "missing a condition", "patient not in the cohort")
+
+# THE FOUR ELECTRODES OF PANEL A. Chosen by hand as illustrations of the task, not by
+# any statistic; the reading in the fourth column is Lora's. A kind whose patient is
+# None is skipped with a note, so the figure still builds while a choice is pending.
+#   kind, patient, electrode, region, what it shows, colour
+EXEMPLARS = [
+    ("auditory", "PAT_3455", "OTD7", "superior temporal gyrus",
+     "selective to the auditory stimulus, and again when the patient speaks", BLUE),
+    ("visual", "PAT_3415", "OS1", "lateral occipital cortex",
+     "responds to the visual stimuli", PURPLE),
+    ("motor", "PAT_6953", "TPD10", "sensorimotor cortex, around the central sulcus",
+     "the verbal response: a burst after the cue in every condition, nothing to the stimulus", RED),
+    ("preparatory", "PAT_6854", "IAG6", "anterior insula",
+     "activity building toward the response cue in every condition", ORANGE),
+]
 
 
 # ---- the gate ------------------------------------------------------------------
@@ -238,6 +255,13 @@ def render_set(side, xyz, hemi, rgba, radius):
     return P2._crop_alpha(np.asarray(img)), int(ok.sum())
 
 
+def _show(ax, img):
+    ax.imshow(img)
+    ax.set_xticks([]); ax.set_yticks([])
+    for s_ in ax.spines.values():
+        s_.set_visible(False)
+
+
 def panel_brains(axes, xyz, hemi, rgba, radius):
     """Left, from above, right; the count drawn under each. The colour key goes on the
     panel's label line, not on the image, where the frontal pole's spheres clip it."""
@@ -245,17 +269,179 @@ def panel_brains(axes, xyz, hemi, rgba, radius):
     n = {}
     for ax, side, tag in zip(axes, ("L", "T", "R"), ("left", "from above", "right")):
         img, n[side] = render_set(side, xyz, hemi, rgba, radius)
-        ax.imshow(img)
-        ax.set_xticks([]); ax.set_yticks([])
-        for s_ in ax.spines.values():
-            s_.set_visible(False)
+        _show(ax, img)
         ax.text(0.02, 0.02, f"{tag}  {n[side]}", transform=ax.transAxes, ha="left",
                 va="bottom", fontsize=7.0, color=MUTED)
     return n
 
 
-# ---- panels ---------------------------------------------------------------------
-def panel_bars(ax, order, total, part, pcol, ylabel, none_label="none"):
+def rgba_of(colour, alpha=255):
+    c = np.clip(255 * np.array(to_rgba(colour)[:3]), 0, 255).astype(np.uint8)
+    return np.array([*c, alpha], np.uint8)
+
+
+# ---- the concatenated ERSP ---------------------------------------------------------
+def cube_of(t, patient, electrode, conds):
+    """The three conditions of one electrode, side by side, plus the rows behind them."""
+    rows = {c: t[(t.patient_id == patient) & (t.electrode == electrode)
+                 & (t.condition == c)] for c in conds}
+    for c, r in rows.items():
+        if r.empty:
+            raise SystemExit(f"{patient} {electrode}: no ERSP for '{c}'")
+    rows = {c: r.iloc[0] for c, r in rows.items()}
+    arrs = [np.load(rows[c].file_path) for c in conds]
+    nf, nt = arrs[0].shape
+    if any(a.shape != (nf, nt) for a in arrs):
+        raise SystemExit(f"{patient} {electrode}: conditions differ in shape")
+    return np.concatenate(arrs, axis=1), arrs, rows, nf, nt
+
+
+def draw_cube(ax, A, conds, nf):
+    """The concatenated ERSP with the block boundaries and the GO cue dashed."""
+    x = np.linspace(0, len(conds), A.shape[1])
+    f = np.linspace(0, FMAX, nf)
+    ax.pcolormesh(x, f, A, cmap="RdBu_r", vmin=-VLIM, vmax=VLIM, shading="auto",
+                  rasterized=True)
+    for b in range(len(conds)):
+        ax.axvline(b + 0.5, color=INK, lw=0.8, ls=(0, (4, 3)))
+        if b:
+            ax.axvline(b, color=INK, lw=1.2)
+    ax.set_xlim(0, len(conds)); ax.set_ylim(0, FMAX)
+    ax.set_xticks([])
+    ax.set_ylabel("Hz", fontsize=7.6)
+    ax.tick_params(labelsize=7, colors=MUTED, length=2)
+    return x
+
+
+# ---- panels: the paper -----------------------------------------------------------
+def panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys):
+    """One electrode: a header line, where it sits on its own hemisphere, and its
+    three conditions concatenated under the trial strip."""
+    kind, patient, electrode, region, reading, col = ex
+    conds = gp["conds"]
+    A, arrs, rows, nf, nt = cube_of(t, patient, electrode, conds)
+    key = f"{patient}|{P2.norm(electrode)}"
+    xyz, hemi = coords([key])
+    if not np.isfinite(xyz[0, 0]):
+        raise SystemExit(f"{patient} {electrode}: no fsaverage coordinate, cannot place it")
+    side = str(hemi[0])
+    # the brain: this electrode alone, large, on the lateral view of its hemisphere
+    _fresh_scenes()
+    img, _ = render_set(side, xyz, hemi, rgba_of(col)[None, :],
+                        np.array([P2.BG_RADIUS * 3.2]))
+    _show(axB, img)
+    axB.text(0.02, 0.02, f"{'left' if side == 'L' else 'right'} hemisphere",
+             transform=axB.transAxes, ha="left", va="bottom", fontsize=6.8, color=MUTED)
+    # the header
+    # the strip below draws its condition labels ABOVE itself, into the bottom of this
+    # row, so the header's own text stays in the upper 60%
+    axH.axis("off")
+    axH.text(0, 0.86, kind.upper(), transform=axH.transAxes, ha="left", va="center",
+             fontsize=10.2, color=col, fontweight="bold")
+    axH.text(0.17, 0.86, f"{patient} · {electrode} · {region}", transform=axH.transAxes,
+             ha="left", va="center", fontsize=9.6, color=INK)
+    axH.text(0.17, 0.56, reading, transform=axH.transAxes, ha="left", va="center",
+             fontsize=8.2, color=MUTED, style="italic")
+    # the strip and the cube
+    P2.trial_strip(axS, dict(conds=conds))
+    draw_cube(axC, A, conds, nf)
+    for s_ in axC.spines.values():
+        s_.set_color(col); s_.set_linewidth(1.4)
+    return dict(kind=kind, patient=patient, electrode=electrode, region=region,
+                reading=reading, hemi=side, x=float(xyz[0, 0]), y=float(xyz[0, 1]),
+                z=float(xyz[0, 2]), in_cohort=key in keys,
+                **{f"margin_{c}": round(float(rows[c].margin), 3) for c in conds},
+                peak_dB=round(float(np.nanmax(A)), 2))
+
+
+def figure_0_paper(t, u, d, gp):
+    t0 = time.time()
+    keys = cohort_keys(d)
+    exs = [e for e in EXEMPLARS if e[1] is not None]
+    for e in EXEMPLARS:
+        if e[1] is None:
+            print(f"    NOTE no electrode chosen yet for the {e[0]} exemplar - skipped")
+
+    # B: what the gate saw, kept in green, rejected in grey
+    uxyz, uhemi = coords(u.key.to_list())
+    kept = u.kept.to_numpy()
+    rgba_u = np.where(kept[:, None], rgba_of(GREEN), rgba_of(P2.BG, 150)).astype(np.uint8)
+    rad_u = np.where(kept, P2.BG_RADIUS * 1.25, P2.BG_RADIUS * 0.95)
+
+    ncell = max(len(exs), 1)
+    nrow_ex = int(np.ceil(ncell / 2))
+    fig = plt.figure(figsize=(17.6, 5.6 + 3.0 * nrow_ex), dpi=190)
+    gs = GridSpec(2, 1, figure=fig, height_ratios=[1.0 * nrow_ex, 1.15], hspace=0.30,
+                  left=0.055, right=0.945, top=0.905, bottom=0.04)
+    fig.suptitle(f"FIG 0   ·   the task and the cohort   ·   the gate saw {len(u)} "
+                 f"electrodes in {d['n_patients']} patients and kept {int(kept.sum())}",
+                 x=0.055, y=0.975, ha="left", fontsize=15.5, color=INK)
+    fig.text(0.055, 0.950,
+             "Three naming conditions - auditory, picture, written sentence - each with a "
+             "stimulus and then a response cue (dashed), on the warped time axis every "
+             "later figure uses.  Four electrodes show what the recordings look like; the "
+             "brains below show every electrode the responsiveness gate saw.",
+             fontsize=9.8, color=MUTED, va="top")
+
+    gA = GridSpecFromSubplotSpec(nrow_ex, 2, gs[0], hspace=0.40, wspace=0.10)
+    rows_out, firsts = [], []
+    for i, ex in enumerate(exs):
+        cell = GridSpecFromSubplotSpec(3, 2, gA[i // 2, i % 2],
+                                       height_ratios=[0.46, 0.30, 1.0],
+                                       width_ratios=[1.0, 2.5], hspace=0.06, wspace=0.05)
+        axH = fig.add_subplot(cell[0, :])
+        axB = fig.add_subplot(cell[1:, 0])
+        axS, axC = fig.add_subplot(cell[1, 1]), fig.add_subplot(cell[2, 1])
+        rows_out.append(panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys))
+        firsts.append((axH, axC))
+        print(f"    {ex[0]:<12} {ex[1]} {ex[2]}  {'in cohort' if rows_out[-1]['in_cohort'] else 'NOT in cohort'}")
+
+    cB = GridSpecFromSubplotSpec(1, 3, gs[1], wspace=0.03)
+    axB3 = [fig.add_subplot(cB[0, i]) for i in range(3)]
+    nB = panel_brains(axB3, uxyz, uhemi, rgba_u, rad_u)
+
+    # one colour bar for the cubes, in the margin the grid leaves free
+    from matplotlib.cm import ScalarMappable
+    from matplotlib.colors import Normalize
+    if firsts:
+        tops = [axc.get_position() for _, axc in firsts]
+        y0, y1 = min(p.y0 for p in tops), max(p.y1 for p in tops)
+        cax = fig.add_axes([0.958, y0, 0.010, y1 - y0])
+        cb = fig.colorbar(ScalarMappable(norm=Normalize(-VLIM, VLIM), cmap="RdBu_r"),
+                          cax=cax)
+        cb.set_label("dB re baseline", fontsize=7.6, color=MUTED)
+        cb.ax.tick_params(labelsize=6.8, colors=MUTED, length=2)
+        cb.outline.set_visible(False)
+
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    inv = fig.transFigure.inverted()
+    labels = [(axB3[0], "B  ·  every electrode the gate saw",
+               "active, through the gate: green   ·   inactive, rejected: grey")]
+    if firsts:
+        labels.insert(0, (firsts[0][0], "A  ·  the task, through four electrodes", ""))
+    for ax, label, right in labels:
+        top = inv.transform((0, ax.get_tightbbox(r).y1))[1]
+        fig.text(0.055, top + 0.004, label, fontsize=10.4, color=INK, va="bottom")
+        if right:
+            fig.text(0.945, top + 0.004, right, fontsize=8.8, color=MUTED, va="bottom",
+                     ha="right")
+
+    OUT.mkdir(parents=True, exist_ok=True)
+    p = OUT / "FIG0_cohort.png"
+    P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    ex_df = pd.DataFrame(rows_out)
+    P2.save_text(ex_df.to_csv(index=False), p.with_name(p.stem + "_exemplars.csv"))
+    n_noxyz = dict(kept=int((~np.isfinite(uxyz[:, 0]) & kept).sum()),
+                   rejected=int((~np.isfinite(uxyz[:, 0]) & ~kept).sum()))
+    caption_paper(p.with_name(p.stem + "_caption.txt"), d, gp, u, ex_df, nB, n_noxyz)
+    print(f"  {time.time()-t0:.0f}s  -> {p.name}")
+    return p
+
+
+# ---- panels: the supplement -------------------------------------------------------
+def panel_bars(ax, order, total, part, pcol, ylabel):
     """Hatched = the total, solid = the part, labelled part/total in the patient's
     colour - the reference style. Same x for every bars panel of the figure."""
     x = np.arange(len(order))
@@ -281,22 +467,13 @@ def panel_bars(ax, order, total, part, pcol, ylabel, none_label="none"):
 
 
 def panel_example(axS, ax, t, row, gp, passed):
-    """One electrode: its conditions side by side on the warped axis FIG 1 uses, the
-    bins the criterion counts OUTLINED (solid above thr_pos, dotted below thr_neg),
-    the GO cue dashed at the middle of each block, and under each block the count
-    against the count it needed."""
+    """One electrode at the gate's line: its conditions side by side, the bins the
+    criterion counts OUTLINED (solid above thr_pos, dotted below thr_neg), and under
+    each block the count against the count it needed."""
     conds = gp["conds"]
-    rows = {c: t[(t.patient_id == row.patient_id) & (t.electrode == row.electrode)
-                 & (t.condition == c)].iloc[0] for c in conds}
-    arrs = [np.load(rows[c].file_path) for c in conds]
-    nf, nt = arrs[0].shape
-    if any(a.shape != (nf, nt) for a in arrs):
-        raise SystemExit(f"{row.patient_id} {row.electrode}: conditions differ in shape")
-    A = np.concatenate(arrs, axis=1)
-    x = np.linspace(0, len(conds), A.shape[1])
+    A, arrs, rows, nf, nt = cube_of(t, row.patient_id, row.electrode, conds)
+    x = draw_cube(ax, A, conds, nf)
     f = np.linspace(0, FMAX, nf)
-    ax.pcolormesh(x, f, A, cmap="RdBu_r", vmin=-VLIM, vmax=VLIM, shading="auto",
-                  rasterized=True)
     need_p, need_n = round(gp["min_pos"] * nf * nt), round(gp["min_neg"] * nf * nt)
     detail = []
     for b, c in enumerate(conds):
@@ -306,9 +483,6 @@ def panel_example(axS, ax, t, row, gp, passed):
         if (a < gp["thr_neg"]).any():
             ax.contour(xs, f, (a < gp["thr_neg"]).astype(float), levels=[0.5],
                        colors=[INK], linewidths=0.5, linestyles="dotted")
-        ax.axvline(b + 0.5, color=INK, lw=0.8, ls=(0, (4, 3)))
-        if b:
-            ax.axvline(b, color=INK, lw=1.2)
         r = rows[c]
         n_pos = round(float(r.prop_above_pos) * nf * nt)
         n_neg = round(float(r.prop_below_neg) * nf * nt)
@@ -322,10 +496,6 @@ def panel_example(axS, ax, t, row, gp, passed):
         detail.append(dict(condition=c, bins_pos=n_pos, need_pos=need_p,
                            bins_neg=n_neg, need_neg=need_n, passes=ok,
                            margin=float(r.margin)))
-    ax.set_xlim(0, len(conds)); ax.set_ylim(0, FMAX)
-    ax.set_xticks([])
-    ax.set_ylabel("Hz", fontsize=7.6)
-    ax.tick_params(labelsize=7, colors=MUTED, length=2)
     col = GREEN if passed else RED
     for s_ in ax.spines.values():
         s_.set_color(col); s_.set_linewidth(1.6)
@@ -349,22 +519,15 @@ def panel_example(axS, ax, t, row, gp, passed):
                 verdict=verdict, detail=detail, n_bins=nf * nt)
 
 
-# ---- the figure -------------------------------------------------------------------
-def figure_0(fset, k):
+def figure_0_supplement(t, g, u, d, gp):
     t0 = time.time()
-    gp = gate_params()
-    d = F3.load(fset, k)                       # the cohort, with P_lana joined
     pcol = P2.patient_colours(d)
-    t = load_gate(gp)
-    g = fate(per_electrode(t), d, gp)
-    u = universe(g)
     a, b, how = pick_examples(u)
     counts = g.fate.value_counts()
     print("  " + "   ".join(f"{f_} {int(counts.get(f_, 0))}" for f_ in FATES))
     print(f"  at the line: {a.patient_id} {a.electrode} (margin {a.best:.4f}) vs "
           f"{b.patient_id} {b.electrode} ({b.best:.4f}) - {how}")
 
-    # per patient: total seen, kept, kept with a LanA value - in patient order
     order = sorted(set(d["patient"]))
     tot = u.groupby("patient_id").size().reindex(order).fillna(0).astype(int).to_numpy()
     kep = u[u.kept].groupby("patient_id").size().reindex(order).fillna(0).astype(int).to_numpy()
@@ -376,29 +539,21 @@ def figure_0(fset, k):
                             gate_rate=(kep / np.maximum(tot, 1)).round(4),
                             lana_coverage=(lan / np.maximum(kep, 1)).round(4)))
 
-    # coordinates: the universe for B, the cohort for D
     uxyz, uhemi = coords(u.key.to_list())
     u_kept = u.kept.to_numpy()
-    rgba_u = np.empty((len(u), 4), np.uint8)
-    grey = np.clip(255 * P2.BG, 0, 255).astype(np.uint8)
-    for i, (p, kp) in enumerate(zip(u.patient_id, u_kept)):
-        rgba_u[i, :3] = (np.clip(255 * np.array(pcol[p]), 0, 255).astype(np.uint8)
-                         if kp else grey)
-        rgba_u[i, 3] = 255 if kp else 150
+    grey = rgba_of(P2.BG, 150)
+    rgba_u = np.array([rgba_of(pcol[p]) if kp else grey
+                       for p, kp in zip(u.patient_id, u_kept)], np.uint8)
     rad_u = np.where(u_kept, P2.BG_RADIUS * 1.25, P2.BG_RADIUS * 0.95)
     has = np.asarray(d["has"])
-    rgba_c = np.empty((len(has), 4), np.uint8)
-    rgba_c[:, :3] = np.where(has[:, None],
-                             np.clip(255 * np.array(to_rgba(ORANGE)[:3]), 0, 255).astype(np.uint8),
-                             grey)
-    rgba_c[:, 3] = np.where(has, 255, 150)
+    rgba_c = np.where(has[:, None], rgba_of(ORANGE), grey).astype(np.uint8)
     rad_c = np.where(has, P2.BG_RADIUS * 1.25, P2.BG_RADIUS * 0.95)
 
     fig = plt.figure(figsize=(17.6, 21.0), dpi=190)
     gs = GridSpec(6, 1, figure=fig, height_ratios=[1.0, 1.55, 0.95, 1.55, 1.15, 1.15],
                   hspace=0.60, left=0.055, right=0.945, top=0.940, bottom=0.028)
-    fig.suptitle(f"FIG 0   ·   the cohort   ·   the gate saw {len(u)} electrodes in "
-                 f"{len(order)} patients and kept {int(u_kept.sum())}   ·   "
+    fig.suptitle(f"FIG S0   ·   the cohort, per patient   ·   the gate saw {len(u)} "
+                 f"electrodes in {len(order)} patients and kept {int(u_kept.sum())}   ·   "
                  f"{int(has.sum())} of those have a LanA value",
                  x=0.055, y=0.982, ha="left", fontsize=15.5, color=INK)
     fig.text(0.055, 0.964,
@@ -447,15 +602,13 @@ def figure_0(fset, k):
              GREEN, True),
             (ex["F"][0], "F  ·  just not, and why", ex["F"][2]["verdict"], RED, True)):
         top = inv.transform((0, ax.get_tightbbox(r).y1))[1]
-        # at the grid's left margin for every panel: a brain axes shrinks to its
-        # image's aspect, so its own left edge would put B and D's labels indented
         fig.text(0.055, top + 0.004, label, fontsize=10.4, color=INK, va="bottom")
         if right:
             fig.text(0.945, top + 0.004, right, fontsize=9.2 if bold else 8.8, color=col,
                      va="bottom", ha="right", fontweight="bold" if bold else "normal")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / "FIG0_cohort.png"
+    p = OUT / "FIG0_cohort_supplement.png"
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     P2.save_text(tab.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))
@@ -466,20 +619,15 @@ def figure_0(fset, k):
                  p.with_name(p.stem + "_examples.csv"))
     n_noxyz = dict(kept=int((~np.isfinite(uxyz[:, 0]) & u_kept).sum()),
                    rejected=int((~np.isfinite(uxyz[:, 0]) & ~u_kept).sum()))
-    caption_0(p.with_name(p.stem + "_caption.txt"), d, gp, tab, counts, u, nB, nD,
-              n_noxyz, ex["E"][2], ex["F"][2], how, fset, k)
+    caption_supplement(p.with_name(p.stem + "_caption.txt"), d, gp, tab, counts, u, nB,
+                       nD, n_noxyz, ex["E"][2], ex["F"][2], how)
     print(f"  {time.time()-t0:.0f}s  -> {p.name}")
     return p
 
 
-# ---- the caption --------------------------------------------------------------------
-def caption_0(path, d, gp, tab, counts, u, nB, nD, n_noxyz, exE, exF, how, fset, k):
-    L = []
-    A = L.append
+# ---- the captions ------------------------------------------------------------------
+def _gate_lines(A, gp, u, n_in):
     nb = gp["n_freq"] * gp["n_time"]
-    A("FIG 0   ·   the cohort")
-    A("=" * 100)
-    A("")
     A("THE GATE, as the cache that applied it recorded it")
     A("-" * 100)
     A(f"For each electrode-condition ERSP - {gp['n_freq']} frequencies x {gp['n_time']} "
@@ -492,8 +640,77 @@ def caption_0(path, d, gp, tab, counts, u, nB, nD, n_noxyz, exE, exF, how, fset,
     A("An electrode is KEPT if any of its three conditions passes. The rule counts bins")
     A("over a threshold across the whole cube: it is not a high-gamma measure and it is")
     A("not a test of whether the response repeats. Re-derived from the stored proportions,")
-    A("it reproduces the stored flag on every row of the table.")
+    A(f"it reproduces the stored flag on every row; all {n_in} cohort electrodes come out kept.")
     A("")
+
+
+def caption_paper(path, d, gp, u, ex_df, nB, n_noxyz):
+    L = []
+    A = L.append
+    A("FIG 0   ·   the task and the cohort")
+    A("=" * 100)
+    A("")
+    A("THE TASK")
+    A("-" * 100)
+    A("Three naming conditions: an auditory stimulus, a picture, a written sentence. Each")
+    A("trial is stimulus, then a response cue. The time axis is WARPED, not clock time:")
+    A("stimulus and response each occupy half a block (proportions 0, 0.5, 0.5), the")
+    A("response cue falls at mid-block (dashed), and the fixation screen contributes no")
+    A("bins - the baseline every dB value is expressed against comes from it. This is the")
+    A("axis every centroid and every cube in the paper is drawn on.")
+    A("")
+    A("PANEL A - four electrodes, chosen by hand as illustrations")
+    A("-" * 100)
+    A("Not selected by any statistic and not a claim about the cohort: they show what the")
+    A("recordings look like and what the three conditions do to a contact of each kind.")
+    A("Each is drawn alone on the lateral view of its own hemisphere, and its three")
+    A("conditions concatenated on the axis above, 0-400 Hz, on the project's +-7 dB scale.")
+    A("")
+    for r_ in ex_df.itertuples():
+        A(f"  {r_.kind.upper():<12} {r_.patient} {r_.electrode}  {r_.region}  "
+          f"({r_.hemi}, x {r_.x:.0f}  y {r_.y:.0f}  z {r_.z:.0f})")
+        A(f"  {'':<12} {r_.reading}")
+        A(f"  {'':<12} gate margin  "
+          + "  ".join(f"{c} {getattr(r_, 'margin_' + c):.2f}" for c in gp["conds"])
+          + f"   (>= 1 passes)   peak {r_.peak_dB:+.1f} dB   "
+          + ("in the analysed cohort" if r_.in_cohort else
+             "NOT IN THE ANALYSED COHORT - removed before the gate"))
+        A("")
+    A("PANEL B - every electrode the gate saw")
+    A("-" * 100)
+    A("Left, from above (anterior up, left on the left), right. Electrodes that passed")
+    A("the gate - the cohort every later figure is computed on - in green at full size;")
+    A("the ones it rejected smaller, grey and lighter.")
+    A(f"  seen {len(u)}   kept {int(u.kept.sum())}   rejected {int((~u.kept).sum())}")
+    A(f"  drawn   left {nB['L']}   from above {nB['T']}   right {nB['R']}")
+    A(f"  without fsaverage coordinates, so not drawn: {n_noxyz['kept']} kept, "
+      f"{n_noxyz['rejected']} rejected")
+    A("")
+    _gate_lines(A, gp, u, int(u.kept.sum()))
+    A("PROVENANCE")
+    A("-" * 100)
+    A(f"  gate table      {CACHE_DIR.relative_to(ROOT).as_posix()}/df_meta.parquet")
+    A(f"  gate params     {CACHE_DIR.relative_to(ROOT).as_posix()}/params.json")
+    A(f"  coordinates     {P2.COORDS.relative_to(ROOT).as_posix()}")
+    A("  exemplars       EXEMPLARS in 00_paper2_figure0_coverage.py")
+    A(f"  built on        {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    A("")
+    A("WHAT THIS FIGURE DOES NOT SHOW")
+    A("-" * 100)
+    A("  - Who the cohort is made of, patient by patient, how much of it the atlas covers,")
+    A("    and what the gate decides at the line: FIG S0, the supplement.")
+    A("  - Any claim that these four are typical. They are the clearest examples, picked")
+    A("    to explain the task.")
+    P2.save_text("\n".join(L) + "\n", path)
+
+
+def caption_supplement(path, d, gp, tab, counts, u, nB, nD, n_noxyz, exE, exF, how):
+    L = []
+    A = L.append
+    A("FIG S0   ·   the cohort, per patient")
+    A("=" * 100)
+    A("")
+    _gate_lines(A, gp, u, int(u.kept.sum()))
     A("WHAT 'TOTAL' MEANS, AND WHAT HAPPENED TO EVERY ELECTRODE IN THE TABLE")
     A("-" * 100)
     A("The total in A is what the gate SAW: the ungated table for the cohort's patients,")
@@ -569,14 +786,13 @@ def caption_0(path, d, gp, tab, counts, u, nB, nD, n_noxyz, exE, exF, how, fset,
     A("")
     A("PROVENANCE")
     A("-" * 100)
-    A(f"  cohort          {fset} cnmf run at K={k} - the electrode set is the same at every K")
+    A(f"  cohort          the cnmf run's labels.csv - the electrode set is the same at every K")
     A(f"  gate table      {CACHE_DIR.relative_to(ROOT).as_posix()}/df_meta.parquet")
     A(f"  gate params     {CACHE_DIR.relative_to(ROOT).as_posix()}/params.json")
     A("  filters         lf_dataset.is_non_neural_electrode / is_grid_electrode /")
     A("                  is_micro_electrode, lf_concat.DEFAULT_EXCLUDE_PATIENTS")
     A(f"  coordinates     {P2.COORDS.relative_to(ROOT).as_posix()}")
     A(f"  atlas           {d['lana_src']}")
-    A(f"  built by        00_paper2_figure0_coverage.py --feature-set {fset} --k {k}")
     A(f"  built on        {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     A("")
     A("WHAT THIS FIGURE DOES NOT SHOW")
@@ -589,13 +805,30 @@ def caption_0(path, d, gp, tab, counts, u, nB, nD, n_noxyz, exE, exF, how, fset,
     P2.save_text("\n".join(L) + "\n", path)
 
 
+# ---- main --------------------------------------------------------------------------
+def prepare(fset, k):
+    gp = gate_params()
+    d = F3.load(fset, k)                       # the cohort, with P_lana joined
+    t = load_gate(gp)
+    g = fate(per_electrode(t), d, gp)
+    u = universe(g)
+    return gp, d, t, g, u
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--feature-set", default="concat_hg")
     ap.add_argument("--k", type=int, default=8)
+    ap.add_argument("--only", choices=["paper", "supplement"], default=None)
     a = ap.parse_args()
     print(f"=== FIGURE 0 ===  cohort of {a.feature_set} at K={a.k}")
-    figure_0(a.feature_set, a.k)
+    gp, d, t, g, u = prepare(a.feature_set, a.k)
+    if a.only in (None, "paper"):
+        print("  the paper's FIG 0 ...")
+        figure_0_paper(t, u, d, gp)
+    if a.only in (None, "supplement"):
+        print("  the supplement, FIG S0 ...")
+        figure_0_supplement(t, g, u, d, gp)
     return 0
 
 

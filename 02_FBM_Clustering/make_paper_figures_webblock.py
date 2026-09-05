@@ -49,9 +49,30 @@ def rel(p: Path) -> str:
 
 
 def fig0_bullets(png: Path):
-    """The cohort, from the per-patient table and the two electrodes at the line."""
+    """The cohort, from the per-patient table and the two electrodes at the line; for
+    the paper's version, the four exemplars and the counts borrowed from the supplement."""
     stem = png.with_suffix("").name
     b = []
+    exm = FIGDIR / f"{stem}_exemplars.csv"
+    if exm.exists():
+        e = pd.read_csv(exm)
+        b.append("The task through " + ("four" if len(e) == 4 else str(len(e)))
+                 + " electrodes: " + "; ".join(
+                     f"<b>{r.kind}</b> {r.patient} {r.electrode} ({r.region})"
+                     for r in e.itertuples()) + ".")
+        out = e[~e.in_cohort.astype(bool)]
+        if len(out):
+            b.append("Chosen by hand as illustrations; "
+                     + ", ".join(f"{r.patient} {r.electrode}" for r in out.itertuples())
+                     + " sits outside the analysed cohort (removed before the gate).")
+        # the cohort counts live with the supplement
+        pt = FIGDIR / "FIG0_cohort_supplement_patients.csv"
+        if pt.exists():
+            t = pd.read_csv(pt)
+            b.append(f"The gate saw <b>{int(t.n_total.sum())}</b> electrodes in {len(t)} "
+                     f"patients and kept <b>{int(t.n_gated.sum())}</b> "
+                     f"({100*t.n_gated.sum()/t.n_total.sum():.0f}%).")
+        return b
     pt = FIGDIR / f"{stem}_patients.csv"
     ex = FIGDIR / f"{stem}_examples.csv"
     if pt.exists():
@@ -216,11 +237,16 @@ def build():
         # FIG 0 has no K in its name: the cohort is the same at every K
         k = None if stem.startswith("FIG0") else int(stem.split("_K")[-1])
         if stem.startswith("FIG0"):
-            num, title = "0", "the cohort"
+            supp = "supplement" in stem
+            num = "S0" if supp else "0"
+            title = "the cohort, per patient" if supp else "the task and the cohort"
             bullets = fig0_bullets(png)
-            alt = ("four panels: electrodes through the gate per patient, of those the "
-                   "ones with a LanA value, and two electrodes at the gate's line - one "
-                   "just kept, one just discarded")
+            alt = ("six panels: electrodes the gate saw and kept per patient, the same "
+                   "on the brain, of the kept ones those with a LanA value, the same on "
+                   "the brain, and two electrodes at the gate's line" if supp else
+                   "two panels: four electrodes illustrating the task, each on its "
+                   "hemisphere with its three conditions concatenated, and every "
+                   "electrode the gate saw on the brain, active in green")
         elif is1:
             tag = stem[4]
             fset = stem.split("_cnmf_")[0][6:]

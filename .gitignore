@@ -227,3 +227,6 @@ Thumbs.db
 # DERIVED results (atlas_corr figures, the lana_inout run) stay tracked.
 04_FBM_Pooling/federenko_atlas/
 04_FBM_Pooling/federenko-atlases-archive.zip
+
+# LanA atlas-run glassbrain renders: 60 MB per resampling, rebuilt by 252, never served
+02_FBM_Clustering/outputs/clustering/atlas/lana_*/runs/*/recon/cluster_*/
