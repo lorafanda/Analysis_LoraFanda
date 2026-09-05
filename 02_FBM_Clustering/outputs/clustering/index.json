@@ -33,7 +33,7 @@
     },
     {
       "id": "minus101",
-      "label": "\u00e2\u02c6\u20191 / 0 / +1 Segmentation"
+      "label": "âˆ’1 / 0 / +1 Segmentation"
     },
     {
       "id": "hg",
@@ -41,7 +41,7 @@
     },
     {
       "id": "rawds",
-      "label": "Raw ERSP (band-aware downsampled 15\u00c3\u201430)"
+      "label": "Raw ERSP (band-aware downsampled 15Ã—30)"
     },
     {
       "id": "concat_hg",
@@ -61,11 +61,11 @@
     },
     {
       "id": "lana_all",
-      "label": "LanA \u00c2\u00b7 all electrodes"
+      "label": "LanA Â· all electrodes"
     },
     {
       "id": "lana_concat",
-      "label": "LanA \u00c2\u00b7 concatenated cohort"
+      "label": "LanA Â· concatenated cohort"
     },
     {
       "id": "concat_hg_all",
@@ -81,76 +81,6 @@
     }
   ],
   "runs": [
-    {
-      "method": "atlas",
-      "feature_set": "lana_all",
-      "run_id": "20260802_pbins",
-      "path": "atlas/lana_all/runs/20260802_pbins",
-      "n_clusters": 5,
-      "n_samples": 2981,
-      "silhouette": null,
-      "created_at": "2026-08-02T12:52:18Z"
-    },
-    {
-      "method": "atlas",
-      "feature_set": "lana_all",
-      "run_id": "20260802_thr0p05",
-      "path": "atlas/lana_all/runs/20260802_thr0p05",
-      "n_clusters": 2,
-      "n_samples": 2981,
-      "silhouette": null,
-      "created_at": "2026-08-02T12:52:18Z"
-    },
-    {
-      "method": "atlas",
-      "feature_set": "lana_all",
-      "run_id": "20260802_thr0p1",
-      "path": "atlas/lana_all/runs/20260802_thr0p1",
-      "n_clusters": 2,
-      "n_samples": 2981,
-      "silhouette": null,
-      "created_at": "2026-08-02T12:52:18Z"
-    },
-    {
-      "method": "atlas",
-      "feature_set": "lana_concat",
-      "run_id": "20260802_pbins",
-      "path": "atlas/lana_concat/runs/20260802_pbins",
-      "n_clusters": 5,
-      "n_samples": 2617,
-      "silhouette": null,
-      "created_at": "2026-08-02T12:52:19Z"
-    },
-    {
-      "method": "atlas",
-      "feature_set": "lana_concat",
-      "run_id": "20260802_thr0p05",
-      "path": "atlas/lana_concat/runs/20260802_thr0p05",
-      "n_clusters": 2,
-      "n_samples": 2617,
-      "silhouette": null,
-      "created_at": "2026-08-02T12:52:18Z"
-    },
-    {
-      "method": "atlas",
-      "feature_set": "lana_concat",
-      "run_id": "20260802_thr0p1",
-      "path": "atlas/lana_concat/runs/20260802_thr0p1",
-      "n_clusters": 2,
-      "n_samples": 2617,
-      "silhouette": null,
-      "created_at": "2026-08-02T12:52:18Z"
-    },
-    {
-      "method": "atlas",
-      "feature_set": "lana_inout",
-      "run_id": "20260728_lana_p05_thr010",
-      "created_at": "2026-07-29T12:47:43Z",
-      "n_samples": 2644,
-      "n_clusters": 2,
-      "silhouette": null,
-      "path": "atlas/lana_inout/runs/20260728_lana_p05_thr010"
-    },
     {
       "method": "cnmf",
       "feature_set": "concat_hg",
@@ -580,6 +510,66 @@
       "silhouette": null,
       "path": "archetypes/concat_rawds/runs/20260826_183725",
       "has_ranking": false
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_all",
+      "run_id": "20260904_thr0p05",
+      "path": "atlas/lana_all/runs/20260904_thr0p05",
+      "n_clusters": 2,
+      "n_samples": 3186,
+      "silhouette": null,
+      "created_at": "2026-09-04T11:55:35Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_all",
+      "run_id": "20260904_thr0p1",
+      "path": "atlas/lana_all/runs/20260904_thr0p1",
+      "n_clusters": 2,
+      "n_samples": 3186,
+      "silhouette": null,
+      "created_at": "2026-09-04T11:55:35Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_all",
+      "run_id": "20260904_pbins",
+      "path": "atlas/lana_all/runs/20260904_pbins",
+      "n_clusters": 5,
+      "n_samples": 3186,
+      "silhouette": null,
+      "created_at": "2026-09-04T11:55:35Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_concat",
+      "run_id": "20260904_thr0p05",
+      "path": "atlas/lana_concat/runs/20260904_thr0p05",
+      "n_clusters": 2,
+      "n_samples": 2806,
+      "silhouette": null,
+      "created_at": "2026-09-04T11:55:35Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_concat",
+      "run_id": "20260904_thr0p1",
+      "path": "atlas/lana_concat/runs/20260904_thr0p1",
+      "n_clusters": 2,
+      "n_samples": 2806,
+      "silhouette": null,
+      "created_at": "2026-09-04T11:55:35Z"
+    },
+    {
+      "method": "atlas",
+      "feature_set": "lana_concat",
+      "run_id": "20260904_pbins",
+      "path": "atlas/lana_concat/runs/20260904_pbins",
+      "n_clusters": 5,
+      "n_samples": 2806,
+      "silhouette": null,
+      "created_at": "2026-09-04T11:55:36Z"
     }
   ],
   "latest": {
