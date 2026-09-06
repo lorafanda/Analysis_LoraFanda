@@ -97,10 +97,7 @@ TRACKS = [
     ("hierarchical/concat_bands5z", "Ward · concat 5-band, z-scored", "gated concat cohort"),
     # archetypal analysis, the fourth method. Listed for all four feature sets; a track
     # with no runs yet is skipped, so these populate as 243 produces them.
-    ("archetypes/concat_hg", "Archetypes · concatenated", "gated concat cohort"),
-    ("archetypes/concat_rawds", "Archetypes · concat 15-band", "gated concat cohort"),
-    ("archetypes/concat_bands5", "Archetypes · concat 5-band", "gated concat cohort"),
-    ("archetypes/concat_bands5z", "Archetypes · concat 5-band, z-scored", "gated concat cohort"),
+    # archetypal analysis dropped 2026-09-06: its runs, outputs and bundle entries are gone
     ("cnmf/concat_hg_all", "Convex NMF - ungated (argmax)", "ungated concat cohort"),
     ("kmeans/concat_hg_all", "K-means · concatenated, ungated", "ungated concat cohort"),
     ("hierarchical/concat_hg_all", "Ward · concatenated, ungated", "ungated concat cohort"),

@@ -66,7 +66,7 @@ import lf_centroids as LC  # noqa: E402   (read only - conventions, not modified
 CLUST = ROOT / "outputs" / "clustering"
 
 # The runs asked for: convex NMF, k-means and Ward, on both concat feature sets.
-METHODS = ("cnmf", "kmeans", "hierarchical", "archetypes")
+METHODS = ("cnmf", "kmeans", "hierarchical")          # archetypal analysis dropped 2026-09-06
 FEATURE_SETS = ("concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z",
                 "concat_hg_all")
 

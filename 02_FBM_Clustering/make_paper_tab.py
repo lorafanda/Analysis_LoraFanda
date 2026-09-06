@@ -1100,8 +1100,8 @@ EXAMPLES = {
         "2022); fsaverage surface (FreeSurfer [version]). Deposited data: [repository, "
         "accession]. Code: github.com/lorafanda/Analysis_LoraFanda, tagged [release].",
         "One row per resource: convex NMF implementation (this paper, lf_decompose); "
-        "stability sweep (this paper, sweep_stability); archetypal analysis (this "
-        "paper); LanA; fsaverage; electrode coordinates in fsaverage space (this "
+        "stability sweep (this paper, sweep_stability); LanA; fsaverage; electrode "
+        "coordinates in fsaverage space (this "
         "paper); the task stimuli [where deposited].",
     ],
     "methods.lead": [
@@ -1196,8 +1196,8 @@ EXAMPLES = {
         "for K = 5 to 30 with [n] random restarts and [n] iterations, keeping the "
         "lowest-error solution. Loadings were normalised to sum to 1 per electrode; "
         "the hard label is the argmax. K was chosen as the largest value at which no "
-        "cluster drew more than half its electrodes from one patient. k-means, Ward's "
-        "method and archetypal analysis were run on the same matrices for comparison.",
+        "cluster drew more than half its electrodes from one patient. k-means and "
+        "Ward's method were run on the same matrices for comparison.",
         "Why convex NMF: its centroids are convex combinations of actual electrodes, "
         "so every type is something an electrode did; and its loadings are graded, so "
         "an electrode can be mostly one type and partly another, which is what the "
@@ -1282,7 +1282,7 @@ EXAMPLES = {
         "Figure S1, held-out curves per feature set with the one-patient share; S2, "
         "the four solutions at their own held-out peaks; S3, Figure 2 with the "
         "algorithm half run on each of the other feature sets; S4, Figure 3 for the "
-        "other feature sets; S5, the archetypal-analysis solution; Table S1, "
+        "other feature sets; Table S1, "
         "per-patient electrode counts before and after gating.",
         "Everything in the carousel above that is not the standard slide goes to the "
         "supplement, one figure per candidate, in the same layout, so a reviewer can "
@@ -1319,7 +1319,7 @@ EXAMPLES = {
         "the main text as (Figure S1) and so on, and Methods S1 describing the time "
         "warp with a worked example.",
         "Keep the supplement to what a reviewer needs to check the main figures: the "
-        "other feature sets, the other K, the archetype solution, and the per-patient "
+        "other feature sets, the other K, and the per-patient "
         "table.",
     ],
 }

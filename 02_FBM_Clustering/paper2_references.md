@@ -57,10 +57,8 @@ justifies needing one. FIG 3, both panels; the reason the c3 enrichment disappea
 Normalised mutual information and its variants. The lower number in each FIG 2A/D
 cell; reported beside ARI because ARI is dominated by the large clusters and NMI is not.
 
-**10. Cutler & Breiman 1994 — archetypal analysis** · `cutlerBreiman1994`
-Components on the convex hull of the data, memberships summing to 1. One of the four
-algorithms in FIG 2's algorithm half (with cNMF, k-means, Ward), and its own explainer
-on the site.
+*(10 — archetypal analysis — removed 2026-09-06: the method is no longer part of the
+paper; its runs and outputs were deleted.)*
 
 **11. Benjamini & Hochberg 1995 — FDR** · `benjaminiHochberg1995`
 All FIG 3 q-values, across the 8 clusters, under both nulls.

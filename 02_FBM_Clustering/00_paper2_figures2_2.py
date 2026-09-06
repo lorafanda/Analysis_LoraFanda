@@ -11,7 +11,7 @@ TWO HALVES, THE SAME THREE QUESTIONS EACH.
 
     top     FEATURE SETS   convex NMF on concat_hg / concat_rawds / concat_bands5 /
                            concat_bands5z - does the representation change the answer?
-    bottom  ALGORITHMS     convex NMF / k-means / Ward / archetypes on one feature set -
+    bottom  ALGORITHMS     convex NMF / k-means / Ward on one feature set -
                            does the method change the answer?
 
     A / D   how much any two solutions agree at all           (.1 mean pairwise ARI
@@ -79,17 +79,16 @@ RED, GREEN = P2.RED, P2.GREEN
 BG = P2.BG
 
 FEATURE_SETS = P2.FSETS
-METHODS = ["cnmf", "kmeans", "hierarchical", "archetypes"]
-METHOD_LABEL = {"cnmf": "convex NMF", "kmeans": "k-means", "hierarchical": "Ward",
-                "archetypes": "archetypes"}
+METHODS = ["cnmf", "kmeans", "hierarchical"]          # archetypal analysis dropped 2026-09-06
+METHOD_LABEL = {"cnmf": "convex NMF", "kmeans": "k-means", "hierarchical": "Ward"}
 FS_SHORT = P2.FS_SHORT
 # convex NMF is the reference for the algorithm half and concat_bands5 for the feature
 # half, matching FIG 1's block order so the two figures number clusters the same way.
 REF_METHOD = "cnmf"
 REF_FSET = P2.MATCH_REF_FSET
-# concat_hg by default for the algorithm half, because it is the only feature set with
-# an archetype run - bands5 and bands5z have none, so choosing the FIG 1 reference here
-# would silently drop a whole algorithm.
+# concat_hg by default for the algorithm half - the representation the field starts
+# from, and the one the published FIG 2 was drawn on. The paper's standard is
+# concat_bands5z; pass --algo-feature-set to draw the half on any of the four.
 DEFAULT_ALGO_FSET = "concat_hg"
 
 
@@ -965,9 +964,9 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self, notes):
     A(f"feature set fixed at {algo_fset}. If a result only exists in one representation")
     A("or under one method, this is the figure that says so.")
     A("")
-    A(f"  {algo_fset} carries the algorithm half because it is the only feature set with")
-    A("  an archetype run - concat_bands5 and concat_bands5z have none, so using FIG 1's")
-    A("  reference here would have silently dropped a whole algorithm.")
+    A(f"  {algo_fset} carries the algorithm half; the same half can be drawn on any of the")
+    A("  four feature sets with --algo-feature-set, and the paper's standard is")
+    A("  concat_bands5z.")
     A("")
     A("EVERY SOLUTION LABELS THE SAME ELECTRODES IN THE SAME ORDER. That is what makes")
     A("any of this comparable, and it is checked rather than assumed: a solution that is")
@@ -1151,8 +1150,6 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self, notes):
     A("    no 1:1 correspondence and cannot be put on these panels at all.")
     A("  - Agreement is not correctness. Four representations can agree on a cluster")
     A("    that is one patient's electrode strip; FIG 1 panel D is what answers that.")
-    A("  - The archetype runs cover concat_hg and concat_rawds only, so the algorithm")
-    A("    half cannot currently be drawn on the 5-band feature sets.")
     P2.save_text("\n".join(L) + "\n", path)
 
 

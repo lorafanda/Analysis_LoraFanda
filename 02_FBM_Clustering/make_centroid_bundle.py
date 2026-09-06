@@ -19,9 +19,8 @@ WHAT IS SHIPPED, to outputs/clustering/paper_web/centroids/:
                            here and refused if it ever stops being true.
   <run id>.w.bin           graded runs only: the loadings at every K of the sweep,
                            uint16 x 65535, one (n, K) block per K, offsets in the json.
-                           Convex NMF's G row-normalised to sum to 1; archetypal
-                           analysis's A, which already does - the same normalisation
-                           FIG 1 and FIG 2 use.
+                           Convex NMF's G row-normalised to sum to 1 - the same
+                           normalisation FIG 1 and FIG 2 use.
   <run id>.json            shape, names, scales, offsets, and the hard labels at every
                            K (argmax for graded runs, the run's own cut for k-means and
                            Ward), so the panel can also show the paper's definition -
@@ -48,7 +47,7 @@ MANIFEST = ROOT / "outputs" / "250_recon" / "fsaverage" / "coverage_viz" / "mani
 OUT = CLUST / "paper_web" / "centroids"
 
 FSETS = ["concat_bands5z", "concat_hg", "concat_rawds", "concat_bands5"]
-METHODS = ["cnmf", "kmeans", "hierarchical", "archetypes"]
+METHODS = ["cnmf", "kmeans", "hierarchical"]          # archetypal analysis dropped 2026-09-06
 COHORT = "cohort1_n27"
 X_SCALE = 0.001          # int16 -> dB
 W_SCALE = 1.0 / 65535    # uint16 -> loading
@@ -137,7 +136,7 @@ def main() -> int:
         run = CLUST / method / fset / "runs" / stamp
         meta = xhash[fset]
         n = meta["n"]
-        graded = method in ("cnmf", "archetypes")
+        graded = method == "cnmf"
         labels, offsets, blobs, have = {}, {}, [], []
         off = 0
         lab_csv = run / "cluster_labels_by_k.csv"
@@ -177,8 +176,7 @@ def main() -> int:
                  x_file=f"x_{fset}.bin", x_scale=X_SCALE, x_sha=meta["sha"],
                  w_file=f"{rid}.w.bin" if graded else None, w_scale=W_SCALE,
                  w_offsets=offsets, labels=labels,
-                 normalisation=("convex NMF G, row-normalised to sum to 1" if method == "cnmf"
-                                else "archetype weights A, rows sum to 1" if graded
+                 normalisation=("convex NMF G, row-normalised to sum to 1" if graded
                                 else "hard partition; no loadings"),
                  generated=dt.date.today().isoformat())
         verified_write(OUT / f"{rid}.json", json.dumps(j).encode("utf-8"))

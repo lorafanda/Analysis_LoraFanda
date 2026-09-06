@@ -10,8 +10,8 @@ A COPY OF clustering_visualizer.html WITH THREE CHANGES AND NO OTHERS.
 
 1. Only the runs the paper uses. The manifest lists 21 runs; the copy keeps the ones a
    paper figure is built from - convex NMF on the four concat feature sets (FIG 1, FIG 3,
-   FIG 2's feature-set half) and k-means, Ward and archetypes on those sets (FIG 2's
-   algorithm half) - in the paper's order, the standard (5 bands z-scored) first. The
+   FIG 2's feature-set half) and k-means and Ward on those sets (FIG 2's algorithm
+   half) - in the paper's order, the standard (5 bands z-scored) first. The
    ungated cohort-2 runs and the per-condition cohort-3 runs are not offered.
 
 2. No coverage panel. The two "Sampling" maps leave the dropdown and the report loses
@@ -55,7 +55,7 @@ MANIFEST = (ROOT / "outputs" / "250_recon" / "fsaverage" / "coverage_viz" / "man
 
 PAPER_K = 8
 FSETS = ["concat_bands5z", "concat_hg", "concat_rawds", "concat_bands5"]   # standard first
-METHODS = ["cnmf", "kmeans", "hierarchical", "archetypes"]
+METHODS = ["cnmf", "kmeans", "hierarchical"]          # archetypal analysis dropped 2026-09-06
 COHORT = "cohort1_n27"
 
 
