@@ -83,6 +83,14 @@ FEATURE_SET_LABELS = {
 # Public API: fit_and_save
 # ============================================================
 
+def unit_norm(X: np.ndarray) -> np.ndarray:
+    """Each row scaled to unit length - the space convex NMF fits in (lf_decompose,
+    measure_cluster_stability.unit and sweep_stability all use this same expression).
+    A zero row stays zero rather than dividing by zero."""
+    X = np.asarray(X, dtype=float)
+    return X / np.maximum(np.linalg.norm(X, axis=1, keepdims=True), 1e-12)
+
+
 def fit_and_save(
     X: np.ndarray,
     *,
@@ -144,27 +152,47 @@ def fit_and_save(
     run_dir = outputs_root / method / feature_set / "runs" / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
 
+    # ---- the space the fit happens in ----
+    # THE SPACE IS PART OF THE METHOD. params["space"] is "dB" (the matrix as given -
+    # every run before 2026-09-06) or "unit-norm" (each electrode scaled to unit length
+    # first, the space convex NMF has always fitted in). Squared-Euclidean methods -
+    # k-means and Ward - are quadratic in amplitude, so in dB they split loud from quiet
+    # before they see shape; unit-norm removes amplitude and leaves shape. EVERYTHING
+    # that describes the partition - the fit, the predictor, the silhouettes, the sweep
+    # metrics, the gap statistic - is computed in the fitted space. X_train.npy is
+    # ALWAYS the raw matrix: every consumer downstream (centroids, figures, the web
+    # bundle) reads dB from it, and the manifest's params["space"] says how the labels
+    # were made from it.
+    space = str(params.get("space", "dB"))
+    if space not in ("dB", "unit-norm"):
+        raise ValueError(f"params['space'] must be 'dB' or 'unit-norm', not {space!r}")
+    params["space"] = space
+    Xf = unit_norm(X) if space == "unit-norm" else X
+    if verbose and space == "unit-norm":
+        print("[fit_and_save] fitting in unit-norm space (X_train.npy stays raw dB)")
+
     # ---- fit ----
     if method == "kmeans":
-        fit = _fit_kmeans(X, params, verbose=verbose)
+        fit = _fit_kmeans(Xf, params, verbose=verbose)
     else:
-        fit = _fit_hierarchical(X, params, verbose=verbose)
+        fit = _fit_hierarchical(Xf, params, verbose=verbose)
 
     labels = fit["labels"]
     model = fit["model"]
     extras = fit.get("extras", {})  # method-specific objects to persist
 
     # ---- 1-NN predictor (uniform inference path for every method) ----
-    predictor = KNeighborsClassifier(n_neighbors=1).fit(X, labels)
+    predictor = KNeighborsClassifier(n_neighbors=1).fit(Xf, labels)
     predictor_type = "centroid" if method == "kmeans" else "1-NN"
 
     # ---- metrics + figures ----
     # Compute per-sample silhouette once and reuse for both metrics and labels.csv.
     if len(np.unique(labels)) > 1:
-        sil_per_point = silhouette_samples(X, labels)
+        sil_per_point = silhouette_samples(Xf, labels)
     else:
         sil_per_point = np.full(len(labels), float("nan"))
-    metrics = _compute_metrics(X, labels, df_keep=df_keep, sil_per_point=sil_per_point)
+    metrics = _compute_metrics(Xf, labels, df_keep=df_keep, sil_per_point=sil_per_point)
+    metrics["space"] = space
     figures = _save_figures(
         X, labels, metrics, run_dir,
         method=method, feature_set=feature_set,
@@ -246,7 +274,7 @@ def fit_and_save(
         # split; the table makes that trade-off visible and sortable.
         lbk_all = extras.get("labels_by_k") or {}
         if lbk_all:
-            sw = _sweep_metrics(X, lbk_all)
+            sw = _sweep_metrics(Xf, lbk_all)          # in the fitted space
             sw.to_csv(run_dir / "sweep_metrics.csv", index=False)
             artifacts["sweep_metrics"] = "sweep_metrics.csv"
             _plot_sweep_metrics(run_dir / "sweep_metrics.png", sw,
@@ -266,7 +294,7 @@ def fit_and_save(
         ks = sorted(int(k) for k in fit["sweep"]["sil_by_k"].keys())
         if verbose:
             print(f"[fit_and_save] computing gap statistic over K={ks} with {gap_n_refs} null refs each")
-        gap_by_k = _compute_gap_statistic(X, ks, n_refs=int(gap_n_refs), verbose=verbose)
+        gap_by_k = _compute_gap_statistic(Xf, ks, n_refs=int(gap_n_refs), verbose=verbose)   # fitted space
         _write_json(run_dir / "gap_by_k.json",
                     {str(k): v for k, v in gap_by_k.items()})
         artifacts["gap_sweep"] = "gap_by_k.json"
@@ -435,6 +463,12 @@ def assign_new(
         raise ValueError(
             f"X_new has {X_new.shape[1]} features but training X has {X_train.shape[1]}."
         )
+
+    # a run fitted in unit-norm space (manifest params["space"]) must see new points
+    # in that space too; X_train.npy is raw, so it is normalised here as well
+    if str((manifest.get("params") or {}).get("space", "dB")) == "unit-norm":
+        X_new = unit_norm(X_new)
+        X_train = unit_norm(X_train)
 
     if method == "kmeans" and use_native_predict:
         labels_new = bundle["model"].predict(X_new).astype(np.int32)

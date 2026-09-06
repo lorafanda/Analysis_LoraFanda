@@ -72,28 +72,54 @@ NEW_CONCAT_TRACKS = [
 ]
 
 
-def native_fit_fn(method: str, n_iter: int):
+def run_space(rd: Path, method: str) -> str:
+    """The space a run was fitted in, from its manifest; dB for runs that predate the
+    field (every k-means and Ward run before 2026-09-06), unit-norm for cnmf always."""
+    if method == "cnmf":
+        return "unit-norm"
+    try:
+        import json as _json
+        p = _json.loads((rd / "manifest.json").read_text(encoding="utf-8")).get("params") or {}
+        return str(p.get("space", "dB"))
+    except Exception:
+        return "dB"
+
+
+def _unit(X):
+    return X / np.maximum(np.linalg.norm(X, axis=1, keepdims=True), 1e-12)
+
+
+def native_fit_fn(method: str, n_iter: int, space: str = "dB"):
     """A refit that matches how the run was actually produced.
 
-    THE SPACE IS PART OF THE METHOD. convex NMF fits unit-normed and X_train.npy is
-    raw dB, so a cnmf refit that skipped the normalisation would be measuring
-    something else again - a second wrong number rather than the right one.
+    THE SPACE IS PART OF THE METHOD. X_train.npy is always raw dB; the run's manifest
+    says whether the labels were made from it as is or after scaling each electrode to
+    unit length. A refit in the wrong space would be measuring something else again -
+    a second wrong number rather than the right one. convex NMF is unit-norm always;
+    k-means and Ward are whatever their manifest says (dB before 2026-09-06, unit-norm
+    after).
     """
     if method == "cnmf":
         import lf_decompose as LD
 
         def fit(X_run, k, seed):
-            Xu = X_run / np.maximum(np.linalg.norm(X_run, axis=1, keepdims=True), 1e-12)
-            G = LD.convex_nmf(Xu, k, n_iter=n_iter, random_state=seed)[1]
+            G = LD.convex_nmf(_unit(X_run), k, n_iter=n_iter, random_state=seed)[1]
             return (G / np.maximum(G.sum(1, keepdims=True), 1e-12)).argmax(1)
         return fit
     if method == "hierarchical":
         from sklearn.cluster import AgglomerativeClustering
 
         def fit(X_run, k, seed):        # deterministic: the subsample is the only draw
-            return AgglomerativeClustering(n_clusters=k, linkage="ward").fit_predict(X_run)
+            A = _unit(X_run) if space == "unit-norm" else X_run
+            return AgglomerativeClustering(n_clusters=k, linkage="ward").fit_predict(A)
         return fit
-    return None                          # kmeans: the default IS native
+    if space == "unit-norm":             # k-means in unit-norm: the resampler's k-means
+        from sklearn.cluster import KMeans   # would refit in dB, which is not this run
+
+        def fit(X_run, k, seed):
+            return KMeans(n_clusters=k, n_init=10, random_state=seed).fit_predict(_unit(X_run))
+        return fit
+    return None                          # k-means in dB: the default IS native
 
 
 def method_of(rd: Path) -> str:
@@ -150,12 +176,13 @@ def sweep_one(rd: Path, ks, n_runs: int, frac: float, dry: bool,
     except ValueError:
         shown = rd
     meth = method_of(rd)
-    fit_fn = native_fit_fn(meth, n_iter) if native else None
+    space = run_space(rd, meth)
+    fit_fn = native_fit_fn(meth, n_iter, space) if native else None
     sub = "stability_by_k_native" if native else "stability_by_k"
     tag = ""
     if native:
-        tag = (f"  NATIVE ({meth}"
-               + (f", unit-normed, n_iter={n_iter}" if meth == "cnmf" else "")
+        tag = (f"  NATIVE ({meth}, {space}"
+               + (f", n_iter={n_iter}" if meth == "cnmf" else "")
                + (", already native" if fit_fn is None else "") + ")")
     print(f"  {shown}  K={want}  n_runs={n_runs} frac={frac}{tag}")
     if dry:

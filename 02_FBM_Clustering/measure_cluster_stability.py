@@ -90,7 +90,13 @@ def fit_labels(Xu, K, seed):
 
 # Methods differ in the space they fit in, and silhouette is not space-free -
 # scoring all of them in dB is the error that made the first separation figure wrong.
-SPACE = {"cnmf": "unit-norm", "kmeans": "dB", "hierarchical": "dB"}
+# 2026-09-06: k-means and Ward moved INTO unit-norm space, the space convex NMF has
+# always fitted in. Squared-Euclidean methods are quadratic in amplitude, so in dB they
+# split loud electrodes from quiet ones before they see shape; unit-norm removes the
+# amplitude and leaves the shape, and the three methods then see the same matrix. Runs
+# made before this date were fitted in dB - their manifest says params["space"]="dB" -
+# and every consumer of this table should read the run's manifest where one exists.
+SPACE = {"cnmf": "unit-norm", "kmeans": "unit-norm", "hierarchical": "unit-norm"}
 
 
 def resolve(method, feature_set):
@@ -106,6 +112,17 @@ def resolve(method, feature_set):
             best = (r["run_id"], rd)
     if best is None:
         raise FileNotFoundError(f"no run with X_train for {method}/{feature_set}")
+    # the run's own record of its space beats the table: a k-means or Ward run made
+    # before 2026-09-06 was fitted in dB and its manifest says so (or says nothing,
+    # which meant dB); one made after says unit-norm. cnmf has no such field.
+    try:
+        p = json.loads((best[1] / "manifest.json").read_text(encoding="utf-8")).get("params") or {}
+        if "space" in p:
+            return best[1], str(p["space"])
+        if method != "cnmf" and (best[1] / "manifest.json").exists():
+            return best[1], "dB"
+    except Exception:
+        pass
     return best[1], SPACE[method]
 
 
