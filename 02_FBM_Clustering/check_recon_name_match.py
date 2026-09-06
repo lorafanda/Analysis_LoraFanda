@@ -88,6 +88,7 @@ def load_recorded(cache: Path, exclude_patients=()) -> pd.DataFrame:
     imported so this script can be pointed at a cache that no run has been fitted on
     yet - which is exactly the moment the names need checking.
     """
+    cache = Path(cache)
     t = pd.read_parquet(cache / "df_meta.parquet")
     n_cond_expected = t["condition"].nunique()
     per = (t.groupby(["patient_id", "electrode"], as_index=False)

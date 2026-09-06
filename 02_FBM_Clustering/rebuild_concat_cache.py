@@ -178,16 +178,52 @@ def main() -> int:
            .to_frame().join(df_all.groupby("patient_id").size().rename("ungated")))
     per["pct_gated"] = (100 * per.gated / per.ungated).round(1)
 
-    # what changed against the cohort the published runs were fitted on
+    # WHO IS IN THE CACHE BUT CONTRIBUTES NOTHING. A patient with no gated electrode,
+    # or with a condition missing, never appears in `per` at all - it is simply absent,
+    # which is the least visible way for a patient to leave a cohort.
+    inc = NM.load_recorded(new_cache, CC.DEFAULT_EXCLUDE_PATIENTS)
+    if int(inc.in_cohort.sum()) != len(df):
+        print(f"  [WARN] the cohort rule reproduced here gives "
+              f"{int(inc.in_cohort.sum())} electrodes, build_concat_dataset gives "
+              f"{len(df)} - the two have drifted apart")
+    silent = []
+    for pid, gp in inc.groupby("patient_id"):
+        if int(gp.in_cohort.sum()):
+            continue
+        if pid in set(CC.DEFAULT_EXCLUDE_PATIENTS):
+            why = "excluded by rule"
+        elif int(gp.n_cond.max()) < inc.n_cond.max():
+            why = (f"only {int(gp.n_cond.max())} of {int(inc.n_cond.max())} conditions "
+                   "on disk")
+        elif not bool(gp.gated.any()):
+            why = "no electrode passes the amplitude gate"
+        else:
+            why = "every electrode removed by a contact filter"
+        silent.append((pid, len(gp), why))
+    if silent:
+        print("\nIN THE CACHE, NOT IN THE COHORT:")
+        for pid, n, why in silent:
+            print(f"  {pid:<10} {n:>4} electrodes   {why}")
+
+    # what changed against the cohort the published runs were fitted on. BOTH SIDES BY
+    # THE SAME RULE: an earlier version counted any high_activity on the old side and
+    # the real cohort on the new one, which reported patients as lost that had never
+    # been in the cohort.
     if old_cache.exists():
         try:
-            old_meta = pd.read_parquet(old_cache / "df_meta.parquet")
-            oldg = (old_meta[old_meta.get("high_activity", False).astype(bool)]
-                    .assign(cn=lambda d: d["electrode"].map(CC.normalize_label))
-                    .drop_duplicates(["patient_id", "cn"])
-                    .groupby("patient_id").size().rename("gated_prev"))
+            prev = NM.load_recorded(old_cache, CC.DEFAULT_EXCLUDE_PATIENTS)
+            oldg = (prev[prev.in_cohort].groupby("patient_id").size()
+                    .rename("gated_prev"))
             per = per.join(oldg, how="outer")
             per["delta"] = per.gated.fillna(0) - per.gated_prev.fillna(0)
+            # a patient the EXCLUSION LIST removed is not a data change; say so
+            # separately rather than showing it as a loss
+            was = NM.load_recorded(old_cache, ())
+            for pid in CC.DEFAULT_EXCLUDE_PATIENTS:
+                n = int(was[(was.patient_id == pid) & was.in_cohort].shape[0])
+                if n:
+                    print(f"  note: {pid} contributed {n} electrodes to "
+                          f"{old_cache.name} and is now excluded by rule, not by data")
         except Exception as e:
             print(f"  (could not read {old_cache.name} for comparison: "
                   f"{type(e).__name__}: {e})")
