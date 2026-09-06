@@ -14,8 +14,11 @@ PANEL A - four electrodes, chosen by hand as illustrations
 ----------------------------------------------------------------------------------------------------
 Not selected by any statistic and not a claim about the cohort: they show what the
 recordings look like and what the three conditions do to a contact of each kind.
-Each is drawn alone on the lateral view of its own hemisphere, and its three
-conditions concatenated on the axis above, 0-400 Hz, on the project's +-7 dB scale.
+Each is drawn alone on the lateral view of its own hemisphere (LH / RH), and its
+three conditions concatenated on the axis above, 0-400 Hz, on the project's +-7 dB
+scale. Top to bottom in one column. The condition names - audio, picture,
+sentences - and the stimulus / response words over each pair of screens are
+written once, over the first electrode; the strips below it are the same strip.
 
   AUDITORY     PAT_3455 OTD7  superior temporal gyrus  (R, x 57  y -35  z 2)
                selective to the auditory stimulus, and again when the patient speaks
@@ -59,7 +62,7 @@ PROVENANCE
   gate params     outputs/_dataset/concat_source_v4/params.json
   coordinates     outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
   exemplars       EXEMPLARS in 00_paper2_figure0_coverage.py
-  built on        2026-09-05 20:56
+  built on        2026-09-06 12:17
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------

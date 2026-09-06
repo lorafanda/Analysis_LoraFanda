@@ -1,24 +1,25 @@
-FIG 1d   ·   5 frequency bands x time, z-scored per band   ·   convex NMF   ·   K = 8
+FIG 1d   ·   5 frequency bands x time, z-scored per band   ·   Ward   ·   K = 8
 ====================================================================================================
 
 WHAT THE FIGURE IS
 ----------------------------------------------------------------------------------------------------
-Convex NMF (Ding, Li & Jordan 2010) fitted to 1693 electrodes from 27 patients, in the
+Ward's agglomerative clustering (ward linkage, euclidean distance) cut at 8 clusters, 1693 electrodes from 27 patients, in the
 5 frequency bands x time, z-scored per band feature set (450 features = 3 conditions x 5 bands x 30 time bins).
-Cut at K = 8. Cluster sizes: [243, 138, 198, 363, 230, 192, 132, 197] (largest 21.4% of the cohort).
+Cut at K = 8. Cluster sizes: [171, 36, 111, 62, 86, 110, 177, 940] (largest 55.5% of the cohort).
 
 PROVENANCE
 ----------------------------------------------------------------------------------------------------
-  run            cnmf/concat_bands5z/runs/20260827_095637
+  run            hierarchical/concat_bands5z/runs/20260827_021703
   cohort cache   concat_source_v4
-  loadings       loadings_by_k/G_k08.npy  (1693 x 8)
-  features       X_train.npy, raw per-band z-scores (NOT the unit-norm space cNMF fits in)
+  labels         cluster_labels_by_k.csv, column k_8  (1693 electrodes, the K = 8 cut of the run's own sweep)
+  fit            {"linkage": "ward", "metric": "euclidean"}  (manifest.json)
+  features       X_train.npy, raw per-band z-scores (the matrix the run stores; the cluster means below are computed on it)
   coordinates    outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
   surfaces       outputs/250_recon/fsaverage/meshes/fsaverage_[lr]h.gii
   render         pyvista/VTK offscreen, material constants read live from
                  functions/lf_recon_shared_config.py (the visualizer's own)
-  built by       00_Paper2_Figures.py --figure 1 --feature-set concat_bands5z --k 8 --method cnmf
-  built on       2026-09-06 12:18
+  built by       00_Paper2_Figures.py --figure 1 --feature-set concat_bands5z --k 8 --method hierarchical
+  built on       2026-09-06 12:19
 
 HOW K WAS CHOSEN
 ----------------------------------------------------------------------------------------------------
@@ -28,17 +29,22 @@ turn over. A curve that only rises cannot choose a K. Each feature set is scored
 in its own home space, so heights are comparable WITHIN a curve and the shape
 and the peak are what compare ACROSS curves.
 
-  feature set        peak K    held-out variance at peak
-  concat_hg             11    0.5519
-  concat_rawds          12    0.4627
-  concat_bands5         14    0.5557
-  concat_bands5z        13    0.5360   <- this figure
+For Ward the held-out block is scored by NEAREST CENTROID (the run's own
+predictor) where convex NMF projects it onto its components: the same folds
+and the same score, so the curves are comparable in kind, and the values
+are read within an algorithm rather than across two.
 
-This figure is cut at K = 8  (NOTE: the peak for this feature set is K = 13; K was overridden on the command line)
+  feature set        peak K    held-out variance at peak
+  concat_hg             30    0.5819
+  concat_rawds          30    0.4418
+  concat_bands5         30    0.5241
+  concat_bands5z        30    0.5335   <- this figure
+
+This figure is cut at K = 8, set on the command line so the three algorithms are read at one K; Ward's own held-out peak for this feature set is K = 30.
 
 PANEL A - held-out variance vs K
 ----------------------------------------------------------------------------------------------------
-All four feature sets, convex NMF only. Each point is the mean over the
+All four feature sets, Ward only. Each point is the mean over the
 bi-cross-validation folds; the shaded band on the emphasised curve is +/- 1 SD
 across folds. The triangle on each curve marks that curve's own peak. The red
 dashed line is the K this figure is cut at (8).
@@ -73,8 +79,8 @@ the percent-of-trial axis, and the frequency band edges on y.
 PANEL D - does this K generalize?
 ----------------------------------------------------------------------------------------------------
 Computed at EVERY K the run was swept at, not only the published one. For each K,
-the electrodes are assigned by argmax of that K's loadings and two numbers are
-taken:
+the electrodes take that K's partition (one column of cluster_labels_by_k.csv)
+and two numbers are taken:
 
   red     the share of CLUSTERS more than 50% of whose electrodes come from
           one patient
@@ -92,9 +98,9 @@ of individuals rather than of a population. So the held-out peak nominates a K
 and this curve says what that K costs; where they disagree is a decision, not a
 computation.
 
-  at K = 8:  0 of 8 clusters (0%), holding 0% of the electrodes
+  at K = 8:  3 of 8 clusters (38%), holding 11% of the electrodes
   best K on this criterion: 5  (0 of 5 clusters, 0% of electrodes)
-  range over K=5..30: 0% to 83% of electrodes in one-patient clusters
+  range over K=5..30: 0% to 50% of electrodes in one-patient clusters
 
 PER-CLUSTER PATIENT COMPOSITION at the published K, against a SIZE-MATCHED
 RANDOM DRAW - the same number of electrodes sampled without replacement from the
@@ -103,17 +109,17 @@ cohort's own patient imbalance instead of assuming it away. Read it as a CEILING
 not a floor: a real anatomical cluster SHOULD draw on fewer patients than a random
 draw, because sEEG coverage is patient-specific. What matters is the other end.
 
-  patients per cluster        14-22  (median 19)   random draw 25.9 of 27
-  largest patient's share     15%-49%  (median 29%)   random draw 11%
-  clusters with under 5 patients 0 of 8
-  WORST: c1 is 49% one patient (67 of its 138 electrodes), drawing on 14 patients.
+  patients per cluster        2-26  (median 9)   random draw 23.8 of 27
+  largest patient's share     14%-92%  (median 42%)   random draw 11%
+  clusters with under 5 patients 2 of 8
+  WORST: c1 is 92% one patient (33 of its 36 electrodes), drawing on 2 patients.
 
-Written alongside the figure as FIG1d_concat_bands5z_cnmf_K8_patients.csv (per cluster) and
-FIG1d_concat_bands5z_cnmf_K8_generalization.csv (per K).
+Written alongside the figure as FIG1d_concat_bands5z_hierarchical_K8_patients.csv (per cluster) and
+FIG1d_concat_bands5z_hierarchical_K8_generalization.csv (per K).
 
 PANEL B, TOP OF EACH BLOCK - the cluster mean
 ----------------------------------------------------------------------------------------------------
-BLOCK ORDER IS NOT CLUSTER ORDER.  Order used: matched to concat_bands5 (cnmf) by loading correlation.
+BLOCK ORDER IS NOT CLUSTER ORDER.  Order used: matched to concat_bands5 (cnmf) by shared electrodes.
 
 Every run labels the SAME 1693 electrodes in the SAME order, so two solutions at
 one K can be matched 1:1 by Hungarian assignment, and block position can be made
@@ -137,14 +143,14 @@ what "looks the same" means for a shape compared by eye, and it is not what it
 would mean if this were reported as a measure of modality invariance. Nothing is
 computed from it and nothing is claimed by it.
 
-  order drawn   c3 c4 c0 c5 c6 c2 c7 c1
-  similarity    +0.95 +0.93 +0.91 +0.88 +0.50 +0.55 +0.39 +0.40
+  order drawn   c2 c5 c0 c6 c3 c1 c7 c4
+  similarity    +0.94 +0.93 +0.86 +0.71 +0.74 +0.88 +0.88 +0.83
   ref cluster    2  4  6  3  5  1  0  7
-  jaccard       0.70 0.42 0.71 0.43 0.44 0.39 0.27 0.03
+  jaccard       0.30 0.25 0.58 0.31 0.07 0.00 0.16 0.00
 
-  matched on loading correlation; the Jaccard above is always on the HARD labels, so
+  matched on shared electrodes; the Jaccard above is always on the HARD labels, so
   the quality number means one thing whichever basis was used.
-  weakest match: c1 at Jaccard 0.03   median 0.42
+  weakest match: c1 at Jaccard 0.00   median 0.20
 
   A 1:1 assignment ALWAYS returns a partner for every cluster, whether or not
   one exists. A low Jaccard is a cluster that has no real counterpart and was
@@ -177,7 +183,7 @@ the axis is percent-of-trial and not seconds.
 The band sets are drawn as FREQUENCY x TIME. Rows are the 5 bands, lowest at the
 bottom: 1-20Hz, 20-70Hz, 70-170Hz, 170-270Hz, 270-400Hz.
 Colour is SD (per-band z-score), on one diverging scale shared by all 8 clusters,
-symmetric about zero at +/- 1.896 (the 99th percentile of |cluster
+symmetric about zero at +/- 3.308 (the 99th percentile of |cluster
 mean| over every cluster, band and time bin). Blue is a decrease, red an
 increase.
 
@@ -197,8 +203,8 @@ cannot appear to run from the end of one trial into the start of the next.
 
 The block title carries the share of bins inside the outline: "agree NN%".
 
-  agreement per cluster   3% - 31%  (median 6%)
-  tightest c0 at 31%   loosest c1 at 3%
+  agreement per cluster   0% - 57%  (median 30%)
+  tightest c1 at 57%   loosest c7 at 0%
 
 WHAT AGREEMENT IS NOT. It is not a test: there is no null, and no correction
 over the 450 bins it is evaluated on per cluster. And it is NOT
@@ -235,6 +241,12 @@ COLOUR AND SIZE, THE VISUALIZER'S OWN RULE. This is transcribed from
 clustering_visualizer.html's updateElectrodes(), not invented here, so these
 renders and the brains on the site read the same way.
 
+THIS IS A HARD PARTITION, so w is 1 for the electrodes in the cluster and 0 for
+every other electrode: members draw in full cluster colour, at full radius and
+fully opaque; the rest draw grey 148 at the smallest radius and 0.10
+opacity. The rule below is the one the convex-NMF figures use, evaluated at
+those two values, so the brains of the three algorithms read alike.
+
       colour: FULL cluster colour at a loading of 0.50 or above; below
               that, mixed toward grey 148 and reaching it exactly at a flat 1/K
               mixture -   g = clip((w - 1/K) / (0.50 - 1/K), 0, 1)
@@ -247,8 +259,8 @@ renders and the brains on the site read the same way.
               background, and a floor at 1/K would leave everything below a flat
               mixture invisible and everything just above it nearly solid
 
-where w is the electrode's convex-NMF loading on this cluster after its loading
-vector has been normalised to sum to 1. THREE CHANNELS FOR THREE QUESTIONS:
+where w is 1 for the electrodes in this cluster and 0 for every other electrode
+(a hard partition has no graded loading). THREE CHANNELS FOR THREE QUESTIONS:
 colour says whether the electrode is expressing this component at all, size says
 how strongly, opacity sinks the rest of the cohort into the background. An
 earlier version ramped colour across the whole range instead, so a typical
@@ -265,10 +277,9 @@ it depending only on draw order.
 Both are RENDERING choices. They change how a loading is drawn, never the
 loading, the label, or any number reported anywhere.
 
-  median t over all 1693 electrodes at their own cluster   0.424
-  electrodes at or above 0.50 (drawn in full cluster colour)   330  (19.5%)
-  electrodes at or above the 0.70 size cap                     34  (2.0%)
-  median normalised loading at an electrode's own cluster 0.369
+  every one of the 1693 electrodes draws at w = 1 in its own cluster and at
+  w = 0 in the other 7: full colour, full radius and opaque there;
+  grey, smallest and faint everywhere else.
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
@@ -283,9 +294,10 @@ WHAT THIS FIGURE DOES NOT SHOW
   - The 50% line in panel D is a convention, not a test. It is not
     calibrated against a null; it is a threshold chosen to be readable. So is
     the 1-SD line the agreement outline draws.
-  - No comparison against k-means, Ward or archetypal analysis within this
-    figure; FIG 2 is where the algorithms are compared. Panel A is convex NMF only.
+  - No comparison against convex NMF, k-means or archetypal analysis within this
+    figure; FIG 2 is where the algorithms are compared. Panel A is Ward only.
   - The renders collapse depth: an electrode deep in the temporal lobe and one
     on the lateral surface can overlap in the image.
-  - The cluster label is an argmax of a GRADED loading. The fade is there
-    precisely because that argmax hides how weak most memberships are.
+  - The label is a HARD assignment: it says which cluster an electrode is in,
+    not how close it came to another. The run's per-electrode silhouette
+    (labels.csv) is not drawn.

@@ -17,8 +17,8 @@ PROVENANCE
   surfaces       outputs/250_recon/fsaverage/meshes/fsaverage_[lr]h.gii
   render         pyvista/VTK offscreen, material constants read live from
                  functions/lf_recon_shared_config.py (the visualizer's own)
-  built by       00_Paper2_Figures.py --figure 1 --feature-set concat_bands5
-  built on       2026-09-01 14:47
+  built by       00_Paper2_Figures.py --figure 1 --feature-set concat_bands5 --k 8 --method cnmf
+  built on       2026-09-06 12:18
 
 HOW K WAS CHOSEN
 ----------------------------------------------------------------------------------------------------
@@ -214,9 +214,9 @@ RIGHT of the right one. Drawing both from the same side, as an earlier version
 did, shows one hemisphere from inside the head. Each render holds only that
 hemisphere's electrodes; an electrode never appears in both.
 
-  electrodes with fsaverage coordinates   1402 / 1693
-  left render                             694
-  right render                            708
+  electrodes with fsaverage coordinates   1625 / 1693
+  left render                             768
+  right render                            857
 
 COLOUR AND SIZE, THE VISUALIZER'S OWN RULE. This is transcribed from
 clustering_visualizer.html's updateElectrodes(), not invented here, so these
@@ -270,8 +270,8 @@ WHAT THIS FIGURE DOES NOT SHOW
   - The 50% line in panel D is a convention, not a test. It is not
     calibrated against a null; it is a threshold chosen to be readable. So is
     the 1-SD line the agreement outline draws.
-  - No comparison against k-means, Ward or archetypal analysis. Panel A is
-    convex NMF only.
+  - No comparison against k-means, Ward or archetypal analysis within this
+    figure; FIG 2 is where the algorithms are compared. Panel A is convex NMF only.
   - The renders collapse depth: an electrode deep in the temporal lobe and one
     on the lateral surface can overlap in the image.
   - The cluster label is an argmax of a GRADED loading. The fade is there
