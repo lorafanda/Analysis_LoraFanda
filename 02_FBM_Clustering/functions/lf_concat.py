@@ -43,6 +43,7 @@ axis when ranking a concat_* run.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
 
@@ -65,13 +66,20 @@ DEFAULT_CONDITIONS: Tuple[str, ...] = ("audio", "picture", "reading")
 # other depth contacts as anyone else's, so throwing the whole patient away costs real
 # data for no methodological gain.
 #
-#   PAT_3415  MIXED — 64 grid contacts (GA..GH) dropped by lf_dataset.GRID_SHAFTS,
-#             57 depth contacts (IMG, IPG, OI, OS, TA, TM, TP) KEPT.
 #   EL044     ECoG THROUGHOUT (Pa 51, T 46, P 6, postP 5) — no depth contacts to keep,
 #             so it stays a whole-patient exclusion.
+#   PAT_3415  MIXED IMPLANT, excluded as a WHOLE PATIENT from 2026-09-06 (Lora).
+#             It is the only patient carrying both a subdural grid and depth shafts:
+#             64 grid contacts (GA..GH) and 57 depth contacts, of which IMG, TA and
+#             IPG are blacklisted as noisy, leaving OI, OS, TM, TP - 18 electrodes
+#             through the gate. The contact-level split above kept those 18; the
+#             decision now is that a mixed implant does not enter the cohort at all.
+#             GRID_SHAFTS and NOISY_SHAFTS still list it, and are simply not reached
+#             while the patient is excluded - so removing it from this tuple restores
+#             the previous behaviour exactly.
 #
-# Pass exclude_patients=() to keep the ECoG patients as well.
-DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044",)
+# Pass exclude_patients=() to keep the ECoG and mixed-implant patients as well.
+DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_3415")
 DEFAULT_FMAX = 500.0
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30
@@ -88,11 +96,34 @@ DEFAULT_DS_TIME_BINS = 30
 #   concat_source_v2  2026-08-17  + EL034, + EL046's Fp_L-5..8   (deleted 2026-08-28)
 #   concat_source_v3  2026-08-25  the split-half bug - 19,380 phantom rows (deleted)
 #   concat_source_v4  2026-08-26  27 patients, 1693 gated / 2959 ungated
-# The default follows the CURRENT cache. v2 and v3 were removed on 2026-08-28: v3
-# was the cohort with split-half files counted as electrodes, and keeping a default
-# pointed at a deleted directory would fail at the first caller that did not pass
-# cache_dir explicitly.
-DEFAULT_CONCAT_CACHE = Path(__file__).resolve().parents[1] / "outputs" / "_dataset" / "concat_source_v4"
+#   concat_source_v5  2026-09-06  + EL048 (its ERSP cubes were written 09-05),
+#                     - PAT_3415 (excluded above; still IN the cache, dropped by
+#                     build_concat_dataset). Built by rebuild_concat_cache.py.
+# v2 and v3 were removed on 2026-08-28: v3 was the cohort with split-half files
+# counted as electrodes, and keeping a default pointed at a deleted directory would
+# fail at the first caller that did not pass cache_dir explicitly.
+#
+# THE DEFAULT IS RESOLVED, NOT PINNED. It was the literal "concat_source_v4", so the
+# moment rebuild_concat_cache.py wrote a new version every caller went on reading the
+# old cohort - silently, because a cache that exists is always a valid cache. The
+# newest concat_source_v<N> on disk is by construction the one that script last
+# built; make_cluster_statistics.py already derives its provenance string the same
+# way. Sorted NUMERICALLY, so v10 beats v9. Set LF_CONCAT_CACHE to an absolute path
+# to pin an older cohort when reproducing a published run.
+def _newest_concat_cache() -> Path:
+    env = os.environ.get("LF_CONCAT_CACHE")
+    if env:
+        return Path(env)
+    d = Path(__file__).resolve().parents[1] / "outputs" / "_dataset"
+    found = []
+    if d.is_dir():
+        for c in d.glob("concat_source_v*"):
+            if c.is_dir() and c.name[len("concat_source_v"):].isdigit():
+                found.append((int(c.name[len("concat_source_v"):]), c))
+    return max(found)[1] if found else d / "concat_source_v4"
+
+
+DEFAULT_CONCAT_CACHE = _newest_concat_cache()
 
 
 def normalize_label(s) -> str:

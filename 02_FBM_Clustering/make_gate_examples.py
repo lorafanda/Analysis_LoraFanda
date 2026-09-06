@@ -42,9 +42,12 @@ from matplotlib.gridspec import GridSpec
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
 
-# v4, not v2: v2 was deleted on 2026-08-28 and this is the only script that read it
-# directly rather than through build_concat_dataset.
-CACHE = ROOT / "outputs" / "_dataset" / "concat_source_v4" / "df_meta.parquet"
+# The cache lf_concat points at, not a literal version: this script reads the table
+# directly rather than through build_concat_dataset, so a pinned name here would keep
+# drawing gate examples from the previous cohort after a rebuild.
+import lf_concat as CC                                          # noqa: E402
+
+CACHE = CC.DEFAULT_CONCAT_CACHE / "df_meta.parquet"
 OUT = ROOT / "outputs" / "clustering" / "gate_examples"
 
 THR_P, MIN_P, THR_N, MIN_N = 2.2, 0.02, -3.0, 0.04

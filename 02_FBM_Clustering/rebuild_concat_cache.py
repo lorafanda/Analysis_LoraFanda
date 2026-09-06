@@ -6,10 +6,11 @@ WHY A NEW CACHE DIRECTORY AND NOT A REBUILD IN PLACE.
 
 lf_dataset.prepare_dataset decides a cache hit with `cached_params == params`, and
 `params` holds input_dir, task, conditions, the thresholds and a schema tag. It holds
-NO patient list, NO cube timestamps and NO content hash. EL033 and PAT_3965 have new
-ERSP cubes but none of those parameters changed, so a rebuild against the existing
-concat_source_v2 would print "cache hit" and hand back the OLD df_meta - including the
-OLD high_activity flags. The re-gating would silently not happen.
+NO patient list, NO cube timestamps and NO content hash. A patient with new ERSP cubes -
+or a patient who has just acquired ERSP cubes for the first time - changes none of those
+parameters, so a rebuild against the existing cache would print "cache hit" and hand back
+the OLD df_meta, including the OLD high_activity flags. The re-gating would silently not
+happen.
 
 Writing to a NEW directory is the only thing that forces the walk of ERSP_matrix and
 therefore forces high_activity to be recomputed from the current cubes.
@@ -19,8 +20,20 @@ WHAT high_activity IS. Per electrode and condition, over the full 0-400 Hz cube:
 An electrode enters the GATED set if that holds in at least one of the three
 conditions. That is the gate the whole cohort size depends on.
 
+WHAT ELSE DECIDES THE COHORT, and is NOT in the cache. The cache is the ungated source:
+it holds every electrode that survived the non-neural, microelectrode and noisy-shaft
+filters. Subdural grid contacts and whole excluded patients are removed one step later,
+by lf_concat.build_concat_dataset reading DEFAULT_EXCLUDE_PATIENTS and GRID_SHAFTS. So
+excluding a patient does NOT need a new cache; adding or re-running a patient does.
+
     python rebuild_concat_cache.py --dry-run
     python rebuild_concat_cache.py --apply
+
+    --version N   build concat_source_v<N> and compare against v<N-1>  (default: 5)
+
+AFTER IT FINISHES the whole chain downstream is stale, because every run was fitted on
+the previous cohort: 240 / 241 / 242 (and 243), then 249, then 252, then the figures.
+The script says so again at the end.
 """
 from __future__ import annotations
 
@@ -34,97 +47,178 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "functions"))
 
 import lf_concat as CC          # noqa: E402
 import lf_dataset as LD         # noqa: E402
+import check_recon_name_match as NM   # noqa: E402
 
 CACHE_ROOT = ROOT / "outputs" / "_dataset"
-NEW_CACHE = CACHE_ROOT / "concat_source_v4"
-OLD_CACHE = CACHE_ROOT / "concat_source_v3"
 INPUT_DIR = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM"
                  r"\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY")
 CONDITIONS = ("audio", "picture", "reading")
-OUT = ROOT / "outputs" / "clustering" / "cohort_v4"
+
+
+def input_patients(inp: Path, task: str = "LM") -> set:
+    """The patients the walk would actually find: a folder with an ERSP_matrix in it."""
+    return {d.name for d in inp.iterdir()
+            if d.is_dir() and (d / task / "ERSP_matrix").is_dir()}
+
+
+def cache_patients(cache: Path) -> set:
+    f = cache / "df_meta.parquet"
+    if not f.exists():
+        return set()
+    return set(pd.read_parquet(f, columns=["patient_id"]).patient_id.unique())
+
+
+def name_match(cache: Path, out: Path, label: str):
+    """The recorded-vs-reconstructed name check, on this cache. See
+    check_recon_name_match.py - the join is silent, so it is checked explicitly."""
+    if not NM.COORDS.exists():
+        print(f"  (no {NM.COORDS.name}: skipping the name check)")
+        return
+    r = NM.report(cache)
+    pp = r["per_patient"]
+    out.mkdir(parents=True, exist_ok=True)
+    for k in ("per_patient", "unmatched_recorded", "unmatched_recon", "candidates",
+              "shafts"):
+        r[k].to_csv(out / f"name_match_{label}_{k}.csv", index=False)
+    bad = pp[pp.unmatched > 0]
+    print(f"\nNAME MATCH, recorded vs reconstructed ({label})")
+    print(f"  {int(pp.unmatched.sum())} recorded electrodes have no recon contact; "
+          f"{int(pp.unmatched_in_cohort.sum())} of them are in the cohort and so lose "
+          f"their coordinates")
+    if len(bad):
+        print(bad[["patient", "recorded", "in_cohort", "matched", "unmatched",
+                   "unmatched_in_cohort", "recon", "recon_unmatched",
+                   "pct_matched"]].to_string(index=False))
+        print("\n  likeliest alias per shaft (a suggestion, not a rename):")
+        print("  " + r["shafts"].to_string(index=False).replace("\n", "\n  "))
+    one = pp[(pp.side != "both") & (pp.recorded > 0)]
+    if len(one):
+        print("\n  recorded with NO reconstruction at all:")
+        print("  " + one[["patient", "recorded"]].to_string(index=False)
+              .replace("\n", "\n  "))
+    print(f"  -> {out}")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--version", type=int, default=5,
+                    help="cache version to build (default 5: concat_source_v5)")
     a = ap.parse_args()
     if not (a.apply or a.dry_run):
         print("pass --dry-run or --apply")
         return 2
 
+    v = a.version
+    new_cache = CACHE_ROOT / f"concat_source_v{v}"
+    old_cache = CACHE_ROOT / f"concat_source_v{v-1}"
+    out = ROOT / "outputs" / "clustering" / f"cohort_v{v}"
+
     inp = INPUT_DIR if INPUT_DIR.exists() else (
         ROOT.parent / "01_FBM_Analysis" / "outputs" / "04_ersp_LM_RAWONLY").resolve()
     print(f"input   : {inp}")
-    print(f"new     : {NEW_CACHE}")
-    print(f"old     : {OLD_CACHE}  {'(present)' if OLD_CACHE.exists() else '(absent)'}")
+    print(f"new     : {new_cache}")
+    print(f"old     : {old_cache}  {'(present)' if old_cache.exists() else '(absent)'}")
+    print(f"excluded patients : {CC.DEFAULT_EXCLUDE_PATIENTS or '(none)'}")
+    print(f"grid shafts       : "
+          + (", ".join(f"{p} {'/'.join(s)}" for p, s in LD.GRID_SHAFTS.items()) or "(none)"))
 
-    if NEW_CACHE.exists() and any(NEW_CACHE.iterdir()):
-        print(f"\n!! {NEW_CACHE.name} already exists and is not empty.")
-        print("   A cache hit there would be just as stale as v2. Delete it or bump "
-              "to v4 if the cubes have changed again since it was built.")
+    # WHO IS ABOUT TO CHANGE. The cache carries no patient list, so this comparison -
+    # the folders on disk against the patients in the old cache - is the only warning
+    # that the cohort is moving, and it is the reason a new directory is being written.
+    have, had = input_patients(inp), cache_patients(old_cache)
+    added, gone = sorted(have - had), sorted(had - have)
+    excl = sorted(set(CC.DEFAULT_EXCLUDE_PATIENTS) & have)
+    print(f"\npatient folders with ERSP: {len(have)}   in {old_cache.name}: {len(had)}")
+    if added:
+        print(f"  NEW, will enter the cohort   : {', '.join(added)}")
+    if gone:
+        print(f"  gone from the input tree     : {', '.join(gone)}")
+    if excl:
+        print(f"  present but EXCLUDED by lf_concat: {', '.join(excl)}  "
+              f"(in the cache, dropped by build_concat_dataset)")
+
+    if new_cache.exists() and any(new_cache.iterdir()):
+        print(f"\n!! {new_cache.name} already exists and is not empty.")
+        print("   A cache hit there would be just as stale as the one it replaces. "
+              "Delete it, or bump --version if the cubes have changed again since it "
+              "was built.")
         if a.apply:
             return 1
 
     if a.dry_run:
-        print("\nDRY RUN — would build the cache and report the cohort. Nothing written.")
+        print("\nDRY RUN - nothing written. The name check below is on the OLD cache; "
+              "a patient that has no ERSP yet shows as 'recon only'.")
+        if old_cache.exists():
+            name_match(old_cache, out, f"dryrun_{old_cache.name}")
         return 0
 
     t0 = time.time()
     df, X = CC.build_concat_dataset(inp, conditions=CONDITIONS,
                                     require_high_activity=True,
-                                    cache_dir=NEW_CACHE, verbose=True)
+                                    cache_dir=new_cache, verbose=True)
     print(f"\nbuilt in {time.time()-t0:.0f}s")
     print(f"GATED cohort : {len(df)} electrodes · {df['patient_id'].nunique()} patients")
     print(f"X_concat     : {X.shape}")
 
-    # the ungated count, from the same fresh cache — this is what concat_hg_all uses
+    # the ungated count, from the same fresh cache - this is what concat_hg_all uses
     df_all, X_all = CC.build_concat_dataset(inp, conditions=CONDITIONS,
                                             require_high_activity=False,
-                                            cache_dir=NEW_CACHE, verbose=False)
+                                            cache_dir=new_cache, verbose=False)
     print(f"UNGATED      : {len(df_all)} electrodes")
 
-    OUT.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
     per = (df.groupby("patient_id").size().rename("gated")
            .to_frame().join(df_all.groupby("patient_id").size().rename("ungated")))
     per["pct_gated"] = (100 * per.gated / per.ungated).round(1)
 
     # what changed against the cohort the published runs were fitted on
-    if OLD_CACHE.exists():
+    if old_cache.exists():
         try:
-            old_meta = pd.read_parquet(OLD_CACHE / "df_meta.parquet")
+            old_meta = pd.read_parquet(old_cache / "df_meta.parquet")
             oldg = (old_meta[old_meta.get("high_activity", False).astype(bool)]
                     .assign(cn=lambda d: d["electrode"].map(CC.normalize_label))
                     .drop_duplicates(["patient_id", "cn"])
                     .groupby("patient_id").size().rename("gated_prev"))
-            per = per.join(oldg)
-            per["delta"] = per.gated - per.gated_prev
+            per = per.join(oldg, how="outer")
+            per["delta"] = per.gated.fillna(0) - per.gated_prev.fillna(0)
         except Exception as e:
-            print(f"  (could not read v2 for comparison: {type(e).__name__}: {e})")
+            print(f"  (could not read {old_cache.name} for comparison: "
+                  f"{type(e).__name__}: {e})")
 
-    per.to_csv(OUT / "cohort_v4_per_patient.csv")
+    per.to_csv(out / f"cohort_v{v}_per_patient.csv")
     print("\nper patient:")
     print(per.to_string())
     if "delta" in per.columns:
         ch = per[per.delta.fillna(0) != 0]
-        print(f"\npatients whose GATED count moved vs v2: {len(ch)}")
+        print(f"\npatients whose GATED count moved vs {old_cache.name}: {len(ch)}")
         if len(ch):
             print(ch[["gated_prev", "gated", "delta"]].to_string())
 
-    (OUT / "cohort_v4_summary.json").write_text(json.dumps(dict(
-        input_dir=str(inp), cache=str(NEW_CACHE),
+    name_match(new_cache, out, new_cache.name)
+
+    (out / f"cohort_v{v}_summary.json").write_text(json.dumps(dict(
+        input_dir=str(inp), cache=str(new_cache),
         n_gated=int(len(df)), n_ungated=int(len(df_all)),
         n_patients=int(df["patient_id"].nunique()),
+        excluded_patients=list(CC.DEFAULT_EXCLUDE_PATIENTS),
+        patients_added_vs_previous=added, patients_gone_vs_previous=gone,
         n_freq=int(X.shape[1]), n_time_concat=int(X.shape[2]),
         conditions=list(CONDITIONS),
         written=time.strftime("%Y-%m-%d %H:%M:%S")), indent=2))
-    print(f"\nwrote -> {OUT}")
-    print("\nNEXT: run 240 / 241 / 242 in parallel. They all read this cache "
-          "read-only and must NOT rebuild it.")
+    print(f"\nwrote -> {out}")
+    print(f"\nNEXT, in order, because every run below was fitted on the OLD cohort:")
+    print("  1. point lf_concat.DEFAULT_CONCAT_CACHE at "
+          f"{new_cache.name} (do this before anything reads the cache)")
+    print("  2. 240 / 241 / 242 (and 243) - they read this cache read-only and must "
+          "NOT rebuild it")
+    print("  3. 249, then 252 (recon exports), then the paper figures")
     return 0
 
 

@@ -82,11 +82,16 @@ def _load(name, fname):
 P2 = _load("p2fig1", "00_Paper2_Figures.py")
 F3 = _load("p2fig3", "00_paper2_figure3_lana.py")
 
+import lf_concat as CC                                          # noqa: E402
+
 CLUST, OUT = P2.CLUST, P2.OUT
 INK, MUTED, GREY = P2.INK, P2.MUTED, P2.GREY
 RED, GREEN, BLUE = P2.RED, P2.GREEN, P2.BLUE
 ORANGE, PURPLE = "#e08214", "#5b2c83"
-CACHE_DIR = ROOT / "outputs" / "_dataset" / "concat_source_v4"
+# the cohort cache lf_concat currently points at - the newest one built, not a
+# literal version, so FIG 0 cannot go on describing the previous cohort after a
+# rebuild (it is the figure whose whole subject is who the cohort is)
+CACHE_DIR = CC.DEFAULT_CONCAT_CACHE
 VLIM = 7.0          # the project's own ERSP colour scale, dB
 FMAX = 400.0        # Hz, the top of the cube the gate counts over
 FATES = ("kept", "failed the gate", "grid contact", "microelectrode",
