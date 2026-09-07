@@ -230,3 +230,12 @@ Thumbs.db
 
 # LanA atlas-run glassbrain renders: 60 MB per resampling, rebuilt by 252, never served
 02_FBM_Clustering/outputs/clustering/atlas/lana_*/runs/*/recon/cluster_*/
+
+# Coverage / cluster overlay bins: make_coverage_bundle.py rewrites ~300 MB of
+# .bin per refit, and the size guard stops the commit every time. NOTE: this rule
+# only affects bins that are NOT already tracked - the 315 that are keep being
+# tracked, because cluster_visualizer.html and clustering_visualizer.html fetch
+# them from raw.githubusercontent and untracking them would stop the brain
+# overlays loading. To actually retire them: git rm --cached them and serve the
+# folder some other way.
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/**/*.bin
