@@ -97,7 +97,7 @@ bad_channels_manual = {
     "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"],
     "PAT_2868": ["IDM3"],
     "PAT_6704": ["ainp1"],
-    "": [""],
+    "EL048": ["EKG","pH_R13","EKG-"],
     "": [""],
 }
 
@@ -157,7 +157,7 @@ for _pid, _out in LOOKUP_OUT_OF_BRAIN.items():
 # can be re-referenced and analysed but cannot enter the recon, the
 # glassbrains or MOBA's 3-D brain until its native->MNI normalisation is run.
 # EL046 has MNI for all 178 localised contacts.
-LOOKUP_NO_MNI = {"EL048"}
+LOOKUP_NO_MNI = {}
 
 # EL040: the FP-R shank sits on the parcellation boundary. FP-R11 was already
 # dropped by the Unknown rule ("Unknown ctx-rh-rostralmiddlefrontal"), while
@@ -264,6 +264,28 @@ notch_repeats   = 1          # 1 is usually enough
 # (fewer harmonics notched, less risk of removing real signal).
 notch_peak_z_thresh = 3.0
 
+# WHERE the notch is decided (2026-09-07).
+#   "block"  each condition block (picture / audio / reading) is cut out with a
+#            margin, notched on ITS OWN median PSD, and epoched from that slice.
+#            Per block you get a PSD before and after, the per-harmonic audit
+#            (Report/<pid>_notch_audit.tsv) and the peaks the mains comb does not
+#            explain (Report/<pid>_unexplained_peaks.tsv).
+#   "file"   one notch decided on the whole cropped recording and applied to all
+#            of it - the behaviour before 2026-09-07. A peak present in one block
+#            only is diluted below the z test on a long file, and a harmonic the
+#            whole file justifies may be absent from a block.
+notch_scope = "block"
+notch_block_pad_s = 10.0     # margin either side of a block's outermost trial, s
+
+# A SECOND COMB per patient, notched alongside the mains harmonics. Add an entry
+# only after Report/<pid>_unexplained_peaks.tsv has shown the comb: fit_comb ranks
+# the candidates. 16.667 Hz is railway traction power (CH / DE / AT); its 3rd,
+# 6th and 9th harmonics coincide with 50, 100 and 150 Hz, so a 50 Hz notch alone
+# leaves 16.7, 33.3, 66.7, 83.3, 116.7, 133.3 ... untouched.
+notch_extra_bases = {
+    # "EL048": (16.667,),
+}
+
 # ---------------------------
 # Trial filtering & HG plot defaults
 # ---------------------------
@@ -321,7 +343,8 @@ EL_PRESETS = {
     "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 
     "EL046": dict(trig="DC6", flip=False, time_range=(21120, 23320), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
-    "EL048": dict(trig="DC6", flip=False, time_range=(4600, 8468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    # "EL048": dict(trig="DC6", flip=False, time_range=(0, 1492), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),    
+    "EL048": dict(trig="DC6", flip=False, time_range=(17700, 19180), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
 }
 
 # MICROEPI_PATIENTS = ["G-01","G-02","G-03","G-04","G-05"]

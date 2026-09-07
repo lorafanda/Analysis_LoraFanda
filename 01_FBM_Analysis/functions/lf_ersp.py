@@ -116,14 +116,25 @@ def suggest_bad_channels_by_psd(
 # Mains notch filtering
 # ----------------------------
 def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
-                           peak_z_thresh=3.0, Q_min=10.0, Q_max=500.0):
+                           peak_z_thresh=3.0, Q_min=10.0, Q_max=500.0,
+                           freqs=None, audit=None):
     """Adaptive notch: only notches a harmonic if a real peak is detected;
-    Q is set automatically based on peak sharpness."""
+    Q is set automatically based on peak sharpness.
+
+    `freqs`: an explicit list of candidate frequencies instead of the harmonics of
+    `base` - used to notch two combs at once (mains + a second interference
+    source) without testing a shared harmonic twice.
+    `audit`: a list; when given, one dict per candidate (freq, z, Q, notched) is
+    appended, so a caller can write down what was decided and why.
+    """
     X = np.asarray(X, float); was_1d = (X.ndim == 1)
     if was_1d: X = X[:, None]
     nyq = 0.5 * fs
     lim = min(0.98 * nyq, max_hz or 0.98 * nyq)
-    harms = [h * base for h in range(1, int(lim // base) + 1)]
+    if freqs is not None:
+        harms = sorted({round(float(f0), 3) for f0 in freqs if 0 < float(f0) < lim})
+    else:
+        harms = [h * base for h in range(1, int(lim // base) + 1)]
 
     nper = int(2.0 * fs)
     f_psd, P_med = welch(X[:, 0].astype(float), fs=fs, nperseg=nper, detrend=False)
@@ -145,10 +156,15 @@ def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
         peak_val = np.max(P_db[peak]) if np.any(peak) else bg_mean
         z = (peak_val - bg_mean) / (bg_std + 1e-6)
         if z < peak_z_thresh:
-            print(f"  [notch] {f0:.0f} Hz: z={z:.1f} — no significant peak, skipping")
+            print(f"  [notch] {f0:.1f} Hz: z={z:.1f} — no significant peak, skipping")
+            if audit is not None:
+                audit.append(dict(freq_hz=float(f0), z=float(z), Q=float("nan"),
+                                  notched=False))
             continue
         Q = float(np.clip(f0 / (bg_std + 1.0) * 2, Q_min, Q_max))
-        print(f"  [notch] {f0:.0f} Hz: z={z:.1f}, Q={Q:.1f} — notching")
+        print(f"  [notch] {f0:.1f} Hz: z={z:.1f}, Q={Q:.1f} — notching")
+        if audit is not None:
+            audit.append(dict(freq_hz=float(f0), z=float(z), Q=Q, notched=True))
         b, a = iirnotch(w0=f0, Q=Q, fs=fs)
         for _ in range(int(repeats)):
             Y = filtfilt(b, a, Y, axis=0, method="gust")
@@ -158,20 +174,145 @@ def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
 
 def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
                             notch_patients=(), mains_base=50.0, fmax=500.0,
-                            repeats=1, peak_z_thresh=3.0):
+                            repeats=1, peak_z_thresh=3.0,
+                            extra_bases=(), audit=None):
     """
     Adaptive mains-harmonic notch with per-patient gating.
 
     `peak_z_thresh` controls how strict the "is this a real peak?" test is
     inside `notch_mains_harmonics`. Higher values = fewer harmonics are
     notched (more conservative, less risk of removing real signal).
+
+    `extra_bases`: further comb fundamentals to test alongside the mains
+    harmonics (e.g. 16.667 for railway traction power). The candidate list is
+    the UNION of all combs, so a frequency shared by two combs (50 = 3 x 16.667)
+    is tested and notched once. `audit` is passed through.
     """
     if not any(s in str(pid_raw) or s in str(patient_id) for s in notch_patients):
         return signals
-    print(f"[notch] {patient_id}  (z>={peak_z_thresh})")
+    lim = min(fmax, 0.5 * fs)
+    freqs = None
+    if extra_bases:
+        freqs = set()
+        for b in (mains_base, *extra_bases):
+            freqs |= {round(k * float(b), 3) for k in range(1, int(lim // float(b)) + 1)}
+        # two combs can land within a notch width of each other (100.0 and 100.002):
+        # keep one per 0.5 Hz so the same peak is not notched twice
+        kept = []
+        for f0 in sorted(freqs):
+            if not kept or f0 - kept[-1] > 0.5:
+                kept.append(f0)
+        freqs = kept
+        print(f"[notch] {patient_id}  (z>={peak_z_thresh}; combs "
+              f"{mains_base} + {tuple(extra_bases)} Hz, {len(freqs)} candidates)")
+    else:
+        print(f"[notch] {patient_id}  (z>={peak_z_thresh})")
     return notch_mains_harmonics(signals, fs, base=mains_base,
-                                  max_hz=min(fmax, 0.5 * fs), repeats=repeats,
-                                  peak_z_thresh=peak_z_thresh)
+                                  max_hz=lim, repeats=repeats,
+                                  peak_z_thresh=peak_z_thresh,
+                                  freqs=freqs, audit=audit)
+
+
+# ----------------------------
+# Per-block cleaning: the window, and what the mains comb does not explain
+# ----------------------------
+def block_window(onsets, trial_ends, n_samples, fs, *, pad_s=10.0, fallback_s=15.0):
+    """[b0, b1) in samples: one condition's trials with `pad_s` of margin.
+
+    The margin is there for two reasons. Every epoch reaches before its onset
+    (baseline) and past its trial end, and a notch applied with filtfilt has a
+    transient at each end of the slice; ten seconds keeps both well away from
+    any trial. Windows of different conditions may overlap - each is cut as its
+    own copy, so an overlap is never filtered twice.
+    """
+    on = np.asarray(onsets, float)
+    if on.size == 0:
+        raise ValueError("block_window: no onsets")
+    te = (np.asarray(trial_ends, float) if trial_ends is not None and len(trial_ends)
+          else on + fallback_s * fs)
+    b0 = int(max(0, np.floor(np.nanmin(on) - pad_s * fs)))
+    b1 = int(min(int(n_samples), np.ceil(np.nanmax(te) + pad_s * fs)))
+    if b1 <= b0:
+        raise ValueError(f"block_window: empty window {b0}..{b1}")
+    return b0, b1
+
+
+def unexplained_peaks(X, fs, *, bases=(50.0,), fmax=500.0, z_thresh=3.0,
+                      min_db=3.0, tol_hz=1.5, nperseg_sec=2.0):
+    """Sharp peaks in the channel-median PSD, and whether the mains comb accounts
+    for them.
+
+    The same z test the notch uses (each bin against its own +-5 Hz surroundings,
+    excluding +-1 Hz), AND at least `min_db` above that background - a z of 3 on a
+    flat background is reached by a noise bin about once per 800 bins, a line is
+    10-20 dB up - kept to local maxima and merged within 1 Hz. A peak within
+    `tol_hz` of a harmonic of any base is `on_comb`; the rest are what a mains
+    notch cannot touch - a second interference source, or a real narrow-band
+    component. Run it AFTER the notch, so it lists what is still there.
+
+    Returns a DataFrame: freq_hz, z, peak_db, above_db, on_comb.
+    """
+    import pandas as pd
+    X = np.asarray(X, float)
+    if X.ndim == 1:
+        X = X[:, None]
+    nper = int(max(8, nperseg_sec * fs))
+    f, P = welch(X, fs=fs, nperseg=nper, axis=0, detrend=False)
+    P_db = 10 * np.log10(np.median(P, axis=1) + 1e-30)
+    keep = f <= min(float(fmax), 0.95 * 0.5 * fs)
+    f, P_db = f[keep], P_db[keep]
+    z = np.full(f.shape, np.nan)
+    above = np.full(f.shape, np.nan)
+    for i, f0 in enumerate(f):
+        local = (f >= f0 - 5) & (f <= f0 + 5)
+        peak = (f >= f0 - 1) & (f <= f0 + 1)
+        bg = local & ~peak
+        if bg.sum() < 4:
+            continue
+        above[i] = P_db[i] - P_db[bg].mean()
+        z[i] = above[i] / (P_db[bg].std() + 1e-6)
+    rows = []
+    for i in range(1, len(f) - 1):
+        if not (np.isfinite(z[i]) and z[i] >= z_thresh and above[i] >= min_db
+                and P_db[i] >= P_db[i - 1] and P_db[i] >= P_db[i + 1]):
+            continue
+        r = dict(freq_hz=float(f[i]), z=float(z[i]), peak_db=float(P_db[i]),
+                 above_db=float(above[i]))
+        if rows and abs(r["freq_hz"] - rows[-1]["freq_hz"]) <= 1.0:
+            if r["z"] > rows[-1]["z"]:
+                rows[-1] = r
+            continue
+        rows.append(r)
+    harm = set()
+    for b in bases:
+        harm |= {k * float(b) for k in range(1, int(fmax // float(b)) + 1)}
+    for r in rows:
+        r["on_comb"] = bool(harm) and min(abs(r["freq_hz"] - h) for h in harm) <= tol_hz
+    # typed even when empty: an object-dtype on_comb makes `df[~df.on_comb]` a column
+    # selection, and a clean block is exactly the case with no rows
+    return (pd.DataFrame(rows, columns=["freq_hz", "z", "peak_db", "above_db", "on_comb"])
+            .astype({"freq_hz": float, "z": float, "peak_db": float,
+                     "above_db": float, "on_comb": bool}))
+
+
+def fit_comb(freqs, candidates=(16.667, 12.5, 15.0, 20.0, 25.0, 33.333, 60.0),
+             tol_hz=1.0):
+    """Which fundamental explains a set of peak frequencies best.
+
+    For each candidate base, the share of `freqs` lying within `tol_hz` of one of
+    its multiples. 16.667 Hz is first because it is railway traction power in
+    Switzerland, Germany and Austria, and its 3rd, 6th and 9th harmonics sit
+    exactly on 50, 100 and 150 Hz - which is how a railway comb hides inside a
+    mains comb. Returns [(base, share, n_hit)] best first; empty if no freqs.
+    """
+    fr = [float(x) for x in freqs]
+    if not fr:
+        return []
+    out = []
+    for b in candidates:
+        hit = sum(1 for x in fr if abs(x / b - round(x / b)) * b <= tol_hz)
+        out.append((float(b), hit / len(fr), int(hit)))
+    return sorted(out, key=lambda t: (-t[1], t[0]))
 
 
 # ----------------------------
