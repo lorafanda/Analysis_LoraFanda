@@ -1,0 +1,18 @@
+{
+  "stripe_db": {
+    "as recorded": -9.44,
+    "interpolated, phase kept (\u00b12 Hz)": -1.9,
+    "interpolated, random phase (\u00b111 Hz)": -0.05,
+    "clean noise": -0.36
+  },
+  "hw_hz": {
+    "phase_kept": 2.0,
+    "random_phase": 11.0
+  },
+  "n_iter_random": 10,
+  "line_fixation_over_trial": 3.0,
+  "onsets": 49,
+  "fs": 1000.0,
+  "seconds": 300.0,
+  "note": "stripe = mean over the trial of the 100 Hz row in dB vs the -0.6..-0.1 s baseline, trial-averaged; 0 = no stripe"
+}
