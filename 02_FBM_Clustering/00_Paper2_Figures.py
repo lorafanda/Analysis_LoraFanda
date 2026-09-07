@@ -429,6 +429,77 @@ def _crop_alpha(img, pad: int = 4):
     return img[y0:y1, x0:x1]
 
 
+# ---- the display rule ---------------------------------------------------------
+# THE DISPLAY RULE IS NOT THE CLUSTERING. Both switches change what is DRAWN and what
+# the drawn trace averages; neither refits anything, and neither touches the partition,
+# panel D, the CSVs or the matching. Defaults reproduce every figure made before
+# 2026-09-07 exactly.
+MIN_P = 0.0          # 0 = members are the argmax; 0.4 = P(belonging) on THIS cluster
+TRACE = "members"    # "members" = plain mean of the drawn set; "weighted" = P-weighted
+
+
+def variant_tag() -> str:
+    """The suffix every output of this variant carries, so versions do not overwrite."""
+    if MIN_P <= 0 and TRACE == "members":
+        return ""
+    t = f"_p{int(round(MIN_P * 100)):03d}" if MIN_P > 0 else ""
+    return t + ("w" if TRACE == "weighted" else "")
+
+
+def variant_note(d) -> str:
+    """One line saying what was applied, and whether it could apply at all."""
+    if not variant_tag():
+        return ""
+    # a hard partition has no loadings at all - load_run sets G to None and builds
+    # a one-hot Gn - so the rule is not "not applied", it is inapplicable
+    if d.get("G") is None:
+        return ("display rule not applicable: a hard partition has no P(belonging), "
+                "so every electrode counts once")
+    bits = []
+    if MIN_P > 0:
+        bits.append(f"shown: P(belonging) >= {MIN_P:g}")
+    bits.append("trace: P-weighted mean of all electrodes" if TRACE == "weighted"
+                else "trace: mean of the shown electrodes")
+    return "   ·   ".join(bits)
+
+
+def cluster_weights(d, j):
+    """(mask, weights) for cluster j under the current display rule.
+
+    mask    which electrodes are DRAWN and counted
+    w       what each electrode contributes to the trace; None means a plain mean
+    """
+    G = d["Gn"]
+    mask = (G[:, j] >= MIN_P) if MIN_P > 0 else (d["lab"] == j)
+    if TRACE == "weighted":
+        return mask, G[:, j]
+    return mask, None
+
+
+def cluster_mean_sd(C, d, j):
+    """The cluster's mean and SD under the current display rule.
+
+    The weighted SD is the weighted second moment about the weighted mean, which
+    reduces to the ordinary SD when the weights are 0/1 - so a hard partition and a
+    graded one are described by the same formula and not by two.
+    """
+    mask, w = cluster_weights(d, j)
+    if w is None:
+        A = C[mask]
+        if not len(A):
+            return np.zeros(C.shape[1:]), np.zeros(C.shape[1:])
+        return A.mean(0), (A.std(0, ddof=1) if len(A) > 1 else np.zeros_like(A[0]))
+    ww = np.asarray(w, float)
+    tot = ww.sum()
+    if tot <= 1e-12:
+        return np.zeros(C.shape[1:]), np.zeros(C.shape[1:])
+    shape = (-1,) + (1,) * (C.ndim - 1)
+    m = (C * ww.reshape(shape)).sum(0) / tot
+    var = (ww.reshape(shape) * (C - m) ** 2).sum(0) / tot
+    eff = tot ** 2 / np.maximum((ww ** 2).sum(), 1e-12)      # Kish effective n
+    return m, np.sqrt(var * (eff / max(eff - 1.0, 1.0)))
+
+
 def render_hemi(side: str, d: dict, j: int, zoom: float = 1.30):
     """One hemisphere, seen from its OWN side, with this cluster's electrodes.
 
@@ -444,7 +515,11 @@ def render_hemi(side: str, d: dict, j: int, zoom: float = 1.30):
     be largest, and the two layers can no longer disagree.
     """
     pl, ok = _scene(side, d, zoom)
-    sel = ok & (d["lab"] == j)
+    # the display rule decides who is on the brain at all; below MIN_P an electrode is
+    # not drawn faintly, it is not drawn
+    sel = ok & cluster_weights(d, j)[0]
+    if MIN_P > 0:
+        ok = ok & (d["Gn"][:, j] >= MIN_P)
     actor = None
     if ok.sum():
         w = d["Gn"][ok, j]                     # EVERY electrode's loading on THIS cluster
@@ -485,8 +560,15 @@ def patient_bar(ax, d, j, pcol):
     and a cluster drawn from the cohort is a fine stripe - which is the whole judgement
     panel D makes across K, made per-cluster and put where the cluster is.
     """
-    sel = d["lab"] == j
+    sel = cluster_weights(d, j)[0]
     n = int(sel.sum())
+    if not n:
+        ax.set_xticks([]); ax.set_yticks([])
+        for s_ in ax.spines.values():
+            s_.set_visible(False)
+        ax.text(0.0, 0.0, "no electrode reaches the display threshold", fontsize=6.4,
+                color=MUTED, va="center")
+        return
     vc = pd.Series(d["patient"][sel]).value_counts()        # descending
     x = 0.0
     for p, c in vc.items():
@@ -1086,11 +1168,14 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     d["fset"] = fset
     K = d["k"]
     C = cube(d["X"], d)
-    means = np.stack([C[d["lab"] == j].mean(0) for j in range(K)])
+    # mean and SD under the display rule. With no rule this is the plain mean over the
+    # argmax members and the ordinary SD, which is what every earlier figure drew.
+    ms = [cluster_mean_sd(C, d, j) for j in range(K)]
+    means = np.stack([m for m, _ in ms])
     # SD across the electrodes of each cluster. A singleton cluster has no SD; zero is
     # the honest value there and it draws as no band, which is a statement about n.
-    sds = np.stack([C[d["lab"] == j].std(0, ddof=1) if (d["lab"] == j).sum() > 1
-                    else np.zeros_like(means[j]) for j in range(K)])
+    sds = np.stack([sd for _, sd in ms])
+    shown = np.array([int(cluster_weights(d, j)[0].sum()) for j in range(K)])
     vlim = float(np.percentile(np.abs(means), 99.0))
     # the shared y range spans mean +/- SD, or the band clips on the loosest cluster
     ylim = (float((means - sds).min()) * 1.06, float((means + sds).max()) * 1.06)
@@ -1118,7 +1203,8 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
 
     fig.suptitle(f"FIG 1{TAG[fset]}   ·   {METHOD_LABEL[method]}   ·   {FS_LABEL[fset]}"
                  "   ·   "
-                 f"K = {K}   ·   {len(d['X'])} electrodes, {d['n_patients']} patients",
+                 f"K = {K}   ·   {len(d['X'])} electrodes, {d['n_patients']} patients"
+                 + (f"   ·   {variant_note(d)}" if variant_tag() else ""),
                  x=0.045, y=1.0 - 0.28 / fig_h, ha="left", fontsize=15.5, color=INK)
 
     panel_A(fig.add_subplot(gs[0, 0:8]), fset, K, method)
@@ -1148,11 +1234,16 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
             axc.tick_params(labelsize=6.4, colors=MUTED, length=2)
             axc.set_ylabel("Hz", fontsize=7.4)
         row = pc[pc.cluster == j].iloc[0]
-        warn = "  ·  " + f"{100*row.top_share:.0f}% one patient" \
-            if row.top_share > DANGER else ""
-        axc.set_title(f"c{j}   n={int(row.n)}   agree {100*agree_frac[j]:.0f}%{warn}",
+        # n and the dominance warning describe the DRAWN set, so the title cannot say
+        # 167 electrodes over a brain showing 60
+        sel_ = cluster_weights(d, j)[0]
+        top_share = (pd.Series(d["patient"][sel_]).value_counts().iloc[0] / shown[j]
+                     if shown[j] else 0.0)
+        warn = "  ·  " + f"{100*top_share:.0f}% one patient" \
+            if top_share > DANGER else ""
+        axc.set_title(f"c{j}   n={shown[j]}   agree {100*agree_frac[j]:.0f}%{warn}",
                       fontsize=8.6,
-                      color=RED if row.top_share > DANGER else cluster_col(j, K),
+                      color=RED if top_share > DANGER else cluster_col(j, K),
                       pad=2.6, loc="left")
         for i_, side in enumerate(("L", "R")):
             axb = fig.add_subplot(blk[1, i_])
@@ -1216,7 +1307,7 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
         s_.set_color(GREY)
 
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / f"FIG1{TAG[fset]}_{fset}_{method}_K{K}.png"
+    p = OUT / f"FIG1{TAG[fset]}_{fset}_{method}_K{K}{variant_tag()}.png"
     save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     save_text(pc.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))
@@ -1701,7 +1792,22 @@ def main() -> int:
     ap.add_argument("--method", choices=METHODS, default="cnmf",
                     help="clustering algorithm to draw; k-means and Ward have no peak "
                          "table, so pass --k with them")
+    ap.add_argument("--display-min-p", type=float, default=0.0,
+                    help="show an electrode on a cluster only if its P(belonging) on "
+                         "that cluster reaches this (0.4 is the display rule; 0 = the "
+                         "argmax members, the default and what earlier figures drew)")
+    ap.add_argument("--trace", choices=["members", "weighted"], default="members",
+                    help="'members' averages the shown electrodes; 'weighted' takes the "
+                         "P-weighted mean over every electrode")
     a = ap.parse_args()
+    if not 0.0 <= a.display_min_p < 1.0:
+        print("!! --display-min-p must be in [0, 1)", file=sys.stderr)
+        return 2
+    globals()["MIN_P"] = float(a.display_min_p)
+    globals()["TRACE"] = a.trace
+    if variant_tag():
+        print(f"  display rule: MIN_P={MIN_P:g}  trace={TRACE}  "
+              f"-> files tagged '{variant_tag()}'")
     for nf in a.figure:
         if nf not in FIGURES:
             print(f"!! no figure {nf}; have {sorted(FIGURES)}", file=sys.stderr)

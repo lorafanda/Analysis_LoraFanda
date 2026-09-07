@@ -339,6 +339,15 @@ def main() -> int:
     fig.text(.106, .9345, "box:  solid = above both nulls     dashed = above the free "
              "null only     grey = at chance          dot = one patient holds over half "
              "the cluster", fontsize=7.0, color=MUTED)
+    if a.weighting == "weighted":
+        # A SOFT COLUMN AGAINST A 0/1 COLUMN CANNOT REACH 1. Read the weighted rows
+        # down a block, never across the two: the top row pairs a graded solution
+        # with a hard one and the bottom row pairs two graded ones.
+        fig.text(.106, .9135, "weighted: each electrode counts as P(belonging), and the "
+                 "overlap is the weighted Jaccard.\nk-means and Ward have no P, so the "
+                 "top row pairs a graded solution with a hard one - read down a block, "
+                 "not across.",
+                 fontsize=7.0, color=FEAT_C, linespacing=1.5, va="top")
     fig.text(.030, .755, "same features,\ndifferent algorithms", fontsize=8.2,
              color=ALGO_C, rotation=90, ha="center", va="center", linespacing=1.5)
     fig.text(.030, .490, "same algorithm,\ndifferent features", fontsize=8.2,
@@ -347,10 +356,13 @@ def main() -> int:
     fig.text(.455, .327, "C", fontsize=11, color=INK, weight="bold")
     fig.text(.680, .327, "D", fontsize=11, color=INK, weight="bold")
 
-    png = OUT / f"FIG4_K{a.k:02d}.png"
+    # THE FILENAME CARRIES THE VARIANT. Without this the weighted render overwrites
+    # the hard one at the same path and the figure on disk stops saying which it is.
+    sfx = ("" if a.weighting == "hard" else "_weighted") + ("_rawJ" if a.raw_jaccard else "")
+    png = OUT / f"FIG4_K{a.k:02d}{sfx}.png"
     fig.savefig(png, dpi=300, facecolor="white")
     plt.close(fig)
-    txt = OUT / f"FIG4_K{a.k:02d}_caption.txt"
+    txt = OUT / f"FIG4_K{a.k:02d}{sfx}_caption.txt"
     body = caption(matched, summary, a.k, a.weighting, onepat, a.raw_jaccard)
     txt.write_text(body, encoding="utf-8")
     if txt.read_text(encoding="utf-8") != body:
