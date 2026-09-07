@@ -299,6 +299,19 @@ notch_Q_max = {
     "EL036": 50.0, "EL037": 50.0, "EL040": 50.0, "EL045": 50.0, "EL048": 50.0,
 }
 
+# NOTCH METHOD per patient (2026-09-07). An IIR notch zeroes a band f0/Q wide - with
+# Q 50 that is 9 Hz at 450 Hz, and EL048's per-shaft plots showed 40 dB holes at
+# 250-450 Hz while 50 and 100 still kept a residual. "interp" = spectrum
+# interpolation (Leske & Dalal 2019): the same harmonic test, then the amplitude
+# inside each peak's MEASURED width is replaced by the flanks' mean, phase kept -
+# the line goes, the floor stays, no hole. notch_Q_max does not apply to it.
+# Unlisted patients keep "iir". Every audit row carries before_db / after_db /
+# hole_hw_hz either way, which is the over/under-correction check.
+notch_method = {
+    "EL036": "interp", "EL037": "interp", "EL040": "interp", "EL045": "interp",
+    "EL048": "interp",
+}
+
 # A SECOND COMB per patient, notched alongside the mains harmonics. Add an entry
 # only after Report/<pid>_unexplained_peaks.tsv has shown the comb: fit_comb ranks
 # the candidates. 16.667 Hz is railway traction power (CH / DE / AT); its 3rd,
