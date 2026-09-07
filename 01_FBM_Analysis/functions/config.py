@@ -277,6 +277,17 @@ notch_peak_z_thresh = 3.0
 notch_scope = "block"
 notch_block_pad_s = 10.0     # margin either side of a block's outermost trial, s
 
+# PER-SHAFT notching (2026-09-07). IDs or substrings, matched like notch_patients.
+# For these patients every harmonic is DECIDED on the shaft's own median PSD and
+# NOTCHED on that shaft's channels only, so a line riding on one shaft is caught
+# where the montage median would dilute it, and a clean shaft is left alone.
+# Everyone else keeps one decision for the whole montage. Orthogonal to
+# notch_scope. Per-shaft patients also get PSD/psd_by_shaft.png (one row per shaft,
+# shared x, one y range, the shaft's notched harmonics and leftover peaks marked)
+# and a `shaft` column in Report/<pid>_notch_audit.tsv and _unexplained_peaks.tsv.
+# "EL" = every Bern patient; list IDs to narrow it.
+notch_shaft_patients = ["EL"]
+
 # A SECOND COMB per patient, notched alongside the mains harmonics. Add an entry
 # only after Report/<pid>_unexplained_peaks.tsv has shown the comb: fit_comb ranks
 # the candidates. 16.667 Hz is railway traction power (CH / DE / AT); its 3rd,

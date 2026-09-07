@@ -1,7 +1,7 @@
 # lf_ersp.py — lean edition + PSD bad-channel suggestion + WM ref helper
 from __future__ import annotations
 from dataclasses import dataclass
-import os, sys, numpy as np
+import os, re, sys, numpy as np
 from fractions import Fraction
 import matplotlib.pyplot as plt
 from scipy.signal import spectrogram, welch, iirnotch, filtfilt
@@ -172,10 +172,54 @@ def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
     return Y.squeeze() if was_1d else Y
 
 
+# ----------------------------
+# Per-shaft notching
+# ----------------------------
+_SHAFT_RX = re.compile(r"\d+$")
+
+
+def shaft_of_name(name) -> str:
+    """'aH_L10' -> 'aH_L', 'IMD5' -> 'IMD': the physical electrode a contact sits on."""
+    return _SHAFT_RX.sub("", str(name).strip())
+
+
+def shaft_groups(names) -> dict:
+    """{shaft: [channel indices]} in order of first appearance."""
+    g = {}
+    for i, n in enumerate(names):
+        g.setdefault(shaft_of_name(n), []).append(i)
+    return g
+
+
+def notch_per_shaft(X, fs, names, *, base=50.0, max_hz=None, repeats=1,
+                    peak_z_thresh=3.0, freqs=None, audit=None):
+    """notch_mains_harmonics decided AND applied separately for every shaft.
+
+    The montage-wide test looks at the median PSD over all channels, so a line that
+    rides on one shaft out of ten is invisible to it and is never notched. Here each
+    shaft is tested on its own median and only its own channels are filtered, so a
+    shaft-specific line is caught and a clean shaft is left alone. Audit rows carry
+    the shaft name and its channel count.
+    """
+    X = np.asarray(X, float)
+    Y = X.copy()
+    for shaft, idx in shaft_groups(names).items():
+        au = [] if audit is not None else None
+        print(f"  [notch] shaft {shaft}  ({len(idx)} ch)")
+        Y[:, idx] = notch_mains_harmonics(X[:, idx], fs, base=base, max_hz=max_hz,
+                                          repeats=repeats, peak_z_thresh=peak_z_thresh,
+                                          freqs=freqs, audit=au)
+        if audit is not None:
+            for r in au:
+                audit.append(dict(shaft=shaft, n_channels=len(idx), **r))
+    return Y
+
+
 def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
                             notch_patients=(), mains_base=50.0, fmax=500.0,
                             repeats=1, peak_z_thresh=3.0,
-                            extra_bases=(), audit=None):
+                            extra_bases=(), audit=None,
+                            per_shaft=False, names=None):
     """
     Adaptive mains-harmonic notch with per-patient gating.
 
@@ -187,9 +231,15 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
     harmonics (e.g. 16.667 for railway traction power). The candidate list is
     the UNION of all combs, so a frequency shared by two combs (50 = 3 x 16.667)
     is tested and notched once. `audit` is passed through.
+
+    `per_shaft` with `names`: decide and notch each shaft on its own (see
+    notch_per_shaft). Otherwise one decision for the montage; its audit rows are
+    tagged shaft="all" so the two paths write the same table.
     """
     if not any(s in str(pid_raw) or s in str(patient_id) for s in notch_patients):
         return signals
+    if per_shaft and names is None:
+        raise ValueError("apply_notch_with_audit: per_shaft=True needs the channel names")
     lim = min(fmax, 0.5 * fs)
     freqs = None
     if extra_bases:
@@ -207,10 +257,21 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
               f"{mains_base} + {tuple(extra_bases)} Hz, {len(freqs)} candidates)")
     else:
         print(f"[notch] {patient_id}  (z>={peak_z_thresh})")
-    return notch_mains_harmonics(signals, fs, base=mains_base,
-                                  max_hz=lim, repeats=repeats,
-                                  peak_z_thresh=peak_z_thresh,
-                                  freqs=freqs, audit=audit)
+    if per_shaft:
+        print(f"[notch] {patient_id}  per shaft: {len(shaft_groups(names))} shafts")
+        return notch_per_shaft(signals, fs, names, base=mains_base, max_hz=lim,
+                               repeats=repeats, peak_z_thresh=peak_z_thresh,
+                               freqs=freqs, audit=audit)
+    n0 = len(audit) if audit is not None else 0
+    Y = notch_mains_harmonics(signals, fs, base=mains_base,
+                              max_hz=lim, repeats=repeats,
+                              peak_z_thresh=peak_z_thresh,
+                              freqs=freqs, audit=audit)
+    if audit is not None:
+        nch = int(np.asarray(signals).shape[1]) if np.asarray(signals).ndim == 2 else 1
+        for r in audit[n0:]:
+            r.setdefault("shaft", "all"); r.setdefault("n_channels", nch)
+    return Y
 
 
 # ----------------------------
@@ -293,6 +354,96 @@ def unexplained_peaks(X, fs, *, bases=(50.0,), fmax=500.0, z_thresh=3.0,
     return (pd.DataFrame(rows, columns=["freq_hz", "z", "peak_db", "above_db", "on_comb"])
             .astype({"freq_hz": float, "z": float, "peak_db": float,
                      "above_db": float, "on_comb": bool}))
+
+
+def unexplained_peaks_by_shaft(X, fs, names, **kw):
+    """unexplained_peaks per shaft, stacked, with a `shaft` column first."""
+    import pandas as pd
+    X = np.asarray(X, float)
+    parts = []
+    for shaft, idx in shaft_groups(names).items():
+        d = unexplained_peaks(X[:, idx], fs, **kw)
+        d.insert(0, "shaft", shaft)
+        parts.append(d)
+    cols = ["shaft", "freq_hz", "z", "peak_db", "above_db", "on_comb"]
+    if not parts:
+        return pd.DataFrame(columns=cols).astype({"on_comb": bool})
+    return pd.concat(parts, ignore_index=True)[cols]
+
+
+def plot_psd_by_shaft(signals, fs, names, *, save_root, patient_id="", block_name="",
+                      fmax=500.0, nperseg_sec=2.0, noverlap=0.5, mains_base=50.0,
+                      audit=None, peaks=None, dpi=200, fname="psd_by_shaft.png"):
+    """The PSD one shaft per row: shared x, ONE y range for every row, each shaft in
+    its own colour (median line, IQR band), with that shaft's own decisions drawn on
+    its row - a triangle at every harmonic the notch took out of it, a cross at
+    every peak left over that no comb explains. `audit` and `peaks` are the per-shaft
+    tables from apply_notch_with_audit / unexplained_peaks_by_shaft; without them the
+    rows carry only the spectra. Writes a PNG under save_root/PSD/.
+    """
+    import pandas as pd
+    import matplotlib
+    X = np.asarray(signals, float)
+    groups = shaft_groups(names)
+    nper = int(max(8, nperseg_sec * fs)); nov = int(noverlap * nper)
+    f, P = welch(X, fs=fs, nperseg=nper, noverlap=nov, axis=0, detrend=False)
+    keep = f <= float(fmax)
+    f = f[keep]; P_db = 10 * np.log10(P[keep, :] + 1e-30)     # (nf, nch)
+    rows = []
+    for shaft, idx in groups.items():
+        B = P_db[:, idx]
+        rows.append((shaft, len(idx), np.nanmedian(B, axis=1),
+                     np.nanpercentile(B, 25, axis=1), np.nanpercentile(B, 75, axis=1)))
+    # one y range for all rows, from every shaft's IQR above 1 Hz (the DC bin alone
+    # would set the top of every panel)
+    m1 = f >= 1.0
+    lo = min(np.nanmin(q1[m1]) for _, _, _, q1, _ in rows)
+    hi = max(np.nanmax(q3[m1]) for _, _, _, _, q3 in rows)
+    pad = 0.05 * (hi - lo if hi > lo else 1.0)
+    ylim = (lo - pad, hi + 3 * pad)
+    n = len(rows)
+    fig, axes = plt.subplots(n, 1, sharex=True, figsize=(11, max(3.2, 1.55 * n + 1.3)),
+                             dpi=dpi, squeeze=False)
+    # tab10 while it lasts: tab20 pairs neighbouring shafts in near-identical hues
+    _cmap = matplotlib.colormaps["tab10" if n <= 10 else "tab20"]
+    colours = lambda i: _cmap(i % (10 if n <= 10 else 20))
+    au = pd.DataFrame(audit) if audit else None
+    pk = peaks if isinstance(peaks, pd.DataFrame) and len(peaks) else None
+    for i, (shaft, nch, med, q1, q3) in enumerate(rows):
+        ax = axes[i, 0]; col = colours(i)
+        ax.fill_between(f, q1, q3, color=col, alpha=0.22, lw=0)
+        ax.plot(f, med, color=col, lw=1.3)
+        if mains_base:
+            for k in range(1, int(fmax // mains_base) + 1):
+                ax.axvline(k * mains_base, color="r", ls="--", lw=0.6, alpha=0.35)
+        ytop = ylim[1] - 1.2 * pad
+        if au is not None and "shaft" in au.columns:
+            a = au[(au.shaft == shaft) & (au.notched.astype(bool))]
+            if len(a):
+                ax.plot(a.freq_hz, np.full(len(a), ytop), "v", color=col, ms=6,
+                        mec="k", mew=0.4, label="notched")
+        if pk is not None and "shaft" in pk.columns:
+            q = pk[(pk.shaft == shaft) & (~pk.on_comb.astype(bool))]
+            if len(q):
+                ax.plot(q.freq_hz, np.full(len(q), ytop), "x", color="k", ms=6,
+                        mew=1.0, label="off-comb peak left")
+        ax.set_ylim(*ylim)
+        ax.text(0.006, 0.93, f"{shaft}  ({nch} ch)", transform=ax.transAxes,
+                ha="left", va="top", fontsize=9, color=col, fontweight="bold")
+        ax.grid(True, ls="--", alpha=0.25)
+        ax.tick_params(labelsize=8)
+        if i == 0 and (au is not None or pk is not None):
+            ax.legend(loc="upper right", fontsize=7.5, frameon=False, ncol=2)
+    axes[-1, 0].set_xlabel("Frequency (Hz)")
+    axes[-1, 0].set_xlim(0, fmax)
+    fig.supylabel("PSD (dB/Hz)", fontsize=9)
+    fig.suptitle(f"{patient_id} – {block_name} – PSD by shaft  ({n} shafts, one y range)",
+                 fontsize=11)
+    fig.tight_layout(rect=(0.02, 0, 1, 0.98))
+    out_dir = os.path.join(save_root, "PSD"); os.makedirs(out_dir, exist_ok=True)
+    out = os.path.join(out_dir, fname)
+    fig.savefig(out, dpi=dpi); plt.close(fig)
+    return out
 
 
 def fit_comb(freqs, candidates=(16.667, 12.5, 15.0, 20.0, 25.0, 33.333, 60.0),
