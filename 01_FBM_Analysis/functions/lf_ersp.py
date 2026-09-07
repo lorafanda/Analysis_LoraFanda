@@ -185,7 +185,7 @@ def _median_psd_db(X, fs, nperseg_sec=2.0):
 
 
 def peak_geometry(f, P_db, f0, *, rise_db=3.0, max_hw_hz=5.0, floor_db=None,
-                  floor_ring=(1.0, 5.0)):
+                  floor_ring=(1.0, 5.0), floor_stat="mean"):
     """What one harmonic looks like in a median PSD.
 
     floor_db   the local floor: mean of the ring `floor_ring` Hz out (default 1-5 Hz,
@@ -206,7 +206,10 @@ def peak_geometry(f, P_db, f0, *, rise_db=3.0, max_hw_hz=5.0, floor_db=None,
     if bg.sum() < 4 or not peak.any():
         return dict(floor_db=nan, above_db=nan, z=nan, hw_hz=nan, hole_hw_hz=nan)
     sd = float(P_db[bg].std())
-    floor = float(P_db[bg].mean()) if floor_db is None else float(floor_db)
+    if floor_db is not None:
+        floor = float(floor_db)
+    else:
+        floor = float(np.median(P_db[bg]) if floor_stat == "median" else P_db[bg].mean())
     i0 = int(np.argmin(np.abs(f - f0)))
     df = float(f[1] - f[0])
     above = float(P_db[i0] - floor)
@@ -229,13 +232,21 @@ def peak_geometry(f, P_db, f0, *, rise_db=3.0, max_hw_hz=5.0, floor_db=None,
                 hole_hw_hz=float(hole))
 
 
-def spectrum_interpolate(X, fs, bands, *, flank_hz=2.0):
+def spectrum_interpolate(X, fs, bands, *, flank_hz=2.0, phase="keep", seed=0):
     """Leske & Dalal (2019), J Neurosci Methods: inside each [lo, hi] band the
     amplitude spectrum is replaced by the mean amplitude of the flanks on either side,
     the phase is kept, and the signal is rebuilt. The line's excess power goes and the
     floor stays, so nothing is dug out - which is exactly what an IIR notch does wrong
     when its band is wider than the line. One FFT over the whole segment, per channel;
     a modulated line's sidebands inside the band go with it.
+
+    `phase`: "keep" is the paper's choice and is right for STATIONARY mains noise.
+    For a line whose amplitude follows the trial (fixation vs stimulus) it is wrong:
+    the time course lives in the band's phases, so a phase-kept band still rises and
+    falls with the trial and the ERSP keeps its stripe even with the power gone
+    (EL048, 2026-09-07: lines cut by 30-50 dB, stripes unchanged). "random" draws a
+    uniform phase per bin (seeded, so reproducible): the band becomes stationary
+    floor-level noise with no time course at all.
     """
     X = np.asarray(X, float)
     was_1d = X.ndim == 1
@@ -244,6 +255,7 @@ def spectrum_interpolate(X, fs, bands, *, flank_hz=2.0):
     n = X.shape[0]
     F = np.fft.rfft(X, axis=0)
     fr = np.fft.rfftfreq(n, d=1.0 / fs)
+    rng = np.random.default_rng(seed)
     for lo, hi in bands:
         band = (fr >= lo) & (fr <= hi)
         fl = ((fr >= lo - flank_hz) & (fr < lo)) | ((fr > hi) & (fr <= hi + flank_hz))
@@ -252,16 +264,32 @@ def spectrum_interpolate(X, fs, bands, *, flank_hz=2.0):
         # RMS, not mean amplitude: for a noise spectrum the mean amplitude squared
         # is pi/4 of the mean power (Rayleigh), 1 dB below the floor
         amp = np.sqrt((np.abs(F[fl]) ** 2).mean(axis=0, keepdims=True))
-        F[band] = amp * np.exp(1j * np.angle(F[band]))
+        if str(phase).lower() == "random":
+            ph = rng.uniform(0.0, 2.0 * np.pi, size=(int(band.sum()), F.shape[1]))
+        else:
+            ph = np.angle(F[band])
+        F[band] = amp * np.exp(1j * ph)
     Y = np.fft.irfft(F, n=n, axis=0)
     return Y[:, 0] if was_1d else Y
 
 
 def notch_by_interpolation(X, fs, *, base=50.0, max_hz=None, peak_z_thresh=3.0,
-                           freqs=None, audit=None, flank_hz=2.0, max_hw_hz=5.0):
+                           freqs=None, audit=None, flank_hz=2.0, max_hw_hz=12.0,
+                           phase="random", widen=True, seed=0, resid_db=3.0):
     """The notch's own harmonic test (z on the median PSD), then spectrum interpolation
-    over each detected peak's MEASURED half-width instead of an IIR notch. Audit rows as
-    notch_mains_harmonics writes them, plus method and hw_hz; Q is nan.
+    over each detected peak's MEASURED width instead of an IIR notch.
+
+    `phase="random"` (see spectrum_interpolate) and `widen=True` are what a TRIAL-LOCKED
+    line needs. A line that switches with the trial has modulation skirts several Hz
+    wide; whatever is left outside the band still reaches the ERSP row through the
+    spectrogram window's +-15 Hz main lobe and keeps the stripe. So after each pass the
+    next 3 Hz outside every band are checked against the far floor (10-20 Hz out,
+    median, beyond a loud line's leakage and beyond a sideband); a band whose skirts
+    still stand more than `resid_db` above it grows by 1 Hz and the pass repeats, up to
+    `max_hw_hz`. The final half-width is the COST of that harmonic - brain signal within
+    it is replaced - and goes to the audit as hw_hz, with n_iter.
+    Audit rows as notch_mains_harmonics writes them, plus method, phase, hw_hz, n_iter;
+    Q is nan.
     """
     X = np.asarray(X, float)
     was_1d = X.ndim == 1
@@ -274,28 +302,56 @@ def notch_by_interpolation(X, fs, *, base=50.0, max_hz=None, peak_z_thresh=3.0,
     else:
         harms = [h * base for h in range(1, int(lim // base) + 1)]
     f, P_db = _median_psd_db(X, fs)
-    bands = []
+    df = float(f[1] - f[0])
+    todo = {}
     for f0 in harms:
         if f0 >= 0.95 * nyq:
             continue
-        g = peak_geometry(f, P_db, f0, max_hw_hz=max_hw_hz)
+        g = peak_geometry(f, P_db, f0, max_hw_hz=min(5.0, max_hw_hz))
         if not np.isfinite(g["z"]) or g["z"] < peak_z_thresh:
             print(f"  [interp] {f0:.1f} Hz: z={g['z']:.1f} — no significant peak, skipping")
             if audit is not None:
                 audit.append(dict(freq_hz=float(f0), z=float(g["z"]), Q=float("nan"),
-                                  notched=False, method="interp", hw_hz=0.0))
+                                  notched=False, method="interp", phase=str(phase),
+                                  hw_hz=0.0, n_iter=0))
             continue
-        hw = max(g["hw_hz"], float(f[1] - f[0]))
-        bands.append((f0 - hw, f0 + hw))
-        print(f"  [interp] {f0:.1f} Hz: z={g['z']:.1f}, +-{hw:.1f} Hz — interpolating")
+        todo[f0] = (max(g["hw_hz"], df), float(g["z"]))
+
+    n_iter = 0
+    Y = X.copy()
+    while True:
+        bands = [(f0 - hw, f0 + hw) for f0, (hw, _) in todo.items()]
+        if not bands:
+            break
+        Y = spectrum_interpolate(X, fs, bands, flank_hz=flank_hz, phase=phase, seed=seed)
+        n_iter += 1
+        if not widen or n_iter >= 12:
+            break
+        fy, Py = _median_psd_db(Y, fs)
+        grew = False
+        for f0, (hw, z) in list(todo.items()):
+            d = np.abs(fy - f0)
+            far = (d >= 10.0) & (d <= 20.0)
+            ring = (d > hw) & (d <= hw + 3.0)
+            if not far.any() or not ring.any():
+                continue
+            resid = float(Py[ring].max() - np.median(Py[far]))
+            if resid > resid_db and hw < max_hw_hz:
+                todo[f0] = (min(hw + 1.0, max_hw_hz), z)
+                grew = True
+        if not grew:
+            break
+    for f0, (hw, z) in todo.items():
+        print(f"  [interp] {f0:.1f} Hz: z={z:.1f}, +-{hw:.1f} Hz, phase {phase} — interpolated"
+              + (f" ({n_iter} passes)" if n_iter > 1 else ""))
         if audit is not None:
-            audit.append(dict(freq_hz=float(f0), z=float(g["z"]), Q=float("nan"),
-                              notched=True, method="interp", hw_hz=float(hw)))
-    Y = spectrum_interpolate(X, fs, bands, flank_hz=flank_hz) if bands else X.copy()
+            audit.append(dict(freq_hz=float(f0), z=float(z), Q=float("nan"), notched=True,
+                              method="interp", phase=str(phase), hw_hz=float(hw),
+                              n_iter=int(n_iter)))
     return Y[:, 0] if was_1d else Y
 
 
-def annotate_correction(audit_rows, X_before, X_after, fs, *, max_hw_hz=10.0):
+def annotate_correction(audit_rows, X_before, X_after, fs, *, max_hw_hz=15.0):
     """THE CHECK, for every audited harmonic, whichever method filtered it:
         before_db    how far the line stood above its local floor
         after_db     how far the spectrum sits from that SAME floor afterwards;
@@ -309,14 +365,22 @@ def annotate_correction(audit_rows, X_before, X_after, fs, *, max_hw_hz=10.0):
     fb, Pb = _median_psd_db(X_before, fs)
     fa, Pa = _median_psd_db(X_after, fs)
     for r in audit_rows:
-        # ONE floor for both sides, from the BEFORE spectrum 3-8 Hz out: beyond a
-        # loud line's leakage skirts, and beyond any hole the filter can dig
-        gb = peak_geometry(fb, Pb, r["freq_hz"], max_hw_hz=max_hw_hz, floor_ring=(3.0, 8.0))
+        # ONE floor for both sides, from the BEFORE spectrum 10-20 Hz out, MEDIAN:
+        # beyond a loud line's modulation skirts and leakage, beyond any hole the
+        # filter can dig, and a sideband in the ring cannot pull a median
+        gb = peak_geometry(fb, Pb, r["freq_hz"], max_hw_hz=max_hw_hz,
+                           floor_ring=(10.0, 20.0), floor_stat="median")
         ga = peak_geometry(fa, Pa, r["freq_hz"], max_hw_hz=max_hw_hz, floor_db=gb["floor_db"],
-                           floor_ring=(3.0, 8.0))
+                           floor_ring=(10.0, 20.0))
         r["before_db"] = round(gb["above_db"], 2)
         r["after_db"] = round(ga["above_db"], 2)
         r["hole_hw_hz"] = round(ga["hole_hw_hz"], 2)
+        # the skirts just outside whatever was treated: what still reaches the
+        # ERSP row through the spectrogram window if it is trial-locked
+        hw = float(r.get("hw_hz", 0.0) or 0.0)
+        d = np.abs(fa - r["freq_hz"])
+        ring = (d > hw) & (d <= hw + 3.0)
+        r["resid_flank_db"] = round(float(Pa[ring].max() - gb["floor_db"]), 2) if ring.any() else float("nan")
 
 
 # ----------------------------
@@ -340,7 +404,7 @@ def shaft_groups(names) -> dict:
 
 def notch_per_shaft(X, fs, names, *, base=50.0, max_hz=None, repeats=1,
                     peak_z_thresh=3.0, freqs=None, audit=None, Q_max=500.0,
-                    method="iir"):
+                    method="iir", interp_kw=None):
     """notch_mains_harmonics decided AND applied separately for every shaft.
 
     The montage-wide test looks at the median PSD over all channels, so a line that
@@ -357,7 +421,7 @@ def notch_per_shaft(X, fs, names, *, base=50.0, max_hz=None, repeats=1,
         if method == "interp":
             Y[:, idx] = notch_by_interpolation(X[:, idx], fs, base=base, max_hz=max_hz,
                                                peak_z_thresh=peak_z_thresh,
-                                               freqs=freqs, audit=au)
+                                               freqs=freqs, audit=au, **(interp_kw or {}))
         else:
             Y[:, idx] = notch_mains_harmonics(X[:, idx], fs, base=base, max_hz=max_hz,
                                               repeats=repeats, peak_z_thresh=peak_z_thresh,
@@ -375,7 +439,7 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
                             repeats=1, peak_z_thresh=3.0,
                             extra_bases=(), audit=None,
                             per_shaft=False, names=None, Q_max=500.0,
-                            method="iir"):
+                            method="iir", interp_kw=None):
     """
     Adaptive mains-harmonic notch with per-patient gating.
 
@@ -428,7 +492,10 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
     if method not in ("iir", "interp"):
         raise ValueError(f"apply_notch_with_audit: method must be 'iir' or 'interp', got {method!r}")
     if method == "interp":
-        print(f"[notch] {patient_id}  method: spectrum interpolation over each peak's own width")
+        _ik = interp_kw or {}
+        print(f"[notch] {patient_id}  method: spectrum interpolation, phase "
+              f"{_ik.get('phase', 'random')}, bands widen to +-{_ik.get('max_hw_hz', 12.0):g} Hz "
+              f"until the skirts are on the floor")
     elif Q_max != 500.0:
         print(f"[notch] {patient_id}  Q capped at {Q_max:g} "
               f"({mains_base / Q_max:.1f} Hz wide at {mains_base:g} Hz)")
@@ -436,11 +503,13 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
         print(f"[notch] {patient_id}  per shaft: {len(shaft_groups(names))} shafts")
         return notch_per_shaft(signals, fs, names, base=mains_base, max_hz=lim,
                                repeats=repeats, peak_z_thresh=peak_z_thresh,
-                               freqs=freqs, audit=audit, Q_max=Q_max, method=method)
+                               freqs=freqs, audit=audit, Q_max=Q_max, method=method,
+                               interp_kw=interp_kw)
     n0 = len(audit) if audit is not None else 0
     if method == "interp":
         Y = notch_by_interpolation(signals, fs, base=mains_base, max_hz=lim,
-                                   peak_z_thresh=peak_z_thresh, freqs=freqs, audit=audit)
+                                   peak_z_thresh=peak_z_thresh, freqs=freqs, audit=audit,
+                                   **(interp_kw or {}))
     else:
         Y = notch_mains_harmonics(signals, fs, base=mains_base,
                                   max_hz=lim, repeats=repeats,

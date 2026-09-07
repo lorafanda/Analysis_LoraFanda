@@ -310,6 +310,19 @@ notch_Q_max = {
 # the line goes, the floor stays, no hole. notch_Q_max does not apply to it.
 # Unlisted patients keep "iir". Every audit row carries before_db / after_db /
 # hole_hw_hz either way, which is the over/under-correction check.
+# HOW the interpolation treats the band (2026-09-07, after EL048's stripes survived
+# the phase-kept version). The ERSP stripe is trial power over baseline power at the
+# harmonic's row: it measures the line's TIME COURSE, and the time course lives in
+# the band's phases - keeping them (the paper's choice, right for stationary mains)
+# kept the stripe with the power gone. "random" phase makes the band stationary
+# floor noise. And a trial-locked line has modulation skirts several Hz wide that
+# still reach the ERSP row through the 128-ms window's +-15 Hz main lobe, so each
+# band widens by 1 Hz per pass until the next 3 Hz outside it are on the floor, up
+# to notch_interp_max_hw_hz. The final width per harmonic is in the audit (hw_hz):
+# brain signal inside it is replaced, which at 100 Hz is part of the HG band.
+notch_interp_phase = "random"         # "random" | "keep"
+notch_interp_max_hw_hz = 12.0
+
 notch_method = {
     "EL036": "interp", "EL037": "interp", "EL040": "interp", "EL045": "interp",
     "EL048": "interp",
@@ -327,7 +340,9 @@ notch_method = {
 # 6th and 9th harmonics coincide with 50, 100 and 150 Hz, so a 50 Hz notch alone
 # leaves 16.7, 33.3, 66.7, 83.3, 116.7, 133.3 ... untouched.
 notch_extra_bases = {
-    # "EL048": (16.667,),
+    # EL048: 84.5 / 115.5 Hz sidebands in every block of the 2026-09-07 audit (z 3.2-3.4,
+    # 6-9 dB up), 16.667 x 5 and x 7; they sit inside the 100 Hz row's window reach
+    "EL048": (16.667,),
 }
 
 # ---------------------------
