@@ -535,7 +535,10 @@ def ensure_dir(p: str) -> str:
 # the 22 names this newly catches are all EKG/EMG/X-family, and every X* name in
 # the cohort is auxiliary, so no real contact is affected.
 _non_neural_pat = re.compile(
-    r"^(PHOTO|MRK|MKR|ECG|EKG|EMG|EOG|AUDIO|TRIG|PULSE|RESP)_?\d*$"
+    # AINP1/2/3 are the Blackrock analogue inputs (photodiode, microphone, trigger);
+    # 02's is_non_neural_electrode drops them, and until 2026-09-07 this did not, so
+    # 140 computed ERSPs for them and let them into the notch's montage median
+    r"^(PHOTO|MRK|MKR|ECG|EKG|EMG|EOG|AUDIO|TRIG|PULSE|RESP|AINP)_?\d*$"
     r"|^X\d+(M\d+)?$"          # X9, X10-X12, X1m1..X1m8, X2m1..X2m8
     r"|^[XE][1-8]$|^X$", re.I)
 

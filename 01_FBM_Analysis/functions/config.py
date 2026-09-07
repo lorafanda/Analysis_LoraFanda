@@ -251,7 +251,7 @@ min_freq_bins = 3     # e.g., 4–8 depending on your df
 outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs"
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
-notch_patients  = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780"]   
+notch_patients  = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780"]   
 # IDs or substrings to match
     
 # notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
@@ -285,9 +285,12 @@ notch_block_pad_s = 10.0     # margin either side of a block's outermost trial, 
 # notch_scope. Per-shaft patients also get PSD/psd_by_shaft.png (one row per shaft,
 # shared x, one y range, the shaft's notched harmonics and leftover peaks marked)
 # and a `shaft` column in Report/<pid>_notch_audit.tsv and _unexplained_peaks.tsv.
-# "EL" would be every Bern patient; the five below are the ones whose cubes carry
-# trial-locked mains stripes (review of 2026-09-07).
-notch_shaft_patients = ["EL036", "EL037", "EL040", "EL045", "EL048"]
+# "EL" would be every Bern patient. The five stripe patients of the 2026-09-07 review,
+# plus EL043, EL049 (future) and the MicroEPI patients (raw ids, as in notch_patients;
+# their micro shafts are named with a trailing "m" and form their own groups).
+notch_shaft_patients = ["EL036", "EL037", "EL040", "EL045", "EL048",
+                        "EL043", "EL049",
+                        "G-01", "G-02", "G-03", "G-04", "G-05", "G-06"]
 
 # CAP ON THE NOTCH Q, per patient (2026-09-07). The adaptive notch sets
 # Q = clip(2*f0/(bg_std+1), 10, 500): 0.7 Hz wide at 350 Hz. EL048's per-block
@@ -310,6 +313,12 @@ notch_Q_max = {
 notch_method = {
     "EL036": "interp", "EL037": "interp", "EL040": "interp", "EL045": "interp",
     "EL048": "interp",
+    "EL043": "interp", "EL049": "interp",
+    # MicroEPI, by raw id (the cell-3 helper also accepts the PAT_ id). Their micro
+    # combs are richer than mains: after the first run read the unexplained-peaks
+    # table per micro shaft and add the comb it names to notch_extra_bases.
+    "G-01": "interp", "G-02": "interp", "G-03": "interp",
+    "G-04": "interp", "G-05": "interp", "G-06": "interp",
 }
 
 # A SECOND COMB per patient, notched alongside the mains harmonics. Add an entry
