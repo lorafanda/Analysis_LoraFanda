@@ -520,9 +520,11 @@ def plot_tetrode_ersp_2x2(ersps, *, save_path, patient_id, condition,
     fig.suptitle(f"{patient_id} – {condition} – WM-ref ERSP: tetrode {tetrode_idx}", fontsize=11)
     fig.colorbar(im, ax=axes.ravel().tolist(), shrink=0.8, label="dB")
 
+    # PNG whatever extension the caller passed: a 300-dpi TIFF of this is ~10 MB
+    save_path = os.path.splitext(str(save_path))[0] + ".png"
     save_dir = os.path.dirname(save_path) or None
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
-    fig.savefig(save_path, dpi=300, format="tiff", transparent=True, bbox_inches="tight")
+    fig.savefig(save_path, dpi=300, format="png", transparent=True, bbox_inches="tight")
     plt.close(fig)
     return save_path

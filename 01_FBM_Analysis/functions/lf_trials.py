@@ -302,7 +302,7 @@ def plot_montage_overview(
     patient_id="",
     figsize_w=200,
     dpi=150,
-    fmt="tif",              # "tif" | "png" — default keeps 140's output format
+    fmt="png",              # "png" | "tif" — PNG everywhere since 2026-09-07
 ):
     """
     Save a stacked montage trace of all channels over full recording duration.

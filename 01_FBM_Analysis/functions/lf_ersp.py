@@ -548,9 +548,11 @@ def plot_psd_overview(signals, fs, names, *, save_root, patient_id="", block_nam
     ax.set_title(f"{patient_id} – {block_name} – PSD overview")
     ax.grid(True, ls='--', alpha=0.3); ax.set_xlim([0, fmax])
     plt.tight_layout()
-    p_tif = os.path.join(out_dir, "psd_allch_full.tif")
+    # PNG, not TIFF: at 600 dpi the TIFF was ~54 MB per patient for a line plot.
+    # The PDF beside it is vector and small, and stays.
+    p_png = os.path.join(out_dir, "psd_allch_full.png")
     p_pdf = os.path.join(out_dir, "psd_allch_full.pdf")
-    fig.savefig(p_tif, dpi=dpi); fig.savefig(p_pdf); plt.close(fig)
+    fig.savefig(p_png, dpi=dpi); fig.savefig(p_pdf); plt.close(fig)
     csv_path = os.path.join(out_dir, "psd_summary.csv")
     with open(csv_path, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
@@ -561,7 +563,7 @@ def plot_psd_overview(signals, fs, names, *, save_root, patient_id="", block_nam
                 mask = (f >= lo) & (f < hi)
                 row.append(float(np.nanmean(P[ci, mask])) if np.any(mask) else np.nan)
             w.writerow(row)
-    return [p_tif, p_pdf, csv_path]
+    return [p_png, p_pdf, csv_path]
 
 
 # ----------------------------
@@ -1004,15 +1006,17 @@ def plot_ersp(
         plt.title(title); plt.legend(loc="upper right"); plt.tight_layout()
 
     suffix = (filename_suffix or "")
-    fname = f"{patient_id}_{condition}_{reref_type}_ERSP_{chan_name}{('_TN' if mode=='TN' else '')}{suffix}.tif"
+    # PNG, not TIFF (2026-09-07): a 300-dpi TIFF of this figure is ~10 MB, and a
+    # patient writes hundreds of them. Nothing downstream reads the image.
+    fname = f"{patient_id}_{condition}_{reref_type}_ERSP_{chan_name}{('_TN' if mode=='TN' else '')}{suffix}.png"
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
         fname = os.path.join(save_dir, fname)
-    plt.savefig(fname, dpi=300, transparent=True, format="tiff")
+    plt.savefig(fname, dpi=300, transparent=True, format="png")
     plt.close()
 
     if save_sidecar:
-        sidecar = fname.replace(".tif", "_metrics.npz")
+        sidecar = os.path.splitext(fname)[0] + "_metrics.npz"
         try:
             np.savez_compressed(
                 sidecar,
@@ -1046,7 +1050,7 @@ def save_cluster_plots(
     outdir = os.path.join(save_root, ("cluster raw plots" if raw else "ERSP_cluster_plots"))
     fig_path = plot_ersp(ersp_plot, patient_id=patient_id, condition=condition,
                          reref_type=reref_type, chan_name=chan_name, save_dir=outdir, params=params)
-    sidecar = fig_path.replace(".tif", ("_RAWmask.npz" if raw else "_PROCmask.npz"))
+    sidecar = os.path.splitext(fig_path)[0] + ("_RAWmask.npz" if raw else "_PROCmask.npz")
     try:
         os.makedirs(outdir, exist_ok=True)
         np.savez_compressed(
@@ -1103,7 +1107,7 @@ def plot_hg_trials(
     trial_end_indices=None,       # supports trial-end-based segmentation
     sort_by="stim",               # "stim" | "resp" | "total" | "none"
     align="onset",                # "onset" (t=0 is stimulus onset) | "go" (t=0 is the GO cue)
-    fmt="tif"                     # "tif" | "png" — default keeps 140's output format
+    fmt="png"                     # "png" | "tif" — PNG everywhere since 2026-09-07
 ):
     """
     Mirrors the legacy HG plot (color/shape/sorting) but lives inside lf_ersp.py.
