@@ -471,7 +471,9 @@ def variant_tag() -> str:
     """The suffix every output of this variant carries, so versions do not overwrite."""
     if MIN_P <= 0 and TRACE == "members":
         return ""
-    t = f"_minP{int(round(MIN_P * 100)):03d}" if MIN_P > 0 else ""
+    if MIN_P <= 0:
+        return "_weighted"          # a weighted trace, every electrode shown
+    t = f"_minP{int(round(MIN_P * 100)):03d}"
     return t + ("w" if TRACE == "weighted" else "")
 
 
