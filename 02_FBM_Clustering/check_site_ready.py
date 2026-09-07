@@ -49,6 +49,17 @@ def add(section, item, state, detail=""):
     rows.append((section, item, state, detail))
 
 
+def rel(p: Path) -> str:
+    """A short path for the report. The site repo is not under ROOT, so this falls back
+    rather than raising, which is what crashed the check on the server."""
+    for base in (ROOT, ROOT.parent, Path.home()):
+        try:
+            return str(p.relative_to(base))
+        except ValueError:
+            continue
+    return str(p)
+
+
 def newest(method, fset):
     try:
         return LR.newest_run(method, fset)
@@ -177,6 +188,9 @@ def main() -> int:
                            if newest(m, fs) and (newest(m, fs) / "manifest.json").exists()),
                           default=0)
     SITE = Path.home() / "lorafanda.github.io"
+    if not SITE.is_dir():
+        print(f"  no site checkout at {SITE} - the site rows are reported n/a "
+              "(this is the analysis machine, not the publishing one)")
     for label, p in (("centroid bundle", WEB / "centroids" / "index.json"),
                      ("coverage bundle",
                       ROOT / "outputs" / "250_recon" / "fsaverage" / "coverage_viz"
@@ -188,7 +202,8 @@ def main() -> int:
                      # itself is what has to be newer than the runs it shows
                      ("analysis_status.html", SITE / "analysis_status.html")):
         if not p.exists():
-            add("site", label, "MISSING", str(p.relative_to(ROOT)))
+            # a site file cannot be missing on a machine with no site checkout
+            add("site", label, "n/a" if not SITE.is_dir() else "MISSING", rel(p))
         else:
             st = "OK" if p.stat().st_mtime >= newest_run_time else "STALE"
             add("site", label, st,
@@ -219,12 +234,15 @@ def main() -> int:
         if section != sec:
             print(f"\n  {section}")
             sec = section
-        if state != "OK":
+        if state not in ("OK", "n/a"):
             bad += 1
-        mark = {"OK": "  ok  ", "STALE": " STALE", "MISSING": " MISS "}[state]
+        mark = {"OK": "  ok  ", "STALE": " STALE", "MISSING": " MISS ",
+                "n/a": "  n/a "}[state]
         print(f"   {mark}  {item:<{width}}{detail}")
 
-    print(f"\n  {len(rows) - bad} of {len(rows)} checks pass.")
+    n_na = sum(1 for r in rows if r[2] == "n/a")
+    print(f"\n  {len(rows) - bad - n_na} of {len(rows) - n_na} checks pass"
+          + (f", {n_na} not applicable here." if n_na else "."))
     if bad:
         print("\n  What is still owed, in order:")
         print("    252_clustering_recon.ipynb           (FIG 3 cannot run without it)")
