@@ -442,8 +442,19 @@ def variant_tag() -> str:
     """The suffix every output of this variant carries, so versions do not overwrite."""
     if MIN_P <= 0 and TRACE == "members":
         return ""
-    t = f"_p{int(round(MIN_P * 100)):03d}" if MIN_P > 0 else ""
+    t = f"_minP{int(round(MIN_P * 100)):03d}" if MIN_P > 0 else ""
     return t + ("w" if TRACE == "weighted" else "")
+
+
+def run_tag(d) -> str:
+    """The run a figure was drawn from, as a filename fragment.
+
+    EVERY TRACK WAS REFITTED ON 2026-09-07 and the figures from the v4 and v5 cohorts
+    have identical names. A figure that cannot name its own run is a figure nobody can
+    check, so the run id goes on the end of the stem - after K, so every consumer that
+    splits the name on "_K" keeps parsing it.
+    """
+    return "_run" + str(d["run"].name).replace("_", "-")
 
 
 def variant_note(d) -> str:
@@ -1307,7 +1318,8 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
         s_.set_color(GREY)
 
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / f"FIG1{TAG[fset]}_{fset}_{method}_K{K}{variant_tag()}.png"
+    p = OUT / (f"FIG1{TAG[fset]}_{fset}_{method}_K{K}"
+               f"{variant_tag()}{run_tag(d)}.png")
     save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     save_text(pc.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))

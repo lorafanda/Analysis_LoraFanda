@@ -91,7 +91,10 @@ sys.path.insert(0, str(ROOT / "functions"))
 import lf_concat as CC          # noqa: E402
 import lf_runs as LR            # noqa: E402
 
-OUT = ROOT / "outputs" / "paper_figures"
+# THE SAME FOLDER AS EVERY OTHER PAPER FIGURE. An earlier version of this script
+# wrote to outputs/paper_figures, one directory up from where FIG 0-3 live, so the
+# figure went missing from every listing that looks in the right place.
+OUT = ROOT / "outputs" / "clustering" / "paper_figures"
 SPACE_FSET = "concat_bands5z"           # the yardstick every cluster is described in
 ALGO_FSET = "concat_hg"                 # axis A is run on HFA
 METHOD_LABEL = {"cnmf": "convex NMF", "kmeans": "k-means", "hierarchical": "Ward"}
@@ -521,7 +524,8 @@ def main() -> int:
         print(f"  {spec['name']}")
         results.append(compare(space, Zz, spec, k1, k2, a.n_perm, a.seed))
 
-    tag = f"K{k1:02d}" + (f"_{k2:02d}" if k2 != k1 else "")
+    tag = (f"K{k1:02d}" + (f"_{k2:02d}" if k2 != k1 else "")
+           + "_run" + str(results[0]["s1"]["run"].name).replace("_", "-"))
     allrows = pd.concat([r["rows"] for r in results], ignore_index=True)
     allrows.to_csv(OUT / f"FIG4_matched_{tag}.csv", index=False)
     pd.DataFrame([r["summary"] for r in results]).to_csv(

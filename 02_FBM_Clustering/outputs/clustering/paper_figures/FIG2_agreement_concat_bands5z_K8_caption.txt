@@ -8,16 +8,14 @@ with the method fixed at cnmf; the bottom varies the ALGORITHM with the
 feature set fixed at concat_bands5z. If a result only exists in one representation
 or under one method, this is the figure that says so.
 
-  concat_bands5z carries the algorithm half because it is the only feature set with
-  an archetype run - concat_bands5 and concat_bands5z have none, so using FIG 1's
-  reference here would have silently dropped a whole algorithm.
+  concat_bands5z carries the algorithm half; the same half can be drawn on any of the
+  four feature sets with --algo-feature-set, and the paper's standard is
+  concat_bands5z.
 
 EVERY SOLUTION LABELS THE SAME ELECTRODES IN THE SAME ORDER. That is what makes
 any of this comparable, and it is checked rather than assumed: a solution that is
 absent, at a different K, or over a different electrode set is dropped with a
 message instead of being compared.
-  dropped from the algorithms half:
-    archetypes/concat_bands5z - no run, or no solution at this K
 
 PANELS A and D - how much any two solutions agree at all
 ----------------------------------------------------------------------------------------------------
@@ -30,22 +28,22 @@ structure agreeing.
 A.1 AND D.1 ARE MEAN PAIRWISE ARI AT EVERY K, with this K marked. Agreement read
 at one K cannot say whether that K is a good place to be comparing; the curve can.
 A.2 and D.2 are the full matrix: upper number ARI, lower NMI, '=' on the diagonal.
-  feature sets   peaks at K=29 (0.488); at K=8 it is 0.328
-  algorithms     peaks at K=27 (0.366); at K=8 it is 0.217
+  feature sets   peaks at K=30 (0.499); at K=8 it is 0.304
+  algorithms     peaks at K=30 (0.568); at K=8 it is 0.391
 
-  feature sets   off-diagonal 0.164 to 0.533, median 0.313
-  algorithms     off-diagonal 0.088 to 0.328, median 0.235
+  feature sets   off-diagonal 0.144 to 0.502, median 0.272
+  algorithms     off-diagonal 0.313 to 0.487, median 0.374
 
   the reading under each panel:
   A: Upper number ADJUSTED RAND, lower NMI - reported together because ARI is dominated by the large
-     clusters and NMI is not.  strongest 15 bands-5 bands 0.53  ·  weakest HG-15 bands 0.16  ·  HG
-     agrees least with the rest (0.20, a mean of 3)  ·  ACROSS K: agreement peaks at K=29 (0.49); at
-     K=8 it is 0.33
+     clusters and NMI is not.  strongest 15 bands-5 bands 0.50  ·  weakest HG-15 bands 0.14  ·  HG
+     agrees least with the rest (0.18, a mean of 3)  ·  ACROSS K: agreement peaks at K=30 (0.50); at
+     K=8 it is 0.30
   D: Upper number ADJUSTED RAND, lower NMI - reported together because ARI is dominated by the large
-     clusters and NMI is not.  strongest k-means-Ward 0.33  ·  weakest convex NMF-Ward 0.09  ·
-     convex NMF agrees least with the rest (0.16, a mean of 2)  ·  WITHIN a kind 0.33 vs ACROSS the
-     graded/hard divide 0.16 (labels: purple = graded, orange = hard)  ·  ACROSS K: agreement peaks
-     at K=27 (0.37); at K=8 it is 0.22
+     clusters and NMI is not.  strongest convex NMF-k-means 0.49  ·  weakest convex NMF-Ward 0.31  ·
+     Ward agrees least with the rest (0.34, a mean of 2)  ·  WITHIN a kind 0.37 vs ACROSS the
+     graded/hard divide 0.40 (labels: purple = graded, orange = hard)  ·  ACROSS K: agreement peaks
+     at K=30 (0.57); at K=8 it is 0.39
 
 PANELS B and E - each cluster against the reference, and what the others think
 ----------------------------------------------------------------------------------------------------
@@ -80,12 +78,12 @@ these numbers without it is the difference between 'the solutions disagree' and
 'this is most of what the solution can offer'.
 
   feature sets
-    cnmf/concat_hg                 0.547   (stability_by_k_native)
-    cnmf/concat_rawds              0.898   (stability_by_k_native)
-    cnmf/concat_bands5             no stability sweep at this K
-    cnmf/concat_bands5z            no stability sweep at this K
+    cnmf/concat_hg                 0.417   (stability_by_k)
+    cnmf/concat_rawds              0.498   (stability_by_k)
+    cnmf/concat_bands5             0.433   (stability_by_k)
+    cnmf/concat_bands5z            0.425   (stability_by_k)
   algorithms
-    cnmf/concat_bands5z            no stability sweep at this K
+    cnmf/concat_bands5z            0.425   (stability_by_k)
     kmeans/concat_bands5z          no stability sweep at this K
     hierarchical/concat_bands5z    no stability sweep at this K
 
@@ -115,32 +113,32 @@ EVERY MATRIX RUNS 0 TO 1 - ARI and NMI in A.2/D.2, the Jaccard matrices in B/E a
 their worst-of and others columns - so a shade means the same thing wherever it
 appears, on both halves and across the four FIG 2 variants.
 
-  feature sets   weakest match per cluster: 0.03 to 0.71, median 0.40
-                 below 0.30 somewhere: pos 4 (c5), pos 6 (c0), pos 7 (c7)
-  algorithms     weakest match per cluster: 0.00 to 0.55, median 0.24
-                 below 0.30 somewhere: pos 0 (c2), pos 1 (c4), pos 3 (c3), pos 4 (c5), pos 5 (c1), pos 6 (c0), pos 7 (c7)
+  feature sets   weakest match per cluster: 0.02 to 0.68, median 0.36
+                 below 0.30 somewhere: pos 5 (c0), pos 6 (c5), pos 7 (c6)
+  algorithms     weakest match per cluster: 0.01 to 0.58, median 0.37
+                 below 0.30 somewhere: pos 3 (c2), pos 4 (c1), pos 6 (c5)
 
   the reading under each panel:
   B: Jaccard against the 1:1 match, reference column dropped, scale 0-1.00.  A LOW VALUE IS THE
-     FINDING: assignment always returns a partner, so it means paired-because-it-had-to-be.  6 of 8
-     fall below 0.30 somewhere: p0 (c2, n=325), p1 (c4, n=199), p3 (c3, n=240), p4 (c5, n=182), and
-     2 more.  /n IN A CELL MEANS THE REFERENCE CLUSTER SPLIT into that many of the solution's
+     FINDING: assignment always returns a partner, so it means paired-because-it-had-to-be.  5 of 8
+     fall below 0.30 somewhere: p1 (c4, n=200), p3 (c2, n=251), p5 (c0, n=126), p6 (c5, n=174), and
+     1 more.  /n IN A CELL MEANS THE REFERENCE CLUSTER SPLIT into that many of the solution's
      clusters (each holding at least 25% of it) - a clean correspondence a 1:1 assignment has to
-     score as one good match and one failure; 3 of the low cells are splits, not disagreements.
+     score as one good match and one failure; 2 of the low cells are splits, not disagreements.
      OTHERS = best agreement between two non-reference solutions on that row; 3 row(s), outlined
-     green, are low only because the REFERENCE disagrees.  2 of 24 cells, hatched, do not beat a
+     green, are low only because the REFERENCE disagrees.  3 of 24 cells, hatched, do not beat a
      size-matched permutation of their own two clusters.  SELF under each column is that solution's
      agreement with ITSELF over 50 refits on 80% of the electrodes - the ceiling every number here
-     is read against: HG 0.55, 15 bands 0.90.
+     is read against: HG 0.42, 15 bands 0.50, 5 bands, z 0.43.
   E: Jaccard against the 1:1 match, reference column dropped, scale 0-1.00.  A LOW VALUE IS THE
-     FINDING: assignment always returns a partner, so it means paired-because-it-had-to-be.  7 of 8
-     fall below 0.30 somewhere: p0 (c3, n=363), p1 (c4, n=230), p3 (c5, n=192), p4 (c6, n=132), and
-     3 more.  /n IN A CELL MEANS THE REFERENCE CLUSTER SPLIT into that many of the solution's
-     clusters (each holding at least 25% of it) - a clean correspondence a 1:1 assignment has to
-     score as one good match and one failure; 6 of the low cells are splits, not disagreements.
-     OTHERS = best agreement between two non-reference solutions on that row; 2 row(s), outlined
-     green, are low only because the REFERENCE disagrees.  5 of 16 cells, hatched, do not beat a
-     size-matched permutation of their own two clusters.
+     FINDING: assignment always returns a partner, so it means paired-because-it-had-to-be.  3 of 8
+     fall below 0.30 somewhere: p3 (c6, n=201), p4 (c5, n=200), p6 (c4, n=119).  /n IN A CELL MEANS
+     THE REFERENCE CLUSTER SPLIT into that many of the solution's clusters (each holding at least
+     25% of it) - a clean correspondence a 1:1 assignment has to score as one good match and one
+     failure; 0 of the low cells are splits, not disagreements.  OTHERS = best agreement between two
+     non-reference solutions on that row; 0 row(s), outlined green, are low only because the
+     REFERENCE disagrees.  2 of 16 cells, hatched, do not beat a size-matched permutation of their
+     own two clusters.
 
 PANELS C and F - which electrodes are placed consistently
 ----------------------------------------------------------------------------------------------------
@@ -160,8 +158,8 @@ WHY THIS IS NOT THE SAME QUESTION AS B AND E. A cluster can match well on averag
 and still be assembled from electrodes that no other solution groups together;
 the Jaccard is a property of a cluster, this is a property of an electrode.
 
-  feature sets   all 4 agree: 21.7%   (chance 0.4%)   no two agree: 4.3%   median count 3
-  algorithms     all 3 agree: 26.2%   (chance 4.4%)   no two agree: 15.4%   median count 2
+  feature sets   all 4 agree: 25.2%   (chance 0.4%)   no two agree: 4.4%   median count 3
+  algorithms     all 3 agree: 46.1%   (chance 2.8%)   no two agree: 12.9%   median count 2
 
 THE CHANCE BASELINE is a permutation: each non-reference solution's labels are
 shuffled - keeping its cluster sizes exactly - and then RE-MATCHED to the
@@ -173,33 +171,33 @@ left to correlate. 200 permutations.
 
 AGREEMENT IS NOT CORRECTNESS. Four representations can agree perfectly on one
 patient's electrode strip.
-  clusters over half one patient   feature half 1 of 8   algorithm half 0 of 8   (FIG 1 panel D)
+  clusters over half one patient   feature half 2 of 8   algorithm half 1 of 8   (FIG 1 panel D)
 
   the reading under each panel:
   C: How many of the 4 solutions put each electrode in the same cluster - the MODAL assignment, so
-     nothing privileges the reference.  22% are placed the same way by all 4, against 0% when the
+     nothing privileges the reference.  25% are placed the same way by all 4, against 0% when the
      other solutions are PERMUTED and re-matched; 4% by no two.  Red = 1, green = 4.  AGREEMENT IS
-     NOT CORRECTNESS: at K=8, 1 of 8 clusters in 5 bands are over half one patient (FIG 1 panel D).
+     NOT CORRECTNESS: at K=8, 2 of 8 clusters in 5 bands are over half one patient (FIG 1 panel D).
   F: How many of the 3 solutions put each electrode in the same cluster - the MODAL assignment, so
-     nothing privileges the reference.  26% are placed the same way by all 3, against 4% when the
-     other solutions are PERMUTED and re-matched; 15% by no two.  Red = 1, green = 3.  AGREEMENT IS
-     NOT CORRECTNESS: at K=8, 0 of 8 clusters in convex NMF on concat_bands5z are over half one
+     nothing privileges the reference.  46% are placed the same way by all 3, against 3% when the
+     other solutions are PERMUTED and re-matched; 13% by no two.  Red = 1, green = 3.  AGREEMENT IS
+     NOT CORRECTNESS: at K=8, 1 of 8 clusters in convex NMF on concat_bands5z are over half one
      patient (FIG 1 panel D).
 
 PROVENANCE
 ----------------------------------------------------------------------------------------------------
   feature sets
-    cnmf          concat_hg        cnmf/concat_hg/runs/20260826_135016   (graded)
-    cnmf          concat_rawds     cnmf/concat_rawds/runs/20260826_135909   (graded)
-    cnmf          concat_bands5    cnmf/concat_bands5/runs/20260827_094931   (graded)
-    cnmf          concat_bands5z   cnmf/concat_bands5z/runs/20260827_095637   (graded)
+    cnmf          concat_hg        cnmf/concat_hg/runs/20260907_141411   (graded)
+    cnmf          concat_rawds     cnmf/concat_rawds/runs/20260907_142325   (graded)
+    cnmf          concat_bands5    cnmf/concat_bands5/runs/20260907_143245   (graded)
+    cnmf          concat_bands5z   cnmf/concat_bands5z/runs/20260907_144051   (graded)
   algorithms
-    cnmf          concat_bands5z   cnmf/concat_bands5z/runs/20260827_095637   (graded)
-    kmeans        concat_bands5z   kmeans/concat_bands5z/runs/20260827_021738   (hard labels)
-    hierarchical  concat_bands5z   hierarchical/concat_bands5z/runs/20260827_021703   (hard labels)
+    cnmf          concat_bands5z   cnmf/concat_bands5z/runs/20260907_144051   (graded)
+    kmeans        concat_bands5z   kmeans/concat_bands5z/runs/20260907_155606   (hard labels)
+    hierarchical  concat_bands5z   hierarchical/concat_bands5z/runs/20260907_160011   (hard labels)
   geometry and block order from concat_bands5 (cnmf) at K=8
   built by      00_paper2_figures2_2.py --k 8 --algo-feature-set concat_bands5z
-  built on      2026-09-05 20:57
+  built on      2026-09-07 18:43
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
@@ -211,5 +209,3 @@ WHAT THIS FIGURE DOES NOT SHOW
     no 1:1 correspondence and cannot be put on these panels at all.
   - Agreement is not correctness. Four representations can agree on a cluster
     that is one patient's electrode strip; FIG 1 panel D is what answers that.
-  - The archetype runs cover concat_hg and concat_rawds only, so the algorithm
-    half cannot currently be drawn on the 5-band feature sets.

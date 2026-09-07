@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -1360,12 +1361,33 @@ def _tracked():
         return None
 
 
+def resolve_fig(fname: str):
+    """The file that IS this figure, whatever run id it ended up carrying.
+
+    Figure names gained a _run<id> suffix on 2026-09-07 so a figure can say which run it
+    was drawn from. An exact name therefore goes stale on the next refit; this takes the
+    newest file whose stem starts the same way, and falls back to the exact name for the
+    figures that have not been redrawn yet.
+    """
+    p = FIGDIR / fname
+    if p.exists():
+        return p
+    stem, suf = Path(fname).stem, Path(fname).suffix
+    # a run id is digits, a dash and digits - anchoring on that keeps FIG4_K08 from
+    # resolving to FIG4_K08_run<id>_weighted, which is a different figure
+    rx = re.compile(re.escape(stem) + r"_run[0-9]+-[0-9]+$")
+    cands = sorted(f for f in FIGDIR.glob(f"{stem}_run*{suf}") if rx.match(f.stem))
+    return cands[-1] if cands else p
+
+
 def _slide(label, fname, role, make, tracked, fallback=None):
     """One slide. `fallback` is an older filename that means the same figure."""
-    f = FIGDIR / fname
-    if not f.exists() and fallback and (FIGDIR / fallback).exists():
-        fname = fallback
-        f = FIGDIR / fname
+    f = resolve_fig(fname)
+    if not f.exists() and fallback:
+        alt = resolve_fig(fallback)
+        if alt.exists():
+            f = alt
+    fname = f.name
     rel = f"{FIGDIR_REL}/{fname}"
     state = ("missing" if not f.exists()
              else "untracked" if (tracked is not None and rel not in tracked)

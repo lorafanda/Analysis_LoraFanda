@@ -85,6 +85,12 @@ F3 = _load("p2fig3", "00_paper2_figure3_lana.py")
 import lf_concat as CC                                          # noqa: E402
 
 CLUST, OUT = P2.CLUST, P2.OUT
+
+
+def cohort_tag() -> str:
+    """v6 from concat_source_v6 - which cohort this drawing of the cohort is."""
+    m = re.search(r"_v(\d+)$", str(CC.DEFAULT_CONCAT_CACHE.name))
+    return f"v{m.group(1)}" if m else str(CC.DEFAULT_CONCAT_CACHE.name)
 INK, MUTED, GREY = P2.INK, P2.MUTED, P2.GREY
 RED, GREEN, BLUE = P2.RED, P2.GREEN, P2.BLUE
 ORANGE, PURPLE = "#e08214", "#5b2c83"
@@ -430,12 +436,12 @@ def figure_0_paper(t, u, d, gp):
     fig.suptitle(f"FIG 0   ·   the task and the cohort   ·   the gate saw {len(u)} "
                  f"electrodes in {d['n_patients']} patients and kept {int(kept.sum())}",
                  x=0.055, y=0.975, ha="left", fontsize=15.5, color=INK)
-    fig.text(0.055, 0.950,
-             "Three naming conditions - auditory, picture, written sentence - each with a "
-             "stimulus and then a response cue (dashed), on the warped time axis every "
-             "later figure uses.\nFour electrodes show what the recordings look like; the "
-             "brains below show every electrode the responsiveness gate saw.",
-             fontsize=9.8, color=MUTED, va="top")
+    # fig.text(0.055, 0.950,
+    #          "Three naming conditions - auditory, picture, written sentence - each with a "
+    #          "stimulus and then a response cue (dashed), on the warped time axis every "
+    #          "later figure uses.\nFour electrodes show what the recordings look like; the "
+    #          "brains below show every electrode the responsiveness gate saw.",
+    #          fontsize=9.8, color=MUTED, va="top")
 
     gA = GridSpecFromSubplotSpec(n_ex, 1, gs[0], hspace=gapA, height_ratios=rows_h)
     rows_out, firsts = [], []
@@ -483,7 +489,9 @@ def figure_0_paper(t, u, d, gp):
                      ha="right")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / "FIG0_cohort.png"
+    # FIG 0 is the COHORT, not a run: it is drawn from the concat cache and is the
+    # same at every K and for every algorithm. So it carries the cache version.
+    p = OUT / f"FIG0_cohort_{cohort_tag()}.png"
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     ex_df = pd.DataFrame(rows_out)
@@ -663,7 +671,7 @@ def figure_0_supplement(t, g, u, d, gp):
                      va="bottom", ha="right", fontweight="bold" if bold else "normal")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / "FIG0_cohort_supplement.png"
+    p = OUT / f"FIG0_cohort_supplement_{cohort_tag()}.png"
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     P2.save_text(tab.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))

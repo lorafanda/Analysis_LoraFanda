@@ -640,7 +640,8 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
                      color=INK, va="bottom")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / f"FIG3_lana_{fset}_K{k}.png"
+    _rt = "_run" + str(d["run"].name).replace("_", "-")
+    p = OUT / f"FIG3_lana_{fset}_K{k}{_rt}.png"
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     P2.save_text(R.to_csv(index=False), p.with_name(p.stem + "_clusters.csv"))

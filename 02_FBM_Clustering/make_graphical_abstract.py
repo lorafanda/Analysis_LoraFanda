@@ -62,6 +62,19 @@ TILE_BG, TILE_EC = "#f6f7f9", "#dde2e8"
 
 
 def need(p: Path) -> Path:
+    """The file, or the newest run-tagged version of it.
+
+    FIG 1's sidecars carry the run id since 2026-09-07, so the name this script asks for
+    is a prefix rather than a filename.
+    """
+    if not p.exists():
+        stem, suf = p.stem, p.suffix
+        # FIG1a_<fset>_cnmf_K8_generalization.csv -> FIG1a_<fset>_cnmf_K8_run<id>_...
+        base, _, tail = stem.partition("_K")
+        k, _, rest = tail.partition("_")
+        cands = sorted(p.parent.glob(f"{base}_K{k}_run*_{rest}{suf}")) if rest else []
+        if cands:
+            return cands[-1]
     if not p.exists():
         raise SystemExit(f"missing {p.name} - run the figure that writes it first")
     return p

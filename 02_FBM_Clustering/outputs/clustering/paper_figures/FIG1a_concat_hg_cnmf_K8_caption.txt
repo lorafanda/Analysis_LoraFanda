@@ -3,22 +3,22 @@ FIG 1a   ·   high gamma (70-150 Hz) x time   ·   convex NMF   ·   K = 8
 
 WHAT THE FIGURE IS
 ----------------------------------------------------------------------------------------------------
-Convex NMF (Ding, Li & Jordan 2010) fitted to 1693 electrodes from 27 patients, in the
+Convex NMF (Ding, Li & Jordan 2010) fitted to 1688 electrodes from 27 patients, in the
 high gamma (70-150 Hz) x time feature set (900 features = 3 conditions x 1 band x 300 time bins).
-Cut at K = 8. Cluster sizes: [165, 436, 185, 199, 228, 162, 175, 143] (largest 25.8% of the cohort).
+Cut at K = 8. Cluster sizes: [232, 342, 224, 195, 198, 193, 167, 137] (largest 20.3% of the cohort).
 
 PROVENANCE
 ----------------------------------------------------------------------------------------------------
-  run            cnmf/concat_hg/runs/20260826_135016
-  cohort cache   concat_source_v4
-  loadings       loadings_by_k/G_k08.npy  (1693 x 8)
+  run            cnmf/concat_hg/runs/20260907_141411
+  cohort cache   concat_source_v6
+  loadings       loadings_by_k/G_k08.npy  (1688 x 8)
   features       X_train.npy, raw dB vs baseline (NOT the unit-norm space cNMF fits in)
   coordinates    outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
   surfaces       outputs/250_recon/fsaverage/meshes/fsaverage_[lr]h.gii
   render         pyvista/VTK offscreen, material constants read live from
                  functions/lf_recon_shared_config.py (the visualizer's own)
   built by       00_Paper2_Figures.py --figure 1 --feature-set concat_hg --k 8 --method cnmf
-  built on       2026-09-06 12:17
+  built on       2026-09-07 18:40
 
 HOW K WAS CHOSEN
 ----------------------------------------------------------------------------------------------------
@@ -29,10 +29,10 @@ in its own home space, so heights are comparable WITHIN a curve and the shape
 and the peak are what compare ACROSS curves.
 
   feature set        peak K    held-out variance at peak
-  concat_hg             11    0.5519   <- this figure
-  concat_rawds          12    0.4627
-  concat_bands5         14    0.5557
-  concat_bands5z        13    0.5360
+  concat_hg             11    0.5483   <- this figure
+  concat_rawds          14    0.4609
+  concat_bands5         13    0.5545
+  concat_bands5z        14    0.5367
 
 This figure is cut at K = 8  (NOTE: the peak for this feature set is K = 11; K was overridden on the command line)
 
@@ -94,7 +94,7 @@ computation.
 
   at K = 8:  0 of 8 clusters (0%), holding 0% of the electrodes
   best K on this criterion: 5  (0 of 5 clusters, 0% of electrodes)
-  range over K=5..30: 0% to 63% of electrodes in one-patient clusters
+  range over K=5..30: 0% to 70% of electrodes in one-patient clusters
 
 PER-CLUSTER PATIENT COMPOSITION at the published K, against a SIZE-MATCHED
 RANDOM DRAW - the same number of electrodes sampled without replacement from the
@@ -103,10 +103,10 @@ cohort's own patient imbalance instead of assuming it away. Read it as a CEILING
 not a floor: a real anatomical cluster SHOULD draw on fewer patients than a random
 draw, because sEEG coverage is patient-specific. What matters is the other end.
 
-  patients per cluster        15-22  (median 19)   random draw 25.9 of 27
-  largest patient's share     19%-46%  (median 25%)   random draw 11%
+  patients per cluster        14-22  (median 19)   random draw 25.9 of 27
+  largest patient's share     16%-45%  (median 27%)   random draw 11%
   clusters with under 5 patients 0 of 8
-  WORST: c7 is 46% one patient (66 of its 143 electrodes), drawing on 15 patients.
+  WORST: c7 is 45% one patient (61 of its 137 electrodes), drawing on 14 patients.
 
 Written alongside the figure as FIG1a_concat_hg_cnmf_K8_patients.csv (per cluster) and
 FIG1a_concat_hg_cnmf_K8_generalization.csv (per K).
@@ -137,14 +137,14 @@ what "looks the same" means for a shape compared by eye, and it is not what it
 would mean if this were reported as a measure of modality invariance. Nothing is
 computed from it and nothing is claimed by it.
 
-  order drawn   c7 c1 c4 c0 c6 c3 c5 c2
-  similarity    +0.84 +0.96 +0.79 +0.64 +0.56 +0.41 +0.41 +0.26
-  ref cluster    2  4  6  3  5  1  0  7
-  jaccard       0.09 0.09 0.53 0.12 0.18 0.32 0.31 0.14
+  order drawn   c1 c3 c2 c5 c4 c7 c0 c6
+  similarity    +0.95 +0.46 +0.78 +0.91 +0.37 +0.84 +0.12 +0.32
+  ref cluster    7  4  3  2  1  0  5  6
+  jaccard       0.41 0.17 0.41 0.06 0.42 0.34 0.15 0.27
 
   matched on loading correlation; the Jaccard above is always on the HARD labels, so
   the quality number means one thing whichever basis was used.
-  weakest match: c7 at Jaccard 0.09   median 0.16
+  weakest match: c5 at Jaccard 0.06   median 0.31
 
   A 1:1 assignment ALWAYS returns a partner for every cluster, whether or not
   one exists. A low Jaccard is a cluster that has no real counterpart and was
@@ -186,11 +186,11 @@ convention, and the same alphas, as lf_centroids.render_hg_centroid, so a
 paper panel and a run-report chip cannot disagree about what shading means.
 A singleton cluster has no SD and draws no band; that is a statement about n.
 
-  median SD over all clusters and time bins   0.626 dB
-  widest cluster (mean SD)  c4   0.805 dB
-  tightest cluster (mean SD) c5   0.545 dB
+  median SD over all clusters and time bins   0.623 dB
+  widest cluster (mean SD)  c7   0.793 dB
+  tightest cluster (mean SD) c6   0.532 dB
 
-All 8 panels share one y-axis (-2.372 to +3.418), spanning
+All 8 panels share one y-axis (-2.647 to +3.439), spanning
 mean +/- SD so the band never clips, so cluster amplitudes and spreads can
 both be compared by eye.
 
@@ -210,8 +210,8 @@ cannot appear to run from the end of one trial into the start of the next.
 
 The block title carries the share of bins inside the outline: "agree NN%".
 
-  agreement per cluster   0% - 28%  (median 14%)
-  tightest c3 at 28%   loosest c0 at 0%
+  agreement per cluster   2% - 28%  (median 10%)
+  tightest c1 at 28%   loosest c0 at 2%
 
 WHAT AGREEMENT IS NOT. It is not a test: there is no null, and no correction
 over the 900 bins it is evaluated on per cluster. And it is NOT
@@ -240,9 +240,9 @@ RIGHT of the right one. Drawing both from the same side, as an earlier version
 did, shows one hemisphere from inside the head. Each render holds only that
 hemisphere's electrodes; an electrode never appears in both.
 
-  electrodes with fsaverage coordinates   1625 / 1693
-  left render                             768
-  right render                            857
+  electrodes with fsaverage coordinates   1688 / 1688
+  left render                             807
+  right render                            881
 
 COLOUR AND SIZE, THE VISUALIZER'S OWN RULE. This is transcribed from
 clustering_visualizer.html's updateElectrodes(), not invented here, so these
@@ -278,10 +278,10 @@ it depending only on draw order.
 Both are RENDERING choices. They change how a loading is drawn, never the
 loading, the label, or any number reported anywhere.
 
-  median t over all 1693 electrodes at their own cluster   0.399
-  electrodes at or above 0.50 (drawn in full cluster colour)   219  (12.9%)
-  electrodes at or above the 0.70 size cap                     17  (1.0%)
-  median normalised loading at an electrode's own cluster 0.354
+  median t over all 1688 electrodes at their own cluster   0.400
+  electrodes at or above 0.50 (drawn in full cluster colour)   229  (13.6%)
+  electrodes at or above the 0.70 size cap                     11  (0.7%)
+  median normalised loading at an electrode's own cluster 0.355
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------

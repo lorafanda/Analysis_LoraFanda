@@ -914,7 +914,11 @@ def figure_2(k: int, algo_fset: str):
     OUT.mkdir(parents=True, exist_ok=True)
     # the feature set the ALGORITHM half was run on is in the name, so the four
     # variants can sit side by side instead of overwriting one another
-    p = OUT / f"FIG2_agreement_{algo_fset}_K{k}.png"
+    # the run named is the reference solution of the ALGORITHM half - convex NMF on
+    # the feature set the half was drawn on - which is what the panels are matched to
+    _ref = LR.newest_run(REF_METHOD, algo_fset)
+    _rt = "_run" + str(_ref.name).replace("_", "-")
+    p = OUT / f"FIG2_agreement_{algo_fset}_K{k}{_rt}.png"
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 

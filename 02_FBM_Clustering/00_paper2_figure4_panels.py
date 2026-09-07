@@ -59,7 +59,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
 import lf_runs as LR                     # noqa: E402
 
-OUT = ROOT / "outputs" / "paper_figures"
+OUT = ROOT / "outputs" / "clustering" / "paper_figures"
 INK, MUTED, GREY, PALE = "#1b1b1b", "#6b6b6b", "#b9b9b9", "#ededed"
 ALGO_C, FEAT_C = "#1f5f8b", "#a4501f"     # axis A, axis B
 
@@ -96,7 +96,15 @@ def patient_share(method, fset, k):
 
 
 def load(k, weighting, raw):
-    tag = f"K{k:02d}"
+    # the analysis writes its tables with the run id in the name, so this takes the
+    # NEWEST set rather than a name it would have to be told
+    cands = sorted(OUT.glob(f"FIG4_matched_K{k:02d}_run*.csv"))
+    if not cands:
+        cands = sorted(OUT.glob(f"FIG4_matched_K{k:02d}.csv"))
+    if not cands:
+        raise SystemExit(f"no FIG4_matched_K{k:02d}*.csv in {OUT} - run "
+                         "00_paper2_figure4_correspondence.py first")
+    tag = cands[-1].stem[len("FIG4_matched_"):]
     matched = pd.read_csv(OUT / f"FIG4_matched_{tag}.csv")
     matched = matched[matched.weighting == weighting].copy()
     matched["value"] = (matched.overlap if raw
@@ -110,7 +118,7 @@ def load(k, weighting, raw):
         M = np.full((d.cluster_1.max() + 1, d.cluster_2.max() + 1), np.nan)
         M[d.cluster_1, d.cluster_2] = d.r_centred
         mats[name] = M
-    return matched, summary, mats
+    return matched, summary, mats, tag
 
 
 # ---- panels -------------------------------------------------------------------
@@ -290,7 +298,7 @@ def main() -> int:
                     help="draw raw Jaccards instead of the chance-corrected ones")
     a = ap.parse_args()
 
-    matched, summary, mats = load(a.k, a.weighting, a.raw_jaccard)
+    matched, summary, mats, tag = load(a.k, a.weighting, a.raw_jaccard)
     ylab = "raw Jaccard" if a.raw_jaccard else "adjusted overlap"
 
     shares, onepat = {}, []
@@ -359,10 +367,10 @@ def main() -> int:
     # THE FILENAME CARRIES THE VARIANT. Without this the weighted render overwrites
     # the hard one at the same path and the figure on disk stops saying which it is.
     sfx = ("" if a.weighting == "hard" else "_weighted") + ("_rawJ" if a.raw_jaccard else "")
-    png = OUT / f"FIG4_K{a.k:02d}{sfx}.png"
+    png = OUT / f"FIG4_{tag}{sfx}.png"
     fig.savefig(png, dpi=300, facecolor="white")
     plt.close(fig)
-    txt = OUT / f"FIG4_K{a.k:02d}{sfx}_caption.txt"
+    txt = OUT / f"FIG4_{tag}{sfx}_caption.txt"
     body = caption(matched, summary, a.k, a.weighting, onepat, a.raw_jaccard)
     txt.write_text(body, encoding="utf-8")
     if txt.read_text(encoding="utf-8") != body:

@@ -16,6 +16,7 @@ from raw.githubusercontent, so an uncommitted figure is a 404 with no other symp
 """
 from __future__ import annotations
 
+import re
 import argparse
 import html
 import subprocess
@@ -110,7 +111,8 @@ def fig1_bullets(png: Path):
     b = []
     pc = FIGDIR / f"{stem}_patients.csv"
     gk = FIGDIR / f"{stem}_generalization.csv"
-    k = int(stem.split("_K")[-1])
+    # K BY REGEX: the name ends with the run id now, not with the K
+    k = int(re.search(r"_K(\d+)", stem).group(1))
     if pc.exists():
         d = pd.read_csv(pc)
         over = int((d.top_share > 0.50).sum())
@@ -192,6 +194,9 @@ def fig3_bullets(png: Path):
 def build():
     figs = (sorted(FIGDIR.glob("FIG0*.png")) + sorted(FIGDIR.glob("FIG1*.png"))
             + sorted(FIGDIR.glob("FIG2*.png")) + sorted(FIGDIR.glob("FIG3*.png")))
+    # the display-rule variants (_minP040, _minP040w) are versions to look at, not
+    # the figures the paper carries, so they stay out of this block
+    figs = [f for f in figs if "_minP" not in f.stem]
     figs = [f for f in figs if " - Copy" not in f.name]
     # the un-suffixed FIG2_agreement_K<k>.png predates the per-feature-set naming and
     # is the concat_hg variant under its old name: when the named one exists, list only
@@ -237,7 +242,10 @@ def build():
         stem = png.with_suffix("").name
         is1 = stem.startswith("FIG1")
         # FIG 0 has no K in its name: the cohort is the same at every K
-        k = None if stem.startswith("FIG0") else int(stem.split("_K")[-1])
+        # K BY REGEX, NOT BY LAST FIELD: names now end with the run id, so the last
+        # underscore-separated field is no longer the K.
+        _m = re.search(r"_K(\d+)", stem)
+        k = None if stem.startswith("FIG0") else (int(_m.group(1)) if _m else None)
         if stem.startswith("FIG0"):
             supp = "supplement" in stem
             num = "S0" if supp else "0"
@@ -253,7 +261,7 @@ def build():
             tag = stem[4]
             # FIG1<tag>_<fset>_<method>_K<k>; the method has no underscore, the
             # feature set does
-            fset, method = stem.rsplit("_K", 1)[0][6:].rsplit("_", 1)
+            fset, method = stem.split("_K")[0][6:].rsplit("_", 1)
             algo = {"cnmf": "convex NMF", "kmeans": "k-means",
                     "hierarchical": "Ward"}.get(method, method)
             num, title = f"1{tag} &middot; K={k}", f"{fset}, {algo}, K = {k}"
