@@ -192,7 +192,7 @@ def shaft_groups(names) -> dict:
 
 
 def notch_per_shaft(X, fs, names, *, base=50.0, max_hz=None, repeats=1,
-                    peak_z_thresh=3.0, freqs=None, audit=None):
+                    peak_z_thresh=3.0, freqs=None, audit=None, Q_max=500.0):
     """notch_mains_harmonics decided AND applied separately for every shaft.
 
     The montage-wide test looks at the median PSD over all channels, so a line that
@@ -208,7 +208,7 @@ def notch_per_shaft(X, fs, names, *, base=50.0, max_hz=None, repeats=1,
         print(f"  [notch] shaft {shaft}  ({len(idx)} ch)")
         Y[:, idx] = notch_mains_harmonics(X[:, idx], fs, base=base, max_hz=max_hz,
                                           repeats=repeats, peak_z_thresh=peak_z_thresh,
-                                          freqs=freqs, audit=au)
+                                          freqs=freqs, audit=au, Q_max=Q_max)
         if audit is not None:
             for r in au:
                 audit.append(dict(shaft=shaft, n_channels=len(idx), **r))
@@ -219,7 +219,7 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
                             notch_patients=(), mains_base=50.0, fmax=500.0,
                             repeats=1, peak_z_thresh=3.0,
                             extra_bases=(), audit=None,
-                            per_shaft=False, names=None):
+                            per_shaft=False, names=None, Q_max=500.0):
     """
     Adaptive mains-harmonic notch with per-patient gating.
 
@@ -235,6 +235,11 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
     `per_shaft` with `names`: decide and notch each shaft on its own (see
     notch_per_shaft). Otherwise one decision for the montage; its audit rows are
     tagged shaft="all" so the two paths write the same table.
+
+    `Q_max` caps the adaptive Q. The default formula reaches 500 at high harmonics,
+    0.7 Hz wide at 350 Hz, and a line that is broad or amplitude-modulated walks
+    through it; 50 is 1 Hz wide at 50 Hz and 7 Hz at 350, still far inside any
+    feature band. Set per patient from cfg.notch_Q_max.
     """
     if not any(s in str(pid_raw) or s in str(patient_id) for s in notch_patients):
         return signals
@@ -257,16 +262,19 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, *,
               f"{mains_base} + {tuple(extra_bases)} Hz, {len(freqs)} candidates)")
     else:
         print(f"[notch] {patient_id}  (z>={peak_z_thresh})")
+    if Q_max != 500.0:
+        print(f"[notch] {patient_id}  Q capped at {Q_max:g} "
+              f"({mains_base / Q_max:.1f} Hz wide at {mains_base:g} Hz)")
     if per_shaft:
         print(f"[notch] {patient_id}  per shaft: {len(shaft_groups(names))} shafts")
         return notch_per_shaft(signals, fs, names, base=mains_base, max_hz=lim,
                                repeats=repeats, peak_z_thresh=peak_z_thresh,
-                               freqs=freqs, audit=audit)
+                               freqs=freqs, audit=audit, Q_max=Q_max)
     n0 = len(audit) if audit is not None else 0
     Y = notch_mains_harmonics(signals, fs, base=mains_base,
                               max_hz=lim, repeats=repeats,
                               peak_z_thresh=peak_z_thresh,
-                              freqs=freqs, audit=audit)
+                              freqs=freqs, audit=audit, Q_max=Q_max)
     if audit is not None:
         nch = int(np.asarray(signals).shape[1]) if np.asarray(signals).ndim == 2 else 1
         for r in audit[n0:]:

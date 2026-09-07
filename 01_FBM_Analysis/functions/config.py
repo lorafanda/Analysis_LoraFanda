@@ -285,8 +285,19 @@ notch_block_pad_s = 10.0     # margin either side of a block's outermost trial, 
 # notch_scope. Per-shaft patients also get PSD/psd_by_shaft.png (one row per shaft,
 # shared x, one y range, the shaft's notched harmonics and leftover peaks marked)
 # and a `shaft` column in Report/<pid>_notch_audit.tsv and _unexplained_peaks.tsv.
-# "EL" = every Bern patient; list IDs to narrow it.
-notch_shaft_patients = ["EL"]
+# "EL" would be every Bern patient; the five below are the ones whose cubes carry
+# trial-locked mains stripes (review of 2026-09-07).
+notch_shaft_patients = ["EL036", "EL037", "EL040", "EL045", "EL048"]
+
+# CAP ON THE NOTCH Q, per patient (2026-09-07). The adaptive notch sets
+# Q = clip(2*f0/(bg_std+1), 10, 500): 0.7 Hz wide at 350 Hz. EL048's per-block
+# audit notched every harmonic and still left the comb 13-17 dB above background -
+# a line that is broad or amplitude-modulated walks through a notch that narrow.
+# Q 50 is 1 Hz wide at 50 Hz and 7 Hz at 350 Hz, far inside any feature band.
+# Patients not listed keep 500, i.e. the behaviour they were processed with.
+notch_Q_max = {
+    "EL036": 50.0, "EL037": 50.0, "EL040": 50.0, "EL045": 50.0, "EL048": 50.0,
+}
 
 # A SECOND COMB per patient, notched alongside the mains harmonics. Add an entry
 # only after Report/<pid>_unexplained_peaks.tsv has shown the comb: fit_comb ranks
