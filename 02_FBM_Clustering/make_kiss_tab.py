@@ -358,6 +358,83 @@ ENTRIES.append(dict(
            "flat; and the ERSP row where only random phase has no stripe")],
 ))
 
+def _corr_numbers() -> dict:
+    """The numbers on the correspondence explainer, from the JSON its script writes."""
+    import json
+    f = EXPL / "E11_cluster_correspondence.json"
+    try:
+        return json.loads(f.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _corr_body() -> list:
+    n = _corr_numbers()
+    m = (n.get("matched") or [{}])[0]
+    g = lambda k, d="?": (f"{m[k]:.2f}" if isinstance(m.get(k), (int, float)) else d)
+    n_el = n.get("n_electrodes", "?")
+    n_moved = n.get("n_moved", "?")
+    return [
+        "Two methods each split the same electrodes into eight groups. Nothing says "
+        "group 3 of one is group 3 of the other &mdash; the numbering is arbitrary "
+        "&mdash; so before anything can be compared, each group has to be paired with "
+        "its opposite number.",
+        "<b>The trap.</b> The obvious way to pair them is by the electrodes they share: "
+        "put each group with whichever group holds most of the same electrodes. Then "
+        "report how many electrodes the paired groups share. That is a question "
+        "answering itself &mdash; the pairs were chosen for the very thing being "
+        "reported, so they cannot help but look like a match.",
+        "<b>What we do instead.</b> Pair on one thing, test on another. Groups are "
+        "paired by the <b>shape of their average response</b> &mdash; how the group "
+        "behaves over the trial &mdash; and are then tested on <b>how many electrodes "
+        "they actually contain in common</b>. Nothing about two groups having a "
+        "similar shape forces them to be built from the same electrodes, so when they "
+        "are, that is a finding rather than a restatement.",
+        "So that a group found on high-frequency activity can be compared with one "
+        "found on fifteen frequency bands, every group is described <b>the same way</b> "
+        "&mdash; by what its member electrodes look like in one shared representation "
+        "&mdash; whatever was used to find it.",
+        "<b>Pairing is greedy.</b> Take the most similar pair, set both aside, take the "
+        "most similar of what is left, and so on. The last pairs are therefore the "
+        "leftovers, and are supposed to be poor: two groups that had nobody else "
+        "available. A pairing that decays is the expected result, and the rank at "
+        "which it reaches chance is the interesting part.",
+        "<b>Why the number is not the raw overlap.</b> Two big groups share electrodes "
+        f"by accident more often than two small ones &mdash; in the toy example above, "
+        f"{g('chance')} of the electrodes overlap for no reason at all. So the figure "
+        "reports the overlap <b>after that has been taken off</b>: "
+        "(observed &minus; chance) / (1 &minus; chance), which is 0 at chance and 1 at "
+        f"identity whatever the sizes. The toy pair shares {g('jaccard')} of its "
+        f"electrodes, which is {g('adjusted')} once chance is removed.",
+        "<b>Where chance comes from.</b> Not from a formula: the electrodes are "
+        "reshuffled between groups, keeping the group sizes, and the whole procedure "
+        "&mdash; averaging, pairing, counting &mdash; is run again, a thousand times. "
+        "The pairing is redone inside every shuffle, because the pairing is part of "
+        "what is being tested.",
+        "<b>And a second, harder shuffle.</b> Electrodes are reshuffled only within "
+        "each patient. That asks whether two methods agree for a better reason than "
+        "both having grouped the same patient together. A group that is one patient "
+        "from end to end cannot be shuffled at all, which is why the figure marks "
+        "those with a dot rather than giving them a p-value they do not have.",
+    ]
+
+
+ENTRIES.append(dict(
+    id="kiss-correspondence",
+    label="Do two methods find the same clusters?",
+    q="Two clustering methods each give eight groups. How do you know they found the "
+      "same eight, and not eight different ones?",
+    body=_corr_body(),
+    figs=[("E.11", "pair on response shape, test on shared electrodes",
+           "E11_cluster_correspondence.png",
+           "the whole procedure on 24 electrodes and three clusters: two clusterings "
+           "of the same electrodes agreeing about 20 of them; each cluster's mean "
+           "response; the correlation between every pair of means with the greedy "
+           "order marked; and the permutation null for the first pair, with the "
+           "observed overlap far out in its tail")],
+))
+
+
 NAV = ('    <button class="nk" data-t="kiss"><span class="dot"></span>'
        "KISS &middot; plain words</button>")
 CSS = "  .nk .dot{background:#c98f00}"
