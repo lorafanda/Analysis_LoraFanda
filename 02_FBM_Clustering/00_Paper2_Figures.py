@@ -315,6 +315,35 @@ def _verified_write(write_fn, path: Path, check_fn, tries: int = 6):
     raise SystemExit(f"could not write {path}: {last}")
 
 
+def cohort_name() -> str:
+    """The concat cache the cohort came from, e.g. concat_source_v6."""
+    import lf_concat as CC
+    return str(CC.DEFAULT_CONCAT_CACHE.name)
+
+
+def stamp(fig, d=None, *, extra: str = "", note: str = ""):
+    """Draw the provenance line on a finished figure.
+
+    Every part of it is read from the objects in hand - the run directory, the loaded
+    matrix, the cache pointer, the clock - so a figure cannot claim a run it was not
+    drawn from. Bottom left, small and grey: present when it is needed, invisible when
+    it is not.
+    """
+    bits = []
+    if d is not None:
+        bits.append(f"run {d['run'].name}")
+        bits.append(f"{len(d['X'])} electrodes, {d['n_patients']} patients")
+        bits.append(f"K = {d['k']}")
+    if extra:
+        bits.append(extra)
+    bits.append(f"cohort {cohort_name()}")
+    bits.append(f"drawn {datetime.now():%Y-%m-%d %H:%M}")
+    if note:
+        bits.append(note)
+    fig.text(0.004, 0.002, "   \u00b7   ".join(bits), fontsize=6.0, color=MUTED,
+             ha="left", va="bottom")
+
+
 def save_png(fig, path: Path, **kw):
     def _check(p):
         from PIL import Image
@@ -1320,6 +1349,7 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / (f"FIG1{TAG[fset]}_{fset}_{method}_K{K}"
                f"{variant_tag()}{run_tag(d)}.png")
+    stamp(fig, d, note=variant_note(d) if variant_tag() else "")
     save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     save_text(pc.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))

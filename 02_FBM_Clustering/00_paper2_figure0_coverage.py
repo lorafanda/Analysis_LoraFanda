@@ -492,6 +492,9 @@ def figure_0_paper(t, u, d, gp):
     # FIG 0 is the COHORT, not a run: it is drawn from the concat cache and is the
     # same at every K and for every algorithm. So it carries the cache version.
     p = OUT / f"FIG0_cohort_{cohort_tag()}.png"
+    # no run to name: FIG 0 IS the cohort, drawn from the cache and the same at
+    # every K and for every algorithm
+    P2.stamp(fig, extra=f"{len(d['X'])} electrodes, {d['n_patients']} patients")
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     ex_df = pd.DataFrame(rows_out)
@@ -672,6 +675,7 @@ def figure_0_supplement(t, g, u, d, gp):
 
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / f"FIG0_cohort_supplement_{cohort_tag()}.png"
+    P2.stamp(fig, extra=f"{len(d['X'])} electrodes, {d['n_patients']} patients")
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     P2.save_text(tab.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))

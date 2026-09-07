@@ -919,6 +919,10 @@ def figure_2(k: int, algo_fset: str):
     _ref = LR.newest_run(REF_METHOD, algo_fset)
     _rt = "_run" + str(_ref.name).replace("_", "-")
     p = OUT / f"FIG2_agreement_{algo_fset}_K{k}{_rt}.png"
+    # the reference run of the algorithm half; every run this figure used is listed
+    # in the caption beside it
+    P2.stamp(fig, extra=f"reference run {_ref.name}   \u00b7   K = {k}   \u00b7   "
+                        f"algorithms on {algo_fset}")
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 

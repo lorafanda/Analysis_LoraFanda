@@ -367,6 +367,13 @@ def main() -> int:
     # THE FILENAME CARRIES THE VARIANT. Without this the weighted render overwrites
     # the hard one at the same path and the figure on disk stops saying which it is.
     sfx = ("" if a.weighting == "hard" else "_weighted") + ("_rawJ" if a.raw_jaccard else "")
+    # the six runs are in the caption; the figure carries the one it is anchored to
+    s0 = summary.iloc[0]
+    fig.text(0.004, 0.004,
+             f"side 1 run {s0.run_1}   \u00b7   K = {a.k}   \u00b7   "
+             f"{a.weighting} weighting   \u00b7   drawn "
+             f"{datetime.now():%Y-%m-%d %H:%M}",
+             fontsize=6.0, color=MUTED, ha="left", va="bottom")
     png = OUT / f"FIG4_{tag}{sfx}.png"
     fig.savefig(png, dpi=300, facecolor="white")
     plt.close(fig)
