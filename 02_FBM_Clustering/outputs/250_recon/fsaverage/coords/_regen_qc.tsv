@@ -26,7 +26,7 @@ PAT_699	OK	166	119	47	spherical
 PAT_7045	OK	195	163	32	spherical
 EL030	OK	102	97	5	spherical
 EL033	OK	92	82	10	spherical
-EL034	OK	105	81	24	spherical
+EL034	OK	105	83	22	spherical
 EL035	OK	173	162	11	spherical
 EL036	OK	71	67	4	spherical
 EL037	OK	156	140	16	spherical
@@ -34,8 +34,8 @@ EL038	OK	166	149	17	spherical
 EL039	OK	132	120	12	spherical
 EL040	OK	246	210	36	spherical
 EL042	OK	133	124	9	spherical
-EL043	OK	106	78	28	spherical
+EL043	OK	106	85	21	spherical
 EL044	OK	128	128	0	spherical
-EL045	OK	124	119	5	spherical
-EL046	OK	178	155	23	affine-only (no sphere.reg)
-EL048	OK	78	67	11	affine-only (no sphere.reg)
+EL045	OK	124	120	4	spherical
+EL046	OK	178	166	12	spherical
+EL048	OK	78	67	11	spherical
