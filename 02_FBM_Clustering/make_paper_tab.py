@@ -1349,7 +1349,29 @@ FS_NAME = {"concat_hg": "HFA (70-150 Hz)", "concat_rawds": "15 bands",
            "concat_bands5": "5 bands", "concat_bands5z": "5 bands, z-scored"}
 FIG1_TAG = {"concat_hg": "a", "concat_rawds": "b", "concat_bands5": "c",
             "concat_bands5z": "d"}
-PEAK_K = {"concat_hg": 11, "concat_rawds": 12, "concat_bands5": 14, "concat_bands5z": 13}
+# THE HELD-OUT PEAK K IS MEASURED, NOT DECIDED HERE. 249 writes it; hardcoding it meant
+# the tab kept quoting the previous cohort's peaks after a refit (on v7 three of the four
+# moved). The literals survive only as a fallback for a tree where 249 has not run.
+_PEAK_K_FALLBACK = {"concat_hg": 11, "concat_rawds": 12,
+                    "concat_bands5": 14, "concat_bands5z": 13}
+
+
+def _peak_k():
+    p = ROOT / "outputs" / "clustering" / "bsf_comparison" / "peak_k.json"
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return dict(_PEAK_K_FALLBACK)
+    out = dict(_PEAK_K_FALLBACK)
+    for k, v in d.items():
+        try:
+            out[k] = int(v)
+        except (TypeError, ValueError):
+            pass
+    return out
+
+
+PEAK_K = _peak_k()
 
 
 def _tracked():

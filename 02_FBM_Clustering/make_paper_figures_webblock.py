@@ -17,6 +17,7 @@ from raw.githubusercontent, so an uncommitted figure is a 404 with no other symp
 from __future__ import annotations
 
 import re
+import json
 import argparse
 import html
 import subprocess
@@ -191,9 +192,84 @@ def fig3_bullets(png: Path):
     return b
 
 
+def _peak_k_text():
+    """The held-out peaks as 249 measured them, in FS_ORDER, e.g. "9 / 13 / 14 / 14"."""
+    order = ["concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z"]
+    try:
+        d = json.loads((ROOT / "outputs" / "clustering" / "bsf_comparison"
+                        / "peak_k.json").read_text(encoding="utf-8"))
+    except Exception:
+        return "not measured yet"
+    return " / ".join(str(d[f]) for f in order if f in d) or "not measured yet"
+
+
+def newest_only(figs):
+    """One file per figure, the newest run of it.
+
+    Run ids are timestamps, so lexical order is chronological - the same rule
+    lf_runs.newest_run uses. Without this, a directory holding two cohorts' renders puts
+    both on the page and the page describes them as one result. Keyed on the name with
+    the run id removed, so a figure and its _weighted variant stay separate figures.
+    FIG 0 has a cohort version (_v6, _v7) instead of a run id and is resolved on that.
+    Files are not touched; only the listing changes.
+    """
+    best = {}
+    for f in figs:
+        stem = f.with_suffix("").name
+        m = re.search(r"_run(\d{8}-\d{6})", stem)
+        if m:
+            key, ver = stem.replace(m.group(0), ""), m.group(1)
+        else:
+            v = re.search(r"_v(\d+)$", stem)
+            if v:
+                key, ver = stem[: v.start()], f"{int(v.group(1)):09d}"
+            else:
+                key, ver = stem, ""
+        cur = best.get(key)
+        if cur is None or ver > cur[0]:
+            best[key] = (ver, f)
+    keep = {f for _, f in best.values()}
+    return [f for f in figs if f in keep]
+
+
+def fig4_bullets(png):
+    """FIG 4's numbers, read from the summary CSV beside it."""
+    csv = png.parent / (png.with_suffix("").name
+                        .replace("FIG4_K", "FIG4_summary_K")
+                        .replace("_weighted", "") + ".csv")
+    if not csv.exists():
+        return []
+    try:
+        d = pd.read_csv(csv)
+    except Exception:
+        return []
+    out = []
+    algo = d[d.comparison.str.contains("_vs_")]
+    feat = d[~d.comparison.str.contains("_vs_")]
+    if "diag_share" in d.columns and len(algo) and len(feat):
+        out.append("<b>Algorithm barely matters; representation does.</b> Two algorithms "
+                   f"on the same features place <b>{100*algo.diag_share.mean():.0f}%</b> "
+                   "of electrodes in matching clusters, two feature sets under the same "
+                   f"algorithm only <b>{100*feat.diag_share.mean():.0f}%</b> - against "
+                   f"{100*d.diag_null_mean.mean():.0f}% for random pairings of the same "
+                   "two solutions.")
+    if "n_matched" in d.columns and "n_sig_plain_hard" in d.columns:
+        out.append(f"<b>{int(d.n_sig_plain_hard.sum())} of {int(d.n_matched.sum())} "
+                   "matched pairs</b> share more electrodes than a size-preserving "
+                   "permutation of the same clustering would, across the six comparisons.")
+    if "r_matched_mean" in d.columns and "r_unmatched_mean" in d.columns:
+        out.append("Pairs are made on centroid correlation and TESTED on electrode "
+                   f"overlap: matched pairs correlate <b>{d.r_matched_mean.mean():+.2f}</b> "
+                   f"against {d.r_unmatched_mean.mean():+.2f} for unmatched ones. The two "
+                   "quantities are independent, which is what makes the overlap evidence "
+                   "rather than a restatement.")
+    return out
+
+
 def build():
     figs = (sorted(FIGDIR.glob("FIG0*.png")) + sorted(FIGDIR.glob("FIG1*.png"))
-            + sorted(FIGDIR.glob("FIG2*.png")) + sorted(FIGDIR.glob("FIG3*.png")))
+            + sorted(FIGDIR.glob("FIG2*.png")) + sorted(FIGDIR.glob("FIG3*.png"))
+            + sorted(FIGDIR.glob("FIG4_K*.png")))
     # the display-rule variants (_minP040, _minP040w) are versions to look at, not
     # the figures the paper carries, so they stay out of this block
     figs = [f for f in figs if "_minP" not in f.stem]
@@ -206,6 +282,7 @@ def build():
             if not (f.name.startswith("FIG2_agreement_K")
                     and f.name.replace("FIG2_agreement_K", "FIG2_agreement_concat_hg_K")
                     in named)]
+    figs = newest_only(figs)
     tracked = tracked_files()
 
     P = [BEGIN,
@@ -229,7 +306,7 @@ def build():
          "measurement in a patient, so a cluster scoring high sits where language "
          "cortex usually is; whether it responded to language is FIG 1.</p>",
          "      <p style='margin:8px 0 0'><b>FIG 1 is cut at two K.</b> The held-out "
-         "peak per feature set (11 / 12 / 14 / 13) and <b>K = 8</b>. They disagree, and "
+         f"peak per feature set ({_peak_k_text()}) and <b>K = 8</b>. They disagree, and "
          "the disagreement is the point &mdash; held-out variance cannot see a cluster "
          "that is one patient's electrode strip, because splitting a cohort until each "
          "patient has their own component fits held-out data perfectly well. At K = 8 "
@@ -246,6 +323,7 @@ def build():
         # underscore-separated field is no longer the K.
         _m = re.search(r"_K(\d+)", stem)
         k = None if stem.startswith("FIG0") else (int(_m.group(1)) if _m else None)
+        is4 = stem.startswith("FIG4")
         if stem.startswith("FIG0"):
             supp = "supplement" in stem
             num = "S0" if supp else "0"
@@ -277,6 +355,15 @@ def build():
             bullets = fig2_bullets(png)
             alt = ("six panels: pairwise agreement, per-cluster agreement and "
                    "per-electrode agreement, for feature sets and for algorithms")
+        elif is4:
+            wt = "weighted" if stem.endswith("_weighted") else "hard"
+            num = f"4 &middot; K={k}"
+            title = f"cluster correspondence, {wt} weighting, K = {k}"
+            bullets = fig4_bullets(png)
+            alt = ("six correspondence matrices - three pairs of algorithms and three "
+                   "pairs of feature sets - with adjusted overlap by match rank, the "
+                   "mean per comparison, and each convex-NMF cluster against the "
+                   "comparisons it appears in")
         else:
             fset = stem.split("_K")[0][len("FIG3_lana_"):]
             num, title = f"3 &middot; K={k}", f"LanA language atlas, {fset}, K = {k}"
