@@ -1,0 +1,57 @@
+half,block_position,reference_cluster,solution,jaccard,others_best
+feature_set,0,7,HG,0.4114,0.5767
+feature_set,0,7,15 bands,0.6684,0.5767
+feature_set,0,7,5 bands,1.0,0.5767
+feature_set,0,7,"5 bands, z",0.7429,0.5767
+feature_set,1,4,HG,0.1686,0.4947
+feature_set,1,4,15 bands,0.4212,0.4947
+feature_set,1,4,5 bands,1.0,0.4947
+feature_set,1,4,"5 bands, z",0.3467,0.4947
+feature_set,2,3,HG,0.4071,0.5497
+feature_set,2,3,15 bands,0.7091,0.5497
+feature_set,2,3,5 bands,1.0,0.5497
+feature_set,2,3,"5 bands, z",0.68,0.5497
+feature_set,3,2,HG,0.0571,0.3926
+feature_set,3,2,15 bands,0.5536,0.3926
+feature_set,3,2,5 bands,1.0,0.3926
+feature_set,3,2,"5 bands, z",0.3823,0.3926
+feature_set,4,1,HG,0.4176,0.4164
+feature_set,4,1,15 bands,0.4647,0.4164
+feature_set,4,1,5 bands,1.0,0.4164
+feature_set,4,1,"5 bands, z",0.4821,0.4164
+feature_set,5,0,HG,0.3418,0.4426
+feature_set,5,0,15 bands,0.0336,0.4426
+feature_set,5,0,5 bands,1.0,0.4426
+feature_set,5,0,"5 bands, z",0.5714,0.4426
+feature_set,6,5,HG,0.1469,0.2359
+feature_set,6,5,15 bands,0.6856,0.2359
+feature_set,6,5,5 bands,1.0,0.2359
+feature_set,6,5,"5 bands, z",0.0174,0.2359
+feature_set,7,6,HG,0.2708,0.2882
+feature_set,7,6,15 bands,0.6425,0.2882
+feature_set,7,6,5 bands,1.0,0.2882
+feature_set,7,6,"5 bands, z",0.2671,0.2882
+algorithm,0,4,convex NMF,1.0,0.1325
+algorithm,0,4,k-means,0.6082,0.1325
+algorithm,0,4,Ward,0.0849,0.1325
+algorithm,1,2,convex NMF,1.0,0.5545
+algorithm,1,2,k-means,0.7156,0.5545
+algorithm,1,2,Ward,0.5268,0.5545
+algorithm,2,0,convex NMF,1.0,0.7143
+algorithm,2,0,k-means,0.8052,0.7143
+algorithm,2,0,Ward,0.6409,0.7143
+algorithm,3,7,convex NMF,1.0,0.5298
+algorithm,3,7,k-means,0.5351,0.5298
+algorithm,3,7,Ward,0.3507,0.5298
+algorithm,4,5,convex NMF,1.0,0.3273
+algorithm,4,5,k-means,0.7123,0.3273
+algorithm,4,5,Ward,0.3544,0.3273
+algorithm,5,6,convex NMF,1.0,0.3034
+algorithm,5,6,k-means,0.6128,0.3034
+algorithm,5,6,Ward,0.2345,0.3034
+algorithm,6,1,convex NMF,1.0,0.8012
+algorithm,6,1,k-means,0.7216,0.8012
+algorithm,6,1,Ward,0.6554,0.8012
+algorithm,7,3,convex NMF,1.0,0.3213
+algorithm,7,3,k-means,0.4959,0.3213
+algorithm,7,3,Ward,0.204,0.3213
