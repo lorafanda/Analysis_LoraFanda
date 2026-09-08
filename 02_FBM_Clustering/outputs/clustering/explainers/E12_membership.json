@@ -1,0 +1,19 @@
+{
+  "run": "20260907_141411",
+  "k": 8,
+  "feature_set": "concat_hg",
+  "n": 1688,
+  "norm_loud": 6.914,
+  "norm_quiet": 2.017,
+  "unit_gap": 1.11e-16,
+  "median_top": 0.355,
+  "keep30": 1234,
+  "keep40": 600,
+  "pct30": 73.1,
+  "pct40": 35.5,
+  "one_over_k": 0.125,
+  "median_first": 0.355,
+  "median_second": 0.213,
+  "best_top": 0.781,
+  "below_1k": 0
+}
