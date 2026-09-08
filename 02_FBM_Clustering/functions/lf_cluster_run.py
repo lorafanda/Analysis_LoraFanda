@@ -401,7 +401,7 @@ def load_run(
         if not run_dir.exists():
             raise FileNotFoundError(f"Run not found: {run_dir}")
 
-    with open(run_dir / "manifest.json") as f:
+    with open(run_dir / "manifest.json", encoding="utf-8") as f:
         manifest = json.load(f)
 
     bundle: Dict[str, Any] = {
@@ -1197,7 +1197,7 @@ def _update_index(outputs_root: Path, manifest: Dict[str, Any]) -> None:
     index_path = outputs_root / "index.json"
 
     if index_path.exists():
-        with open(index_path) as f:
+        with open(index_path, encoding="utf-8") as f:
             idx = json.load(f)
     else:
         idx = {
