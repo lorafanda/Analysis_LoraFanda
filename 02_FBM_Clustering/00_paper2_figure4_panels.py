@@ -122,17 +122,24 @@ def load(k, weighting, raw):
 
 
 # ---- panels -------------------------------------------------------------------
-def panel_matrix(ax, M, rows, share1, share2, name, first_col):
+def panel_matrix(ax, M, rows, share1, share2, name, first_col, diag=None):
     k1, k2 = M.shape
-    order = [int(r.cluster_2) for _, r in rows.iterrows()]
-    cols = order + [j for j in range(k2) if j not in order]
-    im = ax.imshow(M[:, cols], cmap="RdBu_r", vmin=-1, vmax=1, aspect="equal")
+    # BOTH axes follow the match rank: rows in the order the pairs were taken (which is
+    # descending correlation), columns follow their partners. The diagonal then decays
+    # from top-left, so a number's position says how strong its pairing was.
+    rows = rows.sort_values("rank")
+    r_ord = [int(r.cluster_1) for _, r in rows.iterrows()]
+    c_ord = [int(r.cluster_2) for _, r in rows.iterrows()]
+    r_ord += [i for i in range(k1) if i not in r_ord]
+    cols = c_ord + [j for j in range(k2) if j not in c_ord]
+    M = M[np.ix_(r_ord, cols)]
+    im = ax.imshow(M, cmap="RdBu_r", vmin=-1, vmax=1, aspect="equal")
 
     # THE BOX CARRIES SIGNIFICANCE, the number carries the size of the agreement.
     # Asterisks beside a two-decimal number do not fit in a cell this small, and a line
     # weight is read faster across six panels than a run of stars.
     for pos, (_, r) in enumerate(rows.iterrows()):
-        i = int(r.cluster_1)
+        i = pos                       # rows are now in match order, so the pair is (pos, pos)
         both = (r.p_plain < 0.05) and (r.p_within < 0.05)
         plain = (r.p_plain < 0.05) and not both
         st = (dict(lw=1.7, ls="-", edgecolor=INK) if both else
@@ -140,22 +147,26 @@ def panel_matrix(ax, M, rows, share1, share2, name, first_col):
               dict(lw=0.8, ls="-", edgecolor=GREY))
         ax.add_patch(plt.Rectangle((pos - .5, i - .5), 1, 1, fill=False, **st))
         ax.text(pos, i, f"{r.value:.2f}".lstrip("0") or "0", ha="center", va="center",
-                fontsize=6.0, color="white" if abs(M[i, cols[pos]]) > .55 else INK)
-    if len(cols) > len(order):
-        ax.axvline(len(order) - .5, color=INK, lw=0.9, ls=(0, (3, 2)))
+                fontsize=6.0, color="white" if abs(M[pos, pos]) > .55 else INK)
+    if len(cols) > len(c_ord):
+        ax.axvline(len(c_ord) - .5, color=INK, lw=0.9, ls=(0, (3, 2)))
 
     a, b = TITLE[name]
-    ax.set_title(f"{a}  vs  {b}", fontsize=9.0, color=INK, pad=4)
+    ttl = f"{a}  vs  {b}"
+    if diag is not None and np.isfinite(diag[0]):
+        ttl += f"\ndiagonal {diag[0]:.2f}   ·   random pairings {diag[1]:.2f}"
+    ax.set_title(ttl, fontsize=9.0, color=INK, pad=4, linespacing=1.4)
     ax.set_xticks(range(k2)); ax.set_xticklabels([str(c) for c in cols], fontsize=5.8)
-    ax.set_yticks(range(k1)); ax.set_yticklabels(range(k1), fontsize=5.8)
+    ax.set_yticks(range(k1)); ax.set_yticklabels([str(i) for i in r_ord], fontsize=5.8)
     ax.tick_params(length=1.8, colors=MUTED, pad=1.5)
     ax.set_xlabel(f"{b} cluster", fontsize=7.2, color=MUTED, labelpad=1.5)
     if first_col:
         ax.set_ylabel(f"{a} cluster", fontsize=7.2, color=MUTED, labelpad=1.5)
     for sp in ax.spines.values():
         sp.set_color(GREY)
-    for i in np.flatnonzero(share1 > 0.5) if share1 is not None else []:
-        ax.plot(-0.78, i, "o", ms=2.5, color=INK, clip_on=False)
+    for pos, i in enumerate(r_ord):
+        if share1 is not None and share1[i] > 0.5:
+            ax.plot(-0.78, pos, "o", ms=2.5, color=INK, clip_on=False)
     for pos, j in enumerate(cols):
         if share2 is not None and share2[j] > 0.5:
             ax.plot(pos, -0.78, "o", ms=2.5, color=INK, clip_on=False)
@@ -318,11 +329,12 @@ def main() -> int:
     for idx, name in enumerate(summary.comparison):
         ax = fig.add_subplot(gs[idx // 3, 4 * (idx % 3):4 * (idx % 3) + 4])
         s = summary[summary.comparison == name].iloc[0]
-        im = panel_matrix(ax, mats[name], matched[matched.comparison == name]
-                          .sort_values("cluster_1"),
+        dg = ((float(s.diag_share), float(s.diag_null_mean))
+              if "diag_share" in summary.columns else None)
+        im = panel_matrix(ax, mats[name], matched[matched.comparison == name],
                           shares.get((s.method_1, s.feature_set_1)),
                           shares.get((s.method_2, s.feature_set_2)),
-                          name, idx % 3 == 0)
+                          name, idx % 3 == 0, diag=dg)
     panel_rank(fig.add_subplot(gs[2, 0:5]), matched, summary, ylab)
     panel_summary(fig.add_subplot(gs[2, 5:8]), matched, summary)
     imD = panel_left_out(fig.add_subplot(gs[2, 8:12]), matched, summary, a.k)

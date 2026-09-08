@@ -335,6 +335,48 @@ def empirical(pairs, obs, draws, k1):
 
 
 # ---- one comparison -----------------------------------------------------------
+def contingency(s1, s2, k1, k2):
+    """A[i, j] = electrodes in cluster i of solution 1 and cluster j of solution 2.
+
+    Hard labels, so every electrode is counted exactly once and the table sums to n.
+    That is what lets the diagonal share be read as a fraction of the cohort.
+    """
+    A = np.zeros((k1, k2), float)
+    l1, l2 = s1["lab"], s2["lab"]
+    for i in range(k1):
+        m = l1 == i
+        if m.any():
+            A[i] = np.bincount(l2[m], minlength=k2)
+    return A
+
+
+def diagonal_share(A, pairs):
+    """The share of all electrodes sitting on the matched pairs."""
+    tot = A.sum()
+    if tot <= 0:
+        return float("nan")
+    return float(sum(A[i, j] for i, j, _ in pairs) / tot)
+
+
+def pairing_null(A, n_draw=100, seed=0):
+    """The same ratio under RANDOM 1:1 pairings of the two label sets.
+
+    This re-pairs; it does not re-cluster. So it measures how much of the diagonal is
+    earned by the alignment rather than by the data, and says nothing about whether the
+    two clusterings agree more than chance partitions would.
+    """
+    rng = np.random.default_rng(seed)
+    k1, k2 = A.shape
+    m = min(k1, k2)
+    tot = A.sum()
+    out = np.empty(n_draw)
+    for d in range(n_draw):
+        r = rng.permutation(k1)[:m]
+        c = rng.permutation(k2)[:m]
+        out[d] = A[r, c].sum() / tot
+    return out
+
+
 def compare(space, Zz, spec, k1, k2, n_perm, seed, verbose=True):
     """Everything the spec asks for, for one pair of solutions."""
     (m1, f1), (m2, f2) = spec["a"], spec["b"]
@@ -372,6 +414,18 @@ def compare(space, Zz, spec, k1, k2, n_perm, seed, verbose=True):
                 null_within_mean=muw[i], null_within_sd=sdw[i],
                 z_within=zw[i], p_within=pw[i]))
 
+    # the contingency table, the diagonal share, and the pairing null
+    A = contingency(s1, s2, k1, k2)
+    diag = diagonal_share(A, pairs)
+    null_diag = pairing_null(A, n_draw=100, seed=seed + 7)
+    z_diag = ((diag - null_diag.mean()) / null_diag.std(ddof=1)
+              if null_diag.std(ddof=1) > 1e-12 else float("nan"))
+    p_diag = (1.0 + float((null_diag >= diag).sum())) / (len(null_diag) + 1.0)
+    if verbose:
+        print(f"    diagonal share {diag:.3f}   random pairings "
+              f"{null_diag.mean():.3f} +- {null_diag.std(ddof=1):.3f}   "
+              f"z {z_diag:.1f}  p {p_diag:.3f}")
+
     matched = np.array([S_centred[i, j] for i, j, _ in pairs], float)
     off = S_centred.copy()
     for i, j, _ in pairs:
@@ -383,14 +437,20 @@ def compare(space, Zz, spec, k1, k2, n_perm, seed, verbose=True):
         n_matched=len(pairs),
         r_matched_mean=float(matched.mean()), r_matched_min=float(matched.min()),
         r_unmatched_mean=float(np.nanmean(off)),
-        r_gap=float(matched.mean() - np.nanmean(off)))
+        r_gap=float(matched.mean() - np.nanmean(off)),
+        n_electrodes=int(A.sum()),
+        diag_share=diag, diag_null_mean=float(null_diag.mean()),
+        diag_null_sd=float(null_diag.std(ddof=1)), diag_z=float(z_diag),
+        diag_p=float(p_diag), diag_n_draw=int(len(null_diag)),
+        diag_share_adj=float((diag - null_diag.mean())
+                             / max(1.0 - null_diag.mean(), 1e-9)))
     df = pd.DataFrame(rows)
     for w in ("hard", "weighted"):
         sub = df[df.weighting == w]
         summary[f"overlap_{w}_mean"] = float(sub.overlap.mean())
         summary[f"n_sig_plain_{w}"] = int((sub.p_plain < 0.05).sum())
         summary[f"n_sig_within_{w}"] = int((sub.p_within < 0.05).sum())
-    return dict(spec=spec, s1=s1, s2=s2, S=S_centred, S_plain=S_plain,
+    return dict(spec=spec, s1=s1, s2=s2, S=S_centred, S_plain=S_plain, A=A,
                 pairs=pairs, rows=df, summary=summary)
 
 
@@ -538,6 +598,10 @@ def main() -> int:
                   matched=any(i == p[0] and j == p[1] for p in r["pairs"]))
              for i in range(k_a) for j in range(k_b)]
         ).to_csv(OUT / f"FIG4_corr_{r['spec']['name']}_{tag}.csv", index=False)
+        pd.DataFrame(r["A"],
+                     index=[f"s1_c{i}" for i in range(r["A"].shape[0])],
+                     columns=[f"s2_c{j}" for j in range(r["A"].shape[1])]).to_csv(
+            OUT / f"FIG4_contingency_{r['spec']['name']}_{tag}.csv")
 
     png = OUT / f"FIG4_correspondence_{tag}.png"
     draw(results, k1, k2, png, a.n_perm)
