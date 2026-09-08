@@ -654,7 +654,7 @@ EXAMPLES = {
         "cluster it produces will belong to a single patient. If it is true, a few "
         "clusters will capture the responses, each will draw on many patients, and "
         "adding more will only split them.",
-        "We ask a simple question. Across 1693 electrodes from 27 patients, do the "
+        "We ask a simple question. Across 1688 electrodes from 27 patients, do the "
         "responses repeat? A response type is a temporal profile that many electrodes "
         "share and that is not tied to one person or one implant. The alternative is "
         "that each electrode is its own case. Both outcomes are possible and the "
@@ -710,7 +710,7 @@ EXAMPLES = {
     ],
     # ---- 6 - roadmap -----------------------------------------------------------
     "intro.roadmap": [
-        "We clustered the responses of 1693 electrodes from 27 patients under three "
+        "We clustered the responses of 1688 electrodes from 27 patients under three "
         "language conditions. Eight response types were found. We then tested whether "
         "they held when the features, the algorithm and the number of clusters were "
         "changed, and found that some did and some did not. Finally we compared the "
@@ -727,12 +727,12 @@ EXAMPLES = {
     # ---- RESULTS ---------------------------------------------------------------
     "results.cohort": [
         "We recorded from 27 patients implanted with depth electrodes for presurgical "
-        "evaluation. After gating for signal quality and cortical location, 1693 "
+        "evaluation. After gating for signal quality and cortical location, 1688 "
         "electrodes remained (criteria in STAR Methods). No patient contributes more "
         "than 9.2% of the cohort. Coverage was set by clinical need and is densest in "
         "temporal and frontal cortex, bilaterally. Every result below refers to these "
-        "1693 electrodes.",
-        "The cohort is 27 patients and 1693 gated electrodes. No patient holds more "
+        "1688 electrodes.",
+        "The cohort is 27 patients and 1688 gated electrodes. No patient holds more "
         "than a tenth of the data. Placement followed clinical need, so coverage is "
         "dense in the temporal lobe and sparse elsewhere, and no single patient samples "
         "the whole language network. Each electrode is described by its high-frequency activity "
@@ -818,9 +818,10 @@ EXAMPLES = {
         "where they are clear.",
     ],
     "results.f3": [
-        "Figure 3 compares the eight types with the LanA language atlas. 1396 of 1693 "
-        "electrodes fall within atlas coverage; the missing 297 are three whole "
-        "patients whose scans predate the atlas registration. Ranked by mean LanA "
+        "Figure 3 compares the eight types with the LanA language atlas. All 1688 "
+        "electrodes now carry an atlas value: the three patients whose coordinates "
+        "were missing were recovered by the recon alias map, so coverage is no "
+        "longer a caveat on this figure. Ranked by mean LanA "
         "probability, c3 sits highest at 0.226 against a cohort mean of 0.143, and c2 "
         "lowest at 0.101. Against a within-patient permutation, c3 is enriched "
         "(q = 0.008). Against a null that preserves the spatial structure of each "
@@ -904,7 +905,7 @@ EXAMPLES = {
         "Most survive changes of features and algorithm; none is placed by the "
         "language atlas.",
         "Passive language mapping scores each electrode as active or silent. Fanda et "
-        "al. ask what kinds of response exist, cluster 1693 electrodes from 27 "
+        "al. ask what kinds of response exist, cluster 1688 electrodes from 27 "
         "patients into eight types, and show which of them survive the analysis "
         "choices that produced them.",
     ],
@@ -938,7 +939,7 @@ EXAMPLES = {
         "intracranial recordings is faster but reduces each electrode to active or "
         "silent. We asked whether language responses instead fall into a small number "
         "of recurring types. In 27 patients performing auditory, picture and reading "
-        "tasks, we clustered high-frequency activity responses from 1693 electrodes with convex "
+        "tasks, we clustered high-frequency activity responses from 1688 electrodes with convex "
         "non-negative matrix factorization and found eight types, including "
         "production-locked, auditory-onset, ramp-to-cue and suppressed responses. "
         "Held-out fit favoured more clusters, but the extra ones were single patients. "
@@ -948,7 +949,7 @@ EXAMPLES = {
         "what an electrode does, not where it sits.",
         "Passive language mapping from intracranial recordings tells a surgeon which "
         "electrodes respond, not what they do. We asked whether the responses "
-        "themselves recur. Across 1693 electrodes from 27 patients, recorded during "
+        "themselves recur. Across 1688 electrodes from 27 patients, recorded during "
         "listening, picture naming and reading, convex non-negative matrix "
         "factorization found eight response types that differ in when they respond "
         "and whether they care which input it was. The number of types was set by "
@@ -1123,7 +1124,7 @@ EXAMPLES = {
         "is at github.com/lorafanda/Analysis_LoraFanda; the commit that produced the "
         "figures is tagged [tag]. Any additional information is available from the "
         "lead contact on request.",
-        "Data: the 1693-electrode feature matrices, the loadings at every K, electrode "
+        "Data: the 1688-electrode feature matrices, the loadings at every K, electrode "
         "coordinates in fsaverage space, and the per-electrode atlas values, at "
         "[repository]. Recordings: on request, under agreement. Code: public, with the "
         "figure scripts and the notebook that runs them.",
@@ -1173,9 +1174,9 @@ EXAMPLES = {
         "inspected for artefacts; channels meeting [criteria] were removed. Contacts "
         "were kept if they lay in cortical grey matter (distance to the pial surface "
         "at most [mm], not in white matter) and if [signal-quality criterion]. Of [N] "
-        "contacts, 1693 met both.",
+        "contacts, 1688 met both.",
         "Gating: a contact enters the analysis if it is cortical and if its recording "
-        "passes [criterion]. These two rules determine the 1693, and every result is "
+        "passes [criterion]. These two rules determine the 1688, and every result is "
         "conditional on them; loosening either adds contacts whose responses are "
         "dominated by noise, which the clustering then spends a component on.",
     ],
@@ -1187,7 +1188,7 @@ EXAMPLES = {
         "trials. An electrode's feature vector is its three conditions concatenated "
         "(900 values). For the band-set representations the same was done in 5 or 15 "
         "bands at 30 bins per condition, with or without z-scoring per band.",
-        "Four representations of the same 1693 electrodes: high-frequency activity alone, 15 "
+        "Four representations of the same 1688 electrodes: high-frequency activity alone, 15 "
         "bands, 5 bands, and 5 bands z-scored. All are trial-averaged dB time courses "
         "on the same warped time axis, so the feature sets differ in frequency content "
         "and normalisation only.",
@@ -1205,7 +1206,7 @@ EXAMPLES = {
         "brains are coloured by.",
     ],
     "methods.stats": [
-        "n is electrodes (1693) unless stated; per-cluster n in Figure 1. Centroids "
+        "n is electrodes (1688) unless stated; per-cluster n in Figure 1. Centroids "
         "are means with ±1 SD across electrodes. Agreement between partitions: "
         "adjusted Rand index and normalised mutual information; per cluster, Jaccard "
         "after Hungarian matching. Cluster-atlas relations: Spearman rho between "
@@ -1241,7 +1242,7 @@ EXAMPLES = {
         "seen from its own side, colour and size by loading; below that, patient "
         "composition, one segment per patient, widest first. (C) Key to a block. (D) "
         "Share of clusters, and of electrodes, in clusters more than half one patient, "
-        "against K. n = 1693 electrodes, 27 patients.",
+        "against K. n = 1688 electrodes, 27 patients.",
         "Figure 1. Response types. (A) How the number of types was chosen and (D) why "
         "the held-out peak was not used; (B) the types themselves, with (C) the key. "
         "Block order is by cross-condition similarity; cluster ids are unchanged.",
@@ -1265,7 +1266,7 @@ EXAMPLES = {
         "by mean P(LanA) with 95% bootstrap CI, cohort mean as a line, and both nulls "
         "(dark, shaft-shift; pale, within-patient); star, q < 0.05. (B) Loading "
         "against P(LanA) per cluster. (C) Spearman rho per cluster with CI; shaded, "
-        "|rho| < 0.10. (D) P(LanA) over the covered electrodes. 1396 of 1693 "
+        "|rho| < 0.10. (D) P(LanA) over the covered electrodes. All 1688 "
         "electrodes have an atlas value.",
         "Figure 3. Are the types anatomy? Under the liberal null one cluster is "
         "enriched; under the spatial null none is. Panel C is the effect size, which "
