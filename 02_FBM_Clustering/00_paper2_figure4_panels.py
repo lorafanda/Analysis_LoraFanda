@@ -21,11 +21,23 @@ caption, and --raw-jaccard draws them instead.
 FOUR PANELS, ONE CLAIM EACH.
 
     A   the six correspondence matrices, drawn identically so they can be read against
-        each other. Rows are side 1's clusters in their own id order - five of the six
-        share a side 1, so a row means the same cluster across those panels - and
-        columns are REORDERED so each matched partner sits on the diagonal. Colour is
-        the centroid correlation that made the match; the number is the adjusted
-        overlap that tests it. The two are independent, which is the whole design.
+        each other. BOTH axes are reordered by match rank - rows in the order the greedy
+        matching took the pairs, which is descending correlation, and columns following
+        their partners - so the diagonal decays from top-left and a cell's position says
+        how strong its pairing was. The cost, stated because the previous version bought
+        the opposite: a row no longer means the same cluster across panels, so panels are
+        compared by reading the printed ids rather than by position. Colour is the
+        centroid correlation that made the match; the number is the adjusted overlap
+        that tests it. The two are independent, which is the whole design.
+
+        Each panel's title also carries the DIAGONAL SHARE: line the two solutions up by
+        the matching, count the electrodes that land on the diagonal of the contingency
+        table, and divide by all of them. This is the one-to-one matching accuracy of the
+        two solutions - purity with the bijection enforced - and it is quoted against
+        random bijections of the same two clusterings (100 draws), which land about 1/K
+        of the mass on the diagonal. That null re-pairs but does not re-cluster, so it
+        says how much of the diagonal the ALIGNMENT earned, not whether the two solutions
+        agree more than arbitrary partitions would. The per-pair nulls answer the latter.
 
     B   adjusted overlap against match rank. The greedy order is meant to decay, and
         where it reaches 0 is where the two solutions stop agreeing.
@@ -269,13 +281,22 @@ def caption(matched, summary, k, weighting, onepat, raw):
          "level depends on the two cluster sizes, so raw Jaccards are not comparable "
          "between panels and adjusted ones are.",
          "",
-         "A  Colour is the centroid correlation; columns are permuted so each matched "
-         "partner lies on the diagonal. The box says how that pair stands against the "
-         "nulls: solid above both, dashed above the free null only, grey not above "
-         "chance (1000 draws, cluster sizes kept, the matching redone in every draw; "
-         "the second null permutes only within patient). A dashed rule separates "
-         "columns left unmatched. Rows are side 1's own cluster ids, so a row means the "
-         "same cluster in every panel that shares a side 1.",
+         "A  Colour is the centroid correlation. BOTH axes follow the match rank - "
+         "rows in the order the greedy matching took the pairs, columns following their "
+         "partners - so the diagonal decays from top-left and a cell's position says "
+         "how strong its pairing was; cluster ids are printed on both axes, because a "
+         "row no longer means the same cluster across panels. The box says how that "
+         "pair stands against the nulls: solid above both, dashed above the free null "
+         "only, grey not above chance (1000 draws, cluster sizes kept, the matching "
+         "redone in every draw; the second null permutes only within patient). A dashed "
+         "rule separates columns left unmatched.",
+         "Each title also gives the DIAGONAL SHARE - the fraction of all electrodes "
+         "lying on the matched diagonal of the contingency table of hard labels, which "
+         "is the one-to-one matching accuracy of the two solutions - against random "
+         "bijections of the same two clusterings (100 draws, about 1/K by construction). "
+         "That null re-pairs without re-clustering, so it measures how much of the "
+         "diagonal the alignment earned; whether the two solutions agree more than "
+         "arbitrary partitions would is what the per-pair nulls above test.",
          "B  Adjusted overlap by match rank. C  Mean over all eight pairs, with the "
          "number clearing both nulls. D  Each convex-NMF-on-HFA cluster against the "
          "five comparisons it appears in; a dot marks a pair clearing both nulls.",
@@ -289,7 +310,12 @@ def caption(matched, summary, k, weighting, onepat, raw):
                  f"{s[f'overlap_{weighting}_mean']:.2f}); "
                  f"{int(s[f'n_sig_plain_{weighting}'])} of {int(s.n_matched)} pairs "
                  f"above the free null, {int(s[f'n_sig_within_{weighting}'])} above the "
-                 f"within-patient null. Runs {s.run_1} and {s.run_2}.")
+                 + (f"within-patient null; diagonal share {s.diag_share:.2f} of "
+                    f"{int(s.n_electrodes)} electrodes against "
+                    f"{s.diag_null_mean:.2f} +- {s.diag_null_sd:.2f} for random pairings "
+                    f"(z {s.diag_z:.1f}, p < {1.0 / s.diag_n_draw:.2f})"
+                    if "diag_share" in summary.columns else "within-patient null")
+                 + f". Runs {s.run_1} and {s.run_2}.")
     L.append("")
     if onepat:
         L.append("Dots mark clusters more than half held by one patient: "
