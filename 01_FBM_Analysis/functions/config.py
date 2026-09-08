@@ -251,6 +251,40 @@ min_freq_bins = 3     # e.g., 4–8 depending on your df
 outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs"
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
+# ── TRIAL REJECTION IN THE ERSP AVERAGE ──────────────────────────────────────
+# A handful of trials on some channels carry dB values several times anything
+# else on that channel, and a plain mean has no defence: one trial at 35 dB
+# among fifty at 3 dB moves the average by most of a decibel everywhere. It is
+# visible as a bright band in the trials-over-time HG plot.
+#
+# The value is k in:  drop if percentile(|dB|, 99) > median + k * 1.4826 * MAD
+# over that channel's trials. Median and MAD rather than mean and SD because the
+# outliers are IN the sample - a mean and SD move to accommodate them and stop
+# flagging them. Never drops more than a third of a channel's trials; past that
+# it is a bad channel, not a few bad trials, and the run says so.
+#
+# A patient not listed here has no rejection at all and reproduces exactly.
+# k for the MAD rule (median + k*1.4826*MAD). Empty: nobody uses it right now.
+ersp_trial_reject = {}
+# k for the ORDINARY Z-SCORE (mean + k*SD), which is what G-05 runs on. It needs a
+# smaller k than MAD does: the outliers are inside the mean and SD, so they inflate
+# the yardstick they are measured against. Measured on a channel with three
+# runaways: z at 5 or 4.5 rejects NOTHING, z at 1.5-3.5 rejects exactly the three.
+ersp_trial_reject_z = {"G-05": 3.0}
+# THE HIGH-GAMMA ARM. The two tables above score the 99th percentile of |dB| over the
+# whole time-frequency map, which the low frequencies dominate: a trial that is wild
+# only in 70-150 Hz - the band the HG figure draws, and the band the clustering features
+# come from - hardly moves that number and survives. These two apply the same rules to a
+# score computed over the band alone, and are OR-ed with the broadband ones, so turning
+# them on can only reject more.
+#
+# MAD here, z above, on purpose: z's mean and SD are computed from the sample being
+# judged, so several bad trials inflate the yardstick and hide each other. Synthetic
+# channel, 1/f power, three high-gamma runaways in thirty trials: broadband z=3 rejects
+# nothing, band z=3 rejects nothing, band MAD=3.5 rejects exactly the three.
+ersp_trial_reject_hg_mad = {"G-05": 3.5}
+ersp_trial_reject_hg_z = {}
+
 notch_patients  = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780"]   
 # IDs or substrings to match
     
@@ -519,11 +553,16 @@ MICROEPI_MAT_PRESETS = {
         "tsv_file":       "sub-microepi-g-05_task-LanguageMapping_datetime-18-6-2025(15h39m19s)_language-FRE_events.tsv",
         "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6684\ieeg\*_electrodes.tsv",
         "trig":           "photodiode",
+        # the photodiode fades across this file, so each condition block is centred and
+        # scaled on its own before detection - otherwise the brightest block sets the
+        # threshold for all three. "auto" places the edges from a permissive first pass
+        # grouped by the runs in trial_ids; a list of [t0, t1] in seconds overrides it.
+        "pd_blocks":      [[100,556],[620,1050],[1196,1602]], #"auto",
         "flip":           True,
         "time_range":     (100, 1700),
-        "invalid_trials": [0,1,2,54,55,56,107,108,109],
-        "trial_ids":      ["picture"]*51 + ["auditory"]*50 + ["reading"]*50,
-        "fake_trials":    [],
+        "invalid_trials": [0,1,2,107,108,109],
+        "trial_ids":      ["picture"]*54 + ["auditory"]*51 + ["reading"]*53,
+        "fake_trials":    [54,55,56],
     },
     "G-06": {
         "pat_name":       "PAT_6854",
@@ -534,7 +573,7 @@ MICROEPI_MAT_PRESETS = {
         "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6854\ieeg\*_electrodes.tsv",
         "trig":           "photodiode",
         "flip":           True,
-        "threshold":      0.75,
+        "pd_blocks":      "auto",     # see G-05: per-block equalisation before detection
         "time_range":     (700, 2080),
         "invalid_trials": [0,1,2,54,55,56,107,108,109],
         "trial_ids":      ["picture"]*54 + ["auditory"]*53 + ["reading"]*53,  # adjust if needed

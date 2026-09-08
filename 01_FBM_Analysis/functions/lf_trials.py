@@ -20,6 +20,7 @@ def collect_trials(
     z_low=None, z_high=None,
     pct_low=None, pct_high=None,
     keep_resp_accuracy=("correct","valid","1"),   # case-insensitive; None to keep all
+    all_out=None,                 # optional dict, filled with EVERY trial and why it went
 ):
     """
     Collect trial onset/offset/end indices from *.tsv files in `prep_dir`, normalize condition
@@ -195,6 +196,20 @@ def collect_trials(
         keep = (stim_s >= float(min_stim_s)) & (post_s >= float(min_post_s)) \
              & (post_s <= float(max_post_s)) & ra_keep
         
+        # WHY each trial went, not just that it went. First failing test wins, tested
+        # in the order the filters are applied above.
+        reason = np.array([""] * len(on), dtype=object)
+
+        def _mark(m, why):
+            fresh = np.asarray(m, bool) & (reason == "")
+            if fresh.any():
+                reason[fresh] = why
+
+        _mark(~ra_keep, "incorrect response")
+        _mark(stim_s < float(min_stim_s), f"stimulus < {float(min_stim_s):g}s")
+        _mark(post_s < float(min_post_s), f"response < {float(min_post_s):g}s")
+        _mark(post_s > float(max_post_s), f"response > {float(max_post_s):g}s")
+
         # 2) outlier filter on post durations (applied after hard limits)
         lo = hi = np.nan
         z_low_used = z_high_used = np.nan
@@ -209,6 +224,8 @@ def collect_trials(
                 q1, q3 = np.percentile(pdur, [25, 75])
                 iqr = q3 - q1
                 lo, hi = q1 - float(iqr_k) * iqr, q3 + float(iqr_k) * iqr
+                _mark(keep & ~((post_s >= lo) & (post_s <= hi)),
+                      f"duration outlier (IQR k={float(iqr_k):g})")
                 keep &= (post_s >= lo) & (post_s <= hi)
 
             elif method_norm == "zscore":
@@ -227,6 +244,8 @@ def collect_trials(
                 mu = float(np.nanmean(pdur))
                 sd = float(np.nanstd(pdur) + 1e-12)
                 z = (post_s - mu) / sd
+                _mark(keep & ~((z >= zL) & (z <= zH)),
+                      f"duration outlier (z {zL:g}..{zH:g})")
                 keep &= (z >= zL) & (z <= zH)
                 lo, hi = mu + zL * sd, mu + zH * sd
                 z_low_used, z_high_used = zL, zH
@@ -248,11 +267,23 @@ def collect_trials(
                     raise ValueError(f"[{patient_id or 'patient'} | {cond}] "
                                      f"percentile bounds must satisfy 0 ≤ low < high ≤ 100; got {pl}, {ph}")
                 lo, hi = np.percentile(pdur, [pl, ph])
+                _mark(keep & ~((post_s >= lo) & (post_s <= hi)),
+                      f"duration outlier (pct {pl:g}..{ph:g})")
                 keep &= (post_s >= lo) & (post_s <= hi)
                 pct_low_used, pct_high_used = pl, ph
 
         on_kept, off_kept, tend_kept = on[keep], off[keep], tend[keep]
         groups[cond] = (on_kept, off_kept, tend_kept)
+
+        # EVERY trial, in the order the tsv gave them, with the reason it went.
+        # `kept_index` maps position i of groups[cond] back to a row here, which is what
+        # lets a per-channel power rejection - which is indexed against the KEPT set -
+        # be drawn on the same picture as the trials removed before it ever ran.
+        if all_out is not None:
+            all_out[cond] = dict(
+                on=on, off=off, tend=tend, reason=reason,
+                keep=keep.copy(), kept_index=np.flatnonzero(keep),
+                n_in=int(len(on)), n_kept=int(keep.sum()))
 
         if qc_dir:
             import matplotlib.pyplot as _plt

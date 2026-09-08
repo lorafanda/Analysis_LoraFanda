@@ -98,6 +98,95 @@ def _unique_in_order(seq):
 # -----------------------------------------------------------------------------
 # main
 # -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Per-block photodiode equalisation
+# ---------------------------------------------------------------------------
+def _pd_first_pass(pd_1d, fs, preset, threshold):
+    """Onsets used ONLY to place block edges, found deliberately permissively.
+
+    At the working threshold this pass is circular: on a fading photodiode it misses the
+    dim block, so that block gets no window and is never equalised - which is the whole
+    point of the exercise. It does not have to be right about trials, only about where
+    the blocks are, so it runs at a quarter of the working threshold (floor 0.05).
+    Measured on the synthetic drift: 0.4 finds 20 of 30 onsets, 0.2 finds 23, 0.1 finds
+    all 30 with nothing spurious; below 0.05 it starts inventing edges.
+    """
+    from LFfunctions_PDextract import _pd_detect_deriv_core
+    t0, t1 = preset.get("time_range", (0, -1))
+    i0 = max(0, int(t0 * fs))
+    i1 = -1 if (t1 is None or t1 < 0) else min(len(pd_1d), int(t1 * fs))
+    loose = max(0.05, float(threshold) / 4.0)
+    on, _off = _pd_detect_deriv_core(
+        pd_1d, t_start=i0, t_end=(None if i1 < 0 else i1), sampling_rate=fs,
+        threshold_val=loose, flip_trigs=False, do_plot=False)
+    return list(map(int, on))
+
+
+def _block_windows_from_runs(on_abs, trial_ids, n_samples, fs, pad_s=2.0):
+    """Sample windows for each contiguous run of trial_ids, from a first detection pass.
+
+    trial_ids is the condition per trial in order, so its runs ARE the blocks. The
+    onsets are taken in the same order; a run therefore spans from its first onset to
+    its last, padded. Returns [] when the two cannot be lined up, and the caller then
+    leaves the trace alone rather than guessing.
+    """
+    import itertools
+    if len(on_abs) == 0 or not trial_ids:
+        return []
+    runs = [(k, len(list(g))) for k, g in itertools.groupby(trial_ids)]
+    if len(runs) < 2:
+        return []
+    pad = int(pad_s * fs)
+    out, i = [], 0
+    for _name, ln in runs:
+        j = min(i + ln, len(on_abs)) - 1
+        if j < i:
+            break
+        t0 = max(0, int(on_abs[i]) - pad)
+        t1 = min(n_samples, int(on_abs[j]) + pad)
+        out.append((t0, t1))
+        i += ln
+    # blocks must be ordered and non-degenerate to be worth using
+    return out if all(b > a for a, b in out) else []
+
+
+def _equalise_blocks(x, windows, *, label="", floor=0.15):
+    """Centre and scale each block so the steps are the same height everywhere.
+
+    The scale is the block's 5-95 percentile spread, which is the height of a photodiode
+    step and is not moved by a single spike the way peak-to-peak is. A block quieter
+    than `floor` of the loudest is NOT amplified to match - that would turn its noise
+    into edges - it is left at the floor and reported, because a block that dim is a
+    finding rather than something to normalise away.
+    """
+    import numpy as np
+    y = np.array(x, dtype=np.float32, copy=True)
+    spreads = []
+    for (a, b) in windows:
+        seg = x[a:b]
+        lo, hi = np.percentile(seg, [5, 95])
+        spreads.append(float(hi - lo))
+    ref = max(spreads) if spreads else 0.0
+    if ref <= 0:
+        return y, []
+    report = []
+    for (a, b), sp in zip(windows, spreads):
+        seg = x[a:b]
+        med = float(np.median(seg))
+        rel = sp / ref
+        use = max(sp, floor * ref)
+        y[a:b] = (seg - med) / (use + 1e-12)
+        report.append((a, b, sp, rel, rel < floor))
+    if label:
+        print(f"  [{label}] photodiode equalised over {len(windows)} blocks "
+              f"(5-95 spread, relative to the loudest):")
+        for k, (a, b, sp, rel, clipped) in enumerate(report):
+            print(f"      block {k}: {a}-{b} samples   spread {sp:.4g}   "
+                  f"{rel:.2f} x the loudest" + ("   FLOORED, this block is very dim"
+                                                if clipped else ""))
+    return y, report
+
+
 def extract_trials_with_qc(d_all, preset, tsv_path, *, pid,
                            baseline_w=(-0.8, 0.0), min_stim_s=0.5, max_post_s=10.0,
                            iqr_k=1.5, pd_threshold=0.4, response_col="response_type",
@@ -143,14 +232,57 @@ def extract_trials_with_qc(d_all, preset, tsv_path, *, pid,
           f"-> total={len(invalid_merged)}")
 
     # ---- photodiode detection via the (intact) driver ----
-    raw_pd = np.asarray(d_all["photodiode"], dtype=np.float32).reshape(-1, 1)
+    # THE FLIP IS APPLIED HERE, NOT PASSED DOWN, AND THAT IS DELIBERATE. The driver
+    # flips inside _pd_detect_deriv_core (x = -x) but plots pd_full, the array it was
+    # given - so passing flip_trigs moved the onsets and left the figure identical,
+    # which reads as the setting being ignored. Negating first is the same arithmetic
+    # (the driver flips straight after slicing, before any filtering) and the trace
+    # that is plotted is then the trace that was detected on.
+    flip_pd = bool(preset.get("flip", False))
+    pd_1d = np.asarray(d_all["photodiode"], dtype=np.float32)
+    if flip_pd:
+        pd_1d = -pd_1d
+    print(f"  [{pid}] photodiode flip = {flip_pd}  (from the preset; the figure shows "
+          f"the flipped trace)")
+    # ---- per-block equalisation, when the preset asks for it ----
+    # The threshold is a fraction of the sharpest edge in the window, so a file whose
+    # photodiode drifts cannot be served by one number. Equalising each block first
+    # makes that one number mean the same thing from start to end.
+    pd_blocks = preset.get("pd_blocks")
+    if pd_blocks:
+        n_samp = len(pd_1d)
+        if pd_blocks == "auto":
+            first = _pd_first_pass(pd_1d, fs, preset, pd_threshold)
+            wins = _block_windows_from_runs(first, trial_ids_all, n_samp, fs)
+            if not wins:
+                # EQUAL PARTS RATHER THAN NOTHING. Cruder than real block edges, but the
+                # scaling only has to be block-ish, and leaving a dim third of the file
+                # on a threshold set by a bright third is the failure being fixed.
+                import itertools as _it
+                n_runs = len({k for k, _ in _it.groupby(trial_ids_all)}) or 3
+                n_runs = max(2, len([1 for _k, _g in _it.groupby(trial_ids_all)]) or 3)
+                t0, t1 = preset.get("time_range", (0, -1))
+                a = max(0, int(t0 * fs))
+                b = n_samp if (t1 is None or t1 < 0) else min(n_samp, int(t1 * fs))
+                edges = [int(a + (b - a) * k / n_runs) for k in range(n_runs + 1)]
+                wins = list(zip(edges[:-1], edges[1:]))
+                print(f"  [{pid}] pd_blocks='auto': could not place block edges from "
+                      f"{len(first)} first-pass onsets and {len(trial_ids_all)} "
+                      f"trial_ids - falling back to {n_runs} EQUAL parts of the window")
+        else:
+            wins = [(max(0, int(t0 * fs)), min(n_samp, int(t1 * fs)))
+                    for t0, t1 in pd_blocks]
+        if wins:
+            pd_1d, _ = _equalise_blocks(pd_1d, wins, label=pid)
+
+    raw_pd = pd_1d.reshape(-1, 1)
     trig_name = preset.get("trig", "photodiode")
     pd_names = [trig_name]
 
     driver_kwargs = dict(
         raw_signals=raw_pd, sampling_rate=fs, channel_names=pd_names,
         trig_name=trig_name, time_range=preset.get("time_range", (0, -1)),
-        threshold_val=pd_threshold, flip_trigs=preset.get("flip", False),
+        threshold_val=pd_threshold, flip_trigs=False,   # already applied above
         do_plot=True,
         plot_title=f"{pid} - photodiode + TSV pairing (fs={fs:.0f} Hz)",
         plot_kwargs={"color": "black"},

@@ -23,6 +23,20 @@ class ERSPParams:
     vmin: float = -7.0
     vmax: float =  7.0
     fmax: float = 400.0
+    # TRIAL REJECTION, off unless asked. A trial is scored by the 99th percentile of
+    # |dB| over its own map; it is dropped if that is more than trial_reject_mad robust
+    # deviations above the channel's median, or above trial_reject_abs_db outright.
+    # Both None reproduces every cube made before 2026-09-08 exactly.
+    trial_reject_mad: float | None = None
+    trial_reject_z: float | None = None      # mean + k*SD, the ordinary z-score
+    # the SAME two rules, applied to a score computed over trial_reject_band only.
+    # Broadband misses a trial that is wild only in high gamma, which is the band the
+    # HG figure draws and the band the clustering features are built from.
+    trial_reject_hg_mad: float | None = None
+    trial_reject_hg_z: float | None = None
+    trial_reject_band: tuple = (70.0, 150.0)
+    trial_reject_abs_db: float | None = None
+    trial_reject_max_frac: float = 0.34
 
 # ----------------------------
 # Utilities
@@ -865,6 +879,117 @@ def apply_wm_reference_with_exclusions(
 # imputing the same bins in both halves from their own neighbours would push the
 # split-half correlation up for reasons that have nothing to do with the response.
 # Consumers must mask non-finite pairs instead.
+def _trial_scores(stack, freqs=None, band=None):
+    """One number per trial: the 99th percentile of |dB| over that trial's map.
+
+    A percentile rather than the max, so a single bad pixel does not condemn a trial,
+    and rather than the mean, so a trial that is loud only briefly is still caught.
+
+    With `freqs` and `band` given, only the rows inside the band are scored. Pooling
+    every frequency lets the loudest part of the spectrum - almost always the low end -
+    decide the number, so a trial that is extreme ONLY in high gamma barely moves it.
+    Scoring the band directly is what makes the rule agree with the HG figure.
+    """
+    rows = None
+    if freqs is not None and band is not None:
+        f = np.asarray(freqs, float)
+        rows = np.flatnonzero((f >= float(band[0])) & (f <= float(band[1])))
+        if rows.size == 0:
+            rows = None
+    out = np.empty(len(stack), float)
+    for i, A in enumerate(stack):
+        A = np.asarray(A, float)
+        if rows is not None and A.ndim >= 1 and A.shape[0] == len(np.asarray(freqs)):
+            A = A[rows]
+        a = np.abs(A)
+        a = a[np.isfinite(a)]
+        out[i] = np.percentile(a, 99) if a.size else np.nan
+    return out
+
+
+def z_reject_mask(stack, k=5.0):
+    """Which trials an ordinary z-score at k would reject. Used by the HG trials plot.
+
+    Deliberately the same scoring as _reject_trials so the yellow rows on the figure and
+    the trials kept out of the average are the same objects, not two similar ideas.
+    """
+    sc = _trial_scores(stack)
+    ok = np.isfinite(sc)
+    if ok.sum() < 4:
+        return np.zeros(len(stack), bool), sc
+    sd = float(np.std(sc[ok], ddof=1))
+    if sd <= 1e-6:
+        return np.zeros(len(stack), bool), sc
+    return ok & (sc > float(np.mean(sc[ok])) + float(k) * sd), sc
+
+
+def _rule_hits(sc, k_mad, k_z):
+    """Which trials a MAD rule and a z rule flag, on one score vector.
+
+    Split out because it is now applied to two different scores - the whole map and the
+    high-gamma band - and one copy of the arithmetic is one place for it to be wrong.
+    """
+    n = len(sc)
+    bad = np.zeros(n, bool)
+    ok = np.isfinite(sc)
+    if ok.sum() < 4:
+        return bad
+    med = float(np.median(sc[ok]))
+    mad = float(np.median(np.abs(sc[ok] - med))) * 1.4826
+    # a channel whose trials all agree has MAD ~ 0; scaling that up would flag noise
+    if k_mad is not None and mad > 1e-6:
+        bad |= ok & (sc > med + float(k_mad) * mad)
+    # the ordinary z-score: mean and SD, both computed from a sample that CONTAINS
+    # the outliers, so a runaway trial inflates the yardstick it is measured against
+    sd = float(np.std(sc[ok], ddof=1)) if ok.sum() > 1 else 0.0
+    if k_z is not None and sd > 1e-6:
+        bad |= ok & (sc > float(np.mean(sc[ok])) + float(k_z) * sd)
+    return bad
+
+
+def _reject_trials(stack, params, label="", freqs=None):
+    """Indices of trials to keep and to drop, by the robust rule in the module docstring.
+
+    Returns (keep, dropped, scores). With both thresholds off, everything is kept and
+    the caller's arithmetic is untouched.
+    """
+    n = len(stack)
+    idx = np.arange(n)
+    k = getattr(params, "trial_reject_mad", None)
+    kz = getattr(params, "trial_reject_z", None)
+    kb = getattr(params, "trial_reject_hg_mad", None)
+    kbz = getattr(params, "trial_reject_hg_z", None)
+    cap = getattr(params, "trial_reject_abs_db", None)
+    band_on = (kb is not None or kbz is not None) and freqs is not None
+    if n < 4 or (k is None and kz is None and cap is None and not band_on):
+        return idx, np.array([], int), np.full(n, np.nan)
+
+    sc = _trial_scores(stack)
+    ok = np.isfinite(sc)
+    bad = _rule_hits(sc, k, kz)
+    if band_on:
+        band = getattr(params, "trial_reject_band", (70.0, 150.0))
+        sc_b = _trial_scores(stack, freqs=freqs, band=band)
+        # OR, not AND: a trial that is extreme in either view is still a bad trial, and
+        # requiring both would make adding the band arm loosen the rule, not tighten it
+        bad |= _rule_hits(sc_b, kb, kbz)
+    if cap is not None:
+        bad |= ok & (sc > float(cap))
+
+    # NEVER MORE THAN A THIRD. Past that this is a bad channel, not a few bad trials,
+    # and quietly averaging the survivors would hide it.
+    max_drop = int(np.floor(getattr(params, "trial_reject_max_frac", 0.34) * n))
+    if bad.sum() > max_drop:
+        worst = idx[bad][np.argsort(-sc[bad])][:max_drop]
+        keep_bad = np.zeros(n, bool); keep_bad[worst] = True
+        if label:
+            print(f"      [{label}] {int(bad.sum())} trials exceeded the rejection rule, "
+                  f"capped at {max_drop} ({100*getattr(params,'trial_reject_max_frac',0.34):.0f}% "
+                  "of the trials) - this channel may simply be bad")
+        bad = keep_bad
+    return idx[~bad], idx[bad], sc
+
+
 def _halves(stack, avg_like, reducer):
     """(half1, half2) from an odd/even split of a per-trial stack.
 
@@ -1089,6 +1214,10 @@ def compute_ersp(
         warped_db.append(Wdb); warped_z.append(Wz)
 
     warped_db = np.stack(warped_db, 0); warped_z = np.stack(warped_z, 0)
+    # a runaway trial is kept out of the average AND out of the halves, so it cannot
+    # come back through the reproducibility check
+    keep, dropped, scores = _reject_trials(warped_db, params, freqs=f_common)
+    warped_db = warped_db[keep]; warped_z = warped_z[keep]
     with np.errstate(invalid="ignore"):
         avg_db = np.nanmean(warped_db, 0)
         avg_z  = np.nanmean(warped_z,  0)
@@ -1101,6 +1230,9 @@ def compute_ersp(
 
     return dict(
         avg_db=avg_db, avg_z=avg_z, f=f_common, x=x,
+        n_trials_used=int(len(keep)), n_dropped=int(len(dropped)),
+        dropped_trials=[int(i) for i in dropped],
+        trial_scores=[float(v) for v in scores],
         avg_db_h1=db_h1, avg_db_h2=db_h2,
         markers=dict(onset=100.0*(pB), offset=100.0*(pB+pS)),
         meta=dict(mode="TN", fs_in=float(fs), fs_ds=float(fs_ds), scale=float(scale),
@@ -1349,7 +1481,10 @@ def plot_hg_trials(
     trial_end_indices=None,       # supports trial-end-based segmentation
     sort_by="stim",               # "stim" | "resp" | "total" | "none"
     align="onset",                # "onset" (t=0 is stimulus onset) | "go" (t=0 is the GO cue)
-    fmt="png"                     # "png" | "tif" — PNG everywhere since 2026-09-07
+    fmt="png",                    # "png" | "tif" — PNG everywhere since 2026-09-07
+    rejected_trials=None,         # indices (ORIGINAL order) the ERSP average dropped
+    reject_z=None,                # or let the plot apply the z rule to its own matrix
+    exclude_reasons=None          # per-trial reason a trial never reached the ERSP
 ):
     """
     Mirrors the legacy HG plot (color/shape/sorting) but lives inside lf_ersp.py.
@@ -1402,6 +1537,25 @@ def plot_hg_trials(
 
     n_trials = onsets.size
 
+    # REASONS. One string per trial, "" for a trial that reached the ERSP. Anything
+    # non-empty is a trial some earlier filter removed, and it is drawn with the
+    # power-rejected ones rather than being absent from the figure entirely.
+    _excl = None
+    if exclude_reasons is not None:
+        _excl = [str(r or "") for r in exclude_reasons]
+        if len(_excl) != n_trials:
+            raise ValueError(f"plot_hg_trials: exclude_reasons has {len(_excl)} entries "
+                             f"for {n_trials} trials.")
+
+    # A trial removed for being too long is unbounded, and the common time axis is the
+    # longest trial, so drawing it unclipped would squash every real trial. Clip the
+    # excluded ones to the longest trial that was actually kept.
+    _cap = None
+    if _excl is not None and trialend is not None:
+        _kept_m = _np.array([not r for r in _excl], dtype=bool)
+        if _kept_m.any():
+            _cap = int(_np.max(trialend[_kept_m] - onsets[_kept_m]))
+
     # --- filter & smoothing (HG envelope)
     nyq = 0.5 * fs
     low = max(1.0, hg_band[0]) / nyq
@@ -1432,6 +1586,8 @@ def plot_hg_trials(
                     e = int(offsets[i] + 2.0 * fs)  # tail after last offset
                 else:
                     e = int(on + (time_window[1] - time_window[0]) * fs)
+        if _excl is not None and _cap is not None and _excl[i]:
+            e = min(e, int(on) + _cap)          # see the clipping note in the header
         e = max(s + 1, min(e, len(sig)))
         seg = sig[s:e]
 
@@ -1518,6 +1674,40 @@ def plot_hg_trials(
     else:
         order = _np.arange(n_trials)
 
+    # --- REJECTED TRIALS GO TO THE END, still drawn -----------------------------
+    # Computed here, while trial_matrix is still in ORIGINAL order, so the indices mean
+    # what the caller means by them. The existing sort is preserved within each group.
+    # WHY, per trial, not just a set. Power rejection is one reason among several and
+    # is recorded the same way, so the figure can print a breakdown instead of a count.
+    _why = {}
+    if rejected_trials is not None:
+        for i in rejected_trials:
+            if 0 <= int(i) < n_trials:
+                _why[int(i)] = "power (dropped from the ERSP average)"
+    elif reject_z is not None:
+        _m, _ = z_reject_mask(trial_matrix[:, _np.newaxis, :], float(reject_z))
+        for i in _np.flatnonzero(_m):
+            _why[int(i)] = f"power (z > {float(reject_z):g})"
+    if _excl is not None:
+        # an upstream filter ran FIRST, so its reason is the true one for that trial
+        for i, r in enumerate(_excl):
+            if r:
+                _why[i] = r
+    _rej_orig = set(_why)
+    if _rej_orig:
+        # kept rows keep the requested sort; excluded rows are grouped by reason so the
+        # block reads as a list of causes rather than a scatter
+        _keep_o = [int(o) for o in order if int(o) not in _rej_orig]
+        _rej_o = sorted((int(o) for o in order if int(o) in _rej_orig),
+                        key=lambda o: (_why[o], o))
+        order = _np.asarray(_keep_o + _rej_o, dtype=int)
+    _n_rej = len(_rej_orig)
+    _counts = {}
+    for _r in _why.values():
+        _counts[_r] = _counts.get(_r, 0) + 1
+    _rej_src = " · ".join(f"{v} {kk}" for kk, v in
+                          sorted(_counts.items(), key=lambda kv: (-kv[1], kv[0])))
+
     trial_matrix = trial_matrix[order, :]
     off_rel_sorted = _np.asarray(off_rel_s, dtype=float)[order]
     # response duration per trial (GO -> trial end); padded because used_post_s is
@@ -1544,6 +1734,16 @@ def plot_hg_trials(
     cmap = _plt.get_cmap("bwr").copy()
     cmap.set_bad(alpha=0.0)
 
+    title = title + (f"  |  sorted by: {sb}" if sb else "") + \
+        ("  |  aligned: GO" if go_aligned else "")
+    if _n_rej:
+        # the breakdown goes under the title, wrapped: with several reasons in play a
+        # single line of it runs off both edges of the figure
+        import textwrap as _tw
+        _w = max(60, int(11.5 * float(figsize[0])))
+        _head = f"{_n_rej} of {n_trials} trials excluded, drawn at the end - {_rej_src}"
+        title = title + "\n" + "\n".join(_tw.wrap(_head, _w))
+
     _plt.figure(figsize=figsize, dpi=dpi)
     im = _plt.imshow(
         trial_matrix, aspect="auto", origin="lower",
@@ -1553,6 +1753,7 @@ def plot_hg_trials(
 
     # the aligned event sits at 0 s: stimulus onset, or the GO cue
     _plt.axvline(x=0.0, color="k", linestyle="-", linewidth=1.2, zorder=3)
+
 
     half_ms = 30.0
     y_rows = _np.arange(1, trial_matrix.shape[0] + 1)
@@ -1573,11 +1774,32 @@ def plot_hg_trials(
     elif _np.any(_np.isfinite(off_rel_sorted)):
         _ticks(off_rel_sorted, "m")
 
-    # annotate original row index (1-based) at baseline start
+    # annotate original row index (1-based) at baseline start; a rejected trial keeps
+    # its number, in red, with a red X beside it - the row is still drawn above
     for new_row, orig_idx in enumerate(order):
+        _is_rej = int(orig_idx) in _rej_orig
         _plt.text(baseline_w[0] + 0.05, new_row + 1,
-                  str(int(orig_idx) + 1), fontsize=5, color="k",
+                  str(int(orig_idx) + 1), fontsize=5,
+                  color=("#c1121f" if _is_rej else "k"),
+                  fontweight=("bold" if _is_rej else "normal"),
                   va="center", ha="left")
+        if _is_rej:
+            _plt.text(baseline_w[0] - 0.02, new_row + 1, "\u2715", fontsize=6,
+                      color="#c1121f", va="center", ha="right", zorder=6, clip_on=False)
+            # the reason on the row itself: with several filters in play a single
+            # count at the bottom cannot say which one took which trial
+            _plt.text(t_common[-1], new_row + 1, " " + _why[int(orig_idx)] + " ",
+                      fontsize=4.6, color="#c1121f", va="center", ha="right", zorder=6,
+                      bbox=dict(facecolor="white", edgecolor="none", alpha=0.72,
+                                pad=0.6))
+
+    # the line between what the average used and what it did not
+    if _n_rej and _n_rej < trial_matrix.shape[0]:
+        _y = trial_matrix.shape[0] - _n_rej + 0.5
+        _plt.hlines(_y, t_common[0], t_common[-1], colors="#c1121f",
+                    linestyles="--", linewidth=1.0, zorder=5)
+        # no label here: the count is in the title, and anything drawn at this
+        # y lands on the trial number of the row beside it
 
     # optional separators
     if add_separators and trial_matrix.shape[0] > 1:
@@ -1586,8 +1808,7 @@ def plot_hg_trials(
                         colors="k", linestyles=":", linewidth=0.4, alpha=0.6, zorder=2)
 
     cb = _plt.colorbar(im); cb.set_label("High-gamma z-score")
-    _plt.title(title + (f"  | sorted by: {sb}" if sb else "") +
-               ("  | aligned: GO" if go_aligned else ""))
+    _plt.title(title, fontsize=8, linespacing=1.35)
     _plt.xlabel("Time (s) relative to GO cue   (magenta = stimulus onset, "
                 "green = end of response window)" if go_aligned
                 else "Time (s) relative to onset")

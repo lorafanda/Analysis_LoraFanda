@@ -251,14 +251,26 @@ def group_into_tetrodes(micro_list):
 # -----------------------------------------------------------------------------
 def extract_events_from_photodiode(photodiode, fs, *, trig_name="photodiode", time_range=(0, -1),
                                     do_plot=True, trial_ids=None, invalid_trials=None,
-                                    fake_trials=None, extra_table_path=None, **pd_kwargs):
+                                    fake_trials=None, extra_table_path=None,
+                                    flip_trigs=False, **pd_kwargs):
     """
     Run square-wave photodiode detection from a 1-D photodiode trace.
     Wraps LFfunctions_PDextract.get_trigger_indexes_photodiode.
+
+    THE FLIP IS APPLIED HERE, NOT IN THE DRIVER, AND THAT IS THE POINT.
+    LFfunctions_PDextract flips inside `_pd_detect_deriv_core` (`x = -x`) while the
+    figure is drawn by `_plot_pd_detections` from the ORIGINAL `pd_full`. Detection
+    therefore changed with the setting and the picture never did, which is
+    indistinguishable from the setting being ignored. Negating the array before handing
+    it over is the same arithmetic - the driver flips immediately after slicing, before
+    any filtering - and it puts the flip in the plot as well as in the detection.
     """
     from LFfunctions_PDextract import get_trigger_indexes_photodiode
 
-    pd_2d = np.asarray(photodiode, dtype=np.float32).reshape(-1, 1)
+    pd_1d = np.asarray(photodiode, dtype=np.float32)
+    if flip_trigs:
+        pd_1d = -pd_1d
+    pd_2d = pd_1d.reshape(-1, 1)
     out = get_trigger_indexes_photodiode(
         raw_signals=pd_2d, sampling_rate=float(fs),
         channel_names=[trig_name], trig_name=trig_name,
@@ -308,11 +320,15 @@ def extract_microepi_pd_to_prep0(pid_raw, presets, prep_dir, *, do_plot=True):
     fs = d["fs"]
 
     # --- photodiode extraction with per-patient params ---
+    # ONE SOURCE FOR THE FLIP: the patient's preset. It is printed because a photodiode
+    # that is upside down and one that is not both produce plausible-looking onsets.
+    flip = bool(cfg.get("flip", False))
+    print(f"  [{pat_id}] photodiode flip_trigs = {flip}  (from the preset)")
     on_abs, off_abs = extract_events_from_photodiode(
         d["photodiode"], fs,
         trig_name         = cfg.get("trig", "photodiode"),
         time_range        = cfg.get("time_range", (0, -1)),
-        flip_trigs        = cfg.get("flip", False),
+        flip_trigs        = flip,
         do_plot           = do_plot,
         trial_ids         = cfg.get("trial_ids", None),
         invalid_trials    = cfg.get("invalid_trials", []),
