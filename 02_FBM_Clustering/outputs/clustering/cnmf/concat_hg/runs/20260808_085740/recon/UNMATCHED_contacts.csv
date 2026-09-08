@@ -1,1 +1,0 @@
-sample_idx,patient_id,contact_norm,electrode,task,condition,n_high_activity,file_path,file_path_audio,file_path_picture,file_path_reading,cluster_cnmf_concat_hg,w0,w1,w2,w3,w4,w5,w6,top_weight,margin,contact_name,patient,name,hemi,x,y,z,is_wm,is_cortical,dist_to_pial_mm,yeo7_network,yeo17_network
