@@ -1,0 +1,4 @@
+a,a_label,b,b_label,ari,nmi
+kmeans,k-means,hierarchical,Ward,0.4021994418050727,0.5236405392276585
+kmeans,k-means,cnmf,convex NMF,0.3410474157324817,0.4548949837148607
+hierarchical,Ward,cnmf,convex NMF,0.2863833926428525,0.4049133912794082

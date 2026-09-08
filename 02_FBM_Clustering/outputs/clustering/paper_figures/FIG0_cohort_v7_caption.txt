@@ -1,0 +1,72 @@
+FIG 0   ·   the task and the cohort
+====================================================================================================
+
+THE TASK
+----------------------------------------------------------------------------------------------------
+Three naming conditions: an auditory stimulus, a picture, a written sentence. Each
+trial is stimulus, then a response cue. The time axis is WARPED, not clock time:
+stimulus and response each occupy half a block (proportions 0, 0.5, 0.5), the
+response cue falls at mid-block (dashed), and the fixation screen contributes no
+bins - the baseline every dB value is expressed against comes from it. This is the
+axis every centroid and every cube in the paper is drawn on.
+
+PANEL A - four electrodes, chosen by hand as illustrations
+----------------------------------------------------------------------------------------------------
+Not selected by any statistic and not a claim about the cohort: they show what the
+recordings look like and what the three conditions do to a contact of each kind.
+Each is drawn alone on the lateral view of its own hemisphere (LH / RH), and its
+three conditions concatenated on the axis above, 0-400 Hz, on the project's +-7 dB
+scale. Top to bottom in one column. The condition names - audio, picture,
+sentences - and the stimulus / response words over each pair of screens are
+written once, over the first electrode; the strips below it are the same strip.
+
+  AUDITORY     PAT_3455 OTD7  superior temporal gyrus  (R, x 57  y -35  z 2)
+               selective to the auditory stimulus, and again when the patient speaks
+               gate margin  audio 5.70  picture 1.90  reading 1.13   (>= 1 passes)   peak +6.6 dB   in the analysed cohort
+
+  VISUAL       EL043 IOG7  inferior occipital gyrus  (L, x -27  y -100  z -3)
+               responds to the picture and the written sentence, not to the sound
+               gate margin  audio 1.30  picture 7.94  reading 7.30   (>= 1 passes)   peak +12.2 dB   in the analysed cohort
+
+  MOTOR        PAT_6953 TPD10  sensorimotor cortex, around the central sulcus  (R, x 38  y -18  z 36)
+               the verbal response: a burst after the cue in every condition, nothing to the stimulus
+               gate margin  audio 3.60  picture 3.61  reading 3.30   (>= 1 passes)   peak +6.7 dB   in the analysed cohort
+
+  PREPARATORY  PAT_6854 IAG6  anterior insula  (L, x -32  y 22  z 4)
+               activity building toward the response cue in every condition
+               gate margin  audio 1.75  picture 0.89  reading 2.44   (>= 1 passes)   peak +4.8 dB   in the analysed cohort
+
+PANEL B - every electrode the gate saw
+----------------------------------------------------------------------------------------------------
+Left, from above (anterior up, left on the left), right. Electrodes that passed
+the gate - the cohort every later figure is computed on - in green at full size;
+the ones it rejected smaller, grey and lighter.
+  seen 2999   kept 1719   rejected 1280
+  drawn   left 1336   from above 2999   right 1663
+  without fsaverage coordinates, so not drawn: 0 kept, 0 rejected
+
+THE GATE, as the cache that applied it recorded it
+----------------------------------------------------------------------------------------------------
+For each electrode-condition ERSP - 129 frequencies x 300 time-normalised bins = 38700 bins,
+0-400 Hz, dB re the pre-stimulus baseline - the electrode-condition passes if
+  at least 2% of bins are above +2.2 dB (774 bins), OR
+  at least 4% of bins are below -3.0 dB (1548 bins).
+An electrode is KEPT if any of its three conditions passes. The rule counts bins
+over a threshold across the whole cube: it is not a high-gamma measure and it is
+not a test of whether the response repeats. Re-derived from the stored proportions,
+it reproduces the stored flag on every row; all 1719 cohort electrodes come out kept.
+
+PROVENANCE
+----------------------------------------------------------------------------------------------------
+  gate table      outputs/_dataset/concat_source_v7/df_meta.parquet
+  gate params     outputs/_dataset/concat_source_v7/params.json
+  coordinates     outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
+  exemplars       EXEMPLARS in 00_paper2_figure0_coverage.py
+  built on        2026-09-08 22:27
+
+WHAT THIS FIGURE DOES NOT SHOW
+----------------------------------------------------------------------------------------------------
+  - Who the cohort is made of, patient by patient, how much of it the atlas covers,
+    and what the gate decides at the line: FIG S0, the supplement.
+  - Any claim that these four are typical. They are the clearest examples, picked
+    to explain the task.

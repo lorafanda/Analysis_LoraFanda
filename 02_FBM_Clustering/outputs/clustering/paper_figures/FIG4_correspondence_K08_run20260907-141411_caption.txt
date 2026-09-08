@@ -12,4 +12,4 @@ cnmf_concat_hg_vs_concat_bands5z: matched r +0.62 against -0.09 unmatched (gap +
 cnmf_concat_hg_vs_concat_rawds: matched r +0.55 against -0.08 unmatched (gap +0.62); mean Jaccard 0.21 hard, 0.38 weighted; 6 of 8 pairs above the plain null, 4 above the within-patient null. Runs 20260907_141411 and 20260907_142325.
 
 The within-patient null keeps each cluster's patient composition, so a pair that clears it corresponds beyond the two solutions having grouped the same patient together. Weighted rows use P(belonging) as the weight and the weighted Jaccard, which is the plain Jaccard exactly for k-means and Ward.
-Written 2026-09-07 19:48.
+Written 2026-09-08 18:20.
