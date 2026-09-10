@@ -10,7 +10,11 @@ THE GATE, exactly as prepare_dataset computes it. For each electrode-condition E
     high_activity  = (prop_above_pos >= 0.02) OR (prop_below_neg >= 0.04)
 
 n_high_activity counts how many of the three conditions pass; the contact is kept if
-at least one does. 1323 of 3002 contacts pass, 1679 do not.
+at least one does. NO COUNT IS QUOTED HERE ON PURPOSE: it changes with every cache
+rebuild - it was 1323 of 3002 when this was written and the cohort has moved three times
+since - and a number frozen in a docstring is one nobody rechecks. The authoritative
+figures are outputs/clustering/cohort_v<N>/cohort_v<N>_summary.json, written by the same
+rebuild that produces the cache this script reads.
 
 TWO THINGS THIS FIGURE IS FOR. First, the criterion counts BINS OVER A THRESHOLD across
 the whole 0-400 Hz cube - it is not a high-gamma measure and it is not a test of whether
