@@ -1489,8 +1489,11 @@ function drawCentroid() {
 // at module evaluation threw before boot() could start. The controls are wired in wireUI.
 
 function figureOrder(runId, k, ids) {""", "centroid panel js")
-    sub('  autoScale(); render(); updateElectrodes();\n  $("status").style.display = "none";\n}',
-        '  autoScale(); render(); updateElectrodes();\n  $("status").style.display = "none";\n'
+    # The overlay is hidden through hideStatus() now, so it fades instead of snapping;
+    # this anchor moved with it. It failing loudly when the source changed is the point
+    # of anchoring, and is how the change was caught.
+    sub('  autoScale(); render(); updateElectrodes();\n  hideStatus();\n}',
+        '  autoScale(); render(); updateElectrodes();\n  hideStatus();\n'
         '  loadCentroids(r.id);                 // the panel follows; it draws when its data lands\n}',
         "centroid: on run select")
     sub("        refreshMapList();\n        autoScale(); render(); updateElectrodes();\n      } finally",
@@ -1665,8 +1668,11 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         "  <div id=\"hint\">drag rotate · scroll zoom · <b>←&nbsp;→</b> cluster · "
         "<b>↑&nbsp;↓</b> feature set · <b>1 2 3</b> algorithm · <b>g</b> grid · "
         "<b>o</b> overlay · <b>h</b> panels · <b>c</b> controls</div>", "compare UI: hint")
-    sub("  wireUI();\n  await selectRun(pick.id);\n",
-        "  wireUI();\n  await selectRun(pick.id);\n  await ui2Init();\n", "compare UI: boot")
+    # boot() now wraps the run load in a progress hook, so the anchor is the line that
+    # ends it rather than the selectRun call itself.
+    sub("  try { await selectRun(pick.id); } finally { PROGRESS = null; }\n",
+        "  try { await selectRun(pick.id); } finally { PROGRESS = null; }\n  await ui2Init();\n",
+        "compare UI: boot")
     sub("boot().catch(e => {", UI2_JS + "\nboot().catch(e => {", "compare UI: module")
 
     # ---- the report's brain captures ---------------------------------------------------
