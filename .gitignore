@@ -249,3 +249,44 @@ Thumbs.db
 # editor and OS leftovers
 **/__pycache__/
 *.pyc
+
+# ONE COHORT IN THE REPOSITORY AT A TIME (2026-09-10).
+# Two vintages of the same figure sitting side by side is how the site ended up showing
+# v6 renders under v7 prose, and it is confusing to read even when nothing is wrong.
+# Superseded fits, renders and overlays are untracked - they stay on disk and stay in
+# git history, so any published figure is still reachable by its commit - and these
+# rules stop them coming back through a stray `git add .`.
+# To retire the current cohort in turn: add its run-id prefix here and untrack it.
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260719_*/
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260803_*/
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260808_*/
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260817_*/
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260818_*/
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260819_*/
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260826_*/
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260827_*/
+02_FBM_Clustering/outputs/clustering/*/*/runs/20260907_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260719_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260808_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260817_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260818_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260819_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260826_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260827_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260907_*/
+02_FBM_Clustering/outputs/clustering/paper_figures/*_run20260826-*
+02_FBM_Clustering/outputs/clustering/paper_figures/*_run20260907-*
+02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_v4*
+02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_v5*
+02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_v6*
+02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_supplement_v4*
+02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_supplement_v5*
+02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_supplement_v6*
+02_FBM_Clustering/outputs/clustering/paper_figures/oldfigs.zip
+
+# the superseded dataset caches. v7 is the one every script resolves to; the others are
+# 1.4 GB apiece of the same electrodes at an earlier vintage.
+02_FBM_Clustering/outputs/_dataset/concat_source/
+02_FBM_Clustering/outputs/_dataset/concat_source_v4/
+02_FBM_Clustering/outputs/_dataset/concat_source_v5/
+02_FBM_Clustering/outputs/_dataset/concat_source_v6/
