@@ -65,6 +65,16 @@ def L(fid, h, prompt, limit=None, placeholder=""):
             "ph": placeholder}
 
 
+def D(h, *paras):
+    """Draft prose, rendered above the box it belongs to.
+
+    Not a field: it has no id and nothing is stored for it. The scaffold's boxes are for
+    the author's own words; this is a starting draft to edit into one, and it is marked
+    as a draft on the page so the two are never confused.
+    """
+    return {"kind": "draft", "h": h, "paras": list(paras)}
+
+
 W = lambda n: {"unit": "words", "n": n}
 C = lambda n: {"unit": "chars", "n": n}
 
@@ -258,19 +268,74 @@ SECTIONS = [
         "lede": "One subsection per figure, each headed by the claim it supports rather "
                 "than the method it used. Cell Reports allows up to seven main figures.",
         "blocks": [
+            D("Opening &mdash; the cohort, and what is being clustered",
+              "Recordings were made in <b>27 patients</b> undergoing intracranial "
+              "monitoring for epilepsy, who performed auditory naming, picture naming "
+              "and reading completion. Of the <b>2,999 contacts</b> with usable data in "
+              "all three conditions, <b>1,719</b> passed a responsiveness gate and "
+              "entered the analysis.",
+              "The gate is applied per electrode rather than per condition: an electrode "
+              "enters on a single responsive condition and then contributes its full "
+              "three-condition profile. The object analysed throughout is therefore a "
+              "complete response profile across the three tasks, not a single evoked "
+              "response &mdash; which is what makes it possible to ask what <i>kinds</i> "
+              "of response the cortex produces, rather than which regions respond."),
             F("results.cohort", "Cohort and recordings",
               "Patients, electrodes, how many survived gating, and the coverage. The "
               "paragraph that lets a reader judge every number that follows.", rows=6),
             G("Figure 1 &middot; the clusters themselves"),
+            D("Figure 1 &mdash; what the response types are",
+              "We asked what kinds of response the cortex produces during language use, "
+              "letting the data group the profiles rather than sorting them by "
+              "anatomical region or by task. Clustering the 1,719 profiles yields a "
+              "small number of response types, each defined by its time course across "
+              "the three conditions rather than by where it was recorded.",
+              "<i>Describe the eight here so a reader could recognise one in their own "
+              "data: what distinguishes each, and which differ across conditions rather "
+              "than only in amplitude.</i>"),
             F("results.f1", "What the response types are",
               "How many types, what each one looks like, and how they differ across "
               "the three conditions. Describe them so a reader could recognise one in "
               "their own data.", rows=7),
+            D("Figure 1 &mdash; and the choice of K",
+              "K is a choice, and we make it twice. Held-out variance peaks at "
+              "<b>K&nbsp;=&nbsp;9</b> for high-frequency activity and at 13 or 14 for "
+              "the band-based descriptions (<code>bsf_comparison/peak_k.json</code>; "
+              "recheck before submission). The figures are cut at <b>K&nbsp;=&nbsp;8</b> "
+              "throughout, so that every solution is compared at one value.",
+              "The disagreement is itself a result rather than housekeeping. Held-out "
+              "variance cannot penalise a cluster that is one patient&rsquo;s electrode "
+              "strip, because splitting a cohort until each patient has a component of "
+              "their own fits held-out data perfectly well. A criterion that rewards "
+              "that is not measuring what we want K to mean."),
             F("results.f1_k", "Choosing K, and why the held-out peak is not the answer",
               "The disagreement between the held-out peak and K=8 is a result, not a "
               "housekeeping detail: held-out variance cannot see a cluster that is one "
               "patient's electrode strip. Say what the reader should conclude.", rows=7),
-            G("Figure 2 &middot; does the answer depend on the analysis?"),
+            G("Figures 2 and 4 &middot; what a response type depends on",
+              "One argument across two figures, which is why they share a heading: "
+              "Figure&nbsp;2 measures agreement over the whole partition and electrode "
+              "by electrode, Figure&nbsp;4 tests it cluster by cluster against a "
+              "permutation null."),
+            D("Figures 2 and 4 &mdash; the algorithm barely matters, the representation does",
+              "A response type is only as meaningful as the choices that produce it, and "
+              "those choices are not equivalent. <b>The algorithm barely matters; the "
+              "representation does.</b>",
+              "Across algorithms, convex NMF, k-means and Ward place <b>0.62 to 0.69</b> "
+              "of the 1,719 electrodes in corresponding clusters, against <b>0.12</b> "
+              "for random pairings of the same two solutions; <b>54%</b> of electrodes "
+              "are assigned identically by all three, where <b>3%</b> would be expected "
+              "by chance. Across representations the same comparisons give <b>0.36 to "
+              "0.39</b>, and only <b>27%</b> of electrodes are grouped together by all "
+              "four descriptions against <b>8%</b> expected by chance. Every matched "
+              "pair clears both permutation nulls in the algorithm comparisons; two of "
+              "eight fail in the representation comparisons.",
+              "The consequence is that <i>the response types of language cortex</i> is "
+              "not a well-posed object until the frequency description is stated. What "
+              "the cortex does is unchanged; what counts as the same response is not. We "
+              "therefore report each result at a stated representation, and treat "
+              "agreement across representations as a finding rather than as a check that "
+              "the pipeline worked."),
             F("results.f2", "Agreement across feature sets and algorithms",
               "What agrees, what does not, and against what baseline. Give the "
               "self-agreement ceiling its own sentence - a method that disagrees with "
@@ -278,7 +343,34 @@ SECTIONS = [
             F("results.f2_left", "What is left out",
               "The electrodes no two solutions place together, and what that fraction "
               "means for the taxonomy claim.", rows=6),
+            D("Figure 4 &mdash; correspondence, tested rather than asserted",
+              "Agreement measured over a whole partition can conceal a solution in which "
+              "most electrodes move but the largest cluster does not, so we also matched "
+              "clusters one to one and asked what each pairing is worth.",
+              "Clusters from two solutions are paired by the correlation between their "
+              "mean responses in a shared description, and the pairing is then evaluated "
+              "on a quantity it did not use: the electrodes the two clusters actually "
+              "share. Because a correlation between shapes does not constrain "
+              "membership, the overlap is evidence about the pairing rather than a "
+              "restatement of it. Significance is assessed against two size-preserving "
+              "permutations &mdash; one reassigning electrodes freely, one only within "
+              "patient, so that a cluster confined to a single patient cannot pass on "
+              "that account alone."),
+            F("results.f4", "Cluster correspondence and its null",
+              "What FIG 4 adds beyond FIG 2: a matched pairing, an independent test of "
+              "it, and a chance level. State the diagonal share and what it is against, "
+              "and say plainly that the bijection null re-pairs without re-clustering, "
+              "so it measures what the alignment earned rather than whether the two "
+              "solutions agree more than arbitrary partitions would.", rows=7),
             G("Figure 3 &middot; where the types sit"),
+            D("Figure 3 &mdash; and whether the types are simply anatomy",
+              "One possibility survives the representation result: that the types are "
+              "anatomy under another name, and that every description recovers them "
+              "because they are separated in space rather than in response. We therefore "
+              "compared each cluster against the LanA probabilistic language atlas.",
+              "<i>State the ranking, the effect sizes and both nulls. If the honest "
+              "summary is that the effects are small, it belongs here and not in the "
+              "Limitations.</i>"),
             F("results.f3", "Relation to the language atlas",
               "The ranking, the effect sizes, and both nulls. If the honest summary is "
               "that the effects are small, say so here plainly rather than in the "
@@ -1585,6 +1677,11 @@ def build():
                 P.append(f'      <div class="pf-group"><h4>{b["h"]}</h4>'
                          + (f'<p>{b["sub"]}</p>' if b.get("sub") else "")
                          + '</div>')
+            elif b["kind"] == "draft":
+                P.append(f'      <div class="pf-draft"><h5>{b["h"]}'
+                         + '<span class="pf-dtag">draft</span></h5>'
+                         + "".join(f"<p>{x}</p>" for x in b["paras"])
+                         + '</div>')
             else:
                 P.append("      " + field_html(b))
         P.append('    </div>')
@@ -1623,6 +1720,17 @@ CSS = CSS_BEGIN + """
   .pf-group{margin:26px 0 10px;padding:0 0 6px;border-bottom:1px solid var(--line)}
   .pf-group h4{margin:0;font-size:14.5px;letter-spacing:-.1px}
   .pf-group p{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+  /* A DRAFT IS NOT THE PAPER. It reads as prose - serif, generous measure - but it is
+     tagged and tinted so it can never be mistaken for text the author wrote. */
+  .pf-draft{background:#f7f8fa;border:1px solid var(--line);border-left:3px solid #b8336a;
+    border-radius:0 10px 10px 0;padding:14px 18px 4px;margin:0 0 14px;max-width:78ch}
+  .pf-draft h5{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.7px;
+    color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px}
+  .pf-dtag{background:#b8336a;color:#fff;border-radius:999px;padding:1px 8px;font-size:9.5px;
+    letter-spacing:.5px}
+  .pf-draft p{margin:0 0 12px;font-size:14.2px;line-height:1.68;color:#22303c;
+    font-family:Georgia,"Times New Roman",serif}
+  .pf-draft b{color:#12406b}
   .pf-block{background:var(--panel);border:1px solid var(--line);border-radius:12px;
     padding:13px 16px 14px;margin:0 0 11px}
   .pf-block.done{border-left:3px solid var(--ok)}
@@ -1898,8 +2006,9 @@ def main() -> int:
     a = ap.parse_args()
 
     nav, block = build()
-    nfields = sum(1 for s in SECTIONS for b in s["blocks"] if b["kind"] != "group")
-    ids = [b["id"] for s in SECTIONS for b in s["blocks"] if b["kind"] != "group"]
+    _isfield = lambda b: b["kind"] not in ("group", "draft")
+    nfields = sum(1 for s in SECTIONS for b in s["blocks"] if _isfield(b))
+    ids = [b["id"] for s in SECTIONS for b in s["blocks"] if _isfield(b)]
     dup = {i for i in ids if ids.count(i) > 1}
     if dup:
         raise SystemExit(f"duplicate field ids, which would share one box: {sorted(dup)}")

@@ -45,7 +45,12 @@ A.2 and D.2 are the full matrix: upper number ARI, lower NMI, '=' on the diagona
      graded/hard divide 0.39 (labels: purple = graded, orange = hard)  ·  ACROSS K: agreement peaks
      at K=29 (0.55); at K=8 it is 0.36
 
-PANELS B and E - each cluster against the reference, and what the others think
+PER-CLUSTER AGREEMENT - measured here, drawn in FIG 4
+These numbers no longer have a panel. FIG 4 makes the same comparison with a
+permutation null and a chance correction, and pairs clusters on centroid
+correlation rather than on the overlap it then reports - so its numbers are
+comparable across panels and these are not. They are kept in the CSV because they
+are a useful cross-check on FIG 4, not because they are the better measurement.
 ----------------------------------------------------------------------------------------------------
 Each solution's clusters are matched 1:1 to the reference's by Hungarian
 assignment - on the correlation between loading columns where both sides are
@@ -78,14 +83,14 @@ these numbers without it is the difference between 'the solutions disagree' and
 'this is most of what the solution can offer'.
 
   feature sets
-    cnmf/concat_hg                 0.397   (stability_by_k)
-    cnmf/concat_rawds              0.499   (stability_by_k)
-    cnmf/concat_bands5             0.421   (stability_by_k)
-    cnmf/concat_bands5z            0.468   (stability_by_k)
+    cnmf/concat_hg                 0.680   (stability_by_k_native)
+    cnmf/concat_rawds              0.890   (stability_by_k_native)
+    cnmf/concat_bands5             0.741   (stability_by_k_native)
+    cnmf/concat_bands5z            0.612   (stability_by_k_native)
   algorithms
-    cnmf/concat_bands5z            0.468   (stability_by_k)
-    kmeans/concat_bands5z          0.587   (stability_by_k)
-    hierarchical/concat_bands5z    0.482   (stability_by_k)
+    cnmf/concat_bands5z            0.612   (stability_by_k_native)
+    kmeans/concat_bands5z          0.735   (stability_by_k_native)
+    hierarchical/concat_bands5z    0.648   (stability_by_k_native)
 
 PAC - PROPORTION OF AMBIGUOUS CLUSTERING - sits beside it. It is the share of
 consensus values that are neither near 0 nor near 1: entries where the resampling
@@ -117,30 +122,6 @@ appears, on both halves and across the four FIG 2 variants.
                  below 0.30 somewhere: pos 4 (c6), pos 5 (c7)
   algorithms     weakest match per cluster: 0.00 to 0.62, median 0.26
                  below 0.30 somewhere: pos 3 (c2), pos 4 (c6), pos 5 (c7), pos 6 (c0)
-
-  the reading under each panel:
-  B: Jaccard against the 1:1 match, reference column dropped, scale 0-1.00.  A LOW VALUE IS THE
-     FINDING: assignment always returns a partner, so it means paired-because-it-had-to-be.  6 of 8
-     fall below 0.30 somewhere: p1 (c4, n=223), p3 (c2, n=254), p4 (c6, n=152), p5 (c7, n=131), and
-     2 more.  /n IN A CELL MEANS THE REFERENCE CLUSTER SPLIT into that many of the solution's
-     clusters (each holding at least 25% of it) - a clean correspondence a 1:1 assignment has to
-     score as one good match and one failure; 1 of the low cells are splits, not disagreements.
-     OTHERS = best agreement between two non-reference solutions on that row; 3 row(s), outlined
-     green, are low only because the REFERENCE disagrees.  2 of 24 cells, hatched, do not beat a
-     size-matched permutation of their own two clusters.  SELF under each column is that solution's
-     agreement with ITSELF over 50 refits on 80% of the electrodes - the ceiling every number here
-     is read against: HG 0.40, 15 bands 0.50, 5 bands, z 0.47.
-  E: Jaccard against the 1:1 match, reference column dropped, scale 0-1.00.  A LOW VALUE IS THE
-     FINDING: assignment always returns a partner, so it means paired-because-it-had-to-be.  4 of 8
-     fall below 0.30 somewhere: p3 (c2, n=202), p4 (c3, n=117), p5 (c4, n=156), p6 (c7, n=152).  /n
-     IN A CELL MEANS THE REFERENCE CLUSTER SPLIT into that many of the solution's clusters (each
-     holding at least 25% of it) - a clean correspondence a 1:1 assignment has to score as one good
-     match and one failure; 3 of the low cells are splits, not disagreements.  OTHERS = best
-     agreement between two non-reference solutions on that row; 0 row(s), outlined green, are low
-     only because the REFERENCE disagrees.  2 of 16 cells, hatched, do not beat a size-matched
-     permutation of their own two clusters.  SELF under each column is that solution's agreement
-     with ITSELF over 50 refits on 80% of the electrodes - the ceiling every number here is read
-     against: k-means 0.59, Ward 0.48.
 
 PANELS C and F - which electrodes are placed consistently
 ----------------------------------------------------------------------------------------------------
@@ -199,7 +180,7 @@ PROVENANCE
     hierarchical  concat_bands5z   hierarchical/concat_bands5z/runs/20260908_220313   (hard labels)
   geometry and block order from concat_bands5 (cnmf) at K=8
   built by      00_paper2_figures2_2.py --k 8 --algo-feature-set concat_bands5z
-  built on      2026-09-09 00:15
+  built on      2026-09-10 15:04
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------

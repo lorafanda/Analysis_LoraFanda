@@ -823,9 +823,10 @@ def figure_2(k: int, algo_fset: str):
     n_op_al = one_patient_clusters(ar["lab"], d["patient"], k)
 
     # No reading under the panels any more, so the rows sit closer together; the
-    # A column is now two stacked axes and the C column three views, so the figure
-    # is a little taller than it was.
-    fig = plt.figure(figsize=(17.6, 10.8), dpi=190)
+    # A column is now two stacked axes and the C column three views. Narrower than it
+    # was: the per-cluster column went to FIG 4, and stretching two columns across the
+    # width the three used would have made a wide figure out of a smaller claim.
+    fig = plt.figure(figsize=(14.4, 10.8), dpi=190)
     gs = GridSpec(2, 24, figure=fig, hspace=0.62, wspace=1.1,
                   left=0.055, right=0.985, top=0.800, bottom=0.045)
     fig.suptitle(f"FIG 2   ·   agreement   ·   K = {k}   ·   "
@@ -833,8 +834,9 @@ def figure_2(k: int, algo_fset: str):
                  x=0.055, y=0.982, ha="left", fontsize=15.5, color=INK)
     fig.text(0.055, 0.958,
              "Does the answer depend on how the data are represented, or on which "
-             "algorithm is used?  Each row asks that three ways: overall, per cluster, "
-             "per electrode.",
+             "algorithm is used?  Each row asks that two ways: over the whole partition, "
+             "and electrode by electrode.  Cluster by cluster is FIG 4, which tests it "
+             "against a permutation null.",
              fontsize=9.8, color=MUTED, va="top")
 
     halves = (
@@ -843,7 +845,7 @@ def figure_2(k: int, algo_fset: str):
              nullJ=fs_null_J, self=fs_self, pac=fs_pac, split=fs_split,
              nmi=fs_nmi,
              curve=fs_curve, onepat=n_op_fs,
-             refname=FS_SHORT.get(REF_FSET, REF_FSET), tags="ABC",
+             refname=FS_SHORT.get(REF_FSET, REF_FSET), tags="ABC",   # B is not drawn
              head=f"FEATURE SETS   ·   convex NMF on four representations   ·   "
                   f"reference {FS_SHORT.get(REF_FSET, REF_FSET)}"),
         dict(ari=al_ari, J=al_J, cnt=al_cnt, names=al_names, sols=al_sols, ref=al_ref,
@@ -861,21 +863,19 @@ def figure_2(k: int, algo_fset: str):
         t1, t2, t3 = h["tags"]
 
         # .1 the K curve above, .2 the full matrix below
-        cA = GridSpecFromSubplotSpec(2, 1, gs[row, 0:5], height_ratios=[0.42, 1.0],
+        cA = GridSpecFromSubplotSpec(2, 1, gs[row, 0:9], height_ratios=[0.42, 1.0],
                                      hspace=1.05)
         axK, axA = fig.add_subplot(cA[0]), fig.add_subplot(cA[1])
         notes[t1] = panel_ari(axK, axA, h["ari"], h["nmi"], h["names"], groups, k,
                               h["curve"])
 
-        cB = GridSpecFromSubplotSpec(1, 2, gs[row, 6:14], width_ratios=[5.4, 2.0],
-                                     wspace=0.08)
-        axM = fig.add_subplot(cB[0])
-        notes[t2] = panel_clusters(axM, fig.add_subplot(cB[1]), h["J"], h["oth"],
-                                   h["names"], h["order"], h["sizes"], h["ref"], vmax,
-                                   h["nullJ"], h["self"], h["pac"], h["split"])
-
+        # B/E - per-cluster Jaccard against the reference - is not drawn any more.
+        # FIG 4 does that comparison with a permutation null and a chance correction,
+        # and in this row's algorithm half the old panel was close to circular: the
+        # match falls back to shared-electrode count and then reports the Jaccard of
+        # that overlap. The measurement still runs and still reaches the CSV.
         # left, from above, right; the bar under all three
-        cC = GridSpecFromSubplotSpec(2, 3, gs[row, 15:24], height_ratios=[1.0, 0.34],
+        cC = GridSpecFromSubplotSpec(2, 3, gs[row, 10:24], height_ratios=[1.0, 0.34],
                                      hspace=0.16, wspace=0.03)
         axL = fig.add_subplot(cC[0, 0])
         notes[t3] = panel_electrodes(axL, fig.add_subplot(cC[0, 1]),
@@ -886,7 +886,6 @@ def figure_2(k: int, algo_fset: str):
 
         labelled.append((
             [(axK, f"{t1}.1  ·  mean pairwise ARI across K"),
-             (axM, f"{t2}  ·  each cluster against the reference"),
              (axL, f"{t3}  ·  which electrodes are placed consistently")],
             [(axA, f"{t1}.2  ·  how much any two agree")], h["head"]))
 
@@ -1014,7 +1013,12 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self, notes):
         A(textwrap.fill(f"{t_}: {notes[t_]}", 100, initial_indent="  ",
                         subsequent_indent="     "))
     A("")
-    A("PANELS B and E - each cluster against the reference, and what the others think")
+    A("PER-CLUSTER AGREEMENT - measured here, drawn in FIG 4")
+    A("These numbers no longer have a panel. FIG 4 makes the same comparison with a")
+    A("permutation null and a chance correction, and pairs clusters on centroid")
+    A("correlation rather than on the overlap it then reports - so its numbers are")
+    A("comparable across panels and these are not. They are kept in the CSV because they")
+    A("are a useful cross-check on FIG 4, not because they are the better measurement.")
     A("-" * 100)
     A("Each solution's clusters are matched 1:1 to the reference's by Hungarian")
     A("assignment - on the correlation between loading columns where both sides are")
@@ -1087,11 +1091,6 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self, notes):
         bad = [f"pos {p} (c{int(order[p])})" for p in range(len(w)) if w[p] < 0.30]
         A(f"  {'':<14} below 0.30 somewhere: "
           + (", ".join(bad) if bad else "none"))
-    A("")
-    A("  the reading under each panel:")
-    for t_ in ("B", "E"):
-        A(textwrap.fill(f"{t_}: {notes[t_]}", 100, initial_indent="  ",
-                        subsequent_indent="     "))
     A("")
     A("PANELS C and F - which electrodes are placed consistently")
     A("-" * 100)
