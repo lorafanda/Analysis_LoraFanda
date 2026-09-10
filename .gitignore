@@ -283,6 +283,7 @@ Thumbs.db
 02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_supplement_v5*
 02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_supplement_v6*
 02_FBM_Clustering/outputs/clustering/paper_figures/oldfigs.zip
+02_FBM_Clustering/outputs/clustering/comparisons/
 
 # the superseded dataset caches. v7 is the one every script resolves to; the others are
 # 1.4 GB apiece of the same electrodes at an earlier vintage.
