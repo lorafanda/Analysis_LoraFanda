@@ -238,7 +238,13 @@ Thumbs.db
 # them from raw.githubusercontent and untracking them would stop the brain
 # overlays loading. To actually retire them: git rm --cached them and serve the
 # folder some other way.
-02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/**/*.bin
+# REVISED 2026-09-10. The blanket rule broke the visualizer silently: bins committed
+# before it stayed tracked, so v6 kept working, while every run fitted after it was
+# ignored on creation. The page still lists the new run - the manifest is small and
+# tracked - and only 404s when you click it, which is the worst way for this to fail.
+# The per-run clusters_*.bin are what the overlays fetch, so they are tracked. The
+# cohort-level coverage_*.bin are regenerable and much larger, so those stay ignored.
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/coverage_*.bin
 
 # editor and OS leftovers
 **/__pycache__/
