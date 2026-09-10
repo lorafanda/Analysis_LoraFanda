@@ -39,6 +39,50 @@ END = "<!-- END s2 gallery -->"
 # sweep_stability.py writes stability_by_k/k_09; make_missing_centroids.py writes
 # cluster_centroids/k_9. Both appear below, padded and not, on purpose. It only shows
 # up at single-digit K, which is where the held-out peak landed on cohort v7.
+def native_gap(run_dir, k):
+    """(native, k-means-resampled) mean Jaccard at K, or None if either is absent.
+
+    The two sweeps write the same summary under different directories, so the comparison
+    is a straight read - no recomputation, and it moves when the sweeps are re-run.
+    """
+    out = []
+    for sub_dir in ("stability_by_k_native", "stability_by_k"):
+        f = run_dir / sub_dir / f"k_{k:02d}" / "stability_summary.json"
+        try:
+            out.append(float(json.loads(f.read_text(encoding="utf-8"))["mean_jaccard"]))
+        except Exception:
+            return None
+    return tuple(out)
+
+
+def native_sentence(run_dir, k):
+    """The S.14 headline bullet, measured rather than typed.
+
+    It used to quote 0.332 -> 0.658 at K=11, which was true of the cohort it was written
+    on and has been wrong since. Hennig's 0.60 is the usual rule of thumb for "a real
+    cluster", so whether each number sits above or below it is the thing worth saying,
+    and that can flip between cohorts.
+    """
+    g = native_gap(run_dir, k)
+    if not g:
+        return ("It moves the number a long way &mdash; by how much is measured by "
+                "<code>sweep_stability.py --native</code>, which has not been run here.")
+    nat, km = g
+    # Whether the correction CROSSES 0.60 is the interesting part, and it does not always:
+    # the size of the move and the verdict are two different claims, so say each only when
+    # it is true rather than forcing both into one sentence.
+    hi = "above" if nat >= 0.60 else "below"
+    lo = "above" if km >= 0.60 else "below"
+    head = (f"It moves the number a long way. At K={k} on <code>concat_hg</code> the mean "
+            f"Jaccard goes from <b>{km:.3f} to {nat:.3f}</b>")
+    if hi != lo:
+        return head + (f" &mdash; from {lo} Hennig's 0.60 rule of thumb, which reads as "
+                       f"<i>not a real cluster</i>, to {hi} it.")
+    return head + (f", a gain of <b>{nat - km:+.3f}</b> &mdash; though both sit {hi} "
+                   f"Hennig's 0.60 rule of thumb, so the correction is large without "
+                   f"changing the verdict at this K.")
+
+
 def newest(method, fset):
     """The last run id, which is the newest - run ids are timestamps.
 
@@ -254,9 +298,7 @@ def build(peak, tracked=None):
          ["<b>Identical procedure, one thing changed: the refit uses the method the run "
           "was actually fitted by</b>, in that method's own space &mdash; convex NMF "
           "unit-normed rather than k-means in raw dB.",
-          "It moves the number a long way. At K=11 on <code>concat_hg</code> the mean "
-          "Jaccard goes from <b>0.332 to 0.658</b> &mdash; from below Hennig's 0.60 rule "
-          "of thumb, which reads as <i>not a real cluster</i>, to above it.",
+          native_sentence(R[("cnmf", "concat_hg")], KH),
           "<b>The control that makes this a correction and not just a different "
           "number:</b> on a k-means run the native refit IS the old refit, so the two "
           "must agree exactly &mdash; and they come out bit-identical at every K on both "
