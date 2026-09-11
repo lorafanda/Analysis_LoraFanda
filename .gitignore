@@ -76,6 +76,15 @@ outputs/
 05_FBM_ResponseTiming/outputs/**/*.npy
 05_FBM_ResponseTiming/outputs/**/*.parquet
 
+# Allow the motor-mapping status figures only. The per-patient trees (photodiode caches,
+# 5 kHz micro LFP, hundreds of per-channel ERSPs) stay local; make_mm_tab.py copies the
+# curated set the website shows into _status_png/ under stable names.
+!07_FBM_MotorM/outputs/
+07_FBM_MotorM/outputs/*
+!07_FBM_MotorM/outputs/_status_png/
+07_FBM_MotorM/outputs/_status_png/*
+!07_FBM_MotorM/outputs/_status_png/*.png
+
 # Allow the pooling manifest tree (overlays, pool/anatomy run artifacts) — NOT renders
 !04_FBM_Pooling/outputs/
 !04_FBM_Pooling/outputs/pooling/
