@@ -1543,8 +1543,22 @@ def carousels():
     ga = [_slide("Graphical abstract  ·  HG  ·  K = 8",
                  "GA_graphical_abstract_concat_hg_K8.png", "state of the art",
                  "make_graphical_abstract.py", tr)]
+    # FIG 4 - cluster correspondence. It carries K as K08 rather than K8, and its
+    # weighted variant puts the run id BEFORE the suffix (FIG4_K08_run<id>_weighted.png),
+    # which resolve_fig's anchored pattern is built to refuse, so that one is found
+    # directly. Two slides: the hard-label figure and the loading-weighted one.
+    fig4 = [_slide("FIG 4  ·  cluster correspondence  ·  hard labels  ·  K = 8",
+                   "FIG4_K08.png", "HG",
+                   "00_paper2_figure4_correspondence.py --k 8  then  "
+                   "00_paper2_figure4_panels.py --k 8", tr)]
+    _w = sorted(FIGDIR.glob("FIG4_K08_run*_weighted.png"))
+    fig4.append(_slide("FIG 4  ·  cluster correspondence  ·  weighted by loading  ·  K = 8",
+                       _w[-1].name if _w else "FIG4_K08_weighted.png", "weighted",
+                       "00_paper2_figure4_panels.py --k 8 --weighting weighted", tr))
     return {"results.f1": fig1, "results.f2": fig2, "results.f3": fig3,
-            "figs.f1": fig1, "figs.f2": fig2, "figs.f3": fig3, "high.graphical": ga}
+            "results.f4": fig4,
+            "figs.f1": fig1, "figs.f2": fig2, "figs.f3": fig3, "figs.f4": fig4,
+            "high.graphical": ga}
 
 
 _CAR = None
