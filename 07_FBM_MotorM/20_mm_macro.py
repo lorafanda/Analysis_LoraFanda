@@ -53,7 +53,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(ROOT, "functions"))
 sys.path.insert(0, os.path.abspath(os.path.join(ROOT, "..", "01_FBM_Analysis")))
 import config_mm as cfg                                        # noqa: E402
-from lf_mm_io import read_trc_meta, pull_channels              # noqa: E402
+from lf_mm_io import (read_trc_meta, pull_channels, session_timeline,   # noqa: E402
+                      part_paths, real_parts, part_num, part_index, crosses_splice, gaps)
 
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 
@@ -76,6 +77,54 @@ def lm():
 
 
 # ---------------------------------------------------------------------------
+def trial_offsets(pat, pre, tr, off):
+    """The Micromed offset for every trial: its own part's, from 11_mm_sync.py, or the
+    single config value for all of them if that has not been run - loudly, because the
+    parts are not contiguous and one offset is only right for the part it came from.
+    Also drops trials whose epoch spans a seam of the concatenation."""
+    on = tr.onset_s.to_numpy()
+    te = tr.trial_end_s.to_numpy().astype(float).copy()
+    parts, _total = session_timeline(part_paths(pre))
+    rp = real_parts(parts)
+    if not rp:
+        raise SystemExit(f"{pat}: no .ns6 parts under {pre['blackrock_dir']} - the seams and "
+                         f"the per-part offsets need the part headers")
+    keep = np.ones(len(tr), bool)
+    # trial_end_s is the next onset; for the last trial before a seam it lies past the
+    # seam, on a clock this part's offset does not map - clamp it to the part's end
+    te = np.minimum(te, np.array([p["t0"] + p["dur"] for p in rp])[part_index(on, parts)])
+    if rp:
+        x = crosses_splice(on, cfg.time_window, parts)
+        if x.any():
+            print(f"  {int(x.sum())} trial(s) span a seam between .ns6 parts and are dropped: "
+                  + ", ".join(f"#{int(t)} {c} @{o:.1f}" for t, c, o in
+                              zip(tr.trial[x], tr.condition[x], on[x])))
+            keep &= ~x
+    sp = os.path.join(ROOT, "outputs", pat, "sync_parts.tsv")
+    if rp and os.path.exists(sp):
+        import pandas as pd
+        s = pd.read_csv(sp, sep="\t", dtype={"part": str})
+        by = {str(r.part): float(r.offset_s) for r in s.itertuples()}
+        pi = part_index(on, parts)
+        names = [part_num(p) for p in rp]
+        offs = np.array([by.get(names[i], np.nan) for i in pi])
+        miss = np.isnan(offs)
+        if miss.any():
+            print(f"  {int(miss.sum())} trial(s) fall in a part 11_mm_sync.py did not fit "
+                  f"({', '.join(sorted({names[i] for i in pi[miss]}))}) and are dropped")
+            keep &= ~miss
+        used = {names[i]: by[names[i]] for i in np.unique(pi[keep])}
+        print("  per-part clock offsets (sync_parts.tsv): "
+              + "   ".join(f"{k} {v:+.3f} s" for k, v in used.items()))
+        return offs, keep, te
+    print(f"  !! no {os.path.basename(sp)} - ONE offset ({off:+.1f} s) for every trial. The "
+          f"parts are not contiguous, so this is only right for the part it was measured "
+          f"on; run  python .\\11_mm_sync.py --patient {pat}")
+    for a, b, g in gaps(parts):
+        print(f"     gap {part_num(a)} -> {part_num(b)}: {g:+.2f} s by the header origins")
+    return np.full(len(tr), float(off)), keep, te
+
+
 def load_trials(pat, pre):
     p = os.path.join(ROOT, "outputs", pat, f"{pre['pat_name']}_MM_trials.tsv")
     if not os.path.exists(p):
@@ -269,17 +318,20 @@ def run(pat, reref="wm", only=None, contrast_only=False):
     meta = read_trc_meta(path)
     print(f"\n=== {pat} ({pid})  macro, LM chain, reref={reref}")
     print(f"  TRC {os.path.basename(path)}  {meta['n_chan']} ch @ {meta['fs']:.0f} Hz, "
-          f"{meta['dur']:.1f} s;  {len(tr)} trials, clock offset {off:+.1f} s")
+          f"{meta['dur']:.1f} s;  {len(tr)} trials")
+    off_tr, keep, te_s = trial_offsets(pat, pre, tr, off)
+    tr, off_tr, te_s = tr[keep].reset_index(drop=True), off_tr[keep], te_s[keep]
+    print(f"  {len(tr)} trials kept")
 
-    # cue times on the Micromed clock, in samples
+    # cue times on the Micromed clock, in samples - each with its own part's offset
     fs = meta["fs"]
-    on_s = tr.onset_s.to_numpy() + off
+    on_s = tr.onset_s.to_numpy() + off_tr
     if on_s.min() < 2 or on_s.max() > meta["dur"] - 6:
         raise SystemExit(f"mapped onsets span {on_s.min():.1f}..{on_s.max():.1f} s in a "
                          f"{meta['dur']:.1f} s file - the offset looks wrong")
     onsets = np.round(on_s * fs).astype(np.int64)
-    offsets = np.round((tr.offset_s.to_numpy() + off) * fs).astype(np.int64)
-    tends = np.round((tr.trial_end_s.to_numpy() + off) * fs).astype(np.int64)
+    offsets = np.round((tr.offset_s.to_numpy() + off_tr) * fs).astype(np.int64)
+    tends = np.round((te_s + off_tr) * fs).astype(np.int64)
     cond = tr.condition.to_numpy()
 
     print("  reading the TRC (one pass, native rate) ...")

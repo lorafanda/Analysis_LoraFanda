@@ -11,7 +11,8 @@ FIGURES ARE COPIED, NOT LINKED. The site loads images from raw.githubusercontent
 figure has to be committed to show. The analysis writes hundreds of per-channel PNGs;
 committing those would trip the size guard and bury the ones that matter. So a curated set
 is copied into outputs/_status_png/ under stable names, and only that folder is committed.
-Re-run this after re-running an analysis to refresh them.
+Re-run this after re-running an analysis to refresh them. A source of None means the
+file already in _status_png is kept as it is (the first-pass figures the report refers to).
 """
 
 import argparse
@@ -33,23 +34,22 @@ CSS = "  .nm .dot{background:#2a7f62}"
 ACC = "#2a7f62"
 
 G = ROOT / "outputs" / "G-05"
-FIGS = {  # stable name -> source
-    "mm_photodiode_all.png":  Path("C:/Users/fanda/AppData/Local/Temp/claude/S--HumanNeuronLab-ANALYSIS-FLM-Analysis-LoraFanda/f997ad0d-95b9-4701-8631-a057b6254525/scratchpad/MM_photodiode_blackrock.png"),
-    "mm_triggers_G05.png":    G / "PAT_6684_MM_triggers.png",
-    "mm_psd_raw_mouth.png":   G / "macro/wm/PSD_raw/mouth/PSD/psd_allch_full.png",
-    "mm_psd_clean_mouth.png": G / "macro/wm/PSD_clean/mouth/PSD/psd_allch_full.png",
-    "mm_ersp_AG6_wm.png":     G / "macro/wm/ERSP/AG6.png",
-    "mm_hfa_trials_AG6.png":  G / "macro/AG6_HFAtrials.png",
-    "mm_contrast_wm.png":     G / "macro/wm/PAT_6684_MM_contrast.png",
-    "mm_contrast_none.png":   G / "macro/none/PAT_6684_MM_contrast.png",
-    "mm_spectral_shape.png":  G / "macro/spectral_shape.png",
-    "mm_wm_review_1.png":     G / "macro/none/WM_review_1.png",
-    "mm_gradient_none.png":   G / "macro/none/PAT_6684_MM_emg_gradient.png",
-    "mm_gradient_wm.png":     G / "macro/wm/PAT_6684_MM_emg_gradient.png",
-    "mm_micro_raw_AGm1-4.png":   G / "micro/AGm1-4_HG.png",
-    "mm_micro_first_AGm2-5.png": G / "micro/first/AGm2-5_HG.png",
+SCR = Path("C:/Users/fanda/AppData/Local/Temp/claude/S--HumanNeuronLab-ANALYSIS-FLM-Analysis-LoraFanda/f997ad0d-95b9-4701-8631-a057b6254525/scratchpad")
+FIGS = {  # stable name -> source (None: kept as already committed under _status_png)
+    "mm_photodiode_all.png":     SCR / "MM_photodiode_blackrock.png",
+    "mm_triggers_G05.png":       G / "PAT_6684_MM_triggers.png",
+    "mm_contrast_none_v1.png":   None,        # first pass, single offset (kept for the record)
+    "mm_ersp_AG6_wm_v1.png":     None,        # first pass, single offset
+    "mm_trc_channels.png":       SCR / "G05_TRC_nondepth_channels.png",
+    "mm_sync_parts.png":         G / "sync_parts.png",
+    "mm_timing_check.png":       G / "timing_check.png",
+    "mm_psd_raw_mouth.png":      G / "macro/wm/PSD_raw/mouth/PSD/psd_allch_full.png",
+    "mm_psd_clean_mouth.png":    G / "macro/wm/PSD_clean/mouth/PSD/psd_allch_full.png",
+    "mm_ersp_AG6_wm.png":        G / "macro/wm/ERSP/AG6.png",
+    "mm_hgtrials_AG6_mouth.png": G / "macro/wm/HG/mouth/PAT_6684_mouth_WM_HGtrials_AG6.png",
+    "mm_contrast_wm.png":        G / "macro/wm/PAT_6684_MM_contrast.png",
     "mm_micro_shaft_AGm1-4.png": G / "micro/shaft_mean/AGm1-4_HG.png",
-    "mm_micro_shaft_AGm1-4_ERSP_mouth.png": G / "micro/shaft_mean/AGm1-4_ERSP_mouth.png",
+    "mm_micro_analog_HG.png":    G / "micro/shaft_mean/analog_HG.png",
 }
 
 
@@ -66,216 +66,254 @@ def fig(num, title, bullets, name, alt, src=""):
     </figure>"""
 
 
+def para(*ps):
+    return "\n".join(f"    <p>{p}</p>" for p in ps)
+
+
 def build() -> str:
     P = [B_SEC, '  <section id="mm">',
-         f'    <div class="eyebrow" style="color:{ACC}">Stage 07</div>',
-         "    <h2>Motor Mapping</h2>",
-         '    <p class="lead">Five movement blocks &mdash; hand L/R, foot L/R, mouth &mdash; '
-         "in the MicroEPI patients, analysed to test whether the high-frequency response "
-         "seen during speech in the language task is brain or muscle. Mouth is the test; "
-         "hand and foot are the controls.</p>",
+         f'    <div class="eyebrow" style="color:{ACC}">Stage 07 &middot; report, 12 September 2026</div>',
+         "    <h2>Motor Mapping &mdash; is the speech high-gamma brain or muscle?</h2>",
+         '    <p class="lead">What I did, in the order I did it, with what went wrong on the way. '
+         "Patient G-05 (PAT_6684) so far. The task is five blocks of repeated movements &mdash; "
+         "hand left, hand right, foot left, foot right, mouth &mdash; each trial ~3.2 s of rest "
+         "then 3.0 s of GO. Mouth is the test condition: if the broadband high-frequency response "
+         "we see during speech in the language task is muscle, it should appear here whenever the "
+         "jaw moves, and it should not appear for hand or foot.</p>",
 
          f'    <div class="method" style="border-left:4px solid {ACC}">',
-         "      <h3>How it was analysed</h3><ul>",
-         "      <li><b>Raw files only.</b> Blackrock <code>.ns6/.nev</code> for micro, Micromed "
-         "<code>.TRC</code> for macro. No <code>.mat</code> exports. Readers written for both "
-         "formats (<code>functions/lf_mm_io.py</code>).</li>",
-         "      <li><b>Cues from the Blackrock photodiode</b> (<code>ainp1</code>). The Micromed has "
-         "none &mdash; every channel was tested. Level-crossing detector with per-block "
-         "normalisation; last trial of each block dropped; 2.5&ndash;3.5 s stimulus gate.</li>",
-         "      <li><b>Micromed clock aligned to Blackrock</b> by cross-correlating micro against macro "
-         "on the same shaft. No shared trigger exists in the raw files.</li>",
-         "      <li><b>Macro preprocessing = the LM chain</b>, called not copied: bad channels, WM "
-         "reference, adaptive notch per block, PSD before/after.</li>",
-         "      <li><b>ERSP without time warping</b>: fixed 3 s GO, baseline &minus;1.0..&minus;0.2 s, "
-         "per-trial dB averaged, drawn square with baseline 20% / GO 80%.</li>",
-         "      <li><b>Contrast:</b> mouth &minus; foot, mean 70&ndash;150 Hz dB in 0.2&ndash;3 s after GO, "
-         "per contact.</li>",
-         "      <li><b>Controls:</b> floating inputs, sync events, spectral shape, white-matter "
-         "contacts as data, depth gradients, hybrid vs pure shafts.</li>",
-         "      <li><b>Micro:</b> per tetrode (2&times;2), three referencing schemes, notch to 2000 Hz, "
-         "ERSP to 1000 Hz.</li>",
+         "      <h3>Where things stand</h3><ul>",
+         "      <li><b>Done, on the corrected timing:</b> trial table from the photodiode; "
+         "Micromed&harr;Blackrock alignment per recording part from the shared sync pulses; "
+         "timing check; macro contacts through the LM preprocessing chain (WM reference); micro "
+         "contacts referenced to their shaft mean, with the analog inputs.</li>",
+         "      <li><b>Still to re-run</b> (the first versions were computed with a timing error, see "
+         "&sect;3, and are not shown): the unreferenced macro control run, the white-matter "
+         "contact review, the depth-gradient test, the micro contacts under the other two "
+         "references.</li>",
+         "      <li><b>Then:</b> G-01, G-02, G-03 (block bounds to set; G-01 has recording gaps too).</li>",
          "      </ul>",
-         f"      <p style='margin:8px 0 0;color:#68727d'>Patient G-05 (PAT_6684) throughout. "
-         "Scripts in <code>07_FBM_MotorM/</code>: <code>10_mm_triggers</code>, "
+         "      <p style='margin:8px 0 0;color:#68727d'>Everything reads the raw Blackrock "
+         "<code>.ns6/.nev</code> and Micromed <code>.TRC</code> files directly &mdash; no "
+         "<code>.mat</code> exports. Scripts in <code>07_FBM_MotorM/</code>: "
+         "<code>10_mm_triggers</code>, <code>11_mm_sync</code>, <code>12_mm_timing_check</code>, "
          "<code>20_mm_macro</code>, <code>21_mm_micro</code>, <code>23_mm_emg_gradient</code>; "
-         "config in <code>functions/config_mm.py</code>.</p>",
+         "readers in <code>functions/lf_mm_io.py</code>, settings in "
+         "<code>functions/config_mm.py</code>.</p>",
          "    </div>",
 
-         # ---- 1 triggers -----------------------------------------------------------
-         "    <h3>1 &middot; Triggers</h3>",
-         fig("7.1", "The Blackrock photodiode, all four patients",
-             ["Left: peak-to-peak per 0.25 s window across the session, part boundaries dashed. "
-              "Right: 12 s of raw 30 kHz.",
-              "All four carry a clean cue train on <code>ainp1</code>. Amplitudes differ 8&times; "
-              "(G-01 ~80, G-03 ~604); G-05 also has a calibration flash 47&times; its cue.",
-              "That flash is why a threshold defined as a fraction of the largest edge fails: "
-              "the detector here uses the cue's own two levels instead."],
-             "mm_photodiode_all.png", "Blackrock photodiode per patient",
-             "scratch survey, 2026-09-10"),
-         fig("7.2", "Trial table for G-05",
-             ["Green row: behavioural log, anchored per block. Red row: photodiode detections. "
-              "Dashed: every onset (red) and offset (purple).",
-              "197 edges &rarr; 5 blocks &rarr; 98 trials; 93 after dropping the last of each block. "
-              "Block bounds from config, snapped to the real pauses.",
-              "Stimulus 2.79&ndash;3.05 s (median 3.00, log says 3.00); rest 3.04&ndash;4.81 s "
-              "(median 3.22, log 3.20). Nothing rejected by the 2.5&ndash;3.5 s gate.",
-              "The <code>.nev</code> digital events (5.64 s cadence) are sync, not trials, and are "
-              "spread uniformly relative to the cue."],
-             "mm_triggers_G05.png", "trigger QC", "10_mm_triggers.py"),
+         # ---- 1 -----------------------------------------------------------------------
+         "    <h3>1 &middot; Getting the trials</h3>",
+         para("The first problem was that there are no trial markers anywhere I could trust. "
+              "The Blackrock <code>.nev</code> has a digital event stream that looks like trial "
+              "codes &mdash; a 4-word message every 5.785 s &mdash; but the task period is ~6.2 s "
+              "and the messages drift through the trials: they are synchronisation words from the "
+              "stimulation PC, not the task. The Micromed has no event channel at all. So the "
+              "only record of when the screen changed is the photodiode, which is wired to a "
+              "Blackrock analog input (<code>ainp1</code>) in all four patients.",
+              "I first tried the photodiode detector the way it was, and it failed on G-05: the "
+              "recording contains a calibration flash 47&times; larger than the cue, and any "
+              "threshold defined relative to the largest edge misses every real cue. I "
+              "changed nothing in the detector itself; instead I give it the window in which the "
+              "task ran, normalise each block on its own two levels, and let it find the level "
+              "crossings. Trials whose stimulus is not 2.5&ndash;3.5 s long are rejected and the "
+              "last trial of every block is dropped."),
+         fig("7.1", "The Blackrock photodiode in all four patients",
+             ["Left: peak-to-peak per 0.25 s across the whole session. Right: 12 s of raw 30 kHz.",
+              "All four have a clean cue train on <code>ainp1</code>. The amplitudes differ 8&times; "
+              "between rigs, and G-05 has the calibration flash that broke the first attempt."],
+             "mm_photodiode_all.png", "photodiode per patient"),
+         fig("7.2", "Result: the G-05 trial table",
+             ["Green: the behavioural log, anchored per block. Red: what the photodiode gave. "
+              "Dashed lines: every detected onset and offset.",
+              "197 edges &rarr; 5 blocks &rarr; 98 trials &rarr; 93 after dropping the last of each "
+              "block. Stimulus 2.79&ndash;3.03 s (median 3.00; the log says 3.00), rest median "
+              "3.29 s. Nothing is rejected by the length gate.",
+              "Two blocks had 19 trials instead of 20 and I could not explain it at this point. "
+              "The explanation came later (&sect;3): one trial in each of those blocks fell into a "
+              "gap in the recording."],
+             "mm_triggers_G05.png", "trial table", "10_mm_triggers.py"),
 
-         # ---- 2 alignment ----------------------------------------------------------
-         "    <h3>2 &middot; Clock alignment</h3>",
-         '    <div class="method"><ul>',
-         "      <li>The Micromed has no photodiode and no trial codes; its four MKR lines carry a "
-         "featureless 1 Hz clock. Nothing in the raw files is common to both systems.</li>",
-         "      <li>Alignment therefore uses the brain: micro and macro contacts on the same shaft "
-         "record the same local field a millimetre apart. Cross-correlated at 1&ndash;40 Hz, nine "
-         "pairs across four shafts (AG, CAG, HAG, HPG) all put part 1393 at TRC "
-         "<b>325.7 s</b>, spread 0.7 s.</li>",
-         "      <li>Offset <code>&minus;579.4 s</code> (session &rarr; Micromed), precision about "
-         "&plusmn;0.35 s: fine for 6.2 s trials, too coarse for spikes. The micro analysis never "
-         "crosses clocks.</li>",
-         "      <li>Higher bands made it worse (3.8 s spread at 30&ndash;250 Hz): high-gamma is too "
-         "local to be shared across a millimetre.</li>",
-         "    </ul></div>",
+         # ---- 2 -----------------------------------------------------------------------
+         "    <h3>2 &middot; The first macro analysis, and why I stopped trusting it</h3>",
+         para("The cue times live on the Blackrock clock and the macro contacts on the Micromed, "
+              "so I needed the offset between the two. I looked for a shared trigger and did not "
+              "find one at first: the Micromed's X channels are floating inputs full of mains, and "
+              "MKR1&ndash;3 carry a bare 1 Hz clock. So I used the brain itself: a micro wire and "
+              "the macro contact on the same shaft see the same slow activity a millimetre apart. "
+              "Cross-correlating nine such pairs across four shafts at 1&ndash;40 Hz gave the same "
+              "answer on every pair to within 0.35 s, and I used that single offset for the whole "
+              "session.",
+              "With that, I ran the macro contacts through exactly the language-task preprocessing "
+              "(bad channels, white-matter reference, adaptive notch per block, PSD before and "
+              "after &mdash; the LM functions are called, not copied) and computed ERSPs without "
+              "time warping, baseline &minus;1.0..&minus;0.2 s, per-trial dB then averaged, "
+              "and a per-contact contrast: mouth minus foot in 70&ndash;150 Hz over 0.2&ndash;3 s "
+              "after GO."),
+         fig("7.3", "First pass, unreferenced: mouth minus foot on every contact",
+             ["Red: mouth &minus; foot per contact, by shaft. Grey: hand &minus; foot.",
+              "135 of 138 contacts were positive, +1.6 dB on average, white matter as much as grey "
+              "matter, every shaft. That is not what a cortical response looks like, so I ran the "
+              "controls: the spectrum of the effect had the muscle shape (a hump at 60&ndash;90 Hz, "
+              "no 50 Hz comb), the floating inputs showed nothing, the sync words were not "
+              "trial-locked, and pure-macro shafts carried it as much as the hybrid ones. I "
+              "concluded it was muscle activity conducted through the head.",
+              "<b>This figure was computed with the timing error described in &sect;3</b>; the mouth "
+              "block was ~5 s off. It is kept because it is what started the next step."],
+             "mm_contrast_none_v1.png", "first-pass contrast", "20_mm_macro.py --reref none, single offset"),
+         fig("7.4", "What made me suspicious",
+             ["AG6, WM-referenced, first pass. Mouth: the high-gamma trace is already rising "
+              "0.75 s <i>before</i> GO and stays up for the whole window.",
+              "Muscle would start after the cue, with a reaction time, and stop when the stimulus "
+              "ends at 3 s. Something was wrong with the timing of the mouth block, and the "
+              "hand block looked different from the foot block in a way I could not explain either."],
+             "mm_ersp_AG6_wm_v1.png", "first-pass AG6", "20_mm_macro.py --reref wm, single offset"),
 
-         # ---- 3 macro preprocessing ------------------------------------------------
-         "    <h3>3 &middot; Macro preprocessing</h3>",
-         fig("7.3", "PSD of the mouth block, before the adaptive notch",
-             ["Raw TRC at 2048 Hz, DC removed, all neural channels. Median and IQR across "
-              "channels, five sample channels drawn.",
-              "The comb at 50 Hz harmonics is what the notch acts on."],
-             "mm_psd_raw_mouth.png", "PSD raw", "20_mm_macro.py &middot; plot_psd_overview"),
-         fig("7.4", "Same block after the notch",
-             ["<code>apply_notch_with_audit</code> from the LM code, LM settings for this patient, "
-              "per shaft. A harmonic is removed only if its peak clears z&nbsp;&ge;&nbsp;3.",
-              "The audit of every harmonic acted on is written per block."],
-             "mm_psd_clean_mouth.png", "PSD clean", "20_mm_macro.py &middot; plot_psd_overview"),
+         # ---- 3 -----------------------------------------------------------------------
+         "    <h3>3 &middot; Testing the timing: two problems, both fixed</h3>",
+         para("I went back to the Micromed file and plotted every channel that is not a depth "
+              "contact against the cue train carried over with the offset (FIG 7.5). There is "
+              "no photodiode in the TRC &mdash; but MKR4+ has, on top of its clock, a short pulse "
+              "every 5.785 s. That is the cadence of the Blackrock sync words. Both systems "
+              "record the same sync generator, so the two clocks can be matched to the "
+              "millisecond, which is far better than the 0.35 s I had from the brain signals."),
+         fig("7.5", "Every non-depth channel of the G-05 TRC around the first cues",
+             ["Red shading: stimulus on, from the Blackrock photodiode via the offset.",
+              "X1&ndash;X6: floating, 95% of their power at 50/100 Hz, r &asymp; 1 with each other, "
+              "r = 0.005 with the cue train. MKR1&ndash;3: a 1 Hz square. MKR4+: the same square "
+              "plus a &minus;750 pulse every 5.785 s &mdash; the Blackrock sync."],
+             "mm_trc_channels.png", "TRC non-depth channels"),
+         para("Matching the sync pulses to the <code>.nev</code> bursts exposed the real problem. "
+              "The Blackrock recording is split into 300 s files, and I had assumed they are "
+              "contiguous. They are not: the amplifier stops one file and starts the next with "
+              "4&ndash;6.5 s of nothing in between. I checked this three ways, and all three "
+              "agree: the file headers' start times (6.5 s and 4.8 s between the parts that hold "
+              "the task), the sync cadence across each boundary (6.34 s and 4.81 s), and the "
+              "photodiode itself &mdash; one whole trial is missing at each boundary, which is "
+              "exactly the two 19-trial blocks. My single offset had been measured on the middle "
+              "part; on the part before it was wrong by 6.0 s and on the part after &mdash; the "
+              "mouth block &mdash; by 5.1 s, almost a whole trial. Every macro result in &sect;2 "
+              "was cut ~5 s from the true cue.",
+              "The fix is one offset per recording part, fitted on the sync pulses. The cycle "
+              "ambiguity of a 5.785 s pulse train is resolved by the brain-based estimate on the "
+              "part it was measured on, and carried to the other parts by the header times. A "
+              "trial whose epoch spans a boundary (one, #27) is dropped."),
+         fig("7.6", "Result: the two clocks matched per part",
+             ["Top: first 60 s of each part, red = MKR4+ pulse, dashed = <code>.nev</code> burst "
+              "carried over with that part's offset. 51/53, 49/52 and 39/42 bursts land within "
+              "20 ms of a pulse; residual sd 2 ms.",
+              "Bottom: the residual drifts by ~20 &micro;s per second inside a part &mdash; 6 ms "
+              "over 300 s, a clock-rate difference, negligible for 6 s trials.",
+              "Offsets: part 1391 &minus;585.375 s, 1393 &minus;579.049 s, 1395 &minus;574.245 s. "
+              "The old single value was &minus;579.4."],
+             "mm_sync_parts.png", "sync fit", "11_mm_sync.py"),
+         para("I then drew everything on one clock to see it rather than trust it (FIG 7.7), and "
+              "that showed the second problem: the photodiode had spikes every 10.965 s that are "
+              "not in the raw file. They were an artefact of my own decimation &mdash; the file "
+              "is read in 32 MB chunks and each chunk was filtered on its own, so a channel with "
+              "a DC level rang at every chunk edge (32 MB / 51 channels = 10.965 s). Every micro "
+              "channel had a smaller version of the same. I rewrote the decimation to overlap the "
+              "chunks, checked it against decimating a whole channel in one go (identical to "
+              "0.0002), and rebuilt both caches."),
+         fig("7.7", "Result: the timing check on the clean data",
+             ["One column per part, all on the Micromed clock. Row 1: Blackrock photodiode with "
+              "the trial table's stimulus intervals shaded &mdash; the cue is where the table says.",
+              "Row 2: MKR4+ with the <code>.nev</code> bursts on top &mdash; the two trigger "
+              "channels coincide.",
+              "Rows 3&ndash;4: micro shaft mean (blue) against the macro contacts on the same "
+              "shaft (red), 1&ndash;40 Hz: the slow waves overlay, and the whole-part "
+              "cross-correlation leaves +0.05 s in every part (macro lagging micro by the same "
+              "amount everywhere, so a property of the signal, not the clocks). Grey dashed: the "
+              "macro with the old single offset &mdash; right in part 1393, a trial off in the "
+              "other two."],
+             "mm_timing_check.png", "timing check", "12_mm_timing_check.py"),
 
-         # ---- 4 ERSP ---------------------------------------------------------------
-         "    <h3>4 &middot; ERSP and high gamma</h3>",
-         fig("7.5", "AG6, WM-referenced: ERSP per condition, HG underneath",
-             ["Square panels: first 20% is baseline (&minus;0.75..0 s), remaining 80% is GO "
-              "(0..3 s). dB per frequency bin against &minus;1.0..&minus;0.2 s, per trial, then averaged.",
-              "Mouth: broadband, up to +3 dB, already rising before GO and held for the whole 3 s. "
-              "Hand left: a dip for 1.5 s, then a rise that outlasts the stimulus. Foot: flat.",
-              "AG6 is a temporal contact: the residual the WM reference does not remove (section 5)."],
-             "mm_ersp_AG6_wm.png", "AG6 ERSP", "20_mm_macro.py &middot; compute_ersp(mode=RT)"),
-         fig("7.6", "AG6, every trial",
-             ["98 trials, grouped by condition, acquisition order within. Colour is HG z against "
-              "the pre-cue baseline, &plusmn;6. Solid line cue, dashed line stimulus end (3 s).",
-              "Mouth starts at the cue and stops at 3 s, in most trials. Hand starts ~1.5 s after "
-              "the cue and runs past 3 s. The two are different in timing as well as spectrum."],
-             "mm_hfa_trials_AG6.png", "single-trial HFA", "20_mm_macro.py, unreferenced run"),
+         # ---- 4 -----------------------------------------------------------------------
+         "    <h3>4 &middot; The macro contacts, correctly aligned</h3>",
+         para("With the per-part offsets I re-ran the macro chain. The preprocessing is unchanged: "
+              "FIG 7.8 shows the mouth block before and after the adaptive notch, as the LM "
+              "pipeline does it."),
+         fig("7.8", "PSD of the mouth block, before and after the notch",
+             ["Raw TRC at 2048 Hz, all neural channels: median, IQR and five sample channels. "
+              "The notch is decided per shaft and only removes a harmonic whose peak clears "
+              "z &ge; 3; the audit of every decision is written per block."],
+             "mm_psd_raw_mouth.png", "PSD raw", "20_mm_macro.py, plot_psd_overview (LM)"),
+         fig("7.8b", "&hellip;and after",
+             ["Same block, same channels, after <code>apply_notch_with_audit</code>."],
+             "mm_psd_clean_mouth.png", "PSD clean"),
+         fig("7.9", "Result: AG6, now aligned",
+             ["Compare with FIG 7.4. Mouth: nothing before GO, a rise ~0.5 s after it &mdash; a "
+              "reaction time &mdash; then +3 to +5 dB, broadband from 20 Hz to the top of the "
+              "range, held until the stimulus ends. Foot: flat. Hand: a dip, then a rise from "
+              "1.5 s that is weaker and looks different.",
+              "This is what I expected muscle to look like, and it is what the first pass could "
+              "not show because it was looking 5 s too early."],
+             "mm_ersp_AG6_wm.png", "AG6 aligned", "20_mm_macro.py --reref wm, per-part offsets"),
+         fig("7.10", "AG6, mouth, every trial",
+             ["Colour: high-gamma z against the pre-cue baseline, &plusmn;6. Solid line GO, "
+              "purple marks the stimulus end.",
+              "Most trials carry it, it starts after the cue and it stops within ~0.3 s of the "
+              "stimulus ending. A few trials are much stronger than the rest &mdash; how hard the "
+              "patient clenched, presumably."],
+             "mm_hgtrials_AG6_mouth.png", "AG6 trials", "20_mm_macro.py, plot_hg_trials (LM)"),
+         fig("7.11", "Result: mouth minus foot on every WM-referenced contact",
+             ["85 of 95 contacts positive, mean +0.66 dB, 54 above +0.5. Hand &minus; foot (grey) "
+              "is about +0.1 and foot itself is at zero.",
+              "It is largest on the temporal shafts &mdash; AG +1.3, HAG +1.1, HPG +1.0, TPG and "
+              "TSP +0.8 &mdash; and smallest on the insular and mesial ones (IAG +0.3, CAG +0.3, "
+              "IMG +0.4). The strongest single contacts are AG6 (+2.6), HAG8, HPG9 and TPG1&ndash;2 "
+              "(+2.0), all lateral temporal, i.e. nearest the temporalis muscle.",
+              "The white-matter reference removes whatever is common to the white-matter contacts; "
+              "what is left is a field with a gradient, not a focus."],
+             "mm_contrast_wm.png", "contrast WM", "20_mm_macro.py --reref wm, per-part offsets"),
 
-         # ---- 5 contrast -----------------------------------------------------------
-         "    <h3>5 &middot; Mouth minus foot, every contact</h3>",
-         fig("7.7", "Unreferenced (the control run)",
-             ["Red: mouth &minus; foot per contact, grouped by shaft. Green rings: white-matter "
-              "contacts. Grey: hand &minus; foot.",
-              "<b>135 of 138 contacts positive</b>, mean +1.57 dB, every shaft, no focus. "
-              "White matter +1.99, grey matter +2.04 &mdash; tissue makes no difference.",
-              "Not what cortex does. A mouth-motor response would be focal."],
-             "mm_contrast_none.png", "contrast, unreferenced", "20_mm_macro.py --reref none"),
-         fig("7.8", "WM-referenced (the LM chain)",
-             ["Same contrast after the white-matter reference.",
-              "Pure-macro shafts drop from +1.98 to <b>+0.33</b>; only 17 of 75 above +0.5. "
-              "Temporal shafts keep more: TPG +1.13, AG +0.98, HAG +0.81.",
-              "IMG, where the question started: +0.06. Clean."],
-             "mm_contrast_wm.png", "contrast, WM-referenced", "20_mm_macro.py --reref wm"),
+         # ---- 5 -----------------------------------------------------------------------
+         "    <h3>5 &middot; The micro contacts, and the analog inputs as controls</h3>",
+         para("The micro wires and the photodiode are on the same Blackrock clock, so this side "
+              "needed no alignment; it only needed the clean caches. Each tetrode is drawn 2&times;2 "
+              "so a single wire moving alone can be told from all four moving together. The "
+              "first plots were unreadable because of mains harmonics, so the wires are "
+              "re-referenced (here: to the mean of their shaft) and cleaned with the same adaptive "
+              "notch as the macro, run to 2000 Hz. I also asked for the Blackrock analog inputs "
+              "to go through exactly the same analysis, as controls: <code>ainp1</code> is the "
+              "photodiode, <code>ainp2/3</code> turned out to be unconnected (identical to each "
+              "other, white spectrum, no mains)."),
+         fig("7.12", "Result: the analog inputs through the full analysis",
+             ["<code>ainp1</code>, the photodiode: a high-gamma spike exactly at 0 and exactly at "
+              "3.0 s in every condition &mdash; the cue's own edges, i.e. the epoching is on the "
+              "cue to the sample.",
+              "<code>ainp2/3</code>: flat in all five conditions. Whatever the amplifier or the room "
+              "does during a mouth movement, it does not reach an input with nothing attached."],
+             "mm_micro_analog_HG.png", "analog inputs", "21_mm_micro.py --reref shaft_mean"),
+         fig("7.13", "Result: tetrode AGm1&ndash;4, the wires on the same shaft as AG6",
+             ["High gamma per condition, shaft-mean referenced. Nothing: no condition separates "
+              "from the others on any of the four wires, while AG6 on this shaft shows +2.6 dB "
+              "for mouth.",
+              "Over all 48 wires, mouth &minus; foot is +0.05 dB and no wire exceeds +0.5. The "
+              "shaft-mean reference removes whatever all twelve wires of a shaft share; a field "
+              "from a muscle centimetres away is exactly that. The unreferenced and "
+              "first-contact-referenced runs, which would show the shared part, are still to be "
+              "re-run on the clean cache."],
+             "mm_micro_shaft_AGm1-4.png", "AGm1-4", "21_mm_micro.py --reref shaft_mean"),
 
-         # ---- 6 controls -----------------------------------------------------------
-         "    <h3>6 &middot; What it is not</h3>",
-         fig("7.9", "Spectral shape of the response",
-             ["Response minus baseline as a spectrum, 0&ndash;400 Hz. Dotted: 50 Hz harmonics. "
-              "X1 is a floating input.",
-              "Mouth: smooth hump peaking 60&ndash;90 Hz, decaying to 400, low frequencies "
-              "suppressed &mdash; the EMG shape. No comb: not mains.",
-              "Hand: flatter, ~+1 dB, no low-frequency suppression. A different phenomenon.",
-              "X1: nothing. Floating inputs X1/X5 show +0.03 dB mouth&minus;foot: not the amplifier, "
-              "not the room."],
-             "mm_spectral_shape.png", "spectral shape"),
-         '    <div class="method"><ul>',
-         "      <li><b>Sync events:</b> 1047 digital words at 5.636 s against a 6.20 s trial. They "
-         "drift through the trial and land uniformly (10&ndash;24 per bin, uniform 17). Cannot "
-         "make a condition difference.</li>",
-         "      <li><b>Hybrid wiring:</b> unreferenced, pure-macro shafts carry it at full strength "
-         "(105/105 above +0.5) and the strongest shaft, TSP, has no micro wires. Not the "
-         "connection.</li>",
-         "      <li><b>Trial tables:</b> audio/picture/reading prep0 tables match the behavioural log "
-         "to the millisecond on every shared trial. Not a timing error.</li>",
-         "    </ul></div>",
-
-         # ---- 7 WM review ------------------------------------------------------------
-         "    <h3>7 &middot; White-matter contacts as data</h3>",
-         fig("7.10", "WM review, page 1 of 5",
-             ["Each row one WM contact, unreferenced: mouth ERSP, foot ERSP, HG for all "
-              "conditions. Red title = flagged (&gt;1 dB in any condition).",
-              "All 41 respond. A contact buried in white matter has no cortex to respond with; "
-              "it is sitting in a conductor.",
-              "<code>config_mm.wm_exclude</code> keeps named contacts out of the reference; merged "
-              "into the LM exclusion list, so the mechanism is LM's own."],
-             "mm_wm_review_1.png", "WM review", "20_mm_macro.py --reref none"),
-
-         # ---- 8 gradient -------------------------------------------------------------
-         "    <h3>8 &middot; Is it shaped like a source outside the skull?</h3>",
-         fig("7.11", "Unreferenced",
-             ["1: mouth&minus;foot against depth in mm from each shaft's most superficial "
-              "contact. 2: white vs grey matter at matched depth. 3: entry contact per shaft. "
-              "4: laterality, picture only.",
-              "Depth: temporal shafts fall steeply inward (rho &minus;0.61, p 7&times;10<sup>&minus;5</sup>; "
-              "HPG &minus;0.98, TPG &minus;0.95, AG &minus;0.94). Other shafts flat.",
-              "Tissue after depth: WM &minus;0.05, GM +0.02, p 0.12. <b>Not neural.</b>",
-              "Entry contacts: temporal +2.49, other +1.88, p 0.0016. The five hottest surface "
-              "contacts are the five temporal shafts."],
-             "mm_gradient_none.png", "gradient, unreferenced", "23_mm_emg_gradient.py --run none"),
-         fig("7.12", "WM-referenced",
-             ["Pedestal gone: frontal tips at zero (IAG1 &minus;0.05, IMG1 &minus;0.11).",
-              "Temporal shafts stay up along their whole length &mdash; tips included: AG1 +0.70, "
-              "HAG1 +0.63, TPG1 +0.56. Temporal +0.76 vs other +0.24.",
-              "Pooled slope &minus;0.06 dB per 10 mm: the field is smooth. Adjacent contacts see "
-              "it to within ~0.02 dB."],
-             "mm_gradient_wm.png", "gradient, WM-referenced", "23_mm_emg_gradient.py --run wm"),
-
-         # ---- 9 micro ----------------------------------------------------------------
-         "    <h3>9 &middot; Micro contacts, by tetrode</h3>",
-         fig("7.13", "AGm1&ndash;4, as recorded",
-             ["High gamma per condition, one contact per corner. No reference, no notch, 1000 Hz cache.",
-              "Unreadable: mains harmonics across the band."],
-             "mm_micro_raw_AGm1-4.png", "micro raw", "21_mm_micro.py --reref none --no-notch"),
-         fig("7.14", "Referenced to the first contact of the shaft",
-             ["AGm1 subtracted from AGm2&ndash;12; AGm1 itself becomes zero and is dropped. "
-              "LM notch to 2000 Hz, cache at 5000 Hz.",
-              "Keeps one intact reference; hands its noise to the others, sign-flipped."],
-             "mm_micro_first_AGm2-5.png", "micro first-contact", "21_mm_micro.py --reref first"),
-         fig("7.15", "Referenced to the shaft mean",
-             ["Mean of AGm1&ndash;12 subtracted from each. Same notch.",
-              "Subtracts whatever the shaft shares &mdash; noise, and possibly a real local field. "
-              "A response surviving both schemes is not a referencing artefact."],
-             "mm_micro_shaft_AGm1-4.png", "micro shaft-mean", "21_mm_micro.py --reref shaft_mean"),
-         fig("7.16", "Shaft-mean, mouth ERSP to 1000 Hz",
-             ["Square 20/80 as for macro, 0&ndash;1000 Hz.",
-              "Cues and signal share the Blackrock clock: no alignment, exact timing."],
-             "mm_micro_shaft_AGm1-4_ERSP_mouth.png", "micro ERSP mouth",
-             "21_mm_micro.py --reref shaft_mean --ersp"),
-
-         # ---- 10 conclusion ------------------------------------------------------------
-         "    <h3>10 &middot; What it adds up to</h3>",
+         # ---- 6 -----------------------------------------------------------------------
+         "    <h3>6 &middot; What I think it means, so far</h3>",
          f'    <div class="callout" style="border-left:4px solid {ACC}"><ul>',
-         "      <li>The mouth response is <b>muscle, conducted through the head</b>: broadband above "
-         "50 Hz, tissue-blind, on every contact, absent from floating inputs, not sync-locked, "
-         "no mains comb, specific to the movement whose muscles are near the electrodes.</li>",
-         "      <li>Two components. A <b>common-mode pedestal</b> of ~+1.9 dB on everything, which the "
-         "WM reference removes. A <b>lateral&ndash;inferior field</b> that tracks distance from "
-         "temporalis &mdash; +1.1 dB at temporal surfaces, +0.5 at temporal tips, ~0 frontally "
-         "&mdash; which the WM reference cannot remove because the frontal WM contacts do not "
-         "share it.</li>",
-         "      <li>Hand is a different phenomenon: later, weaker, different spectrum. Foot is flat.</li>",
-         "      <li>The field is smooth (&minus;0.06 dB / 10 mm). A <b>bipolar reference</b> would "
-         "cancel it ~30&times; below the current residual on temporal shafts while keeping local "
-         "responses. It would be a different measurement, and it would apply to LM too.</li>",
-         "      <li>Not a reason to exclude the patient, and not a recon problem.</li>",
+         "      <li>On the macro contacts, mouth movement produces a broadband high-frequency "
+         "increase that starts after the cue with a reaction time, lasts exactly as long as the "
+         "stimulus, is present on most contacts, and is strongest on the lateral temporal shafts "
+         "closest to the jaw muscles. Hand produces something smaller and later; foot nothing. "
+         "That is the signature of muscle, volume-conducted through the head, not of a cortical "
+         "mouth-motor response, which would be focal.</li>",
+         "      <li>The same movement produces nothing on the micro wires once the part they share "
+         "with their shaft is removed, and nothing on an unconnected input. So it is not the "
+         "amplifier, not the room, and not something local to a wire.</li>",
+         "      <li>The first-pass conclusion happened to point the same way, but it was reached on "
+         "misaligned data and I do not count it. What survives is what was re-run.</li>",
+         "      <li>For the language task this means the broadband response during speech has to be "
+         "read against this muscle field. The white-matter reference removes the common-mode "
+         "part; a bipolar reference would remove the smooth gradient as well. That is the next "
+         "thing to test once the remaining runs are in.</li>",
          "    </ul></div>",
          "  </section>", E_SEC]
     return "\n".join(P)
@@ -289,6 +327,10 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     missing = []
     for name, src in FIGS.items():
+        if src is None:                      # kept as committed (a first-pass figure)
+            if not (OUT / name).exists():
+                missing.append(f"{name}  <-  (expected already in _status_png)")
+            continue
         if src.exists():
             shutil.copy2(src, OUT / name)
         else:

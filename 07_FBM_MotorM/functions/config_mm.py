@@ -300,6 +300,13 @@ MM_PRESETS = {
         # Precision is about +-0.35 s: fine for cutting 6.2 s trials, too coarse to put a
         # spike raster against a cue. See the note in 20_mm_macro.py.
         "align_macro_offset_s": -579.4,
+        # ...and that is ONLY right for part 1393. The parts are not contiguous (Central
+        # leaves 6.34 s and 4.81 s between them here - header origins, sync cadence and a
+        # trial missing from the photodiode in each gap all agree), so the concatenated
+        # clock is off by the gap on every other part. 11_mm_sync.py measures one offset
+        # per part from the sync pulses MKR4+ and the .nev both carry (residual ~3.5 ms),
+        # seeded by this value on this part; 20_mm_macro.py uses the per-part table.
+        "align_anchor_part": 1393,
         "bk_pd_channel":  "ainp1",
         "bk_pd_p2p":      143,      # measured - against a 6661 calibration flash, hence
                                     # time_range below; a 47x ratio inside one file
@@ -438,6 +445,13 @@ micro_psd_fmax = 1200.0
 # contact itself becomes identically zero under "first" and is dropped from the figures
 # rather than drawn as a flat line pretending to be data.
 micro_reref = "shaft_mean"
+
+# The Blackrock analog inputs (ainp1 = photodiode, ainp2/3 whatever was plugged in - in
+# G-05 nothing: they are identical to each other and white) go through the same cache,
+# notch, epoching, HG and ERSP as the micro contacts. They are not on a shaft, so they are
+# never a reference and never re-referenced. What they show is the task as seen by the
+# same amplifier with no tissue attached; a response there is not neural and not muscle.
+micro_include_ainp = True
 
 # The cache holds the task window only, with this much margin either side. At 5000 Hz the
 # whole session would be about 1.5 GB per patient; the task is half of it and nothing

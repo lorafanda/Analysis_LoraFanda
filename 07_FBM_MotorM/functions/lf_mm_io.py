@@ -4,7 +4,14 @@ Both formats are documented and simple - a header, then interleaved int16 - so t
 pipeline reads what the amplifiers wrote rather than an export someone has to regenerate.
 Everything here was verified against real files on 2026-09-10.
 
-TWO TRAPS THAT COST HALF A DAY, both now handled here so nothing downstream meets them.
+THREE TRAPS THAT COST HALF A DAY EACH, all handled here so nothing downstream meets them.
+
+  DECIMATE WITH OVERLAP. A channel is read in 32 MB chunks; decimating each chunk on its
+  own zero-pads beyond its edges, and a signal with a DC level rings there - the
+  photodiode showed a spike to 808 and 1805 around a 1600 cue level every 10.965 s
+  (32 MB / (51 ch x 2 B) = 328,965 samples), and every micro channel a smaller one. They
+  are not in the raw file. pull_channels now decimates each chunk with the tail of the
+  previous and the head of the next and keeps only its own samples (found 2026-09-12).
 
   TRC LABELS NEED THE ORDER ZONE. LABCOD holds 640 fixed slots whatever the channel count,
   and the ORDER zone maps acquisition index -> slot. Reading LABCOD slot i as channel i
@@ -16,6 +23,15 @@ TWO TRAPS THAT COST HALF A DAY, both now handled here so nothing downstream meet
   time origin in the basic header and a data-packet timestamp of 0, so the session timeline
   is the CONCATENATION of the parts, not a set of offsets. session_timeline() builds that,
   and every time this package quotes is "seconds since the first part began".
+
+  ...AND THE PARTS ARE NOT CONTIGUOUS (found 2026-09-11). Central closes one part and
+  opens the next with 4-6 s of nothing in between: for G-05 the header origins say 6.5 s
+  and 4.8 s, the sync-pulse cadence says 6.34 s and 4.81 s, and the photodiode lost one
+  whole trial in each gap. The concatenated clock is still right for anything inside one
+  part - cue and LFP are cut from the same concatenation - but an epoch that spans a seam
+  has a jump in it (crosses_splice), and a Micromed offset measured on one part is wrong
+  by the gap on the next (11_mm_sync.py measures one per part). The header origin is
+  kept on every part for exactly this: it is the only absolute time Blackrock writes.
 """
 from __future__ import annotations
 
@@ -142,7 +158,29 @@ def pull_channels(meta: dict, idxs, target_fs=None, dtype=None, chunk_mb=32,
     rows -= rows % step
     idxs = list(idxs)
     acc = {i: [] for i in idxs}
+    # overlap for the decimation filter: resample_poly's default FIR reaches 10*step
+    # samples either side, so 32*step of context on each edge leaves no transient inside
+    # the kept samples. A multiple of step, so the output grid is the same as without it.
+    pad = 32 * step if step > 1 else 0
+
+    def emit(prev_tail, cur, next_head):
+        """Decimate cur with its neighbours' edges for context; keep cur's own samples."""
+        for i in idxs:
+            col = cur[:, i].astype(np.float32)
+            if step == 1:
+                acc[i].append(col)
+                continue
+            head = prev_tail[:, i].astype(np.float32) if prev_tail is not None else None
+            tail = next_head[:, i].astype(np.float32) if next_head is not None else None
+            ext = np.concatenate([v for v in (head, col, tail) if v is not None])
+            # 'line' pads the file's own first and last edge with a linear extension,
+            # so a channel sitting on a DC level does not ring there either
+            y = resample_poly(ext, 1, step, padtype="line")
+            k0 = 0 if head is None else len(head) // step
+            acc[i].append(y[k0:k0 + int(np.ceil(len(col) / step))])
+
     done = 0
+    prev_tail, cur = None, None
     with open(meta["path"], "rb") as f:
         f.seek(meta["data_off"])
         left = meta["n_samp"]
@@ -153,14 +191,82 @@ def pull_channels(meta: dict, idxs, target_fs=None, dtype=None, chunk_mb=32,
                 break
             buf = buf[:len(buf) - (len(buf) % (nch * nb))]
             a = np.frombuffer(buf, dtype=dtype).reshape(-1, nch)
-            for i in idxs:
-                col = a[:, i].astype(np.float32)
-                acc[i].append(resample_poly(col, 1, step) if step > 1 else col)
+            if cur is not None:                       # one chunk of lookahead
+                emit(prev_tail, cur, a[:pad] if pad else None)
+                prev_tail = cur[-pad:] if pad else None
+            cur = a
             left -= k
             done += k
             if progress:
                 progress(done, meta["n_samp"])
+    if cur is not None:
+        emit(prev_tail, cur, None)
     return {i: np.concatenate(v) for i, v in acc.items()}, fs / step
+
+
+def part_paths(pre):
+    """The .ns6 parts a preset names, first..last inclusive, in order."""
+    folder = pre["blackrock_dir"]
+    first, last = pre["blackrock"]
+    stem, a = first.rsplit("-", 1)
+    b = last.rsplit("-", 1)[1]
+    return [os.path.join(folder, f"{stem}-{n}.ns6") for n in range(int(a), int(b) + 1)]
+
+
+def real_parts(parts, min_s=1.0):
+    """The parts that hold data. Central writes a 10 ms stub after every real part."""
+    return [p for p in parts if p["dur"] >= min_s]
+
+
+def part_num(part):
+    """'20250120-181120-713.ns6' -> '713', '20250618-145815-1393.ns6' -> '1393'. By the
+    last hyphen, not a fixed slice: G-01 and G-02 have 3-digit parts, G-03 and G-05 four."""
+    return os.path.splitext(os.path.basename(part["name"]))[0].rsplit("-", 1)[1]
+
+
+def _origin_s(part):
+    import datetime as dt
+    return dt.datetime.strptime(part["origin"], "%Y-%m-%d %H:%M:%S.%f").timestamp()
+
+
+def gaps(parts, min_gap_s=0.5):
+    """[(part a, part b, gap_s)] for consecutive real parts whose header origins say the
+    recording stopped between them. Not every boundary is a gap: a fixed-length split
+    (G-02, G-03: 301.155 s parts, origins contiguous to 0.07 s) is one continuous
+    recording and an epoch cut across it is sound. A stop/start (G-05: 10 ms stubs,
+    4-6.5 s gaps) is a seam. Origins carry ~0.2 s of error; every real gap seen is >= 4 s."""
+    rp = real_parts(parts)
+    out = []
+    for a, b in zip(rp[:-1], rp[1:]):
+        g = _origin_s(b) - (_origin_s(a) + a["dur"])
+        if abs(g) > min_gap_s:
+            out.append((a, b, g))
+    return out
+
+
+def splices(parts):
+    """Session-clock times of the seams: where the next real part begins after a gap."""
+    return [b["t0"] for _a, b, _g in gaps(parts)]
+
+
+def crosses_splice(t, window, parts):
+    """True for every t whose epoch [t+window[0], t+window[1]] contains a seam.
+
+    The seam is the whole stretch from the end of one real part's data to the next real
+    part's t0: the 10 ms stub between them was written from inside the gap, so an epoch
+    that only reaches into the stub already holds the jump."""
+    t = np.asarray(t, float)
+    hit = np.zeros(t.shape, bool)
+    for a, b, _g in gaps(parts):
+        hit |= (t + window[0] < b["t0"]) & (t + window[1] > a["t0"] + a["dur"])
+    return hit
+
+
+def part_index(t, parts):
+    """Which real part each session-clock time falls in (index into real_parts)."""
+    rp = real_parts(parts)
+    t0 = np.array([p["t0"] for p in rp])
+    return np.clip(np.searchsorted(t0, np.asarray(t, float), side="right") - 1, 0, len(rp) - 1)
 
 
 def session_timeline(part_paths):
@@ -189,8 +295,16 @@ def find_channel(names, wanted) -> int | None:
 
 
 def save_cache(path, arr, meta):
+    """Written under a temporary name and renamed into place: the share truncates a file
+    whose write fails, and a cache is large enough for that to happen. The old cache is
+    replaced only once the new one is complete."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    np.save(path, arr)
+    tmp = path + ".tmp.npy"
+    np.save(tmp, arr)
+    if os.path.getsize(tmp) < arr.nbytes:
+        os.remove(tmp)
+        raise IOError(f"short write for {path}: the share truncated the cache")
+    os.replace(tmp, path)
     with open(os.path.splitext(path)[0] + ".json", "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2)
 

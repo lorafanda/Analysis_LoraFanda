@@ -42,6 +42,14 @@ micro signal from the same Blackrock recording: one clock, one origin. The macro
 has to carry cue times across a measured offset good to about +-0.35 s; this one does not,
 so its timing is exact and it is the better place to compare response latencies.
 
+ANALOG INPUTS. The Blackrock ainp channels ride along (config micro_include_ainp): ainp1
+is the photodiode, ainp2/3 are whatever was plugged in - in G-05 nothing, they are
+identical to each other and white. They go through the same cache, notch, epoching, HG
+and ERSP, but they are not on a shaft: never a reference, never re-referenced. Their
+figure is the "analog" group. The photodiode's ERSP is the cue itself, a timing check;
+the unconnected inputs are the amplifier with no tissue attached, the Blackrock
+counterpart of X1/X5 on the Micromed.
+
 TETRODE LAYOUT. Contacts come in fours and four wires tens of microns apart see
 overlapping but not identical populations. Plotting them 2x2 keeps that in front of you:
 one corner moving alone is local, all four moving together is a shared field or something
@@ -66,7 +74,7 @@ sys.path.insert(0, os.path.join(ROOT, "functions"))
 sys.path.insert(0, os.path.abspath(os.path.join(ROOT, "..", "01_FBM_Analysis")))
 import config_mm as cfg                                                  # noqa: E402
 from lf_mm_io import (read_nsx_meta, session_timeline, pull_channels,    # noqa: E402
-                      save_cache, load_cache)
+                      save_cache, load_cache, crosses_splice)
 
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 COND_COL = {"hand_left": "#4a6fa5", "hand_right": "#7fa1c9",
@@ -85,9 +93,25 @@ def part_paths(pre):
     return [os.path.join(folder, f"{stem}-{n}.ns6") for n in range(int(a), int(b) + 1)]
 
 
+def is_ainp(name):
+    n = str(name).lower()
+    return n.startswith("ainp") or n == "photodiode"
+
+
 def micro_names(meta):
-    return [n for n in meta["names"] if n and not n.lower().startswith("ainp")
-            and n.lower() != "photodiode"]
+    return [n for n in meta["names"] if n and not is_ainp(n)]
+
+
+def ainp_names(meta):
+    return [n for n in meta["names"] if n and is_ainp(n)]
+
+
+def cache_names(meta):
+    """Micro contacts first, then the analog inputs if the config asks for them."""
+    names = micro_names(meta)
+    if getattr(cfg, "micro_include_ainp", False):
+        names += ainp_names(meta)
+    return names
 
 
 def extract_lfp(pat, pre, force=False):
@@ -99,13 +123,26 @@ def extract_lfp(pat, pre, force=False):
     """
     fs_t = float(cfg.micro_lfp_fs)
     cache = os.path.join(ROOT, "outputs", pat, f"micro_lfp_{int(fs_t)}.npy")
+    parts, total = session_timeline(part_paths(pre))
+    names = cache_names(read_nsx_meta(parts[0]["path"])) if parts else None
     if not force:
         arr, meta = load_cache(cache)
         if arr is not None:
-            print(f"  cached micro LFP: {arr.shape} @ {meta['fs']:.0f} Hz, "
-                  f"session t0 {meta['t0']:.1f} s   [--force to re-read]")
-            return arr, meta
+            if names is None:
+                print(f"  raw parts not reachable under {pre['blackrock_dir']}; using the "
+                      f"cache as it is: {arr.shape} @ {meta['fs']:.0f} Hz")
+                return arr, meta
+            if list(meta["names"]) == names:
+                print(f"  cached micro LFP: {arr.shape} @ {meta['fs']:.0f} Hz, "
+                      f"session t0 {meta['t0']:.1f} s   [--force to re-read]")
+                return arr, meta
+            # a cache written before the analog inputs were included, or after a config
+            # change: the channel set is the cache's identity, so it is re-read
+            print(f"  cached micro LFP has {len(meta['names'])} channels, the config now "
+                  f"asks for {len(names)} - re-reading the .ns6 parts")
 
+    if not parts:
+        raise SystemExit(f"{pat}: no .ns6 parts under {pre['blackrock_dir']}")
     tr = pre.get("time_range")
     if not tr:
         raise SystemExit(f"{pat}: time_range is not set in config_mm.py; the micro cache "
@@ -113,12 +150,9 @@ def extract_lfp(pat, pre, force=False):
     pad = float(cfg.micro_cache_pad_s)
     w0, w1 = float(tr[0]) - pad, float(tr[1]) + pad
 
-    parts, total = session_timeline(part_paths(pre))
-    if not parts:
-        raise SystemExit(f"{pat}: no .ns6 parts under {pre['blackrock_dir']}")
-    names = micro_names(read_nsx_meta(parts[0]["path"]))
-    print(f"  {len(names)} micro channels; caching {w0:.0f}..{w1:.0f} s of "
-          f"{total:.0f} s at {fs_t:.0f} Hz")
+    n_ain = sum(is_ainp(n) for n in names)
+    print(f"  {len(names) - n_ain} micro channels + {n_ain} analog inputs; caching "
+          f"{w0:.0f}..{w1:.0f} s of {total:.0f} s at {fs_t:.0f} Hz")
 
     chunks, got_t0 = [], None
     for k, p in enumerate(parts, 1):
@@ -144,7 +178,11 @@ def extract_lfp(pat, pre, force=False):
     if not chunks:
         raise SystemExit(f"{pat}: no data in {w0:.0f}..{w1:.0f} s")
     arr = np.concatenate(chunks, axis=1).astype(np.float32)
-    meta = dict(fs=float(fs_t), names=names, t0=float(got_t0))
+    meta = dict(fs=float(fs_t), names=names, t0=float(got_t0),
+                # the part layout the cache was cut from, so the seams are known even when
+                # the raw folder is not reachable
+                parts=[dict(name=p["name"], t0=float(p["t0"]), dur=float(p["dur"]),
+                            origin=p["origin"]) for p in parts])
     save_cache(cache, arr, meta)
     print(f"  cached -> {cache}  {arr.shape}  ({arr.nbytes / 1e9:.2f} GB)")
     return arr, meta
@@ -168,8 +206,8 @@ def rereference(X, names, scheme):
     Y = X.copy()
     dropped = []
     for sh, idx in groups.items():
-        if len(idx) < 2:
-            continue
+        if len(idx) < 2 or is_ainp(names[idx[0]]):
+            continue                 # analog inputs: not a shaft, kept as recorded
         if scheme == "first":
             ref = X[idx[0]]
             dropped.append(names[idx[0]])
@@ -235,8 +273,14 @@ def psd_figure(X, fs, names, out_root, pat, tag):
 # analysis
 # ---------------------------------------------------------------------------
 def tetrodes(names):
-    by = {}
+    """[(label, [up to 4 names])]: the micro contacts by shaft in fours, then the analog
+    inputs as their own group ("analog"; the photodiode is named without digits in G-02,
+    so they are grouped by kind, not by number)."""
+    by, ain = {}, []
     for n in names:
+        if is_ainp(n):
+            ain.append(n)
+            continue
         m = re.match(r"^(.*?)(\d+)$", n)
         if m:
             by.setdefault(m.group(1), []).append((int(m.group(2)), n))
@@ -247,7 +291,18 @@ def tetrodes(names):
             grp = seq[i:i + 4]
             if grp:
                 out.append((f"{grp[0]}-{grp[-1][len(shaft):]}", grp))
+    for i in range(0, len(ain), 4):
+        out.append(("analog" if i == 0 else f"analog_{i // 4 + 1}", ain[i:i + 4]))
     return out
+
+
+def chan_title(ch, pre):
+    """Panel title: the analog inputs say what they are."""
+    if ch == pre.get("bk_pd_channel"):
+        return ch if "photodiode" in ch.lower() else f"{ch}  (photodiode)"
+    if is_ainp(ch):
+        return f"{ch}  (analog input)"
+    return ch
 
 
 def epoch(x, fs, onsets, win):
@@ -292,9 +347,13 @@ def ersp_db(ep, fs):
 # ---------------------------------------------------------------------------
 # figures
 # ---------------------------------------------------------------------------
-def plot_tetrode_hg(pat, label, grp, per, png, subtitle):
+def plot_tetrode_hg(pat, label, grp, per, png, subtitle, titles=None):
+    titles = titles or {}
     w0, w1 = cfg.ersp_display_window
-    fig, axes = plt.subplots(2, 2, figsize=(7.4, 5.8), dpi=150, sharex=True, sharey=True)
+    # the analog panels do not share y: the photodiode's z is hundreds and would flatten
+    # the unconnected inputs to a line
+    fig, axes = plt.subplots(2, 2, figsize=(7.4, 5.8), dpi=150, sharex=True,
+                             sharey=not label.startswith("analog"))
     for ax, ch in zip(axes.ravel(), list(grp) + [None] * 4):
         if ch is None or ch not in per:
             ax.axis("off")
@@ -306,7 +365,7 @@ def plot_tetrode_hg(pat, label, grp, per, png, subtitle):
         ax.axhline(0, color=GREY, lw=0.6)
         ax.axvline(0, color="k", lw=1.0)
         ax.set_xlim(w0, w1)
-        ax.set_title(ch, fontsize=9, color=INK)
+        ax.set_title(titles.get(ch, ch), fontsize=9, color=INK)
         ax.tick_params(labelsize=7, colors=MUTED, length=2)
         for sp in ax.spines.values():
             sp.set_color(GREY)
@@ -315,7 +374,8 @@ def plot_tetrode_hg(pat, label, grp, per, png, subtitle):
         ax.set_xlabel("s from GO   (0 at 20% of the axis)", fontsize=7.5, color=MUTED)
     for ax in axes[:, 0]:
         ax.set_ylabel("HG (z)", fontsize=8, color=MUTED)
-    fig.suptitle(f"{pat}   tetrode {label}   high gamma "
+    kind = "analog inputs" if label.startswith("analog") else f"tetrode {label}"
+    fig.suptitle(f"{pat}   {kind}   high gamma "
                  f"{cfg.hg_band[0]:.0f}-{cfg.hg_band[1]:.0f} Hz   ·   {subtitle}",
                  fontsize=9.5, color=INK)
     fig.tight_layout()
@@ -323,7 +383,8 @@ def plot_tetrode_hg(pat, label, grp, per, png, subtitle):
     plt.close(fig)
 
 
-def plot_tetrode_ersp(pat, label, grp, per, cond, png, subtitle):
+def plot_tetrode_ersp(pat, label, grp, per, cond, png, subtitle, titles=None):
+    titles = titles or {}
     w0, w1 = cfg.ersp_display_window
     fig, axes = plt.subplots(2, 2, figsize=(6.8, 6.4), dpi=150)
     im = None
@@ -337,12 +398,13 @@ def plot_tetrode_ersp(pat, label, grp, per, cond, png, subtitle):
         ax.axvline(0, color="k", lw=1.0)
         ax.set_xlim(w0, w1)
         ax.set_box_aspect(1)
-        ax.set_title(f"{ch}  (n={v['n']})", fontsize=8.5, color=INK)
+        ax.set_title(f"{titles.get(ch, ch)}  (n={v['n']})", fontsize=8.5, color=INK)
         ax.tick_params(labelsize=6.5, colors=MUTED, length=2)
     if im is not None:
         cb = fig.colorbar(im, ax=axes, fraction=0.035, pad=0.02)
         cb.set_label("dB vs baseline", fontsize=8)
-    fig.suptitle(f"{pat}   tetrode {label}   {cond}   0-{cfg.micro_ersp_fmax:.0f} Hz   ·   "
+    kind = "analog inputs" if label.startswith("analog") else f"tetrode {label}"
+    fig.suptitle(f"{pat}   {kind}   {cond}   0-{cfg.micro_ersp_fmax:.0f} Hz   ·   "
                  f"{subtitle}", fontsize=9.5, color=INK)
     fig.savefig(png, facecolor="white", bbox_inches="tight")
     plt.close(fig)
@@ -367,8 +429,12 @@ def run(pat, reref="shaft_mean", do_notch=True, force=False, do_ersp=False, do_p
     out_dir = os.path.join(ROOT, "outputs", pat, "micro", tag)
     os.makedirs(out_dir, exist_ok=True)
 
+    # the PSD overview is the micro montage: the analog inputs are not neural and would
+    # move its median and IQR, so they stay out of it (they are in every other output)
+    micro_rows = lambda X_, names_: ([i for i, n in enumerate(names_) if not is_ainp(n)])
     if do_psd:
-        psd_figure(X, fs, names, out_dir, pat, "psd_raw")
+        mi = micro_rows(X, names)
+        psd_figure(X[mi], fs, [names[i] for i in mi], out_dir, pat, "psd_raw")
 
     X, names, dropped = rereference(X, names, reref)
     if dropped:
@@ -389,8 +455,23 @@ def run(pat, reref="shaft_mean", do_notch=True, force=False, do_ersp=False, do_p
                 w.writerows(audit)
             print(f"  wrote {ap}")
     if do_psd:
-        psd_figure(X, fs, names, out_dir, pat, "psd_clean")
+        mi = micro_rows(X, names)
+        psd_figure(X[mi], fs, [names[i] for i in mi], out_dir, pat, "psd_clean")
 
+    # a trial whose epoch spans a seam between .ns6 parts has a jump inside it: the parts
+    # are not contiguous (4-6 s gaps, see lf_mm_io) and the cache is their concatenation
+    parts, _tot = session_timeline(part_paths(pre))
+    if not parts:
+        parts = list(meta.get("parts", []))       # written by extract_lfp at cache time
+        if not parts:
+            print("  !! raw parts not reachable and the cache records no part layout: trials "
+                  "that span a seam are NOT dropped (re-cache with --force when it is back)")
+    x = crosses_splice(tr.onset_s.to_numpy(), cfg.time_window, parts)
+    if x.any():
+        print(f"  {int(x.sum())} trial(s) span a seam between .ns6 parts and are dropped: "
+              + ", ".join(f"#{int(t)} {c} @{o:.1f}" for t, c, o in
+                          zip(tr.trial[x], tr.condition[x], tr.onset_s[x])))
+        tr = tr[~x].reset_index(drop=True)
     onsets = tr.onset_s.to_numpy() - t0           # cache starts at t0 on the session clock
     per, summary = {}, {}
     f = ft = None
@@ -414,14 +495,17 @@ def run(pat, reref="shaft_mean", do_notch=True, force=False, do_ersp=False, do_p
     subtitle = (f"reref {reref}" + ("" if do_notch else ", NO notch")
                 + (f", notched to {cfg.micro_notch_fmax:.0f} Hz" if do_notch else ""))
     tets = tetrodes(names)
-    print(f"  {len(names)} contacts -> {len(tets)} tetrodes")
+    titles = {ch: chan_title(ch, pre) for ch in names}
+    n_ain = sum(is_ainp(n) for n in names)
+    print(f"  {len(names) - n_ain} contacts + {n_ain} analog inputs -> {len(tets)} groups")
     for label, grp in tets:
         plot_tetrode_hg(pat, label, grp, per,
-                        os.path.join(out_dir, f"{label}_HG.png"), subtitle)
+                        os.path.join(out_dir, f"{label}_HG.png"), subtitle, titles)
         if do_ersp:
             for c in cfg.COND_SHORT:
                 plot_tetrode_ersp(pat, label, grp, per, c,
-                                  os.path.join(out_dir, f"{label}_ERSP_{c}.png"), subtitle)
+                                  os.path.join(out_dir, f"{label}_ERSP_{c}.png"),
+                                  subtitle, titles)
 
     p = os.path.join(out_dir, f"{pre['pat_name']}_MM_micro_broadband.tsv")
     conds = list(cfg.COND_SHORT)
@@ -431,12 +515,16 @@ def run(pat, reref="shaft_mean", do_notch=True, force=False, do_ersp=False, do_p
             foot = np.nanmean([v.get(c, np.nan) for c in ("foot_left", "foot_right")])
             fh.write(ch + "\t" + "\t".join(f"{v.get(c, float('nan')):.3f}" for c in conds)
                      + f"\t{v.get('mouth', np.nan) - foot:.3f}\n")
-    md = np.array([v.get("mouth", np.nan) -
-                   np.nanmean([v.get(c, np.nan) for c in ("foot_left", "foot_right")])
-                   for v in summary.values()], float)
+    mf = lambda v: v.get("mouth", np.nan) - np.nanmean([v.get(c, np.nan)
+                                                         for c in ("foot_left", "foot_right")])
+    md = np.array([mf(v) for ch, v in summary.items() if not is_ainp(ch)], float)
     if len(md):
         print(f"  mouth minus foot over {len(md)} contacts: mean {np.nanmean(md):+.2f} dB  "
               f"median {np.nanmedian(md):+.2f}  {int((md > 0.5).sum())} above +0.5")
+    ain = {ch: mf(v) for ch, v in summary.items() if is_ainp(ch)}
+    if ain:
+        print("  analog inputs, as recorded:  "
+              + "   ".join(f"{titles[ch]} {v:+.2f} dB" for ch, v in ain.items()))
     print(f"  wrote {out_dir}")
 
 
