@@ -223,7 +223,6 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     allrows = []
     for k in a.k:
         t0 = datetime.now()
@@ -242,10 +241,12 @@ def main() -> int:
               f"{R.null_mean.median():.3f} | pairs not above chance: {int((R.p_value >= 0.05).sum())}/36"
               f" -> FIG5_{tag}.png")
     if len(a.k) > 1:
-        pd.concat(allrows, ignore_index=True).to_csv(OUT / f"FIG5_pairs_allK_{stamp}.csv", index=False)
-        kk = kk_panel(a.k, a.n_perm, a.seed, OUT / f"FIG5_KbyK_{stamp}.png")
-        kk.to_csv(OUT / f"FIG5_KbyK_{stamp}.csv", index=False)
-        print(f"K-by-K panel over K={a.k} -> FIG5_KbyK_{stamp}.png")
+        # named with the run id like every other paper figure, so the web block keeps one
+        rt = "run" + F4.LR.newest_run("cnmf", "concat_hg").name.replace("_", "-")
+        pd.concat(allrows, ignore_index=True).to_csv(OUT / f"FIG5_pairs_allK_{rt}.csv", index=False)
+        kk = kk_panel(a.k, a.n_perm, a.seed, OUT / f"FIG5_KbyK_{rt}.png")
+        kk.to_csv(OUT / f"FIG5_KbyK_{rt}.csv", index=False)
+        print(f"K-by-K panel over K={a.k} -> FIG5_KbyK_{rt}.png")
     return 0
 
 

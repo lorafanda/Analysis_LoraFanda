@@ -82,8 +82,13 @@ def build() -> str:
          "      <li><b>G-05 is complete</b> on the corrected timing: trial table, per-part clock "
          "alignment, macro contacts with and without the WM reference, depth gradient, WM "
          "contacts as data, micro contacts under three references, analog inputs as controls.</li>",
-         "      <li><b>Next:</b> the two LM-side checks (does the LM WM reference carry speech-time "
-         "high gamma; do LM production maps follow the MM mouth map), then G-01, G-02, G-03.</li>",
+         "      <li><b>The first LM-side check is answered (2026-09-14, Signal &rarr; ERSP, FIG 1.5).</b> "
+         "Locked to the end of each spoken LM answer, every one of G-05's 26 WM reference contacts "
+         "carries the same +6 dB broadband burst - frontal and temporal alike, coupling gain 1.00 - "
+         "so it is the Micromed hardware reference, not muscle under any one shaft. The WM "
+         "re-reference leaves ~2 dB of it in the last ~10% of the warped axis; bipolar pairs cancel it "
+         "entirely. Same mechanism as the mouth block's common-mode here.</li>",
+         "      <li><b>Next:</b> do LM production maps follow the MM mouth map; then G-01, G-02, G-03.</li>",
          "      </ul>",
          "      <p style='margin:8px 0 0;color:#68727d'>Scripts in <code>07_FBM_MotorM/</code>: "
          "<code>10_mm_triggers</code>, <code>11_mm_sync</code>, <code>12_mm_timing_check</code>, "

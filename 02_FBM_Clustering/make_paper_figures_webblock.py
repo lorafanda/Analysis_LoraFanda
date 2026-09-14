@@ -266,10 +266,36 @@ def fig4_bullets(png):
     return out
 
 
+def fig5_bullets(png):
+    """FIG 5's numbers, read from the pairs CSV beside it."""
+    csv = png.parent / (png.with_suffix("").name.replace("FIG5_K", "FIG5_pairs_K") + ".csv")
+    if not csv.exists():
+        return []
+    try:
+        d = pd.read_csv(csv)
+    except Exception:
+        return []
+    if "diagonal_share" not in d.columns:
+        return []
+    sa = d[d.same_feature & ~d.same_algorithm]; sf = d[d.same_algorithm & ~d.same_feature]
+    both = d[~d.same_feature & ~d.same_algorithm]
+    out = [("<b>One number per pair of solutions:</b> the fraction of electrodes on the "
+            "Hungarian-matched diagonal of the pair's contingency table. Same representation, "
+            f"two algorithms: median <b>{sa.diagonal_share.median():.2f}</b>; same algorithm, two "
+            f"representations: <b>{sf.diagonal_share.median():.2f}</b>; both differ: "
+            f"<b>{both.diagonal_share.median():.2f}</b>; chance (labels shuffled across electrodes, "
+            f"cluster sizes kept) <b>{d.null_mean.median():.2f}</b>.")]
+    ns = int((d.p_value >= 0.05).sum())
+    out.append(f"<b>{36 - ns} of 36 pairs</b> sit above the 95th percentile of their own null"
+               + (f"; the {ns} that do not are marked <i>ns</i>." if ns else "."))
+    return out
+
+
 def build():
     figs = (sorted(FIGDIR.glob("FIG0*.png")) + sorted(FIGDIR.glob("FIG1*.png"))
             + sorted(FIGDIR.glob("FIG2*.png")) + sorted(FIGDIR.glob("FIG3*.png"))
-            + sorted(FIGDIR.glob("FIG4_K*.png")))
+            + sorted(FIGDIR.glob("FIG4_K*.png"))
+            + sorted(FIGDIR.glob("FIG5_K*.png")) + sorted(FIGDIR.glob("FIG5_KbyK_run*.png")))
     # the display-rule variants (_minP040, _minP040w) are versions to look at, not
     # the figures the paper carries, so they stay out of this block
     figs = [f for f in figs if "_minP" not in f.stem]
@@ -324,6 +350,7 @@ def build():
         _m = re.search(r"_K(\d+)", stem)
         k = None if stem.startswith("FIG0") else (int(_m.group(1)) if _m else None)
         is4 = stem.startswith("FIG4")
+        is5 = stem.startswith("FIG5")
         if stem.startswith("FIG0"):
             supp = "supplement" in stem
             num = "S0" if supp else "0"
@@ -364,6 +391,17 @@ def build():
                    "pairs of feature sets - with adjusted overlap by match rank, the "
                    "mean per comparison, and each convex-NMF cluster against the "
                    "comparisons it appears in")
+        elif is5:
+            if "KbyK" in stem:
+                num, title = "5 &middot; K by K", "each solution against itself at another K"
+                bullets = ["Per solution, the diagonal share between its own partitions at "
+                           "two K: the fraction of electrodes that stay together when K moves."]
+                alt = "nine small K-by-K matrices, one per algorithm and feature set"
+            else:
+                num, title = f"5 &middot; K={k}", f"nine solutions against each other, K = {k}"
+                bullets = fig5_bullets(png)
+                alt = ("three 9 x 9 matrices of algorithm x feature set: the observed diagonal "
+                       "share, its chance level, and the chance-corrected value")
         else:
             fset = stem.split("_K")[0][len("FIG3_lana_"):]
             num, title = f"3 &middot; K={k}", f"LanA language atlas, {fset}, K = {k}"

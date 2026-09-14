@@ -346,22 +346,114 @@ SECTIONS = [
             D("Figure 4 &mdash; correspondence, tested rather than asserted",
               "Agreement measured over a whole partition can conceal a solution in which "
               "most electrodes move but the largest cluster does not, so we also matched "
-              "clusters one to one and asked what each pairing is worth.",
-              "Clusters from two solutions are paired by the correlation between their "
-              "mean responses in a shared description, and the pairing is then evaluated "
-              "on a quantity it did not use: the electrodes the two clusters actually "
-              "share. Because a correlation between shapes does not constrain "
-              "membership, the overlap is evidence about the pairing rather than a "
-              "restatement of it. Significance is assessed against two size-preserving "
-              "permutations &mdash; one reassigning electrodes freely, one only within "
-              "patient, so that a cluster confined to a single patient cannot pass on "
-              "that account alone."),
+              "clusters one to one and asked what each pairing is worth. The procedure "
+              "has three steps, and the point of it is that the step that <i>makes</i> "
+              "a pair never sees the quantity the pair is <i>judged</i> on.",
+              "<b>Step 1 &mdash; pair by shape.</b> Every cluster gets a mean response "
+              "in one shared description, the 5-band z features (5 bands &times; 3 "
+              "conditions &times; 30 time bins = 450 numbers per electrode). Each "
+              "electrode is first scaled to zero mean and unit SD across its own 450 "
+              "numbers, so a centroid is a shape and not a loudness; for convex NMF the "
+              "mean is weighted by each electrode&rsquo;s loading, for k-means and Ward it "
+              "is the plain mean over members. Between solution A and solution B the "
+              "Pearson correlation of every centroid with every centroid gives a "
+              "<i>K</i>&nbsp;&times;&nbsp;<i>K</i> matrix of <i>r</i> (each solution&rsquo;s own mean "
+              "centroid is subtracted first, so a shape every cluster shares cannot make "
+              "everything look alike). Pairs are taken greedily, highest <i>r</i> first, "
+              "each cluster used once; when the two K differ, the surplus clusters stay "
+              "unmatched.",
+              "<b>Step 2 &mdash; judge by membership.</b> For a matched pair the "
+              "overlap is the Jaccard index of the two electrode sets:",
+              "<div class=\"eqbox\"><div class=\"eq\"><i>J</i>(<i>a</i>, <i>b</i>) = |<i>a</i> &cap; <i>b</i>| / |<i>a</i> &cup; <i>b</i>|<span class=\"eqn\">(1)</span></div></div>",
+              "If cluster a3 holds 210 electrodes, b5 holds 190 and they share 150, "
+              "<i>J</i> = 150 / (210 + 190 &minus; 150) = 150 / 250 = 0.60. (The weighted "
+              "version replaces the set sizes by the loadings, &sum;min / &sum;max, and "
+              "reduces to (1) for hard labels.) A correlation between two mean shapes "
+              "says nothing about how many electrodes the two clusters share, which is "
+              "why a high <i>J</i> on a shape-matched pair is evidence and not a "
+              "restatement.",
+              "<b>Step 3 &mdash; the chance level, twice.</b> Solution B&rsquo;s electrodes are "
+              "reassigned to its clusters at random &mdash; either freely, or only within "
+              "each patient, so that a cluster made of one patient&rsquo;s shaft cannot pass "
+              "on that account alone &mdash; its centroids are recomputed, the pairing is "
+              "redone from step 1, and the overlap that lands on each A cluster is "
+              "recorded. A thousand draws give, per A cluster, a mean chance overlap "
+              "<i>J</i><sub>0</sub>, a z-score and a one-sided p. The adjusted overlap",
+              "<div class=\"eqbox\"><div class=\"eq\"><i>J</i><sub>adj</sub> = (<i>J</i> &minus; <i>J</i><sub>0</sub>) / (1 &minus; <i>J</i><sub>0</sub>)<span class=\"eqn\">(2)</span></div></div>",
+              "is 0 at chance and 1 at identity, which is what lets pairs of different "
+              "sizes be read on one axis. In the example, with <i>J</i><sub>0</sub> = 0.11, "
+              "<i>J</i><sub>adj</sub> = (0.60 &minus; 0.11) / 0.89 = 0.55.",
+              "<b>The one-number summary.</b> Writing <i>C</i><sub><i>ij</i></sub> for the "
+              "number of electrodes in A&rsquo;s cluster <i>i</i> and B&rsquo;s cluster <i>j</i>, "
+              "the diagonal share is the fraction of the cohort sitting on the matched "
+              "pairs:",
+              "<div class=\"eqbox\"><div class=\"eq\">share = &sum;<sub>matched (<i>i</i>,<i>j</i>)</sub> <i>C</i><sub><i>ij</i></sub> / <i>N</i><span class=\"eqn\">(3)</span></div></div>",
+              "so 1187 of 1719 electrodes on the diagonal reads 0.69. Its null re-pairs "
+              "the same two label sets at random without re-clustering; on the v7 run "
+              "that is about 0.12. Read it for what it is: how much of the diagonal the "
+              "alignment <i>earned</i>, not whether the two clusterings agree more than "
+              "two arbitrary partitions would &mdash; that second question is Figure 5. "
+              "Numbers are from the v7 run; re-read them after v8."),
             F("results.f4", "Cluster correspondence and its null",
               "What FIG 4 adds beyond FIG 2: a matched pairing, an independent test of "
               "it, and a chance level. State the diagonal share and what it is against, "
               "and say plainly that the bijection null re-pairs without re-clustering, "
               "so it measures what the alignment earned rather than whether the two "
               "solutions agree more than arbitrary partitions would.", rows=7),
+            G("Figure 5 &middot; every solution against every other",
+              "One matrix in which the nine solutions &mdash; three algorithms &times; "
+              "three representations &mdash; are both the rows and the columns, at a "
+              "fixed K."),
+            D("Figure 5 &mdash; the confusion matrix, and what one number per pair costs",
+              "Figure 4 compares solutions two at a time and along one axis at a time. "
+              "Figure 5 asks the same question of all nine solutions at once, at K = 8 "
+              "(and, in the supplement, at K = 6, 7, 9 and 10): k-means, Ward and convex "
+              "NMF, each on the HFA time course, the 15-band and the 5-band z "
+              "description. Every cell is one number for one pair of solutions.",
+              "<b>The number.</b> For the pair, the contingency table "
+              "<i>C</i><sub><i>ij</i></sub> counts the electrodes in cluster <i>i</i> of "
+              "one solution and cluster <i>j</i> of the other. Its rows are then matched "
+              "one to one to its columns by the Hungarian algorithm, the assignment that "
+              "makes the diagonal as large as it can be, and the cell reports",
+              "<div class=\"eqbox\"><div class=\"eq\">share = &sum;<sub><i>i</i></sub> <i>C</i><sub><i>i</i>, &pi;(<i>i</i>)</sub> / &sum;<sub><i>ij</i></sub> <i>C</i><sub><i>ij</i></sub><span class=\"eqn\">(4)</span></div></div>",
+              "with &pi; the matching. It is the accuracy of a confusion matrix whose "
+              "class names are unknown: 1 when the two partitions are identical up to "
+              "the labels, and it falls towards the chance level as they come apart. "
+              "Unlike Figure 4, the pairing and the score here are the <i>same</i> "
+              "quantity, which is why the chance level has to be measured rather than "
+              "assumed.",
+              "<div style=\"margin:10px 0 12px;font-size:13px\"><table style=\"border-collapse:collapse;font-family:ui-monospace,Consolas,monospace;font-size:12.5px\"><tr><td style=\"padding:3px 10px;color:#6b6b6b\"></td><td style=\"padding:3px 10px;color:#6b6b6b\">b1</td><td style=\"padding:3px 10px;color:#6b6b6b\">b2</td><td style=\"padding:3px 10px;color:#6b6b6b\">b3</td></tr><tr><td style=\"padding:3px 10px;color:#6b6b6b\">a1</td><td style=\"padding:3px 10px;background:#dfe9f5;font-weight:700\">40</td><td style=\"padding:3px 10px\">5</td><td style=\"padding:3px 10px\">5</td></tr><tr><td style=\"padding:3px 10px;color:#6b6b6b\">a2</td><td style=\"padding:3px 10px\">3</td><td style=\"padding:3px 10px;background:#dfe9f5;font-weight:700\">35</td><td style=\"padding:3px 10px\">2</td></tr><tr><td style=\"padding:3px 10px;color:#6b6b6b\">a3</td><td style=\"padding:3px 10px\">4</td><td style=\"padding:3px 10px\">6</td><td style=\"padding:3px 10px;background:#dfe9f5;font-weight:700\">20</td></tr></table><div style=\"color:#6b6b6b;margin-top:4px\">A toy contingency table: 120 electrodes, three clusters on each side. The shaded cells are the Hungarian matching; their sum is 95.</div></div>",
+              "In the toy table the matching pairs a1&ndash;b1, a2&ndash;b2, a3&ndash;b3 and "
+              "the share is (40 + 35 + 20) / 120 = 0.79. Renaming B&rsquo;s clusters "
+              "permutes the columns and the Hungarian step finds the same 0.79, so the "
+              "number does not depend on which cluster happens to be called 0 or 5.",
+              "<b>Chance.</b> The second solution&rsquo;s labels are shuffled across "
+              "electrodes &mdash; every cluster keeps its size, every electrode gets a "
+              "random one &mdash; and the table, the matching and the share are redone, "
+              "a thousand times. At K = 8 that lands near 0.15, not 1/8, because the "
+              "matching is allowed to pick the best of many random tables. Each cell "
+              "carries its null mean, a one-sided p, and the chance-corrected value",
+              "<div class=\"eqbox\"><div class=\"eq\">share<sub>adj</sub> = (share &minus; share<sub>0</sub>) / (1 &minus; share<sub>0</sub>)<span class=\"eqn\">(5)</span></div></div>",
+              "so a pair at 0.69 against a chance of 0.15 reads (0.69 &minus; 0.15) / 0.85 "
+              "= 0.64, and a pair whose share is not above the 95th percentile of its null "
+              "is marked <i>ns</i>.",
+              "<b>Reading the matrix.</b> The 3 &times; 3 blocks along the diagonal are "
+              "one algorithm on three representations; the cells between blocks at the "
+              "same row-and-column position are one representation under two "
+              "algorithms; everything else differs in both. The medians of those three "
+              "groups are the figure&rsquo;s sentence. <i>Fill in after the v8 run.</i>",
+              "<b>K by K.</b> The supplement adds, per solution, the same share between "
+              "its own partition at <i>K</i><sub>a</sub> and at <i>K</i><sub>b</sub>: the "
+              "table is rectangular, min(<i>K</i><sub>a</sub>, <i>K</i><sub>b</sub>) pairs "
+              "are matched, and the share is the fraction of electrodes that stay "
+              "together when K moves. A value of 0.9 between K = 8 and K = 9 means one "
+              "cluster split cleanly and nothing else changed."),
+            F("results.f5", "The nine-solution matrix",
+              "State the three medians (across algorithms, across representations, both "
+              "differ), the chance level, and how many of the 36 pairs clear it. Then "
+              "say in one sentence what Figure 5 adds to Figure 4: the same question "
+              "asked of every pair at once, with a null that re-clusters rather than "
+              "re-pairs.", rows=7),
             G("Figure 3 &middot; where the types sit"),
             D("Figure 3 &mdash; and whether the types are simply anatomy",
               "One possibility survives the representation result: that the types are "
@@ -892,6 +984,40 @@ EXAMPLES = {
         "failure and is not one. Agreement across K peaks at K = 29 for feature sets, "
         "which is where most clusters are one patient. High agreement between two "
         "methods is not evidence of a real type when both have found the same patient.",
+    ],
+    "results.f4": [
+        "Pairing clusters by the correlation of their mean responses and then counting "
+        "the electrodes each pair shares places 62-69% of the cohort on the matched "
+        "diagonal for two algorithms on the same features, and 36-39% for two feature "
+        "sets under the same algorithm, against about 12% for random pairings of the "
+        "same clusters. All eight algorithm pairs clear both permutation nulls; two of "
+        "the eight representation pairs do not. The overlap is measured on a quantity "
+        "the pairing never used, so a matched pair that shares its electrodes is "
+        "evidence of correspondence and not a restatement of the matching.",
+        "Figure 4 tests correspondence cluster by cluster. Clusters are paired by shape "
+        "alone and scored on membership alone. Where the algorithm changes and the "
+        "features do not, the matched pairs share their electrodes far above chance; "
+        "where the features change, about half the pairs do. The bijection null is "
+        "deliberately weak: it says how much of the diagonal the alignment earned, not "
+        "that the two clusterings agree beyond arbitrary partitions, and that stronger "
+        "claim is left to Figure 5.",
+    ],
+    "results.f5": [
+        "With all nine solutions on both axes, the picture of Figures 2 and 4 holds at "
+        "every position of the matrix: the same representation under two algorithms "
+        "agrees at [X], two representations under one algorithm at [Y], and the pairs "
+        "that differ in both at [Z], against a chance level of [C] measured by shuffling "
+        "electrode labels; [n] of 36 pairs do not clear it. The number in every cell is "
+        "the fraction of electrodes on the Hungarian-matched diagonal of the pair's "
+        "contingency table, which is the accuracy of a confusion matrix whose class "
+        "names are unknown.",
+        "Figure 5 puts one number on every pair of solutions. The diagonal blocks - one "
+        "algorithm, three representations - are the low cells; the off-block cells that "
+        "keep the representation and change the algorithm are the high ones. Chance, "
+        "measured by re-clustering at random rather than re-pairing, is [C], and the "
+        "chance-corrected shares make the ordering plain: representation first, "
+        "algorithm second. The K-by-K supplement shows that moving K by one splits or "
+        "merges a cluster and leaves the rest in place.",
     ],
     "results.f2_left": [
         "The agreement figures also say what is not stable. For 4.3% of electrodes no "
@@ -1555,10 +1681,28 @@ def carousels():
     fig4.append(_slide("FIG 4  ·  cluster correspondence  ·  weighted by loading  ·  K = 8",
                        _w[-1].name if _w else "FIG4_K08_weighted.png", "weighted",
                        "00_paper2_figure4_panels.py --k 8 --weighting weighted", tr))
-    return {"results.f1": fig1, "results.f2": fig2, "results.f3": fig3,
-            "results.f4": fig4,
-            "figs.f1": fig1, "figs.f2": fig2, "figs.f3": fig3, "figs.f4": fig4,
-            "high.graphical": ga}
+    # FIG 5 - the nine-solution matrix, and its K-by-K supplement. Named like FIG 4
+    # (K08 + run id), found directly; absent until 00_paper2_figure5_confusion.py has run
+    # on the current cohort, and then the slide is simply not there rather than empty.
+    fig5 = []
+    _f5 = sorted(FIGDIR.glob("FIG5_K08_run*.png"))
+    if _f5:
+        fig5.append(_slide("FIG 5  ·  nine solutions against each other  ·  K = 8",
+                           _f5[-1].name, "HG / 15 bands / 5 bands z",
+                           "00_paper2_figure5_confusion.py --k 6 7 8 9 10", tr))
+    _kk = sorted(FIGDIR.glob("FIG5_KbyK_run*.png"))
+    if _kk:
+        fig5.append(_slide("FIG 5  ·  K by K  ·  each solution against itself at another K",
+                           _kk[-1].name, "K = 6 .. 10",
+                           "00_paper2_figure5_confusion.py --k 6 7 8 9 10", tr))
+    out = {"results.f1": fig1, "results.f2": fig2, "results.f3": fig3,
+           "results.f4": fig4,
+           "figs.f1": fig1, "figs.f2": fig2, "figs.f3": fig3, "figs.f4": fig4,
+           "high.graphical": ga}
+    if fig5:
+        out["results.f5"] = fig5
+        out["figs.f5"] = fig5
+    return out
 
 
 _CAR = None
@@ -1694,7 +1838,8 @@ def build():
             elif b["kind"] == "draft":
                 P.append(f'      <div class="pf-draft"><h5>{b["h"]}'
                          + '<span class="pf-dtag">draft</span></h5>'
-                         + "".join(f"<p>{x}</p>" for x in b["paras"])
+                         + "".join(x if x.lstrip().startswith("<div") else f"<p>{x}</p>"
+                                   for x in b["paras"])
                          + '</div>')
             else:
                 P.append("      " + field_html(b))
