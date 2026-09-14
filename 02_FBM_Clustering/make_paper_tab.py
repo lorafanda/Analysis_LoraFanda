@@ -328,8 +328,9 @@ SECTIONS = [
               "by chance. Across representations the same comparisons give <b>0.36 to "
               "0.39</b>, and only <b>27%</b> of electrodes are grouped together by all "
               "four descriptions against <b>8%</b> expected by chance. Every matched "
-              "pair clears both permutation nulls in the algorithm comparisons; two of "
-              "eight fail in the representation comparisons.",
+              "pair clears both permutation nulls in the algorithm comparisons; in each "
+              "representation comparison five of eight do, and three fail one null or "
+              "both.",
               "The consequence is that <i>the response types of language cortex</i> is "
               "not a well-posed object until the frequency description is stated. What "
               "the cortex does is unchanged; what counts as the same response is not. We "
@@ -378,22 +379,25 @@ SECTIONS = [
               "on that account alone &mdash; its centroids are recomputed, the pairing is "
               "redone from step 1, and the overlap that lands on each A cluster is "
               "recorded. A thousand draws give, per A cluster, a mean chance overlap "
-              "<i>J</i><sub>0</sub>, a z-score and a one-sided p. The adjusted overlap",
+              "<i>J</i><sub>0</sub>, a z-score and a one-sided p. The figure reports both "
+              "nulls; its adjusted overlap uses the free one:",
               "<div class=\"eqbox\"><div class=\"eq\"><i>J</i><sub>adj</sub> = (<i>J</i> &minus; <i>J</i><sub>0</sub>) / (1 &minus; <i>J</i><sub>0</sub>)<span class=\"eqn\">(2)</span></div></div>",
               "is 0 at chance and 1 at identity, which is what lets pairs of different "
-              "sizes be read on one axis. In the example, with <i>J</i><sub>0</sub> = 0.11, "
-              "<i>J</i><sub>adj</sub> = (0.60 &minus; 0.11) / 0.89 = 0.55.",
+              "sizes be read on one axis. In the example, two clusters of 210 and 190 out "
+              "of 1719 overlap by chance at about <i>J</i><sub>0</sub> = 0.06, so "
+              "<i>J</i><sub>adj</sub> = (0.60 &minus; 0.06) / 0.94 = 0.57.",
               "<b>The one-number summary.</b> Writing <i>C</i><sub><i>ij</i></sub> for the "
               "number of electrodes in A&rsquo;s cluster <i>i</i> and B&rsquo;s cluster <i>j</i>, "
               "the diagonal share is the fraction of the cohort sitting on the matched "
               "pairs:",
               "<div class=\"eqbox\"><div class=\"eq\">share = &sum;<sub>matched (<i>i</i>,<i>j</i>)</sub> <i>C</i><sub><i>ij</i></sub> / <i>N</i><span class=\"eqn\">(3)</span></div></div>",
-              "so 1187 of 1719 electrodes on the diagonal reads 0.69. Its null re-pairs "
+              "so 1193 of 1719 electrodes on the diagonal (convex NMF against k-means) reads 0.69. Its null re-pairs "
               "the same two label sets at random without re-clustering; on the v7 run "
               "that is about 0.12. Read it for what it is: how much of the diagonal the "
               "alignment <i>earned</i>, not whether the two clusterings agree more than "
-              "two arbitrary partitions would &mdash; that second question is Figure 5. "
-              "Numbers are from the v7 run; re-read them after v8."),
+              "two arbitrary partitions would. That second question is answered cluster by "
+              "cluster by the step-3 nulls, and per pair of solutions, with one number, by "
+              "Figure 5. Numbers are from the v7 run; re-read them after v8."),
             F("results.f4", "Cluster correspondence and its null",
               "What FIG 4 adds beyond FIG 2: a matched pairing, an independent test of "
               "it, and a chance level. State the diagonal share and what it is against, "
@@ -407,7 +411,7 @@ SECTIONS = [
             D("Figure 5 &mdash; the confusion matrix, and what one number per pair costs",
               "Figure 4 compares solutions two at a time and along one axis at a time. "
               "Figure 5 asks the same question of all nine solutions at once, at K = 8 "
-              "(and, in the supplement, at K = 6, 7, 9 and 10): k-means, Ward and convex "
+              "(and, as companion panels, at K = 6, 7, 9 and 10): k-means, Ward and convex "
               "NMF, each on the HFA time course, the 15-band and the 5-band z "
               "description. Every cell is one number for one pair of solutions.",
               "<b>The number.</b> For the pair, the contingency table "
@@ -430,30 +434,31 @@ SECTIONS = [
               "<b>Chance.</b> The second solution&rsquo;s labels are shuffled across "
               "electrodes &mdash; every cluster keeps its size, every electrode gets a "
               "random one &mdash; and the table, the matching and the share are redone, "
-              "a thousand times. At K = 8 that lands near 0.15, not 1/8, because the "
-              "matching is allowed to pick the best of many random tables. Each cell "
+              "a thousand times. At K = 8 that lands near 0.16 in a first check, not 1/8, "
+              "because the matching is allowed to pick the best of many random tables "
+              "(<i>fill in from the run</i>). Each cell "
               "carries its null mean, a one-sided p, and the chance-corrected value",
               "<div class=\"eqbox\"><div class=\"eq\">share<sub>adj</sub> = (share &minus; share<sub>0</sub>) / (1 &minus; share<sub>0</sub>)<span class=\"eqn\">(5)</span></div></div>",
-              "so a pair at 0.69 against a chance of 0.15 reads (0.69 &minus; 0.15) / 0.85 "
-              "= 0.64, and a pair whose share is not above the 95th percentile of its null "
+              "so a pair at 0.69 against a chance of 0.16 reads (0.69 &minus; 0.16) / 0.84 "
+              "= 0.63, and a pair whose share is not above the 95th percentile of its null "
               "is marked <i>ns</i>.",
               "<b>Reading the matrix.</b> The 3 &times; 3 blocks along the diagonal are "
               "one algorithm on three representations; the cells between blocks at the "
               "same row-and-column position are one representation under two "
               "algorithms; everything else differs in both. The medians of those three "
               "groups are the figure&rsquo;s sentence. <i>Fill in after the v8 run.</i>",
-              "<b>K by K.</b> The supplement adds, per solution, the same share between "
+              "<b>K by K.</b> A companion panel adds, per solution, the same share between "
               "its own partition at <i>K</i><sub>a</sub> and at <i>K</i><sub>b</sub>: the "
               "table is rectangular, min(<i>K</i><sub>a</sub>, <i>K</i><sub>b</sub>) pairs "
               "are matched, and the share is the fraction of electrodes that stay "
-              "together when K moves. A value of 0.9 between K = 8 and K = 9 means one "
-              "cluster split cleanly and nothing else changed."),
+              "together when K moves. A value of 0.9 between K = 8 and K = 9 is what one "
+              "clean split of a cluster holding a tenth of the electrodes would give."),
             F("results.f5", "The nine-solution matrix",
               "State the three medians (across algorithms, across representations, both "
               "differ), the chance level, and how many of the 36 pairs clear it. Then "
               "say in one sentence what Figure 5 adds to Figure 4: the same question "
-              "asked of every pair at once, with a null that re-clusters rather than "
-              "re-pairs.", rows=7),
+              "asked of every pair at once, with a null that reassigns electrodes at "
+              "random rather than re-pairing the same clusters.", rows=7),
             G("Figure 3 &middot; where the types sit"),
             D("Figure 3 &mdash; and whether the types are simply anatomy",
               "One possibility survives the representation result: that the types are "
@@ -990,14 +995,14 @@ EXAMPLES = {
         "the electrodes each pair shares places 62-69% of the cohort on the matched "
         "diagonal for two algorithms on the same features, and 36-39% for two feature "
         "sets under the same algorithm, against about 12% for random pairings of the "
-        "same clusters. All eight algorithm pairs clear both permutation nulls; two of "
-        "the eight representation pairs do not. The overlap is measured on a quantity "
+        "same clusters. All eight algorithm pairs clear both permutation nulls; in each "
+        "representation comparison five of the eight do. The overlap is measured on a quantity "
         "the pairing never used, so a matched pair that shares its electrodes is "
         "evidence of correspondence and not a restatement of the matching.",
         "Figure 4 tests correspondence cluster by cluster. Clusters are paired by shape "
         "alone and scored on membership alone. Where the algorithm changes and the "
         "features do not, the matched pairs share their electrodes far above chance; "
-        "where the features change, about half the pairs do. The bijection null is "
+        "where the features change, five of the eight pairs do. The bijection null is "
         "deliberately weak: it says how much of the diagonal the alignment earned, not "
         "that the two clusterings agree beyond arbitrary partitions, and that stronger "
         "claim is left to Figure 5.",
