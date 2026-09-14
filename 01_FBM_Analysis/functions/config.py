@@ -15,7 +15,7 @@ patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL
 
 patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780] #,"EL043"
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
-patient_ids = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953"]  
+patient_ids = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953"]  
 
 block_name  = "LM"
 conditions_expected = ("picture", "audio", "reading")
@@ -96,6 +96,11 @@ bad_channels_manual = {
     "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44"],
     "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"],
     "PAT_2868": ["IDM3"],
+    # PAT_6684 (G-05) on its TRC, 2026-09-13, by visual review. CAG1/CAG2 are WM contacts:
+    # listing them here also keeps them out of the WM reference.
+    "PAT_6684": ["FPG10", "FPG5", "FPG9", "FPG8", "FOM7", "FOM11","CAG1", "FOL8", "CAG2",
+                 # 2026-09-14: the bursty IMG tail and the noisy FMG/FOM contacts
+                 "IMG13", "IMG14", "IMG15", "FOM10","HPG1","HPG8","HPG7","HPG6","HPG5","CAG6","HAG5","HAG8","HAG7","HAG4","HAG3","HAG2","FOL2","AG5","AG4","AG3","AG2","HAG6","FOL11","TSP1","CAG3"],
     "PAT_6704": ["ainp1"],
     "EL048": ["EKG","pH_R13","EKG-"],
     "": [""],
@@ -270,7 +275,8 @@ ersp_trial_reject = {}
 # smaller k than MAD does: the outliers are inside the mean and SD, so they inflate
 # the yardstick they are measured against. Measured on a channel with three
 # runaways: z at 5 or 4.5 rejects NOTHING, z at 1.5-3.5 rejects exactly the three.
-ersp_trial_reject_z = {"G-05": 3.0}
+# G-05 runs as PAT_6684 on its TRC since 2026-09-12 (see PATH_OVERRIDES); same knobs, new id.
+ersp_trial_reject_z = {"PAT_6684": 3.0}
 # THE HIGH-GAMMA ARM. The two tables above score the 99th percentile of |dB| over the
 # whole time-frequency map, which the low frequencies dominate: a trial that is wild
 # only in 70-150 Hz - the band the HG figure draws, and the band the clustering features
@@ -282,10 +288,10 @@ ersp_trial_reject_z = {"G-05": 3.0}
 # judged, so several bad trials inflate the yardstick and hide each other. Synthetic
 # channel, 1/f power, three high-gamma runaways in thirty trials: broadband z=3 rejects
 # nothing, band z=3 rejects nothing, band MAD=3.5 rejects exactly the three.
-ersp_trial_reject_hg_mad = {"G-05": 3.5}
+ersp_trial_reject_hg_mad = {"PAT_6684": 3.5}
 ersp_trial_reject_hg_z = {}
 
-notch_patients  = ["G-06", "G-04", "G-05", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780"]   
+notch_patients  = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780"]   
 # IDs or substrings to match
     
 # notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
@@ -324,7 +330,8 @@ notch_block_pad_s = 10.0     # margin either side of a block's outermost trial, 
 # their micro shafts are named with a trailing "m" and form their own groups).
 notch_shaft_patients = ["EL036", "EL037", "EL040", "EL045", "EL048",
                         "EL043", "EL049",
-                        "G-01", "G-02", "G-03", "G-04", "G-05", "G-06"]
+                        "G-01", "G-02", "G-03", "G-04", "G-06",
+                        "PAT_6684"]   # G-05, by its PAT_ id now that it runs on the TRC
 
 # CAP ON THE NOTCH Q, per patient (2026-09-07). The adaptive notch sets
 # Q = clip(2*f0/(bg_std+1), 10, 500): 0.7 Hz wide at 350 Hz. EL048's per-block
@@ -365,7 +372,8 @@ notch_method = {
     # combs are richer than mains: after the first run read the unexplained-peaks
     # table per micro shaft and add the comb it names to notch_extra_bases.
     "G-01": "interp", "G-02": "interp", "G-03": "interp",
-    "G-04": "interp", "G-05": "interp", "G-06": "interp",
+    "G-04": "interp", "G-06": "interp",
+    "PAT_6684": "interp",   # G-05 on its TRC
 }
 
 # A SECOND COMB per patient, notched alongside the mains harmonics. Add an entry
@@ -382,7 +390,70 @@ notch_extra_bases = {
 # ---------------------------
 # Trial filtering & HG plot defaults
 # ---------------------------
+# TIME SPANS NO TRIAL MAY TOUCH, per patient, in seconds of that patient's recording
+# clock (the TRC for PAT_6684). collect_trials drops a trial whose [onset - baseline,
+# trial_end] overlaps one, tags it "discharge: <label>" on the HG figure, and counts it
+# in Report/<pid>_IQR.tsv as n_dropped_spans. A patient not listed here is untouched.
+#   PAT_6684 (2026-09-14): the electrographic seizure on TSP4-5 (the TRC's own "Crise"
+#   and "Fin EEG" notes bracket it) and the posterior-hippocampal / amygdala polyspike
+#   bursts, found on the bipolar TRC as 10-45 Hz envelope > 6 MAD for >= 1 s on
+#   HPG1-4, HAG1-3 or AG1-3, merged when closer than 1 s, padded by 0.5 s. Edit freely;
+#   the labels are only for the figure.
+bad_time_spans = {
+    "PAT_6684": [
+    (40.3, 43.8, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (121.3, 123.7, "polyspike burst HAG1-3+HPG1-4"),
+    (133.0, 136.1, "polyspike burst AG1-3"),
+    (232.5, 234.9, "polyspike burst AG1-3+HAG1-3"),
+    # (242.0, 420.3, "seizure TSP4-5"),   # removed 2026-09-14: the discharge stayed on TSP4-5; those
+    #                                     # picture trials are kept, TSP contacts to be judged by eye
+    (254.4, 260.2, "polyspike burst AG1-3+HPG1-4"),
+    (272.1, 274.5, "polyspike burst AG1-3+HPG1-4"),
+    (349.2, 352.8, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (394.3, 397.6, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (403.6, 406.2, "polyspike burst HAG1-3"),
+    (464.0, 466.1, "polyspike burst HPG1-4"),
+    (475.2, 479.0, "polyspike burst AG1-3"),
+    (502.1, 505.4, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (520.8, 523.4, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (551.9, 556.3, "polyspike burst HPG1-4"),
+    (573.9, 576.7, "polyspike burst AG1-3"),
+    (600.4, 603.8, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (669.1, 676.1, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (716.0, 718.8, "polyspike burst HAG1-3+HPG1-4"),
+    (749.4, 751.8, "polyspike burst HAG1-3+HPG1-4"),
+    (792.3, 805.0, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (827.4, 829.4, "polyspike burst HPG1-4"),
+    (859.9, 862.0, "polyspike burst HPG1-4"),
+    (904.3, 906.7, "polyspike burst HAG1-3+HPG1-4"),
+    (939.7, 947.4, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1092.8, 1100.2, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1138.0, 1144.4, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1165.6, 1167.8, "polyspike burst HAG1-3+HPG1-4"),
+    (1247.3, 1256.3, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1257.4, 1264.5, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1350.6, 1354.3, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1359.4, 1362.0, "polyspike burst HPG1-4"),
+    (1376.8, 1379.1, "polyspike burst HAG1-3"),
+    (1386.2, 1388.8, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1390.2, 1393.6, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1398.3, 1403.9, "polyspike burst HAG1-3+HPG1-4"),
+    (1429.1, 1431.5, "polyspike burst HPG1-4"),
+    (1431.7, 1434.9, "polyspike burst HAG1-3"),
+    (1436.5, 1439.1, "polyspike burst HPG1-4"),
+    (1448.0, 1451.4, "polyspike burst AG1-3+HAG1-3"),
+    (1453.5, 1457.7, "polyspike burst HAG1-3+HPG1-4"),
+    (1479.7, 1482.0, "polyspike burst HAG1-3+HPG1-4"),
+    (1522.3, 1525.2, "polyspike burst AG1-3+HAG1-3+HPG1-4"),
+    (1536.8, 1539.1, "polyspike burst HAG1-3"),
+    ],
+}
+
 min_stim_s   = 0.5
+# shortest response (trial_end - offset) a trial may have; responses under this are
+# dropped as "response < Xs". 1.0 s was collect_trials' own default until 2026-09-14
+# and 140 now passes this value, so lowering it here is what brings fast trials back.
+min_post_s   = 1.0
 max_post_s   = 10.0
 iqr_k        = 1.5
 hg_band      = (70.0, 150.0)
@@ -481,11 +552,29 @@ EL_PRESETS = {
 #                         skips micros (no exception to this rule for now).
 # ---------------------------------------------------------------------------
 
-MICROEPI_MAT_PATIENTS = ["G-01", "G-02", "G-03", "G-04", "G-05", "G-06"]
+# G-05 is out of this list since 2026-09-12: it runs as PAT_6684 on its TRC through the
+# standard loader (PATH_OVERRIDES below). Its .mat preset is kept, commented, further down.
+MICROEPI_MAT_PATIENTS = ["G-01", "G-02", "G-03", "G-04", "G-06"]
 
 _NASAC           = r"\\nasac-m2.unige.ch\m-HumanNeuronLab"
 _BIDS_ELEC_MICROEPI = _NASAC + r"\DATARAW\BIDS_elec\MICROEPI"
 _MICROEPI_RAW    = _NASAC + r"\DATARAW\MICROEPI"
+
+# WHERE A PATIENT'S FILES ARE WHEN THEY ARE NOT WHERE THE COHORT LAYOUT SAYS.
+# build_paths_for_patient derives raw/ and prep0/ from base_root (base_root\data_LM\raw,
+# base_root\data_LM\prep0) and electrodes_tsv_path_for_patient returns electrodes_tsv,
+# for the ids listed here; everyone else keeps the automatic paths.
+#   PAT_6684 = MicroEPI G-05, processed from its Micromed TRC (2026-09-12). The TRC has no
+#   photodiode channel; the trial tables in its prep0 are the Blackrock-photodiode tables
+#   moved onto the TRC clock (TRC sample = export sample - 191936; the export's ECoG axis
+#   IS this TRC, checked at lag 0, and the micro stream sits on it to within ~10 ms by
+#   event-triggered averages). The electrodes TSV is the MicroEPI one (sub-6684).
+PATH_OVERRIDES = {
+    "PAT_6684": {
+        "base_root":      _MICROEPI_RAW + r"\MicroEPI-G-05\task_FBM",
+        "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6684\ieeg\*_electrodes.tsv",
+    },
+}
 
 MICROEPI_MAT_PRESETS = {
     "G-01": {
@@ -545,25 +634,26 @@ MICROEPI_MAT_PRESETS = {
         "trial_ids":      ["picture"]*51 + ["auditory"]*50 + ["reading"]*59,
         "fake_trials":    [107,108,109,110,111,112,113,114,115,116],
     },
-    "G-05": {
-        "pat_name":       "PAT_6684",
-        "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-05\tasks\exp9_JonathanFLM_2025_06_18\prep",
-        "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
-                           "f0002_export_Labs_phmicrodown.mat"],
-        "tsv_file":       "sub-microepi-g-05_task-LanguageMapping_datetime-18-6-2025(15h39m19s)_language-FRE_events.tsv",
-        "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6684\ieeg\*_electrodes.tsv",
-        "trig":           "photodiode",
-        # the photodiode fades across this file, so each condition block is centred and
-        # scaled on its own before detection - otherwise the brightest block sets the
-        # threshold for all three. "auto" places the edges from a permissive first pass
-        # grouped by the runs in trial_ids; a list of [t0, t1] in seconds overrides it.
-        "pd_blocks":      [[100,556],[620,1050],[1196,1602]], #"auto",
-        "flip":           True,
-        "time_range":     (100, 1700),
-        "invalid_trials": [0,1,2,107,108,109],
-        "trial_ids":      ["picture"]*54 + ["auditory"]*51 + ["reading"]*53,
-        "fake_trials":    [54,55,56],
-    },
+    # G-05 .mat route, retired 2026-09-12 (runs as PAT_6684 on the TRC; see PATH_OVERRIDES)
+#     "G-05": {
+#         "pat_name":       "PAT_6684",
+#         "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-05\tasks\exp9_JonathanFLM_2025_06_18\prep",
+#         "mat_files":      ["f0001_export_Labs_phmicrodown.mat",
+#                            "f0002_export_Labs_phmicrodown.mat"],
+#         "tsv_file":       "sub-microepi-g-05_task-LanguageMapping_datetime-18-6-2025(15h39m19s)_language-FRE_events.tsv",
+#         "electrodes_tsv": _BIDS_ELEC_MICROEPI + r"\sub-6684\ieeg\*_electrodes.tsv",
+#         "trig":           "photodiode",
+#         # the photodiode fades across this file, so each condition block is centred and
+#         # scaled on its own before detection - otherwise the brightest block sets the
+#         # threshold for all three. "auto" places the edges from a permissive first pass
+#         # grouped by the runs in trial_ids; a list of [t0, t1] in seconds overrides it.
+#         "pd_blocks":      [[100,556],[620,1050],[1196,1602]], #"auto",
+#         "flip":           True,
+#         "time_range":     (100, 1700),
+#         "invalid_trials": [0,1,2,107,108,109],
+#         "trial_ids":      ["picture"]*54 + ["auditory"]*51 + ["reading"]*53,
+#         "fake_trials":    [54,55,56],
+#     },
     "G-06": {
         "pat_name":       "PAT_6854",
         "data_dir":       _MICROEPI_RAW + r"\MicroEPI-G-06\tasks\exp1_lora_2026_01_29_withmicro\prep",

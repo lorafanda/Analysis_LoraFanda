@@ -88,9 +88,22 @@ def drop_aux_from_names(channel_names):
 
 NASAC_ROOT = r"\\nasac-m2.unige.ch\m-HumanNeuronLab"
 
+def _path_override(patient_id):
+    """cfg.PATH_OVERRIDES entry for this patient, or None. Config is imported lazily, as
+    the other cfg lookups in this module do, so importing lf_io_utils never needs it."""
+    try:
+        from functions import config as _cfg
+        return (getattr(_cfg, "PATH_OVERRIDES", {}) or {}).get(str(patient_id).strip())
+    except Exception:
+        return None
+
+
 def electrodes_tsv_path_for_patient(patient_id) -> str:
     """Return a BIDS electrodes-TSV path pattern for the given patient id."""
     pid = str(patient_id).strip()
+    ov = _path_override(pid)
+    if ov and ov.get("electrodes_tsv"):
+        return ov["electrodes_tsv"]
     if pid.startswith(("MicroEPI", "G-", "B-")):
         sub = pid if pid.startswith("MicroEPI") else f"MicroEPI-{pid}"
         return fr"{NASAC_ROOT}\DATARAW\BIDS_elec\MICROEPI\sub-{sub}\ieeg\*_electrodes.tsv"
@@ -509,6 +522,12 @@ def build_paths_for_patient(pid_raw, block_name):
         s = str(pid_raw)
         patient_id = s if s.startswith("PAT_") else f"PAT_{s}"
         base_root  = fr"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_HUG\{patient_id}\task_FBM"
+
+    # a patient whose files live elsewhere (cfg.PATH_OVERRIDES): same layout under another root
+    ov = _path_override(patient_id)
+    if ov and ov.get("base_root"):
+        base_root = ov["base_root"]
+        log(f"Path override for {patient_id}: {base_root}")
 
     raw_dir  = os.path.join(base_root, f"data_{block_name}", "raw")
     prep_dir = os.path.join(base_root, f"data_{block_name}", "prep0")

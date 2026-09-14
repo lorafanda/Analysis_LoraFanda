@@ -21,6 +21,8 @@ def collect_trials(
     pct_low=None, pct_high=None,
     keep_resp_accuracy=("correct","valid","1"),   # case-insensitive; None to keep all
     all_out=None,                 # optional dict, filled with EVERY trial and why it went
+    bad_spans=None,               # [(start_s, end_s, label), ...] on the recording clock; None = no rule
+    bad_spans_pre_s=0.0,          # how far before onset the trial is considered to start (the ERSP baseline)
 ):
     """
     Collect trial onset/offset/end indices from *.tsv files in `prep_dir`, normalize condition
@@ -46,6 +48,10 @@ def collect_trials(
         Method for outlier trimming of post-stimulus durations, applied after min/max filters.
     iqr_k : float
         Tukey factor for IQR fences (default 1.5).
+    bad_spans : list of (start_s, end_s, label), optional
+        Stretches of the recording no trial may touch (seizures, discharge bursts). A
+        trial is dropped when [onset - bad_spans_pre_s, trial_end] overlaps one; it is
+        the first reason tested, so the tag says why regardless of the other filters.
     """
 
     # Language suffixes were enumerated one at a time, and the list fell behind the
@@ -192,9 +198,20 @@ def collect_trials(
         stim_s = (off - on) / float(fs_hz)
         post_s = (tend - off) / float(fs_hz)
 
+        # 0) trials touching a listed discharge span; per trial, the label of the first span hit
+        span_hit = np.zeros(len(on), dtype=bool)
+        span_label = np.array([""] * len(on), dtype=object)
+        if bad_spans:
+            t0 = on / float(fs_hz) - float(bad_spans_pre_s)
+            t1 = tend / float(fs_hz)
+            for a_s, b_s, *lab in bad_spans:
+                hit = (t0 < float(b_s)) & (t1 > float(a_s)) & ~span_hit
+                span_hit |= hit
+                span_label[hit] = (lab[0] if lab else f"{float(a_s):.0f}-{float(b_s):.0f}s")
+
         # 1) min stimulus + min/max post-stimulus duration filters
         keep = (stim_s >= float(min_stim_s)) & (post_s >= float(min_post_s)) \
-             & (post_s <= float(max_post_s)) & ra_keep
+             & (post_s <= float(max_post_s)) & ra_keep & ~span_hit
         
         # WHY each trial went, not just that it went. First failing test wins, tested
         # in the order the filters are applied above.
@@ -205,6 +222,8 @@ def collect_trials(
             if fresh.any():
                 reason[fresh] = why
 
+        for i in np.flatnonzero(span_hit):
+            _mark(np.arange(len(on)) == i, f"discharge: {span_label[i]}")
         _mark(~ra_keep, "incorrect response")
         _mark(stim_s < float(min_stim_s), f"stimulus < {float(min_stim_s):g}s")
         _mark(post_s < float(min_post_s), f"response < {float(min_post_s):g}s")
@@ -318,6 +337,7 @@ def collect_trials(
             post_lo=float(lo) if np.isfinite(lo) else np.nan,
             post_hi=float(hi) if np.isfinite(hi) else np.nan,
             n_dropped_accuracy=int((~ra_keep).sum()),
+            n_dropped_spans=int(span_hit.sum()),
         ))
 
     if report_path and stats:
