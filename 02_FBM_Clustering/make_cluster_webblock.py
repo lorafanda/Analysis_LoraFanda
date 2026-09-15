@@ -70,12 +70,27 @@ def fmt(v, n=3, sign=False):
 
 # ── loading ─────────────────────────────────────────────────────────────────
 def discover():
-    """Every {feature_set}_K{k} directory that actually has a summary in it."""
+    """Every {feature_set}_K{k} directory that actually has a summary in it - and, when
+    heldout_peaks_figure.csv is there, ONLY the one per feature set at the convex-NMF
+    held-out peak, which is the K this block describes. The statistics folder keeps the
+    directories of earlier cohorts (v6's HFA K10/K11, v7's raw-ds K13 and 5-band K14)
+    and the page must not read them as if they were current."""
     out = []
     for d in sorted(STATS.glob("*_K*")):
         f = d / "stats_summary.json"
         if f.exists():
             out.append((d, json.loads(f.read_text())))
+    pk = STATS / "heldout_peaks_figure.csv"
+    if pk.exists():
+        p = pd.read_csv(pk)
+        p = p[p.method_label == "convex NMF"]
+        if "scheme" in p.columns:
+            p = p[p.scheme == "home"]
+        want = {(r.feature_set, int(r.k_peak)) for r in p.itertuples()}
+        keep = [t for t in out
+                if (t[1].get("feature_set"), int(t[1].get("K", -1))) in want]
+        if keep:
+            out = keep
     # concat_hg before concat_rawds, which is the order the argument runs in
     rank = {"concat_hg": 0, "concat_rawds": 1, "concat_bands5": 2,
             "concat_bands5z": 3, "concat_hg_all": 4}
