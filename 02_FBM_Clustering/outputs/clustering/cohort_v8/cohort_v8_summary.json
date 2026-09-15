@@ -1,0 +1,21 @@
+{
+  "input_dir": "\\\\nasac-m2.unige.ch\\m-HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda\\01_FBM_Analysis\\outputs\\04_ersp_LM_RAWONLY",
+  "cache": "\\\\nasac-m2.unige.ch\\m-HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda\\02_FBM_Clustering\\outputs\\_dataset\\concat_source_v8",
+  "n_gated": 1680,
+  "n_ungated": 2948,
+  "n_patients": 27,
+  "excluded_patients": [
+    "EL044",
+    "PAT_3415"
+  ],
+  "patients_added_vs_previous": [],
+  "patients_gone_vs_previous": [],
+  "n_freq": 129,
+  "n_time_concat": 900,
+  "conditions": [
+    "audio",
+    "picture",
+    "reading"
+  ],
+  "written": "2026-09-15 00:35:58"
+}
