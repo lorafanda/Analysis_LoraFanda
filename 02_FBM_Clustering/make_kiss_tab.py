@@ -145,11 +145,11 @@ ENTRIES = [
             "in</i> &mdash; which is a different question &mdash; and it did it in the "
             "wrong space as well, raw dB instead of the unit-normed space convex NMF "
             "actually fits in.",
-            "Refitting with the run's own method changes the answer by a lot. At the "
-            "published K on <code>concat_hg</code>: <b>0.658 natively against 0.332</b>. "
-            "The old number sits below Hennig's 0.60 rule of thumb, which reads as "
-            "&ldquo;not a real cluster&rdquo;; the native one sits above it. Ward was "
-            "understated too, by about 0.07.",
+            "Refitting with the run's own method changes the answer by a lot. On "
+            "<code>concat_hg</code> (v7 run 20260908_201639): <b>0.586 natively against 0.373</b> at "
+            "K = 9, 0.680 against 0.397 at K = 8. The old number sits below Hennig's 0.60 rule of "
+            "thumb, which reads as &ldquo;not a real cluster&rdquo;; the native one sits above it. "
+            "The v8 sweep (<code>sweep_stability.py --new-concat --native</code>) is pending.",
             "<b>The check that makes this a correction rather than just a different "
             "number:</b> on a k-means run the native refit IS the old refit, so the two "
             "must agree exactly &mdash; and they do, bit-identical at every K on both "
@@ -253,10 +253,11 @@ ENTRIES = [
             "has no idea 1/f exists: the 1&ndash;20&nbsp;Hz band alone holds 44% of the "
             "sum of squares, so the fit spends most of its budget on low-frequency power "
             "whether the structure is there or not.",
-            "<b>Normalisation is the biggest lever in the whole feature definition.</b> "
-            "Raw against z-scored gives ARI 0.37 on the same electrodes at the same K "
-            "&mdash; a larger change than swapping k-means for Ward or convex NMF, which "
-            "agree at 0.25&ndash;0.36.",
+            "<b>Normalisation is a lever of the same size as the algorithm.</b> "
+            "Raw against z-scored on the same electrodes at the same K is drawn in FIG 2 "
+            "panel A.2; on v8 the algorithms on the same features agree at ARI "
+            "0.28&ndash;0.45 (median 0.39), and the representation choice moves the answer "
+            "by as much.",
         ],
         figs=[("E.8", "the same ERSP through all four representations",
                "E8_band_schemes.png",
@@ -448,7 +449,7 @@ def _fig4_numbers() -> dict:
                 and r["comparison"] == "cnmf_vs_kmeans_concat_hg"]
     if not rows:
         return {}
-    r = min(rows, key=lambda r: abs(float(r["overlap"]) - 0.69))   # the strongest pair
+    r = min(rows, key=lambda r: int(r["rank"]))   # rank 1: the pair with the highest centroid correlation
     g = lambda k: float(r[k])
     return dict(c1=r["cluster_1"], c2=r["cluster_2"], r=g("r_centred"),
                 n1=int(g("n_1")), n2=int(g("n_2")), j=g("overlap"),

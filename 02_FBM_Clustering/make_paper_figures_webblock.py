@@ -68,7 +68,7 @@ def fig0_bullets(png: Path):
                      + ", ".join(f"{r.patient} {r.electrode}" for r in out.itertuples())
                      + " sits outside the analysed cohort (removed before the gate).")
         # the cohort counts live with the supplement
-        pt = FIGDIR / "FIG0_cohort_supplement_patients.csv"
+        pt = FIGDIR / (stem.replace("FIG0_cohort", "FIG0_cohort_supplement") + "_patients.csv")
         if pt.exists():
             t = pd.read_csv(pt)
             b.append(f"The gate saw <b>{int(t.n_total.sum())}</b> electrodes in {len(t)} "
@@ -79,7 +79,8 @@ def fig0_bullets(png: Path):
     ex = FIGDIR / f"{stem}_examples.csv"
     if pt.exists():
         t = pd.read_csv(pt)
-        big, small = t.iloc[0], t.iloc[-1]
+        srt = t.sort_values("n_gated", ascending=False)
+        big, small = srt.iloc[0], srt.iloc[-1]
         b.append(f"<b>{int(t.n_gated.sum())} electrodes</b> from {len(t)} patients came "
                  f"through the gate; the largest patient is {big.patient} with "
                  f"{int(big.n_gated)} ({100*big.n_gated/t.n_gated.sum():.0f}%), the "
@@ -184,8 +185,10 @@ def fig3_bullets(png: Path):
          f"(|rho| at most {d.rho.abs().max():.2f}) &mdash; belonging more strongly to a "
          f"cluster barely predicts sitting further into language cortex."]
     thin = d[d.coverage < 0.70]
-    b.append(f"LanA covers {100*d.n_lana.sum()/d.n.sum():.0f}% of the electrodes; the "
-             f"missing ones are whole patients the atlas run predates"
+    cov = d.n_lana.sum() / d.n.sum()
+    b.append(f"LanA covers {100*cov:.0f}% of the electrodes"
+             + ("" if cov >= 0.995 else
+                "; the missing ones are whole patients the atlas run predates")
              + (f", and c{int(thin.cluster.iloc[0])} is only "
                 f"{100*thin.coverage.min():.0f}% covered, so its mean is not comparable "
                 f"with the rest." if len(thin) else "."))
@@ -193,7 +196,7 @@ def fig3_bullets(png: Path):
 
 
 def _peak_k_text():
-    """The held-out peaks as 249 measured them, in FS_ORDER, e.g. "9 / 13 / 14 / 14"."""
+    """The held-out peaks as 249 measured them, in FS_ORDER, e.g. "9 / 12 / 13 / 14"."""
     order = ["concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z"]
     try:
         d = json.loads((ROOT / "outputs" / "clustering" / "bsf_comparison"
@@ -210,7 +213,7 @@ def newest_only(figs):
     lf_runs.newest_run uses. Without this, a directory holding two cohorts' renders puts
     both on the page and the page describes them as one result. Keyed on the name with
     the run id removed, so a figure and its _weighted variant stay separate figures.
-    FIG 0 has a cohort version (_v6, _v7) instead of a run id and is resolved on that.
+    FIG 0 has a cohort version (_v6, _v7, _v8) instead of a run id and is resolved on that.
     Files are not touched; only the listing changes.
     """
     best = {}
@@ -219,6 +222,12 @@ def newest_only(figs):
         m = re.search(r"_run(\d{8}-\d{6})", stem)
         if m:
             key, ver = stem.replace(m.group(0), ""), m.group(1)
+            # FIG 1 is one figure per feature set, cut at that feature set's held-out
+            # peak - and the peak moves with the cohort (v7 raw-ds K13, v8 K12). The K
+            # is not part of what makes it a different figure, so it leaves the key;
+            # FIG 4's K06..K10 are a sweep and keep theirs.
+            if key.startswith("FIG1"):
+                key = re.sub(r"_K\d+", "", key)
         else:
             v = re.search(r"_v(\d+)$", stem)
             if v:
@@ -228,8 +237,41 @@ def newest_only(figs):
         cur = best.get(key)
         if cur is None or ver > cur[0]:
             best[key] = (ver, f)
+    # A variant (_weighted) is a way of drawing its base figure, not a figure of its
+    # own: it is shown only when it was rendered on the same run as the base figure's
+    # newest copy. Otherwise a variant left over from the previous cohort would sit
+    # next to the new base figure and the page would describe two cohorts as one.
+    for key in [k for k in best if k.endswith("_weighted")]:
+        base = best.get(key[: -len("_weighted")])
+        if base is not None and base[0] != best[key][0]:
+            del best[key]
     keep = {f for _, f in best.values()}
     return [f for f in figs if f in keep]
+
+
+def current_cohort_only(figs):
+    """Drop renders of runs the coverage manifest no longer lists.
+
+    newest_only keys on the K, so a previous cohort's render at K=8 survives beside
+    the current cohort's render at its peak K and the page shows two cohorts as one
+    result (v7 FIG 1 at K8 next to v8 FIG 1 at K9/K14). The manifest names the twelve
+    runs of the current cohort; a figure whose run id is not among them belongs to an
+    earlier one. FIG 0 has no run id and is left to newest_only. If the manifest cannot
+    be read nothing is dropped.
+    """
+    mf = (ROOT / "outputs" / "250_recon" / "fsaverage" / "coverage_viz"
+          / "manifest.json")
+    try:
+        runs = {r["run"].replace("_", "-")
+                for r in json.loads(mf.read_text(encoding="utf-8"))["runs"]}
+    except Exception:
+        return figs
+    out = []
+    for f in figs:
+        m = re.search(r"_run(\d{8}-\d{6})", f.with_suffix("").name)
+        if m is None or m.group(1) in runs:
+            out.append(f)
+    return out
 
 
 def fig4_bullets(png):
@@ -244,13 +286,14 @@ def fig4_bullets(png):
     except Exception:
         return []
     out = []
-    algo = d[d.comparison.str.contains("_vs_")]
-    feat = d[~d.comparison.str.contains("_vs_")]
+    is_algo = d.comparison.str.match(r"^(cnmf|kmeans|hierarchical)_vs_")
+    algo, feat = d[is_algo], d[~is_algo]
     if "diag_share" in d.columns and len(algo) and len(feat):
-        out.append("<b>Algorithm barely matters; representation does.</b> Two algorithms "
-                   f"on the same features place <b>{100*algo.diag_share.mean():.0f}%</b> "
-                   "of electrodes in matching clusters, two feature sets under the same "
-                   f"algorithm only <b>{100*feat.diag_share.mean():.0f}%</b> - against "
+        out.append("<b>Algorithms agree with each other more than representations do.</b> "
+                   "Two algorithms on the same features place "
+                   f"<b>{100*algo.diag_share.mean():.0f}%</b> of electrodes in matching "
+                   "clusters, two feature sets under the same algorithm "
+                   f"<b>{100*feat.diag_share.mean():.0f}%</b> - against "
                    f"{100*d.diag_null_mean.mean():.0f}% for random pairings of the same "
                    "two solutions.")
     if "n_matched" in d.columns and "n_sig_plain_hard" in d.columns:
@@ -309,14 +352,16 @@ def build():
                     and f.name.replace("FIG2_agreement_K", "FIG2_agreement_concat_hg_K")
                     in named)]
     figs = newest_only(figs)
+    figs = current_cohort_only(figs)
     tracked = tracked_files()
 
     P = [BEGIN,
          '    <h3 id="paper2figs">Paper 2 figures</h3>',
          '    <div class="method" style="border-left:4px solid var(--s2)">',
          "      <b>Built by <code>00_paper2_figure0_coverage.py</code>, "
-         "<code>00_Paper2_Figures.py</code>, <code>00_paper2_figures2_2.py</code> and "
-         "<code>00_paper2_figure3_lana.py</code>, driven and explained by "
+         "<code>00_Paper2_Figures.py</code>, <code>00_paper2_figures2_2.py</code>, "
+         "<code>00_paper2_figure3_lana.py</code> and "
+         "<code>00_paper2_figure4_correspondence.py</code>, driven and explained by "
          "<code>000_Paper2_figures.ipynb</code>.</b> Nothing is written on a figure: "
          "each one ships a <code>_caption.txt</code> beside it with the full "
          "provenance, and the numbers behind every panel as CSV. The bullets below are "
@@ -331,13 +376,14 @@ def build():
          "LanA probabilistic language atlas. LanA is a prior about a LOCATION, not a "
          "measurement in a patient, so a cluster scoring high sits where language "
          "cortex usually is; whether it responded to language is FIG 1.</p>",
-         "      <p style='margin:8px 0 0'><b>FIG 1 is cut at two K.</b> The held-out "
-         f"peak per feature set ({_peak_k_text()}) and <b>K = 8</b>. They disagree, and "
-         "the disagreement is the point &mdash; held-out variance cannot see a cluster "
-         "that is one patient's electrode strip, because splitting a cohort until each "
-         "patient has their own component fits held-out data perfectly well. At K = 8 "
-         "the same layout is also drawn for <b>k-means</b> and <b>Ward</b> on every "
-         "feature set, so the three algorithms read side by side.</p>",
+         "      <p style='margin:8px 0 0'><b>FIG 1 is cut at each feature set's held-out "
+         f"peak</b> ({_peak_k_text()}), on convex NMF; FIG 2 and FIG 3 are cut at "
+         "<b>K = 8</b>, FIG 4 at K = 8 with the neighbouring K either side. The peaks and "
+         "K = 8 disagree, and the disagreement is the point &mdash; held-out variance "
+         "cannot see a cluster that is one patient's electrode strip, because splitting a "
+         "cohort until each patient has their own component fits held-out data perfectly "
+         "well; the generalization sweep in each FIG 1 says where those clusters "
+         "appear.</p>",
          "    </div>"]
 
     missing, untracked = [], []

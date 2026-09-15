@@ -38,7 +38,7 @@ END = "<!-- END s2 gallery -->"
 # PADDING IS NOT UNIFORM AND THE GALLERY HAS TO MATCH EACH PRODUCER.
 # sweep_stability.py writes stability_by_k/k_09; make_missing_centroids.py writes
 # cluster_centroids/k_9. Both appear below, padded and not, on purpose. It only shows
-# up at single-digit K, which is where the held-out peak landed on cohort v7.
+# up at single-digit K, which is where the concat_hg held-out peak landed on cohorts v7 and v8.
 def native_gap(run_dir, k):
     """(native, k-means-resampled) mean Jaccard at K, or None if either is absent.
 
@@ -131,7 +131,7 @@ def build(peak, tracked=None):
           "reading laid end to end, on a y range fitted once across the whole run so the "
           "clusters are comparable to each other.",
           "The band is <b>&plusmn;1 standard deviation ACROSS ELECTRODES</b>, not the "
-          "SEM. With 90&ndash;300 electrodes per cluster the SEM is a hairline and says "
+          "SEM. With 110&ndash;360 electrodes per cluster the SEM is a hairline and says "
           "only that the mean is well estimated, which was never in doubt. SD answers "
           "the question the plot is for: <b>is this cluster a tight family or a loose "
           "one</b>.",

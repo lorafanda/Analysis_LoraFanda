@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import json
 import re
 import subprocess
 import sys
@@ -271,8 +272,8 @@ SECTIONS = [
             D("Opening &mdash; the cohort, and what is being clustered",
               "Recordings were made in <b>27 patients</b> undergoing intracranial "
               "monitoring for epilepsy, who performed auditory naming, picture naming "
-              "and reading completion. Of the <b>2,999 contacts</b> with usable data in "
-              "all three conditions, <b>1,719</b> passed a responsiveness gate and "
+              "and reading completion. Of the <b>2,948 contacts</b> with usable data in "
+              "all three conditions, <b>1,680</b> passed a responsiveness gate and "
               "entered the analysis.",
               "The gate is applied per electrode rather than per condition: an electrode "
               "enters on a single responsive condition and then contributes its full "
@@ -287,7 +288,7 @@ SECTIONS = [
             D("Figure 1 &mdash; what the response types are",
               "We asked what kinds of response the cortex produces during language use, "
               "letting the data group the profiles rather than sorting them by "
-              "anatomical region or by task. Clustering the 1,719 profiles yields a "
+              "anatomical region or by task. Clustering the 1,680 profiles yields a "
               "small number of response types, each defined by its time course across "
               "the three conditions rather than by where it was recorded.",
               "<i>Describe the eight here so a reader could recognise one in their own "
@@ -299,7 +300,7 @@ SECTIONS = [
               "their own data.", rows=7),
             D("Figure 1 &mdash; and the choice of K",
               "K is a choice, and we make it twice. Held-out variance peaks at "
-              "<b>K&nbsp;=&nbsp;9</b> for high-frequency activity and at 13 or 14 for "
+              "<b>K&nbsp;=&nbsp;9</b> for high-frequency activity and at 12 to 14 for "
               "the band-based descriptions (<code>bsf_comparison/peak_k.json</code>; "
               "recheck before submission). The figures are cut at <b>K&nbsp;=&nbsp;8</b> "
               "throughout, so that every solution is compared at one value.",
@@ -321,16 +322,19 @@ SECTIONS = [
               "A response type is only as meaningful as the choices that produce it, and "
               "those choices are not equivalent. <b>The algorithm barely matters; the "
               "representation does.</b>",
-              "Across algorithms, convex NMF, k-means and Ward place <b>0.62 to 0.69</b> "
-              "of the 1,719 electrodes in corresponding clusters, against <b>0.12</b> "
-              "for random pairings of the same two solutions; <b>54%</b> of electrodes "
-              "are assigned identically by all three, where <b>3%</b> would be expected "
-              "by chance. Across representations the same comparisons give <b>0.36 to "
-              "0.39</b>, and only <b>27%</b> of electrodes are grouped together by all "
-              "four descriptions against <b>8%</b> expected by chance. Every matched "
-              "pair clears both permutation nulls in the algorithm comparisons; in each "
-              "representation comparison five of eight do, and three fail one null or "
-              "both.",
+              "Across algorithms, convex NMF, k-means and Ward place <b>0.47 to 0.64</b> "
+              "of the 1,680 electrodes in corresponding clusters, against <b>0.12</b> "
+              "for random pairings of the same two solutions; <b>40%</b> of electrodes "
+              "are assigned identically by all three, where <b>2.5%</b> would be expected "
+              "by chance. Across representations the same comparisons give <b>0.34 to "
+              "0.49</b>, and only <b>31%</b> of electrodes are grouped together by all "
+              "four descriptions against <b>0.4%</b> expected by chance. Seven or eight "
+              "of the eight matched pairs clear both permutation nulls in the algorithm "
+              "comparisons (the rank-8 pair of convex NMF against k-means and against "
+              "Ward, matched at a negative correlation, fails both); in the "
+              "representation comparisons all eight do for 5 bands z, seven of eight for "
+              "5 bands, and for 15 bands seven clear the free null and six the "
+              "within-patient one.",
               "The consequence is that <i>the response types of language cortex</i> is "
               "not a well-posed object until the frequency description is stated. What "
               "the cortex does is unchanged; what counts as the same response is not. We "
@@ -366,8 +370,9 @@ SECTIONS = [
               "<b>Step 2 &mdash; judge by membership.</b> For a matched pair the "
               "overlap is the Jaccard index of the two electrode sets:",
               "<div class=\"eqbox\"><div class=\"eq\"><i>J</i>(<i>a</i>, <i>b</i>) = |<i>a</i> &cap; <i>b</i>| / |<i>a</i> &cup; <i>b</i>|<span class=\"eqn\">(1)</span></div></div>",
-              "If cluster a3 holds 210 electrodes, b5 holds 190 and they share 150, "
-              "<i>J</i> = 150 / (210 + 190 &minus; 150) = 150 / 250 = 0.60. (The weighted "
+              "If convex NMF&rsquo;s cluster c6 holds 223 electrodes, k-means&rsquo; c2 holds 247 "
+              "and they share 178 (their best-matched pair on HFA at K = 8, <i>r</i> = 0.95), "
+              "<i>J</i> = 178 / (223 + 247 &minus; 178) = 178 / 292 = 0.61. (The weighted "
               "version replaces the set sizes by the loadings, &sum;min / &sum;max, and "
               "reduces to (1) for hard labels.) A correlation between two mean shapes "
               "says nothing about how many electrodes the two clusters share, which is "
@@ -383,21 +388,21 @@ SECTIONS = [
               "nulls; its adjusted overlap uses the free one:",
               "<div class=\"eqbox\"><div class=\"eq\"><i>J</i><sub>adj</sub> = (<i>J</i> &minus; <i>J</i><sub>0</sub>) / (1 &minus; <i>J</i><sub>0</sub>)<span class=\"eqn\">(2)</span></div></div>",
               "is 0 at chance and 1 at identity, which is what lets pairs of different "
-              "sizes be read on one axis. In the example, two clusters of 210 and 190 out "
-              "of 1719 overlap by chance at about <i>J</i><sub>0</sub> = 0.06, so "
-              "<i>J</i><sub>adj</sub> = (0.60 &minus; 0.06) / 0.94 = 0.57.",
+              "sizes be read on one axis. In the example, two clusters of 223 and 247 out "
+              "of 1680 overlap by chance at about <i>J</i><sub>0</sub> = 0.08, so "
+              "<i>J</i><sub>adj</sub> = (0.61 &minus; 0.08) / 0.92 = 0.58.",
               "<b>The one-number summary.</b> Writing <i>C</i><sub><i>ij</i></sub> for the "
               "number of electrodes in A&rsquo;s cluster <i>i</i> and B&rsquo;s cluster <i>j</i>, "
               "the diagonal share is the fraction of the cohort sitting on the matched "
               "pairs:",
               "<div class=\"eqbox\"><div class=\"eq\">share = &sum;<sub>matched (<i>i</i>,<i>j</i>)</sub> <i>C</i><sub><i>ij</i></sub> / <i>N</i><span class=\"eqn\">(3)</span></div></div>",
-              "so 1193 of 1719 electrodes on the diagonal (convex NMF against k-means) reads 0.69. Its null re-pairs "
-              "the same two label sets at random without re-clustering; on the v7 run "
+              "so 1069 of 1680 electrodes on the diagonal (convex NMF against k-means) reads 0.64. Its null re-pairs "
+              "the same two label sets at random without re-clustering; on the v8 run "
               "that is about 0.12. Read it for what it is: how much of the diagonal the "
               "alignment <i>earned</i>, not whether the two clusterings agree more than "
               "two arbitrary partitions would. That second question is answered cluster by "
               "cluster by the step-3 nulls, and per pair of solutions, with one number, by "
-              "Figure 5. Numbers are from the v7 run; re-read them after v8."),
+              "Figure 5. Numbers are from the v8 run (convex NMF on HFA, 20260914_225554, against k-means 20260915_004134; FIG 4 at K = 8)."),
             F("results.f4", "Cluster correspondence and its null",
               "What FIG 4 adds beyond FIG 2: a matched pairing, an independent test of "
               "it, and a chance level. State the diagonal share and what it is against, "
@@ -434,13 +439,13 @@ SECTIONS = [
               "<b>Chance.</b> The second solution&rsquo;s labels are shuffled across "
               "electrodes &mdash; every cluster keeps its size, every electrode gets a "
               "random one &mdash; and the table, the matching and the share are redone, "
-              "a thousand times. At K = 8 that lands near 0.16 in a first check, not 1/8, "
+              "a thousand times. At K = 8 that lands near 0.16, not 1/8, "
               "because the matching is allowed to pick the best of many random tables "
-              "(<i>fill in from the run</i>). Each cell "
+              "(v8, 36 pairs, 1000 permutations: null mean 0.156 to 0.176, median 0.159). Each cell "
               "carries its null mean, a one-sided p, and the chance-corrected value",
               "<div class=\"eqbox\"><div class=\"eq\">share<sub>adj</sub> = (share &minus; share<sub>0</sub>) / (1 &minus; share<sub>0</sub>)<span class=\"eqn\">(5)</span></div></div>",
-              "so a pair at 0.69 against a chance of 0.16 reads (0.69 &minus; 0.16) / 0.84 "
-              "= 0.63, and a pair whose share is not above the 95th percentile of its null "
+              "so a pair at 0.64 against a chance of 0.16 reads (0.64 &minus; 0.16) / 0.84 "
+              "= 0.57, and a pair whose share is not above the 95th percentile of its null "
               "is marked <i>ns</i>.",
               "<b>Reading the matrix.</b> The 3 &times; 3 blocks along the diagonal are "
               "one algorithm on three representations; the cells between blocks at the "
@@ -638,8 +643,9 @@ SECTIONS = [
 #
 # Two per field, for every field. Written in the paper's voice: short sentences,
 # direct, one idea each. A and B take different angles on the same prompt rather than
-# rewording each other. Numbers are from the K=8 run of 2026-09-03 (FIG1a concat_hg,
-# FIG2, FIG3 concat_hg) - the Results examples describe the HIGH-GAMMA solution, and
+# rewording each other. Numbers are from the cohort-v8 runs of 2026-09-14/15 at K=8
+# (cnmf concat_hg 20260914_225554; FIG2, FIG3, FIG4 on concat_hg; FIG1a at K9) - the
+# Results examples describe the HIGH-GAMMA solution, and
 # will need rewriting if the paper's standard becomes the 5-band z-scored one. [REF]
 # marks a citation to add and [brackets] a value only the author has. The highlights
 # are within 85 characters and both summaries within 150 words, counted. Keys must be
@@ -843,7 +849,7 @@ EXAMPLES = {
         "cluster it produces will belong to a single patient. If it is true, a few "
         "clusters will capture the responses, each will draw on many patients, and "
         "adding more will only split them.",
-        "We ask a simple question. Across 1688 electrodes from 27 patients, do the "
+        "We ask a simple question. Across 1680 electrodes from 27 patients, do the "
         "responses repeat? A response type is a temporal profile that many electrodes "
         "share and that is not tied to one person or one implant. The alternative is "
         "that each electrode is its own case. Both outcomes are possible and the "
@@ -899,7 +905,7 @@ EXAMPLES = {
     ],
     # ---- 6 - roadmap -----------------------------------------------------------
     "intro.roadmap": [
-        "We clustered the responses of 1688 electrodes from 27 patients under three "
+        "We clustered the responses of 1680 electrodes from 27 patients under three "
         "language conditions. Eight response types were found. We then tested whether "
         "they held when the features, the algorithm and the number of clusters were "
         "changed, and found that some did and some did not. Finally we compared the "
@@ -916,12 +922,12 @@ EXAMPLES = {
     # ---- RESULTS ---------------------------------------------------------------
     "results.cohort": [
         "We recorded from 27 patients implanted with depth electrodes for presurgical "
-        "evaluation. After gating for signal quality and cortical location, 1688 "
+        "evaluation. After gating for signal quality and cortical location, 1680 "
         "electrodes remained (criteria in STAR Methods). No patient contributes more "
-        "than 9.2% of the cohort. Coverage was set by clinical need and is densest in "
+        "than 9.3% of the cohort. Coverage was set by clinical need and is densest in "
         "temporal and frontal cortex, bilaterally. Every result below refers to these "
-        "1688 electrodes.",
-        "The cohort is 27 patients and 1688 gated electrodes. No patient holds more "
+        "1680 electrodes.",
+        "The cohort is 27 patients and 1680 gated electrodes. No patient holds more "
         "than a tenth of the data. Placement followed clinical need, so coverage is "
         "dense in the temporal lobe and sparse elsewhere, and no single patient samples "
         "the whole language network. Each electrode is described by its high-frequency activity "
@@ -930,40 +936,41 @@ EXAMPLES = {
     ],
     "results.f1": [
         "At K = 8, convex NMF separates the electrodes into eight types (Figure 1). The "
-        "largest, c1 (n = 436), rises after the GO cue in all three conditions and "
+        "largest, c1 (n = 428), rises after the GO cue in all three conditions and "
         "returns to baseline before the next trial: a production response, indifferent "
-        "to the input. c3 (n = 199) adds a sharp onset at the start of the auditory "
+        "to the input. c4 (n = 202) adds a sharp onset at the start of the auditory "
         "block, locked to the sound, and then the same rise at production; it is the "
-        "tightest type, with its mean clearing one standard deviation in 28% of time "
-        "bins, the most of any cluster. c4 (n = 228) is the inverse: suppression below "
-        "baseline during the stimulus in every condition. c5 (n = 162) responds only to "
-        "reading and sits mostly on the left (91 electrodes to 53). c2 (n = 185) "
-        "responds mainly to the picture. The remaining three, c0, c6 and c7, carry "
-        "little signal, and c7 is the one cluster that leans on a single patient.",
+        "tightest type, with its mean clearing one standard deviation in [N]% of time "
+        "bins, the most of any cluster. c6 (n = 223) is the inverse: suppression below "
+        "baseline during the stimulus in every condition. c5 (n = 168) responds only to "
+        "reading and sits mostly on the left (99 electrodes to 69). c3 (n = 175) "
+        "responds mainly to the picture. The remaining three, [c?, c? and c?], carry "
+        "little signal; no cluster is more than half one patient, and c2 is the one that leans most on one (46%, PAT_6684).",
         "Eight types emerge and they differ in two ways: when they respond and whether "
         "they care which condition it is. Three are condition-general. c1 responds at "
-        "production, c3 at the auditory stimulus and again at production, and c4 is "
-        "suppressed during the stimulus. Two are condition-specific: c5 for reading, c2 "
+        "production, c4 at the auditory stimulus and again at production, and c6 is "
+        "suppressed during the stimulus. Two are condition-specific: c5 for reading, c3 "
         "for pictures. Three carry little signal. Figure 1 shows each type as its mean "
         "response with one standard deviation, the electrodes that carry it, and the "
         "patients it draws on. The element that recurs is a peak after the GO cue. The "
         "types differ in what happens before it.",
     ],
     "results.f1_k": [
-        "Held-out variance, estimated by bi-cross-validation, peaks at K = 11 for high "
+        "Held-out variance, estimated by bi-cross-validation, peaks at K = 9 for high "
         "gamma and at 12 to 14 for the other feature sets (Figure 1A). We do not use "
-        "those values. At K = 11, two of eleven clusters draw more than half their "
-        "electrodes from one patient; at K = 14 on the five-band features, one cluster "
-        "is 75 of a single patient's 77 electrodes. Across feature sets, 15 to 45% of "
+        "those values. At K = 9, one of nine clusters draws more than half its "
+        "electrodes from one patient (65 of 110); at K = 14 on the five-band "
+        "z-scored features, eight of fourteen do, and one cluster is 116 of a single "
+        "patient's 144 electrodes. Across feature sets, 7% to 53% of "
         "the electrodes sit in one-patient clusters at the held-out peak (Figure 1D). "
         "Held-out variance cannot see this. Splitting a cohort until each patient has "
         "their own component fits held-out data perfectly well. We cut at K = 8, the "
         "largest K at which no high-frequency activity cluster is dominated by one patient and at "
-        "most one is in any other feature set.",
+        "most two are in any other feature set.",
         "The number of clusters is a choice, and the standard criterion gives the wrong "
-        "answer. Bi-cross-validated fit rises to a peak near K = 11 and falls slowly "
+        "answer. Bi-cross-validated fit rises to a peak at K = 9 and falls slowly "
         "after (Figure 1A). But the share of electrodes in clusters that belong to one "
-        "patient starts rising at K = 9 and reaches 60% by K = 30 (Figure 1D). A "
+        "patient starts rising at K = 9 and reaches 71% by K = 29 (Figure 1D). A "
         "cluster that is one patient's electrode strip explains held-out variance as "
         "well as a real one. It is not a response type. K = 8 is the last value at "
         "which every high-frequency activity cluster draws on many patients. That is the K we "
@@ -973,36 +980,36 @@ EXAMPLES = {
     "results.f2": [
         "Figure 2 asks whether the eight types depend on how the electrodes were "
         "described or on which algorithm was used. Between feature sets, the adjusted "
-        "Rand index ranges from 0.16 to 0.53, median 0.31. Between algorithms on the "
-        "same features it ranges from 0.16 to 0.45, median 0.18. Per electrode, all "
-        "four feature sets agree on the cluster for 21.7% of electrodes, against 0.4% "
-        "by chance; all four algorithms agree for 24.7%, against 1.1%. The ceiling "
+        "Rand index ranges from 0.18 to 0.51, median 0.30. Between algorithms on the "
+        "same features it ranges from 0.28 to 0.45, median 0.39. Per electrode, all "
+        "four feature sets agree on the cluster for 31.0% of electrodes, against 0.4% "
+        "by chance; all three algorithms agree for 40.2%, against 2.5%. The ceiling "
         "matters. Convex NMF on high-frequency activity agrees with itself, on resamples of the same "
-        "data, at a Jaccard of only 0.55. K-means reaches 0.82. No cross-method "
+        "data, at a Jaccard of only [J]; k-means reaches [J] (sweep_stability --native, not yet run on v8). No cross-method "
         "agreement can exceed what a method reproduces on its own.",
-        "The types are partly stable. Feature sets agree at a median ARI of 0.31 and "
-        "algorithms at 0.18, both far above chance and far below 1. Per cluster the "
-        "picture is uneven (Figure 2B, E). c3, the auditory type, is recovered by every "
-        "feature set and every algorithm. c0, c5 and c7 are missed by at least one. "
+        "The types are partly stable. Feature sets agree at a median ARI of 0.30 and "
+        "algorithms at 0.39, both far above chance and far below 1. Per cluster the "
+        "picture is uneven (Figure 2B, E). c4, the best-recovered type (Jaccard 0.64 against k-means, 0.49 against Ward), is found by every "
+        "algorithm. c0, c5 and c2 are missed by at least one (Jaccard below 0.30). "
         "Several low cells are splits rather than disagreements: the reference cluster "
         "is two clusters in the other solution, which a one-to-one matching scores as a "
-        "failure and is not one. Agreement across K peaks at K = 29 for feature sets, "
+        "failure and is not one. Agreement across K between algorithms peaks at K = 29 (mean pairwise ARI 0.40, against 0.37 at K = 8), "
         "which is where most clusters are one patient. High agreement between two "
         "methods is not evidence of a real type when both have found the same patient.",
     ],
     "results.f4": [
         "Pairing clusters by the correlation of their mean responses and then counting "
-        "the electrodes each pair shares places 62-69% of the cohort on the matched "
-        "diagonal for two algorithms on the same features, and 36-39% for two feature "
+        "the electrodes each pair shares places 47-64% of the cohort on the matched "
+        "diagonal for two algorithms on the same features, and 34-49% for two feature "
         "sets under the same algorithm, against about 12% for random pairings of the "
-        "same clusters. All eight algorithm pairs clear both permutation nulls; in each "
-        "representation comparison five of the eight do. The overlap is measured on a quantity "
+        "same clusters. Seven or eight of the eight algorithm pairs clear both permutation nulls; in the "
+        "representation comparisons six to eight of the eight do. The overlap is measured on a quantity "
         "the pairing never used, so a matched pair that shares its electrodes is "
         "evidence of correspondence and not a restatement of the matching.",
         "Figure 4 tests correspondence cluster by cluster. Clusters are paired by shape "
         "alone and scored on membership alone. Where the algorithm changes and the "
         "features do not, the matched pairs share their electrodes far above chance; "
-        "where the features change, five of the eight pairs do. The bijection null is "
+        "where the features change, six to eight of the eight pairs do. The bijection null is "
         "deliberately weak: it says how much of the diagonal the alignment earned, not "
         "that the two clusterings agree beyond arbitrary partitions, and that stronger "
         "claim is left to Figure 5.",
@@ -1026,39 +1033,39 @@ EXAMPLES = {
     ],
     "results.f2_left": [
         "The agreement figures also say what is not stable. For 4.3% of electrodes no "
-        "two feature sets agree on a cluster, and for 10.2% no two algorithms do. These "
-        "are not evenly spread. They concentrate in the three weak types, c0, c6 and "
-        "c7, and at the borders between the strong ones. Roughly one electrode in five "
+        "two feature sets agree on a cluster, and for 17.8% no two algorithms do. These "
+        "are not evenly spread. They concentrate in the weak types and at the borders "
+        "between the strong ones. Roughly one electrode in three "
         "belongs to a type that every method finds. The rest belong to a type that some "
         "methods find. The taxonomy claim holds for the first group and is provisional "
         "for the second.",
         "Not every electrode has a type. Figure 2C and F colour each electrode by how "
-        "many methods place it in the same cluster. About a fifth are placed "
-        "identically by all four. A tenth are placed differently by every algorithm. "
+        "many methods place it in the same cluster. About three in ten are placed "
+        "identically by all four. Nearly a fifth are placed differently by every algorithm. "
         "The unstable electrodes are the weak responders, and the unstable clusters are "
         "the ones with the least signal. This is the expected failure mode and the "
         "honest one. The clustering is uncertain where the data are uncertain, not "
         "where they are clear.",
     ],
     "results.f3": [
-        "Figure 3 compares the eight types with the LanA language atlas. All 1688 "
+        "Figure 3 compares the eight types with the LanA language atlas. All 1680 "
         "electrodes now carry an atlas value: the three patients whose coordinates "
         "were missing were recovered by the recon alias map, so coverage is no "
         "longer a caveat on this figure. Ranked by mean LanA "
-        "probability, c3 sits highest at 0.226 against a cohort mean of 0.143, and c2 "
-        "lowest at 0.101. Against a within-patient permutation, c3 is enriched "
+        "probability, c4 sits highest at 0.225 against a cohort mean of 0.134, and c3 "
+        "lowest at 0.101. Against a within-patient permutation, c4 is enriched "
         "(q = 0.008). Against a null that preserves the spatial structure of each "
-        "electrode shaft, it is not (q = 0.45), and no cluster is. The correlation "
-        "between an electrode's loading on a cluster and its atlas probability is below "
-        "|rho| = 0.10 for every type. The clusters are not placed by the atlas.",
+        "electrode shaft, it is not (q = 0.35), and no cluster is. The correlation "
+        "between an electrode's loading on a cluster and its atlas probability is at most "
+        "|rho| = 0.13 (c4, q = 0.17 against the shaft null) and below 0.08 for every other type. The clusters are not placed by the atlas.",
         "The atlas comparison is negative, and the reason is instructive. Under a "
-        "liberal null that shuffles atlas values within each patient, one cluster, c3, "
+        "liberal null that shuffles atlas values within each patient, one cluster, c4, "
         "appears enriched in language cortex. Under a null that shifts labels along "
         "each electrode shaft, keeping neighbouring contacts together, the enrichment "
         "disappears: 0 of 8 clusters pass at q < 0.05. Neighbouring contacts on a shaft "
         "have nearly identical atlas values, so the liberal null inflates every "
         "comparison. The largest correlation between loading and atlas probability is "
-        "0.097. At 1396 electrodes a q-value is almost free; the effect size is what "
+        "0.133. At 1680 electrodes a q-value is almost free; the effect size is what "
         "counts, and it is near zero for every type. The response types are defined by "
         "what the electrodes do, not by where the atlas says language should be.",
     ],
@@ -1128,7 +1135,7 @@ EXAMPLES = {
         "Most survive changes of features and algorithm; none is placed by the "
         "language atlas.",
         "Passive language mapping scores each electrode as active or silent. Fanda et "
-        "al. ask what kinds of response exist, cluster 1688 electrodes from 27 "
+        "al. ask what kinds of response exist, cluster 1680 electrodes from 27 "
         "patients into eight types, and show which of them survive the analysis "
         "choices that produced them.",
     ],
@@ -1142,14 +1149,14 @@ EXAMPLES = {
         "(activity that climbs toward the cue in every condition), suppression (a dip "
         "below baseline during the stimulus), and reading-only. Bottom: the three "
         "tests as one number each. How many: K = 8, with the curve showing why the "
-        "held-out peak at 11 is not the answer. Other methods: 22% of electrodes are "
+        "held-out peak at 9 is not the answer. Other methods: 31% of electrodes are "
         "placed identically by all four feature sets (chance 0.4%), and the "
         "auditory-onset type by every method. Anatomy: no - 0 of 8 types sit above a "
         "null that keeps each shaft intact. Closing line: a response type is what an "
         "electrode does, not where it sits.",
         "One panel. The five named types as small traces over the three conditions, "
         "each with its electrodes on both hemispheres. Below them, three one-number "
-        "verdicts: K = 8; 22% placed alike by all feature sets; 0 of 8 above the "
+        "verdicts: K = 8; 31% placed alike by all feature sets; 0 of 8 above the "
         "spatial atlas null. One sentence: a response type is what an electrode does, "
         "not where it sits. Nothing else - no panel letters, no axes a reader has to "
         "decode at thumbnail size.",
@@ -1162,7 +1169,7 @@ EXAMPLES = {
         "intracranial recordings is faster but reduces each electrode to active or "
         "silent. We asked whether language responses instead fall into a small number "
         "of recurring types. In 27 patients performing auditory, picture and reading "
-        "tasks, we clustered high-frequency activity responses from 1688 electrodes with convex "
+        "tasks, we clustered high-frequency activity responses from 1680 electrodes with convex "
         "non-negative matrix factorization and found eight types, including "
         "production-locked, auditory-onset, ramp-to-cue and suppressed responses. "
         "Held-out fit favoured more clusters, but the extra ones were single patients. "
@@ -1172,7 +1179,7 @@ EXAMPLES = {
         "what an electrode does, not where it sits.",
         "Passive language mapping from intracranial recordings tells a surgeon which "
         "electrodes respond, not what they do. We asked whether the responses "
-        "themselves recur. Across 1688 electrodes from 27 patients, recorded during "
+        "themselves recur. Across 1680 electrodes from 27 patients, recorded during "
         "listening, picture naming and reading, convex non-negative matrix "
         "factorization found eight response types that differ in when they respond "
         "and whether they care which input it was. The number of types was set by "
@@ -1262,7 +1269,7 @@ EXAMPLES = {
     ],
     "limits.patients": [
         "At K = 8 no high-frequency activity cluster is more than half one patient, but the worst "
-        "is 46%, and at the held-out peak two of eleven are. Generalisation was used "
+        "is 46%, and at the held-out peak one of nine is. Generalisation was used "
         "as a criterion, not demonstrated as a result; a held-out cohort would be the "
         "demonstration.",
         "The three weak types are the least stable and the least shared. We have kept "
@@ -1272,12 +1279,13 @@ EXAMPLES = {
     ],
     "limits.k": [
         "There is no correct K. We report the largest K at which every cluster draws "
-        "on many patients, which is one criterion among several; held-out fit gives 11 "
+        "on many patients, which is one criterion among several; held-out fit gives 9 "
         "to 14, and a different threshold on patient dominance would give a different "
         "number. The types that survive across K are more trustworthy than the count.",
         "K = 8 was chosen on high-frequency activity and applied to the other feature sets. At "
-        "K = 8 one cluster in each of the 15-band and 5-band solutions is more than "
-        "half one patient, so the same K is not equally clean everywhere.",
+        "K = 8 two clusters in each of the 15-band and 5-band solutions, and one in the "
+        "5-band z-scored solution, are more than half one patient, so the same K is not "
+        "equally clean everywhere.",
     ],
     "limits.method": [
         "Every result is conditional on convex NMF, on high-frequency activity power, and on a time "
@@ -1285,13 +1293,13 @@ EXAMPLES = {
         "absolute time. Response latencies, and any type defined by them, are "
         "invisible by construction.",
         "The self-agreement of a method sets the ceiling on every cross-method number, "
-        "and for convex NMF on high-frequency activity that ceiling is 0.55. Some of the "
+        "and for convex NMF on high-frequency activity that ceiling is [J] (the v8 sweep is pending). Some of the "
         "disagreement between methods is therefore the method disagreeing with itself. "
         "[The sweep that measures this was run with identical settings on all four "
         "feature sets - update once it has been.]",
     ],
     "limits.atlas": [
-        "LanA covers 82% of the electrodes; the missing 18% are three whole patients. "
+        "LanA covers every electrode (1680 of 1680), so atlas coverage is no longer a caveat. "
         "The atlas is built from fMRI in neurologically typical adults, and it gives a "
         "probability for a location, not a measurement in this patient. A negative "
         "result here says the types are not placed by a group prior; it does not say "
@@ -1347,7 +1355,7 @@ EXAMPLES = {
         "is at github.com/lorafanda/Analysis_LoraFanda; the commit that produced the "
         "figures is tagged [tag]. Any additional information is available from the "
         "lead contact on request.",
-        "Data: the 1688-electrode feature matrices, the loadings at every K, electrode "
+        "Data: the 1680-electrode feature matrices, the loadings at every K, electrode "
         "coordinates in fsaverage space, and the per-electrode atlas values, at "
         "[repository]. Recordings: on request, under agreement. Code: public, with the "
         "figure scripts and the notebook that runs them.",
@@ -1397,9 +1405,9 @@ EXAMPLES = {
         "inspected for artefacts; channels meeting [criteria] were removed. Contacts "
         "were kept if they lay in cortical grey matter (distance to the pial surface "
         "at most [mm], not in white matter) and if [signal-quality criterion]. Of [N] "
-        "contacts, 1688 met both.",
+        "contacts, 1680 met both.",
         "Gating: a contact enters the analysis if it is cortical and if its recording "
-        "passes [criterion]. These two rules determine the 1688, and every result is "
+        "passes [criterion]. These two rules determine the 1680, and every result is "
         "conditional on them; loosening either adds contacts whose responses are "
         "dominated by noise, which the clustering then spends a component on.",
     ],
@@ -1411,7 +1419,7 @@ EXAMPLES = {
         "trials. An electrode's feature vector is its three conditions concatenated "
         "(900 values). For the band-set representations the same was done in 5 or 15 "
         "bands at 30 bins per condition, with or without z-scoring per band.",
-        "Four representations of the same 1688 electrodes: high-frequency activity alone, 15 "
+        "Four representations of the same 1680 electrodes: high-frequency activity alone, 15 "
         "bands, 5 bands, and 5 bands z-scored. All are trial-averaged dB time courses "
         "on the same warped time axis, so the feature sets differ in frequency content "
         "and normalisation only.",
@@ -1429,7 +1437,7 @@ EXAMPLES = {
         "brains are coloured by.",
     ],
     "methods.stats": [
-        "n is electrodes (1688) unless stated; per-cluster n in Figure 1. Centroids "
+        "n is electrodes (1680) unless stated; per-cluster n in Figure 1. Centroids "
         "are means with ±1 SD across electrodes. Agreement between partitions: "
         "adjusted Rand index and normalised mutual information; per cluster, Jaccard "
         "after Hungarian matching. Cluster-atlas relations: Spearman rho between "
@@ -1465,7 +1473,7 @@ EXAMPLES = {
         "seen from its own side, colour and size by loading; below that, patient "
         "composition, one segment per patient, widest first. (C) Key to a block. (D) "
         "Share of clusters, and of electrodes, in clusters more than half one patient, "
-        "against K. n = 1688 electrodes, 27 patients.",
+        "against K. n = 1680 electrodes, 27 patients.",
         "Figure 1. Response types. (A) How the number of types was chosen and (D) why "
         "the held-out peak was not used; (B) the types themselves, with (C) the key. "
         "Block order is by cross-condition similarity; cluster ids are unchanged.",
@@ -1489,7 +1497,7 @@ EXAMPLES = {
         "by mean P(LanA) with 95% bootstrap CI, cohort mean as a line, and both nulls "
         "(dark, shaft-shift; pale, within-patient); star, q < 0.05. (B) Loading "
         "against P(LanA) per cluster. (C) Spearman rho per cluster with CI; shaded, "
-        "|rho| < 0.10. (D) P(LanA) over the covered electrodes. All 1688 "
+        "|rho| < 0.10. (D) P(LanA) over the covered electrodes. All 1680 "
         "electrodes have an atlas value.",
         "Figure 3. Are the types anatomy? Under the liberal null one cluster is "
         "enriched; under the spatial null none is. Panel C is the effect size, which "
@@ -1575,8 +1583,8 @@ FIG1_TAG = {"concat_hg": "a", "concat_rawds": "b", "concat_bands5": "c",
 # THE HELD-OUT PEAK K IS MEASURED, NOT DECIDED HERE. 249 writes it; hardcoding it meant
 # the tab kept quoting the previous cohort's peaks after a refit (on v7 three of the four
 # moved). The literals survive only as a fallback for a tree where 249 has not run.
-_PEAK_K_FALLBACK = {"concat_hg": 11, "concat_rawds": 12,
-                    "concat_bands5": 14, "concat_bands5z": 13}
+_PEAK_K_FALLBACK = {"concat_hg": 9, "concat_rawds": 12,
+                    "concat_bands5": 13, "concat_bands5z": 14}
 
 
 def _peak_k():
@@ -1603,6 +1611,16 @@ def _tracked():
         out = subprocess.run(["git", "ls-files", FIGDIR_REL], cwd=str(ROOT.parent),
                              text=True, capture_output=True, timeout=180)
         return set(out.stdout.split()) if out.returncode == 0 else None
+    except Exception:
+        return None
+
+
+def _current_runs():
+    """The run ids of the current cohort, from the coverage manifest; None if unreadable."""
+    mf = ROOT / "outputs" / "250_recon" / "fsaverage" / "coverage_viz" / "manifest.json"
+    try:
+        return {r["run"].replace("_", "-")
+                for r in json.loads(mf.read_text(encoding="utf-8"))["runs"]}
     except Exception:
         return None
 
@@ -1635,7 +1653,13 @@ def _slide(label, fname, role, make, tracked, fallback=None):
             f = alt
     fname = f.name
     rel = f"{FIGDIR_REL}/{fname}"
+    # A figure drawn on a run the manifest no longer lists is the previous cohort's:
+    # shown as a slide that says so, with the command, rather than as the result.
+    m = re.search(r"_run([0-9]{8}-[0-9]{6})", f.stem)
+    runs = _current_runs()
+    stale = bool(m and runs is not None and m.group(1) not in runs)
     state = ("missing" if not f.exists()
+             else "stale" if stale
              else "untracked" if (tracked is not None and rel not in tracked)
              else "ok")
     return {"label": label, "rel": rel, "role": role, "make": make, "state": state}
@@ -1729,6 +1753,8 @@ def carousel_html(fid):
                     f'loading="lazy">')
         else:
             why = ("not generated yet" if s["state"] == "missing"
+                   else "drawn on the previous cohort - rerun on the current runs"
+                   if s["state"] == "stale"
                    else "on disk but not committed - the site would 404")
             body = (f'<div class="pf-missing"><b>{why}</b><br>'
                     f'<code>python {esc(s["make"])}</code></div>')
