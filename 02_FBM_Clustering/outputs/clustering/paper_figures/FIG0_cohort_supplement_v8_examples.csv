@@ -1,0 +1,7 @@
+side,patient,electrode,condition,bins_pos,need_pos,bins_neg,need_neg,passes,margin
+kept,PAT_6953,TPD8,audio,774,774,49,1548,True,1.0
+kept,PAT_6953,TPD8,picture,511,774,107,1548,False,0.6602067183462532
+kept,PAT_6953,TPD8,reading,769,774,162,1548,False,0.9935400516795865
+discarded,PAT_6953,TPD4,audio,307,774,91,1548,False,0.39664082687338503
+discarded,PAT_6953,TPD4,picture,464,774,56,1548,False,0.599483204134367
+discarded,PAT_6953,TPD4,reading,769,774,119,1548,False,0.9935400516795865
