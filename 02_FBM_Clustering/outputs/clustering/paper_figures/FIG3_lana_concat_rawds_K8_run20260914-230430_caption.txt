@@ -1,4 +1,4 @@
-FIG 3   ·   LanA language atlas   ·   concat_hg   ·   K = 8
+FIG 3   ·   LanA language atlas   ·   concat_rawds   ·   K = 8
 ====================================================================================================
 
 AXES SHARED ACROSS FEATURE SETS
@@ -90,8 +90,8 @@ null, pale dash = the within-patient null, dotted line = the cohort mean, % unde
 each bar = coverage.
 
   cohort mean P_lana             0.1337
-  most  c4  0.2252 [0.1707, 0.3343]  shaft null 0.2198 q=0.352  (within-patient null 0.1464 q=0.00799)
-  least c3  0.1010 [0.0889, 0.1125]  shaft null 0.1117 q=0.986
+  most  c1  0.2329 [0.1720, 0.4580]  shaft null 0.2193 q=0.0919  (within-patient null 0.1462 q=0.00799)
+  least c6  0.0978 [0.0868, 0.1145]  shaft null 0.1064 q=0.994
   clusters above the SHAFT-SHIFT null at q<0.05   0 of 8
   above the weaker within-patient null              1 of 8
 
@@ -122,18 +122,18 @@ it says whether that cluster's rho exceeds chance, not whether the K rhos are
 mutually consistent.
 
   cluster  rho [95% CI]                 q shaft   q within-pat   meanP   q shaft   coverage
-  c4       +0.133 [+0.063, +0.200]      0.172      0.00799   0.2252     0.352   100%
-  c6       -0.049 [-0.101, +0.006]      0.252        0.133   0.1300     0.368   100%
-  c2       -0.024 [-0.093, +0.055]      0.353        0.298   0.1279     0.344   100%
-  c1       +0.039 [-0.019, +0.107]      0.252        0.328   0.1279     0.352   100%
-  c7       -0.026 [-0.080, +0.028]      0.252        0.588   0.1189     0.986   100%
-  c5       -0.022 [-0.094, +0.049]      0.229        0.328   0.1186     0.986   100%
-  c0       +0.001 [-0.083, +0.084]      0.992        0.958   0.1119     0.385   100%
-  c3       -0.073 [-0.169, +0.015]      0.016        0.016   0.1010     0.986   100%
+  c1       +0.156 [+0.083, +0.214]      0.597      0.00799   0.2329    0.0919   100%
+  c2       +0.029 [-0.033, +0.096]      0.597        0.979   0.1426     0.994   100%
+  c7       -0.044 [-0.140, +0.038]      0.597        0.126   0.1411    0.0919   100%
+  c0       -0.041 [-0.101, +0.027]      0.032        0.115   0.1286     0.994   100%
+  c3       +0.001 [-0.046, +0.046]      0.952        0.979   0.1286     0.994   100%
+  c5       -0.002 [-0.088, +0.092]      0.952        0.979   0.1155      0.69   100%
+  c4       -0.071 [-0.147, +0.006]      0.952      0.00799   0.0985     0.994   100%
+  c6       +0.001 [-0.068, +0.084]      0.952        0.979   0.0978     0.994   100%
 
   1 of 8 correlations pass the shaft-shift
   null; 2 pass the weaker within-patient one.
-  NONE reaches |rho| = 0.10 (largest 0.133). At 1680 electrodes a q-value is nearly free; the effect size is
+  NONE reaches |rho| = 0.10 (largest 0.156). At 1680 electrodes a q-value is nearly free; the effect size is
   the result, and the effect size is negligible.
 A rho near zero means the cluster is placed independently of the atlas. That is a
 result, not a failure - it says the clustering found structure the atlas does not
@@ -156,7 +156,7 @@ Against the SHAFT-SHIFT null, which preserves the spatial smoothness of the atla
 sit in more LanA than chance and 1 of 8 correlations pass. Against the weaker within-patient null it
 is 1 and 2. Where those differ, the smoothness was doing the work.
 
-The largest |rho| is 0.13. Significance here is nearly free at this sample size; the effect size is
+The largest |rho| is 0.16. Significance here is nearly free at this sample size; the effect size is
 the result.
 
 Only 100% of electrodes have a LanA value, and the missing ones are WHOLE PATIENTS rather than a
