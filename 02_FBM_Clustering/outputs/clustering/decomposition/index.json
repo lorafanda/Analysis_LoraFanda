@@ -2,8 +2,8 @@
   "concat_rawds": {
     "feature_set": "concat_rawds",
     "K": 7,
-    "source_run": "outputs/clustering/kmeans/concat_rawds/runs/20260826_144504",
-    "n_electrodes": 1693,
+    "source_run": "outputs/clustering/kmeans/concat_rawds/runs/20260915_004207",
+    "n_electrodes": 1680,
     "n_features": 1350,
     "n_patients": 27,
     "conditions": [
@@ -29,46 +29,46 @@
       "360-400Hz"
     ],
     "n_time": 30,
-    "in_sample_var_explained": 0.39005012948889806,
+    "in_sample_var_explained": 0.3913524934579985,
     "mixture": {
-      "n": 1693,
-      "frac_dominant": 0.03071470761961016,
-      "frac_contested": 0.3012404016538689,
-      "frac_no_majority": 0.668044890726521,
-      "median_top_weight": 0.4190359005495702
+      "n": 1680,
+      "frac_dominant": 0.027976190476190477,
+      "frac_contested": 0.30714285714285716,
+      "frac_no_majority": 0.6648809523809524,
+      "median_top_weight": 0.42233586685622304
     },
     "argmax_spatial_coherence": [
-      0.3072753209700428,
-      1.8262749586671754
+      0.2985714285714286,
+      1.7621021569591795
     ],
     "consensus_spatial_coherence": [
-      0.3238944365192582,
-      1.7315538608198282
+      0.30142857142857143,
+      1.7680638234729327
     ],
     "consensus_sizes": [
-      465,
-      109,
-      318,
-      123,
-      251,
-      144,
-      283
+      161,
+      211,
+      364,
+      155,
+      355,
+      105,
+      329
     ],
-    "lopo_real_mean": 0.8562069518971461,
-    "lopo_real_min": 0.5632233239422066,
+    "lopo_real_mean": 0.8836621996227836,
+    "lopo_real_min": 0.521646890704674,
     "lopo_degenerate_folds": 0,
-    "lopo_null_min_mean": 0.550912086993519,
-    "lopo_null_min_std": 0.008463695633323748,
-    "lopo_z": 1.454593534792901,
-    "replication_mean": 0.593789745490418,
+    "lopo_null_min_mean": 0.7525750737338885,
+    "lopo_null_min_std": 0.18442918000546185,
+    "lopo_z": -1.2521238939650206,
+    "replication_mean": 0.5966577859375212,
     "quick": false,
-    "written": "2026-08-26 15:59:08"
+    "written": "2026-09-15 01:04:29"
   },
   "concat_hg": {
     "feature_set": "concat_hg",
     "K": 7,
-    "source_run": "outputs/clustering/kmeans/concat_hg/runs/20260826_144334",
-    "n_electrodes": 1693,
+    "source_run": "outputs/clustering/kmeans/concat_hg/runs/20260915_004134",
+    "n_electrodes": 1680,
     "n_features": 900,
     "n_patients": 27,
     "conditions": [
@@ -80,46 +80,46 @@
       "hg"
     ],
     "n_time": 300,
-    "in_sample_var_explained": 0.5420910261250724,
+    "in_sample_var_explained": 0.5432460707310558,
     "mixture": {
-      "n": 1693,
-      "frac_dominant": 0.006497341996455995,
-      "frac_contested": 0.22209096278795037,
-      "frac_no_majority": 0.7714116952155936,
-      "median_top_weight": 0.39747763668598174
+      "n": 1680,
+      "frac_dominant": 0.0017857142857142857,
+      "frac_contested": 0.2154761904761905,
+      "frac_no_majority": 0.7827380952380952,
+      "median_top_weight": 0.39488560955914553
     },
     "argmax_spatial_coherence": [
-      0.3104850213980029,
-      1.9253394665841037
+      0.3053571428571429,
+      1.8203754302544268
     ],
     "consensus_spatial_coherence": [
-      0.3274607703281027,
-      1.8040356013124548
+      0.30892857142857144,
+      1.8120559328247474
     ],
     "consensus_sizes": [
-      196,
-      281,
-      462,
-      227,
-      13,
-      236,
-      278
+      219,
+      211,
+      206,
+      398,
+      374,
+      181,
+      91
     ],
-    "lopo_real_mean": 0.8243356237372603,
-    "lopo_real_min": 0.68292475123167,
+    "lopo_real_mean": 0.8673278781013516,
+    "lopo_real_min": 0.6933034069776873,
     "lopo_degenerate_folds": 0,
-    "lopo_null_min_mean": 0.7196105163476707,
-    "lopo_null_min_std": 0.0087196356166358,
-    "lopo_z": -4.207258964584441,
-    "replication_mean": 0.6978466021635799,
+    "lopo_null_min_mean": 0.776287905737035,
+    "lopo_null_min_std": 0.017873792135558238,
+    "lopo_z": -4.642803168459018,
+    "replication_mean": 0.6788512397686983,
     "quick": false,
-    "written": "2026-08-26 15:50:15"
+    "written": "2026-09-15 00:55:53"
   },
   "concat_hg_all": {
     "feature_set": "concat_hg_all",
     "K": 7,
-    "source_run": "outputs/clustering/kmeans/concat_hg_all/runs/20260819_235524",
-    "n_electrodes": 2946,
+    "source_run": "outputs/clustering/kmeans/concat_hg_all/runs/20260906_132257",
+    "n_electrodes": 3001,
     "n_features": 900,
     "n_patients": 27,
     "conditions": [
@@ -131,46 +131,46 @@
       "hg"
     ],
     "n_time": 300,
-    "in_sample_var_explained": 0.4766017699892946,
+    "in_sample_var_explained": 0.4742909730799383,
     "mixture": {
-      "n": 2946,
-      "frac_dominant": 0.0033944331296673455,
-      "frac_contested": 0.1924643584521385,
-      "frac_no_majority": 0.8041412084181941,
-      "median_top_weight": 0.384595605390491
+      "n": 3001,
+      "frac_dominant": 0.0023325558147284237,
+      "frac_contested": 0.17594135288237253,
+      "frac_no_majority": 0.8217260913028991,
+      "median_top_weight": 0.3821978276906359
     },
     "argmax_spatial_coherence": [
-      0.27627181581878946,
-      1.8597442851607902
+      0.2688770409863379,
+      1.728596064653649
     ],
     "consensus_spatial_coherence": [
-      0.3437059041960639,
-      1.4633876412044173
+      0.2985004998333889,
+      1.747425093632959
     ],
     "consensus_sizes": [
-      190,
-      890,
-      332,
-      827,
-      181,
-      3,
-      523
+      398,
+      334,
+      590,
+      145,
+      331,
+      473,
+      730
     ],
-    "lopo_real_mean": 0.759376624988892,
-    "lopo_real_min": 0.4334012515559666,
+    "lopo_real_mean": 0.7581783891324488,
+    "lopo_real_min": 0.46616202778767263,
     "lopo_degenerate_folds": 0,
-    "lopo_null_min_mean": 0.5565107664671985,
-    "lopo_null_min_std": 0.09031007363655275,
-    "lopo_z": -1.3631869619183183,
-    "replication_mean": 0.6327372026615093,
+    "lopo_null_min_mean": 0.4453171873688438,
+    "lopo_null_min_std": 0.04363066758988557,
+    "lopo_z": 0.4777566232715878,
+    "replication_mean": 0.620413171019268,
     "quick": false,
-    "written": "2026-08-20 00:04:16"
+    "written": "2026-09-06 13:31:46"
   },
   "concat_bands5": {
     "feature_set": "concat_bands5",
     "K": 7,
-    "source_run": "outputs/clustering/kmeans/concat_bands5/runs/20260827_021650",
-    "n_electrodes": 1693,
+    "source_run": "outputs/clustering/kmeans/concat_bands5/runs/20260915_004248",
+    "n_electrodes": 1680,
     "n_features": 450,
     "n_patients": 27,
     "conditions": [
@@ -186,46 +186,46 @@
       "270-400Hz"
     ],
     "n_time": 30,
-    "in_sample_var_explained": 0.48618601564154396,
+    "in_sample_var_explained": 0.4878739677330448,
     "mixture": {
-      "n": 1693,
-      "frac_dominant": 0.02303603071470762,
-      "frac_contested": 0.2923803898405198,
-      "frac_no_majority": 0.6845835794447725,
-      "median_top_weight": 0.42242911763239765
+      "n": 1680,
+      "frac_dominant": 0.023214285714285715,
+      "frac_contested": 0.2857142857142857,
+      "frac_no_majority": 0.6910714285714286,
+      "median_top_weight": 0.41967626429944926
     },
     "argmax_spatial_coherence": [
-      0.2919400855920114,
-      1.9538858124880656
+      0.2893452380952381,
+      1.8855702094647013
     ],
     "consensus_spatial_coherence": [
-      0.31419400855920115,
-      1.824280951690721
+      0.27130952380952383,
+      1.7624313664836442
     ],
     "consensus_sizes": [
-      291,
-      190,
-      263,
-      43,
-      300,
-      215,
-      391
+      270,
+      183,
+      292,
+      229,
+      147,
+      233,
+      326
     ],
-    "lopo_real_mean": 0.836219110994024,
-    "lopo_real_min": 0.6655773525660381,
+    "lopo_real_mean": 0.9002017286799036,
+    "lopo_real_min": 0.7152918836027172,
     "lopo_degenerate_folds": 0,
-    "lopo_null_min_mean": 0.820093612739046,
-    "lopo_null_min_std": 0.015318532203565398,
-    "lopo_z": -10.086884181830694,
-    "replication_mean": 0.6124671653296434,
+    "lopo_null_min_mean": 0.9034182602789644,
+    "lopo_null_min_std": 0.017710267958400663,
+    "lopo_z": -10.622446657392985,
+    "replication_mean": 0.6147354736156456,
     "quick": false,
-    "written": "2026-08-27 11:49:30"
+    "written": "2026-09-15 01:11:51"
   },
   "concat_bands5z": {
     "feature_set": "concat_bands5z",
     "K": 7,
-    "source_run": "outputs/clustering/kmeans/concat_bands5z/runs/20260827_021738",
-    "n_electrodes": 1693,
+    "source_run": "outputs/clustering/kmeans/concat_bands5z/runs/20260915_004310",
+    "n_electrodes": 1680,
     "n_features": 450,
     "n_patients": 27,
     "conditions": [
@@ -241,39 +241,39 @@
       "270-400Hz"
     ],
     "n_time": 30,
-    "in_sample_var_explained": 0.4783085059334592,
+    "in_sample_var_explained": 0.476868596868375,
     "mixture": {
-      "n": 1693,
-      "frac_dominant": 0.01594802126402835,
-      "frac_contested": 0.26520968694624925,
-      "frac_no_majority": 0.7188422917897224,
-      "median_top_weight": 0.4087457410117543
+      "n": 1680,
+      "frac_dominant": 0.015476190476190477,
+      "frac_contested": 0.2779761904761905,
+      "frac_no_majority": 0.7065476190476191,
+      "median_top_weight": 0.40991201123862886
     },
     "argmax_spatial_coherence": [
-      0.28873038516405136,
-      1.8419675562532707
+      0.29160714285714284,
+      1.809151002621958
     ],
     "consensus_spatial_coherence": [
-      0.31804564907275323,
-      1.645873320537428
+      0.27964285714285714,
+      1.7300999834281612
     ],
     "consensus_sizes": [
-      293,
-      15,
-      182,
-      133,
-      470,
-      232,
-      368
+      151,
+      354,
+      143,
+      300,
+      204,
+      302,
+      226
     ],
-    "lopo_real_mean": 0.863169489707763,
-    "lopo_real_min": 0.7218801671455078,
+    "lopo_real_mean": 0.8065983089282258,
+    "lopo_real_min": 0.6698923113579288,
     "lopo_degenerate_folds": 0,
-    "lopo_null_min_mean": 0.7160646264416847,
-    "lopo_null_min_std": 0.043440083956399464,
-    "lopo_z": 0.1338749876648534,
-    "replication_mean": 0.5580464626941677,
+    "lopo_null_min_mean": 0.683900812351938,
+    "lopo_null_min_std": 0.021630169214478356,
+    "lopo_z": -0.647637143061852,
+    "replication_mean": 0.5491092328841224,
     "quick": false,
-    "written": "2026-08-27 11:56:34"
+    "written": "2026-09-15 01:18:12"
   }
 }
