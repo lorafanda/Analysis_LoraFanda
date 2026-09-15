@@ -304,3 +304,6 @@ Thumbs.db
 02_FBM_Clustering/outputs/_dataset/concat_source_v4/
 02_FBM_Clustering/outputs/_dataset/concat_source_v5/
 02_FBM_Clustering/outputs/_dataset/concat_source_v6/
+
+# Git Bash grep crash dumps, never content
+*.stackdump
