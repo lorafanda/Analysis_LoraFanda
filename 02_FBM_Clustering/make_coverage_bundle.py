@@ -101,10 +101,13 @@ TRACKS = [
     ("cnmf/concat_hg_all", "Convex NMF - ungated (argmax)", "ungated concat cohort"),
     ("kmeans/concat_hg_all", "K-means · concatenated, ungated", "ungated concat cohort"),
     ("hierarchical/concat_hg_all", "Ward · concatenated, ungated", "ungated concat cohort"),
-    ("kmeans/hg", "K-means · per-condition", "2026-07-19 per-task cohort"),
-    ("hierarchical/hg", "Ward · per-condition", "2026-07-19 per-task cohort"),
-    ("kmeans/rawds", "K-means · per-condition 15-band", "2026-07-19 per-task cohort"),
-    ("hierarchical/rawds", "Ward · per-condition 15-band", "2026-07-19 per-task cohort"),
+    # THE 2026-07-19 PER-TASK TRACKS ARE OUT (2026-09-15). Their bundle folders were retired
+    # from git on 2026-09-10 (.gitignore, *__20260719_*), so the full clustering_visualizer
+    # offered four runs whose every file 404s. One cohort on the page, as decided then.
+    # ("kmeans/hg", "K-means · per-condition", "2026-07-19 per-task cohort"),
+    # ("hierarchical/hg", "Ward · per-condition", "2026-07-19 per-task cohort"),
+    # ("kmeans/rawds", "K-means · per-condition 15-band", "2026-07-19 per-task cohort"),
+    # ("hierarchical/rawds", "Ward · per-condition 15-band", "2026-07-19 per-task cohort"),
 ]
 
 # runs known to be unusable; see the scout notes in the commit message

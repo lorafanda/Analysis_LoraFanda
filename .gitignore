@@ -253,7 +253,8 @@ Thumbs.db
 # tracked - and only 404s when you click it, which is the worst way for this to fail.
 # The per-run clusters_*.bin are what the overlays fetch, so they are tracked. The
 # cohort-level coverage_*.bin are regenerable and much larger, so those stay ignored.
-02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/coverage_*.bin
+# (2026-09-15) the cohort coverage bins are NOT ignored any more: the visualizer fetches
+# coverage_<cohort>_r<R>_<hemi>.bin at every run selection, so a new cohort id must reach git.
 
 # editor and OS leftovers
 **/__pycache__/
@@ -283,6 +284,7 @@ Thumbs.db
 02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260826_*/
 02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260827_*/
 02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260907_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260908_*/   # v7, retired 2026-09-15 (v8 is the cohort)
 02_FBM_Clustering/outputs/clustering/paper_figures/*_run20260826-*
 02_FBM_Clustering/outputs/clustering/paper_figures/*_run20260907-*
 02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_v4*
