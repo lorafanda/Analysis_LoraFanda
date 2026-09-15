@@ -176,6 +176,17 @@ def compute_order(manifest):
 UI2_CSS = r"""
   /* ── compare UI — make_cluster_visualizer.py ──────────────────────────── */
   #controls { width:304px; }
+  /* the template's panel (its Run dropdown, pial / inflated / glass, radius ...) is
+     what boot() would show until ui2Init() replaces it; nothing of it is on screen
+     before the compare UI is built (ui2Init adds body.u2ready at its end) */
+  body:not(.u2ready) #controls, body:not(.u2ready) #prov, body:not(.u2ready) #hint { visibility:hidden; }
+  body:not(.u2ready) #ctlBody { transition:none; }   /* a phone folds it before the reveal */
+  /* the splash is opaque (the template panel is not seen through it); the staged line
+     sits on the white glass page, so it is dark and has no spinner */
+  #status { background:#000; }
+  #status.staged .spin { display:none; }
+  #status.staged .statusText { color:#3a3f47; opacity:1; font-weight:500; }
+  #status.failed .spin { animation:none; }
   /* the panel is taller than the one it replaces; on a short window it scrolls rather
      than clipping the report button. Collapsed it keeps overflow:hidden, so the
      max-height animation still works. */
@@ -342,6 +353,10 @@ UI2_JS = r'''
 // and every panel is a capture of this canvas, so a grid cell is exactly what the big
 // view shows at that angle.
 // ─────────────────────────────────────────────────────────────────────────────
+// the loading screen (the turning brain) stays up at least this long, so a cached
+// load does not flash past it
+const U2_MIN_LOAD_MS = 2000;
+let U2_HOLD = false, U2_HIDE_PENDING = false;   // boot(): the splash is up; a hide was asked for meanwhile
 const UI2 = { on:false, mode:"single", sel:new Set(), gridBy:"clusters",
               busy:false, gridOpen:false, seq:0,
               cenPos:new Map() };   // cluster -> where its overlay card was dragged
@@ -1161,6 +1176,19 @@ function u2Fold(open) {
   if (c.classList.contains("collapsed") === !open) return;
   c.classList.toggle("collapsed", !open); $("ctlChevron").textContent = open ? "\u25be" : "\u25b8";
 }
+// THE LOADING ROW, before render()'s glass early return. render() sets the caption and
+// the slider's enabled state after painting the vertices, and in glass mode it returns
+// before painting - so with glass from the first frame the row was never set, and on a
+// run switch in glass mode it had always been stale.
+function syncLoadRow() {
+  const hasLoad = !!loadingsForK();
+  $("loadRow").style.opacity = hasLoad ? "1" : ".35";
+  $("minLoad").disabled = !hasLoad;
+  $("loadNote").textContent = hasLoad
+    ? `graded: ${RUN.k} components, contacts sized and faded by their top weight`
+    : "graded loading — convex-NMF runs only; this run is a hard partition";
+}
+
 // crossing the line either way (a rotated phone, a resized window) takes the fold along;
 // watched from both events, since an emulated viewport fires only the resize
 let u2WasNarrow = U2_NARROW.matches;
@@ -1170,9 +1198,8 @@ window.addEventListener("resize", u2Cross);
 
 async function ui2Init() {
   u2Build();
-  // glass is the only surface here; entering it through the page's own handler keeps the
-  // mesh reload, the white backdrop and the by-cluster contacts in one place
-  try { await $("sGlass").onclick(); } catch (e) { console.warn("glass mode:", e); }
+  // glass is the only surface here, and boot() loaded it as such (see the boot patch in
+  // make_cluster_visualizer.py): no pial-then-glass reload, nothing to click
   UI2.on = true;
   const d0 = u2Defs()[u2Pos()];
   if (d0) UI2.sel = new Set([d0.cluster]);
@@ -1200,9 +1227,10 @@ async function ui2Init() {
   // the report is built one cluster at a time, never from a grid or an overlay
   $("pdfBtn").onclick = async () => { u2SetMode("single"); await exportReport(); u2Sync(); };
   window.addEventListener("keydown", u2Keys);
-  if (u2Phone()) u2Fold();
+  if (u2Phone()) { u2Fold(); void $("controls").offsetHeight; }   // committed before the reveal
   u2Sync();
   drawCentroid();          // sizes the canvas for the view and draws the ring if needed
+  document.body.classList.add("u2ready");   // the panel, the run box and the hint appear
 }
 '''
 
@@ -1757,11 +1785,101 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         "  <div id=\"hint\">drag rotate · scroll zoom · <b>←&nbsp;→</b> cluster · "
         "<b>↑&nbsp;↓</b> feature set · <b>1 2 3</b> algorithm · <b>g</b> grid · "
         "<b>o</b> overlay · <b>h</b> panels · <b>c</b> controls</div>", "compare UI: hint")
-    # boot() now wraps the run load in a progress hook, so the anchor is the line that
-    # ends it rather than the selectRun call itself.
-    sub("  try { await selectRun(pick.id); } finally { PROGRESS = null; }\n",
-        "  try { await selectRun(pick.id); } finally { PROGRESS = null; }\n  await ui2Init();\n",
-        "compare UI: boot")
+    # THE FIRST SECONDS, REWRITTEN AS ONE BLOCK (the template's tail from `await meshReady`
+    # to the closing brace). Glass from the first frame: the template boots on the opaque
+    # pial mesh and ui2Init used to click the glass button afterwards - a grey brain under
+    # the template's own panel, then a second mesh load; the state is set before the mesh
+    # is asked for, so selectRun's render / updateElectrodes already draw glass and
+    # by-cluster contacts. The run load starts as soon as the mesh is in and runs UNDER
+    # the splash, which holds U2_MIN_LOAD_MS from the start of boot (U2_HOLD keeps
+    # showStatus from dropping to the staged line and defers hideStatus); then the brain
+    # comes up, whatever is left of the run load shows as the staged line, and the
+    # compare UI is built.
+    sub("  const meshReady = loadSurface(state.surf);\n",
+        "  U2_HOLD = true;\n"
+        "  const held = new Promise(res => setTimeout(res, U2_MIN_LOAD_MS));\n"
+        "  state.glass = true; state.surf = \"pial\"; state.showElec = true; state.elecByCluster = true;\n"
+        "  const meshReady = loadSurface(\"pial\", GLASS_RGBA);   // glass: uniform rgba, or the alpha is ignored\n",
+        "compare UI: boot glass")
+    sub("  await meshReady;\n"
+        "  $(\"brain\").classList.add(\"up\");\n"
+        "  stageStatus(\"Loading coverage\u2026\");\n"
+        "\n"
+        "  wireUI();\n"
+        "  PROGRESS = (got, total) =>\n"
+        "    setStatus(`Loading coverage\u2026 ${(got / 1048576).toFixed(1)} / ${(total / 1048576).toFixed(1)} MB`);\n"
+        "  try { await selectRun(pick.id); } finally { PROGRESS = null; }\n"
+        "  hideStatus();\n"
+        "}\n",
+        "  await meshReady;\n"
+        "  applyOpacity();                    // white backdrop, 0.18 alpha\n"
+        "  wireUI();\n"
+        "  $(\"showElec\").checked = true;      // glass forces the contacts on; the (hidden) box says so\n"
+        "  PROGRESS = (got, total) =>\n"
+        "    setStatus(`Loading coverage\u2026 ${(got / 1048576).toFixed(1)} / ${(total / 1048576).toFixed(1)} MB`);\n"
+        "  const runLoad = selectRun(pick.id).finally(() => { PROGRESS = null; });\n"
+        "  runLoad.catch(() => {});           // awaited below; this only keeps the rejection handled meanwhile\n"
+        "  await held;\n"
+        "  U2_HOLD = false;\n"
+        "  $(\"brain\").classList.add(\"up\");\n"
+        "  if (U2_HIDE_PENDING) hideStatus(); else $(\"status\").classList.add(\"staged\");\n"
+        "  await runLoad;\n"
+        "  await ui2Init();\n"
+        "  hideStatus();\n"
+        "}\n",
+        "compare UI: boot tail")
+    # the loading row (caption, slider enabled) is set before render()'s glass early
+    # return: with glass from the first frame it was never set, and on a run switch in
+    # glass mode it had always been stale
+    sub("  if (state.glass) { nv.drawScene(); return; }\n  const d = curDef(), hi = d.raw ? MAXC * state.climMax : state.climMax;",
+        "  syncLoadRow();                       // before the glass return, or never in glass mode\n"
+        "  if (state.glass) { nv.drawScene(); return; }\n  const d = curDef(), hi = d.raw ? MAXC * state.climMax : state.climMax;",
+        "compare UI: loading row before glass")
+    sub("  const hasLoad = !!loadingsForK();\n  const lr = $(\"loadRow\");\n"
+        "  lr.style.opacity = hasLoad ? \"1\" : \".35\";\n  $(\"minLoad\").disabled = !hasLoad;\n"
+        "  $(\"loadNote\").textContent = hasLoad\n"
+        "    ? `graded: ${RUN.k} components, contacts sized and faded by their top weight`\n"
+        "    : \"graded loading \u2014 convex-NMF runs only; this run is a hard partition\";\n\n",
+        "", "compare UI: loading row once")
+    # a failure keeps its message and shows the wired template panel; a module that
+    # never runs says so
+    sub("function showStatus(t, staged) {\n  const e = $(\"status\"); if (!e) return;\n  e.style.display = \"grid\";",
+        "let HIDE_T = 0;   // hideStatus's pending display:none, cancelled by the next showStatus\n"
+        "function showStatus(t, staged) {\n  const e = $(\"status\"); if (!e) return;\n"
+        "  clearTimeout(HIDE_T);\n  e.style.display = \"grid\";",
+        "compare UI: showStatus cancels the hide")
+    sub("  setTimeout(() => { e.style.display = \"none\"; }, 500);   // after the fade, not instead of it",
+        "  HIDE_T = setTimeout(() => { e.style.display = \"none\"; }, 500);   // after the fade, not instead of it",
+        "compare UI: hideStatus timer")
+    sub("boot().catch(e => { showStatus(\"Failed to load: \" + e.message, false); console.error(e); });",
+        "boot().catch(e => {\n"
+        "  U2_HOLD = false;\n"
+        "  showStatus(\"Failed to load: \" + e.message + \" \u2014 reload the page\", false);\n"
+        "  $(\"status\").classList.add(\"failed\");\n"
+        "  document.body.classList.add(\"u2ready\");   // whatever chrome is wired is at least visible\n"
+        "  console.error(e);\n});",
+        "compare UI: boot failure")
+    sub("<script type=\"module\">",
+        "<script type=\"module\" onerror=\"document.getElementById('statusText').textContent="
+        "'The viewer library did not load (unpkg.com unreachable?) \u2014 reload, or check the network'\">",
+        "compare UI: module load failure")
+    sub("    if (e.key === \"h\") document.querySelectorAll(\".panel\").forEach(p => p.classList.toggle(\"hidden\"));",
+        "    if (!document.body.classList.contains(\"u2ready\")) return;   // nothing to hide or fold yet\n"
+        "    if (e.key === \"h\") document.querySelectorAll(\".panel\").forEach(p => p.classList.toggle(\"hidden\"));",
+        "compare UI: h/c after the reveal")
+    sub("function showStatus(t, staged) {\n  const e = $(\"status\"); if (!e) return;\n"
+        "  clearTimeout(HIDE_T);\n  e.style.display = \"grid\";\n"
+        "  e.classList.remove(\"gone\");\n"
+        "  e.classList.toggle(\"staged\", staged !== false);",
+        "function showStatus(t, staged) {\n  const e = $(\"status\"); if (!e) return;\n"
+        "  clearTimeout(HIDE_T);\n  e.style.display = \"grid\";\n"
+        "  e.classList.remove(\"gone\");\n"
+        "  e.classList.toggle(\"staged\", staged !== false && !U2_HOLD);   // the splash holds",
+        "compare UI: showStatus under the hold")
+    sub("function hideStatus() {\n  const e = $(\"status\"); if (!e) return;\n",
+        "function hideStatus() {\n  const e = $(\"status\"); if (!e) return;\n"
+        "  if (U2_HOLD) { U2_HIDE_PENDING = true; return; }   // after the splash, not under it\n",
+        "compare UI: hideStatus under the hold")
     sub("boot().catch(e => {", UI2_JS + "\nboot().catch(e => {", "compare UI: module")
 
     # ---- the report's brain captures ---------------------------------------------------

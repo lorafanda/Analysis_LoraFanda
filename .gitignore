@@ -284,7 +284,9 @@ Thumbs.db
 02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260826_*/
 02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260827_*/
 02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260907_*/
-02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260908_*/   # v7, retired 2026-09-15 (v8 is the cohort)
+# v7 (20260908) and the 20260803 pair: retired 2026-09-15, v8 is the cohort
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260803_*/
+02_FBM_Clustering/outputs/250_recon/fsaverage/coverage_viz/runs/*__20260908_*/
 02_FBM_Clustering/outputs/clustering/paper_figures/*_run20260826-*
 02_FBM_Clustering/outputs/clustering/paper_figures/*_run20260907-*
 02_FBM_Clustering/outputs/clustering/paper_figures/FIG0_cohort_v4*
