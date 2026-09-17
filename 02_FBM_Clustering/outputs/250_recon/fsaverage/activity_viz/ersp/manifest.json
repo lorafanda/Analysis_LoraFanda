@@ -1,0 +1,29 @@
+{
+  "source": "04_FBM_Pooling/outputs/_dataset/pooling/_raw_ungated/X_3d.npy",
+  "conditions": [
+    "audio",
+    "picture",
+    "reading"
+  ],
+  "n_cond": 3,
+  "n_freq": 103,
+  "f_hz": [
+    0.0,
+    398.4375
+  ],
+  "fmax_source_hz": 500.0,
+  "n_time": 150,
+  "time_downsample": 2,
+  "n_time_source": 300,
+  "dtype": "uint8",
+  "order": [
+    "cond",
+    "freq",
+    "time"
+  ],
+  "vmin": -10.0,
+  "vmax": 10.0,
+  "nan_byte": 0,
+  "file": "c{contact_index}.bin",
+  "n_contact": 2901
+}
