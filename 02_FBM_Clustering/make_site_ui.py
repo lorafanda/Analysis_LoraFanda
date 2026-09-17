@@ -36,6 +36,213 @@ GROUPS = [   # (header or None, [data-t ...]) in display order
     ("Log &amp; plans", ["notebook", "meetings", "caveats"]),
 ]
 
+# ---------------------------------------------------------------------------------------
+# THE REPORT SHAPE. Every analysis tab reads Answer -> Evidence -> Method -> Open -> History.
+# ANSWERS carries the tab's answer (written here, injected at build); ROLES maps each of the
+# tab's groups (the runtime keys: an h3's id or the slug of its text, "intro" for what precedes
+# the first heading) to a role; a group with no entry lands in History. Tabs without an entry
+# keep the plain strip (KISS, the notebook, the Paper 2 tab). The Overview's answer is the
+# list of every tab's one-liner, built at runtime from ANSWERS in nav order.
+# ---------------------------------------------------------------------------------------
+ANSWERS = {
+    "overview": dict(
+        one="the cohort and where every tab stands",
+        html=("<p>Cohort <b>v8</b>: 1680 gated electrodes from 27 patients (2026-09-15). PAT_6684 (G-05) has since been "
+              "removed from the dataset; <b>v9</b> is built once the MicroEPI reruns and EL051 are on disk. One line per tab, "
+              "the tab's own Answer behind each:</p><!--TABLIST-->"),
+        status="v8 on every stage-02 product · the five S-figures and stages 03/04 are the 1027-electrode fit"),
+    "s1": dict(
+        one="one warped ERSP cube per electrode and condition — WM-referenced, notched, trial-filtered; half-cubes on disk",
+        html=("<p>Raw sEEG becomes one cube per electrode and condition: white-matter re-reference, adaptive mains notch, "
+              "a trial table filtered on accuracy and duration, a 1 kHz STFT in dB against the pre-stimulus baseline, "
+              "time-warped onto 300 bins with the GO cue at 50%. Odd/even half-cubes exist beside every cube (the input of a "
+              "reliability gate that is built but not yet the shipped gate). The un-warped, GO-locked tree of notebook 150 "
+              "covers 28 of 30 patients.</p>"
+              "<ul><li>MicroEPI reruns (G-01, G-04, G-06) with the audited references, then EL051, then v9 — see MicroEPI.</li>"
+              "<li>Per-block photodiode equalisation (<code>pd_blocks</code>) reaches notebook 13 only, not 140.</li>"
+              "<li>Micro/macro ERSP comparison (nb 11) has never run to a saved output.</li></ul>"),
+        status="04_ersp_LM_RAWONLY = the 2026-08-16 run, G-05 recomputed 09-14 and since excluded · halves on disk"),
+    "s2": dict(
+        one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
+        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1680 electrodes, K = 5…30. "
+              "K is read where convex NMF's bi-cross-validated curve peaks (9 / 12 / 13 / 14 for HFA / 15 bands / 5 bands / "
+              "5 bands z) because it is the only method whose curve turns over; the cross-method figures are cut at K = 8. "
+              "The durable result is negative, then graded: hard partitions of these data are not reproducible across "
+              "preprocessing, most electrodes have no majority component, and two algorithms on one feature set agree on "
+              "~60% of electrodes where two feature sets under one algorithm agree on ~40% (chance 12%). The graded "
+              "decomposition is the analysis; an argmax map is only ever shown beside its loadings.</p>"
+              "<ul><li>Still v7 renders: FIG 2 on 5 bands z, the K=8 FIG 1 slides, the weighted FIG 4, the native stability sweep.</li>"
+              "<li>K=8 (largest K with no one-patient cluster on HFA) or the held-out peaks — which one the paper reports.</li>"
+              "<li>v9 once the MicroEPI reruns land.</li></ul>"),
+        status="v8 · twelve runs 20260914–15 · statistics at the peaks · Paper 2 figures on v8"),
+    "lana": dict(
+        one="language-network proximity predicts more HFA while hearing the prompt and while speaking, less during visual encoding",
+        html=("<p>Against LanA (an 806-subject probabilistic atlas of the language network), being closer to the network "
+              "predicts more high-frequency activity while the spoken prompt is heard and during production in all three "
+              "conditions, and less while a visual stimulus is on screen — a within-trial dissociation a BOLD atlas cannot "
+              "express. Effects are small (|ρ| ≤ 0.16) and clear FDR because n = 2644; the map's structure is the result, not "
+              "the coefficients. A hard in/out split depends on the threshold (86% in at P ≥ 0.05, 39% at P ≥ 0.10), which is "
+              "the argument for the continuous map.</p>"
+              "<ul><li>Per-parcel maps (IFG, IFGorb, MFG, AntTemp, PostTemp, AngG): six more volumes through the same function.</li>"
+              "<li>Restricting the atlas to typically-lateralised subjects would raise the correlation ceiling.</li>"
+              "<li>Not yet on v8 — the maps are on the 2644 / 2724-contact set of August.</li></ul>"),
+        status="correlation maps 2026-08-02 · membership figures on the corrected coordinates · pre-v8"),
+    "meetings": dict(
+        one="the through-line and four logged meetings, June–July 2026",
+        html=("<p>Can we find sites that represent language rather than stimulus or response processing? Clustering said no "
+              "(weak, condition-driven structure); classifying networks works but sidesteps the question; the atlas route (3a) "
+              "gave the first positive answer — a time–frequency signature of language-network proximity. Four meetings are "
+              "logged below with the status of every decision. Nothing after 2026-07-28 is recorded here; the lab notebook "
+              "carries it.</p>"
+              "<ul><li>3b — the electrophysiological ROI — was never defined.</li>"
+              "<li>Either log meetings after July here, or retire this tab into the notebook.</li></ul>"),
+        status="last entry 2026-07-28"),
+    "mm": dict(
+        one="the speech-time broadband burst on G-05's contacts is muscle and the hardware reference, not cortex",
+        html=("<p>Mouth movement produces a broadband high-frequency increase on G-05's macro contacts that starts after the cue "
+              "with a reaction time, lasts as long as the movement, is tissue-blind and strongest at the lateral temporal skull "
+              "entries: muscle, volume-conducted, not a cortical mouth-motor response. It is absent from the microwires and "
+              "from an unconnected input. In the language task the same burst rides on every white-matter reference contact "
+              "at the end of each spoken answer (+6 dB, gain 1.00), so it is the Micromed hardware reference: the WM "
+              "re-reference halves it, a bipolar pair removes it.</p>"
+              "<ul><li>Does the LM production map follow the mouth map across contacts?</li>"
+              "<li>G-01, G-02, G-03 on the same protocol. (G-05 is out of the dataset; this stays as the mechanism.)</li></ul>"),
+        status="report of 2026-09-13/14 · G-05 only"),
+    "microepi": dict(
+        one="references audited on all five; timing verified on G-01, G-04, G-06, measured on G-02 (+6 ms, 14 trials off); G-05 out",
+        html=("<p>Of the six micro–macro patients: G-01, G-04 and G-06 are time-aligned to a few ms and their references are "
+              "audited (the bad-channel lists are in config); G-02's photodiode sits +6 ms late with a 0–16 ms sawtooth and "
+              "14 of 157 trials are 20–60 ms off; G-03's timing cannot be checked from its export; G-05 is out (seizure). "
+              "Nothing has been re-run yet.</p>"
+              "<ul><li>140 on G-01 / G-04 / G-06 with the new lists; a decision on G-02's 14 trials; G-03's raw files.</li>"
+              "<li>IAD2–5, IAD12 and IMG1 are still in G-06's reference as configured.</li></ul>"),
+        status="audits 2026-09-15/16 · reruns pending"),
+    "caveats": dict(
+        one="what is open — the reruns, G-02's 14 trials, G-03's raw check, one cohort-changing regex, and two paper decisions",
+        html=("<p>Open, in order: the MicroEPI reruns and EL051, then cohort v9; G-02's 14 mis-timed trials — correct, drop or "
+              "leave; G-03's raw timing check; <code>lf_dataset.py:113</code>, which drops every shaft whose name ends in M "
+              "(PAT_3415's TM strip) — one regex, cohort-changing; notebook 150 and <code>build_timing_table.py</code> still key "
+              "on G-05; the editorial choice between opening A and B (FIG C.4a/b) and whether HFA stays the headline; pooling "
+              "(460/465) five rebuilds behind v8, so S1's role side and cluster side come from different samples.</p>"
+              "<p>Everything under a <i>Done</i> heading below is duplicated in the lab notebook and is proposed for deletion.</p>"),
+        status="open list re-read 2026-09-17"),
+}
+
+# group key -> role; keys are the h3 id when it has one, else the slug of its text (the runtime's rule)
+_H = "history"; _E = "evidence"; _M = "method"; _O = "open"; _A = "answer"
+ROLES = {
+    "overview": {"intro": _H, "the-scientific-arc": _H, "headline-figures-one-per-argument": _H, "how-it-was-built": _M,
+                 "how-the-stages-relate-compare": _H, "status-at-a-glance": _E},
+    "s1": {"intro": _M, "method-notebook-140-the-ersp-producer": _M, "results": _E, "g05trc": _H, "realtime": _H},
+    "s2": {"intro": _M, "paper2figs": _E, "s2gallery": _E, "rtcompare": _H, "method": _H, "results-hfa-k-means-k-9": _H,
+           "concatenated-clustering-a-second-sample-unit": _H, "response-timing-when-does-each-cluster-come-on": _H,
+           "across-the-k-sweep-and-why-the-obvious-version-o": _H, "supporting-checks-reproducibility-k-choice-and-m": _H,
+           "cross-correlation-do-the-clusters-lead-and-lag-e": _H, "cvmethods": _M, "gradedvspartition": _M},
+    "lana": {"intro": _A, "what-the-atlas-is": _M, "what-was-done-step-by-step": _M, "how-to-read-these-figures": _M, "results": _H,
+             "rebuilt-on-the-corrected-coordinates-two-cohorts": _E, "3-a-2-how-this-one-actually-works": _E,
+             "how-this-relates-to-the-lana-fedorenko-work": _E, "honest-caveats": _O, "next-go-deeper": _O, "where-it-lives": _M},
+    "meetings": {},          # every meeting card is History; the answer carries the through-line
+    "mm": {"intro": _A, "where-things-stand": _A, "1-getting-the-trials": _M, "2-the-first-macro-analysis-and-why-i-stopped-tru": _H,
+           "3-testing-the-timing-two-problems-both-fixed": _M, "4-the-macro-contacts-correctly-aligned": _E, "5-white-matter-contacts-as-data": _E,
+           "6-the-micro-contacts-and-the-analog-inputs-as-co": _E, "7-what-i-think-it-means": _A},
+    "microepi": {"intro": _A, "status-now-against-cohort-v8-2026-09-15": _A, "how-to-read-the-checks": _M,
+                 "g-01-pat-5515-clean-aligned": _E, "g-02-pat-5533-clean-reference-a-6-ms-placement-w": _E,
+                 "g-03-pat-6619-audited-timing-not-yet-checkable": _E, "g-04-pat-6704-one-noise-contact-in-the-reference": _E,
+                 "g-05-pat-6684-removed": _H, "g-06-pat-6854-a-noisy-shaft-timing-aligned": _E},
+    "caveats": {"intro": _H, "latebroadband": _H, "g05loose": _H, "clusterdiag": _H, "clusterplan": _H, "real-time-05-open-items": _O,
+                "decisions-only-you-can-make": _O, "still-to-run": _O, "done-2026-09-08-09": _H, "done-2026-08-01-evening": _H,
+                "done-2026-07-31-08-01": _H, "done-2026-07-19": _H, "recently-fixed": _H},
+}
+
+# PROPOSED DELETIONS. (section, group key, text prefix or None for the whole group, why). Struck through
+# on the page, nothing removed; each block keeps a note with the reason. Prefix = the start of the
+# element's text, whitespace-normalised, matched case-insensitively against the group's direct children.
+DEL = [
+    ("overview", "intro", "The cohort is now v8", "the cohort note: the numbers are in the Answer, the run-by-run detail in the notebook 09-10 / 09-12 entries"),
+    ("overview", "the-scientific-arc", None, "the Q1–Q4 chain runs through the retired stages 03/04 and the per-condition clustering; the Answer list replaces it"),
+    ("overview", "headline-figures-one-per-argument", None, "S1–S5 are drawn on the 1027-electrode fit of 2026-08-03 and on stages 03/04, both retired; no v8 story figures exist yet"),
+    ("overview", "how-the-stages-relate-compare", None, "describes the 2026-08-03 run and the per-condition track; superseded by the runbook in 02"),
+    ("s1", "results", "In progress (no saved figures yet)", "an open item, carried in the Answer"),
+    ("s1", "g05trc", None, "G-05 is out of the dataset; the mechanism lives in the Motor Mapping tab"),
+    ("s1", "realtime", "Read this before using the run", "a status note from August; the notebook 08-11 / 08-14 / 08-16 entries hold it"),
+    ("s1", "realtime", "Four defects found while checking this run", "changelog, duplicated in the notebook 08-11 entry"),
+    ("s1", "realtime", "Fixed 2026-08-11", "changelog, duplicated in the notebook 08-11 / 08-14 entries"),
+    ("s1", "realtime", "Two silent data failures found on 2026-08-14", "changelog, duplicated in the notebook 08-16 entry"),
+    ("s1", "realtime", "EL046 and EL048 recovered from the anatomy Lookup", "changelog, duplicated in the notebook 08-16 entry"),
+    ("s1", "realtime", "Two properties stage 05 must handle", "stage 05 is retired"),
+    ("s2", "intro", "16 figures were taken off this tab", "housekeeping note; the notebook 09-10 entry records it"),
+    ("s2", "intro", "A late broadband lift that concat_hg cannot tell from a response", "resolved 09-14 (the recording reference); Caveats keeps the resolution, FIG 1.5 the evidence"),
+    ("s2", "intro", "FIG 2.1", "the figure of the same resolved item"),
+    ("s2", "intro", "Resolved 2026-09-14", "goes with the two blocks above"),
+    ("s2", "s2gallery", "Read this before the figures below", "refers to the K=5 five-type figures that were removed on 09-10"),
+    ("s2", "s2gallery", "HFAcanonical feature", "the old per-condition KPI row (K=9 k-means, 2102 samples)"),
+    ("s2", "method", None, "the per-condition method of July (K by silhouette, composite ranking); the runbook and the methods box replace it"),
+    ("s2", "results-hfa-k-means-k-9", None, "a stale heading over one coverage figure that FIG 0 / S0 now carries"),
+    ("s2", "concatenated-clustering-a-second-sample-unit", "All clusters on one brain", "refers to a render that was removed"),
+    ("s2", "concatenated-clustering-a-second-sample-unit", "Now done for the concat track", "done; changelog"),
+    ("s2", "concatenated-clustering-a-second-sample-unit", "Decision for the paper", "decided: HFA is the headline and the sample unit is the electrode"),
+    ("s2", "supporting-checks-reproducibility-k-choice-and-m", None, "one orphan paragraph; its four figures were removed on 09-10"),
+    ("s2", "cvmethods", "Runs bundled", "describes the 1027-electrode and 2026-07-19 bundles; the visualizer serves the twelve v8 runs"),
+    ("s2", "gradedvspartition", "on concat_hg, K = 7, n = 1266", "the 1266-fit table; the v8 numbers are in the paragraph above it"),
+    ("s2", "gradedvspartition", "Three places the comparison is usually presented unfairly", "duplicates the callout two blocks above"),
+    ("lana", "results", None, "the threshold sweep on the pre-fix coordinates; the rebuilt table below carries the counts"),
+    ("caveats", "intro", None, "housekeeping note; the notebook 09-10 entry records it"),
+    ("caveats", "latebroadband", "Found on 2026-09-08", "resolved: the band is the recording reference (kept below)"),
+    ("caveats", "latebroadband", "Why the reading is muscle rather than epilepsy", "the muscle reading, superseded by the resolution"),
+    ("caveats", "latebroadband", "Why it matters, and it matters for concat_hg", "superseded by the resolution"),
+    ("caveats", "latebroadband", "What would settle it", "settled"),
+    ("caveats", "g05loose", None, "G-05 is out; the two items that survive it (the shaft-M regex, notebook 150 keying on G-05) are in the Answer"),
+    ("caveats", "clusterplan", "Not yet started", "the plan was carried out (all steps marked done below it)"),
+    ("caveats", "clusterplan", "The things that are genuinely your call", "an orphan lead-in to the next heading"),
+    ("caveats", "done-2026-09-08-09", None, "duplicated in the notebook 09-10 entry"),
+    ("caveats", "done-2026-08-01-evening", None, "duplicated in the notebook 08-01 entry"),
+    ("caveats", "done-2026-07-31-08-01", None, "duplicated in the notebook 07-31 / 08-01 entries"),
+    ("caveats", "done-2026-07-19", None, "duplicated in the notebook 07-19 entry"),
+    ("caveats", "recently-fixed", None, "duplicated in the notebook 06-30 / 07-01 entries"),
+]
+
+# CORNELL. Per notebook day: (date as printed, first words of its tag) -> (cue, one-line summary).
+CORNELL = {
+    ("2026-09-12 → 15", "G-05 on its TRC"):        ("G-05 from the TRC; v8 fitted", "G-05 re-processed from its Micromed TRC with photodiode times through the raw clock fit; cohort v8 built and every stage-02 product rerun on it — and G-05 has since been removed."),
+    ("2026-09-10", "cohort v7"):                    ("v7 cohort; repo cleanup; native stability", "Trial rejection and the HG-trials figure fixed in 140, v7 built into a new cache, 866 MB of stale figures untracked, and the convex-NMF stability found understated by half."),
+    ("2026-09-07", "the cluster visualizer"):       ("visualizer as a comparison tool", "The cluster visualizer became a feature-set × algorithm matrix with overlay and grid views; 291 undrawn electrodes recovered by rebuilding the bundle."),
+    ("2026-08-21", "a bootstrap ceiling"):          ("bootstrap ceiling 0.632; C.11; half-cubes", "Per-cluster stability had been capped at 0.632 by an in-bag bootstrap and reversed once corrected; component anatomy tested per voxel; odd/even half-cubes added to stage 01."),
+    ("2026-08-19", "interpreting the decomposition"): ("own-space separation; gate lifted", "FIG C.7 corrected (each method separates only in its own space), the responsiveness gate made a testable feature set, rasters added beside centroids."),
+    ("2026-08-18", "the 27-patient cohort"):        ("27-patient cohort; centroids publish", "Six concat runs on the 27-patient / 1266-electrode cohort, K=7 defended on concat_hg only, every centroid published, PAT_6953 unblocked with a manual WM reference."),
+    ("2026-08-16", "silent data failures"):         ("silent data failures; aux leak", "G-02/G-03's flat 2 s responses traced to a misspelled log column and repaired; auxiliary channels found ERSP'd as cortex in both trees and purged; 464 site claims re-audited."),
+    ("2026-08-14", "real-time re-run"):             ("HUG id bug; RT re-run", "The HUG patients' failure was two id-spelling bugs; the real-time re-run reached 21 of 30 and the ERSP_clean renders were made readable."),
+    ("2026-08-11", "real time, GO-locked"):         ("notebook 150; four fixes", "GO-locked pipeline (150) written; its checks found MicroEPI trials double-counted and a condition-name bug that also reach 140."),
+    ("2026-08-08", "K=7 published"):                ("K=7 published; onsets NaN; xcorr fixed", "Fabricated onsets became NaN, K=7 published as a run, 18 stale concat runs deleted, the cross-correlation estimator made polarity-aware after three false lags."),
+    ("2026-08-07", "visualizer, diagnostics"):      ("four claims withdrawn; pivot to cNMF", "Controls withdrew four claims about the K=5 partition and surfaced three published defects; the pivot to convex NMF recorded with citations."),
+    ("2026-08-03", "re-run + story figures"):       ("1027-electrode re-run; S1–S5", "Full re-run on 1027 electrodes (K 4→5), the auditory reference re-chosen by profile, story figures S1–S5 built."),
+    ("2026-08-03", "a third unnormalised join"):    ("anatomy join normalised", "Anatomy labels were 45% 'unknown' from an unnormalised join — the third instance of that bug class; purity now reported against chance."),
+    ("2026-08-02", "clean cohort + lead/lag"):      ("grid at contact level; lead/lag", "PAT_3415's grid excluded at contact level, the site repointed at the clean run, the lead/lag analysis (215) added with its bootstrap CI."),
+    ("2026-08-02", "cluster timing"):               ("cluster onsets; the across-K confound", "Cluster onset ladders built with the pooling definition, split into stimulus and response windows; the across-K figure rebuilt around the cluster-size confound."),
+    ("2026-08-02", "atlas + K selection"):          ("K on four criteria; LanA as runs", "Every K scored on four criteria; the LanA splits registered as clustering runs so the glassbrain renders them; inside-out laterals fixed."),
+    ("2026-08-01", "recon payoff"):                 ("recon for 23/25 runs; pooling gap closed", "252 run on the fixed coordinates, phantom index entries pruned, 460's export gap closed."),
+    ("2026-07-31", "the recon fix"):                ("recon gap = naming", "126 unplottable contacts were a homoglyph and four naming conventions, not missing localisation; audit_coverage.py written."),
+    ("2026-07-29", "atlas as a run"):               ("atlas as a run", "The LanA in/out split registered as a run with a Desikan-Killiany breakdown."),
+    ("2026-07-28", "language atlas"):               ("language atlas; concat wins", "The Fedorenko/LanA analysis built (sweep, correlation maps, split); concatenated clustering shown cleaner than per-condition."),
+    ("2026-07-19", "full refresh"):                 ("full refresh", "Clustering, decoding and pooling all re-run; the status site built."),
+    ("2026-07-06", ""):                             ("HFA beats the full band", "Paired per-patient test: HFA decodes better than the full spectrum (0.596 vs 0.535)."),
+    ("2026-07-03", ""):                             ("centroid writer", "One centroid writer per K, with SEM shading."),
+    ("2026-07-01", ""):                             ("knife plot; poolv2 gradient", "Silhouette knife plot and PCA projection; poolv2's dB gradient wired onto electrodes."),
+    ("2026-06-30", "convergence"):                  ("poolv2 convergence", "poolv2 and the notebook made bit-identical; the premotor-planning role restored."),
+}
+
+ROLE_ORDER = ["answer", "evidence", "method", "open", "history"]
+ROLE_LABEL = {"answer": "Answer", "evidence": "Evidence", "method": "Method", "open": "Open", "history": "History"}
+
+
+def ui_data() -> str:
+    import json
+    return json.dumps({
+        "answers": ANSWERS, "roles": ROLES, "roleOrder": ROLE_ORDER, "roleLabel": ROLE_LABEL,
+        "del": [dict(sec=s, key=k, prefix=p, why=w) for s, k, p, w in DEL],
+        "cornell": [dict(date=d, tag=t, cue=c, sum=m) for (d, t), (c, m) in CORNELL.items()],
+    }, ensure_ascii=False)
+
+
 B_NAV, E_NAV = "<!-- BEGIN ui nav, generated by make_site_ui.py - do not hand-edit -->", "<!-- END ui nav -->"
 B_CSS, E_CSS = "<!-- BEGIN ui css, generated by make_site_ui.py - do not hand-edit -->", "<!-- END ui css -->"
 B_JS, E_JS = "<!-- BEGIN ui js, generated by make_site_ui.py - do not hand-edit -->", "<!-- END ui js -->"
@@ -114,6 +321,47 @@ CSS = r"""<style id="ui-css">
   .ui-sel{font:inherit;font-size:12px;padding:3px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:#39434e;max-width:300px}
   .ui-tw{overflow-x:auto;margin:8px 0 4px}
   .ui-tw>table{margin:0}
+  /* ---- report shape: role tabs, the answer block ---- */
+  .ui-roles{flex:1 0 100%;display:flex;gap:2px;margin:-2px 0 6px;border-bottom:1px solid var(--line)}
+  .ui-role{background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:6px 12px 7px;font:inherit;font-size:13px;
+    font-weight:600;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .ui-role:hover{color:var(--ink)}
+  .ui-role.on{color:var(--ink);border-bottom-color:var(--ink)}
+  .ui-role .ui-rn{font-size:10.5px;font-weight:600;color:var(--muted);background:var(--chip);border-radius:999px;padding:0 6px}
+  .ui-role.on .ui-rn{background:var(--ink);color:#fff}
+  .ui-rolehide{display:none!important}
+  .ui-strip.ui-nopills .ui-lbl,.ui-strip.ui-nopills .ui-pills{display:none}
+  .ui-answer{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:12px;padding:16px 20px 12px;margin:0 0 22px}
+  .ui-answer[hidden]{display:none}
+  .ui-alab{font-size:10.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .ui-answer p{margin:0 0 10px;font-size:15px;line-height:1.55;max-width:78ch}
+  .ui-answer ul{margin:4px 0 10px;padding-left:20px;max-width:78ch} .ui-answer li{margin:3px 0;font-size:13.5px;color:#39434e}
+  .ui-answer .ui-astat{font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;margin-top:4px;
+    font-family:ui-monospace,Menlo,Consolas,monospace}
+  .ui-tablist{list-style:none;padding:0!important;margin:6px 0 10px!important;max-width:none!important}
+  .ui-tablist li{padding:6px 0;border-top:1px solid var(--line);font-size:13.5px!important}
+  .ui-tablist li:first-child{border-top:0}
+  /* ---- proposed deletions ---- */
+  .ui-delnote{font-size:11px;font-weight:600;color:#c0392b;letter-spacing:.2px;margin:14px 0 -8px;padding-left:10px;border-left:3px solid #c0392b}
+  .ui-del,.ui-del *{text-decoration:line-through;color:#9aa5b1!important;text-decoration-color:#c0392b}
+  .ui-del img{opacity:.35}
+  .ui-del.ui-group>.ui-head{text-decoration:line-through;color:#9aa5b1}
+  .ui-del.ui-group>.ui-delnote,.ui-del.ui-group>.ui-delnote *{text-decoration:none;color:#c0392b!important}
+  .ui-del.ui-group>.ui-head .ui-chev{text-decoration:none}
+  .ui-pill.del{text-decoration:line-through;border-color:#e3b3ad}
+  section.ui-hidedel .ui-del,section.ui-hidedel .ui-delnote{display:none!important}
+  .ui-deltog{color:#c0392b}
+  /* ---- Cornell notebook cards ---- */
+  .nb-day.ui-cornell{display:grid;grid-template-columns:150px 1fr}
+  .nb-day.ui-cornell>.nb-date{grid-column:1/-1}
+  .nb-day.ui-cornell>.ui-cue{grid-column:1;grid-row:2/span var(--rows,4);padding:9px 14px;border-right:1px solid #eef1f4;border-top:1px solid #eef1f4;
+    background:#fbfcfd;font-size:12.5px;line-height:1.4;color:var(--ink);font-weight:600}
+  .nb-day.ui-cornell>.nb-row{grid-column:2}
+  .nb-day.ui-cornell>.nb-row .nb-stage{border-right:1px solid #eef1f4}
+  .nb-day.ui-cornell>.ui-sum{grid-column:1/-1;border-top:1px solid var(--line);background:#f4f6f8;padding:8px 14px;font-size:12.5px;color:#39434e}
+  .ui-cuelab{display:block;font-size:9.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:0 0 3px}
+  .ui-sum .ui-cuelab{display:inline;margin:0 8px 0 0}
+  @media(max-width:700px){.nb-day.ui-cornell{grid-template-columns:1fr}.nb-day.ui-cornell>.ui-cue{grid-column:1;grid-row:auto;border-right:0}.nb-day.ui-cornell>.nb-row{grid-column:1}}
   /* ---- lightbox ---- */
   #ui-lb{position:fixed;inset:0;z-index:1000;background:rgba(16,22,30,.86);display:flex;flex-direction:column;
     animation:fade .15s ease}
@@ -165,6 +413,8 @@ CSS = r"""<style id="ui-css">
     .wrap{display:block} main{max-width:none;padding:0}
     .ui-group.ui-closed>*:not(.ui-head){display:block!important}
     section.ui-focus .ui-group:not(.ui-cur){display:block!important}
+    .ui-rolehide{display:block!important} .ui-answer[hidden]{display:block!important}
+    section.ui-hidedel .ui-del,section.ui-hidedel .ui-delnote{display:none!important}
     figure,table,.method,.callout{break-inside:avoid}
     figure .imgwrap{overflow:visible}
     a{color:inherit}
@@ -174,6 +424,7 @@ CSS = r"""<style id="ui-css">
 JS = r"""<script id="ui-js">
 (function(){
 "use strict";
+const D=__UI_DATA__;
 const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>Array.from((r||document).querySelectorAll(s));
 const LS={get(k){try{return localStorage.getItem("fbm.ui."+k);}catch(e){return null;}},
           set(k,v){try{v==null?localStorage.removeItem("fbm.ui."+k):localStorage.setItem("fbm.ui."+k,v);}catch(e){}}};
@@ -221,15 +472,15 @@ function groupsOf(sec){
       h.classList.add("ui-head"); h.appendChild(mkChev()); g.dataset.key=key;
       out.push({el:g,key,head:h,label});
     });
-    // what sits between the lead paragraph and the first heading becomes an "Intro" group
-    const before=kids.slice(0,kids.indexOf(heads[0]));     // only what precedes the first heading
-    const lead=before.find(k=>k.classList.contains("lead"))||before.find(k=>k.tagName==="H2");
-    let start=lead?lead.nextSibling:sec.firstChild; const first=out[0].el; const pre=[];
-    for(let n=start;n&&n!==first;n=n.nextSibling)pre.push(n);
-    if(pre.some(n=>n.nodeType===1&&!n.classList.contains("retired-note"))){
+    // everything before the first heading, except the tab's own header (eyebrow, title, lead), becomes an "Intro" group
+    const first=out[0].el; const isHdr=n=>n.nodeType===1&&(n.tagName==="H2"||n.classList.contains("eyebrow")||n.classList.contains("lead")||n.classList.contains("retired-note"));
+    const pre=[]; for(let n=sec.firstChild;n&&n!==first;n=n.nextSibling){if(!isHdr(n))pre.push(n);}
+    if(pre.some(n=>n.nodeType===1)){
+      const hdr=Array.from(sec.children).filter(isHdr); const after=hdr.length?hdr[hdr.length-1]:null;
       const g=document.createElement("div"); g.className="ui-group ui-intro"; g.dataset.key="intro";
       const h=document.createElement("h3"); h.className="ui-head ui-syn"; h.id=sec.id+"-intro"; h.textContent="Intro"; h.appendChild(mkChev());
-      sec.insertBefore(g,pre[0]); g.appendChild(h); pre.forEach(n=>g.appendChild(n));
+      if(after)sec.insertBefore(g,after.nextSibling); else sec.insertBefore(g,first);
+      g.appendChild(h); pre.forEach(n=>g.appendChild(n));
       out.unshift({el:g,key:"intro",head:h,label:"Intro"});
     }
     out.forEach(o=>{const g=o.el,h=o.head; const nf=g.querySelectorAll("figure").length, nt=g.querySelectorAll("table").length, nw=text(g).split(" ").length;
@@ -288,25 +539,99 @@ function build(sec){
     const b=ev.target.closest("button[data-act]"); if(!b)return; const act=b.dataset.act, R=REG[sec.id];
     if(act==="expand"||act==="collapse"){R.groups.forEach(g=>setClosed(sec,g,act==="collapse"));saveClosed(sec);}
     else if(act==="focus"){setMode(sec,R.mode==="focus"?"jump":"focus");}
-    else if(act==="prev"||act==="next"){const i=R.groups.indexOf(R.cur||R.groups[0]);const j=Math.min(R.groups.length-1,Math.max(0,i+(act==="next"?1:-1)));goTo(sec,R.groups[j],true);}
+    else if(act==="prev"||act==="next"){const V=R.groups.filter(vis);const i=V.indexOf(R.cur||V[0]);const j=Math.min(V.length-1,Math.max(0,i+(act==="next"?1:-1)));if(V[j])goTo(sec,V[j],true);}
     else if(act==="print"){window.print();}
   });
   setMode(sec,REG[sec.id].mode,true);
+  if(D.roles[sec.id])applyRoles(sec);
+  applyDel(sec);
+  if(sec.id==="notebook")applyCornell(sec);
+}
+/* ---------- the report shape: Answer -> Evidence -> Method -> Open -> History ---------- */
+const vis=g=>!g.el.classList.contains("ui-rolehide");
+function tabList(){
+  const out=[]; $$("nav .ui-navlist button[data-t]").forEach(b=>{const t=b.dataset.t; const A=D.answers[t]; if(!A||t==="overview"||b.classList.contains("retired"))return;
+    out.push('<li><a href="#'+t+'"><b>'+esc(text(b))+'</b></a> — '+esc(A.one)+'</li>');});
+  return '<ul class="ui-tablist">'+out.join("")+'</ul>';
+}
+function applyRoles(sec){
+  const R=REG[sec.id], map=D.roles[sec.id]||{}; R.roles=true;
+  R.groups.forEach(g=>{g.role=map[g.key]||"history"; if(!(g.key in map)&&Object.keys(map).length)console.warn("ui roles: "+sec.id+" has no role for "+g.key); g.el.dataset.role=g.role;});
+  const A=D.answers[sec.id]; let ans=null;
+  if(A){ans=document.createElement("div"); ans.className="ui-answer"; ans.dataset.role="answer";
+    ans.innerHTML='<div class="ui-alab">Answer</div>'+A.html.replace("<!--TABLIST-->",tabList())+(A.status?'<div class="ui-astat">'+esc(A.status)+'</div>':'');
+    sec.insertBefore(ans,R.strip.nextSibling);}
+  R.answer=ans;
+  // groups in role order (a stable sort), directly under the strip
+  if(R.groups.every(g=>g.el.parentElement===sec)){
+    const order=D.roleOrder; R.groups=[...R.groups].sort((a,b)=>order.indexOf(a.role)-order.indexOf(b.role));
+    let cursor=ans||R.strip; R.groups.forEach(g=>{sec.insertBefore(g.el,cursor.nextSibling);cursor=g.el;});
+    const pills=R.strip.querySelector(".ui-pills"); if(pills)R.groups.forEach(g=>{if(g.pill&&g.pill.parentElement===pills)pills.appendChild(g.pill);});
+  }
+  const bar=document.createElement("div"); bar.className="ui-roles";
+  D.roleOrder.forEach(r=>{const n=R.groups.filter(g=>g.role===r).length+(r==="answer"&&ans?1:0); if(!n)return;
+    const b=document.createElement("button"); b.type="button"; b.className="ui-role"; b.dataset.role=r; b.innerHTML=esc(D.roleLabel[r])+'<span class="ui-rn">'+n+'</span>';
+    b.addEventListener("click",()=>setRole(sec,r)); bar.appendChild(b);});
+  R.strip.insertBefore(bar,R.strip.firstChild); R.strip.classList.add("ui-hasroles");
+  const saved=LS.get(sec.id+".role"); setRole(sec,(saved&&bar.querySelector('[data-role="'+saved+'"]'))?saved:(ans?"answer":bar.firstChild.dataset.role),true);
+}
+function setRole(sec,role,silent){
+  const R=REG[sec.id]; if(!R.roles)return; R.role=role; LS.set(sec.id+".role",role==="answer"?null:role);
+  $$(".ui-role",R.strip).forEach(b=>b.classList.toggle("on",b.dataset.role===role));
+  if(R.answer)R.answer.hidden=role!=="answer";
+  R.groups.forEach(g=>{const off=g.role!==role; g.el.classList.toggle("ui-rolehide",off); if(g.pill&&g.pill.tagName==="BUTTON")g.pill.hidden=off;});
+  R.cur=null; R.groups.forEach(g=>{if(g.pill.classList)g.pill.classList.remove("on");});
+  R.strip.classList.toggle("ui-nopills",!R.groups.some(g=>vis(g)&&g.pill&&g.pill.tagName==="BUTTON"));
+  if(R.mode==="focus"){const g=R.groups.find(vis); if(g)setCur(sec,g);}
+  updateArrows(sec); if(!silent)window.scrollTo({top:Math.max(0,R.strip.getBoundingClientRect().top+window.scrollY-6)});
+}
+/* ---------- proposed deletions: struck through, with the reason; nothing removed ---------- */
+function applyDel(sec){
+  const R=REG[sec.id]; if(!R)return; let n=0;
+  D.del.filter(d=>d.sec===sec.id).forEach(d=>{
+    const g=R.groups.find(x=>x.key===d.key); if(!g){console.warn("ui del: no group "+sec.id+"/"+d.key);return;}
+    const note=document.createElement("div"); note.className="ui-delnote"; note.textContent="proposed deletion — "+d.why;
+    if(!d.prefix){g.el.classList.add("ui-del"); g.head.insertAdjacentElement("afterend",note); if(g.pill&&g.pill.classList)g.pill.classList.add("del"); n++; return;}
+    const want=d.prefix.toLowerCase(); const el=Array.from(g.el.children).find(c=>c!==g.head&&!c.classList.contains("ui-delnote")&&text(c).toLowerCase().startsWith(want));
+    if(!el){console.warn("ui del: not found "+sec.id+"/"+d.key+" “"+d.prefix+"”");return;}
+    el.classList.add("ui-del"); el.insertAdjacentElement("beforebegin",note); n++;
+  });
+  R.ndel=n; if(!n)return;
+  const b=document.createElement("button"); b.type="button"; b.className="ui-tb ui-deltog"; b.dataset.act="deltog";
+  const hide=LS.get(sec.id+".hidedel")==="1"; sec.classList.toggle("ui-hidedel",hide);
+  const label=()=>{b.textContent=(sec.classList.contains("ui-hidedel")?"show ":"hide ")+n+" struck";}; label();
+  b.addEventListener("click",()=>{sec.classList.toggle("ui-hidedel");LS.set(sec.id+".hidedel",sec.classList.contains("ui-hidedel")?"1":null);label();});
+  R.strip.querySelector(".ui-tools").appendChild(b);
+}
+/* ---------- the notebook as Cornell notes: cue column, notes, one-line summary ---------- */
+function applyCornell(sec){
+  const R=REG[sec.id]; if(!R)return;
+  R.groups.forEach(g=>{
+    const h=g.head; const first=h.firstElementChild; const date=first&&!first.classList.contains("tag")?text(first):(h.firstChild&&h.firstChild.nodeType===3?h.firstChild.textContent.trim():"");
+    const tag=h.querySelector(".tag"); const tagText=tag?text(tag):"";
+    const e=D.cornell.find(x=>x.date===date&&(!x.tag||tagText.startsWith(x.tag))); if(!e)return;
+    const rows=$$(":scope > .nb-row",g.el); g.el.classList.add("ui-cornell"); g.el.style.setProperty("--rows",String(rows.length));
+    const cue=document.createElement("div"); cue.className="ui-cue"; cue.innerHTML='<span class="ui-cuelab">Cue</span>'+esc(e.cue);
+    const sum=document.createElement("div"); sum.className="ui-sum"; sum.innerHTML='<span class="ui-cuelab">Summary</span>'+esc(e.sum);
+    h.insertAdjacentElement("afterend",cue); g.el.appendChild(sum);
+    if(g.pill)g.pill.textContent=date+" · "+e.cue;
+  });
 }
 function setMode(sec,mode,silent){
   const R=REG[sec.id]; R.mode=mode; LS.set(sec.id+".mode",mode==="focus"?"focus":null);
   sec.classList.toggle("ui-focus",mode==="focus");
   const fb=R.strip.querySelector('[data-act="focus"]'); fb.classList.toggle("on",mode==="focus");
-  if(mode==="focus"){const k=LS.get(sec.id+".cur"); const g=R.groups.find(x=>x.key===k)||R.groups[0]; setCur(sec,g); if(!silent)window.scrollTo({top:0});}
+  if(mode==="focus"){const k=LS.get(sec.id+".cur"); const g=R.groups.find(x=>x.key===k&&vis(x))||R.groups.find(vis)||R.groups[0]; setCur(sec,g); if(!silent)window.scrollTo({top:0});}
   else{R.groups.forEach(g=>g.el.classList.remove("ui-cur"));}
   updateArrows(sec);
 }
 function setCur(sec,g){const R=REG[sec.id];R.cur=g;R.groups.forEach(x=>{x.el.classList.toggle("ui-cur",x===g);if(x.pill.classList)x.pill.classList.toggle("on",x===g);});
   if(R.mode==="focus"){LS.set(sec.id+".cur",g.key);setClosed(sec,g,false);} updateArrows(sec);}
-function updateArrows(sec){const R=REG[sec.id];const i=R.groups.indexOf(R.cur);
-  R.strip.querySelector('[data-act="prev"]').disabled=i<=0; R.strip.querySelector('[data-act="next"]').disabled=i<0||i>=R.groups.length-1;}
+function updateArrows(sec){const R=REG[sec.id];const V=R.groups.filter(vis);const i=V.indexOf(R.cur);
+  R.strip.querySelector('[data-act="prev"]').disabled=i<=0; R.strip.querySelector('[data-act="next"]').disabled=i<0||i>=V.length-1;}
 function goTo(sec,g,scroll){
   const R=REG[sec.id]; if(!R)return;
+  if(R.roles&&g.role&&g.role!==R.role)setRole(sec,g.role,true);
   if(g.el.classList.contains("ui-closed")){setClosed(sec,g,false);saveClosed(sec);}
   setCur(sec,g);
   if(R.mode==="focus"){window.scrollTo({top:Math.max(0,R.strip.getBoundingClientRect().top+window.scrollY-6),behavior:"auto"});return;}
@@ -319,7 +644,7 @@ let tick=false;
 function track(){
   tick=false; const s=curSec(); const R=s&&REG[s.id]; if(!R||R.mode==="focus")return;
   const line=R.strip.getBoundingClientRect().bottom+16; let cur=null;
-  for(const g of R.groups){if(g.el.getBoundingClientRect().top<=line)cur=g;else break;}
+  for(const g of R.groups){if(!vis(g))continue;if(g.el.getBoundingClientRect().top<=line)cur=g;else break;}
   if(cur!==R.cur){R.cur=cur;R.groups.forEach(x=>{if(x.pill.classList)x.pill.classList.toggle("on",x===cur);});updateArrows(s);}
 }
 window.addEventListener("scroll",()=>{if(!tick){tick=true;requestAnimationFrame(track);}
@@ -473,7 +798,7 @@ def main() -> int:
     n0 = len(s)
     s = rebuild_nav(s)
     s = splice(s, B_CSS, E_CSS, CSS, "<!-- BEGIN site gate" if "<!-- BEGIN site gate" in s else "</head>")
-    s = splice(s, B_JS, E_JS, JS, "</body>")
+    s = splice(s, B_JS, E_JS, JS.replace("__UI_DATA__", ui_data()), "</body>")
     s = re.sub(r"(status of the analysis\. Updated )[0-9\u2011-]+", lambda m: m.group(1) + dt.date.today().isoformat().replace("-", "\u2011"), s, count=1)
     nav = s[s.index("<nav>"):s.index("</nav>")]
     n_btn, n_hdr, n_ret = nav.count("data-t="), nav.count('class="ui-navh'), nav.count(" retired")
