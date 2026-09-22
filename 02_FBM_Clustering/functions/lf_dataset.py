@@ -44,7 +44,7 @@ import pandas as pd
 # ============================================================
 DEFAULT_TASK             = "LM"
 DEFAULT_CONDITIONS       = ("audio", "picture", "reading")
-DEFAULT_N_FREQ           = 129
+DEFAULT_N_FREQ           = 103   # 0-400 Hz cube since 2026-09-18 (was 129 = 0-500 Hz)
 DEFAULT_N_TIME           = 300
 DEFAULT_THR_POS          = 2.2
 DEFAULT_MIN_PROP_POS     = 0.02
@@ -104,13 +104,21 @@ def is_non_neural_electrode(label: str) -> bool:
     return False
 
 
-# GVA (PAT_*) shafts ending in "M" are MICROelectrodes: ADM/AGM/FODM/HADM/HAGM/PHDM/
-# TPDM/FOM/IDM/POM/TM, and the discarded X1M/X2M. Each is the micro counterpart of a
-# macro shaft with the same stem (AD/ADM, FOD/FODM, ...). They are neural — just a
-# different scale — so they are NOT "non-neural"; they simply have no macro recon
-# contact and do not belong in a macro-ERSP analysis, where they would cluster and pool
-# but never appear on the brain.
-_RX_MICRO_SHAFT = re.compile(r"^[A-Z0-9]*M$")
+# GVA (PAT_*) MICROELECTRODE contacts: the MicroEPI exports name a microwire bundle with a
+# lower-case "m" between the macro shaft's stem and the contact number - ADm1, FODm12,
+# HAGm3, PHDm7 - and the Micromed TRC of G-05 wrote its bundle as FOM; X1M/X2M are the
+# discarded analog families. They are neural, just a different scale: no macro recon
+# contact, so they do not belong in a macro-ERSP analysis, where they would cluster and
+# pool but never appear on the brain.
+#
+# CASE MATTERS (2026-09-22). The rule used to be "the shaft, upper-cased, ends in M",
+# which also took IDM and POM of PAT_2868 - DIXI depth shafts in the insula and the
+# parietal lobe (IDM2, IDM5, POM2-4 have cubes) - out of every dataset as if they were
+# microwires. Lora wants only stereo contacts in the v9 cohort: the microwires out, those
+# five back in. The lower-case m is the recording's own convention and no macro contact
+# of any cohort carries one before its number (checked over all 4796 recorded contacts).
+_RX_MICRO_LABEL = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*m[_-]?\d+$")
+_MICRO_SHAFTS_UPPER = {"FOM", "X1M", "X2M"}        # TRC-export spellings, no lower-case m
 
 
 def is_micro_electrode(label, patient_id=None) -> bool:
@@ -121,9 +129,11 @@ def is_micro_electrode(label, patient_id=None) -> bool:
         return False
     if patient_id is not None and not str(patient_id).upper().startswith("PAT"):
         return False
-    s = str(label).replace("_", "").replace("-", "").upper()
-    shaft = re.sub(r"\d+$", "", s)
-    return bool(shaft) and bool(_RX_MICRO_SHAFT.fullmatch(shaft))
+    s = str(label).strip().replace(" ", "")
+    if _RX_MICRO_LABEL.fullmatch(s):
+        return True
+    shaft = re.sub(r"\d+$", "", s.replace("_", "").replace("-", "")).upper()
+    return shaft in _MICRO_SHAFTS_UPPER
 
 
 # Subdural GRID / strip shafts, per patient. Listed EXPLICITLY rather than matched by
@@ -230,7 +240,8 @@ def prepare_dataset(
         "min_prop_neg": float(min_prop_neg),
         "apply_high_activity": bool(apply_high_activity),
         # Version tag: bump if filter logic changes incompatibly so old caches invalidate
-        "schema": 1,
+        # 2 (2026-09-22): the micro rule is the lower-case-m spelling; IDM / POM of PAT_2868 are data
+        "schema": 2,
     }
 
     # ---- Cache hit? ----
