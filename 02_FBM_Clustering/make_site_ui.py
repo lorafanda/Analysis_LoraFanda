@@ -52,14 +52,14 @@ ANSWERS = {
               "the tab's own Answer behind each:</p><!--TABLIST-->"),
         status="v8 on every stage-02 product · the five S-figures and stages 03/04 are the 1027-electrode fit"),
     "s1": dict(
-        one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched, trial-filtered; halves beside; run 2026-09-18, three reruns in progress",
+        one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched, trial-filtered; halves beside; 31 of 31 patients ok (run 2026-09-18, reruns 09-21 / 22)",
         html=("<ul>"
               "<li><b>product</b>: cube 103 freq × 300 warped bins, dB re baseline (−0.6, −0.1 s), GO at bin 150 · odd / even halves beside every cube</li>"
               "<li><b>chain</b>: load → channels out (aux, Unknown, bad) → WM reference (grid / whole CAR where no WM) → notch per block (z ≥ 3; iir or spectrum interpolation) → trials (accuracy, stimulus ≥ 0.5 s, post 1–10 s, IQR 1.5) → STFT 1 kHz, bins ≤ 400 Hz → warp → mean</li>"
               "<li><b>run</b>: 2026-09-18, <code>140_ersp_pipeline.py</code> per patient, 31 patients, fmax 400 Hz (was 500) · audit table + review mode per contact</li>"
-              "<li><b>in progress</b>: EL043 (two recordings joined), G-04 / G-06 (reference without bad contacts) · <b>open</b>: 137 contacts without anatomy link, stale-cube audit, QC pass</li>"
+              "<li><b>done since</b>: EL043 on its two recordings joined (3 conditions), G-04 / G-06 with the reference without bad contacts, PAT_6953; no stale cube in the tree · <b>open</b>: 137 contacts without anatomy link (alias decision), QC pass in review mode</li>"
               "</ul>"),
-        status="04_ersp_LM_RAWONLY = 2026-09-18 run (fmax 400) · EL043 / G-04 / G-06 rerunning 09-22 · PAT_6953 run 09-21 · previous tree = _old"),
+        status="04_ersp_LM_RAWONLY = 2026-09-18 run (fmax 400) + reruns EL043 / PAT_6704 / PAT_6854 (09-22), PAT_6953 (09-21) · 31 / 31 ok · previous tree = _old"),
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
         html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1680 electrodes, K = 5…30. "

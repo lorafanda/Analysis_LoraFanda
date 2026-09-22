@@ -143,9 +143,10 @@ def build(a: pd.DataFrame | None) -> str:
     S.append('    <div class="method">' + run_status(a) + '</div>')
     S.append('    <h4>Since the 2026-09-18 run</h4>')
     S.append('    ' + ul(
-        "<b>2026-09-21</b> · MicroEPI reference: bad-listed contacts were averaged in (<code>bad_channels_for_ref=[]</code>) → fixed; affected PAT_6704 (AD8 FOD5 HAD7 IAD1), PAT_6854 (IAD1) → reruns",
-        "<b>2026-09-21</b> · EL043: picture block of 17 June bad, redone 18 June in a second file → <code>RAW_CONCAT</code> joins both (file 2 at 3773.5 s), window 1810–4650 s, picture triggers rebuilt by <code>el043_build_picture_triggers.py</code> → rerun (was: picture 0 trials in crop → aborted, no reading)",
-        "<b>2026-09-21</b> · PAT_6953 run (not in the 18 Sep batch)",
+        "<b>2026-09-22</b> · PAT_6704, PAT_6854 rerun with the MicroEPI reference fix (bad-listed contacts had been averaged in, <code>bad_channels_for_ref=[]</code>): PAT_6704 21 WM contacts used, AD8 FOD5 HAD7 IAD1 left out · PAT_6854 38 used, IAD1 left out · cube counts unchanged (134 / 178 per condition)",
+        "<b>2026-09-22</b> · EL043 rerun on the two recordings joined (<code>RAW_CONCAT</code>, file 2 at 3773.5 s, window 1810–4650 s; picture triggers of 18 June by <code>el043_build_picture_triggers.py</code>, the bad 17 June table parked in prep0-bad): audio 18 / picture 25 / reading 14 trials, 74 cubes per condition (18 Sep run: picture 0 trials in crop → aborted before reading)",
+        "<b>2026-09-21</b> · PAT_6953 run: 147 cubes per condition, 30 WM references, 5 Unknown drops (AD12 FOD1 TLD2 TLD4 TLD5)",
+        "<b>2026-09-22</b> · stale-cube sweep by mtime over all 31 patient folders: no cube, half or CLEAN png older than its run",
         "<b>open</b> · 137 contacts / 10 patients analysed with no anatomy link (recording vs TSV spelling: aI_R / alR, MFG-L / MFG, pIns / pl, PlaT_L / PlanTL, OFA / OFAD): 20 are WM 100 %, 14 Unknown → alias table in 140 + reruns, decision pending",
     ))
 
@@ -228,8 +229,7 @@ def build(a: pd.DataFrame | None) -> str:
     # ---- open -----------------------------------------------------------------------
     S.append('    <h3 id="s1-open">Open — before 140 is done</h3>')
     S.append('    ' + ul(
-        "reruns: EL043 (joined recording), G-04, G-06 (reference fix) → <code>141_audit_140.py</code> → <code>make_lm_review_bundle.py --patients …</code>",
-        "decide: alias table for the 137 unlinked contacts (10 patients) → reruns EL034 EL035 EL037 EL038 EL040 EL042 EL043 EL045 EL046 PAT_6619",
+        "decide: alias table for the 137 unlinked contacts (10 patients) → reruns EL034 EL035 EL037 EL038 EL040 EL042 EL043 EL045 EL046 PAT_6619 → <code>141_audit_140.py</code> → <code>make_lm_review_bundle.py --patients …</code>",
         "decide: bad-list names that matched nothing (spelling vs the same alias problem)",
         "decide: PAT_6953 Unknown contacts (AD12, TLD2 / 4 / 5) keep-list",
         "stale-cube audit by mtime after the reruns",
@@ -241,7 +241,7 @@ def build(a: pd.DataFrame | None) -> str:
     # ---- history --------------------------------------------------------------------
     S.append('    <h3 id="s1-history">History</h3>')
     S.append('    ' + ul(
-        "<b>2026-09-21 / 22</b> · MicroEPI bad-in-reference fix · EL043 two recordings joined, 18 June picture triggers · review mode + review bundle · audit script",
+        "<b>2026-09-21 / 22</b> · MicroEPI bad-in-reference fix, PAT_6704 / PAT_6854 rerun · EL043 two recordings joined, 18 June picture triggers, rerun · PAT_6953 run · review mode + review bundle · audit script · microelectrode rule in the dataset builder = lower-case-m spelling (PAT_2868 IDM / POM are stereo contacts, back in v9)",
         "<b>2026-09-18</b> · fmax 400 Hz (crop in <code>_spectro</code>, option A; downstream constants 103 / 398.4375) · 140 as per-patient script · EL051 bad list (29) · full rerun, 31 patients, 8.1 h · trees renamed <code>_old</code>",
         "<b>2026-09-17</b> · EL052 whole-recording CAR (no WM contact recorded) · <b>09-15</b> · PAT_6684 (G-05) out of the dataset · <b>09-14</b> · G-05 on its Micromed TRC, discharge spans",
         "<b>2026-09-09</b> · per-trial rejection (broadband z / band MAD, ≤ 34 %; G-05 only) · HG raster rewritten: every excluded trial drawn, reason-tagged · <code>collect_trials</code> returns the whole table",
