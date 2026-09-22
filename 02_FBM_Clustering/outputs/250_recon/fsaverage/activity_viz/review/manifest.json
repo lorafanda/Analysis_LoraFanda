@@ -1,0 +1,39 @@
+{
+ "built": "2026-09-22 16:05",
+ "source_tree": "S:/HumanNeuronLab/ANALYSIS/FLM/Analysis_LoraFanda/01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY",
+ "n_patient": 31,
+ "n_contact": 4763,
+ "n_data": 3357,
+ "conditions": [
+  "audio",
+  "picture",
+  "reading"
+ ],
+ "n_cond": 3,
+ "n_freq": 103,
+ "f_hz": [
+  0.0,
+  398.4375
+ ],
+ "fmax_source_hz": 398.4375,
+ "n_time": 150,
+ "time_downsample": 2,
+ "n_time_source": 300,
+ "dtype": "uint8",
+ "order": [
+  "cond",
+  "freq",
+  "time"
+ ],
+ "vmin": -10.0,
+ "vmax": 10.0,
+ "nan_byte": 0,
+ "file": "each contact row's `file`",
+ "hg_path": "{hg_root}/{patient}/LM/HG/{cond}/{patient}_{cond}_{hg_reref}_HGtrials_{name}.png",
+ "metrics": {
+  "power": "mean |dB| over the cube",
+  "hg": "mean dB, 70-150 Hz, stimulus half",
+  "stripe": "mean over 50..350 Hz rows of |row - mean of rows +-2|, dB",
+  "rel": "split-half Pearson r (ERSP_halves)"
+ }
+}
