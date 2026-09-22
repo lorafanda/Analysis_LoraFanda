@@ -199,6 +199,10 @@ def build(a: pd.DataFrame | None) -> str:
         "<b>audit</b> · <code>outputs/04_ersp_LM/audit_140.tsv</code>, <code>.md</code> · <b>review bundle</b> · <code>02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/review/</code> (<code>make_lm_review_bundle.py</code>)",
         "<b>previous tree</b> · <code>04_ersp_LM_RAWONLY_old</code>, <code>04_ersp_LM_old</code> (run of 2026-08-16 + reruns; 0–500 Hz cubes) · <b>RT tree</b> · <code>05_ERSP_LM_RAWONLY_RealTime</code> (notebook 150, GO-locked, see History)",
         "<b>stale cubes</b> · 140 never clears a patient folder → after a rerun that removes channels, audit by mtime before any cohort build",
+        # 2026-09-22: what the cube is normalised TO is the first thing stage 02's distance
+        # metric sees, so it belongs here and not only in the clustering tab.
+        "<b>what the cube is normalised <i>to</i></b> · dB re the pre-stimulus baseline (−0.6…−0.1 s), per trial and per frequency — so a contact's gain and impedance are divided out, but its <b>response size</b> is not, and that is what drives a Euclidean clustering downstream (<a href=\"#s2norm\">stage 02 · FIG N.1–N.6</a>). <code>compute_ersp</code> also returns <code>avg_z</code> — the same thing divided by the baseline SD, per frequency (<code>lf_ersp.py:1230</code>) — which is the quantity Hamilton, Edwards &amp; Chang 2018 (<i>Curr Biol</i> 28:1860, STAR Methods e1) cluster on; 140 saves only <code>avg_db</code>, so one <code>np.save</code> in the export block would give stage 02 a third space with a published precedent",
+        "<b>what the responsiveness gate assumes</b> · the gate is a <i>duration</i> test (|dB| over threshold in ≥ 2–4 % of bins), so a contact with a large but brief transient can fail it. The same hazard made Hamilton et al. 2018 reject a response-vs-silence criterion and select electrodes by held-out STRF prediction instead (STAR Methods e2, “false exclusion of onset electrodes”) — worth one count before v9: gated-out contacts with max |dB| &gt; 4 in under 2 % of bins",
     ) + '</div>')
 
     # ---- checks ---------------------------------------------------------------------

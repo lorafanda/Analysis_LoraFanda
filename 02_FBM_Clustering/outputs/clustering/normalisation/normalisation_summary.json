@@ -1,0 +1,40 @@
+{
+  "cohort": "v8",
+  "run": "kmeans\\concat_bands5\\runs\\20260915_004248",
+  "n": 1680,
+  "p": 450,
+  "bands": [
+    "1-20Hz",
+    "20-70Hz",
+    "70-170Hz",
+    "170-270Hz",
+    "270-400Hz"
+  ],
+  "conditions": [
+    "audio",
+    "picture",
+    "reading"
+  ],
+  "K": 8,
+  "norm_p05": 9.857962183848677,
+  "norm_med": 15.427079230436757,
+  "norm_p95": 27.71737680305467,
+  "ari_db_vs_unit": 0.28015955546187105,
+  "pairs": {
+    "nA": 76,
+    "nA_split": 55,
+    "nA_split_u": 1,
+    "nB": 186937,
+    "nB_join": 39704,
+    "nB_join_u": 13402
+  },
+  "elevation": {
+    "n": 256,
+    "n_pat": 12,
+    "eta_u": 0.5541357006540304,
+    "eta_z": 0.3342654230556372,
+    "n_after": 6,
+    "kept_together": 0.71484375
+  },
+  "written": "2026-09-22 14:04:02"
+}

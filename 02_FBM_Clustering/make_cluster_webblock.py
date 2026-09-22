@@ -346,9 +346,10 @@ def build():
       <h4>Held-out variance over components &mdash; and how K was chosen</h4>
       <ul>
         <li>One panel per feature set, every method fitted AND scored in its <b>home
-          space</b> &mdash; convex NMF unit-normed, k-means and Ward in raw dB. The SHAPE
-          of each curve is meaningful; the heights are NOT comparable across methods,
-          because they are explaining variance in two different matrices.</li>
+          space</b>. On the 2026-09-15 runs drawn here that is <b>unit-norm for all
+          three</b> (<code>cbc86fdf5</code>, 2026-09-06), so the heights ARE comparable:
+          convex NMF's curve is both higher and the only one that turns over. The
+          caption's earlier warning applied to the runs before that date.</li>
         <li>A triangle marks a curve that <b>turns over</b> inside the tested range.{turn}
           k-means and Ward keep buying variance with every extra cluster, which is what a
           partition does &mdash; it has no way to say an extra cluster was not worth
