@@ -52,16 +52,14 @@ ANSWERS = {
               "the tab's own Answer behind each:</p><!--TABLIST-->"),
         status="v8 on every stage-02 product · the five S-figures and stages 03/04 are the 1027-electrode fit"),
     "s1": dict(
-        one="one warped ERSP cube per electrode and condition — WM-referenced, notched, trial-filtered; half-cubes on disk",
-        html=("<p>Raw sEEG becomes one cube per electrode and condition: white-matter re-reference, adaptive mains notch, "
-              "a trial table filtered on accuracy and duration, a 1 kHz STFT in dB against the pre-stimulus baseline, "
-              "time-warped onto 300 bins with the GO cue at 50%. Odd/even half-cubes exist beside every cube (the input of a "
-              "reliability gate that is built but not yet the shipped gate). The un-warped, GO-locked tree of notebook 150 "
-              "covers 28 of 30 patients.</p>"
-              "<ul><li>MicroEPI reruns (G-01, G-04, G-06) with the audited references, then EL051, then v9 — see MicroEPI.</li>"
-              "<li>Per-block photodiode equalisation (<code>pd_blocks</code>) reaches notebook 13 only, not 140.</li>"
-              "<li>Micro/macro ERSP comparison (nb 11) has never run to a saved output.</li></ul>"),
-        status="04_ersp_LM_RAWONLY = the 2026-08-16 run, G-05 recomputed 09-14 and since excluded · halves on disk"),
+        one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched, trial-filtered; halves beside; run 2026-09-18, three reruns in progress",
+        html=("<ul>"
+              "<li><b>product</b>: cube 103 freq × 300 warped bins, dB re baseline (−0.6, −0.1 s), GO at bin 150 · odd / even halves beside every cube</li>"
+              "<li><b>chain</b>: load → channels out (aux, Unknown, bad) → WM reference (grid / whole CAR where no WM) → notch per block (z ≥ 3; iir or spectrum interpolation) → trials (accuracy, stimulus ≥ 0.5 s, post 1–10 s, IQR 1.5) → STFT 1 kHz, bins ≤ 400 Hz → warp → mean</li>"
+              "<li><b>run</b>: 2026-09-18, <code>140_ersp_pipeline.py</code> per patient, 31 patients, fmax 400 Hz (was 500) · audit table + review mode per contact</li>"
+              "<li><b>in progress</b>: EL043 (two recordings joined), G-04 / G-06 (reference without bad contacts) · <b>open</b>: 137 contacts without anatomy link, stale-cube audit, QC pass</li>"
+              "</ul>"),
+        status="04_ersp_LM_RAWONLY = 2026-09-18 run (fmax 400) · EL043 / G-04 / G-06 rerunning 09-22 · PAT_6953 run 09-21 · previous tree = _old"),
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
         html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1680 electrodes, K = 5…30. "
@@ -133,7 +131,8 @@ _H = "history"; _E = "evidence"; _M = "method"; _O = "open"; _A = "answer"
 ROLES = {
     "overview": {"intro": _H, "the-scientific-arc": _H, "headline-figures-one-per-argument": _H, "how-it-was-built": _M,
                  "how-the-stages-relate-compare": _H, "status-at-a-glance": _E},
-    "s1": {"intro": _M, "method-notebook-140-the-ersp-producer": _M, "results": _E, "g05trc": _H, "realtime": _H},
+    "s1": {"intro": _M, "s1-status": _E, "s1-chain": _M, "s1-params": _M, "s1-outputs": _M, "s1-checks": _E,
+           "s1-open": _O, "s1-history": _H},
     "s2": {"intro": _M, "paper2figs": _E, "s2gallery": _E, "rtcompare": _H, "method": _H, "results-hfa-k-means-k-9": _H,
            "concatenated-clustering-a-second-sample-unit": _H, "response-timing-when-does-each-cluster-come-on": _H,
            "across-the-k-sweep-and-why-the-obvious-version-o": _H, "supporting-checks-reproducibility-k-choice-and-m": _H,
