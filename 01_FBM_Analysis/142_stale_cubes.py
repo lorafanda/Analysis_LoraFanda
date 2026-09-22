@@ -41,7 +41,8 @@ def main() -> int:
         stale = []
         for tree in TREES.values():
             for f in glob.glob(os.path.join(tree, pid, "LM", "**", "*"), recursive=True):
-                if os.path.isfile(f) and not f.endswith("Thumbs.db") and os.path.getmtime(f) < t0:
+                # Thumbs.db and the trigger-check figures (el043_build_picture_triggers.py) are not 140 products
+                if os.path.isfile(f) and not f.endswith(("Thumbs.db", "_PDcheck.png")) and os.path.getmtime(f) < t0:
                     stale.append(f)
         if stale:
             per[pid] = stale

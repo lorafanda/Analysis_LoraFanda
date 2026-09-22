@@ -200,7 +200,10 @@ def native_from_tsv(row) -> dict:
     return {"raw": " ".join(f"{t} {w:.2f}" if w == w else t for t, w in zip(toks, ws)) or "",
             "tissue": first[0], "region": region, "hemi": hemi,
             "wm": round(wm, 2), "gm": round(gm, 2), "sub": round(sub, 2), "unknown": round(unk, 2),
-            "unknown_first": first[0] == "unknown", "wm_rule": bool(parts) and first[0] == "WM" and bool(ws) and ws[0] == 1.0}
+            # 140's rule (lf_io_utils.derive_wm_channels_from_electrodes_tsv): first token starts with
+            # "wm-" and its weight is above 0.97 - "Left-UnsegmentedWhiteMatter" does not count
+            "unknown_first": first[0] == "unknown",
+            "wm_rule": bool(toks) and toks[0].startswith("wm-") and bool(ws) and ws[0] == ws[0] and ws[0] > 0.97}
 
 
 def label_text(nat: dict) -> str:

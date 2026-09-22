@@ -439,7 +439,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             wm_all     = io.wm_labels_for_patient(patient_id, electrodes_tsv_pattern=_wm_tsv)
             _bad_norm_for_report = {io.normalize_label(b)
                                     for b in getattr(cfg, "bad_channels_manual", {}).get(patient_id, [])}
-            _name_norm = [io.normalize_label(n) for n in names]
+            _name_norm = [io.alias_label(n, patient_id) for n in names]   # the key apply_wm_reref matches on (cfg.CHANNEL_SHAFT_ALIAS)
             wm_in_sig  = [n for n in wm_all if n in _name_norm]
             wm_usable  = [n for n in wm_in_sig if n not in _bad_norm_for_report]
 
