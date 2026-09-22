@@ -21,7 +21,7 @@ import sys
 REPO = r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda"
 WT = r"C:\Users\fanda\av_branch"
 BRANCH = "activity-visualizer"
-REL = "02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/review"
+REL = "02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz"     # the whole bundle since 2026-09-22 (cube parts, ersp/, review/)
 CHUNK_BYTES = 22e6
 TRAILER = "\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\n"
 
@@ -88,12 +88,12 @@ def main() -> int:
         chunks.append(cur)
     for i, paths in enumerate(chunks, 1):
         git_paths("add", paths)
-        msg = f"activity_viz/review: the LM visualizer's review bundle, part {i}/{len(chunks)}" + TRAILER
+        msg = f"activity_viz: the LM visualizer's bundle, part {i}/{len(chunks)}" + TRAILER
         git("commit", "-q", "-m", msg)
         print(f"  committed part {i}/{len(chunks)} ({len(paths)} files)", flush=True)
     if gone:
         git_paths("rm", gone)
-        git("commit", "-q", "-m", "activity_viz/review: files the rebuilt bundle no longer has" + TRAILER)
+        git("commit", "-q", "-m", "activity_viz: files the rebuilt bundle no longer has" + TRAILER)
         print(f"  removed {len(gone)} files")
     if not chunks and not gone:
         print("nothing to commit: the branch already holds this bundle")

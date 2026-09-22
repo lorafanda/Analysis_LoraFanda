@@ -10,9 +10,10 @@ drawn from, 0-400 Hz, all three conditions - so the page can show the real spect
 a selected electrode rather than the eight band means of the cube. The page fetches one
 file when a contact is selected (~46 kB), never the whole set.
 
-SOURCE. The same pooling cache precompute_activity_cube.py reads:
-    04_FBM_Pooling/outputs/_dataset/pooling/_raw_ungated/X_3d.npy      (n, 129, 300) float32
-    04_FBM_Pooling/outputs/_dataset/pooling/_raw_ungated/df_meta.parquet (patient_id, electrode, condition)
+SOURCE. The same cache precompute_activity_cube.py reads (2026-09-22: the newest concat cache,
+02_FBM_Clustering/outputs/_dataset/concat_source_v<N>, or --dataset <dir>):
+    X_3d.npy          (n, 103, 300) float32
+    df_meta.parquet   (patient_id, electrode, condition)
 and the bundle's own contacts.json, so contact i here is contact i in the cube.
 
 OUTPUT.  02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/ersp/
@@ -28,6 +29,7 @@ OUTPUT.  02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/ersp/
 Commit the ersp/ folder to the activity-visualizer branch beside the rest of the bundle
 (see make_lm_visualizer.py for the worktree recipe).
 """
+import argparse
 import json
 import re
 from pathlib import Path
@@ -36,7 +38,21 @@ import numpy as np
 import pandas as pd
 
 REPO = Path(r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda")
-DATASET_DIR = REPO / "04_FBM_Pooling" / "outputs" / "_dataset" / "pooling" / "_raw_ungated"
+
+
+def newest_concat_cache() -> Path:
+    d = REPO / "02_FBM_Clustering" / "outputs" / "_dataset"
+    cands = [(int(p.name[len("concat_source_v"):]), p) for p in d.glob("concat_source_v*")
+             if p.is_dir() and p.name[len("concat_source_v"):].isdigit()]
+    if not cands:
+        raise FileNotFoundError(f"no concat_source_v<N> under {d}")
+    return max(cands)[1]
+
+
+_ap = argparse.ArgumentParser()
+_ap.add_argument("--dataset", help="cache dir holding X_3d.npy + df_meta.parquet (default: the newest concat_source_v<N>)")
+_ARGS, _ = _ap.parse_known_args()
+DATASET_DIR = Path(_ARGS.dataset) if _ARGS.dataset else newest_concat_cache()
 ERSP_NPY = DATASET_DIR / "X_3d.npy"
 META_PARQUET = DATASET_DIR / "df_meta.parquet"
 BUNDLE = REPO / "02_FBM_Clustering" / "outputs" / "250_recon" / "fsaverage" / "activity_viz"

@@ -21,10 +21,14 @@ mathematically identical to projecting that exact window (exact for the "mean"
 contact aggregation).
 
 SOURCE  (all inside Analysis_LoraFanda — Analysis_Lora is never used)
-  - Raw ungated ERSP:  04_FBM_Pooling/outputs/_dataset/pooling/_raw_ungated/
-        X_3d.npy                       (n_samples, 129, 300) float32 raw ERSP (ungated)
+  - The concat cache (2026-09-22; was the 04 pooling cache _raw_ungated, the same tables
+    built by the same lf_dataset.prepare_dataset, one cohort behind):
+        02_FBM_Clustering/outputs/_dataset/concat_source_v<N>/   newest N, or --dataset <dir>
+        X_3d.npy                       (n_samples, 103, 300) float32 raw ERSP (ungated)
         df_meta.parquet                (row-aligned: patient_id, electrode, condition)
-        (built from 01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY)
+        (built from 01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY by rebuild_concat_cache.py)
+    Patients in lf_concat.DEFAULT_EXCLUDE_PATIENTS (EL044, PAT_3415, PAT_6684) are left
+    out, so the page shows the cohort's ungated set - the same contacts the concat step sees.
   - Contact coords:    02_FBM_Clustering/outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
         (patient, name, hemi, x, y, z, dist_to_pial_mm, is_cortical, ...)
   - Meshes:            02_FBM_Clustering/outputs/250_recon/fsaverage/meshes/fsaverage_{lh,rh}.gii
@@ -44,10 +48,12 @@ Run with the Python that has numpy + pandas + pyarrow (Python 3.11 here):
         02_FBM_Clustering/scripts/precompute_activity_cube.py
 """
 
+import argparse
 import gzip
 import json
 import re
 import struct
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -59,10 +65,31 @@ import pandas as pd
 REPO = Path(r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda")
 OUTPUTS = REPO / "02_FBM_Clustering" / "outputs"
 
-# Raw ungated ERSP dataset (the actual activity) + row-aligned sample meta.
-DATASET_DIR = REPO / "04_FBM_Pooling" / "outputs" / "_dataset" / "pooling" / "_raw_ungated"
-ERSP_NPY = DATASET_DIR / "X_3d.npy"            # (n, 129, 300) float32, already 3D
+
+def newest_concat_cache() -> Path:
+    """The newest concat_source_v<N> under 02_FBM_Clustering/outputs/_dataset - the rule
+    lf_concat uses for its default cache."""
+    cands = [(int(p.name[len("concat_source_v"):]), p) for p in (OUTPUTS / "_dataset").glob("concat_source_v*")
+             if p.is_dir() and p.name[len("concat_source_v"):].isdigit()]
+    if not cands:
+        raise FileNotFoundError("no concat_source_v<N> under 02_FBM_Clustering/outputs/_dataset")
+    return max(cands)[1]
+
+
+_ap = argparse.ArgumentParser()
+_ap.add_argument("--dataset", help="cache dir holding X_3d.npy + df_meta.parquet (default: the newest concat_source_v<N>)")
+_ARGS, _ = _ap.parse_known_args()
+DATASET_DIR = Path(_ARGS.dataset) if _ARGS.dataset else newest_concat_cache()
+ERSP_NPY = DATASET_DIR / "X_3d.npy"            # (n, 103, 300) float32, already 3D
 META_PARQUET = DATASET_DIR / "df_meta.parquet"
+
+# whole patients the concat step leaves out (grid / mixed implants, the removed G-05)
+sys.path.insert(0, str(REPO / "02_FBM_Clustering" / "functions"))
+try:
+    from lf_concat import DEFAULT_EXCLUDE_PATIENTS as EXCLUDE_PATIENTS   # noqa: E402
+except Exception as _e:                                                 # pragma: no cover
+    print(f"[warn] lf_concat not importable ({_e}); using the literal exclusion list")
+    EXCLUDE_PATIENTS = ("EL044", "PAT_3415", "PAT_6684")
 
 # All-patient fsaverage contact coordinates (HUG + EL cohorts).
 COORDS_CSV = OUTPUTS / "250_recon" / "fsaverage" / "coords" / "ALL_PATIENTS_contacts_fsaverage.csv"
@@ -210,6 +237,14 @@ def main() -> None:
     df["electrode"] = df["electrode"].astype(str).str.strip()
     df["condition"] = df["condition"].astype(str).str.strip()
     df["el_key"] = df["electrode"].map(norm_el)
+    excl = df["patient_id"].isin([str(p) for p in EXCLUDE_PATIENTS])
+    if excl.any():
+        print(f"[patients] {int(excl.sum())} rows of {sorted(df.loc[excl, 'patient_id'].unique())} left out (lf_concat.DEFAULT_EXCLUDE_PATIENTS)")
+        keep = np.where(~excl.to_numpy())[0]
+        df = df.loc[~excl].reset_index(drop=True)
+        ersp = ersp[keep]
+        n = ersp.shape[0]
+    print(f"[dataset] {DATASET_DIR.name}: {n} samples, {df['patient_id'].nunique()} patients")
 
     # ---- Frequency bands -------------------------------------------------
     band_bins = [band_hz_to_bins(b, NF, FMAX_HZ) for b in F_BANDS_HZ]
@@ -276,7 +311,17 @@ def main() -> None:
     # cube as float16 to stay under GitHub's 100 MB/file limit (~53 MB vs ~106 MB);
     # plenty of precision for ERSP visualization. Decoded to float32 in the browser.
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    cube.astype("<f2").tofile(OUT_DIR / "cube_f16.bin")
+    # in parts of <= 4 MB (2026-09-22): the repo's pre-commit guard refuses a file above 5 MB,
+    # and the cube is ~50 MB; the page concatenates the parts (manifest files.cube.parts)
+    raw = cube.astype("<f2").tobytes()
+    PART = 4 * 1024 * 1024
+    for old in OUT_DIR.glob("cube_f16*.bin"):
+        old.unlink()
+    parts = []
+    for k in range(0, len(raw), PART):
+        name = f"cube_f16.{len(parts):03d}.bin"
+        (OUT_DIR / name).write_bytes(raw[k:k + PART])
+        parts.append(name)
     for hemi in ("lh", "rh"):
         _, idx, wraw = proj[hemi]
         idx.astype("<u2").tofile(OUT_DIR / f"proj_{hemi}_idx_u16.bin")
@@ -320,7 +365,7 @@ def main() -> None:
                    "mesh_inflated": "../meshes/fsaverage_rh.inflated.gii"},
         },
         "files": {
-            "cube": {"name": "cube_f16.bin", "dtype": "float16",
+            "cube": {"name": parts[0], "parts": parts, "dtype": "float16",
                      "shape": [n_cond, n_band, n_contact, int(NT)]},
             "proj_lh_idx": {"name": "proj_lh_idx_u16.bin", "dtype": "uint16",
                             "shape": [int(proj["lh"][0]), int(K_NEAREST)]},
