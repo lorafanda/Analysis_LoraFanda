@@ -1,6 +1,10 @@
 # lf_io_utils.py
 from __future__ import annotations
 import os, json, glob, functools, h5py
+try:
+    import hdf5plugin  # noqa: F401  - the Bern .h5 files of 2026-09 (EL052 on) are Blosc-compressed
+except ImportError:
+    pass
 import numpy as np
 import pandas as pd
 import re
@@ -247,6 +251,30 @@ def normalize_names(names: list[str]) -> list[str]:
 def wm_labels_for_patient(patient_id: str, *,
                           electrodes_tsv_pattern: str | None = None) -> set[str]:
     """
+    Return WM channel names for a patient, derived from the BIDS electrodes TSV,
+    minus cfg.WM_NOT_REFERENCE[patient_id]: contacts the anatomy calls white matter
+    but which are analysed as ordinary contacts and kept out of the reference (see
+    the config block). This is the single choke point for WM names, so the removal
+    reaches every caller - 140, 150, the MM pipeline - through wm_indices_for_patient.
+    """
+    out = _wm_labels_from_anatomy(patient_id, electrodes_tsv_pattern=electrodes_tsv_pattern)
+    try:
+        from functions import config as _cfg2
+        demote = (getattr(_cfg2, "WM_NOT_REFERENCE", {}) or {}).get(str(patient_id)) or []
+    except Exception:
+        demote = []
+    if demote and out:
+        d = {normalize_label(n) for n in demote}
+        hit = sorted(out & d)
+        out = out - d
+        log(f"[WM] {patient_id}: {len(hit)} WM contact(s) kept out of the reference and "
+            f"analysed as ordinary contacts (cfg.WM_NOT_REFERENCE): {', '.join(hit) or 'none matched'}")
+    return out
+
+
+def _wm_labels_from_anatomy(patient_id: str, *,
+                            electrodes_tsv_pattern: str | None = None) -> set[str]:
+    """
     Return WM channel names for a patient, derived from the BIDS electrodes TSV.
 
     Names are normalized (case-folded, separators stripped) so that downstream
@@ -455,6 +483,45 @@ def bern_good_channels_if_any(raw_dir):
                 return None
     except Exception:
         return None
+
+
+def load_raw_for_patient(patient_id, raw_dir):
+    """The patient's raw recording as (sig, names, fs).
+
+    One file - the first .TRC / .edf / .h5 in raw/ - for everyone, except a patient
+    listed in cfg.RAW_CONCAT: those files are loaded in the listed order and joined
+    along time into one signal (EL051's task was recorded in two parts). The prep0
+    tables of such a patient are on the joined axis; see el051_build_triggers.py.
+    """
+    try:
+        from functions import config as _cfg
+        files = (getattr(_cfg, "RAW_CONCAT", {}) or {}).get(str(patient_id))
+    except Exception:
+        files = None
+    if not files:
+        return load_first_raw_in_dir(raw_dir)
+    parts, names0, fs0 = [], None, None
+    for fn in files:
+        path = os.path.join(raw_dir, fn)
+        if fn.upper().endswith(".TRC"):
+            sig, names, fs = load_trc_and_signals(path)
+        elif fn.lower().endswith(".edf"):
+            sig, fs, names = load_edf(path)
+        elif fn.lower().endswith(".h5"):
+            sig, fs, names = load_h5(path)
+        else:
+            raise ValueError(f"RAW_CONCAT: unsupported file {fn}")
+        names = [str(n) for n in names]
+        if names0 is None:
+            names0, fs0 = names, float(fs)
+        elif names != names0 or float(fs) != fs0:
+            raise ValueError(f"RAW_CONCAT {patient_id}: {fn} differs in channels or fs from {files[0]}")
+        parts.append(np.asarray(sig, dtype=np.float32))
+        log(f"[raw] {patient_id}: {fn} -> {parts[-1].shape[0]} samples @ {fs0:g} Hz "
+            f"(joined axis starts at {sum(p.shape[0] for p in parts[:-1])})")
+    sig = np.concatenate(parts, axis=0)
+    log(f"[raw] {patient_id}: {len(parts)} files joined -> {sig.shape[0]} samples, {sig.shape[0] / fs0:.0f} s")
+    return sig, names0, fs0
 
 
 def load_first_raw_in_dir(raw_dir):

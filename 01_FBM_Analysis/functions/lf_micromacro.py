@@ -410,20 +410,24 @@ def build_combined_signals(data_ecog, data_micro, chans_ecog, chans_micro):
 # WM rereferencing with optional application to micros
 # -----------------------------------------------------------------------------
 def apply_wm_reref_selective(signals, names, wm_names, is_micro, *,
-                             apply_wm_to_micros=False, min_wm=3):
+                             apply_wm_to_micros=False, min_wm=3, bad_channels_for_ref=()):
     """
     Apply WM rereferencing via lf_ersp.apply_wm_reference_with_exclusions.
 
     If apply_wm_to_micros=False (default): only macros are rereferenced; micros pass through.
+    bad_channels_for_ref: channel names (as spelled in `names`) that must not enter the
+    reference even when the anatomy calls them white matter - the patient's bad list. Until
+    2026-09-21 nothing was passed here, so bad-listed WM contacts were averaged in.
     """
     from .lf_ersp import apply_wm_reference_with_exclusions
 
     wm_set = set(wm_names)
     wm_idx = [i for i, nm in enumerate(names) if nm in wm_set]
+    bad_for_ref = list(bad_channels_for_ref)
 
     if apply_wm_to_micros:
         return apply_wm_reference_with_exclusions(
-            signals, names, wm_idx, bad_channels_for_ref=[], min_wm=min_wm)
+            signals, names, wm_idx, bad_channels_for_ref=bad_for_ref, min_wm=min_wm)
 
     # Rereference macros only
     macro_idx   = np.where(~is_micro)[0]
@@ -432,7 +436,7 @@ def apply_wm_reref_selective(signals, names, wm_names, is_micro, *,
     wm_in_macro = [int(np.where(macro_idx == i)[0][0]) for i in wm_idx if i in macro_idx]
 
     macro_rr, used, excl = apply_wm_reference_with_exclusions(
-        macro_sig, macro_names, wm_in_macro, bad_channels_for_ref=[], min_wm=min_wm)
+        macro_sig, macro_names, wm_in_macro, bad_channels_for_ref=bad_for_ref, min_wm=min_wm)
 
     out = signals.copy()
     out[:, macro_idx] = macro_rr

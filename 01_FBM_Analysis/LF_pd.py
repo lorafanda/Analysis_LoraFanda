@@ -22,6 +22,14 @@ import glob
 import numpy as np
 from typing import Dict, Tuple, List, Any, Optional
 
+# The Bern .h5 files of 2026-09 (EL052 on) are Blosc-compressed; h5py can only read them
+# once hdf5plugin has registered the filter, which importing it does. Without the package
+# every dataset read fails with "Can't synchronously read data (can't open directory)".
+try:
+    import hdf5plugin  # noqa: F401
+except ImportError:  # older files (gzip / LZF) still read; EL052 will not
+    pass
+
 # Optional imports are inside functions to avoid hard deps unless the path is used.
 
 __all__ = ["load_patient_raw"]
@@ -309,8 +317,38 @@ def load_patient_raw(
 
     is_el = isinstance(patient_item, str) and patient_item.upper().startswith("EL")
 
+    # 0) a recording split over several files (cfg.RAW_CONCAT): joined along time, so the
+    #    photodiode is detected - or the manual triggers read - on one axis
+    try:
+        from functions import config as _cfg
+        _concat = (getattr(_cfg, "RAW_CONCAT", {}) or {}).get(str(patient_id))
+    except Exception:
+        _concat = None
+    if _concat:
+        parts, names0, fs0 = [], None, None
+        for fn in _concat:
+            p = os.path.join(base_path, fn)
+            if fn.upper().endswith(".TRC"):
+                sig, fs, names = _load_trc(p)
+            elif fn.lower().endswith(".edf"):
+                sig, fs, names = _load_el_edf(p)
+            else:
+                sig, fs, names = _load_el_h5(p)
+            names = np.array([str(n) for n in names], dtype=object)
+            if names0 is None:
+                names0, fs0 = names, float(fs)
+            elif list(names) != list(names0) or float(fs) != fs0:
+                raise RuntimeError(f"RAW_CONCAT {patient_id}: {fn} differs in channels or fs from {_concat[0]}")
+            parts.append(np.asarray(sig, dtype=np.float32))
+            if verbose:
+                print(f"*** RAW_CONCAT: {fn} -> {parts[-1].shape[0]} samples "
+                      f"(joined axis starts at {sum(q.shape[0] for q in parts[:-1])})")
+        raw_signals, sampling_rate, channel_names = np.concatenate(parts, axis=0), fs0, names0
+        if verbose:
+            print(f"*** RAW_CONCAT: {len(parts)} files joined -> {raw_signals.shape[0]} samples")
+
     # 1) TRC (present mostly for PAT/HUG)
-    trcs = glob.glob(os.path.join(base_path, "*.TRC"))
+    trcs = glob.glob(os.path.join(base_path, "*.TRC")) if raw_signals is None else []
     if trcs:
         if verbose:
             print("\n*** Found TRC:")
