@@ -13,7 +13,6 @@ stopped. The site's LM_visualizer.html reads the branch through raw.githubuserco
 page shows the new bundle a minute after the push.
 """
 import argparse
-import hashlib
 import os
 import shutil
 import subprocess
@@ -35,12 +34,14 @@ def git(*args, cwd=WT, check=True):
     return r
 
 
-def sha(path):
-    h = hashlib.sha1()
-    with open(path, "rb") as f:
-        for b in iter(lambda: f.read(1 << 20), b""):
-            h.update(b)
-    return h.hexdigest()
+def git_paths(verb, paths):
+    """git <verb> over many paths - through a pathspec file, the Windows command line is 32 kB."""
+    lst = os.path.join(WT, ".git_pathspec.txt") if os.path.isdir(os.path.join(WT, ".git")) else os.path.join(os.environ.get("TEMP", WT), "review_pathspec.txt")
+    with open(lst, "w", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(paths) + "\n")
+    r = git(verb, "--pathspec-from-file=" + lst, *(["-q"] if verb == "rm" else []))
+    os.remove(lst)
+    return r
 
 
 def main() -> int:
@@ -69,7 +70,9 @@ def main() -> int:
             blob = subprocess.run(["git", "hash-object", p], capture_output=True, text=True, cwd=REPO).stdout.strip()
             if have.get(rel) == blob:
                 continue
-            shutil.copy2(p, os.path.join(WT, *rel.split("/")))
+            target = os.path.join(WT, *rel.split("/"))
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            shutil.copy2(p, target)
             changed.append((rel, os.path.getsize(p)))
             total += os.path.getsize(p)
     wanted = {os.path.relpath(os.path.join(r, f), REPO).replace("\\", "/") for r, _, fs in os.walk(src) for f in fs}
@@ -84,12 +87,12 @@ def main() -> int:
     if cur:
         chunks.append(cur)
     for i, paths in enumerate(chunks, 1):
-        git("add", "--", *paths)
+        git_paths("add", paths)
         msg = f"activity_viz/review: the LM visualizer's review bundle, part {i}/{len(chunks)}" + TRAILER
         git("commit", "-q", "-m", msg)
         print(f"  committed part {i}/{len(chunks)} ({len(paths)} files)", flush=True)
     if gone:
-        git("rm", "-q", "--", *gone)
+        git_paths("rm", gone)
         git("commit", "-q", "-m", "activity_viz/review: files the rebuilt bundle no longer has" + TRAILER)
         print(f"  removed {len(gone)} files")
     if not chunks and not gone:
