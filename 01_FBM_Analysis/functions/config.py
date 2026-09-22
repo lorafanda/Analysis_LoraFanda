@@ -15,7 +15,11 @@ patient_ids = ["G-06", "G-04", "G-05","G-01", "G-02", "G-03","EL030","EL034","EL
 
 patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL044","EL045", 2868, 3066, 3301, 3390, 3415, 3455, 3965, 3975, 3780] #,"EL043"
 # patient_ids = ["G-06", "G-04", "G-05"]#, 3415, 3455, 3965, 3975, 3780]
-patient_ids = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953"]  
+# PAT_6684 (MicroEPI G-05) left the dataset on 2026-09-15 and is not processed any more;
+# its presets, path override, bad lists and discharge spans below stay as the record of
+# the work. 02_FBM_Clustering/functions/lf_concat.DEFAULT_EXCLUDE_PATIENTS keeps it out of
+# every cohort cache built from now on.
+patient_ids = ["G-06", "G-04", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "EL051","EL052","PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953"]  
 
 block_name  = "LM"
 conditions_expected = ("picture", "audio", "reading")
@@ -41,6 +45,12 @@ reref_type = "WM"   # "WM" or "None"
 
 EL_GRID_PATIENTS = {"EL044"}
 GRID_CAR_PATIENTS = {"EL044"}
+# Whole-recording common average (one mean over every neural channel, bad channels left
+# out of the mean): EL052 (2026-09-15) recorded no white-matter contact at all - every isWM
+# and isOut contact of its Lookup is unplugged - so the WM route has nothing to use. Lora
+# chose the whole-recording average over a per-shaft one (2026-09-17). Handled in 140's
+# re-referencing step before the WM branch; the ERSP files carry "CAR" in their names.
+WHOLE_CAR_PATIENTS = {"EL052"}
 EL_GRID_KEEP_PREFIXES = {"EL044": ("P", "p", "T")}
 # Patients with BOTH grid (ECoG) and depth (SEEG) electrodes. For these:
 #   * WM reref still runs (uses depth-electrode WM contacts as usual)
@@ -101,9 +111,44 @@ bad_channels_manual = {
     "PAT_6684": ["FPG10", "FPG5", "FPG9", "FPG8", "FOM7", "FOM11","CAG1", "FOL8", "CAG2",
                  # 2026-09-14: the bursty IMG tail and the noisy FMG/FOM contacts
                  "IMG13", "IMG14", "IMG15", "FOM10","HPG1","HPG8","HPG7","HPG6","HPG5","CAG6","HAG5","HAG8","HAG7","HAG4","HAG3","HAG2","FOL2","AG5","AG4","AG3","AG2","HAG6","FOL11","TSP1","CAG3"],
-    "PAT_6704": ["ainp1"],
+
+"PAT_6704": ["ainp1", "IAD1", "AD8", "HAD7", "IPD8", "FOD1", "FOD5", "FOD6",
+             # and the microwires, 12 per bundle in the export
+             *[f"HADm{i}" for i in range(1, 13)],
+             *[f"PHDm{i}" for i in range(1, 13)],
+             *[f"TPDm{i}" for i in range(1, 13)],
+             *[f"FODm{i}" for i in range(1, 13)]],
+"PAT_6854": ["IAD1", "TBG1", "TBG2", "HAG1", "HAG2", "IAD10",
+             # and the microwires, 8 per bundle in the export
+             *[f"HADm{i}" for i in range(1, 9)],
+             *[f"ADm{i}" for i in range(1, 9)],
+             *[f"HAGm{i}" for i in range(1, 9)],
+             *[f"AGm{i}" for i in range(1, 9)]],
+    # PAT_5515 (G-01), 2026-09-15: FOD6 a nd FOD8 at 44x / 28x the median high gamma
+    # after the notch (not WM; the reference itself is clean).
+    "PAT_5515": ["FOD6", "FOD8"],
     "EL048": ["EKG","pH_R13","EKG-"],
     "PAT_6619": ["CAD15"],
+    # EL052: the minus poles of the chin EMG, EKG and EMG pairs. The EL aux filter knows
+    # MRK/X/ECG/EX/AUDIO prefixes only, and the EL name filter keeps any name with a dash,
+    # so these three survive as "leads" - they would enter the whole-recording CAR mean
+    # and get ERSPs (EL051 had the same leak with EKG-). Listed here they do neither.
+    # Then Lora's bad contacts (2026-09-17). aH_L8 and aH_L9 were never recorded, the
+    # range is written as she gave it; the recording spells EntG_R and PrCG_R.
+    # EL051 (Lora, 2026-09-17), in the recording's own spelling - side-suffixed shafts are
+    # pH_R7, the others pSTG_3; EKG is two channels. All 29 names checked against the h5
+    # on 2026-09-18. pSTG is "the whole shaft": contacts 3-9 are the ones recorded.
+    "EL051": [*[f"pH_R{i}" for i in range(7, 14)],          # pH_R 7-13
+              *[f"pSTG_{i}" for i in range(3, 10)],         # pSTG, whole shaft
+              *[f"VIM_{i}" for i in range(12, 19)],         # VIM 12-18
+              "pSPL_3",
+              "EKG+", "EKG-",
+              *[f"aSMG_{i}" for i in range(4, 9)]],         # aSMG 4-8
+    "EL052": ["Chin-", "EKG-", "EMG-",
+              *[f"A_L{i}"  for i in range(9, 14)],     # A_L9-13
+              *[f"A_R{i}"  for i in range(9, 14)],     # A_R9-13
+              *[f"aH_L{i}" for i in range(7, 14)],     # aH_L7-13
+              "aH_R1", "ANT_R15", "EntG_R11", "Pul_R11", "PrCG_R6", "PrCG_R7"],
 }
 
 # ----------------------------------------------------------------------------
@@ -117,13 +162,33 @@ bad_channels_manual = {
 # silently does nothing), while the generic Lookup.xlsx beside it is
 # populated. EL046 is the other way round. derive_wm_channels_from_lookup()
 # picks by CONTENT, not by filename; these entries only say which folder.
-LOOKUP_ANATOMY_PATIENTS = {"EL046", "EL048"}
-LOOKUP_ANATOMY_PATIENTS = {}
+# EL046 and EL048 have BIDS electrodes tables now (BIDS_elec/SEEG-BERN), so they left
+# this set; EL051 (2026-09-15) has only its Lookup: 121 plugged lead contacts, all with
+# MNI coordinates, 10 of them white matter - a THIN reference, like PAT_6953's was.
+# EL052 (2026-09-17): its Lookup is filled (natus = name without the dash, all 224 rows,
+# 103 of them unplugged); 121 recorded contacts match by name, the four PreCG_R ones are
+# spelled PrCG_R in the recording. Its 57 WM contacts are all unplugged, hence WHOLE_CAR.
+LOOKUP_ANATOMY_PATIENTS = {"EL051", "EL052"}
 LOOKUP_ANATOMY_DIRS = {
     # the workbooks sit in raw/overview/, and the finder does not recurse -
     # pointing at raw/ gave "Lookup fallback failed" and no WM channels at all
     "EL046": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL046\anatomy\raw\overview",
     "EL048": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL048\anatomy\overview",
+    "EL051": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL051\anatomy\raw",
+    "EL052": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL052\anatomy\raw",
+}
+
+# ---- WM contacts kept OUT of the reference, analysed as ordinary contacts --------
+# The electrodes TSV labels these white matter, but on the warped trial maps they
+# respond to the task (2026-09-15 WM check): PAT_6704's THD1 carries +2-3 dB of high
+# gamma through the whole audio stimulus and during the response in picture and
+# reading; THD3/THD4 sit beside it on the same shaft. A responsive contact in the
+# reference subtracts its response from every channel of the patient. Listed here a
+# contact leaves the WM set in wm_labels_for_patient() - so it is neither in the
+# reference nor skipped as WM - and gets its own ERSPs like any cortical contact.
+# bad_channels_manual is the other list: that one removes a contact from everything.
+WM_NOT_REFERENCE = {
+    "PAT_6704": ["THD1", "THD3", "THD4"],
 }
 
 # ---- TEMPORARY manual WM reference -------------------------------------------
@@ -153,6 +218,8 @@ LOOKUP_OUT_OF_BRAIN = {
     "EL046": ["pI_L1", "pI_L4"],
     "EL048": ["A_R9", "EntG_R12", "PHG_R15", "aH_L8", "aH_L9", "pH_R14",
               "pH_R15"],
+    "EL051": [],   # read 2026-09-15: every isOut flag in EL051_Lookup.xlsx is on an unplugged contact
+    "EL052": [],   # read 2026-09-17: all 29 isOut contacts are unplugged; nothing recorded is out
 }
 for _pid, _out in LOOKUP_OUT_OF_BRAIN.items():
     bad_channels_manual[_pid] = sorted(
@@ -218,7 +285,9 @@ nperseg    = 128
 nfft       = nperseg * 2
 noverlap   = int(0.85 * nperseg)  # ~75% (friendly default for Hann)
 n_time_bins = 300                 # for TN
-fmax       = 500.0                # plot y-limit
+fmax       = 400.0                # the cube's ceiling (2026-09-18, was 500 = the whole 1 kHz Nyquist range):
+                                  # compute_ersp keeps the STFT bins <= fmax, 103 of 129, the last at 398.4 Hz;
+                                  # every plot and every notch/PSD audit stops here too
 vmin, vmax = -6.0, 6.0            # dB display range
 
 # ---------------------------
@@ -291,7 +360,7 @@ ersp_trial_reject_z = {"PAT_6684": 3.0}
 ersp_trial_reject_hg_mad = {"PAT_6684": 3.5}
 ersp_trial_reject_hg_z = {}
 
-notch_patients  = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780"]   
+notch_patients  = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049","EL051","EL052", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953"]   
 # IDs or substrings to match
     
 # notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
@@ -331,7 +400,7 @@ notch_block_pad_s = 10.0     # margin either side of a block's outermost trial, 
 notch_shaft_patients = ["EL036", "EL037", "EL040", "EL045", "EL048",
                         "EL043", "EL049",
                         "G-01", "G-02", "G-03", "G-04", "G-06",
-                        "PAT_6684"]   # G-05, by its PAT_ id now that it runs on the TRC
+                        "PAT_6684","PAT_6953"]   # G-05, by its PAT_ id now that it runs on the TRC
 
 # CAP ON THE NOTCH Q, per patient (2026-09-07). The adaptive notch sets
 # Q = clip(2*f0/(bg_std+1), 10, 500): 0.7 Hz wide at 350 Hz. EL048's per-block
@@ -475,7 +544,7 @@ PAT_PRESETS = {
     3965: dict(trig="x1",    flip=True, time_range=(40, 1311),  invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     3975: dict(trig="E2",    flip=False, time_range=(200, 1550), invalid_trials=[], trial_ids=["picture"]*50 + ["auditory"]*50 + ["reading"]*51, fake_trials=[], manual_trig="PAT_3975__FLM_all.tsv"),
     3780: dict(trig="X2",    flip=False, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig="PAT_3780_FLM_all.tsv"),
-    6953: dict(trig="X2", flip=False, time_range=(189, 1182),     invalid_trials=[59,92], trial_ids=["picture"]*51 + ["auditory"]*60 + ["reading"]*53, fake_trials=[52, 59, 60, 62, 63,84+5,93+6,106+7,117,118,119,120], manual_trig=None), #92,93, 113, 117
+    6953: dict(trig="X2", flip=False, time_range=(189, 1182),     invalid_trials=[59,92], trial_ids=["picture"]*51 + ["auditory"]*60 + ["reading"]*58, fake_trials=[52, 59, 60, 62, 63,84+5,93+6,106+7,117,118,119,120], manual_trig=None), #92,93, 113, 117
 }
 
 # PAT_PRESETS is keyed by INT (3455) but patient_ids supplies STRINGS (PAT_3455),
@@ -501,7 +570,13 @@ EL_PRESETS = {
     "EL039": dict(trig="DC6", flip=True, time_range=(0, 1458),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL040": dict(trig="DC6", flip=True, time_range=(100, 1900), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL042": dict(trig="DC6", flip=True, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*55 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
-    "EL043": dict(trig="DC6", flip=True, time_range=(1810, 3710), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids= ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    # EL043 runs on the two recordings joined (cfg.RAW_CONCAT): 1810 s skips the bad picture
+    # naming of 17 June, the window then runs to the end of the 18 June file (3773.5 + 877 s)
+    # where the good picture block sits (see el043_build_picture_triggers.py). The trial ids
+    # and invalid indices describe the pulses of file 1 followed by the 54 picture pulses of
+    # file 2 - only the photodiode extraction reads them; the ERSP run reads prep0.
+    "EL043": dict(trig="DC6", flip=True, time_range=(1810, 4650), invalid_trials=[32,33,34,35,36,65,91,92,93,107,109,111,112,127,129,136], trial_ids= ["auditory"]*53 + ["reading"]*53 + ["picture"]*54, fake_trials=[], manual_trig=None),
+    # the 18 June file on its own (what el043_build_picture_triggers.py runs the detector with):
     # "EL043": dict(trig="DC6", flip=True, time_range=(31, 863), invalid_trials=[], trial_ids=["picture"]*54, fake_trials=[], manual_trig=None),
     "EL044": dict(trig="DC6", flip=False, time_range=(2478, 4290),invalid_trials=[0,1], trial_ids=["picture"]*2 + ["auditory"]*53 + ["reading"]*0, fake_trials=[], manual_trig=None),
     "EL045": dict(trig="DC6", flip=False, time_range=(176, 1468), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
@@ -509,6 +584,42 @@ EL_PRESETS = {
     "EL046": dict(trig="DC6", flip=False, time_range=(21120, 23320), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
     # "EL048": dict(trig="DC6", flip=False, time_range=(0, 1492), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),    
     "EL048": dict(trig="DC6", flip=False, time_range=(17700, 19180), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None),
+    # EL051 (Bern, 2026-09-01): the task was run in two parts on two recordings - the
+    # morning file holds the picture block and an audio block that was interrupted and
+    # abandoned after 24 trials; the afternoon file holds the full audio and reading
+    # blocks. RAW_CONCAT below makes the two files one recording; the triggers are the
+    # photodiode pulses read per file by el051_build_triggers.py and written on the
+    # concatenated sample axis, so detection is bypassed (manual_trig) and time_range,
+    # flip and invalid_trials do not apply. The 24 morning audio trials are left out.
+    "EL051": dict(trig="DC6", flip=False, time_range=(0, -1), invalid_trials=[],
+                  trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[],
+                  manual_trig="prep0/EL051_LM_manual_trigs_concat.tsv"),
+    # EL052 (2026-09-15): one recording, blocks run AUDIO -> READING -> PICTURE, logged in two
+    # files. Its photodiode is inverted (dark while a stimulus is on), so flip=True; the two
+    # dips after 1640 s are not trials. Detection is bypassed: el052_build_triggers.py reads
+    # the dips itself, checks them against both logs and writes the manual table plus the
+    # merged events table (the two aborted picture rows and the aborted audio row left out).
+    "EL052": dict(trig="DC6", flip=True, time_range=(0, 1640), invalid_trials=[],
+                  trial_ids=["auditory"]*53 + ["reading"]*53 + ["picture"]*54, fake_trials=[],
+                  manual_trig="prep0/EL052_LM_manual_trigs.tsv"),
+}
+
+# ---- recordings split over several files ------------------------------------------------
+# One entry per patient whose experiment sits in more than one raw file: the files, in
+# recording order, inside the patient's raw/ folder. Both loaders (lf_io_utils.
+# load_raw_for_patient for the analysis, LF_pd.load_patient_raw for the photodiode
+# extraction) concatenate them along time into one signal, so every prep0 sample index is
+# on that concatenated axis - which is what el051_build_triggers.py writes. Channel names
+# and sampling rate must agree across the files; the loader checks.
+RAW_CONCAT = {
+    "EL051": ["EL051_20260901_09h45m28_15min.h5", "EL051_20260901_14h29m54_18min.h5"],
+    # EL043 (2026-09-21): the picture naming of 17 June was bad and redone on 18 June in a
+    # second, shorter recording (raw/2ndrun_PictureNaming, 877 s, same 140 channels at 1024
+    # Hz). Joined after the 63-min file, file 2 starts at sample 3864064 = 3773.5 s; the
+    # picture trigger table on that axis is written by el043_build_picture_triggers.py,
+    # the audio / reading tables are file 1's and need no shift.
+    "EL043": ["EL043_20250617_16h01m36_63min_HUG_LM.h5",
+              r"2ndrun_PictureNaming\EL043_20250618_11h04m06_15min_HUG_LM.h5"],
 }
 
 # MICROEPI_PATIENTS = ["G-01","G-02","G-03","G-04","G-05"]

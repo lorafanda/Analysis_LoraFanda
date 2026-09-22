@@ -66,6 +66,13 @@ def _spectro(seg: np.ndarray, fs: float, p: ERSPParams):
         detrend=False, scaling="density", mode="psd"
     )
     Sxx = np.maximum(Sxx, 1e-20)
+    # THE CUBE'S CEILING (2026-09-18). fs is 1 kHz here, so the STFT reaches 500 Hz in 129
+    # bins of 3.90625 Hz; only the bins up to p.fmax are kept - 400 keeps 103, the last at
+    # 398.4 Hz. The resolution is unchanged, so a band's bin indices are what they were;
+    # only the top is gone. Both the TN and the RT path of compute_ersp come through here,
+    # so the cubes, the halves and the trial rejection all see the same axis.
+    keep = f <= float(p.fmax) + 1e-9
+    f, Sxx = f[keep], Sxx[keep]
     return f, t, 10.0*np.log10(Sxx)
 
 # ----------------------------

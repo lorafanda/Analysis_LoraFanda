@@ -39,7 +39,7 @@ def save_cluster_mean_ersp_pngs(
     RUN_ID_RECON: str,
     cluster_col_in_keep: str,
     *,
-    fmax_hz: float = 500.0,
+    fmax_hz: float = 398.4375,   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
     vmin: float = -6.0,
     vmax: float = 6.0,
     use_median: bool = False,
@@ -1360,7 +1360,7 @@ def build_cluster_diagnostics_pdf(
     cluster_col_in_keep: Optional[str] = None,
     *,
     ersp_proto_mode: str = "mean",   # "mean" or "median"
-    fmax_hz: float = 500.0,
+    fmax_hz: float = 398.4375,   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
     vmin: float = -6.0,
     vmax: float = 6.0,
 ) -> Path:

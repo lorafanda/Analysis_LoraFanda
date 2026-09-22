@@ -46,8 +46,8 @@ import numpy as np
 import pandas as pd
 
 RT_WINDOW = (-2.5, 5.0)
-N_FREQ = 129
-FMAX = 500.0
+N_FREQ = 103   # 0-400 Hz cube since 2026-09-18
+FMAX = 398.4375   # the last bin of the 0-400 Hz cube (was 500), 2026-09-18
 HG_BAND = (70.0, 150.0)
 CONDITIONS = ("audio", "picture", "reading")
 

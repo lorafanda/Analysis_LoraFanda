@@ -14,8 +14,8 @@ Coordinates (1-BASED, INCLUSIVE on both ends):
   "ds"   — downsampled 15 freq bands x 30 time bins.
            f_rows : 1..15 index into the 15-band grid (see FREQ_BANDS in lf_features).
            t_bins : 1..30; 1-15 = stimulus, 16-30 = post-stim/response.
-  "full" — 129 freq bins x 300 time bins.
-           f_rows : 1..129 linear 0-500 Hz; row = round(hz/500*128) + 1.
+  "full" — 103 freq bins x 300 time bins (0-400 Hz since 2026-09-18).
+           f_rows : 1..103 linear 0-398.4 Hz; row = round(hz/398.4375*102) + 1 (same 3.90625 Hz bins as before).
            t_bins : 1..300; 1-150 = stimulus, 151-300 = post-stim/response.
 
 NOTE: lf_pool.validate_roi_config() checks ds<->full Hz/time consistency and
@@ -150,7 +150,7 @@ ERSP_POOLING_PARAMS = {
         },
     ],
 
-    # -- FULL ERSP (129 freq bins x 300 time bins) -------------------------
+    # -- FULL ERSP (103 freq bins x 300 time bins) -------------------------
     "full": [
         {
             "label": "early_sensory_onset",

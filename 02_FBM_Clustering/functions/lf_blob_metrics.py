@@ -1677,7 +1677,7 @@ def q35_plot_valley_segmentation_4panel(
     save_stem: str | None = None,
     dpi: int = 200,
     # --- NEW AXIS POLICY ---
-    fmax_hz: float = 500.0,
+    fmax_hz: float = 398.4375,   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
     draw_midline: bool = True,
 ):
     """

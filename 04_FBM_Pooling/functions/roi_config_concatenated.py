@@ -374,7 +374,7 @@ ERSP_POOLING_ROLES = {
         "roles": _roles(stim=(1, 15), resp=(16, 30), motor_win=(18, 25), nt=30),
     },
     "full": {
-        "n_time_per_block": 300, "n_freq": 129,
+        "n_time_per_block": 300, "n_freq": 103,
         "stim_bins": [1, 150], "resp_bins": [151, 300], "pre_resp_bins": [271, 300],
         "roles": _roles(stim=(1, 150), resp=(151, 300), motor_win=(180, 255), nt=300),
     },

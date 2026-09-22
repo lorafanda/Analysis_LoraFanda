@@ -78,9 +78,13 @@ DEFAULT_CONDITIONS: Tuple[str, ...] = ("audio", "picture", "reading")
 #             while the patient is excluded - so removing it from this tuple restores
 #             the previous behaviour exactly.
 #
+#   PAT_6684  MicroEPI G-05, REMOVED FROM THE DATASET on 2026-09-15 (Lora). Its ERSP
+#             cubes may still sit on disk under 04_ersp_LM_RAWONLY; no cache built from
+#             here on takes them, and the last cohort that did is v8.
+#
 # Pass exclude_patients=() to keep the ECoG and mixed-implant patients as well.
-DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_3415")
-DEFAULT_FMAX = 500.0
+DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_3415", "PAT_6684")
+DEFAULT_FMAX = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30
 # Ungated source cache (separate from the gated canonical cache: different params).
@@ -366,6 +370,6 @@ def concat_feature_names(kind: str, *, n_blocks: int = 3,
         return [f"{c}|{b}Hz|t{t:02d}" for b in bands for c in conds
                 for t in range(DEFAULT_DS_TIME_BINS)]
     if kind == "concat_raw":
-        return [f"{c}|f{f:03d}|t{t:03d}" for f in range(129) for c in conds
+        return [f"{c}|f{f:03d}|t{t:03d}" for f in range(103) for c in conds
                 for t in range(n_time_block)]
     raise ValueError(f"unknown kind {kind!r}")

@@ -103,7 +103,7 @@ def downsample_ersp_to_bands(
     ersp: np.ndarray,
     freq_band_edges: Sequence[Tuple[float, float]] = FREQ_BANDS_15_TO_400HZ,
     *,
-    fmax_hz: float = 500.0,
+    fmax_hz: float = 398.4375,   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
     time_bins_out: int = 30,
     verbose: bool = False,
 ) -> np.ndarray:
@@ -176,7 +176,7 @@ def build_X_3d_downsampled(
     ersp_list: Iterable[np.ndarray],
     *,
     freq_band_edges: Sequence[Tuple[float, float]] = FREQ_BANDS_15_TO_400HZ,
-    fmax_hz: float = 500.0,
+    fmax_hz: float = 398.4375,   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
     time_bins_out: int = 30,
     verbose: bool = True,
 ) -> np.ndarray:

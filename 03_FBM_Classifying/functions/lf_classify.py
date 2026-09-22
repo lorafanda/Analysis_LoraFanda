@@ -139,9 +139,9 @@ except Exception:  # pragma: no cover
 # ============================================================
 CONDITIONS = ("audio", "picture", "reading")     # fixed concat order for task B
 TASK = "LM"
-N_FREQ = 129
+N_FREQ = 103   # 0-400 Hz cube since 2026-09-18
 N_TIME = 300
-FMAX_HZ = 500.0                                  # original ERSP freq ceiling
+FMAX_HZ = 398.4375                               # last bin of the 0-400 Hz cube (was 500)
 HG_BAND = (70.0, 150.0)
 # ── Feature variants: a NESTED, TIME-MATCHED family ─────────────────────────
 # The scientific question is "does the full spectrum beat high-gamma alone?".

@@ -34,7 +34,7 @@ import numpy as np
 # Defaults
 # ============================================================
 HG_BAND_DEFAULT = (70.0, 150.0)
-FMAX_DEFAULT    = 500.0
+FMAX_DEFAULT    = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 
 
 # ============================================================

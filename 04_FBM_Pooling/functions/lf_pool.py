@@ -125,9 +125,9 @@ def _ensure_recon_cfg():
 # ============================================================
 CONDITIONS = ("audio", "picture", "reading")
 TASK = "LM"
-N_FREQ = 129
+N_FREQ = 103   # 0-400 Hz cube since 2026-09-18 (was 129 = 0-500 Hz)
 N_TIME = 300
-FMAX_HZ = 500.0
+FMAX_HZ = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 HG_BAND = (70.0, 150.0)
 STIM_FRAC = 0.5                       # bin int(STIM_FRAC*N_TIME)=150 == response onset
 
@@ -1422,7 +1422,7 @@ def plot_roi_map(roi_params: Optional[dict] = None, *, grid: str = "ds",
         ax.set_yticklabels([f"{int(lo)}-{int(hi)}" for lo, hi in FREQ_BANDS], fontsize=6)
         ax.set_ylabel("freq band (Hz)")
     else:
-        ax.set_ylabel("freq row (1..129, 0-500 Hz)")
+        ax.set_ylabel("freq row (1..103, 0-398 Hz)")
     ax.set_title(f"Predefined time-frequency ROIs — {grid}   (red=pos · blue=neg · purple=both)")
     if out_png is not None:
         out_png = Path(out_png); out_png.parent.mkdir(parents=True, exist_ok=True)

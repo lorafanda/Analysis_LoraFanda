@@ -242,7 +242,7 @@ def s71_save_gated_blob_run(
 POSTER_CMAP = "bwr"
 POSTER_VMIN = -6.0
 POSTER_VMAX = 6.0
-POSTER_FMAX_HZ = 500.0
+POSTER_FMAX_HZ = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 POSTER_VLINE_PCT = 50.0
 
 def set_poster_style(
@@ -422,7 +422,7 @@ def s10_load_ersps(
     input_dir: Path,
     task: str = "LM",
     allowed_conditions=("audio", "picture", "reading"),
-    n_freq: int = 129,
+    n_freq: int = 103,
     n_time: int = 300,
 ) -> Tuple[pd.DataFrame, List[np.ndarray]]:
     """
@@ -2181,7 +2181,7 @@ def _poster_plot_ersp(
     ax,
     ersp,
     *,
-    fmax_hz=500.0,
+    fmax_hz=398.4375,   # the last bin of the 0-400 Hz cube (was 500), 2026-09-18
     vmin=-6.0,
     vmax=6.0,
     cmap="bwr",
