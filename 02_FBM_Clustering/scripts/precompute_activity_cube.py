@@ -76,15 +76,15 @@ OUT_DIR = OUTPUTS / "250_recon" / "fsaverage" / "activity_viz"
 # concatenated: the first 50% is the STIMULUS phase (onset->offset, warped to a
 # common length) and the second 50% is the RESPONSE/post phase (warped). Freq is
 # linear 0..fmax Hz over nF bins.
-NF, NT = 129, 300
-FMAX_HZ = 500.0
+NF, NT = 103, 300      # 0-400 Hz cube since 2026-09-18 (was 129 = 0-500 Hz)
+FMAX_HZ = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 PROPORTIONS = (0.0, 0.50, 0.50)          # (baseline, stim, post) — must sum to 1
 PHASE_NAMES = ("Stimulus", "Response")   # the two warped phases (post baseline)
 
 # Frequency bands (Hz) — the standard 8 used throughout the project.
 F_BANDS_HZ = [
     (0, 5), (5, 10), (10, 16), (16, 40),
-    (40, 70), (70, 130), (130, 250), (250, 500),
+    (40, 70), (70, 130), (130, 250), (250, 400),
 ]
 
 # Conditions, in display order. "all" = pool every sample regardless of condition.

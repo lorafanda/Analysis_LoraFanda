@@ -44,7 +44,7 @@ OUT = ROOT / "outputs" / "clustering" / "explainers" / "E8_band_schemes.png"
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 RED, GREEN = "#c1121f", "#1b7837"
 CONDS = ("audio", "picture", "reading")
-FMAX = 500.0
+FMAX = 398.4375   # the last bin of the 0-400 Hz cube (was 500), 2026-09-18
 
 
 def band_ticks(edges):

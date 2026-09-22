@@ -100,7 +100,7 @@ def main() -> int:
     stem = f"fig9_corr_map_{a.cmap}" + ("" if clean else "_annotated")
     A.plot_tf_corr_map(
         r_map, sig_mask=None if clean else sig_map,
-        fmax_hz=500.0, cmap=a.cmap, clean=clean,
+        fmax_hz=398.4375, cmap=a.cmap, clean=clean,
         title="" if clean else f"ERSP x P(language) — LanA {a.atlas}, n={n_used}",
         cbar_label="Spearman r  vs  P(language)",
         out_png=OUT / f"{stem}.png", dpi=150)

@@ -36,7 +36,7 @@ CACHE = ROOT / "04_FBM_Pooling" / "outputs" / "_dataset" / "pooling" / "_raw_ung
 POOL = ROOT / "04_FBM_Pooling" / "outputs" / "pooling" / "pool_web"
 CONDITIONS = ("audio", "picture", "reading")
 HGA_HZ = (70.0, 150.0)
-FMAX_HZ = 500.0
+FMAX_HZ = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 ONSET_THR_DB = 0.5
 
 

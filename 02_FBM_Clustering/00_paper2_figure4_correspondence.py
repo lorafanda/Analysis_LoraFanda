@@ -172,7 +172,7 @@ def description_space():
     df, X_concat = CC.build_concat_dataset(
         params["input_dir"], conditions=("audio", "picture", "reading"),
         require_high_activity=True, cache_dir=cache, verbose=False)
-    Z = CC.concat_bands5z_features(X_concat, n_blocks=3, fmax_hz=500.0)
+    Z = CC.concat_bands5z_features(X_concat, n_blocks=3, fmax_hz=398.4375)
     keys = [f"{p}|{norm(e)}" for p, e in zip(df.patient_id, df.electrode)]
     return dict(Z=np.asarray(Z, float), keys=keys, cache=cache.name, n=len(keys))
 

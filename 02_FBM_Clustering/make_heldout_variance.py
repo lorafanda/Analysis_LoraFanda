@@ -188,13 +188,13 @@ def main() -> int:
         # only one was wanted.
         builders = {
             "concat_hg": lambda: CC.concat_hg_features(Xc, hg_band=(70.0, 150.0),
-                                                       fmax=500.0),
+                                                       fmax=398.4375),
             "concat_rawds": lambda: CC.concat_rawds_features(Xc, n_blocks=3,
-                                                             fmax_hz=500.0),
+                                                             fmax_hz=398.4375),
             "concat_bands5": lambda: CC.concat_bands5_features(Xc, n_blocks=3,
-                                                               fmax_hz=500.0),
+                                                               fmax_hz=398.4375),
             "concat_bands5z": lambda: CC.concat_bands5z_features(Xc, n_blocks=3,
-                                                                 fmax_hz=500.0),
+                                                                 fmax_hz=398.4375),
         }
         unknown = [f for f in a.feature_set if f not in builders]
         if unknown:

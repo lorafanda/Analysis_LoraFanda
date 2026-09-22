@@ -42,7 +42,7 @@ META_PARQUET = DATASET_DIR / "df_meta.parquet"
 BUNDLE = REPO / "02_FBM_Clustering" / "outputs" / "250_recon" / "fsaverage" / "activity_viz"
 OUT_DIR = BUNDLE / "ersp"
 
-NF, NT, FMAX_HZ = 129, 300, 500.0
+NF, NT, FMAX_HZ = 103, 300, 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 CONDITIONS = ["audio", "picture", "reading"]
 F_HI_HZ = 400.0
 T_DS = 2                       # 300 -> 150 time bins
@@ -68,7 +68,7 @@ def main() -> None:
         row_of.setdefault(k, i)          # one sample per (patient, electrode, condition) here
 
     contacts = json.loads((BUNDLE / "contacts.json").read_text(encoding="utf-8"))
-    n_f = int(round(F_HI_HZ / FMAX_HZ * (NF - 1))) + 1            # 103 bins, 0..398 Hz
+    n_f = NF                                                       # the cube already ends at 400 Hz
     n_t = NT // T_DS
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     scale = 254.0 / (2 * VLIM)
