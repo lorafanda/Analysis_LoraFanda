@@ -1,5 +1,5 @@
 {
-  "source": "04_FBM_Pooling/outputs/_dataset/pooling/_raw_ungated/X_3d.npy",
+  "source": "02_FBM_Clustering/outputs/_dataset/concat_source_v9/X_3d.npy",
   "conditions": [
     "audio",
     "picture",
@@ -11,7 +11,7 @@
     0.0,
     398.4375
   ],
-  "fmax_source_hz": 500.0,
+  "fmax_source_hz": 398.4375,
   "n_time": 150,
   "time_downsample": 2,
   "n_time_source": 300,
@@ -25,5 +25,5 @@
   "vmax": 10.0,
   "nan_byte": 0,
   "file": "c{contact_index}.bin",
-  "n_contact": 2901
+  "n_contact": 3112
 }

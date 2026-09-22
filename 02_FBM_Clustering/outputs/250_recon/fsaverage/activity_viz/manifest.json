@@ -1,5 +1,5 @@
 {
-  "source_run": "04_FBM_Pooling/outputs/_dataset/pooling/_raw_ungated/X_3d.npy",
+  "source_run": "02_FBM_Clustering/outputs/_dataset/concat_source_v9/X_3d.npy",
   "coords_csv": "02_FBM_Clustering/outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv",
   "conditions": [
     "all",
@@ -38,7 +38,7 @@
     ],
     [
       250,
-      500
+      400
     ]
   ],
   "bands_bins": [
@@ -72,12 +72,12 @@
     ],
     [
       64,
-      128
+      102
     ]
   ],
   "n_cond": 4,
   "n_band": 8,
-  "n_contact": 2901,
+  "n_contact": 3112,
   "n_time": 300,
   "mode": "TN",
   "proportions": [
@@ -98,7 +98,7 @@
     }
   ],
   "phase_boundary": 150,
-  "fmax_hz": 500.0,
+  "fmax_hz": 398.4375,
   "k_nearest": 4,
   "sigma_mm": 4.0,
   "agg_contact": "mean",
@@ -128,12 +128,29 @@
   },
   "files": {
     "cube": {
-      "name": "cube_f16.bin",
+      "name": "cube_f16.000.bin",
+      "parts": [
+        "cube_f16.000.bin",
+        "cube_f16.001.bin",
+        "cube_f16.002.bin",
+        "cube_f16.003.bin",
+        "cube_f16.004.bin",
+        "cube_f16.005.bin",
+        "cube_f16.006.bin",
+        "cube_f16.007.bin",
+        "cube_f16.008.bin",
+        "cube_f16.009.bin",
+        "cube_f16.010.bin",
+        "cube_f16.011.bin",
+        "cube_f16.012.bin",
+        "cube_f16.013.bin",
+        "cube_f16.014.bin"
+      ],
       "dtype": "float16",
       "shape": [
         4,
         8,
-        2901,
+        3112,
         300
       ]
     },
@@ -169,173 +186,5 @@
         4
       ]
     }
-  },
-  "regions": [
-    {
-      "id": 1,
-      "name": "Heschl's gyrus",
-      "system": "Auditory (HG/STG)",
-      "color": [
-        243,
-        104,
-        146
-      ]
-    },
-    {
-      "id": 2,
-      "name": "Planum temporale",
-      "system": "Auditory (HG/STG)",
-      "color": [
-        231,
-        39,
-        97
-      ]
-    },
-    {
-      "id": 3,
-      "name": "Lateral STG",
-      "system": "Auditory (HG/STG)",
-      "color": [
-        170,
-        24,
-        68
-      ]
-    },
-    {
-      "id": 4,
-      "name": "V1 (calcarine)",
-      "system": "Visual / VWFA",
-      "color": [
-        198,
-        104,
-        243
-      ]
-    },
-    {
-      "id": 5,
-      "name": "VWFA / fusiform",
-      "system": "Visual / VWFA",
-      "color": [
-        179,
-        60,
-        235
-      ]
-    },
-    {
-      "id": 6,
-      "name": "Lingual",
-      "system": "Visual / VWFA",
-      "color": [
-        157,
-        27,
-        218
-      ]
-    },
-    {
-      "id": 7,
-      "name": "Lateral occipital",
-      "system": "Visual / VWFA",
-      "color": [
-        123,
-        24,
-        170
-      ]
-    },
-    {
-      "id": 8,
-      "name": "MTG",
-      "system": "Temporal lexical-semantic",
-      "color": [
-        104,
-        243,
-        209
-      ]
-    },
-    {
-      "id": 9,
-      "name": "ITG",
-      "system": "Temporal lexical-semantic",
-      "color": [
-        39,
-        231,
-        185
-      ]
-    },
-    {
-      "id": 10,
-      "name": "ATL / temporal pole",
-      "system": "Temporal lexical-semantic",
-      "color": [
-        24,
-        170,
-        135
-      ]
-    },
-    {
-      "id": 11,
-      "name": "Pars opercularis",
-      "system": "Frontal (IFG / Broca)",
-      "color": [
-        104,
-        160,
-        243
-      ]
-    },
-    {
-      "id": 12,
-      "name": "Pars triangularis",
-      "system": "Frontal (IFG / Broca)",
-      "color": [
-        39,
-        116,
-        231
-      ]
-    },
-    {
-      "id": 13,
-      "name": "Pars orbitalis",
-      "system": "Frontal (IFG / Broca)",
-      "color": [
-        24,
-        82,
-        170
-      ]
-    },
-    {
-      "id": 14,
-      "name": "M1 (precentral)",
-      "system": "Speech-motor (sensorimotor)",
-      "color": [
-        243,
-        171,
-        104
-      ]
-    },
-    {
-      "id": 15,
-      "name": "S1 (postcentral)",
-      "system": "Speech-motor (sensorimotor)",
-      "color": [
-        231,
-        131,
-        39
-      ]
-    },
-    {
-      "id": 16,
-      "name": "Central sulcus",
-      "system": "Speech-motor (sensorimotor)",
-      "color": [
-        170,
-        94,
-        24
-      ]
-    }
-  ],
-  "region_files": {
-    "fill_lh": "region_fill_lh_u8.bin",
-    "fill_rh": "region_fill_rh_u8.bin",
-    "edge_lh": "region_edge_lh_u8.bin",
-    "edge_rh": "region_edge_rh_u8.bin"
   }
 }
