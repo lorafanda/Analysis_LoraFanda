@@ -137,13 +137,24 @@ def cube_names(root, pid, cond):
     return out
 
 
-def classify(names, bad, wm, unknown_hint):
+def alias_key(name, pid):
+    """cfg_norm plus cfg.CHANNEL_SHAFT_ALIAS: the key a recording name has in the anatomy table
+    and in the WM report (aI_R10 of EL042 -> ALR10), as lf_io_utils.alias_label does it."""
+    s = cfg_norm(name)
+    table = (getattr(cfg, "CHANNEL_SHAFT_ALIAS", {}) or {}).get(pid, {})
+    m = re.match(r"^(.*?)(\d+)$", s)
+    if table and m and m.group(1) in table:
+        return table[m.group(1)] + m.group(2)
+    return s
+
+
+def classify(names, bad, wm, pid):
     """Why a cube of the old tree is not in the new one."""
     bad_n = {cfg_norm(b) for b in bad}
     wm_n = {cfg_norm(w) for w in wm}
     groups = {"bad": [], "wm_ref": [], "microwire": [], "not in config lists (Unknown drop / aux / condition not run)": []}
     for n in sorted(names):
-        k = cfg_norm(n)
+        k = alias_key(n, pid)
         if k in bad_n:
             groups["bad"].append(n)
         elif MICRO_RE.match(n):
@@ -275,7 +286,7 @@ def main():
             gone = set(old) - set(new)
             added = set(new) - set(old)
             if gone:
-                change_notes.append(f"{c} -{len(gone)} [{fmt_groups(classify(gone, bad, wm_used, None))}]")
+                change_notes.append(f"{c} -{len(gone)} [{fmt_groups(classify(gone, bad, wm_used, pid))}]")
             if added:
                 change_notes.append(f"{c} +{len(added)} [{' '.join(sorted(added))}]")
         r["cubes_total"] = tot_new
@@ -308,13 +319,14 @@ def main():
             bad_n = {cfg_norm(b) for b in bad}
             in_bad = sorted(n for n in removed if cfg_norm(n) in bad_n)
             not_bad = sorted(n for n in removed if cfg_norm(n) not in bad_n)
+            r["aliased_shafts"] = " ".join(f"{k}->{v}" for k, v in (getattr(cfg, "CHANNEL_SHAFT_ALIAS", {}) or {}).get(pid, {}).items())
             r["qc_channels"] = len(qc_names)
             r["removed_by_bad_list"] = len(in_bad)
             r["removed_not_in_bad_list"] = " ".join(not_bad)
             seen = {cfg_norm(n) for n in qc_names} | {cfg_norm(w) for w in r["wm_excluded_as_bad"].split()}
             r["bad_listed_not_in_recording"] = " ".join(b for b in bad if cfg_norm(b) not in seen)
         else:
-            r["qc_channels"] = r["removed_by_bad_list"] = r["removed_not_in_bad_list"] = r["bad_listed_not_in_recording"] = ""
+            r["qc_channels"] = r["removed_by_bad_list"] = r["removed_not_in_bad_list"] = r["bad_listed_not_in_recording"] = r["aliased_shafts"] = ""
         r["conditions_out"] = "/".join(c for c in CONDS if r[f"{c}_cubes"]) or "none"
         r["change_vs_old"] = "; ".join(change_notes) if change_notes else ("identical names" if tot_old else "no old tree")
         rows.append(r)

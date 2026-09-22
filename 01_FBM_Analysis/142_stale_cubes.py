@@ -59,9 +59,17 @@ def main() -> int:
         print(f"{pid}: {len(files)} stale files {kinds} - channels: {' '.join(names[:20])}{' ...' if len(names) > 20 else ''}")
     print(f"\n{len(total)} stale files in {len(per)} patients")
     if a.delete:
+        locked = []
         for f in total:
-            os.remove(f)
-        print(f"deleted {len(total)} files")
+            try:
+                os.remove(f)
+            except PermissionError:          # open in a viewer / the explorer's thumbnailer: skip, say so
+                locked.append(f)
+        print(f"deleted {len(total) - len(locked)} files")
+        if locked:
+            print(f"{len(locked)} could not be deleted (open in another program) - close it and run --delete again:")
+            for f in locked:
+                print("   " + f)
     else:
         print("(--delete removes them)")
     return 0

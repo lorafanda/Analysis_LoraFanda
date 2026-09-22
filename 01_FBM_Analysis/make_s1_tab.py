@@ -146,8 +146,8 @@ def build(a: pd.DataFrame | None) -> str:
         "<b>2026-09-22</b> · PAT_6704, PAT_6854 rerun with the MicroEPI reference fix (bad-listed contacts had been averaged in, <code>bad_channels_for_ref=[]</code>): PAT_6704 21 WM contacts used, AD8 FOD5 HAD7 IAD1 left out · PAT_6854 38 used, IAD1 left out · cube counts unchanged (134 / 178 per condition)",
         "<b>2026-09-22</b> · EL043 rerun on the two recordings joined (<code>RAW_CONCAT</code>, file 2 at 3773.5 s, window 1810–4650 s; picture triggers of 18 June by <code>el043_build_picture_triggers.py</code>, the bad 17 June table parked in prep0-bad): audio 18 / picture 25 / reading 14 trials, 74 cubes per condition (18 Sep run: picture 0 trials in crop → aborted before reading)",
         "<b>2026-09-21</b> · PAT_6953 run: 147 cubes per condition, 30 WM references, 5 Unknown drops (AD12 FOD1 TLD2 TLD4 TLD5)",
-        "<b>2026-09-22</b> · stale-cube sweep by mtime over all 31 patient folders: no cube, half or CLEAN png older than its run",
-        "<b>open</b> · 137 contacts / 10 patients analysed with no anatomy link (recording vs TSV spelling: aI_R / alR, MFG-L / MFG, pIns / pl, PlaT_L / PlanTL, OFA / OFAD): 20 are WM 100 %, 14 Unknown → alias table in 140 + reruns, decision pending",
+        "<b>2026-09-22</b> · <code>CHANNEL_SHAFT_ALIAS</code>: 137 contacts / 10 patients had no anatomy link (recording vs TSV spelling: aI_R / alR, MFG-L / MFG, pIns / pl, PlaT_L / PlanTL, OFA / OFAD) → reruns EL034 EL035 EL037 EL038 EL040 EL042 EL043 EL045 EL046 PAT_6619: 20 contacts into the references (EL034 +2, EL037 +1, EL038 +1, EL042 +3, EL043 +7, EL045 +1, EL046 +3, PAT_6619 +1, EL037 +2 bad-listed), 14 new Unknown drops (EL034 4, EL037 3, EL038 5, EL040 1) · MicroEPI path takes the same WM set as EL / PAT, so <code>WM_NOT_REFERENCE</code> applies there: PAT_6704 rerun, THD1 / THD3 / THD4 out of the reference (18 used)",
+        "<b>2026-09-22</b> · <code>142_stale_cubes.py</code>: the 33 contacts those reruns no longer produce had kept their files (546: cubes, halves, CLEAN, QC) → deleted; sweep by mtime over all 31 folders clean",
     ))
 
     # ---- chain ----------------------------------------------------------------------
@@ -233,8 +233,7 @@ def build(a: pd.DataFrame | None) -> str:
     # ---- open -----------------------------------------------------------------------
     S.append('    <h3 id="s1-open">Open — before 140 is done</h3>')
     S.append('    ' + ul(
-        "decide: alias table for the 137 unlinked contacts (10 patients) → reruns EL034 EL035 EL037 EL038 EL040 EL042 EL043 EL045 EL046 PAT_6619 → <code>141_audit_140.py</code> → <code>make_lm_review_bundle.py --patients …</code>",
-        "decide: bad-list names that matched nothing (spelling vs the same alias problem)",
+        "decide: bad-list names that matched nothing (EL037 pI_R1–16, EL040 FP-R11 PlaT_L1–3, EL034 MFG-10..12, EL030 EntG_R18, EL048 7 names, EL052 aH_L8 / 9, PAT_3415 HLG5, PAT_3780 FAP9, PAT_6704 ainp1): typo, other patient's shaft, or Unknown-dropped anyway",
         "decide: PAT_6953 Unknown contacts (AD12, TLD2 / 4 / 5) keep-list",
         "stale-cube audit by mtime after the reruns",
         "QC pass in review mode, patient by patient: trigger lock, reference bleed, stripes, bad channels, low trial counts (accept / not)",
