@@ -106,7 +106,7 @@ DK = {
 # differently: RECON_ALIAS of 250_recon_fsaverage.ipynb, inverted. On top of it an unmatched
 # recording shaft is tried with I<->l swapped (the TSVs write the insula shafts alL / alR,
 # the recordings aI_L / aI_R).
-SHAFT_ALIAS = {
+SHAFT_ALIAS = getattr(cfg, "CHANNEL_SHAFT_ALIAS", None) or {   # 140's own table since 2026-09-22
     "EL034": {"MFGL": "MFG"}, "EL043": {"PINS": "PL"}, "EL045": {"PLATL": "PLANTL"},
     "EL046": {"AIL": "ALL", "PIL": "PLL"}, "PAT_6619": {"OFA": "OFAD", "OFP": "OFPD"},
 }

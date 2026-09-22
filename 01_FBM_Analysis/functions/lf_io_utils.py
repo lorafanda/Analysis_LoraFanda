@@ -248,6 +248,26 @@ def normalize_label(s: str) -> str:
 def normalize_names(names: list[str]) -> list[str]:
     return [normalize_label(nm) for nm in names]
 
+
+def alias_label(label, patient_id=None) -> str:
+    """The key under which a RECORDING channel name is looked up in the anatomy table:
+    normalize_label, then cfg.CHANNEL_SHAFT_ALIAS for the patient (aI_R1 -> ALR1 where
+    the TSV spells the shaft alR). Names outside the map are just normalised."""
+    s = normalize_label(label)
+    if patient_id is None:
+        return s
+    try:
+        from functions import config as _cfg
+        table = (getattr(_cfg, "CHANNEL_SHAFT_ALIAS", {}) or {}).get(str(patient_id).strip(), {})
+    except Exception:
+        table = {}
+    if not table:
+        return s
+    m = re.match(r"^(.*?)(\d+)$", s)
+    if m and m.group(1) in table:
+        return table[m.group(1)] + m.group(2)
+    return s
+
 def wm_labels_for_patient(patient_id: str, *,
                           electrodes_tsv_pattern: str | None = None) -> set[str]:
     """
@@ -332,7 +352,8 @@ def wm_indices_for_patient(patient_id: str, channel_names, *,
     want = wm_labels_for_patient(patient_id, electrodes_tsv_pattern=electrodes_tsv_pattern)
     if not want:
         return []
-    lookup = {normalize_label(nm): i for i, nm in enumerate(channel_names)}
+    # recording names under their anatomy-table key (cfg.CHANNEL_SHAFT_ALIAS, 2026-09-22)
+    lookup = {alias_label(nm, patient_id): i for i, nm in enumerate(channel_names)}
     idx = sorted([lookup[l] for l in want if l in lookup])
     # For a hand-written WM list, report how many of the requested names were
     # actually present in the recording. Without this a typo, or a shaft renamed
@@ -408,7 +429,7 @@ def unknown_indices_for_patient(patient_id: str, channel_names, *,
     want = unknown_labels_for_patient(patient_id, electrodes_tsv_pattern=electrodes_tsv_pattern)
     if not want:
         return []
-    lookup = {normalize_label(nm): i for i, nm in enumerate(channel_names)}
+    lookup = {alias_label(nm, patient_id): i for i, nm in enumerate(channel_names)}   # cfg.CHANNEL_SHAFT_ALIAS
     return sorted([lookup[l] for l in want if l in lookup])
 
 

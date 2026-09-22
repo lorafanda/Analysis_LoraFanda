@@ -402,7 +402,11 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
         if is_microepi:
             pid_str = str(pid_raw)
             preset  = cfg.MICROEPI_MAT_PRESETS.get(pid_str, {})
-            wm_names_raw = mm.derive_wm_channels_from_electrodes_tsv(_wm_tsv)
+            # the same WM set as the EL / PAT path (2026-09-22): the TSV rule, minus
+            # cfg.WM_NOT_REFERENCE (PAT_6704 THD1/3/4 had stayed in the reference here), in
+            # the recording's spelling through cfg.CHANNEL_SHAFT_ALIAS (PAT_6619 OFA / OFP)
+            _wm_keys = io.wm_labels_for_patient(patient_id, electrodes_tsv_pattern=_wm_tsv)
+            wm_names_raw = [n for n in names if io.alias_label(n, patient_id) in _wm_keys]
             print(f"  [{patient_id}] WM channels from TSV: {len(wm_names_raw)} "
                   f"-> {wm_names_raw[:6]}{'...' if len(wm_names_raw) > 6 else ''}")
             # the bad list stays out of the reference here as it does for EL / PAT (2026-09-21:

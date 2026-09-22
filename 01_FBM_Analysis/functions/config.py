@@ -191,6 +191,30 @@ WM_NOT_REFERENCE = {
     "PAT_6704": ["THD1", "THD3", "THD4"],
 }
 
+# ---- recording shaft -> anatomy-table shaft (2026-09-22) -----------------------------
+# The electrodes TSV and the recording spell some shafts differently, beyond the
+# punctuation normalize_label removes: the insula shafts are alL / alR in the TSVs and
+# aI_L / aI_R in the recordings, MFG-L is MFG, pIns is pl, PlaT_L is PlanTL, OFA / OFP are
+# OFAD / OFPD. Until now such a contact matched nothing in the anatomy table - never a WM
+# reference, never an Unknown drop - and was analysed as ordinary data whatever its
+# tissue: 137 contacts on these ten patients in the 2026-09-18 run, 20 of them WM 100 %,
+# 14 Unknown. lf_io_utils.alias_label applies this map wherever a RECORDING name is looked
+# up in the anatomy table (WM and Unknown indices); the bad lists are recording-spelled
+# and are not touched. Keys and values are shafts, normalised (upper-case, no _ or -);
+# the contact number is carried over. Same map as the recon's RECON_ALIAS (250), inverted.
+CHANNEL_SHAFT_ALIAS = {
+    "EL034":    {"MFGL": "MFG"},
+    "EL035":    {"AIR": "ALR", "PIR": "PLR"},
+    "EL037":    {"AIL": "ALL", "PIL": "PLL"},
+    "EL038":    {"AIR": "ALR"},
+    "EL040":    {"AIR": "ALR"},
+    "EL042":    {"AIR": "ALR"},
+    "EL043":    {"PINS": "PL"},
+    "EL045":    {"PLATL": "PLANTL"},
+    "EL046":    {"AIL": "ALL", "PIL": "PLL"},
+    "PAT_6619": {"OFA": "OFAD", "OFP": "OFPD"},
+}
+
 # ---- TEMPORARY manual WM reference -------------------------------------------
 # PAT_6953 has neither a BIDS electrodes TSV nor a Lookup workbook, so neither
 # automatic WM route can fire. These contacts were identified by eye on the
