@@ -27,8 +27,11 @@ SOURCE  (all inside Analysis_LoraFanda — Analysis_Lora is never used)
         X_3d.npy                       (n_samples, 103, 300) float32 raw ERSP (ungated)
         df_meta.parquet                (row-aligned: patient_id, electrode, condition)
         (built from 01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY by rebuild_concat_cache.py)
-    Patients in lf_concat.DEFAULT_EXCLUDE_PATIENTS (EL044, PAT_3415, PAT_6684) are left
-    out, so the page shows the cohort's ungated set - the same contacts the concat step sees.
+    Patients in lf_concat.DEFAULT_EXCLUDE_PATIENTS (EL044, PAT_6684) are left out, and so
+    are the subdural GRID contacts of a mixed implant (lf_dataset.GRID_SHAFTS: PAT_3415's
+    GA..GH), so the page shows the cohort's ungated set - the same contacts the concat step
+    sees. Both filters together, because the concat step applies both and this page must
+    not show a contact the clustering never had.
   - Contact coords:    02_FBM_Clustering/outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
         (patient, name, hemi, x, y, z, dist_to_pial_mm, is_cortical, ...)
   - Meshes:            02_FBM_Clustering/outputs/250_recon/fsaverage/meshes/fsaverage_{lh,rh}.gii
@@ -89,7 +92,15 @@ try:
     from lf_concat import DEFAULT_EXCLUDE_PATIENTS as EXCLUDE_PATIENTS   # noqa: E402
 except Exception as _e:                                                 # pragma: no cover
     print(f"[warn] lf_concat not importable ({_e}); using the literal exclusion list")
-    EXCLUDE_PATIENTS = ("EL044", "PAT_3415", "PAT_6684")
+    EXCLUDE_PATIENTS = ("EL044", "PAT_6684")
+# and the contact-level rule for a mixed implant: PAT_3415's depth shafts are in the
+# cohort, its 64 subdural grid contacts are not (2026-09-23). Without this the page would
+# draw 64 contacts the clustering never saw.
+try:
+    from lf_dataset import is_grid_electrode                            # noqa: E402
+except Exception as _e:                                                 # pragma: no cover
+    print(f"[warn] lf_dataset not importable ({_e}); grid contacts will NOT be filtered")
+    is_grid_electrode = lambda label, patient_id=None: False
 
 # All-patient fsaverage contact coordinates (HUG + EL cohorts).
 COORDS_CSV = OUTPUTS / "250_recon" / "fsaverage" / "coords" / "ALL_PATIENTS_contacts_fsaverage.csv"
@@ -240,8 +251,14 @@ def main() -> None:
     excl = df["patient_id"].isin([str(p) for p in EXCLUDE_PATIENTS])
     if excl.any():
         print(f"[patients] {int(excl.sum())} rows of {sorted(df.loc[excl, 'patient_id'].unique())} left out (lf_concat.DEFAULT_EXCLUDE_PATIENTS)")
-        keep = np.where(~excl.to_numpy())[0]
-        df = df.loc[~excl].reset_index(drop=True)
+    grid = df.apply(lambda r: is_grid_electrode(r["electrode"], r["patient_id"]), axis=1)
+    if grid.any():
+        by = df.loc[grid].groupby("patient_id")["electrode"].nunique().to_dict()
+        print(f"[grid] {int(grid.sum())} rows left out as subdural grid contacts {by} (lf_dataset.GRID_SHAFTS)")
+    drop = excl | grid
+    if drop.any():
+        keep = np.where(~drop.to_numpy())[0]
+        df = df.loc[~drop].reset_index(drop=True)
         ersp = ersp[keep]
         n = ersp.shape[0]
     print(f"[dataset] {DATASET_DIR.name}: {n} samples, {df['patient_id'].nunique()} patients")

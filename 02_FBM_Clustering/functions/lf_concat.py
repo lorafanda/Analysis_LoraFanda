@@ -68,22 +68,26 @@ DEFAULT_CONDITIONS: Tuple[str, ...] = ("audio", "picture", "reading")
 #
 #   EL044     ECoG THROUGHOUT (Pa 51, T 46, P 6, postP 5) — no depth contacts to keep,
 #             so it stays a whole-patient exclusion.
-#   PAT_3415  MIXED IMPLANT, excluded as a WHOLE PATIENT from 2026-09-06 (Lora).
-#             It is the only patient carrying both a subdural grid and depth shafts:
-#             64 grid contacts (GA..GH) and 57 depth contacts, of which IMG, TA and
-#             IPG are blacklisted as noisy, leaving OI, OS, TM, TP - 18 electrodes
-#             through the gate. The contact-level split above kept those 18; the
-#             decision now is that a mixed implant does not enter the cohort at all.
-#             GRID_SHAFTS and NOISY_SHAFTS still list it, and are simply not reached
-#             while the patient is excluded - so removing it from this tuple restores
-#             the previous behaviour exactly.
+#   PAT_3415  MIXED IMPLANT, split at CONTACT level. It is the only patient carrying
+#             both a subdural grid and depth shafts: 64 grid contacts (GA..GH) and 57
+#             depth contacts, of which IMG, TA and IPG are blacklisted as noisy,
+#             leaving OI, OS, TM, TP - 18 electrodes through the gate on v7. It was a
+#             whole-patient exclusion between 2026-09-06 and 2026-09-23; the depth
+#             contacts are back in and the grid is still out.
 #
 #   PAT_6684  MicroEPI G-05, REMOVED FROM THE DATASET on 2026-09-15 (Lora). Its ERSP
 #             cubes may still sit on disk under 04_ersp_LM_RAWONLY; no cache built from
 #             here on takes them, and the last cohort that did is v8.
 #
 # Pass exclude_patients=() to keep the ECoG and mixed-implant patients as well.
-DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_3415", "PAT_6684")
+#
+# PAT_3415 IS BACK AT CONTACT LEVEL (2026-09-23, Lora): the whole-patient exclusion of
+# 2026-09-06 is reverted, so its DEPTH contacts enter the cohort again while its 64 grid
+# contacts (GA..GH, GRID_SHAFTS) and its three noisy shafts (IMG, TA, IPG, NOISY_SHAFTS)
+# are dropped as before - the contact-level rule below is what does it. That leaves the
+# same OI / OS / TM / TP coverage the cohort carried through v7. EL044 stays a whole-
+# patient exclusion because it has no depth contacts at all.
+DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_6684")
 DEFAULT_FMAX = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30
