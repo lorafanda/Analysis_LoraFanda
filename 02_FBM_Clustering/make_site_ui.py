@@ -32,7 +32,7 @@ GROUPS = [   # (header or None, [data-t ...]) in display order
     (None, ["overview"]),
     ("Pipeline", ["s1", "s2", "lana"]),
     ("Side studies", ["mm", "microepi"]),
-    ("Writing", ["paper", "kiss"]),
+    ("Writing", ["paper", "outline", "kiss"]),
     ("Log &amp; plans", ["notebook", "meetings", "caveats"]),
 ]
 
@@ -51,6 +51,12 @@ ANSWERS = {
               "removed from the dataset; <b>v9</b> is built once the MicroEPI reruns and EL051 are on disk. One line per tab, "
               "the tab's own Answer behind each:</p><!--TABLIST-->"),
         status="v8 on every stage-02 product · the five S-figures and stages 03/04 are the 1027-electrode fit"),
+    "outline": dict(
+        one="the paper as bullets, preprocessing → clustering outputs, darkness = confidence; source paper2_outline.md (make_outline_tab.py)",
+        html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
+              "run, lightest = a slot for a citation's section / paragraph, a number or a decision). Edit "
+              "<code>02_FBM_Clustering/paper2_outline.md</code> and re-run <code>make_outline_tab.py --insert</code>.</p>"),
+        status="built 2026-09-24 for the lab presentation; numbers from the v9 cache and the 2026-09-24 audit"),
     "s1": dict(
         one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched, trial-filtered; halves beside; 31 of 31 patients ok (run 2026-09-18, reruns 09-21 / 22)",
         html=("<ul>"
