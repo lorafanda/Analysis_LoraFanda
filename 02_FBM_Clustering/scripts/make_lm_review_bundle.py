@@ -33,7 +33,8 @@ STATUS of a contact (why it is or is not in the cubes):
     bad           in cfg.bad_channels_manual (whether it reached the ERSP stage or not)
     wm_ref        used in the white-matter reference and skipped as data (EL / PAT)
     unknown       first tissueLabel token "Unknown": dropped by the parcellation step
-    aux           reached the ERSP stage but left out by a name rule (EKG-, photo, E1...)
+    aux           reached the ERSP stage but left out by a name rule (EKG-, photo, E1...);
+                  not a contact, so not listed since 2026-09-23 - only counted (n_status.aux)
     not_recorded  in the electrodes table but nowhere in the run
     not_run       the patient has no 140 log
 
@@ -378,7 +379,10 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
     for n in wm_used_raw:
         names.setdefault(norm_el(n), n)
 
-    rows, unmatched, n_alias, n_tmp = [], [], 0, 0
+    rows, unmatched, n_alias, n_tmp, n_aux = [], [], 0, 0, 0
+    # shafts the recording's cubes or the anatomy table know; a bad-listed name on no such
+    # shaft (EKG-, Chin-, y1..y4) is not a contact
+    known_shafts = {norm_el(shaft_of(n)) for n in data_names} | {norm_el(shaft_of(v["name_tsv"])) for v in anat.values()}
     for key, name in names.items():
         a, aliased = anat.get(key), None
         if a is None:
@@ -397,7 +401,8 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
         elif key in wm_used:
             status = "wm_ref"
         elif in_qc:
-            status = "aux"
+            n_aux += 1                      # trigger / photodiode / EKG names: counted, not shown
+            continue
         elif nat and nat.get("unknown_first"):
             status = "unknown"
         elif nat and nat.get("is_out"):
@@ -420,6 +425,9 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
         if aliased:
             flags.append(f"name mismatch: TSV {aliased} - not linked in 140")
         if nat is None and status != "not_recorded":
+            if status != "data" and not MICRO_RE.match(name) and norm_el(shaft_of(name)) not in known_shafts:
+                n_aux += 1                  # bad-listed non-electrode names (EKG-, Chin-, y1..y4): counted, not shown
+                continue
             unmatched.append(name)
         co = coords.get((pid, key))
         row = {
@@ -491,7 +499,7 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
         "unexplained_peaks": au["unexplained_peaks"] if au is not None else "",
         "trials": trials, "hg_reref": hg_tag(pid), "anatomy_source": anat_src,
         "n_contacts": len(rows), "n_data": sum(1 for r in rows if r["status"] == "data"),
-        "n_status": {s: sum(1 for r in rows if r["status"] == s) for s in ("data", "wm_ref", "bad", "unknown", "aux", "not_recorded", "not_run")},
+        "n_status": {**{s: sum(1 for r in rows if r["status"] == s) for s in ("data", "wm_ref", "bad", "unknown", "not_recorded", "not_run")}, "aux": n_aux},
     }
     return rows, prow
 
