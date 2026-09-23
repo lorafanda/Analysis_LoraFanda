@@ -14,9 +14,12 @@ Six runs = 2 cohorts x 3 views.
   cohorts
     lana_all      every electrode with an fsaverage coordinate AND an ERSP, any number
                   of conditions present. "Where did we record?"
-    lana_concat   only electrodes carrying ALL THREE conditions, grid patients
-                  (EL044, PAT_3415) and aux/micro channels removed — the sample set
-                  the concatenated clustering and stage-04 pooling actually use.
+    lana_concat   only electrodes carrying ALL THREE conditions, with EL044 (ECoG
+                  throughout) and PAT_6684 removed as patients, PAT_3415's subdural
+                  grid contacts removed one by one (its depth shafts stay — the
+                  clustering's rule since 2026-09-23), and aux/micro channels
+                  removed — the sample set the concatenated clustering and stage-04
+                  pooling actually use.
                   Derived from the ERSP tree, so it already reflects the corrected
                   exclusion list without waiting for 233 to be re-run.
 
@@ -56,7 +59,11 @@ ATLAS = ROOT / "04_FBM_Pooling" / "federenko_atlas" / "langloc_n806_p_0.05_atlas
 CLUST = ROOT / "02_FBM_Clustering" / "outputs" / "clustering"
 
 CONDITIONS = ("audio", "picture", "reading")
-EXCLUDE_PATIENTS = ("EL044", "PAT_3415")
+# Mirrors lf_concat.DEFAULT_EXCLUDE_PATIENTS (2026-09-23): EL044 is ECoG throughout, so
+# there is no depth contact to keep; PAT_6684 (G-05) was removed from the dataset. The
+# mixed implant PAT_3415 is NOT here any more - its grid contacts are dropped one by one
+# below, by the same GRID_SHAFTS rule the clustering uses, and its depth shafts stay.
+EXCLUDE_PATIENTS = ("EL044", "PAT_6684")
 METHOD, METHOD_LABEL = "atlas", "Fedorenko/LanA atlas"
 PBINS = [0.0, 0.05, 0.10, 0.20, 0.35, 1.01]
 _RX_ELEC = re.compile(r"_ERSP_(.+?)_TN", re.IGNORECASE)
@@ -74,13 +81,14 @@ def _clustering_filters():
         "_lf_ds", ROOT / "02_FBM_Clustering" / "functions" / "lf_dataset.py")
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
-    return m.is_non_neural_electrode, m.is_micro_electrode
+    return m.is_non_neural_electrode, m.is_micro_electrode, m.is_grid_electrode
 
 
 def ersp_index() -> pd.DataFrame:
     """One row per (patient, contact): which conditions exist and the audio file path."""
-    is_non_neural, is_micro = _clustering_filters()
+    is_non_neural, is_micro, is_grid = _clustering_filters()
     rec: dict[tuple, dict] = {}
+    n_grid = 0
     for pdir in sorted(p for p in ERSP.iterdir() if p.is_dir()):
         pid = pdir.name
         for cond in CONDITIONS:
@@ -94,6 +102,11 @@ def ersp_index() -> pd.DataFrame:
                 el = m.group(1)
                 if is_non_neural(el) or is_micro(el, pid):
                     continue
+                # a subdural grid contact of a mixed implant is a different measurement,
+                # not a bad one: dropped here exactly as the clustering drops it
+                if is_grid(el, pid):
+                    n_grid += 1
+                    continue
                 k = (pid, norm(el))
                 r = rec.setdefault(k, {"patient_id": pid, "contact_norm": k[1],
                                        "electrode": el, "conds": set(), "file_path": ""})
@@ -105,6 +118,8 @@ def ersp_index() -> pd.DataFrame:
                         r["file_path"] = str(f)
     rows = [{**v, "n_cond": len(v["conds"])} for v in rec.values()]
     df = pd.DataFrame(rows).drop(columns=["conds"])
+    if n_grid:
+        print(f"  dropped {n_grid} subdural grid cube(s) (lf_dataset.GRID_SHAFTS)")
     return df
 
 

@@ -9,8 +9,10 @@ had previously been dropping out of every plot.
 Two cohorts, because they answer different questions:
 
   all      every electrode that has an fsaverage coordinate. "Where did we record?"
-  concat   only electrodes carrying ALL THREE conditions, with the grid patients
-           (EL044, PAT_3415) and aux/micro channels removed — i.e. exactly the
+  concat   only electrodes carrying ALL THREE conditions, with EL044 (ECoG throughout)
+           and PAT_6684 removed as patients, PAT_3415's subdural grid contacts removed
+           one by one (its depth shafts stay — the clustering's rule since 2026-09-23)
+           and aux/micro channels removed — i.e. exactly the
            sample set the concatenated clustering and stage-04 pooling use.
            "Of the electrodes we actually analyse, which are in the network?"
 
@@ -51,8 +53,11 @@ ATLAS = ROOT / "04_FBM_Pooling" / "federenko_atlas" / "langloc_n806_p_0.05_atlas
 OUT = ROOT / "04_FBM_Pooling" / "outputs" / "pooling" / "atlas_corr" / "fedorenko"
 
 CONDITIONS = ("audio", "picture", "reading")
-# Grid / ECoG patients — same rule as lf_concat.DEFAULT_EXCLUDE_PATIENTS.
-EXCLUDE_PATIENTS = ("EL044", "PAT_3415")
+# Same rule as lf_concat.DEFAULT_EXCLUDE_PATIENTS (2026-09-23): EL044 is ECoG throughout,
+# so there is no depth contact to keep, and PAT_6684 (G-05) is out of the dataset. The
+# mixed implant PAT_3415 is excluded CONTACT BY CONTACT instead - is_grid_electrode drops
+# its GA..GH grid below and its depth shafts stay in the cohort.
+EXCLUDE_PATIENTS = ("EL044", "PAT_6684")
 THRESHOLDS = (0.05, 0.10)
 
 IN_COLOR, OUT_COLOR = "#c0392b", "#b9c0c8"
@@ -96,6 +101,8 @@ def concat_contacts() -> set:
     spec.loader.exec_module(_ds)
     is_non_neural_electrode = _ds.is_non_neural_electrode
     is_micro_electrode = _ds.is_micro_electrode
+    is_grid_electrode = _ds.is_grid_electrode
+    n_grid = 0
     per_cond: dict[str, set] = {c: set() for c in CONDITIONS}
     for pdir in sorted(p for p in ERSP.iterdir() if p.is_dir()):
         pid = pdir.name
@@ -112,10 +119,15 @@ def concat_contacts() -> set:
                 el = m.group(1)
                 if is_non_neural_electrode(el) or is_micro_electrode(el, pid):
                     continue
+                # subdural grid contact of a mixed implant: a different measurement, out
+                if is_grid_electrode(el, pid):
+                    n_grid += 1
+                    continue
                 per_cond[cond].add((pid, norm(el)))
     keep = set.intersection(*(per_cond[c] for c in CONDITIONS))
     print(f"  concat cohort: {len(keep)} electrodes with all 3 conditions "
-          f"(excluded {list(EXCLUDE_PATIENTS)})")
+          f"(excluded {list(EXCLUDE_PATIENTS)}"
+          + (f", {n_grid} grid cubes" if n_grid else "") + ")")
     return keep
 
 
