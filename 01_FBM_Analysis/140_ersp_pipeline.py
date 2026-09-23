@@ -397,6 +397,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 keep = [i for i in range(len(names)) if i not in unk_idx]
                 signals = signals[:, keep]
                 names   = [names[i] for i in keep]
+                if is_micro is not None:          # MicroEPI: the micro mask follows the channels
+                    is_micro = is_micro[keep]
                 print(f"  [{patient_id}] dropped {len(unk_idx)} 'Unknown' channels (no parcellation in TSV)")
 
         # ── REREFERENCING
