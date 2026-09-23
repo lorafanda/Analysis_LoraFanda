@@ -590,6 +590,10 @@ EL_PRESETS = {
     "EL035": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL036": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160,161], manual_trig=None),
     "EL037": dict(trig="DC6", flip=False, time_range=(0, -1),     invalid_trials=[0,1,2,54,55,56], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
+    # EL038: prep0 rebuilt 2026-09-24 by el038_rebuild_triggers.py from the FULL session log
+    # (53 audio / 53 reading rows; the raw/ copy of the log and this preset's fake / invalid
+    # lists describe the 2025 detection that lost 14 audio + 2 reading trials in a DC6 drift).
+    # Do not run 140 --pd for EL038 with this preset: it would regress the tables.
     "EL038": dict(trig="DC6", flip=False, time_range=(130, -1),   invalid_trials=[51,52,53,104,105,106], trial_ids=["picture"]*51 + ["auditory"]*56 + ["reading"]*53, fake_trials=[77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93], manual_trig="EL038_20241112_HUG_20250207_onsets_offsets_FBM_all_LM_.tsv"),
     "EL039": dict(trig="DC6", flip=True, time_range=(0, 1458),invalid_trials=[], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
     "EL040": dict(trig="DC6", flip=True, time_range=(100, 1900), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[160], manual_trig=None),
