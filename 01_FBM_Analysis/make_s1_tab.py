@@ -235,6 +235,7 @@ def build(a: pd.DataFrame | None) -> str:
     S.append('    ' + ul(
         "decide: bad-list names that matched nothing (EL037 pI_R1–16, EL040 FP-R11 PlaT_L1–3, EL034 MFG-10..12, EL030 EntG_R18, EL048 7 names, EL052 aH_L8 / 9, PAT_3415 HLG5, PAT_3780 FAP9, PAT_6704 ainp1): typo, other patient's shaft, or Unknown-dropped anyway",
         "decide: PAT_6953 Unknown contacts (AD12, TLD2 / 4 / 5) keep-list",
+        "2026-09-23: Unknown drop extended to MicroEPI (29 contacts: PAT_5515 5, PAT_5533 5, PAT_6619 10, PAT_6704 6, PAT_6854 3) → reruns of the five, then v10",
         "stale-cube audit by mtime after the reruns",
         "QC pass in review mode, patient by patient: trigger lock, reference bleed, stripes, bad channels, low trial counts (accept / not)",
         "then: commit code (fmax-400 edits, 140 script, audit, review, fixes), push page + review bundle, rebuild <code>_raw_ungated</code> → cube / ERSP bundle → clustering caches → site",

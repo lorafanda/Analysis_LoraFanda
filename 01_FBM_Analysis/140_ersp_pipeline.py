@@ -374,8 +374,9 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             print(f"  [{patient_id}] stripped _L#/_R# per cfg.STRIP_HEMI_PATIENTS  "
                   f"-> first few: {names[:8]}")
 
-        # ── DROP "UNKNOWN" PARCELLATION CHANNELS (EL/PAT ONLY)
-        if not is_microepi:
+        # ── DROP "UNKNOWN" PARCELLATION CHANNELS (every cohort since 2026-09-23; was EL/PAT
+        # only, which left 29 unparcellated MicroEPI contacts in the data)
+        if True:
             try:
                 unk_idx = set(io.unknown_indices_for_patient(
                     patient_id, names, electrodes_tsv_pattern=_wm_tsv))
