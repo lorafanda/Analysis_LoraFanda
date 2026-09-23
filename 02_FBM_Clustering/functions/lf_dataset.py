@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
 
@@ -50,6 +51,7 @@ DEFAULT_THR_POS          = 2.2
 DEFAULT_MIN_PROP_POS     = 0.02
 DEFAULT_THR_NEG          = -3.0
 DEFAULT_MIN_PROP_NEG     = 0.04
+DEFAULT_NOISE_K          = 2.0   # a bin counts only beyond k x the cube's split-half noise (2026-09-23); 0 = fixed thresholds
 
 
 # ============================================================
@@ -191,6 +193,28 @@ def is_noisy_electrode(label, patient_id=None) -> bool:
 # ============================================================
 # Public: prepare_dataset
 # ============================================================
+def _halves_noise(cube_paths, n_threads: int = 8) -> List[float]:
+    """Noise of each trial-averaged cube, from its two halves in ERSP_halves:
+    sd(half1 - half2) / 2 in dB (var(h1 - h2) = 2 sigma^2 / (N/2) = 4 sigma^2 / N, and the
+    full mean has sigma^2 / N). NaN where a half is missing or the shapes differ."""
+    def one(p):
+        p = str(p)
+        h1 = p.replace("ERSP_matrix", "ERSP_halves").replace("_TN.npy", "_TN_half1.npy")
+        h2 = h1.replace("_half1.npy", "_half2.npy")
+        try:
+            a, b = np.load(h1), np.load(h2)
+        except (OSError, ValueError):
+            return float("nan")
+        if a.shape != b.shape:
+            return float("nan")
+        d = (a - b).astype(np.float32)
+        if np.isfinite(d).sum() < 100:
+            return float("nan")
+        return float(np.nanstd(d)) / 2.0
+    with ThreadPoolExecutor(n_threads) as ex:
+        return list(ex.map(one, cube_paths))
+
+
 def prepare_dataset(
     input_dir,
     *,
@@ -202,6 +226,7 @@ def prepare_dataset(
     min_prop_pos: float = DEFAULT_MIN_PROP_POS,
     thr_neg: float = DEFAULT_THR_NEG,
     min_prop_neg: float = DEFAULT_MIN_PROP_NEG,
+    noise_k: float = DEFAULT_NOISE_K,
     apply_high_activity: bool = True,
     exclude_micro: bool = True,
     cache_dir = None,
@@ -214,7 +239,7 @@ def prepare_dataset(
     -------
     df_meta : DataFrame, columns
         sample_idx, patient_id, condition, task, electrode, file_path,
-        prop_above_pos, prop_below_neg, high_activity
+        noise_db, thr_pos_used, thr_neg_used, prop_above_pos, prop_below_neg, high_activity
     ersp_list : list of (n_freq, n_time) ndarrays
     X_3d : ndarray of shape (n_samples, n_freq, n_time) — np.stack(ersp_list)
 
@@ -238,10 +263,13 @@ def prepare_dataset(
         "min_prop_pos": float(min_prop_pos),
         "thr_neg": float(thr_neg),
         "min_prop_neg": float(min_prop_neg),
+        "noise_k": float(noise_k),
         "apply_high_activity": bool(apply_high_activity),
         # Version tag: bump if filter logic changes incompatibly so old caches invalidate
         # 2 (2026-09-22): the micro rule is the lower-case-m spelling; IDM / POM of PAT_2868 are data
-        "schema": 2,
+        # 3 (2026-09-23): gate thresholds scale with the split-half noise (noise_k); noise_db,
+        #                 thr_pos_used, thr_neg_used columns
+        "schema": 3,
     }
 
     # ---- Cache hit? ----
@@ -260,8 +288,12 @@ def prepare_dataset(
                     print(f"[lf_dataset cache hit] {cache_dir}")
                     print(f"  {len(df_meta)} samples · X_3d.shape={X_3d.shape}")
                 return df_meta, ersp_list, X_3d
-            elif verbose:
-                print(f"[lf_dataset cache miss] params differ — rebuilding")
+            else:
+                diff = sorted(k for k in set(params) | set(cached_params) if params.get(k) != cached_params.get(k))
+                raise RuntimeError(
+                    f"[lf_dataset] {cache_dir} was built with other params ({', '.join(diff)}) and is not "
+                    f"rebuilt in place (that would silently replace the cohort every run was fitted on): "
+                    f"build the next version with rebuild_concat_cache.py --version N --apply")
 
     # ---- Build fresh ----
     if not input_dir.exists():
@@ -355,11 +387,25 @@ def prepare_dataset(
                       f"→ {len(df_meta)} samples")
 
     # ---- High-activity computation (always computed, optionally filtered) ----
-    prop_pos = []
-    prop_neg = []
-    for arr in ersp_list:
-        prop_pos.append(float((arr > thr_pos).mean()))
-        prop_neg.append(float((arr < thr_neg).mean()))
+    # Since 2026-09-23 the thresholds follow the electrode's own noise. The trial-averaged
+    # cube's noise is sd(half1 - half2) / 2 (ERSP_halves), ~ 1/sqrt(N trials): 2.1 dB at 8
+    # trials, 0.9 dB at 45 - so a fixed +2.2 dB let the low-trial patients gate on noise
+    # (EL033, EL038, EL043, EL046, PAT_6619 were 100 % gated in v9). A bin now counts only
+    # above max(thr_pos, noise_k * noise) and below min(thr_neg, -noise_k * noise); an
+    # electrode without halves keeps the fixed thresholds. noise_k = 0 is the old rule.
+    noise_db = _halves_noise(df_meta["file_path"].tolist()) if (noise_k and len(df_meta)) else [float("nan")] * len(df_meta)
+    thr_up = [max(thr_pos, noise_k * n) if np.isfinite(n) else thr_pos for n in noise_db]
+    thr_dn = [min(thr_neg, -noise_k * n) if np.isfinite(n) else thr_neg for n in noise_db]
+    prop_pos = [float((arr > tu).mean()) for arr, tu in zip(ersp_list, thr_up)]
+    prop_neg = [float((arr < td).mean()) for arr, td in zip(ersp_list, thr_dn)]
+    df_meta["noise_db"] = noise_db
+    df_meta["thr_pos_used"] = thr_up
+    df_meta["thr_neg_used"] = thr_dn
+    if verbose and noise_k and len(df_meta):
+        nd = np.asarray(noise_db, dtype=float)
+        raised = int(sum(1 for t in thr_up if t > thr_pos))
+        print(f"  noise-scaled gate (k={noise_k:g}): halves for {int(np.isfinite(nd).sum())} of {len(nd)} cubes, "
+              f"noise median {np.nanmedian(nd):.2f} dB, threshold raised above {thr_pos} dB for {raised}")
     df_meta["prop_above_pos"] = prop_pos
     df_meta["prop_below_neg"] = prop_neg
     df_meta["high_activity"] = [
@@ -374,8 +420,8 @@ def prepare_dataset(
         df_meta = df_meta[keep].reset_index(drop=True)
         ersp_list = [ersp_list[i] for i in np.where(keep)[0]]
         if verbose:
-            print(f"  high-activity gate (thr_pos>{thr_pos} prop≥{min_prop_pos}, "
-                  f"thr_neg<{thr_neg} prop≥{min_prop_neg}): kept {n_high}, dropped {n_low}")
+            print(f"  high-activity gate (above max({thr_pos}, {noise_k:g}·noise) prop≥{min_prop_pos}, "
+                  f"below min({thr_neg}, -{noise_k:g}·noise) prop≥{min_prop_neg}): kept {n_high}, dropped {n_low}")
 
     # ---- Rebuild sample_idx + stack ----
     df_meta = df_meta.reset_index(drop=True)

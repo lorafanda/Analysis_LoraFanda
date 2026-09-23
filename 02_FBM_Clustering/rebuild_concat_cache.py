@@ -17,8 +17,15 @@ therefore forces high_activity to be recomputed from the current cubes.
 
 WHAT high_activity IS. Per electrode and condition, over the full 0-400 Hz cube:
     prop_above_pos >= 0.02  OR  prop_below_neg >= 0.04
+where a bin counts as above only beyond max(+2.2 dB, k x noise) and as below only
+beyond min(-3.0 dB, -k x noise), k = lf_dataset.DEFAULT_NOISE_K (2.0 since 2026-09-23)
+and noise = sd(half1 - half2) / 2 of the electrode's ERSP_halves - the noise of the
+trial average, ~ 1/sqrt(N trials) (2.1 dB at 8 trials, 0.9 dB at 45). Before v10 the
+thresholds were fixed, so patients with few trials gated on noise (five were 100 %).
 An electrode enters the GATED set if that holds in at least one of the three
-conditions. That is the gate the whole cohort size depends on.
+conditions. That is the gate the whole cohort size depends on. The thresholds live
+in lf_dataset (single source of truth) - there is no flag here, because 240-242 read
+the cache with the same defaults and a cache built with other params is refused.
 
 WHAT ELSE DECIDES THE COHORT, and is NOT in the cache. The cache is the ungated source:
 it holds every electrode that survived the non-neural, microelectrode and noisy-shaft
@@ -172,6 +179,12 @@ def main() -> int:
                                             require_high_activity=False,
                                             cache_dir=new_cache, verbose=False)
     print(f"UNGATED      : {len(df_all)} electrodes")
+    meta = pd.read_parquet(new_cache / "df_meta.parquet")
+    if "noise_db" in meta.columns:
+        raised = meta.thr_pos_used > LD.DEFAULT_THR_POS
+        print(f"gate         : bins beyond max({LD.DEFAULT_THR_POS} dB, {LD.DEFAULT_NOISE_K:g} x noise); "
+              f"noise median {meta.noise_db.median():.2f} dB, threshold raised for {int(raised.sum())} "
+              f"of {len(meta)} electrode-conditions, {int(meta.noise_db.isna().sum())} without halves")
 
     out.mkdir(parents=True, exist_ok=True)
     per = (df.groupby("patient_id").size().rename("gated")
