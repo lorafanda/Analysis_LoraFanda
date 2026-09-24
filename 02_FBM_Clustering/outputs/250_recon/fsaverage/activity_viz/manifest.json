@@ -1,5 +1,5 @@
 {
-  "source_run": "02_FBM_Clustering/outputs/_dataset/concat_source_v9/X_3d.npy",
+  "source_run": "02_FBM_Clustering/outputs/_dataset/concat_source_v10/X_3d.npy",
   "coords_csv": "02_FBM_Clustering/outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv",
   "conditions": [
     "all",
@@ -77,7 +77,7 @@
   ],
   "n_cond": 4,
   "n_band": 8,
-  "n_contact": 3112,
+  "n_contact": 3107,
   "n_time": 300,
   "mode": "TN",
   "proportions": [
@@ -150,7 +150,7 @@
       "shape": [
         4,
         8,
-        3112,
+        3107,
         300
       ]
     },

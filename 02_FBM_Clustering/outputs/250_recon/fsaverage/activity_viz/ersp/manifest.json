@@ -1,5 +1,5 @@
 {
-  "source": "02_FBM_Clustering/outputs/_dataset/concat_source_v9/X_3d.npy",
+  "source": "02_FBM_Clustering/outputs/_dataset/concat_source_v10/X_3d.npy",
   "conditions": [
     "audio",
     "picture",
@@ -25,5 +25,5 @@
   "vmax": 10.0,
   "nan_byte": 0,
   "file": "c{contact_index}.bin",
-  "n_contact": 3112
+  "n_contact": 3107
 }
