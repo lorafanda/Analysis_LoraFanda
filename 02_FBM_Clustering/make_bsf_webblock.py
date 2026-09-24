@@ -325,7 +325,12 @@ def build(d) -> str:
             f"{m}/concat_hg_all &middot; K=8 &middot; "
             f"<code>make_bsf_figures.py</code>"))
 
-    out.append(f"""
+    # Part 2 (held-out variance on the SBSF cohort: FIG C.13 and the peaks table) is not
+    # emitted since 2026-09-24 (Lora: it showed up awkwardly while scrolling); the held-out
+    # story lives in the s2 tab. Set PART2 = True to bring it back.
+    PART2 = False
+    if PART2:
+        out.append(f"""
     <h3>Part 2 &mdash; held-out variance over components, on the SBSF cohort</h3>
     <p><b>A different cohort on purpose.</b> Part 2 is <code>concat_hg</code> &mdash; the
       SBSF run, {ng} electrodes, gate APPLIED &mdash; and <code>concat_rawds</code>,
@@ -354,6 +359,8 @@ def build(d) -> str:
             f"&middot; numbers in <code>bsf_comparison/part2_heldout_variance.csv</code>")}
     {t_peaks(d['pk'])}
   </section>""")
+    else:
+        out.append("  </section>")
     return "\n".join(out)
 
 
