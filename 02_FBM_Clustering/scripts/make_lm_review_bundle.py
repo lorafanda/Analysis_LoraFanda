@@ -64,7 +64,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-REPO = r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda"
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 A01 = os.path.join(REPO, "01_FBM_Analysis")
 sys.path.insert(0, A01)
 from functions import config as cfg   # noqa: E402

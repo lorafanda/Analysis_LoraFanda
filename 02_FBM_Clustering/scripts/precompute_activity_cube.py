@@ -65,7 +65,11 @@ import pandas as pd
 # --------------------------------------------------------------------------
 # CONFIG  (everything lives in Analysis_LoraFanda)
 # --------------------------------------------------------------------------
-REPO = Path(r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda")
+# Derived from this file, not hardcoded: the repo is reached both as S:\ and as
+# \\nasac-m2.unige.ch\m-HumanNeuronLab\..., and a literal drive letter makes the script
+# fail with "no concat_source_v<N>" on whichever mount is not the one it was written on
+# (2026-09-24). serve_bundle.py in this folder has always done it this way.
+REPO = Path(__file__).resolve().parents[2]
 OUTPUTS = REPO / "02_FBM_Clustering" / "outputs"
 
 

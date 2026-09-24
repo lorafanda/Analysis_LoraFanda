@@ -18,7 +18,7 @@ import shutil
 import subprocess
 import sys
 
-REPO = r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda"
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 WT = r"C:\Users\fanda\av_branch"
 BRANCH = "activity-visualizer"
 REL = "02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz"     # the whole bundle since 2026-09-22 (cube parts, ersp/, review/)

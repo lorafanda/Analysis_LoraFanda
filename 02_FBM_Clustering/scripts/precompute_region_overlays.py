@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import nibabel as nib
 
-REPO = Path(r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda")
+REPO = Path(__file__).resolve().parents[2]   # not a drive letter: S:\ and the UNC path are the same repo
 FS_LABEL = Path(r"S:\HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_HUG\fsaverage\label")
 MESH_DIR = REPO / "02_FBM_Clustering" / "outputs" / "250_recon" / "fsaverage" / "meshes"
 OUT_DIR = REPO / "02_FBM_Clustering" / "outputs" / "250_recon" / "fsaverage" / "activity_viz"

@@ -37,7 +37,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO = Path(r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda")
+REPO = Path(__file__).resolve().parents[2]   # not a drive letter: S:\ and the UNC path are the same repo
 
 
 def newest_concat_cache() -> Path:

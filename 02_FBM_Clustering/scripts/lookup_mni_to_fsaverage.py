@@ -49,7 +49,7 @@ import pandas as pd
 from nibabel.freesurfer.io import read_annot, read_geometry
 from scipy.spatial import cKDTree
 
-REPO = r"S:\HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda"
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 NASAC = "//nasac-m2.unige.ch/m-HumanNeuronLab"
 COORDS = os.path.join(REPO, "02_FBM_Clustering", "outputs", "250_recon", "fsaverage", "coords")
 APARC = os.path.join(REPO, "02_FBM_Clustering", "outputs", "250_recon", "fsaverage", "aparc_lookup.csv")
