@@ -19,7 +19,7 @@ patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","E
 # its presets, path override, bad lists and discharge spans below stay as the record of
 # the work. 02_FBM_Clustering/functions/lf_concat.DEFAULT_EXCLUDE_PATIENTS keeps it out of
 # every cohort cache built from now on.
-patient_ids = ["G-06", "G-04", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "EL051","EL052","PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953"]  
+patient_ids = ["G-06", "G-04", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "EL051","EL052","PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]
 
 block_name  = "LM"
 conditions_expected = ("picture", "audio", "reading")
@@ -106,6 +106,10 @@ bad_channels_manual = {
     "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44"],
     "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"],
     "PAT_2868": ["IDM3"],
+    # PAT_1327, 2026-09-24, by visual review of the first run. All five are recorded under
+    # exactly these names (checked against the TRC's 236 channels) and none of them is in
+    # the white-matter reference, so it stays at its 44 contacts.
+    "PAT_1327": ["CAG5", "CPG1", "IAG10", "PHG2", "PHG3"],
     # PAT_6684 (G-05) on its TRC, 2026-09-13, by visual review. CAG1/CAG2 are WM contacts:
     # listing them here also keeps them out of the WM reference.
     "PAT_6684": ["FPG10", "FPG5", "FPG9", "FPG8", "FOM7", "FOM11","CAG1", "FOL8", "CAG2",
@@ -387,7 +391,7 @@ ersp_trial_reject_z = {"PAT_6684": 3.0}
 ersp_trial_reject_hg_mad = {"PAT_6684": 3.5}
 ersp_trial_reject_hg_z = {}
 
-notch_patients  = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049","EL051","EL052", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953"]   
+notch_patients  = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049","EL051","EL052", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]
 # IDs or substrings to match
     
 # notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
@@ -424,6 +428,14 @@ notch_block_pad_s = 10.0     # margin either side of a block's outermost trial, 
 # "EL" would be every Bern patient. The five stripe patients of the 2026-09-07 review,
 # plus EL043, EL049 (future) and the MicroEPI patients (raw ids, as in notch_patients;
 # their micro shafts are named with a trailing "m" and form their own groups).
+#
+# EVERY PATIENT, since 2026-09-24. The list below decided it for 14 of 31 and the other
+# 17 got one decision for the whole montage, which fails both ways at once: the
+# 2026-09-24 audit has PAT_3975 notching 3 of 24 harmonics (a line on one shaft is
+# diluted in the montage median and misses the z test) and leaving -7.3 dB holes in the
+# three it did take. Per shaft, a line is caught where it lives and a clean shaft is left
+# alone. Set notch_shaft_all = False to go back to the list.
+notch_shaft_all = True
 notch_shaft_patients = ["EL036", "EL037", "EL040", "EL045", "EL048",
                         "EL043", "EL049",
                         "G-01", "G-02", "G-03", "G-04", "G-06",
@@ -435,6 +447,9 @@ notch_shaft_patients = ["EL036", "EL037", "EL040", "EL045", "EL048",
 # a line that is broad or amplitude-modulated walks through a notch that narrow.
 # Q 50 is 1 Hz wide at 50 Hz and 7 Hz at 350 Hz, far inside any feature band.
 # Patients not listed keep 500, i.e. the behaviour they were processed with.
+# NO EFFECT since 2026-09-24: Q is an IIR notion and every patient is on interp now,
+# which replaces a measured band instead of ringing a filter. Kept for the day someone
+# is put back on iir.
 notch_Q_max = {
     "EL036": 50.0, "EL037": 50.0, "EL040": 50.0, "EL045": 50.0, "EL048": 50.0,
 }
@@ -460,16 +475,16 @@ notch_Q_max = {
 notch_interp_phase = "random"         # "random" | "keep"
 notch_interp_max_hw_hz = 12.0
 
+# EVERY PATIENT GETS interp, since 2026-09-24. The dict decided it for 12 of 31 and the
+# rest kept "iir", which the audit of that day shows digging holes rather than removing
+# lines: after_db is NEGATIVE for every iir patient (EL030 -5.9, EL046 -6.6, PAT_3415
+# -3.8, PAT_3975 -7.3, PAT_6953 -8.0 dB below background), while the interp patients sit
+# at +0.1 to +2.4 dB with band half-widths of 1.0-1.5 Hz, nowhere near the 12 Hz ceiling.
+# Same method for everyone, so a difference between two patients' cubes is the patients.
+notch_method_default = "interp"
 notch_method = {
-    "EL036": "interp", "EL037": "interp", "EL040": "interp", "EL045": "interp",
-    "EL048": "interp",
-    "EL043": "interp", "EL049": "interp",
-    # MicroEPI, by raw id (the cell-3 helper also accepts the PAT_ id). Their micro
-    # combs are richer than mains: after the first run read the unexplained-peaks
-    # table per micro shaft and add the comb it names to notch_extra_bases.
-    "G-01": "interp", "G-02": "interp", "G-03": "interp",
-    "G-04": "interp", "G-06": "interp",
-    "PAT_6684": "interp",   # G-05 on its TRC
+    # empty: everyone takes notch_method_default. Put a patient here only to make an
+    # exception of them, and say why.
 }
 
 # A SECOND COMB per patient, notched alongside the mains harmonics. Add an entry
@@ -549,7 +564,11 @@ min_stim_s   = 0.5
 # shortest response (trial_end - offset) a trial may have; responses under this are
 # dropped as "response < Xs". 1.0 s was collect_trials' own default until 2026-09-14
 # and 140 now passes this value, so lowering it here is what brings fast trials back.
-min_post_s   = 1.0
+# 0.2 s since 2026-09-24: at 1.0 s the filter was throwing away correct fast answers -
+# a one-syllable picture name is under a second on a good trial - and a patient who is
+# quick lost a chunk of their trials to it. 0.2 s only keeps out responses too short to
+# hold a word.
+min_post_s   = 0.2
 max_post_s   = 10.0
 iqr_k        = 1.5
 hg_band      = (70.0, 150.0)
@@ -572,6 +591,21 @@ PAT_PRESETS = {
     3975: dict(trig="E2",    flip=False, time_range=(200, 1550), invalid_trials=[], trial_ids=["picture"]*50 + ["auditory"]*50 + ["reading"]*51, fake_trials=[], manual_trig="PAT_3975__FLM_all.tsv"),
     3780: dict(trig="X2",    flip=False, time_range=(0, -1),     invalid_trials=[], trial_ids=["picture"]*51 + ["auditory"]*50 + ["reading"]*50, fake_trials=[], manual_trig="PAT_3780_FLM_all.tsv"),
     6953: dict(trig="X2", flip=False, time_range=(189, 1182),     invalid_trials=[59,92], trial_ids=["picture"]*51 + ["auditory"]*60 + ["reading"]*58, fake_trials=[52, 59, 60, 62, 63,84+5,93+6,106+7,117,118,119,120], manual_trig=None), #92,93, 113, 117
+    1327: dict(trig="X2", flip=False, time_range=(0, -1), invalid_trials=[],
+               trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53,
+               fake_trials=[], manual_trig=None),
+    # PAT_1327's preset above is only read by 140 --pd. The ERSP run does not touch it:
+    # process_patient goes straight to RAW_CONCAT + the prep0 tables.
+    #
+    # DO NOT RUN 140 --pd ON THIS PATIENT. trig="X2" cannot work here: PAT_1327's diode is
+    # SPLIT over X1 and X2, and each of them alone is a fast carrier that is high about
+    # 44% of the time whatever is on the screen. Only the DIFFERENCE carries the task, as
+    # a step that decays back to zero (the input is AC-coupled), so the state is the sign
+    # of the smoothed X1-X2 and not a level on either channel. Detecting on X2 alone is
+    # what produced the 14-row picture table in prep0/prep0/ with stimulus "durations" of
+    # 0.06 s and 117 s. pat_1327_build_triggers.py does it properly and writes all three
+    # tables; the trial-by-trial check is prep0/PAT_1327_LM_photodiode_check.png.
+
 }
 
 # PAT_PRESETS is keyed by INT (3455) but patient_ids supplies STRINGS (PAT_3455),
@@ -649,6 +683,21 @@ EL_PRESETS = {
 # and sampling rate must agree across the files; the loader checks.
 RAW_CONCAT = {
     "EL051": ["EL051_20260901_09h45m28_15min.h5", "EL051_20260901_14h29m54_18min.h5"],
+    # PAT_1327 (2026-09-24): the task spans two Micromed files - it starts in the last
+    # third of the 36-min one (the photodiode is flat for the first 23 minutes) and runs
+    # to the end of the 10-min one. Without this entry load_first_raw_in_dir takes the
+    # first .TRC only and the last third of the task is simply absent, with nothing to
+    # say so. File 2 begins at sample 4,440,448 of the joined axis; the prep0 tables that
+    # pat_1327_build_triggers.py writes are on that axis.
+    #
+    # THE JOIN IS NOT SEAMLESS. File 1 lasts 2168.188 s and file 2's header says it starts
+    # 2169 s after file 1's, so about 0.8 s of recording is missing between them (the
+    # header clock counts whole seconds). Two consequences: everything after sample
+    # 4,440,448 sits ~1 s early against the stimulus computer's clock - which is exactly
+    # the "1 s step" the events log appears to take at trial 89, the first trial after the
+    # boundary - and there is a step in every channel at that sample. The one auditory
+    # trial whose epoch contained it is dropped by the trigger builder.
+    "PAT_1327": ["EEG_2935940.TRC", "EEG_2935950.TRC"],
     # EL043 (2026-09-21): the picture naming of 17 June was bad and redone on 18 June in a
     # second, shorter recording (raw/2ndrun_PictureNaming, 877 s, same 140 channels at 1024
     # Hz). Joined after the 63-min file, file 2 starts at sample 3864064 = 3773.5 s; the

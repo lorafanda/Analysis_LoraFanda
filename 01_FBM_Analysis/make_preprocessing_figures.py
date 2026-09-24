@@ -40,6 +40,13 @@ RAW = ROOT / "outputs" / "04_ersp_LM_RAWONLY"
 OUT = ROOT / "outputs" / "preprocessing_docs"
 OUT.mkdir(parents=True, exist_ok=True)
 
+# THE THRESHOLDS COME FROM cfg, not from this file. They were typed into the STEP 5 panel
+# and drifted: it drew "post-stimulus >= 1.0 s" and "<= 5.0 s" while config said 0.2 and
+# 10.0. A figure that documents the pipeline has to read the pipeline.
+import sys                                                            # noqa: E402
+sys.path.insert(0, str(ROOT / "functions"))
+import config as cfg                                                  # noqa: E402
+
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 BLUE, RED, GREEN, ORANGE, PURPLE = "#4a6fa5", "#c1121f", "#1b7837", "#e08214", "#5b2c83"
 MONO = {"family": "DejaVu Sans Mono"}
@@ -214,10 +221,16 @@ def p2():
 
     d.text(0.005, -0.10, "THE NOTCH IS ADAPTIVE, not blanket. notch_mains_harmonics walks "
            "50 Hz and its harmonics and only notches one where a real peak is detected "
-           "(z > 3 above the local PSD),", fontsize=8.8, color=INK, transform=d.transAxes)
-    d.text(0.005, -0.175, "with Q set from how sharp that peak is. A harmonic that is not "
-           "there is left alone, so no signal is removed on the assumption that noise "
-           "must be present.", fontsize=8.8, color=INK, transform=d.transAxes)
+           f"(z > {cfg.notch_peak_z_thresh:g} above the local PSD),",
+           fontsize=8.8, color=INK, transform=d.transAxes)
+    d.text(0.005, -0.175,
+           ("decided on each SHAFT's own spectrum and per condition block. A harmonic that "
+            "is not there is left alone, so no signal is removed on the assumption that "
+            "noise must be present."
+            if cfg.notch_method_default == "interp" else
+            "with Q set from how sharp that peak is. A harmonic that is not there is left "
+            "alone, so no signal is removed on the assumption that noise must be present."),
+           fontsize=8.8, color=INK, transform=d.transAxes)
     p = OUT / "P2_signal_conditioning.png"
     fig.savefig(p, dpi=170, bbox_inches="tight", facecolor="white"); plt.close(fig)
     return p
@@ -394,9 +407,9 @@ def p5():
            transform=a.transAxes)
     for i, (name, rule) in enumerate([
             ("resp_accuracy", "must be correct / valid / 1"),
-            ("min_stim_s", "stimulus ≥ 0.5 s"),
-            ("min_post_s", "post-stimulus ≥ 1.0 s"),
-            ("max_post_s", "post-stimulus ≤ 5.0 s"),
+            ("min_stim_s", f"stimulus ≥ {cfg.min_stim_s:g} s"),
+            ("min_post_s", f"post-stimulus ≥ {cfg.min_post_s:g} s"),
+            ("max_post_s", f"post-stimulus ≤ {cfg.max_post_s:g} s"),
             ("IQR outlier", "post-stimulus within Q1−1.5·IQR … Q3+1.5·IQR")]):
         y = 0.86 - i * 0.115
         a.text(0.02, y, name, fontsize=8.6, color=INK, transform=a.transAxes, **MONO)

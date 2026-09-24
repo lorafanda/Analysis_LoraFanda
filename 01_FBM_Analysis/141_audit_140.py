@@ -238,7 +238,12 @@ def main():
         r["wm_excluded_as_bad"] = (rr["wm_channels_excluded_as_bad"].replace("|", " ") if rr is not None else "")
         r["wm_not_reference"] = " ".join(getattr(cfg, "WM_NOT_REFERENCE", {}).get(pid, []))
         # ---- notch
-        r["notch_method"] = getattr(cfg, "notch_method", {}).get(raw, getattr(cfg, "notch_method", {}).get(pid, "iir"))
+        # cfg.notch_method_default, not "iir": since 2026-09-24 the dict is empty and the
+        # default carries every patient, so a hardcoded fallback here would print "iir"
+        # for a tree that was notched with interp throughout. The log line is the check -
+        # notch_method_log is read straight out of the run's own output.
+        _nm = getattr(cfg, "notch_method", {})
+        r["notch_method"] = _nm.get(raw, _nm.get(pid, getattr(cfg, "notch_method_default", "iir")))
         r["notch_scope"] = "per shaft" if L.get("notch_per_shaft") else ("per block" if L.get("notch_scope") else "")
         r["notch_Q_max"] = getattr(cfg, "notch_Q_max", {}).get(pid, "")
         r["notch_extra_bases"] = str(getattr(cfg, "notch_extra_bases", {}).get(pid, "")) if getattr(cfg, "notch_extra_bases", {}).get(pid) else ""

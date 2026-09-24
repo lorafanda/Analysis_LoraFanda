@@ -95,9 +95,15 @@ _ensure               = io.ensure_dir
 
 
 def notch_method_for(patient_id, pid_raw):
-    """cfg.notch_method: {patient: "iir" | "interp"}; "iir" when unlisted."""
+    """cfg.notch_method: {patient: "iir" | "interp"}; cfg.notch_method_default when unlisted.
+
+    The default was "iir" written in here until 2026-09-24, so a patient nobody had
+    thought about got the method that digs holes. It is cfg's call now, and cfg says
+    interp for everyone.
+    """
+    dflt = str(getattr(cfg, "notch_method_default", "iir"))
     m = getattr(cfg, "notch_method", {})
-    return str(m.get(str(patient_id), m.get(str(pid_raw), "iir")))
+    return str(m.get(str(patient_id), m.get(str(pid_raw), dflt)))
 
 
 def notch_q_max_for(patient_id, pid_raw):
@@ -107,7 +113,9 @@ def notch_q_max_for(patient_id, pid_raw):
 
 
 def notch_per_shaft_for(patient_id, pid_raw):
-    """cfg.notch_shaft_patients: IDs or substrings, like notch_patients."""
+    """cfg.notch_shaft_all, else cfg.notch_shaft_patients: IDs or substrings."""
+    if bool(getattr(cfg, "notch_shaft_all", False)):
+        return True
     pats = getattr(cfg, "notch_shaft_patients", [])
     return any(s in str(pid_raw) or s in str(patient_id) for s in pats)
 
@@ -253,7 +261,12 @@ def run_pd_extraction(pid_raw):
     try:
         if group == "PAT":
             _, base_path, _ = io.build_paths_for_patient(key, BLOCK)
-            raw_signals, channel_names, sampling_rate = io.load_trc_and_signals(glob.glob(os.path.join(base_path, "*.TRC"))[0])
+            # load_raw_for_patient, not the first .TRC in the folder: a patient listed in
+            # cfg.RAW_CONCAT was recorded in several files and its task can sit anywhere
+            # across them (PAT_1327's starts in the last third of file 1 and ends in file
+            # 2). Taking [0] gave the detection a recording that stops mid-task, with
+            # nothing in the output to say so.
+            raw_signals, channel_names, sampling_rate = io.load_raw_for_patient(out_id_for(s), base_path)
             save_path = os.path.join(os.path.dirname(base_path), "prep0")
             exp_files = glob.glob(os.path.join(base_path, "*.tsv")) or glob.glob(os.path.join(base_path, "*.txt"))
             exp_file  = exp_files[0] if exp_files else None
