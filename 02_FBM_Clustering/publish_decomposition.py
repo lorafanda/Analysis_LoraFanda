@@ -83,7 +83,7 @@ def main() -> int:
     out["top_weight"] = top
     out["margin"] = margin
 
-    run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")      # local time, like the k-means / Ward run ids (UTC until 2026-09-24)
     rd = CLUST / METHOD / FSET / "runs" / run_id
     sizes = np.bincount(out[ccol], minlength=K)
     print(f"  run {METHOD}/{FSET}/{run_id}")
@@ -116,6 +116,8 @@ def main() -> int:
             "n_samples": int(len(out)), "n_features": int(C.shape[1]),
             "n_clusters": K, "best_k": K,
             "silhouette_overall": None,
+            "in_sample_variance_explained": meta_in.get("in_sample_var_explained"),
+            # the same number under its old, wrong name - readers written before 2026-09-24 look for it
             "held_out_variance_explained": meta_in.get("in_sample_var_explained"),
             "frac_no_majority": float((top < 0.5).mean()),
             "frac_dominant": float((top >= 0.8).mean()),

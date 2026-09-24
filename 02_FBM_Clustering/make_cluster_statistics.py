@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 """
+make_cluster_statistics.py - the statistics of the three algorithms at one K on one feature
+set (249 calls it at the convex-NMF held-out peak K): separation vs Gaussian surrogates,
+pairwise agreement (ARI / NMI), anatomical coherence, leave-one-patient-out. It reads the
+NEWEST run of each method and asserts they share X_train and the electrode order.
+
+The text below is the docstring it was copied from (make_bsf_comparison.py, 2026-08) and
+describes that older, pinned-run comparison - kept for the history of the panels.
+
 make_bsf_comparison.py - PART 1. BSF against the other two algorithms at matched K.
 
 BSF ("best so far") is a PINNED run, not "the newest":

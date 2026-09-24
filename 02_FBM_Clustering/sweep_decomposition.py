@@ -75,7 +75,7 @@ def mixture_stats(Gn: np.ndarray) -> dict:
     srt = np.sort(Gn, axis=1)
     top = srt[:, -1]
     return dict(
-        frac_dominant=float((top >= 0.5).mean()),
+        frac_dominant=float((top >= 0.8).mean()),      # same cut-off as run_decomposition's mixture_summary ("dominated" >= 0.8; was 0.5 until 2026-09-24)
         frac_no_majority=float((top < 0.5).mean()),
         median_top_weight=float(np.median(top)),
     )

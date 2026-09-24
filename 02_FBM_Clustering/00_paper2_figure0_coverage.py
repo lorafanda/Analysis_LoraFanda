@@ -125,6 +125,7 @@ def gate_params():
     p = json.loads((CACHE_DIR / "params.json").read_text())
     return dict(thr_pos=float(p["thr_pos"]), min_pos=float(p["min_prop_pos"]),
                 thr_neg=float(p["thr_neg"]), min_neg=float(p["min_prop_neg"]),
+                noise_k=float(p.get("noise_k", 0.0)),          # 0 = fixed thresholds (schema 1 / 2)
                 n_freq=int(p["n_freq"]), n_time=int(p["n_time"]),
                 conds=list(p["conditions"]))
 
@@ -544,24 +545,29 @@ def panel_example(axS, ax, t, row, gp, passed):
     detail = []
     for b, c in enumerate(conds):
         xs, a = x[b * nt:(b + 1) * nt], arrs[b]
-        ax.contour(xs, f, (a > gp["thr_pos"]).astype(float), levels=[0.5],
-                   colors=[INK], linewidths=0.5)
-        if (a < gp["thr_neg"]).any():
-            ax.contour(xs, f, (a < gp["thr_neg"]).astype(float), levels=[0.5],
-                       colors=[INK], linewidths=0.5, linestyles="dotted")
         r = rows[c]
+        # the thresholds the cache applied to THIS row: since schema 3 (2026-09-23) they
+        # scale with the row's split-half noise (thr_pos_used / thr_neg_used); older caches
+        # carry no such column and used the fixed values
+        thr_p = float(getattr(r, "thr_pos_used", gp["thr_pos"]))
+        thr_n = float(getattr(r, "thr_neg_used", gp["thr_neg"]))
+        ax.contour(xs, f, (a > thr_p).astype(float), levels=[0.5],
+                   colors=[INK], linewidths=0.5)
+        if (a < thr_n).any():
+            ax.contour(xs, f, (a < thr_n).astype(float), levels=[0.5],
+                       colors=[INK], linewidths=0.5, linestyles="dotted")
         n_pos = round(float(r.prop_above_pos) * nf * nt)
         n_neg = round(float(r.prop_below_neg) * nf * nt)
         ok = bool(r.high_activity)
         ax.text(b + 0.5, -0.04,
-                f"above {gp['thr_pos']:+.1f} dB   {n_pos} of {need_p} bins\n"
-                f"below {gp['thr_neg']:+.1f} dB   {n_neg} of {need_n}",
+                f"above {thr_p:+.1f} dB   {n_pos} of {need_p} bins\n"
+                f"below {thr_n:+.1f} dB   {n_neg} of {need_n}",
                 transform=ax.get_xaxis_transform(), ha="center", va="top",
                 fontsize=6.9, color=GREEN if ok else MUTED, linespacing=1.4,
                 fontweight="bold" if ok else "normal")
         detail.append(dict(condition=c, bins_pos=n_pos, need_pos=need_p,
                            bins_neg=n_neg, need_neg=need_n, passes=ok,
-                           margin=float(r.margin)))
+                           margin=float(r.margin), thr_pos=thr_p, thr_neg=thr_n))
     col = GREEN if passed else RED
     for s_ in ax.spines.values():
         s_.set_color(col); s_.set_linewidth(1.6)
@@ -570,7 +576,7 @@ def panel_example(axS, ax, t, row, gp, passed):
     best = max(detail, key=lambda q: q["margin"])
     by_pos = best["bins_pos"] / need_p >= best["bins_neg"] / need_n
     n, need = (best["bins_pos"], need_p) if by_pos else (best["bins_neg"], need_n)
-    thr = f"{gp['thr_pos']:+.1f}" if by_pos else f"{gp['thr_neg']:+.1f}"
+    thr = f"{best['thr_pos']:+.1f}" if by_pos else f"{best['thr_neg']:+.1f}"
     who = f"{row.patient_id} · {row.electrode}"
     if passed:
         over = n - need
@@ -704,6 +710,11 @@ def _gate_lines(A, gp, u, n_in):
       f"({round(gp['min_pos']*nb)} bins), OR")
     A(f"  at least {100*gp['min_neg']:g}% of bins are below {gp['thr_neg']:+.1f} dB "
       f"({round(gp['min_neg']*nb)} bins).")
+    if gp.get("noise_k"):
+        A(f"Since cache schema 3 (2026-09-23) a bin counts as above only beyond max({gp['thr_pos']:+.1f} dB, "
+          f"{gp['noise_k']:g} x noise) and as below only beyond min({gp['thr_neg']:+.1f} dB, -{gp['noise_k']:g} x noise),")
+        A("noise = sd(half1 - half2) / 2 of that electrode-condition (the trial average's own noise, ~1/sqrt(N)).")
+        A("The per-row thresholds are the cache's thr_pos_used / thr_neg_used; the example panels draw those.")
     A("An electrode is KEPT if any of its three conditions passes. The rule counts bins")
     A("over a threshold across the whole cube: it is not a high-gamma measure and it is")
     A("not a test of whether the response repeats. Re-derived from the stored proportions,")

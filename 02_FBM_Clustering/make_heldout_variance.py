@@ -32,8 +32,9 @@ squares solve for cnmf, and the same rows' mean on the test columns for the hard
 methods. Fitting the method a second time on the test columns would be wrong - two
 independent fits share no component order or scale.
 
-SPACE. Each method is fitted AND scored in its home space (cnmf unit-norm, k-means and
-Ward raw dB), because silhouette-style quantities are not space-free and scoring
+SPACE. Each method is fitted AND scored in its home space - unit-norm for all three since
+2026-09-06 (measure_cluster_stability.SPACE; k-means and Ward were raw dB before) -
+because silhouette-style quantities are not space-free and scoring
 everything in dB is the error that made the first FIG C.7 wrong. That makes the SHAPE
 of each curve comparable but NOT its absolute height. A second pass with every method
 in unit-norm gives the common ground where heights can be read against each other;

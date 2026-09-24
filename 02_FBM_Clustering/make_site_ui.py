@@ -60,7 +60,7 @@ ANSWERS = {
     "s1": dict(
         one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched, trial-filtered; halves beside; 31 of 31 patients ok (run 2026-09-18, reruns 09-21 / 22)",
         html=("<ul>"
-              "<li><b>product</b>: cube 103 freq × 300 warped bins, dB re baseline (−0.6, −0.1 s), GO at bin 150 · odd / even halves beside every cube</li>"
+              "<li><b>product</b>: cube 103 freq × 300 warped bins, dB re baseline (−0.4, −0.1 s), GO at bin 150 · odd / even halves beside every cube</li>"
               "<li><b>chain</b>: load → channels out (aux, Unknown, bad) → WM reference (grid / whole CAR where no WM) → notch per block (z ≥ 3; iir or spectrum interpolation) → trials (accuracy, stimulus ≥ 0.5 s, post 1–10 s, IQR 1.5) → STFT 1 kHz, bins ≤ 400 Hz → warp → mean</li>"
               "<li><b>run</b>: 2026-09-18, <code>140_ersp_pipeline.py</code> per patient, 31 patients, fmax 400 Hz (was 500) · audit table + review mode per contact</li>"
               "<li><b>done since</b>: EL043 on its two recordings joined (3 conditions), G-04 / G-06 with the reference without bad contacts, PAT_6953; no stale cube in the tree · <b>open</b>: 137 contacts without anatomy link (alias decision), QC pass in review mode</li>"
@@ -69,7 +69,7 @@ ANSWERS = {
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
         html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1680 electrodes, K = 5…30. "
-              "K is read where convex NMF's bi-cross-validated curve peaks (9 / 12 / 13 / 14 for HFA / 15 bands / 5 bands / "
+              "K is read where convex NMF's bi-cross-validated curve peaks (v8: 9 / 12 / 13 / 14, v9: 10 / 13 / 13 / 14 for HFA / 15 bands / 5 bands /"
               "5 bands z) because it is the only method whose curve turns over; the cross-method figures are cut at K = 8. "
               "The durable result is negative, then graded: hard partitions of these data are not reproducible across "
               "preprocessing, most electrodes have no majority component, and two algorithms on one feature set agree on "

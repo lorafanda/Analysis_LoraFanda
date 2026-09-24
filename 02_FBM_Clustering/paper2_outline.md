@@ -166,7 +166,7 @@
 ## Time–frequency and the ERSP cube
 - Each channel resampled to 1 kHz (`resample_poly`, 125/128 or 125/256).
 - STFT (`scipy.signal.spectrogram`, Hann, nperseg 128, noverlap 108 = 84 %, nfft 256 → 3.906 Hz bins, 20 ms hop), power in dB; bins ≤ 400 Hz kept (103).
-- Baseline per trial and frequency: mean dB over frames centred in −0.4 to −0.1 s before stimulus onset (the code default; config carries −0.5 and the site says −0.6: settle one number); `Srel = S_dB − baseline`.
+- Baseline per trial and frequency: mean dB over frames centred in −0.4 to −0.1 s before stimulus onset (config and 140 agree since 2026-09-24; the trial segment itself starts at −0.6 s); `Srel = S_dB − baseline`.
 - Time normalisation: stimulus onset → offset interpolated onto bins 0–149, offset → trial_end onto 150–299 (proportions 0 / 0.5 / 0.5); the pre-stimulus period is not in the cube.
 - Average over kept trials (nanmean of dB), NaNs filled by nearest neighbour; halves = odd / even kept trials, not filled.
 - Output: `ERSP_matrix/<cond>/<pid>_<cond>_<ref>_ERSP_<contact>_TN.npy` (103 × 300 float), halves, a CLEAN png; QC ERSP and HG trial rasters for every channel.
@@ -222,15 +222,16 @@
 -4 Figure numbering for Cell Reports (main figures ≤ 7; STAR Methods figures as S) [your slot].
 
 # Check before the talk
--3 Baseline window: code −0.4…−0.1 s (default), config −0.5…−0.1, site text −0.6…−0.1 — one number, then fix the others.
--3 WM rule: code `tissueWeights_1 > 0.97`; docstrings and site say "= 1.0".
--3 STFT overlap: 108 / 128 = 84 % (a config comment says ~75 %).
--3 The `invalid_trials` lists only colour the photodiode figure; they are not removed from the tables — practice trials are out only when the log scores them not-correct or the table was built by hand (EL038, EL043, EL051, EL052).
+- Baseline window — settled 2026-09-24: −0.4…−0.1 s is what every cube was computed with (the ERSPParams default); config now says so and 140 passes it explicitly; the s1 tab and this outline say −0.4 (the trial segment still starts at −0.6 s, which is what the site's −0.6 referred to).
+- WM rule — docstrings, s1 tab and outline now say `tissueWeights_1 > 0.97` (the code was always that).
+- STFT overlap — config comment fixed: 108 / 128 = 84 %, a 20 ms hop.
+- `invalid_trials` — documented in config (they only colour the photodiode figure in the `--pd` path; `fake_trials` are removed); no table changed.
 -3 `trial_idx` = exemplar id: `collect_trials` sorts by it, so odd / even halves interleave by exemplar, not by time (fine for reliability, say so).
 -3 aparc cache built on pial for most patients and on white for EL051 / EL052; 13 patients have no aparc rows (EL044, EL046, EL048, PAT_6953 …) — rebuild before any aparc-based statement.
 -3 The site's stage-02 numbers are on v8 (1680 / 27) until 240–242, 249, 252 and the figures are rerun on v10.
 - Runs on disk now mix cohorts (2026-09-24 01:49): k-means on concat_hg / rawds and Ward on all four feature sets are v10 (n = 1624); k-means on bands5 / bands5z and every convex NMF run are v9 (n = 1695). `make_cluster_statistics` will refuse until 240–242 are complete on v10; the statistics folders hold v6–v8 (n = 1688 / 1719 / 1680).
-- FIG 0 still draws the gate contours at the fixed +2.2 / −3.0 dB and `make_gate_examples.py` assumes 129 × 300 bins; both need the per-row thresholds of schema 3 before they are shown.
--3 Two "dominant" cut-offs exist (0.5 in `sweep_by_k.csv`, 0.8 in `mixture_summary`); the cNMF manifest field `held_out_variance_explained` holds the in-sample value; cNMF run ids are UTC, k-means / Ward local time.
+- FIG 0 and `make_gate_examples.py` — fixed 2026-09-24: contours and captions use each row's `thr_pos_used` / `thr_neg_used` when the cache has them (schema 3), the gate paragraph states the noise-scaled rule, the bin counts come from the cache (103 × 300 = 30 900, 2 % = 618); regenerate the figures on v10.
+- Cut-offs and labels — fixed 2026-09-24: `sweep_by_k.csv` counts "dominant" at ≥ 0.8 like `mixture_summary`; the cNMF manifest now writes `in_sample_variance_explained` (the old key kept for older readers); cNMF run ids are local time from now on.
+- Docstrings — fixed 2026-09-24: 240–242 headers say four feature sets; `make_heldout_variance` says all three methods fit in unit-norm; `make_cluster_statistics` / `make_cluster_figures` carry their own header above the copied BSF text; `lf_concat` says 103 × 900.
 -3 On 2026-09-22 a cache miss rebuilt `concat_source_v8` in place, so the original v8 cohort (1680) is no longer reproducible from disk — one reason the v8 figures must be regenerated rather than reused.
 -4 Which of 1695 / 1620 / ~1640 / 1719 you quote depends on the tree and the gate: v9 fixed gate 1695; v9 cubes with k = 2 1620; + PAT_3415 depth 24; − MicroEPI Unknowns; ± EL038 → read off the v10 build.

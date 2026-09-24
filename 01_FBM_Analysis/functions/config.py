@@ -284,8 +284,11 @@ wm_min_contacts = 3       # require at least this many clean WM contacts
 # ---------------------------
 # Baseline in seconds (relative to onset)
 baseline_w       = (-0.6, -0.1)
-# If None -> use baseline_w; otherwise compute baseline stats in this tighter window
-baseline_calc_w  = (-0.5, -0.1)
+# If None -> use baseline_w; otherwise compute baseline stats in this tighter window.
+# (-0.4, -0.1) is what every cube on disk was computed with: 140 never passed this value
+# and lf_ersp.ERSPParams defaults to (-0.4, -0.1); the config said (-0.5, -0.1) until
+# 2026-09-24. Set here to the applied value and passed explicitly since.
+baseline_calc_w  = (-0.4, -0.1)
 
 # Time-normalized proportions: (baseline, stim, post). Must sum to 1.
 proportions = (0.0, 0.50, 0.50)
@@ -307,7 +310,7 @@ smooth_passes = 1                       # <-- add this
 # ---------------------------
 nperseg    = 128
 nfft       = nperseg * 2
-noverlap   = int(0.85 * nperseg)  # ~75% (friendly default for Hann)
+noverlap   = int(0.85 * nperseg)  # 108 of 128 = 84 % overlap: a 20 ms hop at 1 kHz
 n_time_bins = 300                 # for TN
 fmax       = 400.0                # the cube's ceiling (2026-09-18, was 500 = the whole 1 kHz Nyquist range):
                                   # compute_ersp keeps the STFT bins <= fmax, 103 of 129, the last at 398.4 Hz;
@@ -582,6 +585,11 @@ PAT_PRESETS.update({f"PAT_{_k}": _v for _k, _v in list(PAT_PRESETS.items())
 # EL_PATIENTS = ["EL030","EL034","EL035","EL036","EL037","EL038","EL039","EL040","EL042","EL043","EL044","EL045"]
 EL_PATIENTS = ["EL033","EL034","EL036","EL039","EL040","EL041","EL043","EL044","EL045"]
 
+# NOTE on invalid_trials (both preset tables): in 140's --pd path they only colour the
+# photodiode figure red - parse_and_save writes every paired trial (include_invalid=True).
+# A practice trial stays out of the analysis only when the log scores it as not correct,
+# or when the prep0 table was built by a dedicated script (EL038, EL043, EL051, EL052).
+# fake_trials, by contrast, ARE removed from the detected pulses. (Documented 2026-09-24.)
 EL_PRESETS = {
     "EL030": dict(trig="DC6", flip=False, time_range=(280, 1600), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig="sub-EL030_task-LanguageMapping_timestamp-20-2-2024(13h57m48s)_lang-GER_events.tsv"),
     "EL033": dict(trig="DC6", flip=False, time_range=(280, 1782), invalid_trials=[0,1,2,54,55,56,107,108,109], trial_ids=["picture"]*53 + ["auditory"]*53 + ["reading"]*53, fake_trials=[], manual_trig=None) #"EL033_20240524_HUG_20250206_onsets_offsets_FBM_all_LM_.tsv"

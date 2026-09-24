@@ -31,7 +31,7 @@ Three feature sets, mirroring the per-condition tracks:
                             single biggest lever in the feature definition: raw against
                             z-scored changes the partition more (ARI 0.37) than changing
                             the algorithm does.
-    concat_raw    129 x 900 full-resolution ERSP, stitched (baseline; very high-dim)
+    concat_raw    103 x 900 full-resolution ERSP, stitched (baseline; very high-dim; 129 before 2026-09-18)
 
 Feed the flattened matrix to lf_cluster_run.fit_and_save(feature_set='concat_*').
 The orchestrator is representation-agnostic, so everything downstream (index.json

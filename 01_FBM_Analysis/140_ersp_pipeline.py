@@ -78,7 +78,8 @@ run_root_raw        = os.path.join(cfg.outputs_root, RAWONLY_SCRIPT_NAME)
 
 ersp_params = fe.ERSPParams(
     nperseg=cfg.nperseg, nfft=cfg.nfft, noverlap=cfg.noverlap,
-    baseline_w=cfg.baseline_w, proportions=cfg.proportions,
+    baseline_w=cfg.baseline_w, baseline_calc_w=cfg.baseline_calc_w,   # (-0.4, -0.1): the ERSPParams default every cube was made with; explicit since 2026-09-24
+    proportions=cfg.proportions,
     n_time_bins=cfg.n_time_bins, vmin=cfg.vmin, vmax=cfg.vmax, fmax=cfg.fmax
 )
 

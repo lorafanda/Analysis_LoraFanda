@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 """
+make_cluster_figures.py - FIG C.3a/b/c and FIG C.8a/b/c, one per algorithm, at the K and
+feature set given on the command line (249 passes the convex-NMF held-out peak K), on the
+newest runs. The text below is the docstring of make_bsf_figures.py (2026-08, K = 8 on
+2946 electrodes) it was copied from - the panel design is unchanged.
+
 make_bsf_figures.py - FIG C.3a/b/c and FIG C.8a/b/c, one per algorithm, all at K=8 on
 the identical 2946 electrodes.
 

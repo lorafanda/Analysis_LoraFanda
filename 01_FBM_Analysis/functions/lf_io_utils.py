@@ -80,7 +80,7 @@ def drop_aux_from_names(channel_names):
 # ---- WM reference: derive from BIDS electrodes TSV (no hardcoded lists) ----
 #
 # WM channels are read from `*_electrodes.tsv` per patient. Rule:
-#     tissueWeights_1 == 1.0  AND  first token of tissueLabel starts with "wm-"
+#     tissueWeights_1 > 0.97  AND  first token of tissueLabel starts with "wm-"
 #
 # Path patterns (UNC) per cohort:
 #     EL:        ...\DATARAW\SEEG_EXPERIMENTS_BERN\Reconstruction\<pid>\BIDS\ieeg\sub-<pid>_electrodes.tsv
@@ -121,7 +121,7 @@ def derive_wm_channels_from_electrodes_tsv(tsv_path_pattern: str) -> list[str]:
     """
     Read a BIDS electrodes TSV and return the names of channels flagged as WM.
 
-    Rule: `tissueWeights_1 == 1.0` and first token of `tissueLabel` starts with `wm-`.
+    Rule: `tissueWeights_1 > 0.97` and first token of `tissueLabel` starts with `wm-`.
     Accepts a literal path or a glob pattern; the first match is used.
     """
     matches = glob.glob(tsv_path_pattern)

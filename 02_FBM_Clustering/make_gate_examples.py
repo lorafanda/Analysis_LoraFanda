@@ -3,7 +3,9 @@
 make_gate_examples.py - what the responsiveness gate actually looks like at the line.
 
 THE GATE, exactly as prepare_dataset computes it. For each electrode-condition ERSP
-(129 frequencies x 300 time-normalised bins, 0-400 Hz, dB re pre-stimulus baseline):
+(103 frequencies x 300 time-normalised bins, 0-400 Hz, dB re pre-stimulus baseline; 129
+before 2026-09-18; since cache schema 3, 2026-09-23, the thresholds are per row:
+max(+2.2 dB, 2 x split-half noise) / min(-3.0 dB, -2 x noise), read from thr_pos_used):
 
     prop_above_pos = fraction of bins >  +2.2 dB
     prop_below_neg = fraction of bins <  -3.0 dB
@@ -105,11 +107,12 @@ def panel(ax, r, passed):
     f = np.linspace(0, FMAX, n_f)
     ax.pcolormesh(x, f, arr, cmap="bwr", vmin=VMIN, vmax=VMAX, shading="auto",
                   rasterized=True)
-    # the bins the criterion actually counts
-    ax.contour(x, f, (arr > THR_P).astype(float), levels=[0.5],
+    # the bins the criterion actually counts, at the thresholds the cache applied to this row
+    thr_p = float(r.get("thr_pos_used", THR_P)); thr_n = float(r.get("thr_neg_used", THR_N))
+    ax.contour(x, f, (arr > thr_p).astype(float), levels=[0.5],
                colors=["#111111"], linewidths=0.45)
     if r["prop_below_neg"] > 0:
-        ax.contour(x, f, (arr < THR_N).astype(float), levels=[0.5],
+        ax.contour(x, f, (arr < thr_n).astype(float), levels=[0.5],
                    colors=["#111111"], linewidths=0.45, linestyles="dotted")
     ax.axvline(50, color="#222222", lw=0.9, ls=(0, (4, 3)))
     ax.set_ylim(0, FMAX)
@@ -165,17 +168,24 @@ def main() -> int:
 
     fig.suptitle("What the responsiveness gate is actually deciding",
                  x=0.055, y=0.972, ha="left", fontsize=15, color=INK)
+    # the numbers from the cache this run read, not from the day the text was written
+    n_f, n_t = np.load(rows_in[0]["file_path"]).shape
+    need = round(MIN_P * n_f * n_t)
+    kept = d.groupby(["patient_id", "electrode"])["high_activity"].any()
+    n_all, n_pass = int(len(kept)), int(kept.sum())
+    scaled = "thr_pos_used" in d.columns and (d["thr_pos_used"] > THR_P).any()
     body = [
         "The gate counts BINS OVER A THRESHOLD in the whole 0-400 Hz cube, then keeps a "
         "contact if any one of its three conditions passes: at least 2% of bins above "
-        "+2.2 dB, OR at least 4% below -3.0 dB. Outlined regions are the bins being "
-        "counted - solid for positive, dotted for suppression.",
-        "1323 of 3002 contacts pass, 1679 do not. Every panel below shows that "
-        "contact's BEST condition, and all six sit within 0.3% of the line.",
-        "Read the bin counts, not the percentages. Each cube holds 129 x 300 = 38,700 "
-        "bins, so the 2% rule is a count: 774. EL033 aH_R5 has 774 and is kept; aH_R2, "
-        "the SAME SHANK IN THE SAME PATIENT, has 773 and is thrown away. One bin in "
-        "38,700 decides it, and nothing here measures whether either response repeats.",
+        "+2.2 dB, OR at least 4% below -3.0 dB"
+        + (" - since 2026-09-23 the bar rises to 2 x the row's split-half noise where that "
+           "is larger, so few-trial averages cannot pass on noise" if scaled else "")
+        + ". Outlined regions are the bins being counted - solid for positive, dotted for suppression.",
+        f"{n_pass} of {n_all} contacts pass, {n_all - n_pass} do not. Every panel below shows that "
+        "contact's BEST condition, and all six sit closest to the line.",
+        f"Read the bin counts, not the percentages. Each cube holds {n_f} x {n_t} = {n_f * n_t:,} "
+        f"bins, so the 2% rule is a count: {need}. The kept and the discarded examples differ by "
+        "a handful of bins, and nothing here measures whether either response repeats.",
     ]
     fig.text(0.055, 0.930, "\n".join(textwrap.fill(t, width=142) for t in body),
              fontsize=8.5, color=MUTED, va="top", linespacing=1.55)
