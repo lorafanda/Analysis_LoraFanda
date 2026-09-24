@@ -4,7 +4,7 @@
 "raw_id": "G-06",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-22 09:48",
+"run_start": "2026-09-24 00:36",
 "status": "ok",
 "reference": "WM reference, 38 contacts (selective: WM contacts stay as data)",
 "wm_n": 38,
@@ -59,30 +59,30 @@
 "in": "53",
 "kept": "41",
 "used": "41",
-"cubes": "178"
+"cubes": "175"
 },
 "picture": {
 "in": "54",
 "kept": "46",
 "used": "46",
-"cubes": "178"
+"cubes": "175"
 },
 "reading": {
 "in": "53",
 "kept": "28",
 "used": "28",
-"cubes": "178"
+"cubes": "175"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-6854_electrodes.tsv",
 "n_contacts": 216,
-"n_data": 178,
+"n_data": 175,
 "n_status": {
-"data": 178,
+"data": 175,
 "wm_ref": 0,
 "bad": 38,
-"unknown": 0,
+"unknown": 3,
 "not_recorded": 0,
 "not_run": 0,
 "aux": 0
@@ -93,7 +93,7 @@
 "raw_id": "G-04",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-22 13:46",
+"run_start": "2026-09-23 23:47",
 "status": "ok",
 "reference": "WM reference, 18 contacts (selective: WM contacts stay as data)",
 "wm_n": 18,
@@ -160,36 +160,36 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "540-1840 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "40",
+"unexplained_peaks": "41",
 "trials": {
 "audio": {
 "in": "53",
 "kept": "38",
 "used": "38",
-"cubes": "134"
+"cubes": "128"
 },
 "picture": {
 "in": "54",
 "kept": "51",
 "used": "51",
-"cubes": "134"
+"cubes": "128"
 },
 "reading": {
 "in": "53",
 "kept": "46",
 "used": "46",
-"cubes": "134"
+"cubes": "128"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-6704_electrodes.tsv",
 "n_contacts": 194,
-"n_data": 134,
+"n_data": 128,
 "n_status": {
-"data": 134,
+"data": 128,
 "wm_ref": 0,
 "bad": 55,
-"unknown": 1,
+"unknown": 7,
 "not_recorded": 4,
 "not_run": 0,
 "aux": 0
@@ -200,7 +200,7 @@
 "raw_id": "G-01",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-18 16:28",
+"run_start": "2026-09-23 21:47",
 "status": "ok",
 "reference": "WM reference, 20 contacts (selective: WM contacts stay as data)",
 "wm_n": 20,
@@ -213,36 +213,36 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "190-1614 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "16",
+"unexplained_peaks": "14",
 "trials": {
 "audio": {
 "in": "53",
 "kept": "44",
 "used": "44",
-"cubes": "148"
+"cubes": "143"
 },
 "picture": {
 "in": "54",
 "kept": "47",
 "used": "47",
-"cubes": "148"
+"cubes": "143"
 },
 "reading": {
 "in": "53",
 "kept": "45",
 "used": "45",
-"cubes": "148"
+"cubes": "143"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-5515_electrodes.tsv",
 "n_contacts": 158,
-"n_data": 148,
+"n_data": 143,
 "n_status": {
-"data": 148,
+"data": 143,
 "wm_ref": 0,
 "bad": 2,
-"unknown": 1,
+"unknown": 6,
 "not_recorded": 7,
 "not_run": 0,
 "aux": 0
@@ -253,7 +253,7 @@
 "raw_id": "G-02",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-18 16:54",
+"run_start": "2026-09-23 22:41",
 "status": "ok",
 "reference": "WM reference, 27 contacts (selective: WM contacts stay as data)",
 "wm_n": 27,
@@ -269,30 +269,30 @@
 "in": "53",
 "kept": "46",
 "used": "46",
-"cubes": "169"
+"cubes": "164"
 },
 "picture": {
 "in": "54",
 "kept": "44",
 "used": "44",
-"cubes": "169"
+"cubes": "164"
 },
 "reading": {
 "in": "53",
 "kept": "46",
 "used": "46",
-"cubes": "169"
+"cubes": "164"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-5533_electrodes.tsv",
 "n_contacts": 181,
-"n_data": 169,
+"n_data": 164,
 "n_status": {
-"data": 169,
+"data": 164,
 "wm_ref": 0,
 "bad": 0,
-"unknown": 0,
+"unknown": 5,
 "not_recorded": 12,
 "not_run": 0,
 "aux": 0
@@ -303,7 +303,7 @@
 "raw_id": "G-03",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-22 13:24",
+"run_start": "2026-09-23 23:20",
 "status": "ok",
 "reference": "WM reference, 17 contacts (selective: WM contacts stay as data)",
 "wm_n": 17,
@@ -321,30 +321,30 @@
 "in": "53",
 "kept": "20",
 "used": "20",
-"cubes": "143"
+"cubes": "133"
 },
 "picture": {
 "in": "54",
 "kept": "41",
 "used": "41",
-"cubes": "143"
+"cubes": "133"
 },
 "reading": {
 "in": "53",
 "kept": "44",
 "used": "44",
-"cubes": "143"
+"cubes": "133"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-6619_electrodes.tsv",
-"n_contacts": 160,
-"n_data": 143,
+"n_contacts": 157,
+"n_data": 133,
 "n_status": {
-"data": 143,
+"data": 133,
 "wm_ref": 0,
 "bad": 1,
-"unknown": 3,
+"unknown": 10,
 "not_recorded": 13,
 "not_run": 0,
 "aux": 0
@@ -727,7 +727,7 @@
 "raw_id": "EL038",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-22 13:04",
+"run_start": "2026-09-24 01:09",
 "status": "ok",
 "reference": "WM reference, 9 contacts (skipped as data)",
 "wm_n": 9,
@@ -746,9 +746,9 @@
 "unexplained_peaks": "3",
 "trials": {
 "audio": {
-"in": "39",
-"kept": "8",
-"used": "8",
+"in": "53",
+"kept": "11",
+"used": "11",
 "cubes": "66"
 },
 "picture": {
@@ -758,9 +758,9 @@
 "cubes": "66"
 },
 "reading": {
-"in": "51",
-"kept": "39",
-"used": "39",
+"in": "53",
+"kept": "41",
+"used": "41",
 "cubes": "66"
 }
 },
@@ -1850,6 +1850,37 @@
 "unknown": 5,
 "not_recorded": 0,
 "not_run": 0,
+"aux": 0
+}
+},
+{
+"patient": "PAT_1327",
+"raw_id": "PAT_1327",
+"system": "HUG",
+"ran": false,
+"run_start": "",
+"status": "not run",
+"reference": "",
+"wm_n": 0,
+"wm_source": "",
+"bad_n": 0,
+"bad_list": [],
+"notch": "",
+"crop": "",
+"conditions": "",
+"unexplained_peaks": "",
+"trials": {},
+"hg_reref": "WM",
+"anatomy_source": "sub-1327_electrodes.tsv",
+"n_contacts": 224,
+"n_data": 0,
+"n_status": {
+"data": 0,
+"wm_ref": 0,
+"bad": 0,
+"unknown": 0,
+"not_recorded": 0,
+"not_run": 224,
 "aux": 0
 }
 }

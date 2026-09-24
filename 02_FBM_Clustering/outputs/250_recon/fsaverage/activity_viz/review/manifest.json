@@ -1,9 +1,9 @@
 {
- "built": "2026-09-23 21:18",
+ "built": "2026-09-24 11:27",
  "source_tree": "S:/HumanNeuronLab/ANALYSIS/FLM/Analysis_LoraFanda/01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY",
- "n_patient": 31,
- "n_contact": 4736,
- "n_data": 3357,
+ "n_patient": 32,
+ "n_contact": 4957,
+ "n_data": 3328,
  "conditions": [
   "audio",
   "picture",
@@ -30,6 +30,9 @@
  "nan_byte": 0,
  "file": "each contact row's `file`",
  "hg_path": "{hg_root}/{patient}/LM/HG/{cond}/{patient}_{cond}_{hg_reref}_HGtrials_{name}.png",
+ "psd_path": "{hg_root}/{patient}/LM/PSD_clean/{cond}/PSD/psd_by_shaft.png (per-shaft patients) or psd_allch_full.png",
+ "iqr_path": "{hg_root}/{patient}/LM/Report/{patient}_{cond}_iqr_postDur_QC.png",
+ "trials": "trials/{patient}.json: every trial of the run's tables with the reason it was dropped (lf_trials.collect_trials, the run's settings)",
  "metrics": {
   "power": "mean |dB| over the cube",
   "hg": "mean dB, 70-150 Hz, stimulus half",
