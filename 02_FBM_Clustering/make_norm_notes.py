@@ -43,6 +43,7 @@ S = pd.read_csv(NORM / "normalisation_scorecard.csv").set_index("transform")
 J = json.loads((NORM / "normalisation_summary.json").read_text(encoding="utf-8"))
 RAW, UN, BZ, BZU = "raw dB", "unit-norm", "band-z  (concat_bands5z)", "band-z → unit-norm"
 RZ, SOFT = "row z (correlation distance)", "band-z → soft norm"
+RZ2 = "band-z → row z"
 TRAP1, TRAP2 = "per-bin column z  (trap)", "per-electrode per-band z  (trap)"
 P = J["pairs"]
 E = J["elevation"]
@@ -124,13 +125,18 @@ def block_s2():
           f"{1/S.loc[RAW,'bal']:.0f}&times; the smallest.",
           f"<b>Band-z alone does not fix it</b> ({a[2]}) &mdash; it moves the sort into the high bands. "
           "The per-electrode step is what removes it.",
-          f"<b>band-z &rarr; unit-norm</b> is the best of the eleven on the columns that matter: size "
-          f"{a[1]}, band tracking {S.loc[BZU,'vband']:.2f}, balance {S.loc[BZU,'bal']:.2f}, and "
-          f"<b>no cluster that is one patient</b> ({S.loc[BZU,'pat']:.0%} vs {S.loc[UN,'pat']:.0%} for "
-          f"plain unit-norm). It is the space the site's runs already use {cite('dm')}.",
-          f"<b>It costs reproducibility</b>: stability (ARI between 80% subsamples) "
+          f"<b>band-z &rarr; unit-norm</b> is the space the site's runs use {cite('dm')}, and it is the "
+          f"best of the eleven on the column that matters most &mdash; it tracks where the response is "
+          f"({S.loc[BZU,'vband']:.2f}, the highest band tracking in the table) without sorting by size "
+          f"({a[1]}). Balance {S.loc[BZU,'bal']:.2f}; "
+          + (f"<b>no cluster is one patient</b>" if S.loc[BZU, 'pat'] < 0.005 else
+             f"{S.loc[BZU,'pat']:.0%} of electrodes sit in a cluster one patient dominates")
+          + f" ({S.loc[UN,'pat']:.0%} for plain unit-norm).",
+          f"<b>What it costs</b>: stability (ARI between 80% subsamples) "
           f"{S.loc[UN,'stab']:.2f} for plain unit-norm, {S.loc[BZU,'stab']:.2f} once the bands are "
-          "equalised. That is the price of letting the weak high bands speak, and it belongs in the paper.",
+          "equalised, and the most balanced partition of all is band-z &rarr; row z "
+          f"({S.loc[RZ2,'bal']:.2f} against {S.loc[BZU,'bal']:.2f}). That is the price of letting the "
+          "weak high bands speak, and it belongs in the paper.",
           f"<b>The two traps behave as the literature predicts</b> {cite('mc','st')}: per-bin column z "
           f"inflates the silent bins (balance {S.loc[TRAP1,'bal']:.2f}), and z-scoring each band within "
           f"each electrode erases where in frequency the response is (band tracking "

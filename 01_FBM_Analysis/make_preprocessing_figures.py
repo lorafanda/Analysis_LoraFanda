@@ -7,15 +7,17 @@ from memory:
 
     functions/config.py            nperseg 128, nfft 256, noverlap 108,
                                    baseline_w (-0.6,-0.1), baseline_calc_w (-0.5,-0.1),
-                                   proportions (0, .5, .5), n_time_bins 300, fmax 500
+                                   proportions (0, .5, .5), n_time_bins 300, fmax 400
     functions/lf_ersp.py           _to_khz_resampled -> 1000 Hz, _spectro, compute_ersp
     functions/lf_trials.py         collect_trials filters
     140 cell 11                    the order: reref -> notch -> trials -> ERSP -> save
     02_.../functions/lf_dataset.py thr_pos 2.2 / min_prop_pos 0.02,
-                                   thr_neg -3.0 / min_prop_neg 0.04
+                                   thr_neg -3.0 / min_prop_neg 0.04,
+                                   noise_k 2.0 (2026-09-23: the thresholds follow
+                                   each cube's own split-half noise)
     02_.../functions/lf_concat.py  build_concat_dataset, concat_hg/rawds features
 
-Cohort numbers are the v4 rebuild of 2026-08-26 (27 patients).
+Cohort numbers are the v10 rebuild of 2026-09-24 (29 patients).
 Real cubes are used wherever a real cube can make the point.
 
     python make_preprocessing_figures.py
@@ -79,7 +81,7 @@ def p1():
             "electrode per condition; the last two happen in 02_FBM_Clustering and turn "
             "those cubes into the matrix the algorithms see.",
             "Everything below was read from the code that runs, and the cohort numbers "
-            "are the v4 rebuild of 2026-08-26."], y=0.975)
+            "are the v10 rebuild of 2026-09-24."], y=0.975)
 
     steps = [
         ("1  LOAD", "signals + channel\nnames + fs", BLUE),
@@ -88,7 +90,7 @@ def p1():
         ("4  NOTCH", "mains harmonics,\nonly where real", PURPLE),
         ("5  TRIALS", "prep0 TSV\n+ filters", ORANGE),
         ("6  ERSP", "spectrogram,\nbaseline, warp", RED),
-        ("7  SAVE", "cube 129×300\n+ odd/even halves", RED),
+        ("7  SAVE", "cube 103×300\n+ odd/even halves", RED),
         ("8  GATE", "high-activity\nin ≥1 condition", GREEN),
         ("9  FEATURES", "concat 3 conditions\n→ hg / rawds", GREEN),
     ]
@@ -105,15 +107,15 @@ def p1():
     ax.plot([12.9, 16.6], [3.05, 3.05], color=GREEN, lw=1.2)
     ax.text(12.9, 3.15, "02_FBM_Clustering", fontsize=9, color=GREEN)
 
-    ax.text(0.45, 2.55, "WHAT SURVIVES EACH NARROWING  (v4, 27 patients)",
+    ax.text(0.45, 2.55, "WHAT SURVIVES EACH NARROWING  (v10, 29 patients)",
             fontsize=10.4, color=INK)
-    rows = [("cubes written to ERSP_matrix", "9,774 files", MUTED),
-            ("rows in the dataset cache", "9,342", MUTED),
-            ("unique contacts", "3,296", INK),
-            ("…with all THREE conditions present", "2,959", INK),
-            ("…and high-activity in ≥1 condition", "1,693", GREEN),
-            ("dropped: missing a condition", "149", MUTED),
-            ("dropped: no high-activity condition", "1,266", MUTED),
+    rows = [("cubes written to ERSP_matrix", "9,444 files", MUTED),
+            ("rows in the dataset cache", "9,345", MUTED),
+            ("unique contacts", "3,107", INK),
+            ("…with all THREE conditions present", "2,961", INK),
+            ("…and high-activity in ≥1 condition", "1,624", GREEN),
+            ("dropped: missing a condition", "146", MUTED),
+            ("dropped: no high-activity condition", "1,337", MUTED),
             ("dropped: subdural grid (PAT_3415)", "192", MUTED),
             ("dropped: excluded patient EL044", "124 rows", MUTED)]
     for i, (k, v, c) in enumerate(rows):
@@ -121,8 +123,8 @@ def p1():
         ax.text(0.55, yy, k, fontsize=8.6, color=c)
         ax.text(5.1, yy, v, fontsize=8.6, color=c, ha="right", **MONO)
 
-    ax.text(6.1, 2.20, "The gate is the big one: it removes 1,266 of 2,959 electrodes, "
-            "43%.", fontsize=9.2, color=INK)
+    ax.text(6.1, 2.20, "The gate is the big one: it removes 1,337 of 2,961 electrodes, "
+            "45%.", fontsize=9.2, color=INK)
     ax.text(6.1, 1.94, "Of the 1,693 that survive, high-activity holds in\n"
                        "1 condition for 828,  2 for 465,  3 for 400.",
             fontsize=9, color=MUTED, va="top", linespacing=1.5)
@@ -239,7 +241,8 @@ def p3():
             "signal is first resampled to 1000 Hz (_to_khz_resampled) so every patient "
             "lands on the same frequency grid regardless of their recording rate.",
             "Spectrogram: Hann window, nperseg 128, noverlap 108, nfft 256. That gives "
-            "129 frequency bins from 0 to 500 Hz and a new time bin every 20 ms. The "
+            "103 frequency bins from 0 to 400 Hz - the STFT reaches 500 Hz in 129 bins and "
+            "everything above fmax is dropped in _spectro - and a new time bin every 20 ms. The "
             "power is turned into dB with 10·log10.",
             "dB is then taken RELATIVE TO BASELINE: the mean over −0.5 to −0.1 s before "
             "onset is subtracted from every time bin, per frequency. So 0 dB means "
@@ -268,7 +271,7 @@ def p3():
              extent=[tt[0] - 0.6, tt[-1] - 0.6, f[0], f[-1]])
     b.set_ylim(0, 200); b.set_xlabel("time (s)", fontsize=8.4)
     b.set_ylabel("Hz", fontsize=8.4)
-    b.set_title("B · spectrogram, raw dB\n129 bins 0–500 Hz, one every 20 ms",
+    b.set_title("B · spectrogram, raw dB\n103 bins 0–400 Hz, one every 20 ms",
                 fontsize=9.4, loc="left", color=INK)
     b.tick_params(labelsize=7.4, colors=MUTED)
 
@@ -285,17 +288,17 @@ def p3():
 
     d = fig.add_subplot(gs[3])
     im = d.imshow(A, aspect="auto", origin="lower", cmap="bwr", vmin=-6, vmax=6,
-                  extent=[0, 300, 0, 500])
+                  extent=[0, 300, 0, 400])
     d.axvline(150, color=INK, lw=1.4)
-    d.text(75, 470, "stimulus", ha="center", fontsize=8, color=INK)
-    d.text(225, 470, "post", ha="center", fontsize=8, color=INK)
+    d.text(75, 376, "stimulus", ha="center", fontsize=8, color=INK)
+    d.text(225, 376, "post", ha="center", fontsize=8, color=INK)
     d.set_xlabel("time bin (0–299)", fontsize=8.4); d.set_ylabel("Hz", fontsize=8.4)
     d.set_title("D · averaged over trials, time-normalised\nA REAL cube: EL033 aH_L11, audio",
                 fontsize=9.4, loc="left", color=GREEN)
     d.tick_params(labelsize=7.4, colors=MUTED)
     fig.colorbar(im, ax=d, fraction=0.04, pad=0.02, label="dB re baseline")
 
-    fig.text(0.05, 0.075, "The saved cube is D: 129 frequencies × 300 time bins, one file "
+    fig.text(0.05, 0.075, "The saved cube is D: 103 frequencies × 300 time bins, one file "
              "per electrode per condition. NaNs left by the warp are filled from nearest "
              "neighbours (fill_nans_nearest) — the halves are NOT filled, because "
              "imputing the same bins in both halves would inflate their correlation.",
@@ -405,9 +408,9 @@ def p5():
 
     b = fig.add_subplot(gs[1])
     im = b.imshow(A, aspect="auto", origin="lower", cmap="bwr", vmin=-6, vmax=6,
-                  extent=[0, 300, 0, 500])
+                  extent=[0, 300, 0, 400])
     hot = A > 2.2
-    b.contour(np.linspace(0, 300, A.shape[1]), np.linspace(0, 500, A.shape[0]),
+    b.contour(np.linspace(0, 300, A.shape[1]), np.linspace(0, 400, A.shape[0]),
               hot.astype(float), levels=[0.5], colors="k", linewidths=0.6)
     b.set_title(f"STEP 8 — the gate, on a real cube\nblack outline: the "
                 f"{100*hot.mean():.1f}% of bins above +2.2 dB",
@@ -419,17 +422,20 @@ def p5():
     c = fig.add_subplot(gs[2]); c.axis("off")
     c.text(0, 1.0, "STEP 8 — the high-activity rule", fontsize=10.4, color=GREEN,
            transform=c.transAxes)
-    c.text(0.02, 0.86, "prop_above_pos ≥ 0.02      (fraction of the 129×300 plane\n"
-                       "                             above +2.2 dB)",
+    c.text(0.02, 0.86, "prop_above_pos ≥ 0.02      (fraction of the 103×300 plane\n"
+                       "                             above max(+2.2 dB, 2 × noise))",
            fontsize=8.5, color=INK, transform=c.transAxes, va="top", **MONO)
     c.text(0.02, 0.62, "        OR", fontsize=8.5, color=RED, transform=c.transAxes, **MONO)
-    c.text(0.02, 0.54, "prop_below_neg ≥ 0.04      (below −3.0 dB)",
+    c.text(0.02, 0.54, "prop_below_neg ≥ 0.04      (below min(−3.0 dB, −2 × noise))",
            fontsize=8.5, color=INK, transform=c.transAxes, va="top", **MONO)
-    c.text(0, 0.34, "computed over the FULL 0–500 Hz cube, per condition. An electrode "
-           "is kept if it holds in AT LEAST ONE of the three conditions — 2% of 38,700 "
-           "bins is 774 bins.",
+    c.text(0, 0.34, "computed over the FULL 0–400 Hz cube, per condition. An electrode is kept\n"
+           "if it holds in AT LEAST ONE of the three conditions — 2% of 30,900 bins is 618.\n\n"
+           "Since 2026-09-23 the threshold is the LARGER of +2.2 dB and twice the cube's own\n"
+           "split-half noise, sd(half1−half2)/2. That noise is ~2.1 dB at 8 trials and ~0.9 at\n"
+           "45, so a fixed cut let the low-trial patients gate on their own noise. It was\n"
+           "raised for 1,198 of 9,345 electrode-conditions.",
            fontsize=8.4, color=MUTED, transform=c.transAxes, va="top")
-    c.text(0, 0.10, "v4: 1,693 of 2,959 pass.  828 on one condition, 465 on two, 400 on "
+    c.text(0, 0.10, "v10: 1,624 of 2,961 pass.  782 on one condition, 438 on two, 404 on "
            "all three.", fontsize=8.6, color=GREEN, transform=c.transAxes, va="top")
 
     fig.text(0.05, 0.365, "THE THING TO KNOW ABOUT THIS GATE", fontsize=11, color=RED)
@@ -438,12 +444,12 @@ def p5():
              "reproducible ones — and amplitude depends on how many trials went into the "
              "average. Fewer trials means a noisier mean, more bins past the threshold, "
              "and a better chance of passing.\n"
-             "That is visible in v4: EL033 and PAT_3965 lost about 30% of their trials to "
+             "That is visible in the cohort: EL033 and PAT_3965 lost about 30% of their trials to "
              "the fixation-cross correction and both moved UP in gated count. The split-"
              "half cubes in ERSP_halves exist to replace this with a reproducibility test, "
              "which does not have that property.\n"
              "The gate is also the single largest narrowing in the whole pipeline: it "
-             "removes 1,266 of 2,959 electrodes, 43% of everything that reaches it.",
+             "removes 1,337 of 2,961 electrodes, 45% of everything that reaches it.",
              fontsize=8.9, color=MUTED, va="top", linespacing=1.65)
     p = OUT / "P5_trial_and_electrode_selection.png"
     fig.savefig(p, dpi=170, bbox_inches="tight", facecolor="white"); plt.close(fig)
@@ -458,7 +464,7 @@ def p6():
                           top=0.66, bottom=0.07)
     header(fig, "Step 9 · From three cubes to the matrix the algorithms see",
            ["Each surviving electrode has three cubes — audio, picture, reading. They "
-            "are laid side by side along TIME into one 129 × 900 block, so the frequency "
+            "are laid side by side along TIME into one 103 × 900 block, so the frequency "
             "axis is untouched and a single electrode is one row.",
             "That block is then reduced two different ways. Both are built from the same "
             "electrodes, so anything that differs between them is the representation and "
@@ -468,8 +474,8 @@ def p6():
                                      ("reading", GREEN)]):
         ax = fig.add_subplot(gs[0, i])
         ax.imshow(A, aspect="auto", origin="lower", cmap="bwr", vmin=-6, vmax=6,
-                  extent=[0, 300, 0, 500])
-        ax.set_title(f"{cond}   129 × 300", fontsize=9.2, loc="left", color=col)
+                  extent=[0, 300, 0, 400])
+        ax.set_title(f"{cond}   103 × 300", fontsize=9.2, loc="left", color=col)
         ax.set_xticks([])
         if i:                                  # keep the Hz scale on the first panel only
             ax.set_yticks([])
@@ -478,7 +484,7 @@ def p6():
 
     ax = fig.add_subplot(gs[1, :])
     ax.axis("off")
-    ax.text(0, 1.02, "concatenated:  129 × 900", fontsize=10, color=INK,
+    ax.text(0, 1.02, "concatenated:  103 × 900", fontsize=10, color=INK,
             transform=ax.transAxes)
     ax.add_patch(Rectangle((0.005, 0.62), 0.36, 0.30, transform=ax.transAxes,
                            fc="#eef1f4", ec=INK, lw=1.4))
@@ -504,7 +510,7 @@ def p6():
             "the one stage-04 pooling uses.",
             fontsize=8.6, color=MUTED, transform=ax.transAxes, va="top", linespacing=1.5)
 
-    ax.text(0, 0.30, "v4 cohort: 1,693 electrodes × 27 patients  →  concat_hg (1693, 900) "
+    ax.text(0, 0.30, "v10 cohort: 1,624 electrodes × 29 patients  →  concat_hg (1624, 900) "
             "and concat_rawds (1693, 1350)", fontsize=9.4, color=GREEN,
             transform=ax.transAxes)
     ax.text(0, 0.16, "These two matrices are what 240 / 241 / 242 read. Nothing after "

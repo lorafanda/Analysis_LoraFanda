@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 import warnings
@@ -49,10 +50,35 @@ sys.path.insert(0, str(ROOT / "functions"))
 
 CLUST = ROOT / "outputs" / "clustering"
 OUT = CLUST / "normalisation"
-# The v8 runs the site publishes. X_train.npy is raw dB in both; the run's own fit space
-# is recorded in its manifest and is irrelevant here - we re-fit every space ourselves.
-RUN_B5 = CLUST / "kmeans" / "concat_bands5" / "runs" / "20260915_004248"
-RUN_HG = CLUST / "kmeans" / "concat_hg" / "runs" / "20260915_004134"
+# The NEWEST k-means run of each feature set, not a pinned one: these figures describe the
+# cohort, so pinning them to v8 (as they were until 2026-09-24) left them describing a
+# cohort the site no longer publishes. X_train.npy is raw dB whatever space the run was
+# fitted in - the run's manifest records that, and it is irrelevant here, because every
+# space below is re-derived from the raw dB matrix.
+import lf_runs as LR  # noqa: E402
+
+RUN_B5 = LR.newest_run("kmeans", "concat_bands5")
+RUN_HG = LR.newest_run("kmeans", "concat_hg")
+
+
+def cohort_label() -> str:
+    """v<N> of the cache the newest run was fitted on, for the figure titles."""
+    import json
+    try:
+        p = json.loads((RUN_B5 / "manifest.json").read_text(encoding="utf-8"))
+        n = (p.get("params") or {}).get("cache") or ""
+        m = re.search(r"concat_source_(v\d+)", str(n))
+        if m:
+            return m.group(1)
+    except Exception:
+        pass
+    d = ROOT / "outputs" / "_dataset"
+    vs = [int(x.name.rsplit("v", 1)[1]) for x in d.glob("concat_source_v*")
+          if x.is_dir() and x.name.rsplit("v", 1)[1].isdigit()]
+    return f"v{max(vs)}" if vs else "v?"
+
+COHORT = cohort_label()          # v<N> of the cache behind the newest run
+N_ELEC = 0                       # filled in main(), so a caption cannot claim a stale count
 
 INK, MUTED, RED, GREEN, BLUE = "#1b232c", "#68727d", "#c1121f", "#1b7837", "#2471a3"
 ACC = "#b5651d"
@@ -69,6 +95,7 @@ def wrap(text: str, width: int = WRAP) -> str:
     """Hard-wrap a caption. matplotlib will not wrap a suptitle, and bbox_inches='tight'
     then widens the whole canvas to fit one long line."""
     import textwrap as _tw
+    text = text.replace("{COHORT}", COHORT).replace("{N}", f"{N_ELEC}")
     nl = chr(10)
     return nl.join(nl.join(_tw.wrap(par, width)) if par.strip() else ""
                    for par in text.split(nl))
@@ -233,7 +260,8 @@ def fig_n1(X, r, elev, bands, NB, NC, NT, out):
     ax.set_title("D · amplitude is real but not\nthe main thing", loc="left")
 
     fig.suptitle(wrap(
-        "FIG N.1 · what the numbers in a concatenated cube are made of — concat_bands5, v8, 1680 electrodes × 450 features (raw dB)"),
+        "FIG N.1 · what the numbers in a concatenated cube are made of — concat_bands5, {COHORT}, "
+        f"{X.shape[0]} electrodes × {X.shape[1]} features (raw dB)"),
         fontsize=10, x=0.055, ha="left", y=0.975)
     fig.savefig(out / "N1_what_the_numbers_are.png", dpi=180, bbox_inches="tight")
     plt.close(fig)
@@ -279,7 +307,7 @@ def fig_n2(score, out):
     ax.set_yticks(np.arange(-0.5, len(rows), 1), minor=True)
     ax.grid(which="minor", color="white", lw=1.4)
     ax.tick_params(which="minor", length=0)
-    ax.set_title("FIG N.2 · the normalisation scorecard — k-means K=8 on the same 1680 electrodes, concat_bands5 (v8)\n"
+    ax.set_title(wrap("FIG N.2 · the normalisation scorecard — k-means K=8 on the same {N} electrodes, concat_bands5 ({COHORT})") + "\n"
                  "Green = the behaviour we want, column by column: columns 1, 2, 6 and 8 LOW (the partition is not a sort by "
                  "size or by level, and no cluster is one patient),\ncolumns 3, 4, 5 and 7 HIGH (it tracks where the response "
                  "is, it is balanced, it reproduces). Green box = the space the site's runs already use.\n"
@@ -413,7 +441,7 @@ def fig_n4(X, Xn, out, ks=(5, 8, 12, 20, 30, 50, 80, 120, 200, 300),
     ax.set_title("C · the increment they read as an elbow:\nno optimum, only a decay", loc="left")
 
     fig.suptitle(wrap(
-        "FIG N.4 · why 'variance explained vs K' cannot choose K for k-means or Ward — concat_bands5, v8\n"
+        "FIG N.4 · why 'variance explained vs K' cannot choose K for k-means or Ward — concat_bands5, {COHORT}\n"
                  "A held-out row is reconstructed by ONE centroid, so an extra cluster almost never hurts; convex NMF's k graded "
                  "loadings overfit sooner, which is why only its curve has an interior peak (Owen & Perry 2009)."),
         fontsize=10, x=0.06, ha="left", y=0.99)
@@ -475,7 +503,7 @@ def fig_n5(X, Xn, r, nm, lab_db, lab_un, bands, NB, NC, NT, out):
         ax.set_xticklabels(bands, fontsize=7)
         ax.set_xlabel("5 bands × (audio | picture | reading) × 30 time bins", fontsize=7.5)
     fig.suptitle(wrap(
-        "FIG N.5 · the same electrode pairs before and after — concat_bands5, v8; cluster labels from k-means K=8 fitted in each space\n"
+        "FIG N.5 · the same electrode pairs before and after — concat_bands5, {COHORT}; cluster labels from k-means K=8 fitted in each space\n"
                  f"A: {nA} pairs in the cohort have cos ≥ 0.8 with ≥ 2× size difference — raw dB splits {nA_split} of them, "
                  f"the normalised space {nA_split_u}.   "
                  f"B: {nB:,} pairs have opposite shape at the same size — raw dB puts {nB_join:,} in one cluster, "
@@ -532,7 +560,7 @@ def fig_n6(X, Xn, elev, r, pat, bands, NB, NC, NT, out):
                  f"(elevation η² {eta2(lab_u, elev):.2f} → {eta2(lab_z, elev):.2f})", loc="left")
 
     fig.suptitle(wrap(
-        "FIG N.6 · the decision unit-norm does not make for you — concat_bands5, v8, k-means K=8\n"
+        "FIG N.6 · the decision unit-norm does not make for you — concat_bands5, {COHORT}, k-means K=8\n"
                  "Unit-norm removes size but keeps a constant offset: a vector that is negative everywhere keeps that as its direction. "
                  "Broadband high-frequency suppression is a documented response (Ossandón et al. 2011; Ramot et al. 2012), so this "
                  "group is only an artefact if the suppression is a baseline problem — check the single trials before choosing "
@@ -556,6 +584,7 @@ def main() -> int:
     n, p = X.shape
     NB, NC, NT = len(bands), len(conds), 30
     assert p == NB * NC * NT, (p, NB, NC, NT)
+    globals()["N_ELEC"] = n
     pat = D.patient_id.astype(str).to_numpy()
     nm = (D.patient_id.astype(str) + " " + D.electrode.astype(str)).to_numpy()
     r = np.linalg.norm(X, axis=1)
@@ -609,7 +638,7 @@ def main() -> int:
     if not a.quick:
         fig_n4(X, Xn, OUT)
 
-    summary = dict(cohort="v8", run=str(RUN_B5.relative_to(CLUST)), n=n, p=p,
+    summary = dict(cohort=COHORT, run=str(RUN_B5.relative_to(CLUST)), n=n, p=p,
                    bands=bands, conditions=conds, K=K_MAIN,
                    norm_p05=float(np.percentile(r, 5)), norm_med=float(np.median(r)),
                    norm_p95=float(np.percentile(r, 95)),
