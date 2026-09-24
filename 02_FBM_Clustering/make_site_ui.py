@@ -58,14 +58,14 @@ ANSWERS = {
               "<code>02_FBM_Clustering/paper2_outline.md</code> and re-run <code>make_outline_tab.py --insert</code>.</p>"),
         status="built 2026-09-24 for the lab presentation; numbers from the v9 cache and the 2026-09-24 audit"),
     "s1": dict(
-        one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched, trial-filtered; halves beside; 31 of 31 patients ok (run 2026-09-18, reruns 09-21 / 22)",
+        one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched, trial-filtered; halves beside; 31 of 31 patients ok (rebuilt 09-18 → 09-24, all at fmax 400)",
         html=("<ul>"
               "<li><b>product</b>: cube 103 freq × 300 warped bins, dB re baseline (−0.4, −0.1 s), GO at bin 150 · odd / even halves beside every cube</li>"
               "<li><b>chain</b>: load → channels out (aux, Unknown, bad) → WM reference (grid / whole CAR where no WM) → notch per block (z ≥ 3; iir or spectrum interpolation) → trials (accuracy, stimulus ≥ 0.5 s, post 1–10 s, IQR 1.5) → STFT 1 kHz, bins ≤ 400 Hz → warp → mean</li>"
-              "<li><b>run</b>: 2026-09-18, <code>140_ersp_pipeline.py</code> per patient, 31 patients, fmax 400 Hz (was 500) · audit table + review mode per contact</li>"
+              "<li><b>run</b>: <code>140_ersp_pipeline.py</code> per patient, 31 patients, fmax 400 Hz (was 500), in five waves — 16 on 09-18, PAT_6953 09-21, eight 09-22, four 09-23, EL038 and PAT_6854 09-24 · audit table + review mode per contact</li>"
               "<li><b>done since</b>: EL043 on its two recordings joined (3 conditions), G-04 / G-06 with the reference without bad contacts, PAT_6953; no stale cube in the tree · <b>open</b>: 137 contacts without anatomy link (alias decision), QC pass in review mode</li>"
               "</ul>"),
-        status="04_ersp_LM_RAWONLY = 2026-09-18 run (fmax 400) + reruns EL043 / PAT_6704 / PAT_6854 (09-22), PAT_6953 (09-21) · 31 / 31 ok · previous tree = _old"),
+        status="04_ersp_LM_RAWONLY = the fmax-400 rebuild, 09-18 to 09-24 · 31 / 31 ok · audit re-read 2026-09-24 03:03 · previous tree = _old"),
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
         html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1624 electrodes, K = 5…30. "

@@ -13,7 +13,9 @@ A figure is judged against what it DEPENDS on, not against the calendar:
   cohort   drawn from the concat cache or a clustering run
            -> stale if older than the newest concat_source_v<N>
   ersp     drawn from the 140 cubes
-           -> stale if older than the newest cube in 04_ersp_LM_RAWONLY
+           -> stale if older than the newest cube in 04_ersp_LM_RAWONLY, except the s1
+              examples, which are one patient's figures and are judged against that
+              patient's own run (see the comment in main)
   method   a documentation drawing of the pipeline
            -> never "stale" by date; stale only when the method itself changed, which a
               human has to decide (the 0-500 -> 0-400 Hz axis is the current example)
@@ -65,10 +67,35 @@ def main() -> int:
                    key=lambda p: int(p.name.rsplit("v", 1)[1]) if p.name.rsplit("v", 1)[1].isdigit() else -1)
     V = cache[-1].joinpath("params.json").stat().st_mtime
     cubes = ROOT / "01_FBM_Analysis" / "outputs" / "04_ersp_LM_RAWONLY"
-    E = max((max((f.stat().st_mtime for f in (p / "LM" / "ERSP_matrix").rglob("*.npy")), default=0)
-             for p in cubes.iterdir() if p.is_dir()), default=0)
+    per_patient = {p.name: max((f.stat().st_mtime for f in (p / "LM" / "ERSP_matrix").rglob("*.npy")),
+                               default=0.0)
+                   for p in cubes.iterdir() if p.is_dir()}
+    E = max(per_patient.values(), default=0.0)
+
+    # THE s1 EXAMPLES ARE ONE PATIENT'S FIGURES, and are judged against THAT PATIENT'S RUN.
+    # Two reasons the tree maximum is the wrong bar for them. 140 is re-run patient by
+    # patient - 31 patients over five days for the fmax-400 rebuild - so against the newest
+    # cube anywhere, an example reads as stale the moment any OTHER patient is re-run. And
+    # within one run 140 writes its QC figures BEFORE its cubes, so the figure is ~20 min
+    # older than the last cube of the very run that produced it, and would never be current.
+    # audit_140.tsv carries when each patient's run started, which is the honest bar: same
+    # run, current. make_s1_tab.py owns the choice of patient, so it is read from there.
+    ex = re.search(r'^EX = "([^"]+)"', (ROOT / "01_FBM_Analysis" / "make_s1_tab.py")
+                   .read_text(encoding="utf-8", errors="replace"), re.M)
+    EX = ex.group(1) if ex else None
+    E_S1 = per_patient.get(EX, E)
+    audit = ROOT / "01_FBM_Analysis" / "outputs" / "04_ersp_LM" / "audit_140.tsv"
+    if EX and audit.exists():
+        t = pd.read_csv(audit, sep="\t").set_index("patient").run_start.to_dict().get(EX)
+        if isinstance(t, str):
+            E_S1 = dt.datetime.strptime(t, "%Y-%m-%d %H:%M").timestamp()
+
     print(f"cohort  {cache[-1].name}  built {dt.datetime.fromtimestamp(V):%Y-%m-%d %H:%M}")
-    print(f"cubes   newest in 04_ersp_LM_RAWONLY  {dt.datetime.fromtimestamp(E):%Y-%m-%d %H:%M}\n")
+    print(f"cubes   newest in 04_ersp_LM_RAWONLY  {dt.datetime.fromtimestamp(E):%Y-%m-%d %H:%M}")
+    if EX:
+        print(f"s1      example patient {EX}, its run started "
+              f"{dt.datetime.fromtimestamp(E_S1):%Y-%m-%d %H:%M}")
+    print()
 
     s = SITE.read_text(encoding="utf-8", errors="replace")
     rows = []
@@ -92,7 +119,8 @@ def main() -> int:
             elif dep == "cohort":
                 v = "3 current" if t >= V else "1 STALE - cohort"
             elif dep == "ersp":
-                v = "3 current" if t >= E else "2 STALE - cubes"
+                bar = E_S1 if "_status_png/s1_" in relp else E
+                v = "3 current" if t >= bar else "2 STALE - cubes"
             else:
                 v = "4 method drawing"
             rows.append(dict(fig=num, title=title, section=txt(None) if not sec else
