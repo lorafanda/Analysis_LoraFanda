@@ -4,7 +4,7 @@
 "raw_id": "G-06",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-24 00:36",
+"run_start": "2026-09-24 11:38",
 "status": "ok",
 "reference": "WM reference, 38 contacts (selective: WM contacts stay as data)",
 "wm_n": 38,
@@ -63,8 +63,8 @@
 },
 "picture": {
 "in": "54",
-"kept": "46",
-"used": "46",
+"kept": "47",
+"used": "47",
 "cubes": "175"
 },
 "reading": {
@@ -93,7 +93,7 @@
 "raw_id": "G-04",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-23 23:47",
+"run_start": "2026-09-24 12:12",
 "status": "ok",
 "reference": "WM reference, 18 contacts (selective: WM contacts stay as data)",
 "wm_n": 18,
@@ -164,8 +164,8 @@
 "trials": {
 "audio": {
 "in": "53",
-"kept": "38",
-"used": "38",
+"kept": "46",
+"used": "46",
 "cubes": "128"
 },
 "picture": {
@@ -200,7 +200,7 @@
 "raw_id": "G-01",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-23 21:47",
+"run_start": "2026-09-24 12:45",
 "status": "ok",
 "reference": "WM reference, 20 contacts (selective: WM contacts stay as data)",
 "wm_n": 20,
@@ -217,8 +217,8 @@
 "trials": {
 "audio": {
 "in": "53",
-"kept": "44",
-"used": "44",
+"kept": "49",
+"used": "49",
 "cubes": "143"
 },
 "picture": {
@@ -229,8 +229,8 @@
 },
 "reading": {
 "in": "53",
-"kept": "45",
-"used": "45",
+"kept": "48",
+"used": "48",
 "cubes": "143"
 }
 },
@@ -253,7 +253,7 @@
 "raw_id": "G-02",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-23 22:41",
+"run_start": "2026-09-24 13:10",
 "status": "ok",
 "reference": "WM reference, 27 contacts (selective: WM contacts stay as data)",
 "wm_n": 27,
@@ -303,7 +303,7 @@
 "raw_id": "G-03",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-23 23:20",
+"run_start": "2026-09-24 13:37",
 "status": "ok",
 "reference": "WM reference, 17 contacts (selective: WM contacts stay as data)",
 "wm_n": 17,
@@ -319,20 +319,20 @@
 "trials": {
 "audio": {
 "in": "53",
-"kept": "20",
-"used": "20",
+"kept": "36",
+"used": "36",
 "cubes": "133"
 },
 "picture": {
 "in": "54",
-"kept": "41",
-"used": "41",
+"kept": "42",
+"used": "42",
 "cubes": "133"
 },
 "reading": {
 "in": "53",
-"kept": "44",
-"used": "44",
+"kept": "46",
+"used": "46",
 "cubes": "133"
 }
 },
@@ -355,7 +355,7 @@
 "raw_id": "EL030",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-18 17:45",
+"run_start": "2026-09-24 13:58",
 "status": "ok",
 "reference": "WM reference, 5 contacts (skipped as data)",
 "wm_n": 5,
@@ -364,10 +364,10 @@
 "bad_list": [
 "EntG_R18"
 ],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "280-1600 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "3",
+"unexplained_peaks": "20",
 "trials": {
 "audio": {
 "in": "53",
@@ -1007,7 +1007,7 @@
 "raw_id": "EL045",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-22 13:14",
+"run_start": "2026-09-24 11:39",
 "status": "ok",
 "reference": "WM reference, 5 contacts (skipped as data)",
 "wm_n": 5,
@@ -1017,12 +1017,12 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "176-1468 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "39",
+"unexplained_peaks": "41",
 "trials": {
 "audio": {
 "in": "53",
-"kept": "30",
-"used": "30",
+"kept": "44",
+"used": "44",
 "cubes": "91"
 },
 "picture": {
@@ -1033,8 +1033,8 @@
 },
 "reading": {
 "in": "53",
-"kept": "43",
-"used": "43",
+"kept": "45",
+"used": "45",
 "cubes": "91"
 }
 },
@@ -1110,7 +1110,7 @@
 "raw_id": "EL048",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-18 20:14",
+"run_start": "2026-09-24 11:53",
 "status": "ok",
 "reference": "WM reference, 11 contacts (skipped as data)",
 "wm_n": 11,
@@ -1135,8 +1135,8 @@
 "trials": {
 "audio": {
 "in": "53",
-"kept": "38",
-"used": "38",
+"kept": "39",
+"used": "39",
 "cubes": "59"
 },
 "picture": {
@@ -1171,7 +1171,7 @@
 "raw_id": "EL051",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-18 20:29",
+"run_start": "2026-09-24 12:08",
 "status": "ok",
 "reference": "WM reference, 9 contacts (skipped as data)",
 "wm_n": 9,
@@ -1208,10 +1208,10 @@
 "pSTG_8",
 "pSTG_9"
 ],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "none",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "8",
+"unexplained_peaks": "86",
 "trials": {
 "audio": {
 "in": "53",
@@ -1221,8 +1221,8 @@
 },
 "picture": {
 "in": "54",
-"kept": "46",
-"used": "46",
+"kept": "47",
+"used": "47",
 "cubes": "85"
 },
 "reading": {
@@ -1251,7 +1251,7 @@
 "raw_id": "EL052",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-18 20:43",
+"run_start": "2026-09-24 12:22",
 "status": "ok",
 "reference": "whole-recording CAR: mean of 104 ch, 24 bad left out",
 "wm_n": 0,
@@ -1285,15 +1285,15 @@
 "aH_L9",
 "aH_R1"
 ],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "0-1640 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "2",
+"unexplained_peaks": "26",
 "trials": {
 "audio": {
 "in": "53",
-"kept": "40",
-"used": "40",
+"kept": "42",
+"used": "42",
 "cubes": "104"
 },
 "picture": {
@@ -1328,17 +1328,17 @@
 "raw_id": "PAT_3455",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-18 20:58",
+"run_start": "2026-09-24 12:38",
 "status": "ok",
 "reference": "WM reference, 21 contacts (skipped as data)",
 "wm_n": 21,
 "wm_source": "BIDS TSV",
 "bad_n": 0,
 "bad_list": [],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "250-1836 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "5",
+"unexplained_peaks": "25",
 "trials": {
 "audio": {
 "in": "48",
@@ -1378,7 +1378,7 @@
 "raw_id": "PAT_2868",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-18 21:16",
+"run_start": "2026-09-24 12:57",
 "status": "ok",
 "reference": "WM reference, 23 contacts (skipped as data)",
 "wm_n": 23,
@@ -1387,21 +1387,21 @@
 "bad_list": [
 "IDM3"
 ],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "140-1500 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "1",
+"unexplained_peaks": "35",
 "trials": {
 "audio": {
 "in": "53",
-"kept": "38",
-"used": "38",
+"kept": "40",
+"used": "40",
 "cubes": "39"
 },
 "picture": {
 "in": "54",
-"kept": "45",
-"used": "45",
+"kept": "46",
+"used": "46",
 "cubes": "39"
 },
 "reading": {
@@ -1430,17 +1430,17 @@
 "raw_id": "PAT_3066",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-18 21:23",
+"run_start": "2026-09-24 13:06",
 "status": "ok",
 "reference": "WM reference, 46 contacts (skipped as data)",
 "wm_n": 46,
 "wm_source": "BIDS TSV",
 "bad_n": 0,
 "bad_list": [],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "260-1900 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "3",
+"unexplained_peaks": "46",
 "trials": {
 "audio": {
 "in": "50",
@@ -1480,17 +1480,17 @@
 "raw_id": "PAT_3301",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-18 21:45",
+"run_start": "2026-09-24 13:30",
 "status": "ok",
 "reference": "WM reference, 53 contacts (skipped as data)",
 "wm_n": 53,
 "wm_source": "BIDS TSV",
 "bad_n": 0,
 "bad_list": [],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "0-1900 s",
 "conditions": "picture",
-"unexplained_peaks": "0",
+"unexplained_peaks": "4",
 "trials": {
 "audio": {
 "in": "",
@@ -1500,8 +1500,8 @@
 },
 "picture": {
 "in": "43",
-"kept": "39",
-"used": "39",
+"kept": "40",
+"used": "40",
 "cubes": "146"
 },
 "reading": {
@@ -1530,34 +1530,34 @@
 "raw_id": "PAT_3390",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-18 21:51",
+"run_start": "2026-09-24 13:37",
 "status": "ok",
 "reference": "WM reference, 22 contacts (skipped as data)",
 "wm_n": 22,
 "wm_source": "BIDS TSV",
 "bad_n": 0,
 "bad_list": [],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "170-1222 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "3",
+"unexplained_peaks": "15",
 "trials": {
 "audio": {
 "in": "53",
-"kept": "45",
-"used": "45",
+"kept": "46",
+"used": "46",
 "cubes": "96"
 },
 "picture": {
 "in": "54",
-"kept": "45",
-"used": "45",
+"kept": "49",
+"used": "49",
 "cubes": "96"
 },
 "reading": {
 "in": "53",
-"kept": "41",
-"used": "41",
+"kept": "43",
+"used": "43",
 "cubes": "96"
 }
 },
@@ -1580,7 +1580,7 @@
 "raw_id": "PAT_3415",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-18 22:05",
+"run_start": "2026-09-24 13:51",
 "status": "ok",
 "reference": "WM reference, 9 contacts (skipped as data)",
 "wm_n": 9,
@@ -1605,10 +1605,10 @@
 "HLG16",
 "HLG17"
 ],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "30-1500 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "10",
+"unexplained_peaks": "101",
 "trials": {
 "audio": {
 "in": "53",
@@ -1624,8 +1624,8 @@
 },
 "reading": {
 "in": "53",
-"kept": "41",
-"used": "41",
+"kept": "45",
+"used": "45",
 "cubes": "121"
 }
 },
