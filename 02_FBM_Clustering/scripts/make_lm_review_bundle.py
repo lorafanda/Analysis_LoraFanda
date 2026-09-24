@@ -352,6 +352,98 @@ def load_json(path, default):
 
 
 # ---- one patient ----------------------------------------------------------------------------
+def prep_dir_of(pid, audit):
+    """The prep0 folder the run read, from the run's log (the audit names the log)."""
+    log = str(audit.loc[pid, "log"]) if audit is not None and pid in audit.index else ""
+    path = os.path.join(QC, "logs", log)
+    if not log or not os.path.exists(path):
+        return None
+    m = re.search(r"(?:Prep dir|prep_dir):\s*(\S+)", io.open(path, encoding="utf-8", errors="replace").read())
+    return m.group(1) if m else None
+
+
+def read_trial_tables(prep_dir):
+    """Every row of the run's trial tables (byte-identical copies skipped, like lf_trials)."""
+    import hashlib
+    seen, parts = set(), []
+    for f in sorted(glob.glob(os.path.join(prep_dir, "*.tsv"))):
+        h = hashlib.md5(open(f, "rb").read()).hexdigest()
+        if h in seen:
+            continue
+        seen.add(h)
+        try:
+            t = pd.read_csv(f, sep="\t")
+        except Exception:
+            continue
+        lc = {c.lower(): c for c in t.columns}
+        if not {"sample", "sample_offsets", "trial_end"} <= set(lc):
+            continue
+        t = t.rename(columns={lc[k]: k for k in ("sample", "sample_offsets", "trial_end")})
+        t["_idx"] = t[lc["trial_idx"]] if "trial_idx" in lc else ""
+        t["_acc"] = t[lc["resp_accuracy"]].astype(str) if "resp_accuracy" in lc else ""
+        parts.append(t)
+    return pd.concat(parts) if parts else None
+
+
+def fs_of(pid, audit, tables):
+    """Sampling rate of the tables: the audit's fs, else implied by the IQR report's post_med."""
+    v = str(audit.loc[pid, "fs_hz"]) if audit is not None and pid in audit.index else ""
+    try:
+        if v and float(v) > 0:
+            return float(v)
+    except ValueError:
+        pass
+    iqr = os.path.join(QC, pid, "LM", "Report", f"{pid}_IQR.tsv")
+    if tables is None or not os.path.exists(iqr):
+        return None
+    r = pd.read_csv(iqr, sep="\t")
+    post_med = float(r["post_med"].median())
+    smp = float((tables["trial_end"] - tables["sample_offsets"]).median())
+    if not post_med > 0:
+        return None
+    return float(min((512, 1024, 2048, 4096, 30000), key=lambda c: abs(c - smp / post_med)))
+
+
+def write_trials(pid, audit):
+    """review/trials/<pid>.json: every trial of the run's tables with the reason it was dropped,
+    computed by the same function 140 uses (lf_trials.collect_trials, the cohort's settings)."""
+    from functions import lf_trials as LT   # noqa: E402  (01_FBM_Analysis/functions is on sys.path)
+    prep_dir = prep_dir_of(pid, audit)
+    if not prep_dir or not os.path.isdir(prep_dir):
+        return None
+    tables = read_trial_tables(prep_dir)
+    fs = fs_of(pid, audit, tables)
+    if tables is None or fs is None:
+        return None
+    # the rule values THE RUN used come from its IQR report, not from the live config (which
+    # may already carry the next run's values); min_stim_s is not in the report -> config
+    rules = {"min_post_s": float(cfg.min_post_s), "max_post_s": float(cfg.max_post_s), "iqr_k": float(cfg.iqr_k), "source": "config"}
+    iqr = os.path.join(QC, pid, "LM", "Report", f"{pid}_IQR.tsv")
+    if os.path.exists(iqr):
+        r0 = pd.read_csv(iqr, sep="\t").iloc[0]
+        rules = {"min_post_s": float(r0["min_post_s"]), "max_post_s": float(r0["max_post_s"]), "iqr_k": float(r0["iqr_k"]), "source": "the run's IQR report"}
+    all_trials = {}
+    import contextlib
+    with contextlib.redirect_stdout(io.StringIO()):
+        LT.collect_trials(prep_dir, fs, outlier_method="IQR", iqr_k=rules["iqr_k"], report_path=None, patient_id=pid,
+                          max_post_s=rules["max_post_s"], min_stim_s=cfg.min_stim_s, min_post_s=rules["min_post_s"],
+                          all_out=all_trials, bad_spans=getattr(cfg, "bad_time_spans", {}).get(pid, []),
+                          bad_spans_pre_s=abs(float(cfg.baseline_w[0])))
+    meta = {int(s): (str(i), a) for s, i, a in zip(tables["sample"], tables["_idx"], tables["_acc"])}
+    out = {"patient": pid, "fs": fs, "prep_dir": prep_dir.replace("\\", "/"),
+           "rules": {"accuracy": "correct / valid / 1", "min_stim_s": cfg.min_stim_s, **rules},
+           "columns": ["trial_idx", "onset_s", "stim_s", "post_s", "accuracy", "kept", "reason"], "conditions": {}}
+    for cond, d in all_trials.items():
+        rows = []
+        for on, off, te, keep, why in zip(d["on"], d["off"], d["tend"], d["keep"], d["reason"]):
+            idx, acc = meta.get(int(on), ("", ""))
+            rows.append([idx, round(on / fs, 2), round((off - on) / fs, 2), round((te - off) / fs, 2), acc, int(bool(keep)), str(why)])
+        out["conditions"][cond] = {"n_in": int(d["n_in"]), "n_kept": int(d["n_kept"]), "rows": rows}
+    os.makedirs(os.path.join(OUT, "trials"), exist_ok=True)
+    io.open(os.path.join(OUT, "trials", f"{pid}.json"), "w", encoding="utf-8").write(json.dumps(out, separators=(",", ":")))
+    return out
+
+
 def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
     """The contact rows of one patient (ERSP files written under tmp_prefix + k) and its patients.json row."""
     sysname = system_of(raw)
@@ -563,6 +655,17 @@ def main() -> None:
         contacts.extend(rows)
         patients.append(prow)
 
+    # the per-trial reject tables, for every patient every time (cheap: the tsvs only)
+    n_tr = 0
+    for raw in cfg.patient_ids:
+        pid = pid_of(str(raw))
+        try:
+            if write_trials(pid, audit) is not None:
+                n_tr += 1
+        except Exception as e:                          # a table the run could not read either
+            print(f"   [trials] {pid}: {type(e).__name__}: {e}")
+    print(f"[trials] {n_tr} patients -> review/trials/<pid>.json")
+
     manifest = {
         "built": datetime.now().strftime("%Y-%m-%d %H:%M"), "source_tree": CUBES.replace("\\", "/"),
         "n_patient": len(patients), "n_contact": len(contacts), "n_data": sum(1 for r in contacts if r["file"]),
@@ -571,6 +674,9 @@ def main() -> None:
         "dtype": "uint8", "order": ["cond", "freq", "time"], "vmin": -VLIM, "vmax": VLIM, "nan_byte": 0,
         "file": "each contact row's `file`",
         "hg_path": "{hg_root}/{patient}/LM/HG/{cond}/{patient}_{cond}_{hg_reref}_HGtrials_{name}.png",
+        "psd_path": "{hg_root}/{patient}/LM/PSD_clean/{cond}/PSD/psd_by_shaft.png (per-shaft patients) or psd_allch_full.png",
+        "iqr_path": "{hg_root}/{patient}/LM/Report/{patient}_{cond}_iqr_postDur_QC.png",
+        "trials": "trials/{patient}.json: every trial of the run's tables with the reason it was dropped (lf_trials.collect_trials, the run's settings)",
         "metrics": {"power": "mean |dB| over the cube", "hg": "mean dB, 70-150 Hz, stimulus half",
                     "stripe": "mean over 50..350 Hz rows of |row - mean of rows +-2|, dB", "rel": "split-half Pearson r (ERSP_halves)"},
     }
