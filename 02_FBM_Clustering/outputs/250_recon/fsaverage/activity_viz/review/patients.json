@@ -1857,30 +1857,55 @@
 "patient": "PAT_1327",
 "raw_id": "PAT_1327",
 "system": "HUG",
-"ran": false,
-"run_start": "",
-"status": "not run",
-"reference": "",
-"wm_n": 0,
-"wm_source": "",
-"bad_n": 0,
-"bad_list": [],
-"notch": "",
-"crop": "",
-"conditions": "",
-"unexplained_peaks": "",
-"trials": {},
+"ran": true,
+"run_start": "2026-09-24 14:44",
+"status": "ok",
+"reference": "WM reference, 44 contacts (skipped as data)",
+"wm_n": 44,
+"wm_source": "BIDS TSV",
+"bad_n": 5,
+"bad_list": [
+"CAG5",
+"CPG1",
+"IAG10",
+"PHG2",
+"PHG3"
+],
+"notch": "interp \u00b7 per shaft",
+"crop": "none",
+"conditions": "audio/picture/reading",
+"unexplained_peaks": "11",
+"trials": {
+"audio": {
+"in": "52",
+"kept": "34",
+"used": "34",
+"cubes": "165"
+},
+"picture": {
+"in": "54",
+"kept": "51",
+"used": "51",
+"cubes": "165"
+},
+"reading": {
+"in": "53",
+"kept": "43",
+"used": "43",
+"cubes": "165"
+}
+},
 "hg_reref": "WM",
 "anatomy_source": "sub-1327_electrodes.tsv",
 "n_contacts": 224,
-"n_data": 0,
+"n_data": 165,
 "n_status": {
-"data": 0,
-"wm_ref": 0,
-"bad": 0,
-"unknown": 0,
+"data": 165,
+"wm_ref": 44,
+"bad": 5,
+"unknown": 10,
 "not_recorded": 0,
-"not_run": 224,
+"not_run": 0,
 "aux": 0
 }
 }

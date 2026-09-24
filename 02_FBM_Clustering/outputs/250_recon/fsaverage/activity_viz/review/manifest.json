@@ -1,9 +1,9 @@
 {
- "built": "2026-09-24 14:41",
+ "built": "2026-09-24 15:28",
  "source_tree": "S:/HumanNeuronLab/ANALYSIS/FLM/Analysis_LoraFanda/01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY",
  "n_patient": 32,
  "n_contact": 4957,
- "n_data": 3328,
+ "n_data": 3493,
  "conditions": [
   "audio",
   "picture",
