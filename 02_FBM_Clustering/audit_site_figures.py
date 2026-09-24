@@ -39,7 +39,13 @@ ROOT = Path(__file__).resolve().parents[1]
 SITE = Path.home() / "lorafanda.github.io" / "analysis_status.html"
 OUT = ROOT / "02_FBM_Clustering" / "outputs"
 
-DEP = [(r"outputs/clustering/", "cohort"), (r"outputs/pooling/", "cohort"),
+# Most of outputs/clustering/explainers/ is drawn, not measured: E1-E9 and E11 are
+# illustrations of a method (their scripts read no run and no cache, checked 2026-09-24),
+# so a cohort rebuild does not make them wrong. Only the two that read a run are cohort-
+# dependent, and they are named here rather than inferred from the folder.
+COHORT_EXPLAINERS = ("E10_archetypes", "E12_membership")
+DEP = [(rf"explainers/(?!{'|'.join(COHORT_EXPLAINERS)})", "method"),
+       (r"outputs/clustering/", "cohort"), (r"outputs/pooling/", "cohort"),
        (r"outputs/classification/", "cohort"), (r"outputs/figures/", "cohort"),
        (r"_status_png/s1_", "ersp"), (r"microepi_status/", "ersp"),
        (r"outputs/compare_140/", "ersp"), (r"preprocessing_docs/", "method")]

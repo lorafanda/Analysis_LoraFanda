@@ -47,10 +47,10 @@ GROUPS = [   # (header or None, [data-t ...]) in display order
 ANSWERS = {
     "overview": dict(
         one="the cohort and where every tab stands",
-        html=("<p>Cohort <b>v8</b>: 1680 gated electrodes from 27 patients (2026-09-15). PAT_6684 (G-05) has since been "
-              "removed from the dataset; <b>v9</b> is built once the MicroEPI reruns and EL051 are on disk. One line per tab, "
-              "the tab's own Answer behind each:</p><!--TABLIST-->"),
-        status="v8 on every stage-02 product · the five S-figures and stages 03/04 are the 1027-electrode fit"),
+        html=("<p>Cohort <b>v10</b>: 1624 gated electrodes from 29 patients (2026-09-24), the first cohort built on the "
+              "fmax-400 cubes. PAT_6684 (G-05) and EL044 are out; PAT_3415 is in with its depth electrodes only. One line "
+              "per tab, the tab's own Answer behind each:</p><!--TABLIST-->"),
+        status="v10 on the stage-02 runs, statistics and figures · Paper 2 figures, the five S-figures and stages 03/04 are older fits"),
     "outline": dict(
         one="the paper as bullets, preprocessing → clustering outputs, darkness = confidence; source paper2_outline.md (make_outline_tab.py)",
         html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
@@ -68,17 +68,17 @@ ANSWERS = {
         status="04_ersp_LM_RAWONLY = 2026-09-18 run (fmax 400) + reruns EL043 / PAT_6704 / PAT_6854 (09-22), PAT_6953 (09-21) · 31 / 31 ok · previous tree = _old"),
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
-        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1680 electrodes, K = 5…30. "
-              "K is read where convex NMF's bi-cross-validated curve peaks (v8: 9 / 12 / 13 / 14, v9: 10 / 13 / 13 / 14 for HFA / 15 bands / 5 bands /"
-              "5 bands z) because it is the only method whose curve turns over; the cross-method figures are cut at K = 8. "
+        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1624 electrodes, K = 5…30. "
+              "K is read where convex NMF's bi-cross-validated curve peaks (v10: 10 / 12 / 14 / 16 for HFA / 15 bands / 5 bands / "
+              "5 bands z; v9 was 10 / 13 / 13 / 14) because it is the only method whose curve turns over; the cross-method figures are cut at K = 8. "
               "The durable result is negative, then graded: hard partitions of these data are not reproducible across "
               "preprocessing, most electrodes have no majority component, and two algorithms on one feature set agree on "
               "~60% of electrodes where two feature sets under one algorithm agree on ~40% (chance 12%). The graded "
               "decomposition is the analysis; an argmax map is only ever shown beside its loadings.</p>"
-              "<ul><li>Still v7 renders: FIG 2 on 5 bands z, the K=8 FIG 1 slides, the weighted FIG 4, the native stability sweep.</li>"
+              "<ul><li>The 24 Paper 2 figures are still the v8 renders; the twelve runs, the statistics and the cross-method figures are v10.</li>"
               "<li>K=8 (largest K with no one-patient cluster on HFA) or the held-out peaks — which one the paper reports.</li>"
-              "<li>v9 once the MicroEPI reruns land.</li></ul>"),
-        status="v8 · twelve runs 20260914–15 · statistics at the peaks · Paper 2 figures on v8"),
+              "<li>The native stability sweep has not been re-run since v8.</li></ul>"),
+        status="v10 · twelve runs 2026-09-24 · statistics at the peaks · Paper 2 figures still on v8"),
     "lana": dict(
         one="language-network proximity predicts more HFA while hearing the prompt and while speaking, less during visual encoding",
         html=("<p>Against LanA (an 806-subject probabilistic atlas of the language network), being closer to the network "
@@ -89,7 +89,7 @@ ANSWERS = {
               "the argument for the continuous map.</p>"
               "<ul><li>Per-parcel maps (IFG, IFGorb, MFG, AntTemp, PostTemp, AngG): six more volumes through the same function.</li>"
               "<li>Restricting the atlas to typically-lateralised subjects would raise the correlation ceiling.</li>"
-              "<li>Not yet on v8 — the maps are on the 2644 / 2724-contact set of August.</li></ul>"),
+              "<li>Not yet on v10 — the maps are on the 2644 / 2724-contact set of August.</li></ul>"),
         status="correlation maps 2026-08-02 · membership figures on the corrected coordinates · pre-v8"),
     "meetings": dict(
         one="the through-line and four logged meetings, June–July 2026",
@@ -123,13 +123,12 @@ ANSWERS = {
         status="audits 2026-09-15/16 · reruns pending"),
     "caveats": dict(
         one="what is open — the reruns, G-02's 14 trials, G-03's raw check, one cohort-changing regex, and two paper decisions",
-        html=("<p>Open, in order: the MicroEPI reruns and EL051, then cohort v9; G-02's 14 mis-timed trials — correct, drop or "
-              "leave; G-03's raw timing check; <code>lf_dataset.py:113</code>, which drops every shaft whose name ends in M "
-              "(PAT_3415's TM strip) — one regex, cohort-changing; notebook 150 and <code>build_timing_table.py</code> still key "
-              "on G-05; the editorial choice between opening A and B (FIG C.4a/b) and whether HFA stays the headline; pooling "
-              "(460/465) five rebuilds behind v8, so S1's role side and cluster side come from different samples.</p>"
+        html=("<p>Open, in order: G-02's 14 mis-timed trials — correct, drop or leave; G-03's raw timing check; notebook 150 "
+              "and <code>build_timing_table.py</code> still key on G-05; the 24 Paper 2 figures still on v8; the editorial choice "
+              "between opening A and B (FIG C.4a/b) and whether HFA stays the headline; pooling (460/465) still on a pre-v8 "
+              "cohort, so S1's role side and cluster side come from different samples.</p>"
               "<p>Everything under a <i>Done</i> heading below is duplicated in the lab notebook and is proposed for deletion.</p>"),
-        status="open list re-read 2026-09-17"),
+        status="open list re-read 2026-09-24 · the MicroEPI reruns, EL051/EL052 and the micro-shaft regex are done"),
 }
 
 # group key -> role; keys are the h3 id when it has one, else the slug of its text (the runtime's rule)
