@@ -82,7 +82,23 @@ PAPER_K = 8
 REPORT_3D = False
 FSETS = ["concat_bands5z", "concat_hg", "concat_rawds", "concat_bands5"]   # standard first
 METHODS = ["cnmf", "kmeans", "hierarchical"]          # archetypal analysis dropped 2026-09-06
-COHORT = "cohort1_n27"
+COHORT_FALLBACK = "cohort1_n29"   # only used if a manifest carries several cohorts
+
+
+def cohort_id(manifest) -> str:
+    """Which cohort the manifest is for, read from the manifest and not pinned here.
+
+    make_coverage_bundle names a cohort after its patient count, so the id moves with
+    every rebuild (v8 cohort1_n27 -> v10 cohort1_n29). A pinned id silently matches no
+    run at all, which is worse than failing: the page builds, with nothing in it.
+    """
+    ids = list(manifest.get("cohorts", {}))
+    if len(ids) == 1:
+        return ids[0]
+    if COHORT_FALLBACK in ids:
+        return COHORT_FALLBACK
+    raise SystemExit(f"manifest carries {len(ids)} cohorts {ids} and none is "
+                     f"{COHORT_FALLBACK}; re-run make_coverage_bundle.py")
 
 
 def load_p2_f2():
@@ -96,9 +112,10 @@ def load_p2_f2():
 def paper_runs(manifest):
     """The manifest's runs that a paper figure is built from, in the paper's order."""
     by = {}
+    cohort = cohort_id(manifest)
     for r in manifest["runs"]:
         parts = r["id"].split("__")
-        if len(parts) != 3 or r.get("cohort_id") != COHORT:
+        if len(parts) != 3 or r.get("cohort_id") != cohort:
             continue
         method, fset, stamp = parts
         if method in METHODS and fset in FSETS:

@@ -52,6 +52,8 @@ from matplotlib.gridspec import GridSpec
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
 
+import lf_runs as LR                                  # noqa: E402  (needs the path above)
+
 CLUST = ROOT / "outputs" / "clustering"
 OUT = CLUST / "comparison"
 K = 7
@@ -60,10 +62,13 @@ K = 7
 # a third of that spread.
 N_NULL_KM, N_NULL_CNMF = 10, 12
 
+# THE NEWEST RUN OF EACH TRACK, not three run ids typed in. These were pinned to the
+# runs of 2026-08-17/18; once those directories were superseded the figure could not be
+# rebuilt at all, which is a worse failure than being one cohort behind.
 RUNS = {
-    "cNMF argmax": CLUST / "cnmf/concat_hg/runs/20260818_112939",
-    "k-means":     CLUST / "kmeans/concat_hg/runs/20260817_171544",
-    "Ward":        CLUST / "hierarchical/concat_hg/runs/20260817_171627",
+    "cNMF argmax": LR.newest_run("cnmf", "concat_hg"),
+    "k-means":     LR.newest_run("kmeans", "concat_hg"),
+    "Ward":        LR.newest_run("hierarchical", "concat_hg"),
 }
 COL = {"cNMF argmax": "#5b2c83", "k-means": "#1f77b4", "Ward": "#2a9d5c"}
 INK, MUTED = "#1b232c", "#68727d"
