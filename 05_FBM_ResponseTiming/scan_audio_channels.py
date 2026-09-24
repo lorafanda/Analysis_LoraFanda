@@ -47,7 +47,7 @@ sys.modules.setdefault("mne", types.ModuleType("mne"))  # config imports it tran
 import lf_nsx as N  # noqa: E402
 from functions import config as cfg  # noqa: E402
 
-RAW = Path(r"S:\HumanNeuronLab\DATARAW\MICROEPI")
+RAW = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\MICROEPI")
 OUT = HERE / "outputs" / "audio_scan"
 
 

@@ -59,10 +59,10 @@ KEEP = {"correct", "valid", "1"}
 
 RESULTS = (Path(__file__).resolve().parent / "outputs" / "04_ersp_LM_RAWONLY")
 TARGETS = {
-    "EL033": Path("S:/HumanNeuronLab/DATARAW/SEEG_EXPERIMENTS_BERN/EL033/"
-                  "task_FBM/data_LM/prep0"),
-    "PAT_3965": Path("S:/HumanNeuronLab/DATARAW/SEEG_EXPERIMENTS_HUG/PAT_3965/"
-                     "task_FBM/data_LM/prep0"),
+    "EL033": Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN"
+                  r"\EL033\task_FBM\data_LM\prep0"),
+    "PAT_3965": Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_HUG"
+                     r"\PAT_3965\task_FBM\data_LM\prep0"),
 }
 COL = "trial_end"
 

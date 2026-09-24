@@ -18,7 +18,7 @@ import numpy as np
 import nibabel as nib
 from PIL import Image
 
-MESH = Path("S:/HumanNeuronLab/ANALYSIS/FLM/Analysis_LoraFanda/02_FBM_Clustering/outputs/250_recon/fsaverage/meshes")
+MESH = Path(__file__).resolve().parent / "outputs" / "250_recon" / "fsaverage" / "meshes"
 OUT = Path("C:/Users/fanda/AppData/Local/Temp/claude/S--HumanNeuronLab-ANALYSIS-FLM-Analysis-LoraFanda/"
            "b2b76878-a2dc-444b-8806-1d2b9386c369/scratchpad")
 N, PX = 36, 132
