@@ -893,7 +893,7 @@
 "raw_id": "EL043",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-22 13:12",
+"run_start": "2026-09-24 15:33",
 "status": "ok",
 "reference": "WM reference, 28 contacts (skipped as data)",
 "wm_n": 28,
@@ -907,8 +907,8 @@
 "trials": {
 "audio": {
 "in": "53",
-"kept": "21",
-"used": "18",
+"kept": "22",
+"used": "19",
 "cubes": "67"
 },
 "picture": {
@@ -1057,7 +1057,7 @@
 "raw_id": "EL046",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-22 13:24",
+"run_start": "2026-09-24 15:34",
 "status": "ok",
 "reference": "WM reference, 6 contacts (skipped as data)",
 "wm_n": 6,
@@ -1067,21 +1067,21 @@
 "pI_L1",
 "pI_L4"
 ],
-"notch": "iir \u00b7 per block",
+"notch": "interp \u00b7 per shaft",
 "crop": "21120-23320 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "6",
+"unexplained_peaks": "45",
 "trials": {
 "audio": {
 "in": "53",
-"kept": "30",
-"used": "30",
+"kept": "35",
+"used": "35",
 "cubes": "83"
 },
 "picture": {
 "in": "54",
-"kept": "35",
-"used": "35",
+"kept": "43",
+"used": "43",
 "cubes": "83"
 },
 "reading": {
