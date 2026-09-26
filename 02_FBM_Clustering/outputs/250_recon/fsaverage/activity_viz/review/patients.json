@@ -893,34 +893,34 @@
 "raw_id": "EL043",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 15:33",
+"run_start": "",
 "status": "ok",
 "reference": "WM reference, 28 contacts (skipped as data)",
 "wm_n": 28,
 "wm_source": "BIDS TSV",
 "bad_n": 0,
 "bad_list": [],
-"notch": "interp \u00b7 per shaft",
+"notch": "interp \u00b7 ",
 "crop": "1810-4650 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "12",
+"unexplained_peaks": "",
 "trials": {
 "audio": {
 "in": "53",
-"kept": "22",
-"used": "19",
+"kept": "23",
+"used": "",
 "cubes": "67"
 },
 "picture": {
 "in": "54",
 "kept": "25",
-"used": "25",
+"used": "",
 "cubes": "67"
 },
 "reading": {
 "in": "53",
 "kept": "14",
-"used": "14",
+"used": "",
 "cubes": "67"
 }
 },
@@ -1057,48 +1057,52 @@
 "raw_id": "EL046",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 15:34",
+"run_start": "",
 "status": "ok",
 "reference": "WM reference, 6 contacts (skipped as data)",
 "wm_n": 6,
 "wm_source": "BIDS TSV",
-"bad_n": 2,
+"bad_n": 6,
 "bad_list": [
+"A_L1",
+"A_L2",
+"aH_R12",
+"pH_L1",
 "pI_L1",
 "pI_L4"
 ],
-"notch": "interp \u00b7 per shaft",
+"notch": "interp \u00b7 ",
 "crop": "21120-23320 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "45",
+"unexplained_peaks": "",
 "trials": {
 "audio": {
 "in": "53",
 "kept": "35",
-"used": "35",
-"cubes": "83"
+"used": "",
+"cubes": "79"
 },
 "picture": {
 "in": "54",
 "kept": "43",
-"used": "43",
-"cubes": "83"
+"used": "",
+"cubes": "79"
 },
 "reading": {
 "in": "53",
 "kept": "14",
-"used": "14",
-"cubes": "83"
+"used": "",
+"cubes": "79"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL046_space-T1w_electrodes.tsv",
 "n_contacts": 196,
-"n_data": 83,
+"n_data": 79,
 "n_status": {
-"data": 83,
+"data": 79,
 "wm_ref": 6,
-"bad": 2,
+"bad": 6,
 "unknown": 22,
 "not_recorded": 83,
 "not_run": 0,
