@@ -52,13 +52,23 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
 import lf_decompose as D  # noqa: E402
+import lf_runs as LR  # noqa: E402
 
 CLUST = ROOT / "outputs" / "clustering"
 DEC = CLUST / "decomposition"
-SOURCES = {
-    "concat_hg":    CLUST / "kmeans" / "concat_hg" / "runs" / "20260817_171544",
-    "concat_rawds": CLUST / "kmeans" / "concat_rawds" / "runs" / "20260817_171634",
-}
+
+
+# Feature sets this script can run. The X comes from the newest k-means run of that set,
+# which carries the cohort's X_train.npy. These used to be pinned run ids
+# (20260817_171544 / 20260817_171634); by 2026-09-27 both folders had been deleted, so
+# the script could not run at all, and while they existed they silently held the August
+# cohort whatever had been rebuilt since. Resolved per call instead - see _source.
+SOURCES = ("concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z")
+
+
+def _source(fs):
+    """Newest k-means run directory for a feature set."""
+    return LR.newest_run("kmeans", fs)
 
 
 def bicv_curve(X, ks, *, n_row_folds=4, n_col_folds=4, n_iter=150, seed=0):
@@ -167,7 +177,8 @@ def main() -> int:
     n_iter = 50 if a.quick else 150
 
     for fs in sets:
-        src = SOURCES[fs]
+        src = _source(fs)
+        print(f"[{fs}] source run {src.name}")
         X = np.load(src / "X_train.npy").astype(np.float64)
         lab = pd.read_csv(src / "labels.csv")
         pat = lab["patient_id"].astype(str).to_numpy()
