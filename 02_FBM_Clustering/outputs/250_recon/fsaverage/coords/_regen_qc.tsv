@@ -1,5 +1,6 @@
 patient	status	n_contacts	n_cortical	n_wm	projection
 PAT_1145	OK	142	104	38	spherical
+PAT_1327	OK	224	180	44	spherical
 PAT_2462	OK	133	133	0	spherical
 PAT_2856	OK	176	139	37	spherical
 PAT_2868	OK	63	40	23	spherical
