@@ -121,11 +121,13 @@ def load(n_elec: int, n_bins: int):
 def _fit_scale(X, Wn, G, comp):
     """Per-component factor that makes G @ comp the model the iterations converged to.
 
-    convex_nmf returns comp = (W'X)/colsum(W) with W's columns normalised, but leaves G
-    on the un-normalised scale.  Rather than assume the factor, recover it: the
-    least-squares rescaling of each component is the one that minimises ||X - G diag(a) comp||,
-    and for the correctly-paired factors that is exactly colsum(W).  Solved, then checked
-    against colsum(W) so a change upstream cannot pass silently.
+    The least-squares rescaling of each component is the one that minimises
+    ||X - G diag(a) comp||, and for a correctly-paired (G, comp) that is exactly 1.
+
+    Since the 2026-09-27 fix convex_nmf pairs them itself, so this returns ~1 and the
+    multiplication at the call site is a no-op.  It is kept as a guard: it is computed
+    from the returned factors rather than assumed, so if the pairing ever regresses the
+    figure still draws the real fit instead of silently reporting a shrunken one.
     """
     k = comp.shape[0]
     # normal equations for a: (G'G * comp comp') a = diag(G' X comp')
@@ -150,12 +152,11 @@ def main(k, n_bins, n_elec):
     n, p = X.shape
     neg = int((X < 0).sum())
     W, G, comp = LD.convex_nmf(X, k, random_state=0, n_iter=300)
-    # convex_nmf normalises W's columns to sum to 1 AFTER the fit (so a component really
-    # is a convex combination of electrodes) but does not rescale G by the same factors.
-    # G @ comp is then the fit shrunk by those column sums, not the fit: on this sample
-    # 80.3% of variance instead of the 86.6% the iterations actually reached. Undo it
-    # here, by putting each factor back into the loadings it was divided out of, so that
-    # G @ comp IS the converged model and panels A/C/D reconstruct each other exactly.
+    # convex_nmf pairs G with the normalised components itself since 2026-09-27, so this
+    # is a no-op guard rather than a repair (see _fit_scale). Before that fix G was left
+    # on the un-normalised scale and G @ comp came out shrunk - 80.3% of variance on this
+    # sample instead of the 86.6% the iterations reached. Keeping the line means panels
+    # A/C/D are guaranteed to reconstruct each other whatever upstream does.
     G = G * _fit_scale(X, W, G, comp)
     R = G @ comp
     rel = np.linalg.norm(X - R) / np.linalg.norm(X)

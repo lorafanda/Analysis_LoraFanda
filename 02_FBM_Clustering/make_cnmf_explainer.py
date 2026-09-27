@@ -88,15 +88,16 @@ def main() -> int:
     lab = Gn.argmax(1)
     # TWO RECONSTRUCTIONS, and the difference is worth knowing.
     #
-    # The model convex_nmf minimises is X ~= G(W'X). But nothing constrains G's ROWS
-    # to sum to 1 - on this fit they sum to about 1.47 - so the raw product carries a
-    # scale offset and sits above the data. Checked at 300, 1000, 3000 and 10000
-    # iterations: identical, so this is the converged solution, not under-training.
+    # recon_model is the model convex_nmf minimises, X ~= G(W'X). Since 2026-09-27 G comes
+    # back already paired with the normalised components, so this IS the converged fit -
+    # it no longer sits above the data the way it did when G carried the un-normalised
+    # scale. (The old note here said G's rows sum to ~1.47 and that the normalised pair
+    # reconstructed better, 0.64 against 1.15; both were symptoms of that unpaired G.)
     #
-    # Every reported quantity in this project uses the normalised pair instead: Gn with
-    # rows summing to 1, and comps = (W'X)/colsum(W). On this data that also happens to
-    # reconstruct better (Frobenius 0.64 against 1.15), and it is the version panel D
-    # shows, so panel E draws it too rather than mixing conventions mid-figure.
+    # recon is the ROW-normalised version: Gn with rows summing to 1, which is what every
+    # reported mixture statistic uses and what panel D shows, so panel E draws it too
+    # rather than mixing conventions mid-figure. Row-normalising still drops each
+    # electrode's overall magnitude, so the two are not the same picture.
     comps_raw = W.T @ Xu
     recon_model = G @ comps_raw
     recon = Gn @ comps
