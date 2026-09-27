@@ -115,9 +115,19 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
         ("audit", False, PREP, ["141_audit_140.py"]),
 
         # ---- select: the held-out curves. Nine scripts read what this writes.
-        ("select", False, CLUST, ["make_heldout_variance.py",
+        # --spaces unit, not the default "both": measure_cluster_stability.SPACE is
+        # unit-norm for all three methods, so the "home" pass fits exactly the same
+        # matrices. Measured 2026-09-28: 0 of 156 summary rows differed between the two.
+        # It was half the phase's runtime for a duplicate column.
+        ("select", False, CLUST, ["make_heldout_variance.py", "--spaces", "unit",
                                   "--from-cache", newest_cache(), "--ks", *HELDOUT_KS]),
-        ("select", False, CLUST, ["choose_k.py"]),
+        # every feature set: choose_k defaults to concat_hg alone, so the other three
+        # kept whatever k_selection.json was last written - concat_rawds was still
+        # showing an August fit when this was checked.
+        ("select", False, CLUST, ["choose_k.py",
+                                  *sum([["--feature-set", f] for f in
+                                        ("concat_hg", "concat_rawds",
+                                         "concat_bands5", "concat_bands5z")], [])]),
 
         # ---- runs: per-run products the gallery and the visualizer both read, and a
         # fresh run has neither until they are written
