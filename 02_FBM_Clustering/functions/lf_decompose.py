@@ -143,9 +143,17 @@ def convex_nmf(X: np.ndarray, k: int, *, n_iter: int = 300, tol: float = 1e-6,
     # Normalise each column of W to sum to 1 so the component really is a convex
     # combination of observed electrodes. comp is then a weighted AVERAGE of real
     # responses and keeps its dB units, which is what makes it plottable as a profile.
-    Wn = W / np.maximum(W.sum(0, keepdims=True), 1e-12)
+    #
+    # The same factor must go INTO G, or the returned pair no longer reconstructs the
+    # fit the iterations reached: dividing comp by colsum(W) makes it 1/colsum LARGER
+    # (1.25x at K=8, 2.30x at K=30 on concat_bands5), and G left alone then overshoots.
+    # Without the `* s` below, ||G @ comp|| = 1593 against ||X|| = 675 at K=30, so the
+    # in-sample variance explained went negative past K~20 and the bi-cross-validated
+    # curve grew a spurious peak at K=10. Fixed 2026-09-27.
+    s = np.maximum(W.sum(0), 1e-12)
+    Wn = W / s
     comp = Wn.T @ Xa
-    return Wn, G, comp
+    return Wn, G * s, comp
 
 
 def reconstruct(X: np.ndarray, W: np.ndarray, G: np.ndarray) -> np.ndarray:
