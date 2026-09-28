@@ -165,13 +165,17 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
         ("prep", False, PREP, ["make_preprocessing_figures.py"]),
         ("prep", False, PREP, ["make_s1_tab.py", "--insert"]),
 
-        # ---- bundles: coverage FIRST, it writes the manifest the other two resolve
-        # runs through. The LM bundle is built here but NOT pushed - see WHAT IT DOES
-        # NOT DO; it went a day stale in September because it was only ever manual.
+        # ---- bundles. The LM review bundle goes FIRST: it is the only place the BIDS
+        # tissueLabel column is parsed into a native anatomy label, and
+        # make_coverage_bundle.add_report_fields reads its contacts.json to put those
+        # labels in the report. Built after coverage, the region bars would silently be
+        # one cohort behind. It is built here but NOT pushed - see WHAT IT DOES NOT DO;
+        # it went a day stale in September because it was only ever run by hand.
+        # Then coverage, which writes the manifest the other two resolve runs through.
+        ("bundles", False, CLUST, ["scripts/make_lm_review_bundle.py"]),
         ("bundles", False, CLUST, ["make_coverage_bundle.py"]),
         ("bundles", False, CLUST, ["make_centroid_bundle.py"]),
         ("bundles", False, CLUST, ["make_cluster_visualizer.py"]),
-        ("bundles", False, CLUST, ["scripts/make_lm_review_bundle.py"]),
 
         # ---- site: the blocks, make_site_ui last, then the audit
         ("site", False, CLUST, ["make_paper_figures_webblock.py", "--insert"]),
