@@ -173,12 +173,15 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
         ("stage02", False, CLUST, ["make_decomposition_figure.py"]),
         ("stage02", False, CLUST, ["make_overview_options.py"]),
         ("stage02", False, CLUST, ["make_component_anatomy.py", "--run", newest_cnmf_hg()]),
-        ("stage02", False, CLUST, ["make_archetype_explainer.py"]),      # E10
         ("stage02", False, CLUST, ["make_membership_explainer.py"]),     # E12
-        # FIG C.9 and G2 read a run of the UNGATED set (concat_hg_all). Notebook 237 is
-        # not part of the standard rebuild, so this step fails until 237 has run on the
-        # current cohort - deliberately left in, so the summary says so out loud.
-        ("stage02", False, CLUST, ["make_gate_split_figures.py"]),
+        # DROPPED 2026-09-28, at Lora's word - both failed every run on missing inputs
+        # that are not part of this rebuild, and a permanent FAIL in the summary trains
+        # you to stop reading it:
+        #   make_archetype_explainer.py  needs clustering/archetypes/, which does not
+        #     exist for any cohort - run_archetypes.py has never been run here.
+        #   make_gate_split_figures.py   needs a run of the UNGATED set concat_hg_all,
+        #     which comes from notebook 237.
+        # Put either back by adding its line again once its input exists.
 
         # ---- norm and prep. The --insert halves of these live in the site phase: they
         # write to the site checkout, which only exists on the laptop.
