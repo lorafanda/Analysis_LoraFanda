@@ -6,8 +6,8 @@
   ],
   "default_radius": "10",
   "coords": "ALL_PATIENTS_contacts_fsaverage.csv",
-  "n_contacts_in_coords": 6191,
-  "n_patients_in_coords": 41,
+  "n_contacts_in_coords": 6586,
+  "n_patients_in_coords": 43,
   "coverage_fields": [
     "n_contacts",
     "n_patients"
@@ -56,22 +56,22 @@
         "PAT_6953"
       ],
       "n_patients": 30,
-      "n_contacts": 4135,
+      "n_contacts": 4530,
       "coverage": {
         "6": {
           "lh": {
             "file": "coverage_cohort1_n30_r6_lh_u8.bin",
             "dtype": "uint8",
-            "pct_vertices_sampled": 64.4,
-            "max_patients_at_a_vertex": 22,
-            "max_contacts_at_a_vertex": 61
+            "pct_vertices_sampled": 64.5,
+            "max_patients_at_a_vertex": 23,
+            "max_contacts_at_a_vertex": 68
           },
           "rh": {
             "file": "coverage_cohort1_n30_r6_rh_u8.bin",
             "dtype": "uint8",
-            "pct_vertices_sampled": 62.8,
-            "max_patients_at_a_vertex": 19,
-            "max_contacts_at_a_vertex": 64
+            "pct_vertices_sampled": 66.2,
+            "max_patients_at_a_vertex": 21,
+            "max_contacts_at_a_vertex": 67
           }
         },
         "10": {
@@ -79,15 +79,15 @@
             "file": "coverage_cohort1_n30_r10_lh_u8.bin",
             "dtype": "uint8",
             "pct_vertices_sampled": 84.9,
-            "max_patients_at_a_vertex": 24,
-            "max_contacts_at_a_vertex": 129
+            "max_patients_at_a_vertex": 25,
+            "max_contacts_at_a_vertex": 144
           },
           "rh": {
             "file": "coverage_cohort1_n30_r10_rh_u8.bin",
             "dtype": "uint8",
-            "pct_vertices_sampled": 82.2,
-            "max_patients_at_a_vertex": 22,
-            "max_contacts_at_a_vertex": 159
+            "pct_vertices_sampled": 83.7,
+            "max_patients_at_a_vertex": 24,
+            "max_contacts_at_a_vertex": 178
           }
         },
         "15": {
@@ -95,15 +95,15 @@
             "file": "coverage_cohort1_n30_r15_lh_u8.bin",
             "dtype": "uint8",
             "pct_vertices_sampled": 95.3,
-            "max_patients_at_a_vertex": 24,
-            "max_contacts_at_a_vertex": 215
+            "max_patients_at_a_vertex": 25,
+            "max_contacts_at_a_vertex": 237
           },
           "rh": {
             "file": "coverage_cohort1_n30_r15_rh_u16.bin",
             "dtype": "uint16",
             "pct_vertices_sampled": 91.8,
-            "max_patients_at_a_vertex": 22,
-            "max_contacts_at_a_vertex": 297
+            "max_patients_at_a_vertex": 24,
+            "max_contacts_at_a_vertex": 325
           }
         }
       }
@@ -118,7 +118,7 @@
           "nbr_r6_lh_idx.p00.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 1019153
+        "nnz": 1040212
       },
       "rh": {
         "off": "nbr_r6_rh_off.bin",
@@ -126,7 +126,7 @@
           "nbr_r6_rh_idx.p00.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 983738
+        "nnz": 1095090
       }
     },
     "10": {
@@ -137,7 +137,7 @@
           "nbr_r10_lh_idx.p01.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 3176851
+        "nnz": 3241935
       },
       "rh": {
         "off": "nbr_r10_rh_off.bin",
@@ -146,7 +146,7 @@
           "nbr_r10_rh_idx.p01.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 2988631
+        "nnz": 3332166
       }
     },
     "15": {
@@ -160,7 +160,7 @@
           "nbr_r15_lh_idx.p04.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 8852092
+        "nnz": 9040949
       },
       "rh": {
         "off": "nbr_r15_rh_off.bin",
@@ -168,10 +168,11 @@
           "nbr_r15_rh_idx.p00.bin",
           "nbr_r15_rh_idx.p01.bin",
           "nbr_r15_rh_idx.p02.bin",
-          "nbr_r15_rh_idx.p03.bin"
+          "nbr_r15_rh_idx.p03.bin",
+          "nbr_r15_rh_idx.p04.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 8266180
+        "nnz": 9208945
       }
     }
   },
@@ -206,8 +207,8 @@
         6
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -482,8 +483,8 @@
         6
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -771,8 +772,8 @@
         5
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -1034,8 +1035,8 @@
         6
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -1283,8 +1284,8 @@
         4
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -1525,8 +1526,8 @@
         5
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -1743,8 +1744,8 @@
         6
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -2022,8 +2023,8 @@
         6
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -2300,8 +2301,8 @@
         4
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -2568,8 +2569,8 @@
         29
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -2998,8 +2999,8 @@
         4
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
@@ -3229,8 +3230,8 @@
         24
       ],
       "n_electrodes": 1487,
-      "n_contacts_with_cluster": 1424,
-      "n_samples_with_cluster": 1424,
+      "n_contacts_with_cluster": 1487,
+      "n_samples_with_cluster": 1487,
       "unit": "electrode",
       "n_electrodes_multilabel": 0,
       "n_patients_run": 30,
