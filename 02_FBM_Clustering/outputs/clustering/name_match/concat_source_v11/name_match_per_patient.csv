@@ -1,6 +1,4 @@
 patient,recorded,in_cohort,matched,matched_in_cohort,via_raw_only,excluded_patient,unmatched,unmatched_in_cohort,recon,recon_recorded,recon_unmatched,pct_matched,side
-EL052,104,37,0,0,0,False,104,37,0,0,0,0.0,recorded only
-EL051,85,26,0,0,0,False,85,26,0,0,0,0.0,recorded only
 EL044,124,0,116,0,0,True,8,0,128,116,12,93.5,both
 EL030,83,65,83,65,0,False,0,0,102,83,19,100.0,both
 EL033,74,70,74,70,0,False,0,0,92,74,18,100.0,both
@@ -16,6 +14,8 @@ EL043,67,61,67,61,0,False,0,0,106,67,39,100.0,both
 EL045,91,90,91,90,0,False,0,0,124,91,33,100.0,both
 EL046,78,49,78,49,0,False,0,0,178,78,100,100.0,both
 EL048,59,16,59,16,0,False,0,0,78,59,19,100.0,both
+EL051,85,26,85,26,0,False,0,0,171,85,86,100.0,both
+EL052,104,37,104,37,0,False,0,0,224,104,120,100.0,both
 PAT_1145,0,0,0,0,0,False,0,0,142,0,142,,recon only
 PAT_1327,165,101,165,101,0,False,0,0,224,165,59,100.0,both
 PAT_2462,0,0,0,0,0,False,0,0,133,0,133,,recon only
