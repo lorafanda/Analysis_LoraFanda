@@ -126,7 +126,11 @@ def regions_for(gated: set[str]) -> pd.Series:
     return pd.Series([v for v in vals if v]).value_counts()
 
 
-def panel_a(ax, df: pd.DataFrame, cache_name: str) -> None:
+LANG_PAL = {"GER": "#7d5ba6", "FRE": "#3f9e8c", "ENG": "#b5651d", "ITA": "#8aa62f"}
+CEN_PAL = {"Bern": "#5b6bbf", "Geneva": "#c77f2a"}
+
+
+def panel_a(ax, df: pd.DataFrame, cache_name: str, lang: dict | None = None) -> None:
     piv = (df.groupby(["patient_id", "condition", "in_cohort"]).size()
              .unstack(["condition", "in_cohort"], fill_value=0))
     order = sorted(piv.index, key=lambda p: (0 if str(p).startswith("EL") else 1, str(p)))
@@ -146,17 +150,23 @@ def panel_a(ax, df: pd.DataFrame, cache_name: str) -> None:
 
     tot = piv.sum(1).to_numpy(float)
     kept = piv[[c for c in piv.columns if c[1]]].sum(1).to_numpy(float)
-    for yi, t, k in zip(y, tot, kept):
+    # the task language closes each row, in its own colour, so the cohort's language
+    # split is readable straight off panel A without cross-referencing panel B
+    for yi, t, k, pid in zip(y, tot, kept, piv.index):
         ax.text(t + max(tot) * 0.012, yi, f"{int(t)}", va="center", ha="left",
                 fontsize=7.2, color=INK)
         ax.text(t + max(tot) * 0.075, yi, f"({int(k)} kept)", va="center", ha="left",
                 fontsize=6.6, color=MUTED)
+        code = (lang or {}).get(str(pid), "") or "?"
+        ax.text(max(tot) * 1.245, yi, code, va="center", ha="left", fontsize=6.8,
+                color=LANG_PAL.get(code, MUTED),
+                fontweight="bold" if code in LANG_PAL else "normal")
 
     ax.set_yticks(y); ax.set_yticklabels(piv.index, fontsize=7.4)
     ax.set_xlabel("ERSP cubes in the cache  (one per electrode × condition)", fontsize=8.6)
     ax.set_title(f"A  ·  Per patient  —  {cache_name}", fontsize=10.5,
                  loc="left", color=INK, pad=8)
-    ax.set_xlim(0, max(tot) * 1.16)
+    ax.set_xlim(0, max(tot) * 1.30)
     ax.grid(axis="x", color="#dfe3e8", lw=0.6, zorder=0)
     ax.set_axisbelow(True)
     for s in ("top", "right", "left"):
@@ -168,37 +178,33 @@ def panel_a(ax, df: pd.DataFrame, cache_name: str) -> None:
               loc="lower right", bbox_to_anchor=(1.0, -0.085))
 
 
-def version_block(ax, name, cen, lan, reg, n_pat, n_gated, cen_pal, lang_pal) -> None:
-    """One cache version: three proportional bars, labels on the left.
+def version_block(ax, name, cen, lan, reg, n_pat, n_gated, cen_pal, lang_pal, reg_pal) -> None:
+    """One cache version: three proportional bars, labels on the left, no text inside.
 
-    Three separate axes stacked with their own titles collided with the next version's
-    heading and clipped every in-bar label, so this is one axes with three rows and the
-    category names as y ticks - nothing to overlap.
+    reg_pal is built ONCE over the union of every version's regions, not per version: a
+    palette indexed by position within each version's own top-6 gave the same region a
+    different colour in different versions, which breaks the only comparison this panel
+    exists to make.
     """
-    series = [("centre", cen, lambda k, i: cen_pal.get(k, "#9aa3ad")),
-              ("language", lan, lambda k, i: lang_pal.get(k, "#9aa3ad")),
-              ("anatomy", reg, lambda k, i: ("#aeb4bc" if str(k).startswith("other")
-                                             else plt.get_cmap("tab20")(i % 20)))]
-    for row, (label, counts, pal) in enumerate(series):
+    series = [(cen, lambda k: cen_pal.get(k, "#9aa3ad")),
+              (lan, lambda k: lang_pal.get(k, "#9aa3ad")),
+              (reg, lambda k: reg_pal.get(k, "#aeb4bc"))]
+    for row, (counts, pal) in enumerate(series):
         y = 2 - row
         tot = float(counts.sum()) or 1.0
         left = 0.0
-        for i, k in enumerate(counts.index):
+        for k in counts.index:
             v = float(counts[k])
-            ax.barh([y], [100 * v / tot], left=[100 * left / tot], height=0.66, zorder=3,
-                    color=pal(k, i), edgecolor="white", linewidth=0.7)
-            # only where the slice is wide enough to hold the text without clipping
-            if 100 * v / tot >= 11:
-                ax.text(100 * (left + v / 2) / tot, y, f"{k} {int(v)}", ha="center",
-                        va="center", fontsize=6.5, color="white")
+            ax.barh([y], [100 * v / tot], left=[100 * left / tot], height=0.70, zorder=3,
+                    color=pal(k), edgecolor="white", linewidth=0.6)
             left += v
     ax.set_xlim(0, 100); ax.set_ylim(-0.6, 2.6)
-    ax.set_yticks([2, 1, 0]); ax.set_yticklabels(["centre", "language", "anatomy"],
-                                                 fontsize=7.2, color=MUTED)
+    ax.set_yticks([2, 1, 0])
+    ax.set_yticklabels(["centre", "language", "anatomy"], fontsize=6.2, color=MUTED)
     ax.set_xticks([])
     ax.tick_params(axis="y", length=0)
     ax.set_title(f"{name}   ·   {n_pat} patients, {n_gated} gated",
-                 fontsize=8.6, loc="left", color=INK, pad=4)
+                 fontsize=7.4, loc="left", color=INK, pad=3)
     for s in ax.spines.values():
         s.set_visible(False)
 
@@ -229,25 +235,33 @@ def build(version: int | None):
     if not rows:
         raise SystemExit("no readable cache")
 
-    fig = plt.figure(figsize=(15.2, 10.4), dpi=200)
-    gs = fig.add_gridspec(1, 2, width_ratios=[1.0, 0.95], wspace=0.34,
-                          left=0.065, right=0.965, top=0.848, bottom=0.075)
-    panel_a(fig.add_subplot(gs[0, 0]), tdf, target.name)
+    fig = plt.figure(figsize=(13.8, 9.8), dpi=200)
+    gs = fig.add_gridspec(1, 2, width_ratios=[1.0, 0.46], wspace=0.30,
+                          left=0.070, right=0.975, top=0.868, bottom=0.075)
+    panel_a(fig.add_subplot(gs[0, 0]), tdf, target.name, mlang)
 
-    # ---- B: one axes per cache version, three proportional bars each
-    right = gs[0, 1].subgridspec(len(rows), 1, hspace=0.72)
-    cen_pal = {"Bern": "#5b6bbf", "Geneva": "#c77f2a"}
-    lang_pal = {"GER": "#7d5ba6", "FRE": "#3f9e8c", "ENG": "#b5651d", "ITA": "#8aa62f"}
+    # ---- B: one axes per cache version, three proportional bars each.
+    # Every version's top regions first, so one palette covers them all and a region
+    # keeps its colour down the whole column - see version_block.
+    per_version = []
+    for e in rows:
+        reg = regions_for(e["gated"])
+        top = reg.head(6)
+        if len(reg) > 6:
+            top = pd.concat([top, pd.Series({"other": int(reg[6:].sum())})])
+        per_version.append(top)
+    names = sorted({k for t in per_version for k in t.index if k != "other"},
+                   key=lambda k: -sum(int(t.get(k, 0)) for t in per_version))
+    reg_pal = {k: plt.get_cmap("tab20")(i % 20) for i, k in enumerate(names)}
+    reg_pal["other"] = "#aeb4bc"
+
+    right = gs[0, 1].subgridspec(len(rows), 1, hspace=0.80)
     for j, e in enumerate(rows):
         pats = e["pats"]
         cen = pd.Series([mcentre.get(p, "unknown") for p in pats]).value_counts()
         lan = pd.Series([mlang.get(p, "") or "unknown" for p in pats]).value_counts()
-        reg = regions_for(e["gated"])
-        top = reg.head(6)
-        if len(reg) > 6:
-            top = pd.concat([top, pd.Series({f"other ({len(reg) - 6})": int(reg[6:].sum())})])
-        version_block(fig.add_subplot(right[j]), e["name"], cen, lan, top,
-                      len(pats), len(e["gated"]), cen_pal, lang_pal)
+        version_block(fig.add_subplot(right[j]), e["name"], cen, lan, per_version[j],
+                      len(pats), len(e["gated"]), CEN_PAL, LANG_PAL, reg_pal)
 
     fig.text(0.065, 0.960, "FIG C.0  ·  What the clustering cohort is made of",
              fontsize=13.5, color=INK)
@@ -256,13 +270,21 @@ def build(version: int | None):
              "final cohort — it failed the activity gate, or a rule removed it first "
              "(subdural grid, microwire, non-neural name, excluded patient, a condition "
              "missing on disk).", fontsize=8.2, color=MUTED)
-    fig.text(0.535, 0.905, "B  ·  Every cache on disk, side by side",
+    # B carries no prose: the bars are the point, and at this size any in-bar or caption
+    # text was unreadable anyway. The one thing a reader cannot infer is the colour key,
+    # so centre and language get a two-line legend and nothing else. That today's rules
+    # are applied to every cache is documented in this file's header instead.
+    bx = gs[0, 1].get_position(fig).x0
+    fig.text(bx, 0.905, "B  ·  Every cache on disk",
              fontsize=10.5, color=INK)
-    fig.text(0.535, 0.888,
-             "Bars are proportions. TODAY'S rules applied to each cache, so a version's "
-             "count here can differ from what it published at the time — the microwire "
-             "and grid rules have both changed since v8.",
-             fontsize=7.4, color=MUTED)
+    keys = [(k, c) for k, c in CEN_PAL.items()] + \
+           [(k, c) for k, c in LANG_PAL.items() if k in set(mlang.values())]
+    for i, (k, c) in enumerate(keys):
+        x = bx + (i % 4) * 0.052
+        yy = 0.884 - (i // 4) * 0.017
+        fig.patches.append(plt.Rectangle((x, yy), 0.011, 0.009, transform=fig.transFigure,
+                                         facecolor=c, edgecolor="none", zorder=5))
+        fig.text(x + 0.014, yy + 0.0045, k, fontsize=6.8, color=MUTED, va="center")
 
     OUT.mkdir(parents=True, exist_ok=True)
     png = OUT / "C0_cohort_composition.png"
