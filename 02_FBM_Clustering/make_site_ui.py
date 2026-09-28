@@ -47,10 +47,12 @@ GROUPS = [   # (header or None, [data-t ...]) in display order
 ANSWERS = {
     "overview": dict(
         one="the cohort and where every tab stands",
-        html=("<p>Cohort <b>v10</b>: 1624 gated electrodes from 29 patients (2026-09-24), the first cohort built on the "
-              "fmax-400 cubes. PAT_6684 (G-05) and EL044 are out; PAT_3415 is in with its depth electrodes only. One line "
-              "per tab, the tab's own Answer behind each:</p><!--TABLIST-->"),
-        status="v10 on the stage-02 runs, statistics and figures · Paper 2 figures, the five S-figures and stages 03/04 are older fits"),
+        html=("<p>Cohort <b>v11</b>: 1487 gated electrodes from 30 patients (2026-09-26), on a cube tree whose "
+              "preprocessing is uniform for the first time — every patient at fmax 400 with a per-shaft spectrum-interpolation "
+              "notch. PAT_1327 joins; PAT_6684 (G-05) and EL044 are out; PAT_3415 is in with its depth electrodes only; "
+              "PAT_3301 cannot enter, it has only picture naming. One line per tab, the tab's own Answer behind each:</p>"
+              "<!--TABLIST-->"),
+        status="v11 cache built 2026-09-26 · stage-02 runs in progress (240 / 241, then 242 and 249) · nothing on this page is a v11 result yet"),
     "outline": dict(
         one="the paper as bullets, preprocessing → clustering outputs, darkness = confidence; source paper2_outline.md (make_outline_tab.py)",
         html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
@@ -65,20 +67,21 @@ ANSWERS = {
               "<li><b>run</b>: <code>140_ersp_pipeline.py</code> per patient, 31 patients, fmax 400 Hz (was 500), in five waves — 16 on 09-18, PAT_6953 09-21, eight 09-22, four 09-23, EL038 and PAT_6854 09-24 · audit table + review mode per contact</li>"
               "<li><b>done since</b>: EL043 on its two recordings joined (3 conditions), G-04 / G-06 with the reference without bad contacts, PAT_6953; no stale cube in the tree · <b>open</b>: 137 contacts without anatomy link (alias decision), QC pass in review mode</li>"
               "</ul>"),
-        status="04_ersp_LM_RAWONLY = the fmax-400 rebuild, 09-18 to 09-24 · 31 / 31 ok · audit re-read 2026-09-24 03:03 · previous tree = _old"),
+        status="04_ersp_LM_RAWONLY = the fmax-400 tree · 32 / 32 ok, every one interp + per shaft · 30 run 09-24, EL043 / EL046 09-26 · previous tree = _old"),
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
-        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1624 electrodes, K = 5…30. "
-              "K is read where convex NMF's bi-cross-validated curve peaks (v10: 10 / 12 / 14 / 16 for HFA / 15 bands / 5 bands / "
-              "5 bands z; v9 was 10 / 13 / 13 / 14) because it is the only method whose curve turns over; the cross-method figures are cut at K = 8. "
+        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1487 electrodes, K = 5…30. "
+              "K is read where convex NMF's bi-cross-validated curve peaks (v10 gave 10 / 12 / 14 / 16 for HFA / 15 bands / 5 bands / "
+              "5 bands z; v11's are not known until 249 has run) because it is the only method whose curve turns over; the cross-method figures are cut at K = 8. "
               "The durable result is negative, then graded: hard partitions of these data are not reproducible across "
               "preprocessing, most electrodes have no majority component, and two algorithms on one feature set agree on "
               "~60% of electrodes where two feature sets under one algorithm agree on ~40% (chance 12%). The graded "
               "decomposition is the analysis; an argmax map is only ever shown beside its loadings.</p>"
-              "<ul><li>The 24 Paper 2 figures are still the v8 renders; the twelve runs, the statistics and the cross-method figures are v10.</li>"
+              "<ul><li><b>No result on this tab is v11 yet.</b> 240 and 241 are running on the v11 cache, 242 follows 240, then 249. "
+              "The result blocks below are emptied until those runs exist, rather than showing v10 numbers under a v11 heading.</li>"
               "<li>K=8 (largest K with no one-patient cluster on HFA) or the held-out peaks — which one the paper reports.</li>"
               "<li>The native stability sweep has not been re-run since v8.</li></ul>"),
-        status="v10 · twelve runs 2026-09-24 · statistics at the peaks · Paper 2 figures still on v8"),
+        status="v11 cache 2026-09-26 · 240 / 241 running, 242 and 249 to follow · the result blocks are empty until then"),
     "lana": dict(
         one="language-network proximity predicts more HFA while hearing the prompt and while speaking, less during visual encoding",
         html=("<p>Against LanA (an 806-subject probabilistic atlas of the language network), being closer to the network "
@@ -89,7 +92,7 @@ ANSWERS = {
               "the argument for the continuous map.</p>"
               "<ul><li>Per-parcel maps (IFG, IFGorb, MFG, AntTemp, PostTemp, AngG): six more volumes through the same function.</li>"
               "<li>Restricting the atlas to typically-lateralised subjects would raise the correlation ceiling.</li>"
-              "<li>Not yet on v10 — the maps are on the 2644 / 2724-contact set of August.</li></ul>"),
+              "<li>Not on v11, and no rebuild is planned — the maps are on the 2644 / 2724-contact set of August, so the tab is retired.</li></ul>"),
         status="correlation maps 2026-08-02 · membership figures on the corrected coordinates · pre-v8"),
     "meetings": dict(
         one="the through-line and four logged meetings, June–July 2026",
@@ -438,7 +441,11 @@ function groupsOf(sec){
       out.push({el:g,key,head:h,label});
     });
     // everything before the first heading, except the tab's own header (eyebrow, title, lead), becomes an "Intro" group
-    const first=out[0].el; const isHdr=n=>n.nodeType===1&&(n.tagName==="H2"||n.classList.contains("eyebrow")||n.classList.contains("lead")||n.classList.contains("retired-note"));
+    // "tabhead" is the opt-in for a block that must stay above the role strip and be
+    // visible in EVERY role - the cohort figure at the top of stage 02 is the case this
+    // was added for. Without it the block is swept into the Intro group, which the tab
+    // hides behind its Method button, so "the first thing you see" was not visible at all.
+    const first=out[0].el; const isHdr=n=>n.nodeType===1&&(n.tagName==="H2"||n.classList.contains("eyebrow")||n.classList.contains("lead")||n.classList.contains("retired-note")||n.classList.contains("tabhead"));
     const pre=[]; for(let n=sec.firstChild;n&&n!==first;n=n.nextSibling){if(!isHdr(n))pre.push(n);}
     if(pre.some(n=>n.nodeType===1)){
       const hdr=Array.from(sec.children).filter(isHdr); const after=hdr.length?hdr[hdr.length-1]:null;

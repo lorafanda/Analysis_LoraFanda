@@ -46,6 +46,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -262,12 +264,27 @@ def main() -> int:
         conditions=list(CONDITIONS),
         written=time.strftime("%Y-%m-%d %H:%M:%S")), indent=2))
     print(f"\nwrote -> {out}")
+    # FIG C.0 describes whatever caches are on disk, so it is rebuilt here rather than
+    # left to be remembered: a cohort figure that is one version behind the cohort is
+    # worse than none. It only reads, and a failure here must not fail the rebuild that
+    # has already succeeded, so it is reported and swallowed.
+    print("\nFIG C.0, the cohort figure (make_cohort_figure.py):")
+    try:
+        r = subprocess.run([sys.executable, "make_cohort_figure.py"],
+                           cwd=str(Path(__file__).resolve().parent),
+                           env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+        if r.returncode:
+            print(f"  !! exit {r.returncode} - re-run it by hand; the cache itself is fine")
+    except Exception as e:                                   # noqa: BLE001
+        print(f"  !! {type(e).__name__}: {e} - re-run it by hand; the cache itself is fine")
+
     print(f"\nNEXT, in order, because every run below was fitted on the OLD cohort:")
     print("  1. point lf_concat.DEFAULT_CONCAT_CACHE at "
           f"{new_cache.name} (do this before anything reads the cache)")
     print("  2. 240 / 241 / 242 (and 243) - they read this cache read-only and must "
           "NOT rebuild it")
     print("  3. 249, then 252 (recon exports), then the paper figures")
+    print("  4. make_cohort_figure.py --insert, from the machine that has the site")
     return 0
 
 

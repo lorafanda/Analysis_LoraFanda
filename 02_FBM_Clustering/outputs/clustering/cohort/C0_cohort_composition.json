@@ -1,0 +1,109 @@
+{
+ "target": "concat_source_v11",
+ "versions": {
+  "concat_source_v4": {
+   "patients": 26,
+   "gated": 1616,
+   "cubes": 9342,
+   "centres": {
+    "Geneva": 14,
+    "Bern": 12
+   },
+   "languages": {
+    "GER": 13,
+    "FRE": 13
+   }
+  },
+  "concat_source_v5": {
+   "patients": 26,
+   "gated": 1616,
+   "cubes": 9522,
+   "centres": {
+    "Geneva": 14,
+    "Bern": 12
+   },
+   "languages": {
+    "GER": 13,
+    "FRE": 13
+   }
+  },
+  "concat_source_v6": {
+   "patients": 27,
+   "gated": 1629,
+   "cubes": 9517,
+   "centres": {
+    "Geneva": 14,
+    "Bern": 13
+   },
+   "languages": {
+    "GER": 14,
+    "FRE": 13
+   }
+  },
+  "concat_source_v7": {
+   "patients": 27,
+   "gated": 1626,
+   "cubes": 9517,
+   "centres": {
+    "Geneva": 14,
+    "Bern": 13
+   },
+   "languages": {
+    "GER": 14,
+    "FRE": 13
+   }
+  },
+  "concat_source_v8": {
+   "patients": 29,
+   "gated": 1719,
+   "cubes": 9432,
+   "centres": {
+    "Bern": 15,
+    "Geneva": 14
+   },
+   "languages": {
+    "GER": 16,
+    "FRE": 13
+   }
+  },
+  "concat_source_v9": {
+   "patients": 29,
+   "gated": 1719,
+   "cubes": 9432,
+   "centres": {
+    "Bern": 15,
+    "Geneva": 14
+   },
+   "languages": {
+    "GER": 16,
+    "FRE": 13
+   }
+  },
+  "concat_source_v10": {
+   "patients": 29,
+   "gated": 1624,
+   "cubes": 9345,
+   "centres": {
+    "Bern": 15,
+    "Geneva": 14
+   },
+   "languages": {
+    "GER": 16,
+    "FRE": 13
+   }
+  },
+  "concat_source_v11": {
+   "patients": 30,
+   "gated": 1487,
+   "cubes": 9825,
+   "centres": {
+    "Bern": 15,
+    "Geneva": 15
+   },
+   "languages": {
+    "GER": 16,
+    "FRE": 14
+   }
+  }
+ }
+}
