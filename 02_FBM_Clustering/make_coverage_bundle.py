@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -165,6 +166,70 @@ PALETTE = {
 
 def norm(s) -> str:
     return "" if s is None else str(s).replace("_", "").replace("-", "").upper()
+
+
+REVIEW_CONTACTS = FS / "activity_viz" / "review" / "contacts.json"
+PATIENT_META = Path(__file__).resolve().parent / "patient_meta.csv"
+
+
+def _strict(s) -> str:
+    """The LM review bundle's norm_el: strip everything that is not alphanumeric.
+
+    coverage's own norm() keeps more characters, so the two tables only line up under
+    the stricter of the two - which is why the join is done with this one on both sides.
+    """
+    return re.sub(r"[^A-Za-z0-9]", "", str(s)).upper()
+
+
+def add_report_fields(cj: dict, co_all: "pd.DataFrame") -> None:
+    """Native anatomy per contact, and centre / task language per patient.
+
+    The report draws three bars from these: patients by centre, patients by task
+    language, and each cluster's native regions. Both sources are optional - a missing
+    one leaves the field out and the report simply does not draw that bar.
+
+    The native label is NOT recomputed here: parsing the BIDS tissueLabel column is a
+    hundred lines in make_lm_review_bundle.py and duplicating it would let the two
+    disagree. This reads that bundle's contacts.json instead, which means the LM bundle
+    has to be built first - make_paper2_outputs orders them that way.
+
+    The regions go out as a vocabulary plus one index per contact: 45 distinct strings
+    over 6191 contacts is 25 kB that way against 79 kB as repeated strings, and
+    contacts.json is fetched on every page load.
+    """
+    # ---- per-contact native region
+    if REVIEW_CONTACTS.exists():
+        rows = json.loads(REVIEW_CONTACTS.read_text(encoding="utf-8"))
+        rows = rows if isinstance(rows, list) else list(rows.values())[0]
+        reg = {f"{r['patient']}|{_strict(r['name'])}": ((r.get("native") or {}).get("region") or "")
+               for r in rows}
+        keys = [f"{p}|{_strict(n)}" for p, n in zip(co_all["patient"], co_all["name"])]
+        vals = [reg.get(k, "") for k in keys]
+        vocab = sorted({v for v in vals if v})
+        idx = {v: i for i, v in enumerate(vocab)}
+        cj["regions"] = vocab
+        cj["region"] = [idx.get(v, -1) for v in vals]          # -1 = no native label
+        n = sum(1 for v in vals if v)
+        print(f"  native regions: {n}/{len(vals)} contacts, {len(vocab)} distinct")
+    else:
+        print(f"  native regions: SKIPPED, no {REVIEW_CONTACTS.name} "
+              f"(run scripts/make_lm_review_bundle.py first)")
+
+    # ---- per-patient centre and task language
+    if PATIENT_META.exists():
+        meta = pd.read_csv(PATIENT_META)
+        out = {}
+        for r in meta.itertuples():
+            lang = "" if (not isinstance(r.language, str) or not r.language.strip()) else r.language
+            out[str(r.patient)] = {"centre": str(r.centre), "lang": lang}
+        cj["patient_meta"] = out
+        pats = {str(p) for p in co_all["patient"]}
+        known = sum(1 for p in pats if out.get(p, {}).get("lang"))
+        print(f"  patient meta: {len(pats & set(out))}/{len(pats)} patients, "
+              f"language known for {known}")
+    else:
+        print(f"  patient meta: SKIPPED, no {PATIENT_META.name} "
+              f"(run make_patient_meta.py --write)")
 
 
 def write_counts(arr: np.ndarray, path_stem: Path) -> tuple[str, str]:
@@ -401,6 +466,7 @@ def main() -> int:
                             for r in co_all.itertuples()]
     contacts_json["hemi"] = ["lh" if r == "L" else "rh" for r in co_all["hemi1"]]
     contacts_json["patient"] = [str(p) for p in co_all["patient"]]
+    add_report_fields(contacts_json, co_all)
 
     # ── K-independent neighbourhood index, written once for every run and every K
     print("  neighbourhood index (shared by every run and every K):")

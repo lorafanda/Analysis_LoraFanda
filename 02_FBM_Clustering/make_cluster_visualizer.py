@@ -1255,6 +1255,117 @@ async function ui2Init() {
 # ---------------------------------------------------------------------------
 # the html
 # ---------------------------------------------------------------------------
+_REPORT_EXTRAS_JS = r'''
+// ── report extras: cohort make-up and native anatomy ─────────────────────────
+// Added 2026-09-28. contacts.json carries, from make_coverage_bundle.add_report_fields:
+//   regions       a vocabulary of native anatomy labels
+//   region[i]     index into it per contact, -1 where the BIDS tissueLabel gave none
+//   patient_meta  {patient: {centre, lang}} from patient_meta.csv
+// Every one is optional: a bundle built before this simply draws no extra bar.
+
+// A stable colour per label, so a region keeps its colour between clusters and between
+// reports. Hue from a string hash; fixed s/l so nothing comes out muddy or invisible.
+function hueOf(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+  return h;
+}
+function labelColour(s, i, n) {
+  return `hsl(${hueOf(s)} 52% ${n && i === n - 1 ? 78 : 56}%)`;
+}
+
+// The patients of the run on screen, once each.
+function runPatients() {
+  const lab = labelsForK(), out = new Set();
+  for (const i of (CONTACTS.cohorts[RUN.cohort_id] || [])) {
+    const L = lab && lab[i];
+    if (Array.isArray(L) && L.length) out.add(CONTACTS.patient[i]);
+  }
+  return out;
+}
+
+// Patients grouped by one field of patient_meta, as stackbar items + a caption.
+function patientsBy(field) {
+  const meta = CONTACTS.patient_meta;
+  if (!meta) return null;
+  const cnt = new Map();
+  for (const p of runPatients()) {
+    const v = (meta[p] || {})[field] || "unknown";
+    cnt.set(v, (cnt.get(v) || 0) + 1);
+  }
+  if (!cnt.size) return null;
+  // biggest first, but "unknown" always last so it never leads the bar
+  const keys = [...cnt.keys()].sort((a, b) =>
+    (a === "unknown") - (b === "unknown") || cnt.get(b) - cnt.get(a) || a.localeCompare(b));
+  const tot = [...cnt.values()].reduce((a, b) => a + b, 0);
+  return {
+    tot,
+    items: keys.map(k => ({
+      label: k, value: cnt.get(k),
+      color: k === "unknown" ? "#c8ccd2" : labelColour(k)
+    })),
+    cap: keys.map(k => `${esc(k)} ${cnt.get(k)}`).join(" · ")
+  };
+}
+
+// One labelled bar with its caption.
+function metaBar(title, hint, d) {
+  if (!d) return "";
+  return `<div><div class="sbcap" style="margin:0 0 3px"><b>${esc(title)}</b> — ${esc(hint)}</div>
+    <div class="sbtrack">${stackbar(d.items, d.tot, 15)}</div>
+    <div class="sbcap">${d.cap}</div></div>`;
+}
+
+function cohortBarsHTML() {
+  const c = patientsBy("centre"), l = patientsBy("lang");
+  if (!c && !l) return "";
+  return `<div class="two" style="margin-top:10px">
+    ${metaBar("Recording centre", `${c ? c.tot : 0} patients`, c)}
+    ${metaBar("Task language", "from the behavioural filename, or read off the stimuli", l)}
+  </div>`;
+}
+
+// Native anatomy of one cluster: the top regions, the rest folded into "other".
+// Counted over the contacts the run gave that cluster, which is fewer than the
+// cluster's samples wherever a contact has no native label.
+function regionItemsFor(cid, topN) {
+  if (!CONTACTS.regions || !CONTACTS.region) return null;
+  const lab = labelsForK(), cnt = new Map();
+  let n = 0, unl = 0;
+  for (const i of (CONTACTS.cohorts[RUN.cohort_id] || [])) {
+    const L = lab && lab[i];
+    if (!Array.isArray(L) || L.indexOf(cid) < 0) continue;
+    n++;
+    const ri = CONTACTS.region[i];
+    if (ri == null || ri < 0) { unl++; continue; }
+    const r = CONTACTS.regions[ri];
+    cnt.set(r, (cnt.get(r) || 0) + 1);
+  }
+  if (!cnt.size) return null;
+  const sorted = [...cnt.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const keep = sorted.slice(0, topN || 6);
+  const rest = sorted.slice(topN || 6).reduce((a, e) => a + e[1], 0);
+  const items = keep.map(([r, v]) => ({ label: r, value: v, color: labelColour(r) }));
+  if (rest) items.push({ label: `other (${sorted.length - keep.length} regions)`, value: rest, color: "#aeb4bc" });
+  const tot = n - unl;
+  return {
+    items, tot, unl,
+    cap: keep.slice(0, 3).map(([r, v]) => `${esc(r)} ${(100 * v / tot).toFixed(0)}%`).join(" · ")
+         + (unl ? ` · ${unl} unlabelled` : "")
+  };
+}
+
+// The second track under a cluster's patient composition. Same width, thinner, its own
+// caption - compact enough to sit in the existing cell without a new column.
+function regionTrack(cid) {
+  const d = regionItemsFor(cid, 6);
+  if (!d) return "";
+  return `<div class="sbtrack" style="margin-top:3px">${stackbar(d.items, d.tot, 9)}</div>
+    <div class="sbcap" style="opacity:.85">${d.cap}</div>`;
+}
+'''
+
+
 def build_html(order):
     s = SRC.read_text(encoding="utf-8")
     n_patch = 0
@@ -1985,6 +2096,38 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     sub("    const blob = new Blob([html], { type: \"text/html;charset=utf-8\" });",
         "    const blob = new Blob([dedupeImages(html)], { type: \"text/html;charset=utf-8\" });",
         "dedupe before save")
+
+    # ---- cohort make-up and native anatomy ---------------------------------------
+    # Three bars the report did not have: the patients by recording centre, the patients
+    # by task language, and each cluster's native anatomy. The first two are counted over
+    # PATIENTS, so they do not depend on the coordinate file - EL051 and EL052 have no
+    # rows in it and are absent from the rest of the report, but they still count here.
+    # The regions come from contacts.json's vocabulary + per-contact index, written by
+    # make_coverage_bundle.add_report_fields; a bundle without them simply draws nothing.
+    sub("function stackbar(items, total, h, scaleMax) {",
+        _REPORT_EXTRAS_JS + "\nfunction stackbar(items, total, h, scaleMax) {",
+        "report extras: helpers")
+
+    # the two cohort bars, under the donut row they belong with
+    sub('  ${summary}\n  ${note("overview")}',
+        '  ${cohortBarsHTML()}\n  ${summary}\n  ${note("overview")}',
+        "report extras: centre and language bars")
+
+    # a second, thinner track under each cluster's patient composition - in the same
+    # cell, so the card grid keeps its five columns and nothing reflows
+    # the two row builders name the cluster differently - `k` in the cards, `c` in the
+    # K panel - so each patch passes its own variable rather than binding a shared name
+    for anchor, cid, tag in (
+        (("        <div><div class=\"sbtrack\">${stackbar(items, tot, 15, barMax)}</div>\n"
+          "          <div class=\"sbcap\">${tot} samples"), "k", "cards"),
+        (("            <div><div class=\"sbtrack\">${stackbar(items, tot, 15, kBarMax)}</div>\n"
+          "              <div class=\"sbcap\">${tot} samples"), "c", "K panel"),
+    ):
+        head, cap = anchor.split("\n")
+        pad = " " * (len(cap) - len(cap.lstrip()))
+        sub(anchor,
+            head + "\n" + pad + "${regionTrack(" + cid + ")}\n" + cap,
+            f"report extras: region track ({tag})")
 
     left = re.findall(r"\b(covShots|covSpin|densSpin|covStats|covMax)\b", s)
     if left:
