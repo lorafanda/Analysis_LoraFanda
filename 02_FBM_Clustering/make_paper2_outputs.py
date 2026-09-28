@@ -9,6 +9,24 @@ command.
     python make_paper2_outputs.py --only paper    one or more phases (see PHASES below)
     python make_paper2_outputs.py --ks 7 8 9      the K values FIG 4 / 5 are drawn at
 
+TWO MACHINES, AND WHICH PHASES BELONG WHERE.
+
+  On the SERVER: everything that touches data. It has every byte of it, and the analysis
+  is run there. It has no site checkout and no git remote, so the site phase is skipped
+  automatically and the run ends clean:
+
+      python make_paper2_outputs.py --headless          (audit..bundles, 34 steps)
+
+  On the LAPTOP: the site, and the pushing. Nine steps write into
+  ~/lorafanda.github.io, and only this machine can commit and push:
+
+      python make_paper2_outputs.py --only site
+
+  The split is automatic - the site phase runs only where its checkout exists. --site
+  forces it, --no-site suppresses it, LF_SITE_DIR moves it. Before 2026-09-28 those nine
+  were spread through the norm, prep, bundles and site phases, and a server run ended
+  with nine identical FileNotFoundErrors on C:\\Users\\<whoever>\\lorafanda.github.io.
+
 THE ORDER, and why it is this order. The phases run in dependency order, so a phase only
 reads what an earlier one wrote:
 
@@ -80,6 +98,9 @@ TAIL = ("ANALYSIS", "FLM", "Analysis_LoraFanda")
 _here = Path(__file__).resolve().parents[1]
 ROOT = NASAC if tuple(_here.parts[-3:]) == TAIL else _here
 CLUST, PREP = ROOT / "02_FBM_Clustering", ROOT / "01_FBM_Analysis"
+# The site checkout, the same way every --insert script resolves it. LF_SITE_DIR
+# overrides, so a machine that keeps it elsewhere does not have to edit this file.
+SITE_DIR = Path(os.environ.get("LF_SITE_DIR") or (Path.home() / "lorafanda.github.io"))
 
 KS_DEFAULT = ["6", "7", "8", "9", "10"]      # the K range the page shows FIG 4 / 5 at
 # Wide enough to show whether a held-out peak exists at all. The cNMF peak the page used
@@ -159,11 +180,10 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
         # current cohort - deliberately left in, so the summary says so out loud.
         ("stage02", False, CLUST, ["make_gate_split_figures.py"]),
 
-        # ---- norm and prep
+        # ---- norm and prep. The --insert halves of these live in the site phase: they
+        # write to the site checkout, which only exists on the laptop.
         ("norm", False, CLUST, ["make_normalisation_figures.py"]),
-        ("norm", False, CLUST, ["make_norm_notes.py", "--insert"]),
         ("prep", False, PREP, ["make_preprocessing_figures.py"]),
-        ("prep", False, PREP, ["make_s1_tab.py", "--insert"]),
 
         # ---- bundles. The LM review bundle goes FIRST: it is the only place the BIDS
         # tissueLabel column is parsed into a native anatomy label, and
@@ -175,13 +195,20 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
         ("bundles", False, CLUST, ["scripts/make_lm_review_bundle.py"]),
         ("bundles", False, CLUST, ["make_coverage_bundle.py"]),
         ("bundles", False, CLUST, ["make_centroid_bundle.py"]),
-        ("bundles", False, CLUST, ["make_cluster_visualizer.py"]),
 
-        # ---- site: the blocks, make_site_ui last, then the audit
+        # ---- site: everything that WRITES INTO THE SITE CHECKOUT. Split out of the
+        # other phases on 2026-09-28: the analysis runs on the server, where the data
+        # lives but the site checkout and the git remote do not, so these nine steps
+        # failed nine times with the same FileNotFoundError on
+        # C:\\Users\\<whoever>\\lorafanda.github.io. They are skipped automatically when
+        # that folder is missing - see SITE_DIR below - so a server run now ends clean.
+        ("site", False, CLUST, ["make_cluster_visualizer.py"]),
         ("site", False, CLUST, ["make_paper_figures_webblock.py", "--insert"]),
         ("site", False, CLUST, ["make_cluster_webblock.py", "--insert"]),
         ("site", False, CLUST, ["make_s2_gallery.py", "--insert"]),
         ("site", False, CLUST, ["make_paper_tab.py", "--insert"]),
+        ("site", False, CLUST, ["make_norm_notes.py", "--insert"]),
+        ("site", False, PREP, ["make_s1_tab.py", "--insert"]),
         ("site", False, CLUST, ["make_site_ui.py", "--insert"]),
         ("site", False, CLUST, ["audit_site_figures.py", "--csv"]),
     ]
@@ -197,12 +224,30 @@ def main() -> int:
     ap.add_argument("--only", nargs="*", choices=PHASES, help="run only these phases")
     ap.add_argument("--ks", nargs="+", default=KS_DEFAULT,
                     help=f"K values for FIG 4 / 5 (default {' '.join(KS_DEFAULT)})")
+    ap.add_argument("--site", dest="site", action="store_true", default=None,
+                    help="run the site phase even if the checkout looks absent")
+    ap.add_argument("--no-site", dest="site", action="store_false",
+                    help="skip the site phase (data only)")
     ap.add_argument("--list", action="store_true", help="print the plan and stop")
     a = ap.parse_args()
 
     ks = [str(k) for k in a.ks]
     steps = [s for s in plan(ks)
              if (not a.only or s[0] in a.only) and not (a.headless and s[1])]
+
+    # WHERE THIS IS RUNNING. The analysis runs on the server, which has every byte of
+    # data but no site checkout and no git remote; the site is written and pushed from
+    # the laptop. So the site phase is skipped unless its checkout is actually here,
+    # which is what --site forces and --no-site suppresses.
+    site_here = SITE_DIR.is_dir()
+    want_site = a.site if a.site is not None else site_here
+    if not want_site and any(s[0] == "site" for s in steps):
+        n = sum(1 for s in steps if s[0] == "site")
+        steps = [s for s in steps if s[0] != "site"]
+        why = "not on this machine" if not site_here else "--no-site"
+        print(f"[site] skipping {n} steps: {SITE_DIR} is {why}.\n"
+              f"       Run them where the site checkout is, with --only site.", flush=True)
+
     print(f"{ROOT}\n{len(steps)} steps  ·  FIG 4/5 at K = {' '.join(ks)}"
           + (" (headless: 5 brain renders skipped)" if a.headless else "")
           + f"\n{'-' * 72}", flush=True)
