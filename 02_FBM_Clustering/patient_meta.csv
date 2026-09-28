@@ -23,7 +23,7 @@ PAT_3390,HUG,Geneva,FRE,stimuli
 PAT_3415,HUG,Geneva,FRE,stimuli
 PAT_3455,HUG,Geneva,FRE,stimuli
 PAT_3780,HUG,Geneva,FRE,derived
-PAT_3965,HUG,Geneva,,
+PAT_3965,HUG,Geneva,FRE,Lora
 PAT_3975,HUG,Geneva,GER,derived
 PAT_5515,MicroEPI,Geneva,FRE,derived
 PAT_5533,MicroEPI,Geneva,FRE,derived
