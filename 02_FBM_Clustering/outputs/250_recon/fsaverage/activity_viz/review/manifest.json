@@ -1,9 +1,9 @@
 {
- "built": "2026-09-28 23:17",
- "source_tree": "//nasac-m2.unige.ch/m-HumanNeuronLab/ANALYSIS/FLM/Analysis_LoraFanda/01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY",
+ "built": "2026-09-29 16:01",
+ "source_tree": "S:/HumanNeuronLab/ANALYSIS/FLM/Analysis_LoraFanda/01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY",
  "n_patient": 32,
- "n_contact": 4950,
- "n_data": 3470,
+ "n_contact": 5144,
+ "n_data": 3434,
  "conditions": [
   "audio",
   "picture",
