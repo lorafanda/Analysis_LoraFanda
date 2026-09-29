@@ -637,12 +637,12 @@
 "raw_id": "EL037",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 14:51",
+"run_start": "2026-09-28 14:32",
 "status": "ok",
 "reference": "WM reference, 13 contacts (skipped as data)",
 "wm_n": 13,
 "wm_source": "BIDS TSV",
-"bad_n": 39,
+"bad_n": 47,
 "bad_list": [
 "pH_R7",
 "aH_R1",
@@ -682,7 +682,15 @@
 "pI_R13",
 "pI_R14",
 "pI_R15",
-"pI_R16"
+"pI_R16",
+"pH_R12",
+"aI_L2",
+"aI_L3",
+"aI_L4",
+"aI_L5",
+"A_L4",
+"pI_L14",
+"CinG_L2"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
@@ -693,33 +701,33 @@
 "in": "53",
 "kept": "33",
 "used": "33",
-"cubes": "90"
+"cubes": "83"
 },
 "picture": {
 "in": "54",
 "kept": "39",
 "used": "39",
-"cubes": "90"
+"cubes": "83"
 },
 "reading": {
 "in": "53",
 "kept": "39",
 "used": "39",
-"cubes": "90"
+"cubes": "83"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL037_electrodes.tsv",
-"n_contacts": 176,
-"n_data": 90,
+"n_contacts": 171,
+"n_data": 83,
 "n_status": {
-"data": 90,
+"data": 83,
 "wm_ref": 13,
-"bad": 15,
+"bad": 17,
 "unknown": 12,
 "not_recorded": 46,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -898,8 +906,12 @@
 "reference": "WM reference, 28 contacts (skipped as data)",
 "wm_n": 28,
 "wm_source": "BIDS TSV",
-"bad_n": 0,
-"bad_list": [],
+"bad_n": 3,
+"bad_list": [
+"sSMG8",
+"sSMG9",
+"sSMG10"
+],
 "notch": "interp \u00b7 per shaft",
 "crop": "1810-4650 s",
 "conditions": "audio/picture/reading",
@@ -909,29 +921,29 @@
 "in": "53",
 "kept": "25",
 "used": "22",
-"cubes": "67"
+"cubes": "64"
 },
 "picture": {
 "in": "54",
 "kept": "25",
 "used": "25",
-"cubes": "67"
+"cubes": "64"
 },
 "reading": {
 "in": "53",
 "kept": "20",
 "used": "20",
-"cubes": "67"
+"cubes": "64"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL043_electrodes.tsv",
 "n_contacts": 117,
-"n_data": 67,
+"n_data": 64,
 "n_status": {
-"data": 67,
+"data": 64,
 "wm_ref": 28,
-"bad": 0,
+"bad": 3,
 "unknown": 11,
 "not_recorded": 11,
 "not_run": 0,
@@ -1007,45 +1019,56 @@
 "raw_id": "EL045",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 11:39",
+"run_start": "2026-09-28 17:07",
 "status": "ok",
-"reference": "WM reference, 5 contacts (skipped as data)",
-"wm_n": 5,
+"reference": "WM reference, 4 contacts (skipped as data)",
+"wm_n": 4,
 "wm_source": "BIDS TSV",
-"bad_n": 0,
-"bad_list": [],
+"bad_n": 10,
+"bad_list": [
+"PlaT_L2",
+"PlaT_L3",
+"PlaT_L4",
+"PlanTL4",
+"A_R8",
+"A_L2",
+"A_L3",
+"A_L4",
+"STG_L1",
+"STG_L2"
+],
 "notch": "interp \u00b7 per shaft",
 "crop": "176-1468 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "41",
+"unexplained_peaks": "9",
 "trials": {
 "audio": {
 "in": "53",
 "kept": "44",
 "used": "44",
-"cubes": "91"
+"cubes": "83"
 },
 "picture": {
 "in": "54",
 "kept": "46",
 "used": "46",
-"cubes": "91"
+"cubes": "83"
 },
 "reading": {
 "in": "53",
 "kept": "45",
 "used": "45",
-"cubes": "91"
+"cubes": "83"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL045_electrodes.tsv",
-"n_contacts": 129,
-"n_data": 91,
+"n_contacts": 127,
+"n_data": 83,
 "n_status": {
-"data": 91,
-"wm_ref": 5,
-"bad": 0,
+"data": 83,
+"wm_ref": 4,
+"bad": 7,
 "unknown": 28,
 "not_recorded": 5,
 "not_run": 0,
@@ -1096,15 +1119,15 @@
 }
 },
 "hg_reref": "WM",
-"anatomy_source": "sub-EL046_space-T1w_electrodes.tsv",
+"anatomy_source": "sub-EL046_electrodes.tsv",
 "n_contacts": 196,
 "n_data": 78,
 "n_status": {
 "data": 78,
 "wm_ref": 6,
 "bad": 6,
-"unknown": 22,
-"not_recorded": 84,
+"unknown": 21,
+"not_recorded": 85,
 "not_run": 0,
 "aux": 1
 }
@@ -1157,7 +1180,7 @@
 }
 },
 "hg_reref": "WM",
-"anatomy_source": "sub-EL048_space-T1w_electrodes.tsv",
+"anatomy_source": "sub-EL048_electrodes.tsv",
 "n_contacts": 78,
 "n_data": 59,
 "n_status": {
