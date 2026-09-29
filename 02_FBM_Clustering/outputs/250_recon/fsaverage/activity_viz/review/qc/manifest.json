@@ -1,11 +1,11 @@
 {
- "built": "2026-09-29 10:37",
- "n_hg": 9870,
+ "built": "2026-09-29 16:02",
+ "n_hg": 9891,
  "hg_px": 800,
  "hg_quality": 65,
  "fig_px": 900,
  "psd_px": 1100,
- "size_mb": 470.1,
+ "size_mb": 470.7,
  "hg": "{pid}/HG/{cond}/{name}.webp",
  "iqr": "{pid}/iqr_{cond}.webp",
  "psd": "{pid}/psd_{cond}.webp"
