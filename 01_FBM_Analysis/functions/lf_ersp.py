@@ -296,7 +296,8 @@ def spectrum_interpolate(X, fs, bands, *, flank_hz=2.0, phase="keep", seed=0):
 
 def notch_by_interpolation(X, fs, *, base=50.0, max_hz=None, peak_z_thresh=3.0,
                            freqs=None, audit=None, flank_hz=2.0, max_hw_hz=12.0,
-                           phase="random", widen=True, seed=0, resid_db=3.0):
+                           phase="random", widen=True, seed=0, resid_db=3.0,
+                           min_hw_hz=None):
     """The notch's own harmonic test (z on the median PSD), then spectrum interpolation
     over each detected peak's MEASURED width instead of an IIR notch.
 
@@ -311,7 +312,24 @@ def notch_by_interpolation(X, fs, *, base=50.0, max_hz=None, peak_z_thresh=3.0,
     it is replaced - and goes to the audit as hw_hz, with n_iter.
     Audit rows as notch_mains_harmonics writes them, plus method, phase, hw_hz, n_iter;
     Q is nan.
+
+    `min_hw_hz` (2026-09-28): {harmonic_hz: half-width} or one float - a FLOOR on the
+    starting half-width of a detected harmonic. The widening test above reads the
+    time-averaged PSD, so a residue that is trial-locked but small on average passes it
+    (EL037, 350 Hz: hw stayed 1.0 Hz, after 0.5-1.4 dB, and the ERSP row still sat
+    1.15 dB below its neighbours over every trial). The floor is set per patient in
+    config.notch_interp_min_hw_hz; the widening loop still runs on top of it.
     """
+    if min_hw_hz is None:
+        min_hw_hz = {}
+    elif not isinstance(min_hw_hz, dict):
+        min_hw_hz = {None: float(min_hw_hz)}
+
+    def _min_hw(f0):
+        for k, v in min_hw_hz.items():
+            if k is None or abs(float(k) - float(f0)) < 1e-6:
+                return float(v)
+        return 0.0
     X = np.asarray(X, float)
     was_1d = X.ndim == 1
     if was_1d:
@@ -336,7 +354,7 @@ def notch_by_interpolation(X, fs, *, base=50.0, max_hz=None, peak_z_thresh=3.0,
                                   notched=False, method="interp", phase=str(phase),
                                   hw_hz=0.0, n_iter=0))
             continue
-        todo[f0] = (max(g["hw_hz"], df), float(g["z"]))
+        todo[f0] = (min(max(g["hw_hz"], df, _min_hw(f0)), max_hw_hz), float(g["z"]))
 
     n_iter = 0
     Y = X.copy()

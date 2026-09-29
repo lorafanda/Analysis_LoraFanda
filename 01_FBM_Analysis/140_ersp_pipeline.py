@@ -135,7 +135,8 @@ def apply_notch_with_audit(signals, fs, patient_id, pid_raw, audit=None, names=N
         Q_max=notch_q_max_for(patient_id, pid_raw),
         method=notch_method_for(patient_id, pid_raw),
         interp_kw=dict(phase=getattr(cfg, "notch_interp_phase", "random"),
-                       max_hw_hz=float(getattr(cfg, "notch_interp_max_hw_hz", 12.0))),
+                       max_hw_hz=float(getattr(cfg, "notch_interp_max_hw_hz", 12.0)),
+                       min_hw_hz=dict(getattr(cfg, "notch_interp_min_hw_hz", {}).get(patient_id, {}))),
     )
 
 
@@ -415,6 +416,26 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                     is_micro = is_micro[keep]
                 print(f"  [{patient_id}] dropped {len(unk_idx)} 'Unknown' channels (no parcellation in TSV)")
 
+        # ── DROP BAD-LISTED CONTACTS (2026-09-28, Lora) - before the reference, the PSD figures
+        # and the notch. Until now cfg.bad_channels_manual only kept a contact out of the
+        # reference (by name) and out of the ERSP export, so the per-shaft notch still decided
+        # each shaft's harmonics and widths on a median that included the bad contacts
+        # (EL045's PlaT_L: three of six). Dropped here they are in nothing downstream. The WM
+        # ones are still reported in wm_channels_excluded_as_bad through _dropped_bad_keys.
+        _bad_norm_drop = {io.normalize_label(b)
+                          for b in getattr(cfg, "bad_channels_manual", {}).get(patient_id, [])}
+        _dropped_bad = [n for n in names if io.normalize_label(n) in _bad_norm_drop]
+        _dropped_bad_keys = [io.alias_label(n, patient_id) for n in _dropped_bad]
+        if _dropped_bad:
+            keep = [i for i, n in enumerate(names) if io.normalize_label(n) not in _bad_norm_drop]
+            signals = signals[:, keep]
+            names   = [names[i] for i in keep]
+            if is_micro is not None:
+                is_micro = is_micro[keep]
+            print(f"  [{patient_id}] dropped {len(_dropped_bad)} bad-listed channels before the "
+                  f"reference and the notch: {' '.join(_dropped_bad[:12])}"
+                  f"{' ...' if len(_dropped_bad) > 12 else ''}")
+
         # ── REREFERENCING
         if is_microepi:
             pid_str = str(pid_raw)
@@ -442,7 +463,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             wm_skip = set()
             report["n_wm_used"]                   = len(wm_used)
             report["wm_channels_used"]            = "|".join(sorted(wm_used))
-            report["wm_channels_excluded_as_bad"] = "|".join(sorted(wm_excl))
+            report["wm_channels_excluded_as_bad"] = "|".join(sorted(set(wm_excl) | {k for k in _dropped_bad_keys if k in _wm_keys}))
             print(f"  [{patient_id}] WM reference: {len(wm_used)} contacts used"
                   + (f", {len(wm_excl)} bad-listed left out: {sorted(wm_excl)}" if wm_excl else ""))
             anchor_name = preset.get("micro_reref_anchor")
@@ -480,7 +501,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 try:
                     signals, reref, wm_skip = apply_wm_reref(
                         signals, names, patient_id, electrodes_tsv_pattern=_wm_tsv)
-                    wm_excluded_norm = [n for n in wm_in_sig if n in _bad_norm_for_report]
+                    wm_excluded_norm = sorted(set([n for n in wm_in_sig if n in _bad_norm_for_report]
+                                                  + [k for k in _dropped_bad_keys if k in wm_all]))
                     report["n_wm_used"]                    = len(wm_usable)
                     report["wm_channels_used"]             = "|".join(sorted(wm_usable))
                     report["wm_channels_excluded_as_bad"]  = "|".join(sorted(wm_excluded_norm))

@@ -17,7 +17,7 @@ from memory:
                                    each cube's own split-half noise)
     02_.../functions/lf_concat.py  build_concat_dataset, concat_hg/rawds features
 
-Cohort numbers are the v10 rebuild of 2026-09-24 (29 patients).
+Cohort numbers are the v11 rebuild of 2026-09-26 (30 patients).
 Real cubes are used wherever a real cube can make the point.
 
     python make_preprocessing_figures.py
@@ -88,7 +88,7 @@ def p1():
             "electrode per condition; the last two happen in 02_FBM_Clustering and turn "
             "those cubes into the matrix the algorithms see.",
             "Everything below was read from the code that runs, and the cohort numbers "
-            "are the v10 rebuild of 2026-09-24."], y=0.975)
+            "are the v11 rebuild of 2026-09-26."], y=0.975)
 
     steps = [
         ("1  LOAD", "signals + channel\nnames + fs", BLUE),
@@ -114,24 +114,24 @@ def p1():
     ax.plot([12.9, 16.6], [3.05, 3.05], color=GREEN, lw=1.2)
     ax.text(12.9, 3.15, "02_FBM_Clustering", fontsize=9, color=GREEN)
 
-    ax.text(0.45, 2.55, "WHAT SURVIVES EACH NARROWING  (v10, 29 patients)",
+    ax.text(0.45, 2.55, "WHAT SURVIVES EACH NARROWING  (v11, 30 patients)",
             fontsize=10.4, color=INK)
-    rows = [("cubes written to ERSP_matrix", "9,444 files", MUTED),
-            ("rows in the dataset cache", "9,345", MUTED),
-            ("unique contacts", "3,107", INK),
-            ("…with all THREE conditions present", "2,961", INK),
-            ("…and high-activity in ≥1 condition", "1,624", GREEN),
-            ("dropped: missing a condition", "146", MUTED),
-            ("dropped: no high-activity condition", "1,337", MUTED),
-            ("dropped: subdural grid (PAT_3415)", "192", MUTED),
-            ("dropped: excluded patient EL044", "124 rows", MUTED)]
+    rows = [("cubes written to ERSP_matrix", "9,924 files", MUTED),
+            ("rows in the dataset cache", "9,825", MUTED),
+            ("unique contacts", "3,455", INK),
+            ("…with all THREE conditions present", "3,185", INK),
+            ("…after the exclusion rules", "3,121", INK),
+            ("…and high-activity in ≥1 condition", "1,487", GREEN),
+            ("dropped: missing a condition", "270", MUTED),
+            ("dropped: excluded by rule", "64", MUTED),
+            ("dropped: no high-activity condition", "1,634", MUTED)]
     for i, (k, v, c) in enumerate(rows):
         yy = 2.20 - i * 0.235
         ax.text(0.55, yy, k, fontsize=8.6, color=c)
         ax.text(5.1, yy, v, fontsize=8.6, color=c, ha="right", **MONO)
 
-    ax.text(6.1, 2.20, "The gate is the big one: it removes 1,337 of 2,961 electrodes, "
-            "45%.", fontsize=9.2, color=INK)
+    ax.text(6.1, 2.20, "The gate is the big one: it removes 1,634 of 3,121 electrodes, "
+            "52%.", fontsize=9.2, color=INK)
     ax.text(6.1, 1.94, "Of the 1,693 that survive, high-activity holds in\n"
                        "1 condition for 828,  2 for 465,  3 for 400.",
             fontsize=9, color=MUTED, va="top", linespacing=1.5)
@@ -448,7 +448,7 @@ def p5():
            "45, so a fixed cut let the low-trial patients gate on their own noise. It was\n"
            "raised for 1,198 of 9,345 electrode-conditions.",
            fontsize=8.4, color=MUTED, transform=c.transAxes, va="top")
-    c.text(0, 0.10, "v10: 1,624 of 2,961 pass.  782 on one condition, 438 on two, 404 on "
+    c.text(0, 0.10, "v11: 1,487 of 3,121 pass.  "
            "all three.", fontsize=8.6, color=GREEN, transform=c.transAxes, va="top")
 
     fig.text(0.05, 0.365, "THE THING TO KNOW ABOUT THIS GATE", fontsize=11, color=RED)
@@ -523,7 +523,7 @@ def p6():
             "the one stage-04 pooling uses.",
             fontsize=8.6, color=MUTED, transform=ax.transAxes, va="top", linespacing=1.5)
 
-    ax.text(0, 0.30, "v10 cohort: 1,624 electrodes × 29 patients  →  concat_hg (1624, 900) "
+    ax.text(0, 0.30, "v11 cohort: 1,487 electrodes × 30 patients  →  concat_hg (1487, 900) "
             "and concat_rawds (1693, 1350)", fontsize=9.4, color=GREEN,
             transform=ax.transAxes)
     ax.text(0, 0.16, "These two matrices are what 240 / 241 / 242 read. Nothing after "

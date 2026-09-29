@@ -90,6 +90,24 @@ MIXED_GRID_KEEP_PREFIXES = {
 STRIP_HEMI_PATIENTS = {"EL043"}
 
 bad_channels_manual = {
+    # EL045 (2026-09-28, PSD_clean psd_summary of the 09-24 run): 70-150 Hz floor 15 / 15 / 11 / 7 dB
+    # above the patient's median in every condition. PlaT_L4 was one of the five WM reference
+    # contacts, so a fifth of its broadband noise went into all 91 data contacts.
+    # PlanTL4 is the same contact in the electrodes TSV's spelling: the reference itself
+    # matches the recording name (PlaT_L4 left the reference in the 09-28 rerun - the cubes
+    # moved by ~1 dB), but the run report's wm_channels_used / _excluded columns compare
+    # the TSV keys, so without this spelling they mis-report it as used.
+    "EL045": ["PlaT_L2", "PlaT_L3", "PlaT_L4", "PlanTL4", "A_R8",
+              # 2026-09-28 (Lora, after the third rerun): A_L2-4 and STG_L1-2 carry the deepest
+              # 350 Hz stripe of the patient (-1.7 dB rows) and go out with the bad-list drop
+              # that now happens before the notch.
+              "A_L2", "A_L3", "A_L4", "STG_L1", "STG_L2"],
+    # EL043 (2026-09-28): sSMG8-10 sit 10-14 dB above the patient's median at 12-70 Hz in every
+    # condition, with the excluded trials saturated in the HG raster - a noisy stretch of that
+    # shaft segment. Hip7 / ITG9 / ITG10 (broadband rise only in the response half, speech
+    # muscle on lateral temporal contacts) were looked at and kept. The 28 WM reference
+    # contacts are all within +7 dB (pl2) of the median.
+    "EL043": ["sSMG8", "sSMG9", "sSMG10"],
     "EL040": [ f"PlaT_L{i}" for i in range(1, 4)],  # example; fill after visual/clinical review
     "PAT_3415": [ f"HLG{i}" for i in range(1, 18)],  # example; fill after visual/clinical review
     "PAT_3780": ["FAP9"],  # example; fill after visual/clinical review
@@ -100,7 +118,16 @@ bad_channels_manual = {
     "EL036": [f"pHG_R{i}" for i in range(1, 5)]+[f"pHG_R{i}" for i in range(8, 13)],
     "EL037": ["pH_R7","aH_R1","A_R10","A_R12","CinG_L12","CinG_L13","aI_L18"]
               + [f"pI_L{i}" for i in range(1, 17)]
-              + [f"pI_R{i}" for i in range(1, 17)],
+              + [f"pI_R{i}" for i in range(1, 17)]
+              # 2026-09-28, PSD_clean psd_summary of the 09-24 run: pH_R12 is +33 / +31 / +7 dB
+              # above the patient's median 70-150 Hz floor (dead in two of three blocks; the
+              # raster is saturated). aH_R2/3/4, pH_L1, pH_R2, aI_L16 (+6 to +12 dB) were looked
+              # at and kept: Lora reads their stripes as the 350 Hz residue, not a bad contact.
+              # The 13 WM reference contacts are all within +4.5 dB (pH_R1) of the median.
+              + ["pH_R12"]
+              # 2026-09-28 (Lora, after the rerun): removed by hand from the outputs of every
+              # condition and listed here so a rerun skips them.
+              + ["aI_L2", "aI_L3", "aI_L4", "aI_L5", "A_L4", "pI_L14", "CinG_L2"],
     "EL038": ["pH_R7","aH_L3","STO_R1","A_L7", "CinG_R2"],  # example; fill after visual/clinical review
     # "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44", "Pa52", "Pa54", "Pa62", "Pa36", "Pa61", "Pa45", "Pa59", "Pa38", "Pa30", "Pa50", "Pa35", "Pa58", "Pa46", "Pa27", "Pa43", "Pa29", "Pa28", "Pa42", "Pa34", "Pa31", "Pa55", "Pa10", "Pa33", "Pa19", "Pa57", "Pa39", "Pa22", "Pa20", "Pa47", "Pa14", "Pa4"],
     "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44"],
@@ -243,7 +270,9 @@ MANUAL_WM_CHANNELS = {
 # is not in. Read from the workbooks on 2026-08-14; regenerate if the anatomy
 # is redone.
 LOOKUP_OUT_OF_BRAIN = {
-    "EL046": ["pI_L1", "pI_L4"],
+    # EL046: pI_L1 / pI_L4 from the earlier review; the four below added 2026-09-24 after
+    # the re-run, all matching the recording's own spelling.
+    "EL046": ["pI_L1", "pI_L4", "aH_R12", "A_L1", "pH_L1", "A_L2"],
     "EL048": ["A_R9", "EntG_R12", "PHG_R15", "aH_L8", "aH_L9", "pH_R14",
               "pH_R15"],
     "EL051": [],   # read 2026-09-15: every isOut flag in EL051_Lookup.xlsx is on an unplugged contact
@@ -475,6 +504,24 @@ notch_Q_max = {
 notch_interp_phase = "random"         # "random" | "keep"
 notch_interp_max_hw_hz = 12.0
 
+# A FLOOR on the starting half-width, per patient and harmonic (2026-09-28). The widening
+# test reads the time-averaged PSD; a residue that is trial-locked but small on average
+# passes it and still stripes the ERSP row. EL037's 350 Hz line: hw stayed 1.0 Hz
+# (after 0.5-1.4 dB above the floor on every shaft), yet the 350 Hz ERSP row sat
+# 1.15 dB below its neighbours over all trials, both halves, all conditions - the
+# cohort's deepest stripe (EL036 -0.72 at 350; EL045 -0.59 / -0.49 at 200 / 300).
+# The band still widens on top of this floor if the PSD test asks for it; the audit
+# shows the width actually used (hw_hz). Check the stripe after a rerun with the row
+# bias of the new cubes (mean ERSP at the harmonic row minus its +-2 neighbours).
+notch_interp_min_hw_hz = {
+    "EL037": {350.0: 5.0},
+    # EL045 (third rerun, 2026-09-28 15:47): the 59.94 Hz comb is notched and the reference
+    # is clean, yet the 350 Hz row still sits 0.74 dB below its neighbours over every trial
+    # (A_L1-4, EntG_L2, TTG_L3 at -1.7) with hw 0.5-1.0 at 350 - the same trial-locked
+    # residue as EL037, same remedy.
+    "EL045": {350.0: 5.0},
+}
+
 # EVERY PATIENT GETS interp, since 2026-09-24. The dict decided it for 12 of 31 and the
 # rest kept "iir", which the audit of that day shows digging holes rather than removing
 # lines: after_db is NEGATIVE for every iir patient (EL030 -5.9, EL046 -6.6, PAT_3415
@@ -496,6 +543,12 @@ notch_extra_bases = {
     # EL048: 84.5 / 115.5 Hz sidebands in every block of the 2026-09-07 audit (z 3.2-3.4,
     # 6-9 dB up), 16.667 x 5 and x 7; they sit inside the 100 Hz row's window reach
     "EL048": (16.667,),
+    # EL045 (2026-09-28 rerun, after PlaT_L4 left the reference): 359.5, 240 and 180 Hz on
+    # A_L / EntG_L / STG_L / TTG_L in every condition (z 11-31, 3-6 dB up), a 59.94 Hz comb
+    # - the screen's refresh rate. fit_comb: 59.94 explains 20 of 23 peaks; the rest is the
+    # 86.5 / 113.5 Hz pair. The 359.5 Hz line reached the 351.6 Hz ERSP row through the
+    # window's main lobe: -0.75 dB over every trial (A_L1-4, EntG_L2, TTG_L3 at -1.7).
+    "EL045": (59.94,),
 }
 
 # ---------------------------
