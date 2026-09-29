@@ -1339,19 +1339,19 @@
 "in": "53",
 "kept": "42",
 "used": "42",
-"cubes": "104"
+"cubes": "84"
 },
 "picture": {
 "in": "54",
 "kept": "47",
 "used": "47",
-"cubes": "104"
+"cubes": "84"
 },
 "reading": {
 "in": "53",
 "kept": "42",
 "used": "42",
-"cubes": "104"
+"cubes": "84"
 }
 },
 "hg_reref": "WM",
@@ -1630,7 +1630,7 @@
 "reference": "WM reference, 9 contacts (skipped as data)",
 "wm_n": 9,
 "wm_source": "BIDS TSV",
-"bad_n": 17,
+"bad_n": 18,
 "bad_list": [
 "HLG1",
 "HLG2",
@@ -1648,7 +1648,8 @@
 "HLG14",
 "HLG15",
 "HLG16",
-"HLG17"
+"HLG17",
+"HLG18"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "30-1500 s",
@@ -1677,11 +1678,11 @@
 "hg_reref": "WM",
 "anatomy_source": "sub-3415_electrodes.tsv",
 "n_contacts": 148,
-"n_data": 121,
+"n_data": 123,
 "n_status": {
-"data": 121,
-"wm_ref": 9,
-"bad": 17,
+"data": 123,
+"wm_ref": 6,
+"bad": 18,
 "unknown": 1,
 "not_recorded": 0,
 "not_run": 0,
