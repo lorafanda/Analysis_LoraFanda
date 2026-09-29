@@ -74,10 +74,20 @@ def per_channel_z(d: pd.DataFrame, col="score_hg") -> pd.DataFrame:
 def dropped(d: pd.DataFrame, z: float, frac: float) -> pd.DataFrame:
     """Per patient x condition x trial: the share of channels over z, and the verdict."""
     d = d.assign(over=d.z > z)
-    g = (d.groupby(["patient", "condition", "trial"])
-           .agg(share=("over", "mean"), n_ch=("over", "size"),
-                worst=("z", "max"), median_z=("z", "median"))
-           .reset_index())
+    agg = dict(share=("over", "mean"), n_ch=("over", "size"),
+               worst=("z", "max"), median_z=("z", "median"))
+    # trial_label is the number the HG figure prints. Carried through so a trial named
+    # here can be found on the figure: `trial` counts only what reached the ERSP, the
+    # label counts the whole table, and on PAT_3455 picture those are 47 and 53.
+    if "trial_label" in d.columns:
+        agg["label"] = ("trial_label", "first")
+    g = (d.groupby(["patient", "condition", "trial"]).agg(**agg).reset_index())
+    if "label" not in g.columns:
+        # NOT trial + 1. That is right only when no trial was filtered before the ERSP,
+        # and when one was it is quietly wrong: on PAT_3455 picture, 6 of 53 were removed
+        # first, so scored trial 14 is row 16 and trial+1 would send you to row 15. A
+        # table written before the trial_label column simply cannot answer this.
+        g["label"] = np.nan
     g["is_drop"] = g.share >= frac
     return g
 
@@ -125,9 +135,15 @@ def main() -> int:
         g = dropped(d, a.z, a.frac)
         hit = g[g["is_drop"]].sort_values(["patient", "condition", "trial"])
         print(f"\nTRIALS DROPPED at z={a.z}, frac={a.frac:.0%}  ({len(hit)})")
+        if hit.label.isna().any():
+            print("  ('row' needs the trial_label column - re-run 145 to get it)")
+        else:
+            print("  ('row' is the number printed beside that trial on the HG figure)")
         for r in hit.itertuples():
-            print(f"  {r.patient:<10} {r.condition:<8} trial {int(r.trial):>3}  "
-                  f"on {r.share:.0%} of {int(r.n_ch)} channels  worst z {r.worst:5.1f}")
+            _row = "  ?" if not np.isfinite(r.label) else f"{int(r.label):>3}"
+            print(f"  {r.patient:<10} {r.condition:<8} row {_row} "
+                  f"(scored trial {int(r.trial):>3})  on {r.share:.0%} of "
+                  f"{int(r.n_ch)} channels  worst z {r.worst:5.1f}")
     elif a.list:
         print("\n--list needs --z and --frac")
     return 0

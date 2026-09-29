@@ -822,10 +822,18 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                     _sc = res.get("trial_scores") or []
                     _sh = res.get("trial_scores_hg") or []
                     _drop = set(res.get("dropped_trials") or [])
+                    # TWO TRIAL NUMBERINGS, and they are not the same one. `trial` counts
+                    # only the trials that reached the ERSP; `trial_label` is the number
+                    # the HG figure prints beside the row, which counts the WHOLE table
+                    # including the trials a filter removed first. On PAT_3455 picture
+                    # that is 47 against 53. Both are written, so a trial the sweep names
+                    # can be found on the figure without arithmetic.
+                    _kp = (_hg_all["keep_pos"] if _hg_all is not None else None)
                     for _t in range(len(_sc)):
+                        _orig = int(_kp[_t]) if (_kp is not None and _t < len(_kp)) else _t
                         _score_rows.append(dict(
                             patient=patient_id, condition=cond, channel=chan_name,
-                            trial=_t,
+                            trial=_t, trial_label=_orig + 1,
                             score_map=_sc[_t],
                             score_hg=(_sh[_t] if _t < len(_sh) else float("nan")),
                             dropped_by_current_rule=int(_t in _drop)))
