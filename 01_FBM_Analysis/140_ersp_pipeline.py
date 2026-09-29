@@ -76,6 +76,18 @@ RAWONLY_SCRIPT_NAME = "04_ersp_LM_RAWONLY"
 run_root_ersp       = os.path.join(cfg.outputs_root, ERSP_SCRIPT_NAME)
 run_root_raw        = os.path.join(cfg.outputs_root, RAWONLY_SCRIPT_NAME)
 
+# PRODUCT SWITCHES. Every one defaults to True, so a normal run writes exactly what it
+# wrote before these existed. They are here for 145_trial_zscore_test.py, which needs the
+# same pipeline but only two of the products; without them that script would have to fork
+# this loop, and a forked 873-line pipeline drifts from the real one within a week.
+WRITE_MONTAGE      = True   # Report/<pid>_montage_overview.png
+WRITE_ERSP_PLOTS   = True   # ERSP/<cond>/*.png          (the per-channel ERSP figures)
+WRITE_HG_PLOTS     = True   # HG/<cond>/*.png            (the per-trial high-gamma rasters)
+WRITE_CUBES        = True   # ERSP_matrix/<cond>/*.npy   (what stage 02 clusters)
+WRITE_HALVES       = True   # ERSP_halves/<cond>/*.npy   (the split-half gate)
+WRITE_CLEAN_PNG    = True   # ERSP_clean/<cond>/*_CLEAN.png
+EXPORT_TRIAL_SCORES = False  # TrialScores/<cond>/<pid>_<cond>_trial_scores.tsv
+
 ersp_params = fe.ERSPParams(
     nperseg=cfg.nperseg, nfft=cfg.nfft, noverlap=cfg.noverlap,
     baseline_w=cfg.baseline_w, baseline_calc_w=cfg.baseline_calc_w,   # (-0.4, -0.1): the ERSPParams default every cube was made with; explicit since 2026-09-24
@@ -313,6 +325,38 @@ def run_pd_extraction(pid_raw):
 # ============================================================
 # Part 2 - ERSP pipeline + cluster export, the notebook's process_patient() verbatim
 # ============================================================
+def _hg_trial_z(res, hg_all):
+    """Per-trial z of the high-gamma score, laid out in the HG figure's row order.
+
+    compute_ersp scores only the trials it was given; the HG figure draws the WHOLE
+    trial table, including the ones a filter removed upstream. hg_all["keep_pos"] is the
+    map between the two, so the score is written to the row it belongs to and every
+    other row stays NaN - which the figure draws as no label rather than as a zero.
+
+    The z is computed within the channel, across its trials, which is the definition
+    146_trial_zscore_sweep.py uses. Two definitions of "the z of a trial" would be one
+    too many: the number on the figure has to be the number the rule would act on.
+    """
+    sc = res.get("trial_scores_hg")
+    if not sc:
+        return None
+    sc = np.asarray(sc, float)
+    ok = np.isfinite(sc)
+    if ok.sum() < 4:
+        return None
+    sd = float(np.std(sc[ok], ddof=1))
+    if sd <= 1e-9:
+        return None
+    z = (sc - float(np.mean(sc[ok]))) / sd
+    if hg_all is None:
+        return z
+    out = np.full(len(hg_all["on"]), np.nan)
+    pos = np.asarray(hg_all["keep_pos"], int)
+    n = min(len(pos), len(z))
+    out[pos[:n]] = z[:n]
+    return out
+
+
 def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_PSD_PLOTS,
                     INCLUDE_MICROEPI_MICROS):
     ersp_params.trial_reject_mad = getattr(cfg, "ersp_trial_reject", {}).get(str(pid_raw))
@@ -597,8 +641,9 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             cond_groups = rebased
 
         if RUN_ERSP_PIPELINE:
-            tr.plot_montage_overview(signals=signals, fs=fs, names=names,
-                                     cond_groups=cond_groups, save_dir=report_dir, patient_id=patient_id)
+            if WRITE_MONTAGE:
+                tr.plot_montage_overview(signals=signals, fs=fs, names=names,
+                                         cond_groups=cond_groups, save_dir=report_dir, patient_id=patient_id)
             ersp_root = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "ERSP")
             hg_root   = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "HG")
 
@@ -712,6 +757,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                     print(f"  [{patient_id} | {cond}] trial tables disagree "
                           f"({int(_kept_a.sum())} vs {len(on_c)}); the HG figure shows the kept trials only")
             print(f"  {cond}: ", end="", flush=True)
+            _score_rows = []
             for ci, chan_name in enumerate(names):
                 if chan_name in wm_skip: continue
                 if chan_name in micro_names_set: continue
@@ -722,11 +768,12 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                     trial_ends=te_c, mode=cfg.mode, time_window=cfg.time_window,
                     params=ersp_params)
 
-                if RUN_ERSP_PIPELINE:
+                if RUN_ERSP_PIPELINE and WRITE_ERSP_PLOTS:
                     fe.plot_ersp(res, patient_id=patient_id, condition=cond,
                                  reref_type=reref, chan_name=chan_name,
                                  save_dir=ersp_dir, params=ersp_params,
                                  plot_title=False, save_sidecar=False)
+                if RUN_ERSP_PIPELINE and WRITE_HG_PLOTS:
                     fe.plot_hg_trials(
                         signals=sig_c, fs=fs,
                         onsets=(_hg_all["on"] if _hg_all is not None else on_c),
@@ -739,6 +786,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                             [int(_hg_all["keep_pos"][i]) for i in res.get("dropped_trials", [])]
                             if _hg_all is not None else res.get("dropped_trials")),
                         exclude_reasons=(_hg_all["reason"] if _hg_all is not None else None),
+                        trial_z=_hg_trial_z(res, _hg_all),
                         vmin=cfg.hg_vmin, vmax=cfg.hg_vmax,
                         save_dir=hg_dir, add_separators=False, sort_ascending=True,
                         trial_end_indices=(_hg_all["te"] if _hg_all is not None else te_c),
@@ -751,19 +799,48 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                         fill_nans_nearest(A)
                     mode_tag = "_TN" if str(res["meta"]["mode"]).upper() == "TN" else ""
                     stem = f"{patient_id}_{cond}_{reref}_ERSP_{chan_name}{mode_tag}"
-                    np.save(os.path.join(out_mat, f"{stem}.npy"), A)
+                    if WRITE_CUBES:
+                        np.save(os.path.join(out_mat, f"{stem}.npy"), A)
                     # split-half cubes for the reliability gate, in ERSP_halves/ (see the notebook)
                     for _h, _key in (("half1", "avg_db_h1"), ("half2", "avg_db_h2")):
                         _H = res.get(_key)
-                        if _H is None:
+                        if _H is None or not WRITE_HALVES:
                             continue
                         _ensure(out_half)
                         np.save(os.path.join(out_half, f"{stem}_{_h}.npy"), np.asarray(_H, float))
-                    save_clean_png(A, vmin=ersp_params.vmin, vmax=ersp_params.vmax,
-                                   path_png=os.path.join(out_png, f"{stem}_CLEAN.png"))
+                    if WRITE_CLEAN_PNG:
+                        save_clean_png(A, vmin=ersp_params.vmin, vmax=ersp_params.vmax,
+                                       path_png=os.path.join(out_png, f"{stem}_CLEAN.png"))
                     del A
+
+                # ONE ROW PER (CHANNEL, TRIAL). compute_ersp already scores every trial;
+                # nothing here re-derives it, so the numbers written are the ones the
+                # rejection rule would compare against. They are all-NaN unless a
+                # trial_reject_* threshold is set, which is why 145 sets an
+                # unreachable one - it turns the scoring on without dropping anything.
+                if EXPORT_TRIAL_SCORES:
+                    _sc = res.get("trial_scores") or []
+                    _sh = res.get("trial_scores_hg") or []
+                    _drop = set(res.get("dropped_trials") or [])
+                    for _t in range(len(_sc)):
+                        _score_rows.append(dict(
+                            patient=patient_id, condition=cond, channel=chan_name,
+                            trial=_t,
+                            score_map=_sc[_t],
+                            score_hg=(_sh[_t] if _t < len(_sh) else float("nan")),
+                            dropped_by_current_rule=int(_t in _drop)))
                 del res
             print(" done")
+
+            if EXPORT_TRIAL_SCORES and _score_rows:
+                _sdir = _ensure(io.patient_output_dir(run_root_ersp, patient_id,
+                                                      cfg.block_name, "TrialScores"))
+                _sp = os.path.join(_sdir, f"{patient_id}_{cond}_trial_scores.tsv")
+                pd.DataFrame(_score_rows).to_csv(_sp, sep="	", index=False)
+                _n_ch = len(set(r["channel"] for r in _score_rows))
+                _n_tr = len(set(r["trial"] for r in _score_rows))
+                print(f"  [{patient_id} | {cond}] trial scores -> {os.path.basename(_sp)} "
+                      f"({_n_ch} channels x {_n_tr} trials)")
 
         # ── PER-BLOCK CLEANING REPORT
         if notch_audit_rows:

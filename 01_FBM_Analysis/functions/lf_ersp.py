@@ -8,6 +8,14 @@ from scipy.signal import spectrogram, welch, iirnotch, filtfilt
 from scipy.ndimage import (gaussian_filter, label, generate_binary_structure,
                            binary_closing, uniform_filter)
 
+# PER-HARMONIC NOTCH LOGGING. Off since 2026-09-29: with per-shaft interpolation this
+# printed one line per harmonic per shaft per condition - hundreds of lines a patient,
+# which buries the summary that actually matters. Nothing is lost: every one of those
+# lines is already a row in Report/<pid>_notch_audit.tsv, with the same z, half-width
+# and pass count. Set True to get them back on the console.
+VERBOSE_NOTCH_PER_HARMONIC = False
+
+
 # ----------------------------
 # Parameters
 # ----------------------------
@@ -177,13 +185,15 @@ def notch_mains_harmonics(X, fs, *, base=50.0, max_hz=None, repeats=1,
         peak_val = np.max(P_db[peak]) if np.any(peak) else bg_mean
         z = (peak_val - bg_mean) / (bg_std + 1e-6)
         if z < peak_z_thresh:
-            print(f"  [notch] {f0:.1f} Hz: z={z:.1f} — no significant peak, skipping")
+            if VERBOSE_NOTCH_PER_HARMONIC:
+                print(f"  [notch] {f0:.1f} Hz: z={z:.1f} — no significant peak, skipping")
             if audit is not None:
                 audit.append(dict(freq_hz=float(f0), z=float(z), Q=float("nan"),
                                   notched=False))
             continue
         Q = float(np.clip(f0 / (bg_std + 1.0) * 2, Q_min, Q_max))
-        print(f"  [notch] {f0:.1f} Hz: z={z:.1f}, Q={Q:.1f} — notching")
+        if VERBOSE_NOTCH_PER_HARMONIC:
+            print(f"  [notch] {f0:.1f} Hz: z={z:.1f}, Q={Q:.1f} — notching")
         if audit is not None:
             audit.append(dict(freq_hz=float(f0), z=float(z), Q=Q, notched=True))
         b, a = iirnotch(w0=f0, Q=Q, fs=fs)
@@ -348,7 +358,8 @@ def notch_by_interpolation(X, fs, *, base=50.0, max_hz=None, peak_z_thresh=3.0,
             continue
         g = peak_geometry(f, P_db, f0, max_hw_hz=min(5.0, max_hw_hz))
         if not np.isfinite(g["z"]) or g["z"] < peak_z_thresh:
-            print(f"  [interp] {f0:.1f} Hz: z={g['z']:.1f} — no significant peak, skipping")
+            if VERBOSE_NOTCH_PER_HARMONIC:
+                print(f"  [interp] {f0:.1f} Hz: z={g['z']:.1f} — no significant peak, skipping")
             if audit is not None:
                 audit.append(dict(freq_hz=float(f0), z=float(g["z"]), Q=float("nan"),
                                   notched=False, method="interp", phase=str(phase),
@@ -381,8 +392,9 @@ def notch_by_interpolation(X, fs, *, base=50.0, max_hz=None, peak_z_thresh=3.0,
         if not grew:
             break
     for f0, (hw, z) in todo.items():
-        print(f"  [interp] {f0:.1f} Hz: z={z:.1f}, +-{hw:.1f} Hz, phase {phase} — interpolated"
-              + (f" ({n_iter} passes)" if n_iter > 1 else ""))
+        if VERBOSE_NOTCH_PER_HARMONIC:
+            print(f"  [interp] {f0:.1f} Hz: z={z:.1f}, +-{hw:.1f} Hz, phase {phase} — interpolated"
+                  + (f" ({n_iter} passes)" if n_iter > 1 else ""))
         if audit is not None:
             audit.append(dict(freq_hz=float(f0), z=float(z), Q=float("nan"), notched=True,
                               method="interp", phase=str(phase), hw_hz=float(hw),
@@ -987,14 +999,16 @@ def _reject_trials(stack, params, label="", freqs=None):
     cap = getattr(params, "trial_reject_abs_db", None)
     band_on = (kb is not None or kbz is not None) and freqs is not None
     if n < 4 or (k is None and kz is None and cap is None and not band_on):
-        return idx, np.array([], int), np.full(n, np.nan)
+        return idx, np.array([], int), np.full(n, np.nan), np.full(n, np.nan)
 
     sc = _trial_scores(stack)
     ok = np.isfinite(sc)
     bad = _rule_hits(sc, k, kz)
+    sc_band = np.full(n, np.nan)
     if band_on:
         band = getattr(params, "trial_reject_band", (70.0, 150.0))
         sc_b = _trial_scores(stack, freqs=freqs, band=band)
+        sc_band = sc_b          # kept so the caller can export it - see below
         # OR, not AND: a trial that is extreme in either view is still a bad trial, and
         # requiring both would make adding the band arm loosen the rule, not tighten it
         bad |= _rule_hits(sc_b, kb, kbz)
@@ -1012,7 +1026,10 @@ def _reject_trials(stack, params, label="", freqs=None):
                   f"capped at {max_drop} ({100*getattr(params,'trial_reject_max_frac',0.34):.0f}% "
                   "of the trials) - this channel may simply be bad")
         bad = keep_bad
-    return idx[~bad], idx[bad], sc
+    # sc is the whole-map score, sc_band the same statistic over trial_reject_band
+    # only. The band one is what the HG figure shows and what a high-gamma rule
+    # should be swept on, so it is returned rather than thrown away.
+    return idx[~bad], idx[bad], sc, sc_band
 
 
 def _halves(stack, avg_like, reducer):
@@ -1241,7 +1258,7 @@ def compute_ersp(
     warped_db = np.stack(warped_db, 0); warped_z = np.stack(warped_z, 0)
     # a runaway trial is kept out of the average AND out of the halves, so it cannot
     # come back through the reproducibility check
-    keep, dropped, scores = _reject_trials(warped_db, params, freqs=f_common)
+    keep, dropped, scores, scores_hg = _reject_trials(warped_db, params, freqs=f_common)
     warped_db = warped_db[keep]; warped_z = warped_z[keep]
     with np.errstate(invalid="ignore"):
         avg_db = np.nanmean(warped_db, 0)
@@ -1258,6 +1275,7 @@ def compute_ersp(
         n_trials_used=int(len(keep)), n_dropped=int(len(dropped)),
         dropped_trials=[int(i) for i in dropped],
         trial_scores=[float(v) for v in scores],
+        trial_scores_hg=[float(v) for v in scores_hg],
         avg_db_h1=db_h1, avg_db_h2=db_h2,
         markers=dict(onset=100.0*(pB), offset=100.0*(pB+pS)),
         meta=dict(mode="TN", fs_in=float(fs), fs_ds=float(fs_ds), scale=float(scale),
@@ -1509,7 +1527,8 @@ def plot_hg_trials(
     fmt="png",                    # "png" | "tif" — PNG everywhere since 2026-09-07
     rejected_trials=None,         # indices (ORIGINAL order) the ERSP average dropped
     reject_z=None,                # or let the plot apply the z rule to its own matrix
-    exclude_reasons=None          # per-trial reason a trial never reached the ERSP
+    exclude_reasons=None,         # per-trial reason a trial never reached the ERSP
+    trial_z=None                  # per-trial z of the high-gamma score, ORIGINAL order
 ):
     """
     Mirrors the legacy HG plot (color/shape/sorting) but lives inside lf_ersp.py.
@@ -1808,6 +1827,17 @@ def plot_hg_trials(
                   color=("#c1121f" if _is_rej else "k"),
                   fontweight=("bold" if _is_rej else "normal"),
                   va="center", ha="left")
+        # The trial's high-gamma z at the right edge, outside the data, coloured by how
+        # far out it is. This is the SAME number the rejection rule compares against -
+        # compute_ersp's trial_scores_hg, z-scored within this channel - so the figure
+        # and the rule cannot disagree about which trial is extreme.
+        if trial_z is not None and int(orig_idx) < len(trial_z):
+            _zv = float(trial_z[int(orig_idx)])
+            if _np.isfinite(_zv):
+                _zc = "#c1121f" if _zv >= 3.0 else ("#d97706" if _zv >= 2.0 else "#6b7280")
+                _plt.text(t_common[-1] + 0.02, new_row + 1, f"{_zv:+.1f}", fontsize=5,
+                          color=_zc, fontweight=("bold" if _zv >= 3.0 else "normal"),
+                          va="center", ha="left", clip_on=False, zorder=6)
         if _is_rej:
             _plt.text(baseline_w[0] - 0.02, new_row + 1, "\u2715", fontsize=6,
                       color="#c1121f", va="center", ha="right", zorder=6, clip_on=False)
