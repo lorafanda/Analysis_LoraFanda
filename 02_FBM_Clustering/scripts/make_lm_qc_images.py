@@ -66,19 +66,25 @@ def main() -> int:
     for c in contacts:
         if c["status"] != "data" or (a.patients and c["patient"] not in a.patients):
             continue
-        pid, ref = c["patient"], patients.get(c["patient"], {}).get("hg_reref", "WM")
+        P = patients.get(c["patient"], {})
+        pid, ref = c["patient"], P.get("hg_reref", "WM")
+        # a non-cohort patient (patients.json: tree / hfa_dir / hfa_stem) is read from the
+        # frozen 04_ersp_LM tree with its HG/ folder; the bundle keeps its own HG/ layout
+        qc_root = os.path.join(os.path.dirname(QC), P["tree"]) if P.get("tree") and P["tree"] != os.path.basename(QC) else QC
+        hdir, hstem = P.get("hfa_dir", "HFA"), P.get("hfa_stem", "HFAtrials")
         for cond in c["conds"]:
-            src = os.path.join(QC, pid, "LM", "HFA", cond, f"{pid}_{cond}_{ref}_HFAtrials_{c['name']}.png")   # the bundle keeps its HG/ layout
+            src = os.path.join(qc_root, pid, "LM", hdir, cond, f"{pid}_{cond}_{ref}_{hstem}_{c['name']}.png")
             dst = os.path.join(OUT, pid, "HG", cond, f"{c['name']}.webp")
             jobs.append((src, dst, HG_W, HG_Q)); expected.add(os.path.normcase(dst))
     for pid, P in patients.items():
         if not P.get("ran") or (a.patients and pid not in a.patients):
             continue
+        qc_root = os.path.join(os.path.dirname(QC), P["tree"]) if P.get("tree") and P["tree"] != os.path.basename(QC) else QC
         for cond in CONDS:
-            jobs.append((os.path.join(QC, pid, "LM", "Report", f"{pid}_{cond}_iqr_postDur_QC.png"),
+            jobs.append((os.path.join(qc_root, pid, "LM", "Report", f"{pid}_{cond}_iqr_postDur_QC.png"),
                          os.path.join(OUT, pid, f"iqr_{cond}.webp"), FIG_W, FIG_Q))
-            by_shaft = os.path.join(QC, pid, "LM", "PSD_clean", cond, "PSD", "psd_by_shaft.png")
-            src = by_shaft if os.path.exists(by_shaft) else os.path.join(QC, pid, "LM", "PSD_clean", cond, "PSD", "psd_allch_full.png")
+            by_shaft = os.path.join(qc_root, pid, "LM", "PSD_clean", cond, "PSD", "psd_by_shaft.png")
+            src = by_shaft if os.path.exists(by_shaft) else os.path.join(qc_root, pid, "LM", "PSD_clean", cond, "PSD", "psd_allch_full.png")
             jobs.append((src, os.path.join(OUT, pid, f"psd_{cond}.webp"), PSD_W if src == by_shaft else FIG_W, FIG_Q))
     t0 = time.time()
     counts, total = {"made": 0, "kept": 0, "missing": 0}, 0

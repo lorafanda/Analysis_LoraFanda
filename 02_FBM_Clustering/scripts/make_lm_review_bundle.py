@@ -73,6 +73,25 @@ NASAC = "//nasac-m2.unige.ch/m-HumanNeuronLab"
 CUBES = os.path.join(A01, "outputs", cfg.ERSP_TREE)     # one tree since 2026-09-30 (03_ERSP)
 QC = CUBES
 AUDIT = os.path.join(QC, "audit_140.tsv")
+# THE NON-COHORT PATIENTS (2026-09-30, Lora): the review shows every patient that was ever
+# processed, and marks the ones outside the clustering dataset with an asterisk. They are
+# not in cfg.patient_ids and were never run into 03_ERSP, so their cubes and figures come
+# from the frozen 04_* trees (HG/ and _HGtrials_ there), and their audit row from that
+# tree's audit. The reason each one is out is what the asterisk explains on the page.
+NON_COHORT = {"EL044": "ECoG grids only, and only the audio block was recorded",
+              "PAT_3301": "picture naming only - no audio or reading block",
+              "PAT_6684": "excluded after the seizure review (bad_time_spans)"}
+FROZEN_CUBES = os.path.join(A01, "outputs", "04_ersp_LM_RAWONLY")
+FROZEN_QC = os.path.join(A01, "outputs", "04_ersp_LM")
+FROZEN_AUDIT = os.path.join(FROZEN_QC, "audit_140.tsv")
+
+
+def tree_of(pid: str) -> dict:
+    """Where a patient's cubes, QC figures and rasters are: the 03_ERSP tree for the cohort,
+    the frozen 04_* trees for the non-cohort patients."""
+    if pid in NON_COHORT:
+        return {"cubes": FROZEN_CUBES, "qc": FROZEN_QC, "hfa_dir": "HG", "hfa_stem": "HGtrials", "tree": "04_ersp_LM"}
+    return {"cubes": CUBES, "qc": QC, "hfa_dir": cfg.HFA_DIR, "hfa_stem": "HFAtrials", "tree": cfg.ERSP_TREE}
 RECON = os.path.join(REPO, "02_FBM_Clustering", "outputs", "250_recon", "fsaverage")
 BUNDLE = os.path.join(RECON, "activity_viz")
 OUT = os.path.join(BUNDLE, "review")
@@ -280,7 +299,7 @@ def anatomy_table(raw: str, pid: str) -> tuple[dict, str]:
 # ---- cubes ------------------------------------------------------------------------------
 def cube_files(pid: str, cond: str) -> dict:
     out = {}
-    for f in glob.glob(os.path.join(CUBES, pid, "LM", "ERSP_matrix", cond, "*_TN.npy")):
+    for f in glob.glob(os.path.join(tree_of(pid)["cubes"], pid, "LM", "ERSP_matrix", cond, "*_TN.npy")):
         m = CUBE_RE.search(os.path.basename(f))
         if m:
             out[m.group(1)] = f
@@ -290,7 +309,7 @@ def cube_files(pid: str, cond: str) -> dict:
 def qc_names(pid: str) -> set:
     out = set()
     for cond in CONDS:
-        for f in glob.glob(os.path.join(QC, pid, "LM", "ERSP", cond, "*_TN.png")):
+        for f in glob.glob(os.path.join(tree_of(pid)["qc"], pid, "LM", "ERSP", cond, "*_TN.png")):
             m = PNG_RE.search(os.path.basename(f))
             if m:
                 out.add(m.group(1))
@@ -299,7 +318,8 @@ def qc_names(pid: str) -> set:
 
 def hg_tag(pid: str) -> str:
     for cond in CONDS:
-        fs = glob.glob(os.path.join(QC, pid, "LM", cfg.HFA_DIR, cond, "*_HFAtrials_*.png"))
+        t = tree_of(pid)
+        fs = glob.glob(os.path.join(t["qc"], pid, "LM", t["hfa_dir"], cond, f"*_{t['hfa_stem']}_*.png"))
         if fs:
             m = HG_RE.search(os.path.basename(fs[0]))
             return m.group(1) if m else "WM"
@@ -355,7 +375,7 @@ def load_json(path, default):
 def prep_dir_of(pid, audit):
     """The prep0 folder the run read, from the run's log (the audit names the log)."""
     log = str(audit.loc[pid, "log"]) if audit is not None and pid in audit.index else ""
-    path = os.path.join(QC, "logs", log)
+    path = os.path.join(tree_of(pid)["qc"], "logs", log)
     if not log or not os.path.exists(path):
         return None
     m = re.search(r"(?:Prep dir|prep_dir):\s*(\S+)", io.open(path, encoding="utf-8", errors="replace").read())
@@ -393,7 +413,7 @@ def fs_of(pid, audit, tables):
             return float(v)
     except ValueError:
         pass
-    iqr = os.path.join(QC, pid, "LM", "Report", f"{pid}_IQR.tsv")
+    iqr = os.path.join(tree_of(pid)["qc"], pid, "LM", "Report", f"{pid}_IQR.tsv")
     if tables is None or not os.path.exists(iqr):
         return None
     r = pd.read_csv(iqr, sep="\t")
@@ -418,7 +438,7 @@ def write_trials(pid, audit):
     # the rule values THE RUN used come from its IQR report, not from the live config (which
     # may already carry the next run's values); min_stim_s is not in the report -> config
     rules = {"min_post_s": float(cfg.min_post_s), "max_post_s": float(cfg.max_post_s), "iqr_k": float(cfg.iqr_k), "source": "config"}
-    iqr = os.path.join(QC, pid, "LM", "Report", f"{pid}_IQR.tsv")
+    iqr = os.path.join(tree_of(pid)["qc"], pid, "LM", "Report", f"{pid}_IQR.tsv")
     if os.path.exists(iqr):
         r0 = pd.read_csv(iqr, sep="\t").iloc[0]
         rules = {"min_post_s": float(r0["min_post_s"]), "max_post_s": float(r0["max_post_s"]), "iqr_k": float(r0["iqr_k"]), "source": "the run's IQR report"}
@@ -590,6 +610,9 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
         "crop": au["crop_cfg"] if au is not None else "", "conditions": au["conditions_out"] if au is not None else "",
         "unexplained_peaks": au["unexplained_peaks"] if au is not None else "",
         "trials": trials, "hg_reref": hg_tag(pid), "anatomy_source": anat_src,
+        # the cohort flag (2026-09-30): the page marks in_cohort=false with an asterisk and this note
+        "in_cohort": pid not in NON_COHORT, "cohort_note": NON_COHORT.get(pid, ""),
+        "tree": tree_of(pid)["tree"], "hfa_dir": tree_of(pid)["hfa_dir"], "hfa_stem": tree_of(pid)["hfa_stem"],
         "n_contacts": len(rows), "n_data": sum(1 for r in rows if r["status"] == "data"),
         "n_status": {**{s: sum(1 for r in rows if r["status"] == s) for s in ("data", "wm_ref", "bad", "unknown", "not_recorded", "not_run")}, "aux": n_aux},
     }
@@ -608,6 +631,16 @@ def main() -> None:
     audit = pd.read_csv(AUDIT, sep="\t", dtype=str).fillna("").set_index("patient") if os.path.exists(AUDIT) else None
     if audit is None:
         print(f"[warn] {AUDIT} missing - run 01_FBM_Analysis/141_audit_140.py first; patients.json will be thin")
+    # the non-cohort patients' rows come from the frozen tree's audit (they were never run
+    # into 03_ERSP); until 03_ERSP has an audit of its own, so do everyone else's
+    if os.path.exists(FROZEN_AUDIT):
+        frozen = pd.read_csv(FROZEN_AUDIT, sep="\t", dtype=str).fillna("").set_index("patient")
+        if audit is None:
+            audit = frozen
+            print(f"[warn] using the frozen audit {FROZEN_AUDIT} for every patient until 03_ERSP is audited")
+        else:
+            extra = frozen.loc[[p for p in NON_COHORT if p in frozen.index and p not in audit.index]]
+            audit = pd.concat([audit, extra])
     coords = {}
     for f in glob.glob(os.path.join(RECON, "coords", "*_contacts_fsaverage.csv")):
         if "ALL_PATIENTS" in f:
@@ -633,8 +666,8 @@ def main() -> None:
             os.remove(old)
 
     patients, contacts = [], []
-    for raw in cfg.patient_ids:
-        raw = str(raw)
+    ids = [str(r) for r in cfg.patient_ids] + [p for p in NON_COHORT if p not in {pid_of(str(r)) for r in cfg.patient_ids}]
+    for raw in ids:
         pid = pid_of(raw)
         if partial and pid not in args.patients:
             if pid in old_by_pat:                      # kept as it is, files included
@@ -657,7 +690,7 @@ def main() -> None:
 
     # the per-trial reject tables, for every patient every time (cheap: the tsvs only)
     n_tr = 0
-    for raw in cfg.patient_ids:
+    for raw in ids:
         pid = pid_of(str(raw))
         try:
             if write_trials(pid, audit) is not None:
@@ -669,6 +702,7 @@ def main() -> None:
     manifest = {
         "built": datetime.now().strftime("%Y-%m-%d %H:%M"), "source_tree": CUBES.replace("\\", "/"),
         "n_patient": len(patients), "n_contact": len(contacts), "n_data": sum(1 for r in contacts if r["file"]),
+        "non_cohort": NON_COHORT, "frozen_tree": FROZEN_QC.replace("\\", "/"),
         "conditions": CONDS, "n_cond": len(CONDS), "n_freq": NF, "f_hz": [0.0, (NF - 1) * F_STEP], "fmax_source_hz": (NF - 1) * F_STEP,
         "n_time": NT // T_DS, "time_downsample": T_DS, "n_time_source": NT,
         "dtype": "uint8", "order": ["cond", "freq", "time"], "vmin": -VLIM, "vmax": VLIM, "nan_byte": 0,

@@ -1158,7 +1158,11 @@ const rvHasQc = () => !!(HG_ROOT || RV.qc);
 function rvHgUrl(c, cond) {
   if (!HG_ROOT) return `${BUNDLE}review/qc/${c.patient}/HG/${cond}/${c.name}.webp`;
   const P = RV.pats.find(p => p.patient === c.patient), root = HG_ROOT.replace(/\/?$/, "/");
-  return `${root}${c.patient}/LM/HFA/${cond}/${c.patient}_${cond}_${P ? P.hg_reref : "WM"}_HFAtrials_${c.name}.png`;
+  // a non-cohort patient (asterisk) lives in the frozen 04_ersp_LM tree, one folder up from
+  // the 03_ERSP root, with the old HG/ folder and _HGtrials_ stem; patients.json says which
+  const tree = P && P.tree && P.tree !== "03_ERSP" ? root.replace(/03_ERSP\/$/, P.tree + "/") : root;
+  const dir = P && P.hfa_dir ? P.hfa_dir : "HFA", stem = P && P.hfa_stem ? P.hfa_stem : "HFAtrials";
+  return `${tree}${c.patient}/LM/${dir}/${cond}/${c.patient}_${cond}_${P ? P.hg_reref : "WM"}_${stem}_${c.name}.png`;
 }
 function rvHgRow(tile, c, on) {
   const cur = tile.nextElementSibling, has = cur && cur.classList.contains("hgrow") && cur.dataset.i == c.i;
@@ -1197,7 +1201,10 @@ function rvPatientInfo(P) {
   const tr = BRAIN_CONDS.map(c => { const t = P.trials[c] || {}; return `<b>${c}</b> ${t.used || "—"} of ${t.in || "—"} trials · ${t.cubes || 0} cubes`; }).join(" &nbsp;·&nbsp; ");
   const ns = P.n_status || {};
   const warn = P.status && P.status !== "ok" ? ` · <span class="warn">${_esc(P.status)}</span>` : "";
-  return `<b>${_esc(P.patient)}</b> (${_esc(P.raw_id)}, ${_esc(P.system)}) · run ${_esc(P.run_start || "—")}${warn}<br>${tr}<br>` +
+  const star = P.in_cohort === false ? `<b>*</b> ` : "";
+  const note = P.in_cohort === false ? `<br><span class="warn">* not in the clustering dataset: ${_esc(P.cohort_note || "")}` +
+    (P.tree && P.tree !== "03_ERSP" ? ` · shown from the frozen ${_esc(P.tree)} tree (run of ${_esc((P.run_start || "").slice(0, 10) || "—")}), not re-processed with the cohort` : "") + `</span>` : "";
+  return `${star}<b>${_esc(P.patient)}</b> (${_esc(P.raw_id)}, ${_esc(P.system)}) · run ${_esc(P.run_start || "—")}${warn}${note}<br>${tr}<br>` +
     `reference: ${_esc(P.reference)}${P.wm_source ? " · " + _esc(P.wm_source) : ""} · notch: ${_esc(P.notch)} · crop: ${_esc(P.crop)} · bad-listed: ${P.bad_n} · unexplained peaks: ${_esc(P.unexplained_peaks)}<br>` +
     `contacts: <b>${ns.data || 0}</b> with ERSP · ${ns.wm_ref || 0} WM reference · ${ns.bad || 0} bad · ${ns.unknown || 0} Unknown · ${ns.aux || 0} aux · ${ns.not_recorded || 0} not recorded · anatomy: ${_esc(P.anatomy_source)}`;
 }
@@ -1256,6 +1263,11 @@ function rvRender() {
   const all = RV.byPat.get(RV.pid) || [], list = RV.excl ? all : all.filter(c => c.status === "data");
   const P = RV.pats.find(p => p.patient === RV.pid);
   $("rvInfo").innerHTML = P ? rvPatientInfo(P) : "";
+  // the legend for the asterisk, once, under the patient info: every patient ever processed is
+  // listed, but only the cohort ones are in the clustering dataset (2026-09-30, Lora)
+  { const nc = RV.pats.filter(p => p.in_cohort === false);
+    if (nc.length) $("rvInfo").innerHTML += `<div style="margin-top:4px;color:var(--muted);font-size:11px"><b>*</b> not in the clustering dataset (listed for review only): ` +
+      nc.map(p => `<b>${_esc(p.patient)}</b> — ${_esc(p.cohort_note || "")}`).join(" · ") + `</div>`; }
   const groups = [];
   if (RV.sort === "shaft") { let cur = null; for (const c of list) { if (!cur || cur.shaft !== c.shaft) { cur = { shaft: c.shaft, items: [] }; groups.push(cur); } cur.items.push(c); } }
   else groups.push({ shaft: $("rvSort").selectedOptions[0].textContent, items: rvSorted(list) });
@@ -1357,7 +1369,12 @@ async function toggleReview(on) {
   if (!RV.on) { RV.sel = -1; drawConcat(true); updateInfo(); return; }
   if (!(await loadReview())) { $("rvInfo").innerHTML = `no review bundle at ${_esc(BUNDLE)}review/ — build it with 02_FBM_Clustering/scripts/make_lm_review_bundle.py (after 01_FBM_Analysis/141_audit_140.py)`; return; }
   const sel = $("rvPatient");
-  if (!sel.options.length) { sel.innerHTML = RV.pats.map(p => `<option value="${_esc(p.patient)}">${_esc(p.patient)}${p.ran ? "" : " (not run)"}${p.status && p.status !== "ok" && p.ran ? " ⚠" : ""}</option>`).join(""); rvWire(); }
+  if (!sel.options.length) {
+    sel.innerHTML = RV.pats.map(p => `<option value="${_esc(p.patient)}">${p.in_cohort === false ? "* " : ""}${_esc(p.patient)}${p.ran ? "" : " (not run)"}${p.status && p.status !== "ok" && p.ran ? " ⚠" : ""}</option>`).join("");
+    const nc = RV.pats.filter(p => p.in_cohort === false);
+    if (nc.length) sel.title = "* = not in the clustering dataset: " + nc.map(p => `${p.patient} (${p.cohort_note || ""})`).join("; ");
+    rvWire();
+  }
   if (!RV.pid) rvSetPatient(RV.pats[0].patient); else rvRender();
 }
 
