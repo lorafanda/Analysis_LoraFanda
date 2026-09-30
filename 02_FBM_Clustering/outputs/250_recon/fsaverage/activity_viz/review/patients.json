@@ -1625,10 +1625,10 @@
 "raw_id": "PAT_3415",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 13:51",
+"run_start": "2026-09-29 18:56",
 "status": "ok",
-"reference": "WM reference, 9 contacts (skipped as data)",
-"wm_n": 9,
+"reference": "WM reference, 6 contacts (skipped as data)",
+"wm_n": 6,
 "wm_source": "BIDS TSV",
 "bad_n": 18,
 "bad_list": [
@@ -1654,25 +1654,25 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "30-1500 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "101",
+"unexplained_peaks": "45",
 "trials": {
 "audio": {
 "in": "53",
 "kept": "45",
 "used": "45",
-"cubes": "121"
+"cubes": "123"
 },
 "picture": {
 "in": "54",
 "kept": "49",
 "used": "49",
-"cubes": "121"
+"cubes": "123"
 },
 "reading": {
 "in": "53",
 "kept": "45",
 "used": "45",
-"cubes": "121"
+"cubes": "123"
 }
 },
 "hg_reref": "WM",
