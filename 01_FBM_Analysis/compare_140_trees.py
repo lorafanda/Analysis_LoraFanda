@@ -66,8 +66,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 OUTPUTS = ROOT / "outputs"
 OUT = OUTPUTS / "compare_140"
-NEW_RAW, OLD_RAW = OUTPUTS / "04_ersp_LM_RAWONLY", OUTPUTS / "04_ersp_LM_RAWONLY_old"
-NEW_QC, OLD_QC = OUTPUTS / "04_ersp_LM", OUTPUTS / "04_ersp_LM_old"
+# since 2026-09-30: new = the one 03_ERSP tree (cubes and QC together, HFA/ rasters),
+# old = the frozen 04_* way (runs up to 09-29). Before that the pair was 04_* vs 04_*_old.
+NEW_RAW, OLD_RAW = OUTPUTS / "03_ERSP", OUTPUTS / "04_ersp_LM_RAWONLY"
+NEW_QC, OLD_QC = OUTPUTS / "03_ERSP", OUTPUTS / "04_ersp_LM"
 CONDS = ("audio", "picture", "reading")
 BANDS = [(1, 20), (20, 70), (70, 170), (170, 270), (270, 400)]
 HG = (70.0, 150.0)

@@ -76,7 +76,7 @@ def dropped(d: pd.DataFrame, z: float, frac: float) -> pd.DataFrame:
     d = d.assign(over=d.z > z)
     agg = dict(share=("over", "mean"), n_ch=("over", "size"),
                worst=("z", "max"), median_z=("z", "median"))
-    # trial_label is the number the HG figure prints. Carried through so a trial named
+    # trial_label is the number the HFA figure prints. Carried through so a trial named
     # here can be found on the figure: `trial` counts only what reached the ERSP, the
     # label counts the whole table, and on PAT_3455 picture those are 47 and 53.
     if "trial_label" in d.columns:
@@ -138,7 +138,7 @@ def main() -> int:
         if hit.label.isna().any():
             print("  ('row' needs the trial_label column - re-run 145 to get it)")
         else:
-            print("  ('row' is the number printed beside that trial on the HG figure)")
+            print("  ('row' is the number printed beside that trial on the HFA figure)")
         for r in hit.itertuples():
             _row = "  ?" if not np.isfinite(r.label) else f"{int(r.label):>3}"
             print(f"  {r.patient:<10} {r.condition:<8} row {_row} "

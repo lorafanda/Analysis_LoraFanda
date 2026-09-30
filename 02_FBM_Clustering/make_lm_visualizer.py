@@ -48,7 +48,7 @@ track - with these things changed (2026-09-17):
      elevation convention) and switches the hemisphere filter to both if the contact was
      hidden by it. The ring is captioned with the contact's name on the brain itself.
      Order by shaft or worst-first on any number; size slider; excluded contacts on/off. "HG" on a tile (or "HG under every tile") adds the run's HG
-     trial rasters - the QC PNGs of 01_FBM_Analysis/outputs/04_ersp_LM/<pid>/LM/HG/ - from
+     trial rasters - the QC PNGs of 01_FBM_Analysis/outputs/03_ERSP/<pid>/LM/HFA/ - from
      a LOCAL server, given as ?hg=<url> or typed into the bar's "QC root" field (kept in
      localStorage); the originals are ~2 GB and never go to the site. Since 2026-09-27 the
      bundle carries compact WebP copies (review/qc/, scripts/make_lm_qc_images.py: HG rasters
@@ -63,7 +63,7 @@ track - with these things changed (2026-09-17):
      01_FBM_Analysis/141_audit_140.py). To look at it before pushing:
          python 02_FBM_Clustering/scripts/serve_bundle.py 8000        (this repo, CORS)
          python -m http.server 8931 --directory ~/lorafanda.github.io  (the site)
-         http://localhost:8931/LM_visualizer.html?bundle=http://localhost:8000/02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/&hg=http://localhost:8000/01_FBM_Analysis/outputs/04_ersp_LM/&review=1
+         http://localhost:8931/LM_visualizer.html?bundle=http://localhost:8000/02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/&hg=http://localhost:8000/01_FBM_Analysis/outputs/03_ERSP/&review=1
 
 The loading screen's turning brain is copied from cluster_visualizer.html at build time
 (the inlined sprite strip), so the two pages open the same way.
@@ -414,7 +414,7 @@ TEMPLATE = r"""<!doctype html>
       <label><input type="checkbox" id="rvHgAll"> HG under every tile</label>
       <label title="turn the brain so the selected contact faces you"><input type="checkbox" id="rvFollow" checked> camera follows</label>
       <label title="the patient's PSD and trial-rejection figures and every trial's reason, in a column on the right (key l)"><input type="checkbox" id="rvSideCb"> figures (l)</label>
-      <label title="where the run's QC figures (HG rasters, PSD, trial rejection) are served from - they are not on the site. Run: python 02_FBM_Clustering/scripts/serve_bundle.py 8000">QC root <input type="text" id="rvHgRoot" placeholder="http://localhost:8000/01_FBM_Analysis/outputs/04_ersp_LM/" spellcheck="false" style="width:230px;background:#101318;color:var(--fg);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:2px 5px;font:inherit;font-size:11px"></label>
+      <label title="where the run's QC figures (HG rasters, PSD, trial rejection) are served from - they are not on the site. Run: python 02_FBM_Clustering/scripts/serve_bundle.py 8000">QC root <input type="text" id="rvHgRoot" placeholder="http://localhost:8000/01_FBM_Analysis/outputs/03_ERSP/" spellcheck="false" style="width:230px;background:#101318;color:var(--fg);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:2px 5px;font:inherit;font-size:11px"></label>
       <span id="rvNote" style="margin-left:auto;color:var(--muted);font-weight:400;font-size:11px"></span>
     </h3>
     <div class="pinfo" id="rvInfo"></div>
@@ -434,7 +434,7 @@ const BRANCH = "activity-visualizer";
 const BUNDLE = new URLSearchParams(location.search).get("bundle")
   || `https://raw.githubusercontent.com/lorafanda/Analysis_LoraFanda/${BRANCH}/02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/`;
 const $ = (id) => document.getElementById(id);
-// ?hg=http://localhost:8000/01_FBM_Analysis/outputs/04_ersp_LM/ - where the review mode finds
+// ?hg=http://localhost:8000/01_FBM_Analysis/outputs/03_ERSP/ - where the review mode finds
 // the HG trial rasters (the QC figures of the 140 run; ~2 GB, so never on the site)
 // ?hg=<url> wins; otherwise the root typed into the review bar (kept in localStorage); "" = none
 let HG_ROOT = new URLSearchParams(location.search).get("hg") || (() => { try { return localStorage.getItem("lm_hg_root") || ""; } catch (e) { return ""; } })();
@@ -1158,7 +1158,7 @@ const rvHasQc = () => !!(HG_ROOT || RV.qc);
 function rvHgUrl(c, cond) {
   if (!HG_ROOT) return `${BUNDLE}review/qc/${c.patient}/HG/${cond}/${c.name}.webp`;
   const P = RV.pats.find(p => p.patient === c.patient), root = HG_ROOT.replace(/\/?$/, "/");
-  return `${root}${c.patient}/LM/HG/${cond}/${c.patient}_${cond}_${P ? P.hg_reref : "WM"}_HGtrials_${c.name}.png`;
+  return `${root}${c.patient}/LM/HFA/${cond}/${c.patient}_${cond}_${P ? P.hg_reref : "WM"}_HFAtrials_${c.name}.png`;
 }
 function rvHgRow(tile, c, on) {
   const cur = tile.nextElementSibling, has = cur && cur.classList.contains("hgrow") && cur.dataset.i == c.i;
@@ -1223,7 +1223,7 @@ async function rvSideRender() {
   if (my !== RV.sideSeq) return;                                         // a newer render took over while the table loaded
   side.innerHTML = "";
   const h = (t) => { const e = document.createElement("h4"); e.textContent = t; side.appendChild(e); };
-  if (!rvHasQc()) side.appendChild(rvSideNote("No QC figures in this bundle. Run  python 02_FBM_Clustering/scripts/serve_bundle.py 8000  and type  http://localhost:8000/01_FBM_Analysis/outputs/04_ersp_LM/  into 'QC root' above (it is remembered), or build the copies with make_lm_qc_images.py."));
+  if (!rvHasQc()) side.appendChild(rvSideNote("No QC figures in this bundle. Run  python 02_FBM_Clustering/scripts/serve_bundle.py 8000  and type  http://localhost:8000/01_FBM_Analysis/outputs/03_ERSP/  into 'QC root' above (it is remembered), or build the copies with make_lm_qc_images.py."));
   const qc = `${BUNDLE}review/qc/${pid}/`;
   for (const cond of BRAIN_CONDS) {
     h(`${cond} · trials`);

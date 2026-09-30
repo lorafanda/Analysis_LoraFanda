@@ -49,7 +49,7 @@ _spec = importlib.util.spec_from_file_location("cfg01", REPO / "01_FBM_Analysis"
 cfg = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(cfg)
 
-AUDIT = REPO / "01_FBM_Analysis" / "outputs" / "04_ersp_LM" / "audit_140.tsv"
+AUDIT = REPO / "01_FBM_Analysis" / "outputs" / "03_ERSP" / "audit_140.tsv"   # one tree since 2026-09-30
 COORDS = ROOT / "outputs" / "250_recon" / "fsaverage" / "coords" / "ALL_PATIENTS_contacts_fsaverage_nowm.csv"
 META = ROOT / "patient_meta.csv"
 OUT = ROOT / "outputs" / "clustering" / "cohort"

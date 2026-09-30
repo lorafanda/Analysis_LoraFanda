@@ -3,14 +3,14 @@
 
     "C:/Users/fanda/AppData/Local/Programs/Python/Python311/python.exe" 01_FBM_Analysis/141_audit_140.py
 
-Reads, per patient of cfg.patient_ids: the newest 140 log (outputs/04_ersp_LM/logs/<pid>_<stamp>.log),
-the WM re-referencing report (outputs/04_ersp_LM_RAWONLY/wm_reref_report.tsv), the IQR trial report
-(outputs/04_ersp_LM/<pid>/LM/Report/<pid>_IQR.tsv), the cube tree (outputs/04_ersp_LM_RAWONLY) and,
-for the comparison, the previous tree (outputs/04_ersp_LM_RAWONLY_old). Config is read live, so the
+Reads, per patient of cfg.patient_ids, from the one tree outputs/<cfg.ERSP_TREE> (03_ERSP since
+2026-09-30): the newest 140 log (logs/<pid>_<stamp>.log), the WM re-referencing report
+(wm_reref_report.tsv), the IQR trial report (<pid>/LM/Report/<pid>_IQR.tsv) and the cubes; for the
+comparison, the previous tree (outputs/04_ersp_LM_RAWONLY, the frozen 04_* way). Config is read live, so the
 bad list / reference route columns describe what the code would do NOW - if a list changed after the
 run, the cube-count check at the end of the row is where it shows.
 
-Writes outputs/04_ersp_LM/audit_140.tsv (one row per patient, every column) and audit_140.md (the same
+Writes outputs/<cfg.ERSP_TREE>/audit_140.tsv (one row per patient, every column) and audit_140.md (the same
 in three readable tables), and prints the .md.
 """
 import glob
@@ -27,10 +27,10 @@ os.chdir(HERE)
 sys.path.insert(0, HERE)
 from functions import config as cfg   # noqa: E402
 
-QC_ROOT = os.path.join("outputs", "04_ersp_LM")
+QC_ROOT = os.path.join("outputs", cfg.ERSP_TREE)      # QC figures and cubes in one tree since 2026-09-30
 LOG_DIR = os.path.join(QC_ROOT, "logs")
-NEW_ROOT = os.path.join("outputs", "04_ersp_LM_RAWONLY")
-OLD_ROOT = os.path.join("outputs", "04_ersp_LM_RAWONLY_old")
+NEW_ROOT = QC_ROOT
+OLD_ROOT = os.path.join("outputs", "04_ersp_LM_RAWONLY")     # the previous way, frozen
 CONDS = ("audio", "picture", "reading")
 MICRO_RE = re.compile(r"^[A-Za-z]+m\d+$")           # ADm3, FODm12 ... the microwire bundles
 CUBE_RE = re.compile(r"_(?:WM|CAR)_ERSP_(.+)_TN\.npy$")
@@ -287,7 +287,7 @@ def main():
             r[f"{c}_halves"] = len(glob.glob(os.path.join(NEW_ROOT, pid, "LM", "ERSP_halves", c, "*.npy")))
             r[f"{c}_clean_png"] = len(glob.glob(os.path.join(NEW_ROOT, pid, "LM", "ERSP_clean", c, "*.png")))
             r[f"{c}_qc_ersp_png"] = len(glob.glob(os.path.join(QC_ROOT, pid, "LM", "ERSP", c, "*.png")))
-            r[f"{c}_qc_hg_png"] = len(glob.glob(os.path.join(QC_ROOT, pid, "LM", "HG", c, "*.png")))
+            r[f"{c}_qc_hg_png"] = len(glob.glob(os.path.join(QC_ROOT, pid, "LM", cfg.HFA_DIR, c, "*.png")))
             gone = set(old) - set(new)
             added = set(new) - set(old)
             if gone:

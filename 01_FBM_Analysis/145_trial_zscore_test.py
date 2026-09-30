@@ -7,7 +7,7 @@
 
 Writes outputs/04_ersp-trialtestzscore/<patient>/LM/ with three things and nothing else:
 
-    HG/<cond>/            the high-gamma per-trial rasters
+    HFA/<cond>/           the high-frequency per-trial rasters ("HG" until 2026-09-30)
     ERSP_clean/<cond>/    the clean ERSP images
     TrialScores/<cond>/   <patient>_<cond>_trial_scores.tsv - one row per channel x trial
 
@@ -17,7 +17,7 @@ turned down to those three. Every number here therefore comes from the same code
 builds the real cubes; a forked copy of an 873-line pipeline would drift from it within
 a week, and then the trials you judged would not be the trials you kept.
 
-NOTHING IN 04_ersp_LM OR 04_ersp_LM_RAWONLY IS TOUCHED. No cubes, no halves, no PSD, no
+NOTHING IN THE REAL TREE (outputs/<cfg.ERSP_TREE>, 03_ERSP since 2026-09-30) IS TOUCHED. No cubes, no halves, no PSD, no
 montage, no wm_reref_report row - so this can be run on a patient whose real tree you
 are happy with, and that tree is exactly as it was afterwards.
 
@@ -67,7 +67,7 @@ def main() -> int:
     ap.add_argument("--skip-done", action="store_true",
                     help="skip a patient that already has all three score tables")
     ap.add_argument("--keep-ersp-plots", action="store_true",
-                    help="also write the per-channel ERSP figures (off: HG + clean only)")
+                    help="also write the per-channel ERSP figures (off: HFA + clean only)")
     a = ap.parse_args()
     if not a.patient and not a.all:
         ap.error("give --patient <ids> or --all")
@@ -102,7 +102,7 @@ def main() -> int:
     m.EXPORT_TRIAL_SCORES = True
 
     print(f"trial test tree : {root}")
-    print(f"products        : HG rasters, clean ERSP images, per-trial scores"
+    print(f"products        : HFA rasters, clean ERSP images, per-trial scores"
           + (", ERSP figures" if a.keep_ersp_plots else ""))
     print(f"scoring         : trial_reject_hg_z = {NEVER_REJECTS:g} "
           f"(scores computed, no trial dropped)\n")
@@ -114,8 +114,14 @@ def main() -> int:
         print("=" * 72)
         try:
             # process_patient reads the thresholds off cfg at entry, so they are set on
-            # cfg rather than on ersp_params - which that function would overwrite.
-            for d, v in (("ersp_trial_reject_hg_z", NEVER_REJECTS),):
+            # cfg rather than on ersp_params - which that function would overwrite. The
+            # three other arms are set to None for this patient (the patient key beats
+            # the "default" key, which since 2026-09-30 carries MAD 3.5 for everyone):
+            # here every trial is scored and none is dropped, whatever the real run does.
+            for d, v in (("ersp_trial_reject_hg_z", NEVER_REJECTS),
+                         ("ersp_trial_reject_hg_mad", None),
+                         ("ersp_trial_reject", None),
+                         ("ersp_trial_reject_z", None)):
                 cur = dict(getattr(m.cfg, d, {}) or {})
                 cur[str(pid)] = v
                 setattr(m.cfg, d, cur)

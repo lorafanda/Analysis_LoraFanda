@@ -1768,8 +1768,9 @@ def plot_hg_trials(
             chan_name = f"Ch{channel_idx}"
     _atag = "_GO" if str(align).lower() == "go" else ""
     _ext = "png" if str(fmt).lower() == "png" else "tif"
-    title = f"{patient_id} – {condition} – {reref_type}-ref HG trials: {chan_name}"
-    fname = f"{patient_id}_{condition}_{reref_type}_HGtrials_{chan_name}{_atag}.{_ext}"
+    # "HFA" since 2026-09-30 (the 03_ERSP tree); the 04_ersp_LM files say HGtrials
+    title = f"{patient_id} – {condition} – {reref_type}-ref HFA trials: {chan_name}"
+    fname = f"{patient_id}_{condition}_{reref_type}_HFAtrials_{chan_name}{_atag}.{_ext}"
     out_path = os.path.join(save_dir, fname) if save_dir else fname
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)

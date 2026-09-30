@@ -8,7 +8,7 @@ LIVE page (lorafanda.github.io) without a local server.
 
 Reads activity_viz/review/contacts.json (every contact with ERSP) and patients.json (the
 reference tag in the HG file names) and writes, under activity_viz/review/qc/:
-    <pid>/HG/<cond>/<name>.webp     the HG trial raster (01_FBM_Analysis/outputs/04_ersp_LM/<pid>/LM/HG/),
+    <pid>/HG/<cond>/<name>.webp     the HFA trial raster (01_FBM_Analysis/outputs/03_ERSP/<pid>/LM/HFA/),
                                     800 px wide, quality 65: ~45 kB instead of ~350 kB
     <pid>/iqr_<cond>.webp           Report/<pid>_<cond>_iqr_postDur_QC.png, 900 px
     <pid>/psd_<cond>.webp           PSD_clean/<cond>/PSD/psd_by_shaft.png (per-shaft patients) else psd_allch_full.png
@@ -30,7 +30,7 @@ from datetime import datetime
 from PIL import Image
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-QC = os.path.join(REPO, "01_FBM_Analysis", "outputs", "04_ersp_LM")
+QC = os.path.join(REPO, "01_FBM_Analysis", "outputs", "03_ERSP")   # one tree since 2026-09-30
 REVIEW = os.path.join(REPO, "02_FBM_Clustering", "outputs", "250_recon", "fsaverage", "activity_viz", "review")
 OUT = os.path.join(REVIEW, "qc")
 CONDS = ("audio", "picture", "reading")
@@ -68,7 +68,7 @@ def main() -> int:
             continue
         pid, ref = c["patient"], patients.get(c["patient"], {}).get("hg_reref", "WM")
         for cond in c["conds"]:
-            src = os.path.join(QC, pid, "LM", "HG", cond, f"{pid}_{cond}_{ref}_HGtrials_{c['name']}.png")
+            src = os.path.join(QC, pid, "LM", "HFA", cond, f"{pid}_{cond}_{ref}_HFAtrials_{c['name']}.png")   # the bundle keeps its HG/ layout
             dst = os.path.join(OUT, pid, "HG", cond, f"{c['name']}.webp")
             jobs.append((src, dst, HG_W, HG_Q)); expected.add(os.path.normcase(dst))
     for pid, P in patients.items():

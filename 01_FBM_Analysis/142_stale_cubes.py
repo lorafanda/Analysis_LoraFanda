@@ -8,9 +8,10 @@
 produces; a channel that the rerun no longer produces (newly a WM reference, newly dropped
 as Unknown, newly bad-listed) keeps its cubes, halves, CLEAN and QC figures from the earlier
 run, and those enter the next cohort build as if they were current (v8 carried 48 such
-cubes). The run start of every patient is the audit's (outputs/04_ersp_LM/audit_140.tsv,
-141_audit_140.py - run it first); every file under the patient's folders in both trees
-with an mtime before that start is stale. Patients without a run are skipped.
+cubes). The run start of every patient is the audit's (outputs/<cfg.ERSP_TREE>/audit_140.tsv,
+141_audit_140.py - run it first); every file under the patient's folder of the tree
+(03_ERSP since 2026-09-30: cubes and QC figures together) with an mtime before that start
+is stale. Patients without a run are skipped.
 """
 import argparse
 import glob
@@ -20,9 +21,12 @@ from datetime import datetime
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-AUDIT = os.path.join(HERE, "outputs", "04_ersp_LM", "audit_140.tsv")
-TREES = {"cubes": os.path.join(HERE, "outputs", "04_ersp_LM_RAWONLY"),
-         "qc": os.path.join(HERE, "outputs", "04_ersp_LM")}
+import sys                                   # noqa: E402
+sys.path.insert(0, HERE)
+from functions import config as cfg          # noqa: E402
+TREE = os.path.join(HERE, "outputs", cfg.ERSP_TREE)
+AUDIT = os.path.join(TREE, "audit_140.tsv")
+TREES = {"tree": TREE}                       # one tree since 2026-09-30 (was cubes + qc)
 
 
 def main() -> int:
@@ -53,9 +57,9 @@ def main() -> int:
     for pid, files in per.items():
         kinds = {}
         for f in files:
-            k = os.path.relpath(f, TREES["cubes"] if f.startswith(TREES["cubes"]) else TREES["qc"]).split(os.sep)[2]
+            k = os.path.relpath(f, TREE).split(os.sep)[2]
             kinds[k] = kinds.get(k, 0) + 1
-        names = sorted({os.path.basename(f).split("_ERSP_")[-1].split("_HGtrials_")[-1].rsplit("_TN", 1)[0].rsplit(".", 1)[0] for f in files})
+        names = sorted({os.path.basename(f).split("_ERSP_")[-1].split("_HFAtrials_")[-1].split("_HGtrials_")[-1].rsplit("_TN", 1)[0].rsplit(".", 1)[0] for f in files})
         print(f"{pid}: {len(files)} stale files {kinds} - channels: {' '.join(names[:20])}{' ...' if len(names) > 20 else ''}")
     print(f"\n{len(total)} stale files in {len(per)} patients")
     if a.delete:

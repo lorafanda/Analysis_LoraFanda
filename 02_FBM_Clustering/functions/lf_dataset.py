@@ -461,8 +461,9 @@ def load_canonical(verbose: bool = True) -> Tuple[pd.DataFrame, List[np.ndarray]
     from scratch if needed using the default INPUT_DIR from the notebook
     conventions.
     """
-    input_dir = Path("../01_FBM_Analysis/outputs/04_ersp_LM_RAWONLY").resolve()
+    # 03_ERSP since 2026-09-30: cubes and QC figures in one tree (04_ersp_LM_RAWONLY is frozen)
+    input_dir = Path("../01_FBM_Analysis/outputs/03_ERSP").resolve()
     if not input_dir.exists():
         # Try absolute UNC path used on Lora's server
-        input_dir = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY")
+        input_dir = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\03_ERSP")
     return prepare_dataset(input_dir, cache_dir=DEFAULT_CACHE_DIR, verbose=verbose)

@@ -70,8 +70,8 @@ sys.path.insert(0, A01)
 from functions import config as cfg   # noqa: E402
 
 NASAC = "//nasac-m2.unige.ch/m-HumanNeuronLab"
-CUBES = os.path.join(A01, "outputs", "04_ersp_LM_RAWONLY")
-QC = os.path.join(A01, "outputs", "04_ersp_LM")
+CUBES = os.path.join(A01, "outputs", cfg.ERSP_TREE)     # one tree since 2026-09-30 (03_ERSP)
+QC = CUBES
 AUDIT = os.path.join(QC, "audit_140.tsv")
 RECON = os.path.join(REPO, "02_FBM_Clustering", "outputs", "250_recon", "fsaverage")
 BUNDLE = os.path.join(RECON, "activity_viz")
@@ -82,7 +82,7 @@ NF, NT, T_DS, VLIM = 103, 300, 2, 10.0
 F_STEP = 3.90625
 CUBE_RE = re.compile(r"_(?:WM|CAR)_ERSP_(.+)_TN\.npy$")
 PNG_RE = re.compile(r"_(?:WM|CAR)_ERSP_(.+)_TN\.png$")
-HG_RE = re.compile(r"_(WM|CAR)_HGtrials_")
+HG_RE = re.compile(r"_(WM|CAR)_(?:HFA|HG)trials_")
 MICRO_RE = re.compile(r"^[A-Za-z]+m\d+$")
 
 # Desikan-Killiany names, readable
@@ -299,7 +299,7 @@ def qc_names(pid: str) -> set:
 
 def hg_tag(pid: str) -> str:
     for cond in CONDS:
-        fs = glob.glob(os.path.join(QC, pid, "LM", "HG", cond, "*_HGtrials_*.png"))
+        fs = glob.glob(os.path.join(QC, pid, "LM", cfg.HFA_DIR, cond, "*_HFAtrials_*.png"))
         if fs:
             m = HG_RE.search(os.path.basename(fs[0]))
             return m.group(1) if m else "WM"
@@ -673,7 +673,7 @@ def main() -> None:
         "n_time": NT // T_DS, "time_downsample": T_DS, "n_time_source": NT,
         "dtype": "uint8", "order": ["cond", "freq", "time"], "vmin": -VLIM, "vmax": VLIM, "nan_byte": 0,
         "file": "each contact row's `file`",
-        "hg_path": "{hg_root}/{patient}/LM/HG/{cond}/{patient}_{cond}_{hg_reref}_HGtrials_{name}.png",
+        "hg_path": "{hg_root}/{patient}/LM/HFA/{cond}/{patient}_{cond}_{hg_reref}_HFAtrials_{name}.png",
         "psd_path": "{hg_root}/{patient}/LM/PSD_clean/{cond}/PSD/psd_by_shaft.png (per-shaft patients) or psd_allch_full.png",
         "iqr_path": "{hg_root}/{patient}/LM/Report/{patient}_{cond}_iqr_postDur_QC.png",
         "trials": "trials/{patient}.json: every trial of the run's tables with the reason it was dropped (lf_trials.collect_trials, the run's settings)",

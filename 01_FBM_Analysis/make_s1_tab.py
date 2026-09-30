@@ -9,7 +9,7 @@ replaced between BEGIN/END markers (the first run replaces the hand-written sect
 curated set of figures is copied into outputs/_status_png/ under stable names (the site
 loads images from raw.githubusercontent, so a figure shows only once that folder is
 committed), and nothing else in the file is touched. Re-run after every 140 rerun: the
-run-status bullets and the per-patient table are read from outputs/04_ersp_LM/audit_140.tsv
+run-status bullets and the per-patient table are read from outputs/<cfg.ERSP_TREE>/audit_140.tsv
 (141_audit_140.py - run that first) at build time.
 
 The sub-tab roles of the tab (Answer / Evidence / Method / Open / History) are the h3 ids
@@ -31,8 +31,11 @@ sys.path.insert(0, str(ROOT / "functions"))
 import config as cfg                                                  # noqa: E402  (the pipeline's own settings)
 
 OUT = ROOT / "outputs" / "_status_png"
-AUDIT = ROOT / "outputs" / "04_ersp_LM" / "audit_140.tsv"
-QC = ROOT / "outputs" / "04_ersp_LM"
+TREE = ROOT / "outputs" / cfg.ERSP_TREE          # one tree since 2026-09-30 (03_ERSP): cubes + QC figures
+AUDIT = TREE / "audit_140.tsv"
+# until the 03_ERSP rerun has been audited, the table is the last one of the frozen 04_* way
+AUDIT_FALLBACK = ROOT / "outputs" / "04_ersp_LM" / "audit_140.tsv"
+QC = TREE
 SITE = Path("C:/Users/fanda/lorafanda.github.io/analysis_status.html")
 FIGROOT = "01_FBM_Analysis/outputs/_status_png"
 DOCS = "01_FBM_Analysis/outputs/preprocessing_docs"
@@ -45,10 +48,13 @@ EX = "PAT_6704"          # the example patient of the current run's figures
 EXCH = "THD1"            # transverse temporal (Heschl) - the audio responder
 FIGS = {   # stable name -> source (None: kept as already committed under _status_png)
     "s1_example_ersp.png":  QC / EX / "LM" / "ERSP" / "audio" / f"{EX}_audio_WM_ERSP_{EXCH}_TN.png",
-    "s1_example_hg.png":    QC / EX / "LM" / "HG" / "audio" / f"{EX}_audio_WM_HGtrials_{EXCH}.png",
+    "s1_example_hg.png":    QC / EX / "LM" / cfg.HFA_DIR / "audio" / f"{EX}_audio_WM_HFAtrials_{EXCH}.png",
     "s1_trials_iqr.png":    QC / EX / "LM" / "Report" / f"{EX}_audio_iqr_postDur_QC.png",
     "s1_psd_raw.png":       QC / EX / "LM" / "PSD_raw" / "audio" / "PSD" / "psd_by_shaft.png",
     "s1_psd_clean.png":     QC / EX / "LM" / "PSD_clean" / "audio" / "PSD" / "psd_by_shaft.png",
+    # the trial z-score test tree (145 -> 147 / 148), 2026-09-30
+    "s1_trials_counts_z.png": ROOT / "outputs" / "04_ersp-trialtestzscore" / "_summary" / "trial_counts_and_z.png",
+    "s1_trial_z_heatmap.png": ROOT / "outputs" / "04_ersp-trialtestzscore" / "_summary" / "z_heatmaps" / "EL033.png",
 }
 MAX_FIG_MB = 4.5          # the repo's pre-commit guard refuses files above 5 MB
 
@@ -70,10 +76,13 @@ def fig(name: str, num: str, title: str, bullets: list[str], runid: str, *, sub:
 
 
 # ---------------------------------------------------------------------------------------
+AUDIT_USED = AUDIT if AUDIT.exists() else AUDIT_FALLBACK
+
+
 def read_audit() -> pd.DataFrame | None:
-    if not AUDIT.exists():
+    if not AUDIT_USED.exists():
         return None
-    return pd.read_csv(AUDIT, sep="\t", dtype=str).fillna("")
+    return pd.read_csv(AUDIT_USED, sep="\t", dtype=str).fillna("")
 
 
 def ref_short(r) -> str:
@@ -126,7 +135,8 @@ def run_status(a: pd.DataFrame | None) -> str:
         "producer: <code>01_FBM_Analysis/140_ersp_pipeline.py --patient &lt;id&gt;</code> (one process per patient; notebook 140 = same code)",
         f"contacts with cubes: <b>{n_cubes}</b> · cube shape: {', '.join(shapes) or '–'} (freq × warped time) · fmax <b>400 Hz</b>",
         "errors: " + ("; ".join(_e(b) for b in bad) if bad else "none"),
-        "table: <code>outputs/04_ersp_LM/audit_140.tsv</code> / <code>.md</code> (<code>141_audit_140.py</code>) - one row per patient, 103 columns",
+        "table: <code>outputs/03_ERSP/audit_140.tsv</code> / <code>.md</code> (<code>141_audit_140.py</code>) - one row per patient, 103 columns"
+        + ("" if AUDIT_USED == AUDIT else " · <b>the 03_ERSP tree has not been audited yet: the numbers on this tab are the last audit of the frozen 04_* way (32 patients, runs to 2026-09-29)</b>"),
     )
 
 
@@ -139,50 +149,55 @@ def build(a: pd.DataFrame | None) -> str:
     S.append('    <div class="eyebrow" style="color:var(--s1)">Stage 01</div>')
     S.append('    <h2 class="title">Signal → ERSP</h2>')
     S.append('    <p class="lead">Raw sEEG → one <b>ERSP cube</b> per electrode × condition (103 freq × 300 warped time bins, dB re baseline). '
-             'Producer: <code>140_ersp_pipeline.py</code>. Tree: <code>04_ersp_LM_RAWONLY</code>. '
+             'Producer: <code>140_ersp_pipeline.py</code>. Tree: <code>outputs/03_ERSP</code> (one folder per patient, cubes and QC together, since 2026-09-30; <code>04_ersp_LM*</code> frozen as the previous way). '
              f'Outline form, {today}; numbers from <code>audit_140.tsv</code>.</p>')
 
     # ---- status -------------------------------------------------------------------
     S.append('    <h3 id="s1-status">Run status</h3>')
     S.append('    <div class="method">' + run_status(a) + '</div>')
-    S.append('    <h4>Since the 2026-09-18 run</h4>')
+    S.append('    <h4>Since the 2026-09-24 run</h4>')
     S.append('    ' + ul(
-        "<b>2026-09-22</b> · PAT_6704, PAT_6854 rerun with the MicroEPI reference fix (bad-listed contacts had been averaged in, <code>bad_channels_for_ref=[]</code>): PAT_6704 21 WM contacts used, AD8 FOD5 HAD7 IAD1 left out · PAT_6854 38 used, IAD1 left out · cube counts unchanged (134 / 178 per condition)",
-        "<b>2026-09-22</b> · EL043 rerun on the two recordings joined (<code>RAW_CONCAT</code>, file 2 at 3773.5 s, window 1810–4650 s; picture triggers of 18 June by <code>el043_build_picture_triggers.py</code>, the bad 17 June table parked in prep0-bad): audio 18 / picture 25 / reading 14 trials, 74 cubes per condition (18 Sep run: picture 0 trials in crop → aborted before reading)",
-        "<b>2026-09-21</b> · PAT_6953 run: 147 cubes per condition, 30 WM references, 5 Unknown drops (AD12 FOD1 TLD2 TLD4 TLD5)",
-        "<b>2026-09-22</b> · <code>CHANNEL_SHAFT_ALIAS</code>: 137 contacts / 10 patients had no anatomy link (recording vs TSV spelling: aI_R / alR, MFG-L / MFG, pIns / pl, PlaT_L / PlanTL, OFA / OFAD) → reruns EL034 EL035 EL037 EL038 EL040 EL042 EL043 EL045 EL046 PAT_6619: 20 contacts into the references (EL034 +2, EL037 +1, EL038 +1, EL042 +3, EL043 +7, EL045 +1, EL046 +3, PAT_6619 +1, EL037 +2 bad-listed), 14 new Unknown drops (EL034 4, EL037 3, EL038 5, EL040 1) · MicroEPI path takes the same WM set as EL / PAT, so <code>WM_NOT_REFERENCE</code> applies there: PAT_6704 rerun, THD1 / THD3 / THD4 out of the reference (18 used)",
-        "<b>2026-09-22</b> · <code>142_stale_cubes.py</code>: the 33 contacts those reruns no longer produce had kept their files (546: cubes, halves, CLEAN, QC) → deleted; sweep by mtime over all 31 folders clean",
+        "<b>2026-09-24</b> · full rerun of 26 patients on the settings of that day: spectrum interpolation <b>per shaft for every patient</b> (the audit of 09-23 had shown the IIR notch digging −0.7 to −8 dB holes), post-offset floor <b>0.2 s</b> (1 s had cost 760 trials on v9), baseline calc window explicit (−0.4, −0.1 s) · <b>PAT_1327</b> joins (165 contacts) · <b>EL038</b> trigger tables rebuilt from the full session log (<code>el038_rebuild_triggers.py</code>: 14 audio + 2 reading trials that a DC6 drift and a pruned log copy had lost)",
+        "<b>2026-09-26</b> · EL043, EL046 rerun (EL046 bad list +4: aH_R12, A_L1, pH_L1, A_L2)",
+        "<b>2026-09-28</b> · <b>bad-listed contacts are dropped before the reference, the PSD figures and the notch</b> (until then the list only kept a contact out of the reference by name and out of the cluster export: EL045's PlaT_L had three bad contacts of six in the shaft median the notch decides on, and PlaT_L4, 11 dB above the patient's floor, was a fifth of its reference) · <b>width floor</b> <code>notch_interp_min_hw_hz</code>: EL037's 350 Hz row sat 1.15 dB below its neighbours on every trial while the PSD test passed at ±1 Hz — with ±5 Hz the row bias is +0.09; the same floor for EL045 · <b>EL045</b>: a 59.94 Hz comb (the screen's refresh: 180 / 240 / 359.5 Hz on four shafts) that only stood out once the noisy contact left the reference, notched as <code>notch_extra_bases</code> like EL048's railway comb · bad lists: EL037 + pH_R12 (dead in two blocks), aI_L2–5, A_L4, pI_L14, CinG_L2 · EL043 + sSMG8–10 (12–70 Hz floor 10–14 dB up; files removed by hand, no rerun) · EL045 + PlaT_L2–4, A_R8, A_L2–4, STG_L1–2 · EL037 and EL045 rerun",
+        "<b>2026-09-29</b> · <b>EL051, EL052 on their FreeSurfer reconstruction</b>: BIDS electrodes tables in <code>BIDS_elec/SEEG-BERN</code>, shaft aliases for the recon's spelling (Pul_R / Pul_, al_R / aI_R, ml / mI, PreCG / PrCG_R), Lookup route and whole-recording CAR retired · each candidate WM contact checked against the other five (ERSP, high gamma, floor): EL051 reference = A_R6, A_R9, aH_R11 (POp_R1 carries a +0.5 dB speech response → <code>WM_NOT_REFERENCE</code>, analysed as data; pH_R8, VIM_12 bad-listed), EL052 = aI_R17, aI_R18, mI_R6, mI_R7, mI_R15 (Pul_R16 14 dB above the floor → bad) · bad lists: EL051 VIM whole shaft, aH_R13 · EL052 ANT_R14, aH_R12, aH_R13, pH_L12, pH_L13, Pul_R16 · PAT_1327 FOD7 removed · both rerun, their 09-24 files deleted (EL052's old cubes carried the CAR tag)",
+        "<b>2026-09-30</b> · <b>per-trial rejection on for everyone</b>: high-gamma MAD rule, k = 3.5 (<code>ersp_trial_reject_hg_mad[\"default\"]</code>; see step 7) · <b>PAT_3415 depth-only</b>: its 64 grid and 30 strip contacts (BIDS type n/a, tissueLabel “unknown”) leave with the Unknown drop now that the patient is out of <code>MIXED_GRID_DEPTH_PATIENTS</code>; reference IMG15–17, IPG10 / 12 / 13 (HLG18, 26.8 dB above the floor, had been in it); HLG1–18 bad — the whole shaft sits 25–28 dB above the other depth contacts; CAR vs WM compared on the depth contacts, alike, WM kept · <b>whole-recording CAR</b> now averages neural channels only (the HUG photodiode had been in PAT_3415's mean: a vertical line at 0 and 50 % of every ERSP) · <b>trial z-score tree</b> (145 → 146 / 147 / 148, every patient, 09-30): nobody is drastically affected at z = 3 — 39 of 3777 cohort trials by the montage-wide rule, max 3 per patient-condition · <b>PAT_3415 goes back to WM</b> (was in <code>WHOLE_CAR_PATIENTS</code> for the comparison) · <b>full 140 rerun of all 32 patients started</b> on these settings",
+        "<b>known</b> · 140 never clears a patient folder: after every rerun the removed contacts' files stay until <code>142_stale_cubes.py --delete</code> or a hand sweep (done for EL037, EL043, EL045, EL051, EL052, PAT_1327; PAT_3415's <code>_CAR_</code> files wait for the sweep after the WM run)",
     ))
 
     # ---- chain ----------------------------------------------------------------------
     S.append('    <h3 id="s1-chain">Chain — per patient, in order</h3>')
     S.append('    <div class="method">' + ul(
         "<b>1 · load</b>: Bern <code>.h5</code> (1024 Hz; <code>RAW_CONCAT</code> joins split recordings: EL051, EL043) · HUG <code>.TRC</code> (2048 Hz) · MicroEPI <code>.mat</code> export (macros + micros, <code>lf_micromacro</code>)",
-        "<b>2 · channels out</b>: aux by name (EKG, EMG, Chin, photo, X / E families) · MicroEPI micros: raw pass-through (G-04 / G-06 microwires bad-listed) · EL: crop to preset <code>time_range</code> · EL043: hemisphere suffix stripped · grid keep-prefixes (EL044 P / p / T, PAT_3415) · <b>Unknown</b>: tissueLabel empty / NaN / “Unknown…” → dropped · <b>bad</b>: <code>cfg.bad_channels_manual</code> (+ Lookup <code>isOut</code>) → no cube",
-        "<b>3 · reference</b> (one per patient, before any trial): <b>WM mean</b> of ≥ 3 contacts; WM rule = tissueWeights_1 &gt; 0.97 ∧ first token <code>wm-</code> (BIDS electrodes TSV; Lookup workbook for EL051 / EL052); bad list excluded; <code>WM_NOT_REFERENCE</code> = PAT_6704 THD1 / THD3 / THD4 (WM by anatomy, analysed as data) · EL / HUG: WM contacts skipped as data · MicroEPI: macros only, WM contacts kept as data · EL044: per-grid CAR (P 6, Pa 55, T 48, postP 15) · EL052: whole-recording CAR (104 ch, 24 bad out; no WM contact recorded)",
+        "<b>2 · channels out</b>: aux by name (EKG, EMG, Chin, X / E families; the HUG photodiode “photo” and EKG-/EMG- survive to the montage and leave at the export, and since 09-30 stay out of any CAR mean) · MicroEPI micros: raw pass-through (G-04 / G-06 microwires bad-listed) · EL: crop to preset <code>time_range</code> · EL043: hemisphere suffix stripped · grid keep-prefixes (EL044 P / p / T only; PAT_3415's grid and strips are <b>out</b> since 09-30 — they carry no parcellation, so the Unknown drop takes all 94) · <b>Unknown</b>: tissueLabel empty / NaN / “Unknown…” → dropped · <b>bad</b>: <code>cfg.bad_channels_manual</code> → <b>dropped here</b> (since 2026-09-28: out of the reference, the PSD figures, the notch decision, the QC and the export alike; before, only out of the reference and the export)",
+        "<b>3 · reference</b> (one per patient, before any trial): <b>WM mean</b> of ≥ 3 contacts; WM rule = tissueWeights_1 &gt; 0.97 ∧ first token <code>wm-</code> in the BIDS electrodes TSV (every patient since 2026-09-29; EL051 / EL052 were on their Lookup workbook until their FreeSurfer reconstruction existed) · <code>WM_NOT_REFERENCE</code> = WM by anatomy but responsive, analysed as data: PAT_6704 THD1 / THD3 / THD4, EL051 POp_R1, PAT_3415 IMG8 / IPG15 · EL / HUG: WM contacts skipped as data · MicroEPI: macros only, WM contacts kept as data · EL044: per-grid CAR (P 6, Pa 55, T 48, postP 15) · no whole-recording CAR (EL052 had one until 09-29; PAT_3415 for one comparison run on 09-30 — alike, WM kept; the CAR mean now averages neural channels only) · counts 3 (EL051) to 53 (PAT_3301); PAT_3415 6 (IMG15–17, IPG10 / 12 / 13)",
         f"<b>4 · notch</b> (per condition block, ±{cfg.notch_block_pad_s:g} s pad, <b>per shaft</b> and "
         f"<code>{cfg.notch_method_default}</code> for <b>every patient</b> since 2026-09-24): candidates 50 Hz + "
-        f"harmonics ≤ {cfg.fmax:g} (EL048 also 16.667 Hz comb) · test z ≥ {cfg.notch_peak_z_thresh:g} vs the shaft's "
-        f"own local PSD · <code>interp</code> = spectrum interpolation, {cfg.notch_interp_phase} phase, band widened "
-        f"≤ ±{cfg.notch_interp_max_hw_hz:g} Hz · audit: <code>Report/&lt;pid&gt;_notch_audit.tsv</code>, "
+        f"harmonics ≤ {cfg.fmax:g}, plus a second comb where the unexplained-peak audit showed one "
+        f"(<code>notch_extra_bases</code>: {', '.join(f'{p} {b[0]:g} Hz' for p, b in sorted(cfg.notch_extra_bases.items()))} — railway traction, the screen's refresh) · "
+        f"test z ≥ {cfg.notch_peak_z_thresh:g} vs the shaft's own local PSD · <code>interp</code> = spectrum interpolation, "
+        f"{cfg.notch_interp_phase} phase, band widened +1 Hz per pass while the ring 3 Hz outside stands &gt; 3 dB above the far floor, "
+        f"≤ ±{cfg.notch_interp_max_hw_hz:g} Hz · <b>width floor</b> where a trial-locked residue survives that test "
+        f"(<code>notch_interp_min_hw_hz</code>: {', '.join(f'{p} {int(list(d)[0])} Hz ±{list(d.values())[0]:g} Hz' for p, d in sorted(cfg.notch_interp_min_hw_hz.items()))}; "
+        f"checked by the ERSP row bias of the new cubes) · audit: <code>Report/&lt;pid&gt;_notch_audit.tsv</code>, "
         f"<code>_unexplained_peaks.tsv</code>",
         "<b>5 · trials</b> (<code>lf_trials.collect_trials</code>, prep0 tables; byte-identical duplicates skipped): "
         "resp_accuracy ∈ {correct, valid, 1}"
         f" · stimulus ≥ {cfg.min_stim_s:g} s · post {cfg.min_post_s:g}–{cfg.max_post_s:g} s · IQR k = {cfg.iqr_k:g} on post duration · report <code>Report/&lt;pid&gt;_IQR.tsv</code> + QC png per condition",
         "<b>6 · ERSP</b> (<code>lf_ersp.compute_ersp</code>, per channel): resample 1 kHz → STFT Hann nperseg 128, noverlap 108, nfft 256 (3.906 Hz bins, 20 ms hop) → dB re baseline mean (−0.4, −0.1 s; the segment starts at −0.6 s) → bins ≤ <code>cfg.fmax</code> = 400 Hz kept: <b>103 bins, last 398.4 Hz</b> (2026-09-18; was 129 / 500) → time-warp TN: stimulus onset→offset = bins 0–149, offset→<code>trial_end</code> = 150–299 (<code>proportions (0, .5, .5)</code>, bin 150 = GO) → mean over kept trials · NaN fill nearest (cube only) · halves: odd / even trials, no fill",
-        "<b>7 · per-trial rejection inside the average</b>: off for every patient (configured for PAT_6684 only, now out of the dataset)",
-        "<b>8 · HG QC</b>: 70–150 Hz Butterworth → Hilbert → 25 ms smoothing → baseline z · raster per channel, trials sorted by stimulus duration, excluded trials drawn last, reason-tagged (accuracy / duration / IQR / power)",
-        "<b>9 · write</b>: cube <code>.npy</code> + halves + CLEAN png (RAWONLY tree) · QC ERSP + HG png for every channel incl. bad (QC tree) · PSD raw / clean · <code>wm_reref_report.tsv</code> row · log",
+        "<b>7 · per-trial rejection inside the average</b> (since 2026-09-30, every patient): per channel, a trial's score = 99th percentile of |dB| over 70–150 Hz; dropped when score &gt; median + 3.5 × 1.4826 × MAD of that channel's trials (<code>ersp_trial_reject_hg_mad[\"default\"] = 3.5</code>), never more than 34 % of a channel's trials (past that 140 calls the channel bad and stops dropping) · MAD, not z: a mean and SD are computed from the trials being judged, so several bad trials widen the yardstick and hide each other — on the 145 tables no channel showed more than 8 outlier trials in ~130 by z, while MAD found 171 channels with 9–15 (the interictal-spiking mesial temporal contacts); k = 3.5 removes ~2–3 % of trials per channel · the channel is kept; its rasters show every dropped trial with its z",
+        "<b>8 · HFA QC</b> (<code>HFA/</code>, “HG” until 09-30): 70–150 Hz Butterworth → Hilbert → 25 ms smoothing → baseline z · raster per channel, trials sorted by stimulus duration, excluded trials drawn last, reason-tagged (accuracy / duration / IQR / power)",
+        "<b>9 · write</b> (all under <code>03_ERSP/&lt;pid&gt;/LM/</code> since 09-30): cube <code>.npy</code> + halves + CLEAN png · QC ERSP + HFA png for every kept channel (bad-listed contacts no longer drawn since 09-28) · per-trial score table · PSD raw / clean · <code>wm_reref_report.tsv</code> row · log",
     ) + '</div>')
     S.append('    <h4>Downstream (stage 02, not here)</h4>')
     S.append('    ' + ul(
-        "gate: <code>prop_above_pos ≥ 0.02</code> ∨ <code>prop_below_neg ≥ 0.04</code> (thr +2.2 / −3.0 dB) in ≥ 1 condition; per electrode, not per condition",
+        "gate (noise-scaled since v10, <code>lf_dataset</code> schema 3): a bin counts beyond max(2.2 dB, 2 × noise) / min(−3 dB, −2 × noise), noise = sd(half1 − half2) / 2 of that electrode-condition; <code>prop_above_pos ≥ 0.02</code> ∨ <code>prop_below_neg ≥ 0.04</code> in ≥ 1 condition; per electrode, not per condition",
         "concatenation along time: 3 cubes → 103 × 900 (<code>concat_rawds</code>: 15 bands × 30 bins per block; <code>concat_hg</code>: 70–150 Hz mean per bin) · cache <code>concat_source_v*</code>",
         "constants moved to 103 / 398.4375 Hz on 2026-09-18 in stages 02–05 (<code>lf_dataset</code>, <code>lf_features</code>, <code>lf_clustering</code>, <code>lf_concat</code>, <code>lf_pool</code>, <code>lf_rt</code>, <code>lf_classify</code>, notebooks 240–242 / 212 / 232)",
     ))
     S.append(fig("P2_signal_conditioning.png", "FIG P.2", "Steps 3–4 · reference and notch (documentation figure)",
                  ["A: contact pair before / after WM re-reference (simulated) · B: PSD with mains harmonics · C: scheme per patient type",
-                  "documentation of the method, 2026-08-26 (v4); schemes unchanged except EL052 whole CAR (09-17) and the MicroEPI bad-list fix (09-21)"],
+                  "documentation of the method, 2026-08-26 (v4); since then: MicroEPI bad-list fix (09-21), bad list applied before the notch (09-28), EL052 on a WM reference instead of a whole-recording CAR (09-29)"],
                  "<code>make_preprocessing_figures.py</code>", sub=DOCS))
     S.append(fig("P3_one_trial_to_ersp.png", "FIG P.3", "Step 6 · one trial → one ERSP (documentation figure)",
                  ["A: raw trial, baseline window marked · B: spectrogram dB · C: after baseline subtraction · D: averaged TN cube (EL033 aH_L11 audio, v4)",
@@ -204,15 +219,15 @@ def build(a: pd.DataFrame | None) -> str:
     # ---- outputs -------------------------------------------------------------------
     S.append('    <h3 id="s1-outputs">Outputs — where things are</h3>')
     S.append('    <div class="method">' + ul(
-        "<b>inputs</b> · raw: <code>DATARAW/&lt;cohort&gt;/&lt;pid&gt;/task_FBM/data_LM/raw/</code> (+ events log) · triggers: <code>…/prep0/&lt;pid&gt;_LM_&lt;cond&gt;__&lt;trig&gt;_&lt;date&gt;.tsv</code> (onset, onset_duration, sample, sample_offsets, trial_end, condition_name, resp_accuracy, trial_idx; <code>prep0/prep0-bad/</code> = parked tables) · anatomy: <code>BIDS_elec/…/sub-&lt;id&gt;/ieeg/*_electrodes.tsv</code> (EL051 / EL052: <code>anatomy/raw/*Lookup*.xlsx</code>) · config: <code>functions/config.py</code> (presets, bad lists, references, notch)",
-        "<b>cubes</b> · <code>outputs/04_ersp_LM_RAWONLY/&lt;pid&gt;/LM/ERSP_matrix/&lt;cond&gt;/&lt;pid&gt;_&lt;cond&gt;_&lt;WM|CAR&gt;_ERSP_&lt;ch&gt;_TN.npy</code> (103 × 300 float) · <code>ERSP_halves/&lt;cond&gt;/…_half1|2.npy</code> · <code>ERSP_clean/&lt;cond&gt;/*_CLEAN.png</code> · <code>wm_reref_report.tsv</code>",
-        "<b>QC</b> · <code>outputs/04_ersp_LM/&lt;pid&gt;/LM/</code>: <code>ERSP/&lt;cond&gt;/*.png</code> (every channel incl. bad) · <code>HG/&lt;cond&gt;/*_HGtrials_&lt;ch&gt;.png</code> · <code>PSD_raw</code>, <code>PSD_clean</code> · <code>Report/</code>: <code>_IQR.tsv</code>, <code>_&lt;cond&gt;_iqr_postDur_QC.png</code>, <code>_montage_overview.png</code>, <code>_notch_audit.tsv</code>, <code>_unexplained_peaks.tsv</code> · <code>logs/&lt;pid&gt;_&lt;stamp&gt;.log</code>",
-        "<b>audit</b> · <code>outputs/04_ersp_LM/audit_140.tsv</code>, <code>.md</code> · <b>review bundle</b> · <code>02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/review/</code> (<code>make_lm_review_bundle.py</code>)",
-        "<b>previous tree</b> · <code>04_ersp_LM_RAWONLY_old</code>, <code>04_ersp_LM_old</code> (run of 2026-08-16 + reruns; 0–500 Hz cubes) · <b>RT tree</b> · <code>05_ERSP_LM_RAWONLY_RealTime</code> (notebook 150, GO-locked, see History)",
+        "<b>inputs</b> · raw: <code>DATARAW/&lt;cohort&gt;/&lt;pid&gt;/task_FBM/data_LM/raw/</code> (+ events log; <code>RAW_CONCAT</code> joins EL043's and EL051's two files) · triggers: <code>…/prep0/&lt;pid&gt;_LM_&lt;cond&gt;__&lt;trig&gt;_&lt;date&gt;.tsv</code> (onset, onset_duration, sample, sample_offsets, trial_end, condition_name, resp_accuracy, trial_idx; <code>prep0/prep0-bad/</code> = parked tables) · anatomy: <code>BIDS_elec/&lt;site&gt;/sub-&lt;id&gt;/ieeg/*_electrodes.tsv</code> for every patient (EL051 / EL052 since 2026-09-29; the Lookup route in config is empty but kept) · config: <code>functions/config.py</code> (presets, bad lists, references, notch, aliases)",
+        "<b>cubes</b> · <code>outputs/03_ERSP/&lt;pid&gt;/LM/ERSP_matrix/&lt;cond&gt;/&lt;pid&gt;_&lt;cond&gt;_&lt;WM|CAR&gt;_ERSP_&lt;ch&gt;_TN.npy</code> (103 × 300 float) · <code>ERSP_halves/&lt;cond&gt;/…_half1|2.npy</code> · <code>ERSP_clean/&lt;cond&gt;/*_CLEAN.png</code> · <code>wm_reref_report.tsv</code>",
+        "<b>QC</b> · <code>outputs/03_ERSP/&lt;pid&gt;/LM/</code> (same folder as the cubes): <code>ERSP/&lt;cond&gt;/*.png</code> (every channel incl. bad) · <code>HFA/&lt;cond&gt;/*_HFAtrials_&lt;ch&gt;.png</code> (“HG” in the old tree) · <code>TrialScores/&lt;cond&gt;/*_trial_scores.tsv</code> · <code>PSD_raw</code>, <code>PSD_clean</code> · <code>Report/</code>: <code>_IQR.tsv</code>, <code>_&lt;cond&gt;_iqr_postDur_QC.png</code>, <code>_montage_overview.png</code>, <code>_notch_audit.tsv</code>, <code>_unexplained_peaks.tsv</code> · <code>logs/&lt;pid&gt;_&lt;stamp&gt;.log</code>",
+        "<b>audit</b> · <code>outputs/03_ERSP/audit_140.tsv</code>, <code>.md</code> · <b>review bundle</b> · <code>02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/review/</code> (<code>make_lm_review_bundle.py</code>)",
+        "<b>previous trees</b> · <code>04_ersp_LM_RAWONLY</code> + <code>04_ersp_LM</code> (the way up to 2026-09-29, 32 patients, frozen 09-30 for the comparison with 03_ERSP: <code>compare_140_trees.py</code>) · <code>04_ersp_LM_RAWONLY_old</code>, <code>04_ersp_LM_old</code> (run of 2026-08-16 + reruns; 0–500 Hz cubes) · <b>RT tree</b> · <code>05_ERSP_LM_RAWONLY_RealTime</code> (notebook 150, GO-locked, see History)",
         "<b>stale cubes</b> · 140 never clears a patient folder → after a rerun that removes channels, audit by mtime before any cohort build",
         # 2026-09-22: what the cube is normalised TO is the first thing stage 02's distance
         # metric sees, so it belongs here and not only in the clustering tab.
-        "<b>what the cube is normalised <i>to</i></b> · dB re the pre-stimulus baseline (−0.6…−0.1 s), per trial and per frequency — so a contact's gain and impedance are divided out, but its <b>response size</b> is not, and that is what drives a Euclidean clustering downstream (<a href=\"#s2norm\">stage 02 · FIG N.1–N.6</a>). <code>compute_ersp</code> also returns <code>avg_z</code> — the same thing divided by the baseline SD, per frequency (<code>lf_ersp.py:1230</code>) — which is the quantity Hamilton, Edwards &amp; Chang 2018 (<i>Curr Biol</i> 28:1860, STAR Methods e1) cluster on; 140 saves only <code>avg_db</code>, so one <code>np.save</code> in the export block would give stage 02 a third space with a published precedent",
+        "<b>what the cube is normalised <i>to</i></b> · dB re the pre-stimulus baseline (−0.4…−0.1 s; the trial segment starts at −0.6 s), per trial and per frequency — so a contact's gain and impedance are divided out, but its <b>response size</b> is not, and that is what drives a Euclidean clustering downstream (<a href=\"#s2norm\">stage 02 · FIG N.1–N.6</a>). <code>compute_ersp</code> also returns <code>avg_z</code> — the same thing divided by the baseline SD, per frequency (<code>lf_ersp.py:1230</code>) — which is the quantity Hamilton, Edwards &amp; Chang 2018 (<i>Curr Biol</i> 28:1860, STAR Methods e1) cluster on; 140 saves only <code>avg_db</code>, so one <code>np.save</code> in the export block would give stage 02 a third space with a published precedent",
         "<b>what the responsiveness gate assumes</b> · the gate is a <i>duration</i> test (|dB| over threshold in ≥ 2–4 % of bins), so a contact with a large but brief transient can fail it. The same hazard made Hamilton et al. 2018 reject a response-vs-silence criterion and select electrodes by held-out STRF prediction instead (STAR Methods e2, “false exclusion of onset electrodes”) — worth one count before v9: gated-out contacts with max |dB| &gt; 4 in under 2 % of bins",
     ) + '</div>')
 
@@ -221,42 +236,62 @@ def build(a: pd.DataFrame | None) -> str:
     S.append('    ' + ul(
         "<b><code>141_audit_140.py</code></b> → per patient: run time, status, crop, channels in / neural / Unknown / aux, bad list, reference route + WM list, notch per condition (notched / comb left / off-comb / unexplained), trials in → IQR kept → used, cubes new vs previous tree (name diff, classified), shapes, NaN sample, QC counts, <b>name reconciliation</b> (removed by bad list / removed by no rule / listed but not recorded)",
         "<b>LM_visualizer review mode</b> (key <code>r</code>): per patient, contacts shaft by shaft, each tile = concatenated ERSP (audio | picture | reading, undistorted) · native label (tissueLabel, GM / WM / sub %) + fsaverage aparc · status (data / WM ref / bad / Unknown / aux / not recorded) · split-half r, mains-row stripe index, |dB|, HG per condition · worst-first orders · HG rasters from a local server (<code>?hg=</code>) · bundle: <code>make_lm_review_bundle.py</code> (per-patient rebuilds)",
-        "<b>findings, 18–21 Sep</b>: EL043 aborted (fixed) · MicroEPI bad-in-reference (fixed) · 137 contacts without anatomy link (open) · bad-list names matching nothing: EL037 pI_R1–16 + pI_L10–13, EL040 FP-R11 PlaT_L1–3, EL034 MFG-10..12, EL030 EntG_R18, EL052 aH_L8 / 9, PAT_3415 HLG5, PAT_3780 FAP9 (open) · low trial counts: EL038 audio 8 / 39, EL043 reading 14, EL046 reading 14, EL034 audio 20, PAT_6619 audio 20 · notch leftovers: EL048 56 / 184 notched, 15–16 comb peaks left, 106 unexplained; EL035 audio 7; EL042 3 / 3 / 6; PAT_6704 4 / 4 / 3",
-        "<b>photodiode</b>: EL / HUG <code>LFfunctions_PDextract.get_trigger_indexes_photodiode</code> (threshold 0.40, flip per preset, log pairing) · MicroEPI <code>lf_micromacro.extract_events_from_photodiode</code> · manual triggers: EL051 / EL052 (<code>manual_trig</code>) · PAT_6704 checked 2026-09-18: Heschl (THD1) HG locks at 0 % of the audio stimulus, stimulus durations picture 0.98–1.04 s, reading 3.48–3.55 s",
+        "<b>findings, 18–22 Sep</b> (all closed): EL043 aborted → two recordings joined · MicroEPI bad-in-reference → fixed · 137 contacts without anatomy link → <code>CHANNEL_SHAFT_ALIAS</code> · EL038 audio 8 / 39 trials → tables rebuilt from the full log (09-24)",
+        "<b>findings, 28–29 Sep</b> (closed): EL045 looked noisy after every notch — a reference contact (PlaT_L4) 11 dB above the patient's floor and three bad contacts in the shaft median the notch decides on → bad list applied before everything · a 350 Hz residue that is trial-locked and invisible to the time-averaged PSD test (EL037 −1.15 dB row bias, EL045 −0.74) → width floor · EL045's screen comb → second comb · the run report's <code>wm_channels_excluded_as_bad</code> compares TSV keys with bad-list spellings (PlanTL4 vs PlaT_L4) → both spellings listed · EL051 / EL052 white-matter candidates checked one by one before the switch to their BIDS tables",
+        "<b>findings, 30 Sep</b>: PAT_3415's HLG shaft is bad as a whole (every contact 25–28 dB above the other depth contacts at 70–150 Hz and 16–20 dB at 1–30 Hz — a connector, not tissue) and HLG18 had been one of its nine reference contacts; its OI / OS / TA / TM / TP are subdural strips, not depth shafts (BIDS type n/a like the grid) → depth-only · the HUG photodiode channel survives the aux drop and had entered PAT_3415's CAR mean → CAR on neural channels only · EL039 has no usable triggers (the task ran 09:25–09:48 on 3 Dec 2024; the recording that overlaps it has an unplugged DC6, the one left in raw/ starts after the task) → recon only · the trial z tree (145) on all 32 patients: 13 trials over z = 4 on ≥ 20 % of channels — four are montage-wide (EL033 picture #46 on 67 of 75 channels), the rest sit on one or two shafts (PAT_3965 audio #41 on HAG / AG / CAG only: a discharge, not a trial problem), which is what the per-shaft heatmaps (148) are for",
+        "<b>still open</b>: bad-list names that match no recorded channel (EL037 pI_R1–16 + pI_L5 / 10–16 + aI_L18, EL040 PlaT_L1–3 marked “example”, EL034 MFG-10..12, EL030 EntG_R18, PAT_3415 HLG5, PAT_3780 FAP9) — harmless, the audit lists them · PAT_6953 Unknown keep-list (AD12, TLD2 / 4 / 5) · thin references: EL051 3 contacts, EL045 4, EL036 4 · notch leftovers: EL048's railway comb (106 unexplained peaks), EL035 (112), PAT_3415 (101)",
+        "<b>photodiode</b>: EL / HUG <code>LFfunctions_PDextract.get_trigger_indexes_photodiode</code> (threshold 0.40, flip per preset, log pairing) · MicroEPI <code>lf_micromacro.extract_events_from_photodiode</code> · manual trigger tables: EL030, EL038, EL051, EL052, PAT_3301, PAT_3975, PAT_3780 (<code>manual_trig</code>) · PAT_6704 checked 2026-09-18: Heschl (THD1) HG locks at 0 % of the audio stimulus, stimulus durations picture 0.98–1.04 s, reading 3.48–3.55 s · EL038 census 2026-09-24: every logged trial of EL037 / 040 / 042 / 045 / 046 / 052 sits on a pulse",
     ))
-    S.append(fig("s1_example_ersp.png", "FIG 1.1", f"Example ERSP · {EX} {EXCH} audio (run 2026-09-18)",
+    ex_run = "?"
+    if a is not None and (a["patient"] == EX).any():
+        ex_run = str(a.loc[a["patient"] == EX, "run_start"].iloc[0])[:10] or "?"
+    S.append(fig("s1_example_ersp.png", "FIG 1.1", f"Example ERSP · {EX} {EXCH} audio (run {ex_run})",
                  ["x: warped time 0–100 %, line at 50 % = GO · y: 0–400 Hz · colour: dB re baseline, ±6",
                   "transverse temporal (Heschl): HG 70–150 Hz on from 0 %, through the stimulus and the response; low-frequency onset response at 0–5 %"],
-                 f"<code>04_ersp_LM/{EX}/LM/ERSP/audio/{EX}_audio_WM_ERSP_{EXCH}_TN.png</code>"))
-    S.append(fig("s1_example_hg.png", "FIG 1.2", f"HG trials · {EX} {EXCH} audio (run 2026-09-18)",
+                 f"<code>03_ERSP/{EX}/LM/ERSP/audio/{EX}_audio_WM_ERSP_{EXCH}_TN.png</code>"))
+    S.append(fig("s1_example_hg.png", "FIG 1.2", f"HFA trials · {EX} {EXCH} audio (run {ex_run})",
                  ["rows: trials sorted by stimulus duration, numbers = rows of the trigger table · colour: HG z · black line: onset · magenta: stimulus offset",
-                  "excluded trials drawn last, red, reason-tagged: 9 response &lt; 1 s, 6 duration outlier (IQR k = 1.5) → 38 of 53 in the average"],
-                 f"<code>04_ersp_LM/{EX}/LM/HG/audio/{EX}_audio_WM_HGtrials_{EXCH}.png</code>"))
-    S.append(fig("s1_trials_iqr.png", "FIG 1.3", f"Trial gate · {EX} audio (run 2026-09-18)",
-                 ["post-stimulus duration per trial · orange: hard limits 1–10 s · blue: IQR k = 1.5 fences · green kept 38, red dropped 15"],
-                 f"<code>04_ersp_LM/{EX}/LM/Report/{EX}_audio_iqr_postDur_QC.png</code>"))
-    S.append('    <figure><div class="cap"><div class="fignum">FIG 1.4</div><h4>PSD per shaft · ' + EX + ' audio block, raw vs clean (run 2026-09-18)</h4>'
+                  f"excluded trials drawn last, red, reason-tagged (accuracy · response &lt; {cfg.min_post_s:g} s or &gt; {cfg.max_post_s:g} s · duration outlier, IQR k = {cfg.iqr_k:g} · power); the header gives the counts of this run"],
+                 f"<code>03_ERSP/{EX}/LM/HFA/audio/{EX}_audio_WM_HFAtrials_{EXCH}.png</code>"))
+    S.append(fig("s1_trials_iqr.png", "FIG 1.3", f"Trial gate · {EX} audio (run {ex_run})",
+                 [f"post-stimulus duration per trial · orange: hard limits {cfg.min_post_s:g}–{cfg.max_post_s:g} s · blue: IQR k = {cfg.iqr_k:g} fences · green kept, red dropped"],
+                 f"<code>03_ERSP/{EX}/LM/Report/{EX}_audio_iqr_postDur_QC.png</code>"))
+    S.append('    <figure><div class="cap"><div class="fignum">FIG 1.4</div><h4>PSD per shaft · ' + EX + f' audio block, raw vs clean (run {ex_run})</h4>'
              + ul("top: after reference, before notch · bottom: after notch (interp, per shaft) · dashed: 50 Hz harmonics",
                   "the notch audit TSV carries before_db / after_db / hole_hw_hz per harmonic and shaft")
-             + f'<div class="runid"><code>04_ersp_LM/{EX}/LM/PSD_raw|PSD_clean/audio/PSD/psd_by_shaft.png</code></div></div>'
+             + f'<div class="runid"><code>03_ERSP/{EX}/LM/PSD_raw|PSD_clean/audio/PSD/psd_by_shaft.png</code></div></div>'
              + f'<div class="imgwrap"><img data-fig="{FIGROOT}/s1_psd_raw.png" alt="PSD raw" style="margin-bottom:8px"><img data-fig="{FIGROOT}/s1_psd_clean.png" alt="PSD clean"></div></figure>')
+    S.append(fig("s1_trials_counts_z.png", "FIG 1.5", "Trials per patient: kept / removed, and the spread of the trial z (145 tree, 2026-09-30)",
+                 ["A: per patient × condition, kept (pink audio / blue picture / brown reading) and removed before the ERSP (incorrect response, discharge span, duration filters); n in the trigger table on top",
+                  "B: one dot per trial — the median over channels of its per-channel z (146: z within each channel across its trials, score = 99th percentile of |dB| in 70–150 Hz); red = the 12 trials 146's montage rule drops at z &gt; 4 on ≥ 20 % of channels, numbered as on the HFA raster · 29 cohort patients, 3777 trials",
+                  "what it answers: at z = 3 nobody is drastically affected — 39 trials by the montage rule (max 3 in one patient-condition), 13 by median z; the low counts (EL043 20–25, EL046 reading 23) are set by the accuracy / duration filters, not by z"],
+                 "<code>147_trial_figure.py</code> · <code>outputs/04_ersp-trialtestzscore/_summary/trial_counts_and_z.png</code>"))
+    S.append(fig("s1_trial_z_heatmap.png", "FIG 1.6", "Channel × trial z · EL033 (148, one page per patient)",
+                 ["rows: channels grouped by shaft · columns: the trials that reached the ERSP, numbered as on the HFA raster · colour: per-channel z, clipped at 6 · red triangle: the trial 146's rule drops",
+                  "a full column is a trial event (picture #46: every shaft) → drop the trial; a block inside a column is one region during that trial (a discharge) → the per-channel MAD rule of step 7 removes it from those channels and keeps the rest; a horizontal band is a channel problem, which z cannot see (it is within-channel) — that is the floor check's job"],
+                 "<code>148_trial_z_heatmaps.py</code> · <code>outputs/04_ersp-trialtestzscore/_summary/z_heatmaps/&lt;pid&gt;.png</code>"))
 
     # ---- open -----------------------------------------------------------------------
-    S.append('    <h3 id="s1-open">Open — before 140 is done</h3>')
+    S.append('    <h3 id="s1-open">Open — what stage 01 still owes</h3>')
     S.append('    ' + ul(
-        "decide: bad-list names that matched nothing (EL037 pI_R1–16, EL040 FP-R11 PlaT_L1–3, EL034 MFG-10..12, EL030 EntG_R18, EL048 7 names, EL052 aH_L8 / 9, PAT_3415 HLG5, PAT_3780 FAP9, PAT_6704 ainp1): typo, other patient's shaft, or Unknown-dropped anyway",
+        "<b>the 03_ERSP tree is being written</b> (full rerun of the 29 cohort patients, started 2026-09-30, MAD 3.5 on, PAT_3415 depth-only): when it is complete the chain is <code>141_audit_140.py</code> → <code>142_stale_cubes.py</code> (nothing to sweep in a fresh tree) → <code>rebuild_concat_cache.py --version 14</code> (reads 03_ERSP) → 240 / 241 / 242 → <code>make_paper2_outputs.py</code> · the v13 cache and everything on the site below it are the last of the 04_* way",
+        "compare the two ways once 03_ERSP is complete: <code>compare_140_trees.py</code> (old = <code>04_ersp_LM*</code>, new = <code>03_ERSP</code>) — trial counts per channel, cube differences, the HFA rasters with the MAD-dropped trials",
+        "decide: the bad-list names that match no recorded channel (list under Checks) — delete the dead entries or leave them; the audit keeps flagging them",
         "decide: PAT_6953 Unknown contacts (AD12, TLD2 / 4 / 5) keep-list",
-        "2026-09-23: Unknown drop extended to MicroEPI (29 contacts: PAT_5515 5, PAT_5533 5, PAT_6619 10, PAT_6704 6, PAT_6854 3) → reruns of the five, then v10",
-        "stale-cube audit by mtime after the reruns",
-        "QC pass in review mode, patient by patient: trigger lock, reference bleed, stripes, bad channels, low trial counts (accept / not)",
-        "then: commit code (fmax-400 edits, 140 script, audit, review, fixes), push page + review bundle, rebuild <code>_raw_ungated</code> → cube / ERSP bundle → clustering caches → site",
-        "known: <code>pd_blocks</code> (per-block photodiode equalisation) reaches notebook 13 only, not 140 · micro / macro ERSP comparison (nb 11) never run to a saved output · microwire contacts (…m) to be removed post hoc for PAT_ patients (0 in the current tree)",
+        "QC pass in review mode, patient by patient: trigger lock, reference bleed, stripes, bad channels, low trial counts (EL037 / EL043 / EL045 done 09-28)",
+        "the drop-before-notch of 09-28 reaches every patient with the 03_ERSP rerun (until then only EL037 / EL045 / EL051 / EL052 / PAT_3415 had it)",
+        "aparc labels on fsaverage for PAT_1327, EL051, EL052: <code>211_validation.ipynb</code> (<code>aparc_lookup.csv</code> is of 09-22), then the review bundle again",
+        "known: <code>pd_blocks</code> (per-block photodiode equalisation) reaches notebook 13 only, not 140 · micro / macro ERSP comparison (nb 11) never run to a saved output",
     ))
 
     # ---- history --------------------------------------------------------------------
     S.append('    <h3 id="s1-history">History</h3>')
     S.append('    ' + ul(
-        "<b>2026-09-21 / 22</b> · MicroEPI bad-in-reference fix, PAT_6704 / PAT_6854 rerun · EL043 two recordings joined, 18 June picture triggers, rerun · PAT_6953 run · review mode + review bundle · audit script · microelectrode rule in the dataset builder = lower-case-m spelling (PAT_2868 IDM / POM are stereo contacts, back in v9)",
+        "<b>2026-09-30</b> · one output tree <code>03_ERSP</code> (cubes + QC per patient; <code>HG</code> → <code>HFA</code>; 04_* frozen) for the 29 cohort patients · per-trial rejection for everyone: HFA MAD k = 3.5 per channel (the z form is blind to channels with many bad trials) · PAT_3415 depth-only (grid + strips out via the Unknown drop, HLG shaft bad, 6-contact reference; CAR vs WM alike, WM kept) · CAR mean on neural channels only · trial z tree 145–148 on all patients: counts, violins, per-shaft heatmaps · TABLE C.0 (every patient and why it is or is not in the cohort) under FIG C.0 · EL039 = no triggers",
+        "<b>2026-09-29</b> · EL051 / EL052 on their FreeSurfer reconstruction (BIDS tables, shaft aliases, WM references 3 / 5 after a contact-by-contact check; POp_R1 kept as data, Pul_R16 bad) · Lookup anatomy route and whole-recording CAR retired · PAT_1327 FOD7 out",
+        "<b>2026-09-28</b> · bad list applied before the reference and the notch · width floor at 350 Hz (EL037, EL045) · EL045 screen comb 59.94 Hz · bad lists EL037 / EL043 / EL045 after per-contact sheets (floor vs the patient's median, ERSP, HG raster) · stale files of the removed contacts swept by hand",
+        "<b>2026-09-24 / 26</b> · rerun of all patients on interp per shaft, post floor 0.2 s, PAT_1327 in, EL038 triggers rebuilt · EL043 / EL046 rerun 09-26",
+        "<b>2026-09-21 / 22</b> · MicroEPI bad-in-reference fix, PAT_6704 / PAT_6854 rerun · EL043 two recordings joined, 18 June picture triggers, rerun · PAT_6953 run · review mode + review bundle · audit script · microelectrode rule in the dataset builder = lower-case-m spelling (PAT_2868 IDM / POM are stereo contacts, back in v9) · <code>CHANNEL_SHAFT_ALIAS</code> for 137 contacts of 10 patients, reruns of those ten · <code>142_stale_cubes.py</code> sweep (546 files)",
         "<b>2026-09-18</b> · fmax 400 Hz (crop in <code>_spectro</code>, option A; downstream constants 103 / 398.4375) · 140 as per-patient script · EL051 bad list (29) · full rerun, 31 patients, 8.1 h · trees renamed <code>_old</code>",
         "<b>2026-09-17</b> · EL052 whole-recording CAR (no WM contact recorded) · <b>09-15</b> · PAT_6684 (G-05) out of the dataset · <b>09-14</b> · G-05 on its Micromed TRC, discharge spans",
         "<b>2026-09-09</b> · per-trial rejection (broadband z / band MAD, ≤ 34 %; G-05 only) · HG raster rewritten: every excluded trial drawn, reason-tagged · <code>collect_trials</code> returns the whole table",

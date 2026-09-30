@@ -64,8 +64,9 @@ import lf_dataset as LD         # noqa: E402
 import check_recon_name_match as NM   # noqa: E402
 
 CACHE_ROOT = ROOT / "outputs" / "_dataset"
+# 03_ERSP since 2026-09-30: the one tree (cubes + QC); 04_ersp_LM_RAWONLY is the frozen previous way
 INPUT_DIR = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM"
-                 r"\Analysis_LoraFanda\01_FBM_Analysis\outputs\04_ersp_LM_RAWONLY")
+                 r"\Analysis_LoraFanda\01_FBM_Analysis\outputs\03_ERSP")
 CONDITIONS = ("audio", "picture", "reading")
 
 
@@ -130,7 +131,7 @@ def main() -> int:
     out = ROOT / "outputs" / "clustering" / f"cohort_v{v}"
 
     inp = INPUT_DIR if INPUT_DIR.exists() else (
-        ROOT.parent / "01_FBM_Analysis" / "outputs" / "04_ersp_LM_RAWONLY").resolve()
+        ROOT.parent / "01_FBM_Analysis" / "outputs" / "03_ERSP").resolve()
     print(f"input   : {inp}")
     print(f"new     : {new_cache}")
     print(f"old     : {old_cache}  {'(present)' if old_cache.exists() else '(absent)'}")

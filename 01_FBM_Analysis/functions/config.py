@@ -19,7 +19,11 @@ patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","E
 # its presets, path override, bad lists and discharge spans below stay as the record of
 # the work. 02_FBM_Clustering/functions/lf_concat.DEFAULT_EXCLUDE_PATIENTS keeps it out of
 # every cohort cache built from now on.
-patient_ids = ["G-06", "G-04", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048", "EL051","EL052","PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]
+# THE 29 CLUSTERING PATIENTS (2026-09-30, Lora): EL044 (ECoG, audio block only) and PAT_3301
+# (picture naming only) left this list with the move to the 03_ERSP tree - neither can enter
+# a three-condition cohort, and the new tree is built for the cohort only. Their presets
+# and bad lists below stay; their 04_ersp_LM* outputs stay as they were.
+patient_ids = ["G-06", "G-04", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL045","EL046","EL048", "EL051","EL052","PAT_3455","PAT_2868","PAT_3066", "PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]
 
 block_name  = "LM"
 conditions_expected = ("picture", "audio", "reading")
@@ -50,6 +54,14 @@ GRID_CAR_PATIENTS = {"EL044"}
 # and isOut contact of its Lookup is unplugged - so the WM route has nothing to use. Lora
 # chose the whole-recording average over a per-shaft one (2026-09-17). Handled in 140's
 # re-referencing step before the WM branch; the ERSP files carry "CAR" in their names.
+# PAT_3415 was here on 2026-09-30 for a CAR-vs-WM comparison on its depth contacts, and
+# LEFT THE SET the same day (Lora): it goes back to WM like every other patient. It has
+# the contacts for it - 6 in the BIDS TSV, IMG15 IMG16 IMG17 IPG10 IPG12 IPG13, all on the
+# IMG / IPG depth shafts that survive the Unknown drop now that the grid and strips are
+# out - and its 2026-09-29 run already referenced on those same six. With the patient in
+# this set 140 writes "_CAR_" files instead of "_WM_" ones; both land in the same patient
+# folder and are told apart by that tag, so do not run 142 --delete between a CAR run and
+# a WM one - it would take the older set as stale.
 WHOLE_CAR_PATIENTS = set()   # EL052 until 2026-09-29: its Lookup had no plugged WM contact; its BIDS TSV has 29
 EL_GRID_KEEP_PREFIXES = {"EL044": ("P", "p", "T")}
 # Patients with BOTH grid (ECoG) and depth (SEEG) electrodes. For these:
@@ -60,12 +72,17 @@ EL_GRID_KEEP_PREFIXES = {"EL044": ("P", "p", "T")}
 #     channels that pierce cortex.
 # bad_channels_manual still applies independently for excluding truly bad
 # contacts (e.g. PAT_3415's HLG1-17 already in that list).
-MIXED_GRID_DEPTH_PATIENTS = {"PAT_3415","EL044"}
+#
+# PAT_3415 LEFT THIS SET ON 2026-09-30 (Lora): the study is stereo-EEG, so its 64 grid
+# contacts (GA-GH) and 30 strip contacts (OI, OS, TA, TM, TP - BIDS type n/a like the
+# grid) are out of the analysis altogether. All 94 carry tissueLabel "unknown", so without
+# the protection the Unknown drop above the reference removes them - before the
+# reference, the notch and every figure - and only the depth shafts IMG and IPG remain
+# (HLG1-18 is bad-listed: the whole shaft sits 25-28 dB above the other depth contacts).
+MIXED_GRID_DEPTH_PATIENTS = {"EL044"}
 MIXED_GRID_KEEP_PREFIXES = {
-    # PAT_3415: 64 grid contacts GA1-GH8 (8x8 grid), 18 temporal strips
-    # (TA/TM/TP × 1-6), 12 occipital strips (OI/OS × 1-6). G/T/O cover
-    # all 94 surface contacts without matching HLG/IPG depth contacts.
-    "PAT_3415": ("G", "T", "O"),
+    # PAT_3415 (until 2026-09-30): ("G", "T", "O") - 64 grid contacts GA1-GH8 (8x8 grid),
+    # 18 temporal strips (TA/TM/TP x 1-6), 12 occipital strips (OI/OS x 1-6).
     "EL044": ("P", "p", "T"),
 }
 
@@ -419,6 +436,18 @@ min_freq_bins = 3     # e.g., 4–8 depending on your df
 # Outputs
 # ---------------------------
 outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs"
+# ONE TREE SINCE 2026-09-30 (Lora): outputs/03_ERSP/<pid>/LM/ holds everything 140 writes for a
+# patient - ERSP_matrix, ERSP_halves, ERSP_clean (the cubes and their images), ERSP and HFA
+# (the per-channel figures and the per-trial high-frequency rasters, "HFA" where the old
+# tree said "HG"), PSD_raw, PSD_clean, Report, TrialScores - with logs/, wm_reref_report.tsv
+# and audit_140.tsv at the tree's root. 04_ersp_LM and 04_ersp_LM_RAWONLY are FROZEN as the
+# previous way (runs up to 2026-09-29, 32 patients) so the two can be compared
+# (compare_140_trees.py: old = 04_*, new = 03_ERSP). Readers that follow this constant:
+# 140, 141, 142, 145, lf_dataset / rebuild_concat_cache, the review bundle and its QC images,
+# make_lm_visualizer, make_s1_tab, make_patient_roster. Pooling, timing and classifying
+# scripts still name 04_* and will be moved when they are next run.
+ERSP_TREE = "03_ERSP"
+HFA_DIR = "HFA"          # the per-trial raster folder and file stem (<pid>_<cond>_<ref>_HFAtrials_<ch>.png)
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
 # ── TRIAL REJECTION IN THE ERSP AVERAGE ──────────────────────────────────────
@@ -453,7 +482,15 @@ ersp_trial_reject_z = {"PAT_6684": 3.0}
 # judged, so several bad trials inflate the yardstick and hide each other. Synthetic
 # channel, 1/f power, three high-gamma runaways in thirty trials: broadband z=3 rejects
 # nothing, band z=3 rejects nothing, band MAD=3.5 rejects exactly the three.
-ersp_trial_reject_hg_mad = {"PAT_6684": 3.5}
+#
+# EVERYONE SINCE 2026-09-30 (Lora): the "default" key applies when a patient has no entry
+# of its own (140 reads the patient's key first, then "default"). Chosen on the 145 tables
+# of all 32 patients: with the ordinary z no channel ever shows more than 8 outlier trials
+# in ~130, because its own SD absorbs them; with MAD, 171 channels show 9-15 - the
+# interictal-spiking mesial temporal contacts - and k=3.5 removes ~2-3 % of trials per
+# channel, the spiky trials of those contacts and next to nothing elsewhere. The
+# channel is kept; only the run's 34 % cap says when it is a bad channel instead.
+ersp_trial_reject_hg_mad = {"default": 3.5, "PAT_6684": 3.5}
 ersp_trial_reject_hg_z = {}
 
 notch_patients  = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049","EL051","EL052", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]

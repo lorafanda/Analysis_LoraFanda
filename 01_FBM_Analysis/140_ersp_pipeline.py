@@ -5,7 +5,7 @@
     python .\140_ersp_pipeline.py --patient PAT_6684
     python .\140_ersp_pipeline.py --patient G-01            (MicroEPI .mat patient -> PAT_5515)
     python .\140_ersp_pipeline.py --patient EL030 --pd      (also redo the photodiode trial tables first)
-    python .\140_ersp_pipeline.py --patient EL030 --no-qc   (cubes and CLEAN PNGs only, no 04_ersp_LM figures)
+    python .\140_ersp_pipeline.py --patient EL030 --no-qc   (cubes and CLEAN PNGs only, no ERSP / HFA / PSD figures)
 
 Run it from anywhere; it changes into 01_FBM_Analysis itself, the way the notebook kernel
 sits there. Use the same Python the notebook runs in (it needs mne, h5py, scipy).
@@ -13,7 +13,7 @@ sits there. Use the same Python the notebook runs in (it needs mne, h5py, scipy)
 WHY A SCRIPT. The notebook holds every patient's intermediates in one kernel and dies
 partway through a 32-patient run. Here each patient is one process: it starts clean,
 writes its outputs, prints the same lines the notebook printed, appends its row to
-outputs/04_ersp_LM_RAWONLY/wm_reref_report.tsv, and exits. A crash costs one patient.
+outputs/03_ERSP/wm_reref_report.tsv, and exits. A crash costs one patient.
 
 WHAT IT IS. Cells 1, 2, the PD-extraction cell and the pipeline cell of the notebook,
 verbatim in their logic (2026-09-18), with three differences:
@@ -22,7 +22,7 @@ verbatim in their logic (2026-09-18), with three differences:
   - the report TSV is merged per patient rather than rewritten per batch.
 The output trees and everything in them are the ones the notebook writes.
 
-Everything is logged to outputs/04_ersp_LM/logs/<patient>_<timestamp>.log as well as to
+Everything is logged to outputs/03_ERSP/logs/<patient>_<timestamp>.log as well as to
 the terminal.
 """
 from __future__ import annotations
@@ -71,8 +71,12 @@ class _Tee:
 # Cell 1 - run controls (the toggles become flags)
 # ============================================================
 BLOCK = "LM"
-ERSP_SCRIPT_NAME    = "04_ersp_LM"
-RAWONLY_SCRIPT_NAME = "04_ersp_LM_RAWONLY"
+# ONE TREE since 2026-09-30 (cfg.ERSP_TREE = 03_ERSP): the QC figures and the cubes of a
+# patient land in the same <pid>/LM/ folder. The two names are kept because every writer
+# below picks one of them; they simply point at the same place now. 04_ersp_LM and
+# 04_ersp_LM_RAWONLY are frozen as the previous way.
+ERSP_SCRIPT_NAME    = cfg.ERSP_TREE
+RAWONLY_SCRIPT_NAME = cfg.ERSP_TREE
 run_root_ersp       = os.path.join(cfg.outputs_root, ERSP_SCRIPT_NAME)
 run_root_raw        = os.path.join(cfg.outputs_root, RAWONLY_SCRIPT_NAME)
 
@@ -82,11 +86,11 @@ run_root_raw        = os.path.join(cfg.outputs_root, RAWONLY_SCRIPT_NAME)
 # this loop, and a forked 873-line pipeline drifts from the real one within a week.
 WRITE_MONTAGE      = True   # Report/<pid>_montage_overview.png
 WRITE_ERSP_PLOTS   = True   # ERSP/<cond>/*.png          (the per-channel ERSP figures)
-WRITE_HG_PLOTS     = True   # HG/<cond>/*.png            (the per-trial high-gamma rasters)
+WRITE_HG_PLOTS     = True   # HFA/<cond>/*.png           (the per-trial high-frequency rasters; "HG" until 09-30)
 WRITE_CUBES        = True   # ERSP_matrix/<cond>/*.npy   (what stage 02 clusters)
 WRITE_HALVES       = True   # ERSP_halves/<cond>/*.npy   (the split-half gate)
 WRITE_CLEAN_PNG    = True   # ERSP_clean/<cond>/*_CLEAN.png
-EXPORT_TRIAL_SCORES = False  # TrialScores/<cond>/<pid>_<cond>_trial_scores.tsv
+EXPORT_TRIAL_SCORES = True   # TrialScores/<cond>/<pid>_<cond>_trial_scores.tsv (in the 03_ERSP tree since 09-30; was 145's only)
 
 ersp_params = fe.ERSPParams(
     nperseg=cfg.nperseg, nfft=cfg.nfft, noverlap=cfg.noverlap,
@@ -359,15 +363,21 @@ def _hg_trial_z(res, hg_all):
 
 def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_PSD_PLOTS,
                     INCLUDE_MICROEPI_MICROS):
-    ersp_params.trial_reject_mad = getattr(cfg, "ersp_trial_reject", {}).get(str(pid_raw))
-    ersp_params.trial_reject_z   = getattr(cfg, "ersp_trial_reject_z", {}).get(str(pid_raw))
-    ersp_params.trial_reject_hg_mad = getattr(cfg, "ersp_trial_reject_hg_mad", {}).get(str(pid_raw))
-    ersp_params.trial_reject_hg_z   = getattr(cfg, "ersp_trial_reject_hg_z", {}).get(str(pid_raw))
-    _rej_on = ersp_params.trial_reject_mad or ersp_params.trial_reject_z
+    # the patient's own entry first, then the "default" key (2026-09-30); a table with
+    # neither leaves that rule off for the patient
+    def _rej(name):
+        d = getattr(cfg, name, {}) or {}
+        return d.get(str(pid_raw), d.get("default"))
+    ersp_params.trial_reject_mad = _rej("ersp_trial_reject")
+    ersp_params.trial_reject_z   = _rej("ersp_trial_reject_z")
+    ersp_params.trial_reject_hg_mad = _rej("ersp_trial_reject_hg_mad")
+    ersp_params.trial_reject_hg_z   = _rej("ersp_trial_reject_hg_z")
+    _rej_on = (ersp_params.trial_reject_mad or ersp_params.trial_reject_z
+               or ersp_params.trial_reject_hg_mad or ersp_params.trial_reject_hg_z)
     if _rej_on:
         print(f"  [{pid_raw}] ERSP trial rejection ON  "
-              f"MAD k={ersp_params.trial_reject_mad}  "
-              f"z k={ersp_params.trial_reject_z}")
+              f"MAD k={ersp_params.trial_reject_mad}  z k={ersp_params.trial_reject_z}  "
+              f"HG MAD k={ersp_params.trial_reject_hg_mad}  HG z k={ersp_params.trial_reject_hg_z}")
 
     report = {
         "pid_raw": str(pid_raw), "patient_id": "", "status": "",
@@ -526,7 +536,12 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             wm_usable  = [n for n in wm_in_sig if n not in _bad_norm_for_report]
 
             if str(pid_raw) in getattr(cfg, "WHOLE_CAR_PATIENTS", set()):
-                _good = [i for i, n in enumerate(names) if io.normalize_label(n) not in _bad_norm_for_report]
+                # neural channels only (2026-09-30): the aux drop above keeps the HUG
+                # photodiode ("photo"), EKG-/EMG- and E1-E4, which the export skips through
+                # _is_non_neural but the mean did not - PAT_3415's CAR carried the photodiode
+                # step into every contact (a vertical line at 0 % and 50 % of every ERSP)
+                _good = [i for i, n in enumerate(names)
+                         if io.normalize_label(n) not in _bad_norm_for_report and not _is_non_neural(n)]
                 if len(_good) < 3:
                     print(f"[error] {patient_id}: whole-recording CAR needs >= 3 good channels, has {len(_good)}")
                     report["status"] = "error-reref"
@@ -537,7 +552,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 reref   = "CAR"
                 wm_skip = set()
                 print(f"[note] {patient_id}: whole-recording CAR - mean of {len(_good)} channels, "
-                      f"{len(names) - len(_good)} bad channels left out of the mean")
+                      f"{len(names) - len(_good)} bad or non-neural channels left out of the mean: "
+                      f"{' '.join(n for i, n in enumerate(names) if i not in set(_good))}")
                 report["n_wm_used"]                   = 0
                 report["wm_channels_used"]            = f"CAR:all({len(_good)})"
                 report["wm_channels_excluded_as_bad"] = "|".join(sorted(n for n in names if io.normalize_label(n) in _bad_norm_for_report))
@@ -645,7 +661,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 tr.plot_montage_overview(signals=signals, fs=fs, names=names,
                                          cond_groups=cond_groups, save_dir=report_dir, patient_id=patient_id)
             ersp_root = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "ERSP")
-            hg_root   = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "HG")
+            hg_root   = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, cfg.HFA_DIR)
 
         if RUN_CLUSTER_EXPORT:
             mat_root = _ensure(io.patient_output_dir(run_root_raw, patient_id, cfg.block_name, "ERSP_matrix"))
@@ -871,7 +887,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
 
 
 def merge_report(row):
-    """outputs/04_ersp_LM_RAWONLY/wm_reref_report.tsv: one row per patient, this run's row
+    """outputs/03_ERSP/wm_reref_report.tsv: one row per patient, this run's row
     replacing the patient's previous one, the others kept (the notebook rewrote the whole
     file per batch; one patient per process needs a merge)."""
     out_tsv = os.path.join(run_root_raw, "wm_reref_report.tsv")
@@ -907,8 +923,8 @@ def main():
     ap.add_argument("--patient", required=True, nargs="+",
                     help="raw id(s) as config.py spells them: EL030, PAT_3455, G-01, PAT_6684 ...")
     ap.add_argument("--pd", action="store_true", help="run the photodiode trial extraction first (rewrites prep0)")
-    ap.add_argument("--no-qc", action="store_true", help="skip the 04_ersp_LM figures (ERSP/HG/PSD/montage); cubes only")
-    ap.add_argument("--no-export", action="store_true", help="skip the 04_ersp_LM_RAWONLY cubes and CLEAN PNGs")
+    ap.add_argument("--no-qc", action="store_true", help="skip the QC figures (ERSP/HFA/PSD/montage); cubes only")
+    ap.add_argument("--no-export", action="store_true", help="skip the cubes, halves and CLEAN PNGs")
     ap.add_argument("--no-psd", action="store_true", help="keep the QC but skip the dpi-600 PSD montages")
     ap.add_argument("--macros-only", action="store_true", help="MicroEPI patients: skip the micro wires")
     a = ap.parse_args()
