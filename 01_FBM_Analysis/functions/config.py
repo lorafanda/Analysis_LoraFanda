@@ -50,7 +50,7 @@ GRID_CAR_PATIENTS = {"EL044"}
 # and isOut contact of its Lookup is unplugged - so the WM route has nothing to use. Lora
 # chose the whole-recording average over a per-shaft one (2026-09-17). Handled in 140's
 # re-referencing step before the WM branch; the ERSP files carry "CAR" in their names.
-WHOLE_CAR_PATIENTS = {"EL052"}
+WHOLE_CAR_PATIENTS = set()   # EL052 until 2026-09-29: its Lookup had no plugged WM contact; its BIDS TSV has 29
 EL_GRID_KEEP_PREFIXES = {"EL044": ("P", "p", "T")}
 # Patients with BOTH grid (ECoG) and depth (SEEG) electrodes. For these:
 #   * WM reref still runs (uses depth-electrode WM contacts as usual)
@@ -109,7 +109,11 @@ bad_channels_manual = {
     # contacts are all within +7 dB (pl2) of the median.
     "EL043": ["sSMG8", "sSMG9", "sSMG10"],
     "EL040": [ f"PlaT_L{i}" for i in range(1, 4)],  # example; fill after visual/clinical review
-    "PAT_3415": [ f"HLG{i}" for i in range(1, 18)],  # example; fill after visual/clinical review
+    # PAT_3415: the whole HLG shaft. Until 2026-09-29 the range stopped at 17 and HLG18 - the one
+    # contact left - was a ninth of the WM reference with a 70-150 Hz floor 26.8 dB above the
+    # patient's depth median and the speech-muscle signature (broadband 150-400 Hz rise through
+    # the response half, a 180 Hz line): every cube of the 09-24 run carries it.
+    "PAT_3415": [ f"HLG{i}" for i in range(1, 19)],
     "PAT_3780": ["FAP9"],  # example; fill after visual/clinical review
     "PAT_3975": ["TPG1"],  # example; fill after visual/clinical review
     "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
@@ -136,7 +140,8 @@ bad_channels_manual = {
     # PAT_1327, 2026-09-24, by visual review of the first run. All five are recorded under
     # exactly these names (checked against the TRC's 236 channels) and none of them is in
     # the white-matter reference, so it stays at its 44 contacts.
-    "PAT_1327": ["CAG5", "CPG1", "IAG10", "PHG2", "PHG3"],
+    "PAT_1327": ["CAG5", "CPG1", "IAG10", "PHG2", "PHG3",
+                 "FOD7"],   # 2026-09-29 (Lora); its files were removed from the 140 outputs by hand
     # PAT_6684 (G-05) on its TRC, 2026-09-13, by visual review. CAG1/CAG2 are WM contacts:
     # listing them here also keeps them out of the WM reference.
     "PAT_6684": ["FPG10", "FPG5", "FPG9", "FPG8", "FOM7", "FOM11","CAG1", "FOL8", "CAG2",
@@ -171,7 +176,8 @@ bad_channels_manual = {
     # on 2026-09-18. pSTG is "the whole shaft": contacts 3-9 are the ones recorded.
     "EL051": [*[f"pH_R{i}" for i in range(7, 14)],          # pH_R 7-13
               *[f"pSTG_{i}" for i in range(3, 10)],         # pSTG, whole shaft
-              *[f"VIM_{i}" for i in range(12, 19)],         # VIM 12-18
+              *[f"VIM_{i}" for i in range(1, 19)],          # VIM, whole shaft (was 12-18 until 2026-09-29)
+              "aH_R13",                                     # 2026-09-29
               "pSPL_3",
               "EKG+", "EKG-",
               *[f"aSMG_{i}" for i in range(4, 9)]],         # aSMG 4-8
@@ -179,7 +185,14 @@ bad_channels_manual = {
               *[f"A_L{i}"  for i in range(9, 14)],     # A_L9-13
               *[f"A_R{i}"  for i in range(9, 14)],     # A_R9-13
               *[f"aH_L{i}" for i in range(7, 14)],     # aH_L7-13
-              "aH_R1", "ANT_R15", "EntG_R11", "Pul_R11", "PrCG_R6", "PrCG_R7"],
+              "aH_R1", "ANT_R15", "EntG_R11", "Pul_R11", "PrCG_R6", "PrCG_R7",
+              # 2026-09-29 (Lora): aH_R10 / aH_R11 were asked for too but are not recorded
+              "ANT_R14", "aH_R12", "aH_R13", "pH_L12", "pH_L13",
+              # 2026-09-29, check of the BIDS table's WM contacts: Pul_R16's 70-150 Hz floor sits
+              # 14 dB above the recording's median and its ERSP is a broadband smear from 100 to
+              # 350 Hz in every condition - an artefact contact, out of everything. The other five
+              # (aI_R17/18, mI_R6/7/15) are quiet: floors 0.6-2 dB below the median, HG within 0.45 dB.
+              "Pul_R16"],
 }
 
 # ----------------------------------------------------------------------------
@@ -199,7 +212,11 @@ bad_channels_manual = {
 # EL052 (2026-09-17): its Lookup is filled (natus = name without the dash, all 224 rows,
 # 103 of them unplugged); 121 recorded contacts match by name, the four PreCG_R ones are
 # spelled PrCG_R in the recording. Its 57 WM contacts are all unplugged, hence WHOLE_CAR.
-LOOKUP_ANATOMY_PATIENTS = {"EL051", "EL052"}
+# 2026-09-29: EL051 and EL052 have their FreeSurfer recon and a BIDS electrodes TSV in
+# BIDS_elec/SEEG-BERN now, so the TSV route finds them first and the Lookup entries below
+# are no longer reached. The set is left empty rather than deleted, with the dirs, so a
+# patient can be put back on the workbook route if a table ever goes missing.
+LOOKUP_ANATOMY_PATIENTS = set()
 LOOKUP_ANATOMY_DIRS = {
     # the workbooks sit in raw/overview/, and the finder does not recurse -
     # pointing at raw/ gave "Lookup fallback failed" and no WM channels at all
@@ -220,6 +237,18 @@ LOOKUP_ANATOMY_DIRS = {
 # bad_channels_manual is the other list: that one removes a contact from everything.
 WM_NOT_REFERENCE = {
     "PAT_6704": ["THD1", "THD3", "THD4"],
+    # EL051 (2026-09-29 check of the BIDS table's six WM contacts, each against the other
+    # five): POp_R1 rises +0.4 to +0.55 dB in high gamma through the response half of all
+    # three conditions, a band at 70-110 Hz - the opercular speech response, not white
+    # matter noise. The other five stay within +-0.3 dB.
+    "EL051": ["POp_R1"],
+    # PAT_3415 (2026-09-29, the same check with HLG18 out): IMG8 responds (+1.2 dB high gamma
+    # through the picture stimulus and response, +0.4 / +0.7 in audio, a 50-200 Hz patch);
+    # IPG15 is the outermost contact of its shaft, with a broadband rise at the end of the
+    # audio trials and the deepest stimulus suppression. The six left (IMG15-17, IPG10, IPG12,
+    # IPG13) sit 0.3-1.6 dB below the median floor with high gamma within +-0.4 dB (IPG12
+    # +0.7 in the picture response half).
+    "PAT_3415": ["IMG8", "IPG15"],
 }
 
 # ---- recording shaft -> anatomy-table shaft (2026-09-22) -----------------------------
@@ -244,6 +273,13 @@ CHANNEL_SHAFT_ALIAS = {
     "EL045":    {"PLATL": "PLANTL"},
     "EL046":    {"AIL": "ALL", "PIL": "PLL"},
     "PAT_6619": {"OFA": "OFAD", "OFP": "OFPD"},
+    # EL051 / EL052 (2026-09-29): their FreeSurfer recon's electrodes TSV (BIDS_elec/SEEG-BERN)
+    # carries the hemisphere the recording leaves out (Pul_R1 vs Pul_1) and spells the insula
+    # shafts al / ml where the recording has aI / mI; PreCG vs PrCG_R. Same map, inverted, as
+    # RECON_ALIAS in 250_recon_fsaverage.ipynb.
+    "EL051":    {"ANT": "ANTR", "ASMG": "ASMGR", "ASPL": "ASPLR", "PSPL": "PSPLR", "PSTG": "PSTGR",
+                 "PUL": "PULR", "VIM": "VIMR"},
+    "EL052":    {"AIR": "ALR", "MIL": "MLL", "MIR": "MLR", "PRCGR": "PRECG"},
 }
 
 # ---- TEMPORARY manual WM reference -------------------------------------------
@@ -502,7 +538,21 @@ notch_Q_max = {
 # to notch_interp_max_hw_hz. The final width per harmonic is in the audit (hw_hz):
 # brain signal inside it is replaced, which at 100 Hz is part of the HG band.
 notch_interp_phase = "random"         # "random" | "keep"
-notch_interp_max_hw_hz = 12.0
+# A HARD CEILING ON THE INTERPOLATED HALF-WIDTH. 3.0 Hz since 2026-09-30, was 12.0.
+#
+# A mains harmonic is a line: peak_geometry measures the real one and caps its own
+# estimate at 5 Hz. Everything past that came from the widening loop, which grows the
+# band by 1 Hz whenever residual energy sits in the ring just outside it - and at high
+# frequencies that residual is often ordinary broadband brain, so it widened until it
+# hit the ceiling. At 12.0 that is a 24 Hz hole per harmonic, and the loop reached it
+# with n_iter=12, i.e. it never converged, it ran out of passes.
+#
+# The cost is not cosmetic. High gamma is 70-150 Hz and the 100 and 150 Hz notches sit
+# inside it. On EL033's audio block, six shafts (pH_R, aH_R, STG_R, PHG_R, EntG_R, A_R)
+# had 29.0 of those 80 Hz interpolated away - 36 % of the band every HFA feature is
+# built from, replaced by flank RMS and random phase. At 3.0 Hz the same worst case is
+# about 7 %.
+notch_interp_max_hw_hz = 3.0
 
 # A FLOOR on the starting half-width, per patient and harmonic (2026-09-28). The widening
 # test reads the time-averaged PSD; a residue that is trial-locked but small on average
