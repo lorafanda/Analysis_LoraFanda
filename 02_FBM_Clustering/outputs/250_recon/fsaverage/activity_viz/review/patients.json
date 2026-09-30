@@ -951,70 +951,6 @@
 }
 },
 {
-"patient": "EL044",
-"raw_id": "EL044",
-"system": "Bern",
-"ran": true,
-"run_start": "2026-09-24 15:47",
-"status": "ok",
-"reference": "per-grid CAR: P(6), Pa(55), T(48), postP(15)",
-"wm_n": 0,
-"wm_source": "",
-"bad_n": 13,
-"bad_list": [
-"T57",
-"postP1",
-"T9",
-"T39",
-"T10",
-"Pa63",
-"Pa48",
-"Pa1",
-"Pa53",
-"Pa60",
-"Pa51",
-"Pa37",
-"Pa44"
-],
-"notch": "interp \u00b7 per shaft",
-"crop": "2478-4290 s",
-"conditions": "audio",
-"unexplained_peaks": "1",
-"trials": {
-"audio": {
-"in": "53",
-"kept": "24",
-"used": "24",
-"cubes": "124"
-},
-"picture": {
-"in": "",
-"kept": "",
-"used": "",
-"cubes": "0"
-},
-"reading": {
-"in": "",
-"kept": "",
-"used": "",
-"cubes": "0"
-}
-},
-"hg_reref": "CAR",
-"anatomy_source": "sub-EL044_electrodes.tsv",
-"n_contacts": 150,
-"n_data": 124,
-"n_status": {
-"data": 124,
-"wm_ref": 0,
-"bad": 13,
-"unknown": 13,
-"not_recorded": 0,
-"not_run": 0,
-"aux": 0
-}
-},
-{
 "patient": "EL045",
 "raw_id": "EL045",
 "system": "Bern",
@@ -1521,56 +1457,6 @@
 }
 },
 {
-"patient": "PAT_3301",
-"raw_id": "PAT_3301",
-"system": "HUG",
-"ran": true,
-"run_start": "2026-09-24 13:30",
-"status": "ok",
-"reference": "WM reference, 53 contacts (skipped as data)",
-"wm_n": 53,
-"wm_source": "BIDS TSV",
-"bad_n": 0,
-"bad_list": [],
-"notch": "interp \u00b7 per shaft",
-"crop": "0-1900 s",
-"conditions": "picture",
-"unexplained_peaks": "4",
-"trials": {
-"audio": {
-"in": "",
-"kept": "",
-"used": "",
-"cubes": "0"
-},
-"picture": {
-"in": "43",
-"kept": "40",
-"used": "40",
-"cubes": "146"
-},
-"reading": {
-"in": "",
-"kept": "",
-"used": "",
-"cubes": "0"
-}
-},
-"hg_reref": "WM",
-"anatomy_source": "sub-3301_electrodes.tsv",
-"n_contacts": 202,
-"n_data": 146,
-"n_status": {
-"data": 146,
-"wm_ref": 53,
-"bad": 0,
-"unknown": 3,
-"not_recorded": 0,
-"not_run": 0,
-"aux": 1
-}
-},
-{
 "patient": "PAT_3390",
 "raw_id": "PAT_3390",
 "system": "HUG",
@@ -1951,6 +1837,201 @@
 "wm_ref": 44,
 "bad": 6,
 "unknown": 10,
+"not_recorded": 0,
+"not_run": 0,
+"aux": 0
+}
+},
+{
+"patient": "EL044",
+"raw_id": "EL044",
+"system": "Bern",
+"ran": true,
+"run_start": "2026-09-24 15:47",
+"status": "ok",
+"reference": "per-grid CAR: P(6), Pa(55), T(48), postP(15)",
+"wm_n": 0,
+"wm_source": "",
+"bad_n": 13,
+"bad_list": [
+"T57",
+"postP1",
+"T9",
+"T39",
+"T10",
+"Pa63",
+"Pa48",
+"Pa1",
+"Pa53",
+"Pa60",
+"Pa51",
+"Pa37",
+"Pa44"
+],
+"notch": "interp \u00b7 per shaft",
+"crop": "2478-4290 s",
+"conditions": "audio",
+"unexplained_peaks": "1",
+"trials": {
+"audio": {
+"in": "53",
+"kept": "24",
+"used": "24",
+"cubes": "124"
+},
+"picture": {
+"in": "",
+"kept": "",
+"used": "",
+"cubes": "0"
+},
+"reading": {
+"in": "",
+"kept": "",
+"used": "",
+"cubes": "0"
+}
+},
+"hg_reref": "CAR",
+"anatomy_source": "sub-EL044_electrodes.tsv",
+"in_cohort": false,
+"cohort_note": "ECoG grids only, and only the audio block was recorded",
+"tree": "04_ersp_LM",
+"hfa_dir": "HG",
+"hfa_stem": "HGtrials",
+"n_contacts": 150,
+"n_data": 124,
+"n_status": {
+"data": 124,
+"wm_ref": 0,
+"bad": 13,
+"unknown": 13,
+"not_recorded": 0,
+"not_run": 0,
+"aux": 0
+}
+},
+{
+"patient": "PAT_3301",
+"raw_id": "PAT_3301",
+"system": "HUG",
+"ran": true,
+"run_start": "2026-09-24 13:30",
+"status": "ok",
+"reference": "WM reference, 53 contacts (skipped as data)",
+"wm_n": 53,
+"wm_source": "BIDS TSV",
+"bad_n": 0,
+"bad_list": [],
+"notch": "interp \u00b7 per shaft",
+"crop": "0-1900 s",
+"conditions": "picture",
+"unexplained_peaks": "4",
+"trials": {
+"audio": {
+"in": "",
+"kept": "",
+"used": "",
+"cubes": "0"
+},
+"picture": {
+"in": "43",
+"kept": "40",
+"used": "40",
+"cubes": "146"
+},
+"reading": {
+"in": "",
+"kept": "",
+"used": "",
+"cubes": "0"
+}
+},
+"hg_reref": "WM",
+"anatomy_source": "sub-3301_electrodes.tsv",
+"in_cohort": false,
+"cohort_note": "picture naming only - no audio or reading block",
+"tree": "04_ersp_LM",
+"hfa_dir": "HG",
+"hfa_stem": "HGtrials",
+"n_contacts": 202,
+"n_data": 146,
+"n_status": {
+"data": 146,
+"wm_ref": 53,
+"bad": 0,
+"unknown": 3,
+"not_recorded": 0,
+"not_run": 0,
+"aux": 1
+}
+},
+{
+"patient": "PAT_6684",
+"raw_id": "PAT_6684",
+"system": "HUG",
+"ran": false,
+"run_start": "",
+"status": "not run",
+"reference": "",
+"wm_n": 0,
+"wm_source": "",
+"bad_n": 34,
+"bad_list": [
+"FPG10",
+"FPG5",
+"FPG9",
+"FPG8",
+"FOM7",
+"FOM11",
+"CAG1",
+"FOL8",
+"CAG2",
+"IMG13",
+"IMG14",
+"IMG15",
+"FOM10",
+"HPG1",
+"HPG8",
+"HPG7",
+"HPG6",
+"HPG5",
+"CAG6",
+"HAG5",
+"HAG8",
+"HAG7",
+"HAG4",
+"HAG3",
+"HAG2",
+"FOL2",
+"AG5",
+"AG4",
+"AG3",
+"AG2",
+"HAG6",
+"FOL11",
+"TSP1",
+"CAG3"
+],
+"notch": "",
+"crop": "",
+"conditions": "",
+"unexplained_peaks": "",
+"trials": {},
+"hg_reref": "WM",
+"anatomy_source": "no electrodes TSV",
+"in_cohort": false,
+"cohort_note": "excluded after the seizure review (bad_time_spans)",
+"tree": "04_ersp_LM",
+"hfa_dir": "HG",
+"hfa_stem": "HGtrials",
+"n_contacts": 0,
+"n_data": 0,
+"n_status": {
+"data": 0,
+"wm_ref": 0,
+"bad": 0,
+"unknown": 0,
 "not_recorded": 0,
 "not_run": 0,
 "aux": 0
