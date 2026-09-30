@@ -59,6 +59,8 @@ MESHES = FS / "meshes"
 COORDS = FS / "coords" / "ALL_PATIENTS_contacts_fsaverage.csv"
 OUT = FS / "coverage_viz"
 CLUSTERING = ROOT / "outputs" / "clustering"
+sys.path.insert(0, str(ROOT))
+from functions import lf_runs   # noqa: E402  (the cohort tag: only current-cache runs are bundled)
 # The cuts the K control offers. Narrower than what a run's sweep holds (4..23) on
 # purpose: 5..12 spans every K anyone has argued for here, and each extra cut is a
 # labels vector per run to ship and a stability fit to compute.
@@ -324,15 +326,26 @@ def discover_runs(explicit: str | None, per_track: int) -> list[tuple[str, str, 
         rd = CLUSTERING / key / "runs"
         if not rd.is_dir():
             continue
-        kept = 0
+        kept, skipped = 0, []
         for d in sorted((p for p in rd.iterdir() if p.is_dir()),
                         key=lambda p: p.name, reverse=True):
             if d.name in SKIP_RUNS or not (d / "labels.csv").exists():
+                continue
+            # the cohort tag (2026-09-30): only runs of the current cache reach the bundle,
+            # so the visualizer never shows a previous cohort as if it were this one
+            if lf_runs.run_cache(d) != lf_runs.current_cache():
+                skipped.append(f"{d.name} ({lf_runs.run_cache(d) or 'no tag'})")
                 continue
             found.append((key, label, cohort, d))
             kept += 1
             if kept >= per_track:
                 break
+        if skipped and not kept:
+            print(f"  [runs] {key}: no run of {lf_runs.current_cache()} - skipped {', '.join(skipped[:3])}"
+                  f"{' ...' if len(skipped) > 3 else ''}")
+    if not found and not explicit:
+        raise SystemExit(f"no run of the current cache {lf_runs.current_cache()} in any track - fit first "
+                         "(240 / 241 / 242, publish_decomposition.py)")
     return found
 
 

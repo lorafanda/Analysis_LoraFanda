@@ -177,9 +177,9 @@ def main() -> int:
     methods = a.method or ORDER
     tag = a.tag or ("_".join(methods) if a.method else "all")
     cached = None
+    import lf_concat as CC
     if a.from_cache:
-        import lf_concat as CC
-        inp = (ROOT.parent / "01_FBM_Analysis" / "outputs" / "04_ersp_LM_RAWONLY")
+        inp = (ROOT.parent / "01_FBM_Analysis" / "outputs" / "03_ERSP")   # one tree since 2026-09-30
         df_c, Xc = CC.build_concat_dataset(inp, conditions=("audio", "picture", "reading"),
                                            require_high_activity=True,
                                            cache_dir=Path(a.from_cache), verbose=False)
@@ -223,6 +223,9 @@ def main() -> int:
                          n_col_folds=a.col_folds, n_iter=a.n_iter)
                 d["feature_set"], d["method"] = fs, m
                 d["method_label"], d["space"], d["scheme"] = LABEL[m], space, scheme
+                # the cohort tag (2026-09-30): the cache these curves were computed on,
+                # so a reader can tell a v13 curve from a v14 one without the file date
+                d["cache"] = run.name if cached is not None else (CC.cache_tag(None)["name"] + " (assumed)")
                 d["n"], d["p"] = X0.shape
                 allrows.append(d)
                 pd.concat(allrows).to_csv(OUT / f"heldout_variance_{tag}.csv", index=False)

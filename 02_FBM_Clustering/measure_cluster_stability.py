@@ -66,6 +66,8 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
+sys.path.insert(0, str(ROOT))
+from functions import lf_runs   # noqa: E402  (the cohort tag)
 
 CLUST = ROOT / "outputs" / "clustering"
 # Its own folder, shared with notebook 238. Two other things in this project are also
@@ -108,10 +110,15 @@ def resolve(method, feature_set):
         if r["method"] != method or r["feature_set"] != feature_set:
             continue
         rd = CLUST / method / feature_set / "runs" / r["run_id"]
-        if (rd / "X_train.npy").exists() and (best is None or r["run_id"] > best[0]):
+        if not (rd / "X_train.npy").exists():
+            continue
+        if lf_runs.run_cache(rd) != lf_runs.current_cache():      # the cohort tag, 2026-09-30
+            continue
+        if best is None or r["run_id"] > best[0]:
             best = (r["run_id"], rd)
     if best is None:
-        raise FileNotFoundError(f"no run with X_train for {method}/{feature_set}")
+        raise FileNotFoundError(f"no run with X_train for {method}/{feature_set} on the current cache "
+                                f"{lf_runs.current_cache()} (LF_ALLOW_STALE_RUNS does not apply here: refit)")
     # the run's own record of its space beats the table: a k-means or Ward run made
     # before 2026-09-06 was fitted in dB and its manifest says so (or says nothing,
     # which meant dB); one made after says unit-norm. cnmf has no such field.

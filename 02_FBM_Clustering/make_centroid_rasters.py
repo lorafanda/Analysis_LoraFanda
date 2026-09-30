@@ -61,7 +61,9 @@ from matplotlib.gridspec import GridSpec
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
+sys.path.insert(0, str(ROOT))
 import lf_centroids as LC  # noqa: E402   (read only - conventions, not modified)
+from functions import lf_runs   # noqa: E402  (the cohort tag)
 
 CLUST = ROOT / "outputs" / "clustering"
 
@@ -105,6 +107,8 @@ def newest_per_track(a):
             continue
         rd = CLUST / r["method"] / r["feature_set"] / "runs" / r["run_id"]
         if not rd.is_dir() or not (rd / "X_train.npy").exists():
+            continue
+        if lf_runs.run_cache(rd) != lf_runs.current_cache():      # the cohort tag, 2026-09-30
             continue
         key = (r["method"], r["feature_set"])
         if key not in best or r["run_id"] > best[key][0]:

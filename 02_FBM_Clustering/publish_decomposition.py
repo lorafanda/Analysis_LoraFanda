@@ -103,12 +103,18 @@ def main() -> int:
         if (SRC / f).exists():
             shutil.copy2(SRC / f, rd / f)
 
+    # the cohort tag (2026-09-30) is the SOURCE run's: the decomposition was fitted on
+    # that run's X_train, so it belongs to whatever cache that run was fitted on
+    src_man = json.loads((SRC / "manifest.json").read_text(encoding="utf-8")) if (SRC / "manifest.json").exists() else {}
+    cache_tag = src_man.get("cache") or {"name": None, "unknown": True,
+                                         "note": "source run predates the cohort tag (2026-09-30)"}
     manifest = {
         "schema_version": 1,
         "method": METHOD, "method_label": METHOD_LABEL,
         "feature_set": FSET, "feature_set_label": FSET_LABEL,
         "run_id": run_id,
         "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "cache": cache_tag,
         "params": {"k": K, "n_iter": 300, "random_state": 0,
                    "preprocessing": "unit-norm per electrode",
                    "algorithm": "convex NMF (Ding, Li & Jordan 2010)"},
@@ -149,6 +155,7 @@ def main() -> int:
         "created_at": manifest["created_at"],
         "n_samples": int(len(out)), "n_clusters": K, "silhouette": None,
         "path": f"{METHOD}/{FSET}/runs/{run_id}", "has_ranking": False,
+        "cache": cache_tag.get("name"),
     })
     idx.setdefault("latest", {}).setdefault(METHOD, {})[FSET] = run_id
     idx["updated_at"] = manifest["created_at"]

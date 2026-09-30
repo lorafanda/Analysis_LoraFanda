@@ -324,6 +324,10 @@ def fit_and_save(
         "feature_set_label": feature_set_label or FEATURE_SET_LABELS.get(feature_set, feature_set),
         "run_id": run_id,
         "created_at": _dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        # the cohort tag (2026-09-30): which concat_source_v<N> this run was fitted on.
+        # lf_concat.build_concat_dataset stamps it on df_keep.attrs; a frame that did not
+        # come through it gets the cache every default caller reads, marked "assumed".
+        "cache": _cache_tag_of(df_keep, verbose=verbose),
         "params": params,
         "summary": {
             "n_samples": int(X.shape[0]),
@@ -1169,6 +1173,31 @@ def _validate_run_artifacts(
         )
 
 
+def _cache_tag_of(df_keep: Optional[pd.DataFrame], *, verbose: bool = True) -> Dict[str, Any]:
+    """The cohort tag for a run's manifest.
+
+    lf_concat.build_concat_dataset puts {"name": "concat_source_v<N>", ...} on the
+    frame's attrs. A frame without it (built some other way) is stamped with the cache
+    every default reader resolves right now, and the manifest says "assumed": true, so
+    the provenance is recorded as what it is - an inference, not a fact.
+    """
+    tag = None
+    if df_keep is not None:
+        try:
+            tag = df_keep.attrs.get("cache")
+        except Exception:
+            tag = None
+    if tag and tag.get("name"):
+        return dict(tag)
+    from functions.lf_concat import cache_tag          # local import: lf_concat imports this module's neighbours
+    tag = cache_tag(None)
+    tag["assumed"] = True
+    if verbose:
+        print(f"[fit_and_save] no cohort tag on df_keep - recording the current cache "
+              f"{tag['name']} as ASSUMED (load through lf_concat.build_concat_dataset to record it)")
+    return tag
+
+
 def _safe_git_info() -> Dict[str, Any]:
     try:
         commit = subprocess.check_output(
@@ -1243,6 +1272,7 @@ def _update_index(outputs_root: Path, manifest: Dict[str, Any]) -> None:
         "n_clusters": manifest["summary"]["n_clusters"],
         "silhouette": manifest["summary"]["silhouette_overall"],
         "path": f"{manifest['method']}/{manifest['feature_set']}/runs/{manifest['run_id']}",
+        "cache": (manifest.get("cache") or {}).get("name"),      # the cohort tag, 2026-09-30
     })
     idx["runs"] = sorted(runs, key=lambda r: (r["method"], r["feature_set"], r["run_id"]))
 

@@ -134,6 +134,27 @@ def _newest_concat_cache() -> Path:
 DEFAULT_CONCAT_CACHE = _newest_concat_cache()
 
 
+def cache_tag(cache_dir=None) -> dict:
+    """The cohort tag of a cache directory: its name (concat_source_v<N>) and what its
+    params.json says. `None` means the cache every default caller uses (the newest on
+    disk, or LF_CONCAT_CACHE). Written into run manifests; compared by lf_runs."""
+    d = Path(cache_dir) if cache_dir is not None else DEFAULT_CONCAT_CACHE
+    tag = {"name": d.name, "path": str(d)}
+    p = d / "params.json"
+    if p.exists():
+        try:
+            import json
+            tag["params"] = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return tag
+
+
+def current_cache_name() -> str:
+    """The name of the cache a run must have been fitted on to count as current."""
+    return _newest_concat_cache().name
+
+
 def normalize_label(s) -> str:
     """'aH_R-1' -> 'AHR1'. Same rule the coords/recon side uses, so joins line up."""
     if s is None:
@@ -245,6 +266,12 @@ def build_concat_dataset(
 
     df_contacts = pd.DataFrame.from_records(records).reset_index(drop=True)
     df_contacts.insert(0, "sample_idx", np.arange(len(df_contacts)))
+    # THE COHORT TAG (2026-09-30). The cache this cohort came from travels with the frame
+    # (pandas attrs survive copies and row selection), fit_and_save / publish_decomposition
+    # write it into the run's manifest, and lf_runs refuses a run whose tag is not the
+    # current cache's. This is what would have caught the v12 driver run on v11 fits
+    # everywhere instead of in FIG 4 alone.
+    df_contacts.attrs["cache"] = cache_tag(cache_dir)
     X_concat = np.empty((len(keep_rows), n_freq, n_time * len(conditions)), dtype=np.float32)
     for i, rows in enumerate(keep_rows):
         X_concat[i] = np.concatenate([X_3d[r] for r in rows], axis=1)

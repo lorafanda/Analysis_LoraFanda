@@ -91,9 +91,14 @@ def newest(method, fset):
     showed two different cohorts at once and labelled them as one. Nothing else in the
     project resolves runs that way.
     """
-    d = CLUST / method / fset / "runs"
-    r = sorted(p for p in d.iterdir() if p.is_dir()) if d.is_dir() else []
-    return r[-1] if r else None
+    # the newest run OF THE CURRENT CACHE (lf_runs, 2026-09-30): a track whose runs are
+    # all from another cohort raises with both names rather than drawing the old one
+    sys.path.insert(0, str(ROOT))
+    from functions.lf_runs import newest_run
+    try:
+        return newest_run(method, fset)
+    except FileNotFoundError:
+        return None
 
 
 def tracked_set():

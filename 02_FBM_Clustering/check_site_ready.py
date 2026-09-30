@@ -61,10 +61,18 @@ def rel(p: Path) -> str:
 
 
 def newest(method, fset):
+    """The newest run OF THE CURRENT CACHE (lf_runs, 2026-09-30). A track whose runs
+    are all from another cohort is reported as such in section 1, not hidden as OK."""
     try:
         return LR.newest_run(method, fset)
+    except LR.StaleRunError as e:
+        STALE_TRACKS[f"{method}/{fset}"] = str(e).split(", the current cache")[0].split(": ", 1)[-1]
+        return None
     except Exception:
         return None
+
+
+STALE_TRACKS: dict = {}
 
 
 def run_tag(rd):
@@ -98,7 +106,10 @@ def main() -> int:
         for fs in FSETS:
             rd = newest(m, fs)
             if rd is None:
-                add("runs", f"{m}/{fs}", "MISSING", "no run at all")
+                if f"{m}/{fs}" in STALE_TRACKS:
+                    add("runs", f"{m}/{fs}", "STALE", f"no run of {LR.current_cache()}: {STALE_TRACKS[f'{m}/{fs}']}")
+                else:
+                    add("runs", f"{m}/{fs}", "MISSING", "no run at all")
                 continue
             import numpy as np
             n = int(np.load(rd / "X_train.npy", mmap_mode="r").shape[0])
