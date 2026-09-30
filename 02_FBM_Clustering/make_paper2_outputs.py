@@ -208,6 +208,8 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
         # FIG C.0 first - it is the top of the clustering tab, and rebuild_concat_cache
         # already re-draws the PNG, so this only splices the block in
         ("site", False, CLUST, ["make_cohort_figure.py", "--insert"]),
+        # TABLE C.0 right under it: every patient and why it is (not) in the cohort
+        ("site", False, CLUST, ["make_patient_roster.py", "--insert"]),
         ("site", False, CLUST, ["make_cluster_visualizer.py"]),
         ("site", False, CLUST, ["make_paper_figures_webblock.py", "--insert"]),
         ("site", False, CLUST, ["make_cluster_webblock.py", "--insert"]),
