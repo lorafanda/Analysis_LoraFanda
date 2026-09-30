@@ -60,13 +60,31 @@ def load_140():
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--patient", required=True, nargs="+",
+    ap.add_argument("--patient", nargs="+",
                     help="patient ids as in config.patient_ids (EL035, PAT_3455, G-01 ...)")
+    ap.add_argument("--all", action="store_true",
+                    help="every patient in config.patient_ids")
+    ap.add_argument("--skip-done", action="store_true",
+                    help="skip a patient that already has all three score tables")
     ap.add_argument("--keep-ersp-plots", action="store_true",
                     help="also write the per-channel ERSP figures (off: HG + clean only)")
     a = ap.parse_args()
+    if not a.patient and not a.all:
+        ap.error("give --patient <ids> or --all")
 
     m = load_140()
+    if a.all:
+        a.patient = [str(p) for p in m.cfg.patient_ids]
+
+    if a.skip_done:
+        keep = []
+        for pid in a.patient:
+            out = m.out_id_for(pid) if hasattr(m, "out_id_for") else pid
+            d = Path(m.cfg.outputs_root) / OUT_NAME / str(out) / m.cfg.block_name / "TrialScores"
+            done = len(list(d.glob("*_trial_scores.tsv"))) if d.is_dir() else 0
+            (keep.append(pid) if done < 3
+             else print(f"  skip {pid}: {done} score tables already there"))
+        a.patient = keep
     root = os.path.join(m.cfg.outputs_root, OUT_NAME)
 
     # ---- the test tree. Both of 140's roots point INSIDE it, so every product it still
