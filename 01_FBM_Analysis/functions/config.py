@@ -118,7 +118,10 @@ bad_channels_manual = {
               # 2026-09-28 (Lora, after the third rerun): A_L2-4 and STG_L1-2 carry the deepest
               # 350 Hz stripe of the patient (-1.7 dB rows) and go out with the bad-list drop
               # that now happens before the notch.
-              "A_L2", "A_L3", "A_L4", "STG_L1", "STG_L2"],
+              "A_L2", "A_L3", "A_L4", "STG_L1", "STG_L2",
+              # 2026-10-02 (Lora, visual review of the 03_ERSP tree). None is in the reference.
+              "TTG_L4", "TTG_L7", "TTG_L8", "A_L1", "A_L5", "A_L6"]
+             + [f"EntG_L{i}" for i in range(5, 12)],
     # EL043 (2026-09-28): sSMG8-10 sit 10-14 dB above the patient's median at 12-70 Hz in every
     # condition, with the excluded trials saturated in the HG raster - a noisy stretch of that
     # shaft segment. Hip7 / ITG9 / ITG10 (broadband rise only in the response half, speech
