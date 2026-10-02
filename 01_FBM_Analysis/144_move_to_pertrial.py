@@ -13,11 +13,11 @@ Since 2026-10-02 the products with one row per trial live together:
     <pid>/LM/HFA/          ->  <pid>/LM/PerTrial/HFA/
     <pid>/LM/Signal/       ->  <pid>/LM/PerTrial/Signal/
     <pid>/LM/TrialScores/  ->  <pid>/LM/PerTrial/TrialScores/
+    <pid>/LM/Report/       ->  <pid>/LM/PerTrial/Report/
 
-140 writes them there (cfg.HFA_DIR, cfg.SIGNAL_DIR, cfg.TRIALSCORES_DIR) and every reader takes
-the folder from the same three names, so after this move nothing looks in the old places.
-Report/ is NOT moved: it holds the run's reports (trial filter, notch audit, montage) and nine
-scripts read it.
+140 writes them there (cfg.HFA_DIR, cfg.SIGNAL_DIR, cfg.TRIALSCORES_DIR, cfg.REPORT_DIR) and
+every reader asks cfg.product_dir(), which looks in PerTrial/ first and in the old place only
+when PerTrial/ has no such folder - so a tree can be read before, during and after this move.
 
 A move is a rename on the same volume: instant, and no file is rewritten. If the destination
 already exists (a patient re-run after the change has written PerTrial/HFA while an old HFA/ is
@@ -40,7 +40,8 @@ sys.path.insert(0, str(HERE))
 from functions import config as cfg                      # noqa: E402
 
 # old name at <pid>/LM/  ->  where config says it lives now
-MOVES = {"HFA": cfg.HFA_DIR, "Signal": cfg.SIGNAL_DIR, "TrialScores": cfg.TRIALSCORES_DIR}
+MOVES = {"HFA": cfg.HFA_DIR, "Signal": cfg.SIGNAL_DIR, "TrialScores": cfg.TRIALSCORES_DIR,
+         "Report": cfg.REPORT_DIR}
 
 
 def n_files(d: Path) -> int:

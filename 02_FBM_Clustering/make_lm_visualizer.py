@@ -1245,7 +1245,8 @@ async function rvSideRender() {
       det.appendChild(tb); side.appendChild(det);
     } else side.appendChild(rvSideNote(T ? `${cond}: not in the run's tables` : "trial table not in the bundle (rebuild it with make_lm_review_bundle.py)"));
     if (HG_ROOT) {
-      side.appendChild(rvSideImg(`${root}${pid}/LM/Report/${pid}_${cond}_iqr_postDur_QC.png`, `${pid} ${cond} trial rejection (post-offset durations, IQR fences)`));
+      const _P = RV.pats.find(p => p.patient === pid), _rep = _P && _P.report_dir ? _P.report_dir : "PerTrial/Report";   // per patient since 2026-10-02
+      side.appendChild(rvSideImg(`${root}${pid}/LM/${_rep}/${pid}_${cond}_iqr_postDur_QC.png`, `${pid} ${cond} trial rejection (post-offset durations, IQR fences)`));
       side.appendChild(rvSideImg(`${root}${pid}/LM/PSD_clean/${cond}/PSD/psd_by_shaft.png`, `${pid} ${cond} PSD after the notch`, `${root}${pid}/LM/PSD_clean/${cond}/PSD/psd_allch_full.png`));
     } else if (RV.qc) {
       side.appendChild(rvSideImg(`${qc}iqr_${cond}.webp`, `${pid} ${cond} trial rejection (post-offset durations, IQR fences)`));

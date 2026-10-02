@@ -48,8 +48,8 @@ EX = "PAT_6704"          # the example patient of the current run's figures
 EXCH = "THD1"            # transverse temporal (Heschl) - the audio responder
 FIGS = {   # stable name -> source (None: kept as already committed under _status_png)
     "s1_example_ersp.png":  QC / EX / "LM" / "ERSP" / "audio" / f"{EX}_audio_WM_ERSP_{EXCH}_TN.png",
-    "s1_example_hg.png":    QC / EX / "LM" / cfg.HFA_DIR / "audio" / f"{EX}_audio_WM_HFAtrials_{EXCH}.png",
-    "s1_trials_iqr.png":    QC / EX / "LM" / "Report" / f"{EX}_audio_iqr_postDur_QC.png",
+    "s1_example_hg.png":    Path(cfg.product_dir(QC / EX / "LM", "HFA")) / "audio" / f"{EX}_audio_WM_HFAtrials_{EXCH}.png",
+    "s1_trials_iqr.png":    Path(cfg.product_dir(QC / EX / "LM", "Report")) / f"{EX}_audio_iqr_postDur_QC.png",
     "s1_psd_raw.png":       QC / EX / "LM" / "PSD_raw" / "audio" / "PSD" / "psd_by_shaft.png",
     "s1_psd_clean.png":     QC / EX / "LM" / "PSD_clean" / "audio" / "PSD" / "psd_by_shaft.png",
     # the trial z-score test tree (145 -> 147 / 148), 2026-09-30
@@ -221,7 +221,7 @@ def build(a: pd.DataFrame | None) -> str:
     S.append('    <div class="method">' + ul(
         "<b>inputs</b> · raw: <code>DATARAW/&lt;cohort&gt;/&lt;pid&gt;/task_FBM/data_LM/raw/</code> (+ events log; <code>RAW_CONCAT</code> joins EL043's and EL051's two files) · triggers: <code>…/prep0/&lt;pid&gt;_LM_&lt;cond&gt;__&lt;trig&gt;_&lt;date&gt;.tsv</code> (onset, onset_duration, sample, sample_offsets, trial_end, condition_name, resp_accuracy, trial_idx; <code>prep0/prep0-bad/</code> = parked tables) · anatomy: <code>BIDS_elec/&lt;site&gt;/sub-&lt;id&gt;/ieeg/*_electrodes.tsv</code> for every patient (EL051 / EL052 since 2026-09-29; the Lookup route in config is empty but kept) · config: <code>functions/config.py</code> (presets, bad lists, references, notch, aliases)",
         "<b>cubes</b> · <code>outputs/03_ERSP/&lt;pid&gt;/LM/ERSP_matrix/&lt;cond&gt;/&lt;pid&gt;_&lt;cond&gt;_&lt;WM|CAR&gt;_ERSP_&lt;ch&gt;_TN.npy</code> (103 × 300 float) · <code>ERSP_halves/&lt;cond&gt;/…_half1|2.npy</code> · <code>ERSP_clean/&lt;cond&gt;/*_CLEAN.png</code> · <code>wm_reref_report.tsv</code>",
-        "<b>QC</b> · <code>outputs/03_ERSP/&lt;pid&gt;/LM/</code> (same folder as the cubes): <code>ERSP/&lt;cond&gt;/*.png</code> (every channel incl. bad) · <code>PerTrial/</code> (everything with one row per trial, since 2026-10-02): <code>HFA/&lt;cond&gt;/*_HFAtrials_&lt;ch&gt;.png</code> (“HG” in the old tree), <code>Signal/&lt;cond&gt;/*_SIGtrials_&lt;ch&gt;.png</code>, <code>TrialScores/*_trial_scores.tsv</code> · <code>PSD_raw</code>, <code>PSD_clean</code> · <code>Report/</code>: <code>_IQR.tsv</code>, <code>_&lt;cond&gt;_iqr_postDur_QC.png</code>, <code>_montage_overview.png</code>, <code>_notch_audit.tsv</code>, <code>_unexplained_peaks.tsv</code> · <code>logs/&lt;pid&gt;_&lt;stamp&gt;.log</code>",
+        "<b>QC</b> · <code>outputs/03_ERSP/&lt;pid&gt;/LM/</code> (same folder as the cubes): <code>ERSP/&lt;cond&gt;/*.png</code> (every channel incl. bad) · <code>PerTrial/</code> (everything with one row per trial, since 2026-10-02): <code>HFA/&lt;cond&gt;/*_HFAtrials_&lt;ch&gt;.png</code> (“HG” in the old tree), <code>Signal/&lt;cond&gt;/*_SIGtrials_&lt;ch&gt;.png</code>, <code>TrialScores/*_trial_scores.tsv</code>, <code>Report/</code> (<code>_IQR.tsv</code>, <code>_&lt;cond&gt;_iqr_postDur_QC.png</code>, <code>_montage_overview.png</code>, <code>_notch_audit.tsv</code>, <code>_unexplained_peaks.tsv</code>) · <code>PSD_raw</code>, <code>PSD_clean</code> · <code>Report/</code>: <code>_IQR.tsv</code>, <code>_&lt;cond&gt;_iqr_postDur_QC.png</code>, <code>_montage_overview.png</code>, <code>_notch_audit.tsv</code>, <code>_unexplained_peaks.tsv</code> · <code>logs/&lt;pid&gt;_&lt;stamp&gt;.log</code>",
         "<b>audit</b> · <code>outputs/03_ERSP/audit_140.tsv</code>, <code>.md</code> · <b>review bundle</b> · <code>02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/review/</code> (<code>make_lm_review_bundle.py</code>)",
         "<b>previous trees</b> · <code>04_ersp_LM_RAWONLY</code> + <code>04_ersp_LM</code> (the way up to 2026-09-29, 32 patients, frozen 09-30 for the comparison with 03_ERSP: <code>compare_140_trees.py</code>) · <code>04_ersp_LM_RAWONLY_old</code>, <code>04_ersp_LM_old</code> (run of 2026-08-16 + reruns; 0–500 Hz cubes) · <b>RT tree</b> · <code>05_ERSP_LM_RAWONLY_RealTime</code> (notebook 150, GO-locked, see History)",
         "<b>stale cubes</b> · 140 never clears a patient folder → after a rerun that removes channels, audit by mtime before any cohort build",
@@ -255,7 +255,7 @@ def build(a: pd.DataFrame | None) -> str:
                  f"<code>03_ERSP/{EX}/LM/PerTrial/HFA/audio/{EX}_audio_WM_HFAtrials_{EXCH}.png</code>"))
     S.append(fig("s1_trials_iqr.png", "FIG 1.3", f"Trial gate · {EX} audio (run {ex_run})",
                  [f"post-stimulus duration per trial · orange: hard limits {cfg.min_post_s:g}–{cfg.max_post_s:g} s · blue: IQR k = {cfg.iqr_k:g} fences · green kept, red dropped"],
-                 f"<code>03_ERSP/{EX}/LM/Report/{EX}_audio_iqr_postDur_QC.png</code>"))
+                 f"<code>03_ERSP/{EX}/LM/PerTrial/Report/{EX}_audio_iqr_postDur_QC.png</code>"))
     S.append('    <figure><div class="cap"><div class="fignum">FIG 1.4</div><h4>PSD per shaft · ' + EX + f' audio block, raw vs clean (run {ex_run})</h4>'
              + ul("top: after reference, before notch · bottom: after notch (interp, per shaft) · dashed: 50 Hz harmonics",
                   "the notch audit TSV carries before_db / after_db / hole_hw_hz per harmonic and shaft")

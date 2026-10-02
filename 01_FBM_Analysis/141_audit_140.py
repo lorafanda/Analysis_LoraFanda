@@ -5,7 +5,7 @@
 
 Reads, per patient of cfg.patient_ids, from the one tree outputs/<cfg.ERSP_TREE> (03_ERSP since
 2026-09-30): the newest 140 log (logs/<pid>_<stamp>.log), the WM re-referencing report
-(wm_reref_report.tsv), the IQR trial report (<pid>/LM/Report/<pid>_IQR.tsv) and the cubes; for the
+(wm_reref_report.tsv), the IQR trial report (<pid>/LM/PerTrial/Report/<pid>_IQR.tsv) and the cubes; for the
 comparison, the previous tree (outputs/04_ersp_LM_RAWONLY, the frozen 04_* way). Config is read live, so the
 bad list / reference route columns describe what the code would do NOW - if a list changed after the
 run, the cube-count check at the end of the row is where it shows.
@@ -250,7 +250,7 @@ def main():
         r["unexplained_peaks"] = L.get("unexplained_peaks", "")
         r["dup_trigger_tables_skipped"] = L.get("dup_trigger_tables", "")
         # ---- per condition
-        iqr_path = os.path.join(QC_ROOT, pid, "LM", "Report", f"{pid}_IQR.tsv")
+        iqr_path = os.path.join(cfg.product_dir(os.path.join(QC_ROOT, pid, "LM"), "Report"), f"{pid}_IQR.tsv")
         iqr = pd.read_csv(iqr_path, sep="\t").set_index("condition") if os.path.exists(iqr_path) else None
         tot_new = tot_old = 0
         change_notes = []
@@ -287,7 +287,7 @@ def main():
             r[f"{c}_halves"] = len(glob.glob(os.path.join(NEW_ROOT, pid, "LM", "ERSP_halves", c, "*.npy")))
             r[f"{c}_clean_png"] = len(glob.glob(os.path.join(NEW_ROOT, pid, "LM", "ERSP_clean", c, "*.png")))
             r[f"{c}_qc_ersp_png"] = len(glob.glob(os.path.join(QC_ROOT, pid, "LM", "ERSP", c, "*.png")))
-            r[f"{c}_qc_hg_png"] = len(glob.glob(os.path.join(QC_ROOT, pid, "LM", cfg.HFA_DIR, c, "*.png")))
+            r[f"{c}_qc_hg_png"] = len(glob.glob(os.path.join(cfg.product_dir(os.path.join(QC_ROOT, pid, "LM"), "HFA"), c, "*.png")))
             gone = set(old) - set(new)
             added = set(new) - set(old)
             if gone:

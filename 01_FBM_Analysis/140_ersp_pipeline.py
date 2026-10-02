@@ -654,7 +654,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                   f"(pad {getattr(cfg, 'notch_block_pad_s', 10.0):.0f} s)"
                   + (", decided and applied PER SHAFT" if per_shaft else ""))
 
-        report_dir  = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "Report")
+        report_dir  = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
+                                            getattr(cfg, "REPORT_DIR", "Report"))
         report_path = os.path.join(report_dir, f"{patient_id}_IQR.tsv")
         all_trials = {}
         cond_groups = tr.collect_trials(prep_dir, fs, outlier_method="IQR",

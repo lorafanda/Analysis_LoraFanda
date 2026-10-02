@@ -74,7 +74,8 @@ def patient_order(pids) -> list[str]:
 
 def load_counts(patients=None) -> pd.DataFrame:
     rows = []
-    for f in sorted(glob.glob(str(TREE / "*" / "LM" / "Report" / "*_IQR.tsv"))):
+    # either layout: <pid>/LM/Report/ (before 2026-10-02) or <pid>/LM/PerTrial/Report/
+    for f in sorted(glob.glob(str(TREE / "*" / "LM" / "**" / "*_IQR.tsv"), recursive=True)):
         d = pd.read_csv(f, sep="\t")
         d["patient"] = d["patient_id"].astype(str)
         if patients and d.patient.iloc[0] not in patients:

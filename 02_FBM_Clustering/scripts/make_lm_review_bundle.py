@@ -90,8 +90,13 @@ def tree_of(pid: str) -> dict:
     """Where a patient's cubes, QC figures and rasters are: the 03_ERSP tree for the cohort,
     the frozen 04_* trees for the non-cohort patients."""
     if pid in NON_COHORT:
-        return {"cubes": FROZEN_CUBES, "qc": FROZEN_QC, "hfa_dir": "HG", "hfa_stem": "HGtrials", "tree": "04_ersp_LM"}
-    return {"cubes": CUBES, "qc": QC, "hfa_dir": cfg.HFA_DIR, "hfa_stem": "HFAtrials", "tree": cfg.ERSP_TREE}
+        return {"cubes": FROZEN_CUBES, "qc": FROZEN_QC, "hfa": "HG", "hfa_dir": "HG", "hfa_stem": "HGtrials",
+                "report_dir": "Report", "tree": "04_ersp_LM"}
+    # hfa / "Report" are the bare folder names this script looks for (cfg.product_dir: PerTrial/
+    # first, the old place while a patient has not been moved); hfa_dir / report_dir are what the
+    # page is told, and that is the PerTrial layout - the tree's layout since 2026-10-02
+    return {"cubes": CUBES, "qc": QC, "hfa": "HFA", "hfa_dir": cfg.HFA_DIR, "hfa_stem": "HFAtrials",
+            "report_dir": cfg.REPORT_DIR, "tree": cfg.ERSP_TREE}
 RECON = os.path.join(REPO, "02_FBM_Clustering", "outputs", "250_recon", "fsaverage")
 BUNDLE = os.path.join(RECON, "activity_viz")
 OUT = os.path.join(BUNDLE, "review")
@@ -319,7 +324,7 @@ def qc_names(pid: str) -> set:
 def hg_tag(pid: str) -> str:
     for cond in CONDS:
         t = tree_of(pid)
-        fs = glob.glob(os.path.join(t["qc"], pid, "LM", t["hfa_dir"], cond, f"*_{t['hfa_stem']}_*.png"))
+        fs = glob.glob(os.path.join(cfg.product_dir(os.path.join(t["qc"], pid, "LM"), t["hfa"]), cond, f"*_{t['hfa_stem']}_*.png"))
         if fs:
             m = HG_RE.search(os.path.basename(fs[0]))
             return m.group(1) if m else "WM"
@@ -413,7 +418,7 @@ def fs_of(pid, audit, tables):
             return float(v)
     except ValueError:
         pass
-    iqr = os.path.join(tree_of(pid)["qc"], pid, "LM", "Report", f"{pid}_IQR.tsv")
+    iqr = os.path.join(cfg.product_dir(os.path.join(tree_of(pid)["qc"], pid, "LM"), "Report"), f"{pid}_IQR.tsv")
     if tables is None or not os.path.exists(iqr):
         return None
     r = pd.read_csv(iqr, sep="\t")
@@ -438,7 +443,7 @@ def write_trials(pid, audit):
     # the rule values THE RUN used come from its IQR report, not from the live config (which
     # may already carry the next run's values); min_stim_s is not in the report -> config
     rules = {"min_post_s": float(cfg.min_post_s), "max_post_s": float(cfg.max_post_s), "iqr_k": float(cfg.iqr_k), "source": "config"}
-    iqr = os.path.join(tree_of(pid)["qc"], pid, "LM", "Report", f"{pid}_IQR.tsv")
+    iqr = os.path.join(cfg.product_dir(os.path.join(tree_of(pid)["qc"], pid, "LM"), "Report"), f"{pid}_IQR.tsv")
     if os.path.exists(iqr):
         r0 = pd.read_csv(iqr, sep="\t").iloc[0]
         rules = {"min_post_s": float(r0["min_post_s"]), "max_post_s": float(r0["max_post_s"]), "iqr_k": float(r0["iqr_k"]), "source": "the run's IQR report"}
@@ -613,6 +618,7 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
         # the cohort flag (2026-09-30): the page marks in_cohort=false with an asterisk and this note
         "in_cohort": pid not in NON_COHORT, "cohort_note": NON_COHORT.get(pid, ""),
         "tree": tree_of(pid)["tree"], "hfa_dir": tree_of(pid)["hfa_dir"], "hfa_stem": tree_of(pid)["hfa_stem"],
+        "report_dir": tree_of(pid)["report_dir"],
         "n_contacts": len(rows), "n_data": sum(1 for r in rows if r["status"] == "data"),
         "n_status": {**{s: sum(1 for r in rows if r["status"] == s) for s in ("data", "wm_ref", "bad", "unknown", "not_recorded", "not_run")}, "aux": n_aux},
     }
@@ -709,7 +715,7 @@ def main() -> None:
         "file": "each contact row's `file`",
         "hg_path": "{hg_root}/{patient}/LM/{hfa_dir}/{cond}/{patient}_{cond}_{hg_reref}_{hfa_stem}_{name}.png (hfa_dir / hfa_stem per patient in patients.json: PerTrial/HFA + HFAtrials in 03_ERSP)",
         "psd_path": "{hg_root}/{patient}/LM/PSD_clean/{cond}/PSD/psd_by_shaft.png (per-shaft patients) or psd_allch_full.png",
-        "iqr_path": "{hg_root}/{patient}/LM/Report/{patient}_{cond}_iqr_postDur_QC.png",
+        "iqr_path": "{hg_root}/{patient}/LM/{report_dir}/{patient}_{cond}_iqr_postDur_QC.png (report_dir per patient: PerTrial/Report in 03_ERSP)",
         "trials": "trials/{patient}.json: every trial of the run's tables with the reason it was dropped (lf_trials.collect_trials, the run's settings)",
         "metrics": {"power": "mean |dB| over the cube", "hg": "mean dB, 70-150 Hz, stimulus half",
                     "stripe": "mean over 50..350 Hz rows of |row - mean of rows +-2|, dB", "rel": "split-half Pearson r (ERSP_halves)"},

@@ -463,12 +463,27 @@ ERSP_TREE = "03_ERSP"
 # THE PER-TRIAL PRODUCTS LIVE IN <pid>/LM/PerTrial/ (2026-10-02, Lora): the HFA rasters, the
 # Signal traces and the trial-score tables - everything that has one row per trial - so the
 # patient folder separates what is per trial from the averages (ERSP, ERSP_matrix, ...).
-# Every writer and reader takes the folder from these three names. Report/ stays where it
-# is: it holds the run's reports (trial filter, notch audit, montage), read by nine scripts.
-# 144_move_to_pertrial.py moves the folders of the patients already run.
+# Report/ goes with them (Lora): the trial-filter report and its figures, the notch audit,
+# the montage. Every writer takes the folder from these names; every reader asks
+# product_dir(), which looks in PerTrial/ first and falls back to the old place for a
+# patient whose folders have not been moved yet (144_move_to_pertrial.py) and for the
+# frozen 04_* trees, which keep their layout.
 PERTRIAL_DIR = "PerTrial"
 HFA_DIR = PERTRIAL_DIR + "/HFA"                  # <pid>_<cond>_<ref>_HFAtrials_<ch>.png
 TRIALSCORES_DIR = PERTRIAL_DIR + "/TrialScores"  # <pid>_<cond>_trial_scores.tsv
+REPORT_DIR = PERTRIAL_DIR + "/Report"            # <pid>_IQR.tsv, *_iqr_postDur_QC.png, notch audit, montage
+
+
+def product_dir(lm_dir, name):
+    """Folder of one per-trial product of a patient: <lm_dir>/PerTrial/<name>, or
+    <lm_dir>/<name> when only the old place exists. `name` is the bare folder name
+    ("HFA", "Signal", "TrialScores", "Report"; "HG" in the frozen 04_ersp_LM tree)."""
+    import os
+    new = os.path.join(str(lm_dir), PERTRIAL_DIR, name)
+    old = os.path.join(str(lm_dir), name)
+    return new if (os.path.isdir(new) or not os.path.isdir(old)) else old
+
+
 # THE CLEANED SIGNAL, TRIAL BY TRIAL (2026-10-02, Lora): the HFA raster's twin - same trials,
 # order, marks and rejected rows, but each row is the broadband cleaned voltage as a trace
 # (<pid>/LM/PerTrial/Signal/<cond>/<pid>_<cond>_<ref>_SIGtrials_<ch>.png). ONE scale for the whole

@@ -34,6 +34,15 @@ QC = os.path.join(REPO, "01_FBM_Analysis", "outputs", "03_ERSP")   # one tree si
 REVIEW = os.path.join(REPO, "02_FBM_Clustering", "outputs", "250_recon", "fsaverage", "activity_viz", "review")
 OUT = os.path.join(REVIEW, "qc")
 CONDS = ("audio", "picture", "reading")
+
+
+def _pdir(lm, name):
+    """A per-trial folder of one patient: <lm>/PerTrial/<name> (2026-10-02), or <lm>/<name> for a
+    patient not moved yet and for the frozen 04_* tree. Same rule as config.product_dir."""
+    new, old = os.path.join(lm, "PerTrial", name), os.path.join(lm, name)
+    return new if (os.path.isdir(new) or not os.path.isdir(old)) else old
+
+
 HG_W, HG_Q = 800, 65
 FIG_W, FIG_Q = 900, 70
 PSD_W = 1100
@@ -71,9 +80,10 @@ def main() -> int:
         # a non-cohort patient (patients.json: tree / hfa_dir / hfa_stem) is read from the
         # frozen 04_ersp_LM tree with its HG/ folder; the bundle keeps its own HG/ layout
         qc_root = os.path.join(os.path.dirname(QC), P["tree"]) if P.get("tree") and P["tree"] != os.path.basename(QC) else QC
-        hdir, hstem = P.get("hfa_dir", "PerTrial/HFA"), P.get("hfa_stem", "HFAtrials")
+        hstem = P.get("hfa_stem", "HFAtrials")
+        hdir = _pdir(os.path.join(qc_root, pid, "LM"), os.path.basename(P.get("hfa_dir", "PerTrial/HFA")))
         for cond in c["conds"]:
-            src = os.path.join(qc_root, pid, "LM", hdir, cond, f"{pid}_{cond}_{ref}_{hstem}_{c['name']}.png")
+            src = os.path.join(hdir, cond, f"{pid}_{cond}_{ref}_{hstem}_{c['name']}.png")
             dst = os.path.join(OUT, pid, "HG", cond, f"{c['name']}.webp")
             jobs.append((src, dst, HG_W, HG_Q)); expected.add(os.path.normcase(dst))
     for pid, P in patients.items():
@@ -81,7 +91,7 @@ def main() -> int:
             continue
         qc_root = os.path.join(os.path.dirname(QC), P["tree"]) if P.get("tree") and P["tree"] != os.path.basename(QC) else QC
         for cond in CONDS:
-            jobs.append((os.path.join(qc_root, pid, "LM", "Report", f"{pid}_{cond}_iqr_postDur_QC.png"),
+            jobs.append((os.path.join(_pdir(os.path.join(qc_root, pid, "LM"), "Report"), f"{pid}_{cond}_iqr_postDur_QC.png"),
                          os.path.join(OUT, pid, f"iqr_{cond}.webp"), FIG_W, FIG_Q))
             by_shaft = os.path.join(qc_root, pid, "LM", "PSD_clean", cond, "PSD", "psd_by_shaft.png")
             src = by_shaft if os.path.exists(by_shaft) else os.path.join(qc_root, pid, "LM", "PSD_clean", cond, "PSD", "psd_allch_full.png")
