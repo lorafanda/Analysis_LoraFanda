@@ -210,7 +210,15 @@ bad_channels_manual = {
     # PAT_5515 (G-01), 2026-09-15: FOD6 a nd FOD8 at 44x / 28x the median high gamma
     # after the notch (not WM; the reference itself is clean).
     "PAT_5515": ["FOD6", "FOD8"],
-    "EL048": ["EKG","pH_R13","EKG-"],
+    # EL048, 2026-10-02: aH_L1 is a white-matter contact and was one of the 11 reference
+    # contacts. In the raw file it is 3230 uV SD against 60-75 for the others over the whole
+    # task, with its broadband floor 16-20 dB above theirs. After the reference every line
+    # (50-400 Hz) stood at the same amplitude and phase on all 69 other contacts (CV 0.01,
+    # spread 1 deg) and at 10.0x with the opposite sign on aH_L1 - one eleventh of that
+    # contact, injected through the mean. That was the 200 / 300 Hz ERSP bands, the band at
+    # the top of the axis (400 Hz, never notched), the 84.5 / 115.5 Hz pair and the 12.5 Hz
+    # comb of the audio block. Dropped here it leaves the reference at 10 contacts.
+    "EL048": ["EKG","pH_R13","EKG-", "aH_L1"],
     "PAT_6619": ["CAD15"],
     # EL052: the minus poles of the chin EMG, EKG and EMG pairs. The EL aux filter knows
     # MRK/X/ECG/EX/AUDIO prefixes only, and the EL name filter keeps any name with a dash,
