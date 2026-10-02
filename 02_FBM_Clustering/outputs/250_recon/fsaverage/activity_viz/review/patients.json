@@ -806,13 +806,18 @@
 "reference": "WM reference, 9 contacts (skipped as data)",
 "wm_n": 9,
 "wm_source": "BIDS TSV",
-"bad_n": 5,
+"bad_n": 10,
 "bad_list": [
 "pH_R7",
 "aH_L3",
 "STO_R1",
 "A_L7",
-"CinG_R2"
+"CinG_R2",
+"pH_R1",
+"pH_R2",
+"LinG_R5",
+"LinG_R6",
+"A_L1"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
@@ -823,19 +828,19 @@
 "in": "53",
 "kept": "28",
 "used": "28",
-"cubes": "66"
+"cubes": "61"
 },
 "picture": {
 "in": "51",
 "kept": "51",
 "used": "51",
-"cubes": "66"
+"cubes": "61"
 },
 "reading": {
 "in": "53",
 "kept": "42",
 "used": "42",
-"cubes": "66"
+"cubes": "61"
 }
 },
 "hg_reref": "WM",
@@ -847,11 +852,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 171,
-"n_data": 66,
+"n_data": 61,
 "n_status": {
-"data": 66,
+"data": 61,
 "wm_ref": 9,
-"bad": 5,
+"bad": 10,
 "unknown": 46,
 "not_recorded": 45,
 "not_run": 0,
