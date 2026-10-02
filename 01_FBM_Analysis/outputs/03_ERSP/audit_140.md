@@ -1,4 +1,4 @@
-# 140 run audit - fmax 400 Hz - 2026-10-02 17:44
+# 140 run audit - fmax 400 Hz - 2026-10-02 21:36
 
 30 patients in cfg.patient_ids; 30 with a log; 30 ok. Cube trees: new `outputs\03_ERSP`, previous `outputs\04_ersp_LM_RAWONLY`.
 
@@ -12,27 +12,27 @@
 | PAT_5533 | MicroEPI | 2026-09-30 19:56 | 27.8 | ok | 10-1295 s | 180 | 169 | 5 | 11 | 0 | WM reference, 27 contacts (selective: WM contacts stay as data) | BIDS TSV (MicroEPI) | 27 | · | · | 164 | 0 | · | · |
 | PAT_6619 | MicroEPI | 2026-09-30 20:51 | 22.3 | ok | 1690-290 s | 158 | 144 | 11 | 14 | 1 | WM reference, 17 contacts (selective: WM contacts stay as data) | BIDS TSV (MicroEPI) | 17 | · | · | 133 | 0 | · | CAD15 |
 | EL030 | Bern | 2026-09-30 22:03 | 10.3 | ok | 280-1600 s | 137 | 103 | 14 | · | 1 | WM reference, 5 contacts (skipped as data) | BIDS TSV | 5 | · | · | 83 | 0 | · | EntG_R18 |
-| EL033 | Bern | 2026-09-30 21:32 | 10.0 | ok | 280-1782 s | 124 | 93 | 8 | · | 0 | WM reference, 10 contacts (skipped as data) | BIDS TSV | 10 | · | · | 74 | 0 | · | · |
+| EL033 | Bern | 2026-09-30 21:32 | 10.0 | ok | 280-1782 s | 124 | 93 | 8 | · | 15 | WM reference, 10 contacts (skipped as data) | BIDS TSV | 10 | · | · | 61 | 0 | · | pH_R7 aH_R12 aH_L1 aH_L2 aH_L3 aH_L4 aH_L5 aH_L6 aH_L7 aH_L8 aH_L9 aH_L10 aH_L11 aH_L12 PHG_R4 |
 | EL034 | Bern | 2026-09-30 21:50 | 7.4 | ok | none | 137 | 106 | 27 | · | 5 | WM reference, 24 contacts (skipped as data) | BIDS TSV | 24 | · | · | 52 | 0 | · | MFG-10 MFG-11 MFG-12 OFG-L15 aH-L12 |
-| EL035 | Bern | 2026-09-30 21:14 | 13.9 | ok | none | 156 | 125 | 3 | · | 13 | WM reference, 10 contacts (skipped as data) | BIDS TSV | 10 | PHGR10 | · | 98 | 0 | · | EntG_R7 EntG_R8 EntG_R9 EntG_R10 EntG_R11 Fopc_R1 Fopc_R2 Fopc_R3 Fopc_R4 Fopc_R5 pHG_R11 pHG_R12 |
+| EL035 | Bern | 2026-09-30 21:14 | 13.9 | ok | none | 156 | 125 | 3 | · | 24 | WM reference, 10 contacts (skipped as data) | BIDS TSV | 10 | PHGR10 | · | 87 | 0 | · | EntG_R7 EntG_R8 EntG_R9 EntG_R10 EntG_R11 Fopc_R1 Fopc_R2 Fopc_R3 Fopc_R4 Fopc_R5 pHG_R11 pHG_R12 CinG_R1 CinG_R3 CinG_R5 CinG_R7 aI_R1 aI_R2 aI_R3 aI_R4 aI_R5 aI_R6 aI_R7 |
 | EL036 | Bern | 2026-09-30 22:17 | 6.4 | ok | none | 108 | 72 | 10 | · | 9 | WM reference, 4 contacts (skipped as data) | BIDS TSV | 4 | · | · | 48 | 0 | · | pHG_R1 pHG_R2 pHG_R3 pHG_R4 pHG_R8 pHG_R9 pHG_R10 pHG_R11 pHG_R12 |
 | EL037 | Bern | 2026-09-30 21:40 | 12.4 | ok | none | 156 | 123 | 4 | · | 47 | WM reference, 11 contacts (skipped as data) | BIDS TSV | 11 | CINGL12 CINGL13 PHR7 PLL15 PLL16 | · | 83 | 0 | · | aH_R1 A_R10 A_R12 aI_L18 pI_L1 pI_L2 pI_L3 pI_L4 pI_L5 pI_L6 pI_L7 pI_L8 pI_L9 pI_L10 pI_L11 pI_L12 pI_L13 pI_L14 pI_L15 pI_L16 pI_R1 pI_R2 pI_R3 pI_R4 pI_R5 pI_R6 pI_R7 pI_R8 pI_R9 pI_R10 pI_R11 pI_R12 pI_R13 pI_R14 pI_R15 pI_R16 pH_R12 aI_L2 aI_L3 aI_L4 aI_L5 A_L4 pI_L14 CinG_L2 |
 | EL038 | Bern | 2026-09-30 21:42 | 8.6 | ok | none | 148 | 91 | 11 | · | 10 | WM reference, 9 contacts (skipped as data) | BIDS TSV | 9 | CINGR2 STOR1 | · | 61 | 0 | · | pH_R7 aH_L3 A_L7 pH_R1 pH_R2 LinG_R5 LinG_R6 A_L1 |
-| EL040 | Bern | 2026-09-30 20:49 | 18.6 | ok | 100-1900 s | 171 | 139 | 3 | · | 11 | WM reference, 9 contacts (skipped as data) | BIDS TSV | 9 | · | · | 122 | 0 | · | FP-R10 FP-R11 FP-R12 FP-R13 FP-R14 FP-R15 PlaT_L1 PlaT_L2 PlaT_L3 |
+| EL040 | Bern | 2026-09-30 20:49 | 18.6 | ok | 100-1900 s | 171 | 139 | 3 | · | 11 | WM reference, 9 contacts (skipped as data) | BIDS TSV | 9 | · | · | 120 | 0 | · | FP-R10 FP-R11 FP-R12 FP-R13 FP-R14 FP-R15 PlaT_L1 PlaT_L2 PlaT_L3 aH_R13 pPVH_L2 |
 | EL042 | Bern | 2026-09-30 21:18 | 13.4 | ok | none | 153 | 118 | 2 | · | 0 | WM reference, 12 contacts (skipped as data) | BIDS TSV | 12 | · | · | 103 | 0 | · | · |
 | EL043 | Bern | 2026-09-30 21:04 | 14.5 | ok | 1810-4650 s | 140 | 107 | 11 | · | 3 | WM reference, 28 contacts (skipped as data) | BIDS TSV | 28 | · | · | 64 | 0 | · | sSMG8 sSMG9 sSMG10 |
-| EL045 | Bern | 2026-09-30 21:52 | 10.8 | ok | 176-1468 s | 136 | 102 | 6 | · | 10 | WM reference, 4 contacts (skipped as data) | BIDS TSV | 4 | PLANTL4 | · | 83 | 0 | · | PlaT_L2 PlaT_L3 PlaT_L4 A_R8 A_L2 A_L3 A_L4 STG_L1 STG_L2 |
+| EL045 | Bern | 2026-09-30 21:52 | 10.8 | ok | 176-1468 s | 136 | 102 | 6 | · | 23 | WM reference, 4 contacts (skipped as data) | BIDS TSV | 4 | PLANTL4 | · | 70 | 0 | · | PlaT_L2 PlaT_L3 PlaT_L4 A_R8 A_L2 A_L3 A_L4 STG_L1 STG_L2 TTG_L4 TTG_L7 TTG_L8 A_L1 A_L5 A_L6 EntG_L5 EntG_L6 EntG_L7 EntG_L8 EntG_L9 EntG_L10 EntG_L11 |
 | EL046 | Bern | 2026-09-30 21:27 | 14.2 | ok | 21120-23320 s | 152 | 92 | 2 | · | 6 | WM reference, 9 contacts (skipped as data) | BIDS TSV | 9 | · | · | 74 | 0 | · | A_L1 A_L2 aH_R12 pH_L1 pI_L1 pI_L4 |
-| EL048 | Bern | 2026-09-30 21:25 | 15.4 | ok | 17700-19180 s | 111 | 79 | 7 | · | 10 | WM reference, 11 contacts (skipped as data) | BIDS TSV | 11 | · | · | 59 | 0 | · | A_R9 EKG EKG- EntG_R12 PHG_R15 aH_L8 aH_L9 pH_R13 pH_R14 pH_R15 |
+| EL048 | Bern | 2026-10-02 20:53 | 11.5 | ok | 17700-19180 s | 111 | 78 | 7 | · | 11 | WM reference, 10 contacts (skipped as data) | BIDS TSV | 10 | AHL1 | · | 59 | 0 | · | A_R9 EKG EKG- EntG_R12 PHG_R15 aH_L8 aH_L9 pH_R13 pH_R14 pH_R15 |
 | EL051 | Bern | 2026-09-30 22:08 | 8.9 | ok | none | 155 | 122 | 18 | · | 41 | WM reference, 3 contacts (skipped as data) | BIDS TSV | 3 | PHR8 VIMR12 | POp_R1 | 70 | 0 | · | EKG+ EKG- VIM_1 VIM_10 VIM_11 VIM_12 VIM_13 VIM_14 VIM_15 VIM_16 VIM_17 VIM_18 VIM_2 VIM_3 VIM_4 VIM_5 VIM_6 VIM_7 VIM_8 VIM_9 aH_R13 aSMG_4 aSMG_5 aSMG_6 aSMG_7 aSMG_8 pH_R10 pH_R11 pH_R12 pH_R13 pH_R7 pH_R9 pSPL_3 pSTG_3 pSTG_4 pSTG_5 pSTG_6 pSTG_7 pSTG_8 pSTG_9 |
 | EL052 | Bern | 2026-09-30 21:57 | 11.2 | ok | 0-1640 s | 163 | 128 | 14 | · | 32 | WM reference, 5 contacts (skipped as data) | BIDS TSV | 5 | PULR16 | · | 84 | 0 | · | ANT_R14 ANT_R15 A_L10 A_L11 A_L12 A_L13 A_L9 A_R10 A_R11 A_R12 A_R13 A_R9 Chin- EKG- EMG- EntG_R11 PrCG_R6 PrCG_R7 Pul_R11 aH_L10 aH_L11 aH_L12 aH_L13 aH_L7 aH_L8 aH_L9 aH_R1 aH_R12 aH_R13 pH_L12 pH_L13 |
-| PAT_3455 | HUG | 2026-09-30 20:39 | 19.5 | ok | 250-1836 s | 121 | 117 | 0 | · | 2 | WM reference, 21 contacts (skipped as data) | BIDS TSV | 21 | · | · | 95 | 0 | · | · |
+| PAT_3455 | HUG | 2026-09-30 20:39 | 19.5 | ok | 250-1836 s | 121 | 117 | 0 | · | 2 | WM reference, 21 contacts (skipped as data) | BIDS TSV | 21 | · | · | 93 | 0 | · | HAD9 HAD10 |
 | PAT_2868 | HUG | 2026-09-30 22:13 | 7.9 | ok | 140-1500 s | 74 | 64 | 0 | · | 1 | WM reference, 23 contacts (skipped as data) | BIDS TSV | 23 | · | · | 39 | 0 | · | IDM3 |
 | PAT_3066 | HUG | 2026-09-30 20:24 | 25.2 | ok | 260-1900 s | 212 | 200 | 2 | · | 0 | WM reference, 46 contacts (skipped as data) | BIDS TSV | 46 | · | · | 152 | 0 | · | · |
-| PAT_3390 | HUG | 2026-09-30 21:42 | 15.1 | ok | 170-1222 s | 130 | 119 | 0 | · | 1 | WM reference, 22 contacts (skipped as data) | BIDS TSV | 22 | · | · | 96 | 0 | · | · |
+| PAT_3390 | HUG | 2026-09-30 21:42 | 15.1 | ok | 170-1222 s | 130 | 119 | 0 | · | 1 | WM reference, 22 contacts (skipped as data) | BIDS TSV | 22 | · | · | 95 | 0 | · | PHG12 |
 | PAT_3415 | HUG | 2026-09-30 20:59 | 5.0 | ok | 30-1500 s | 171 | 149 | 96 | · | 18 | WM reference, 6 contacts (skipped as data) | BIDS TSV | 6 | HLG17 HLG18 | IMG8 IPG15 | 29 | 0 | · | HLG1 HLG2 HLG3 HLG4 HLG5 HLG6 HLG7 HLG8 HLG9 HLG10 HLG11 HLG12 HLG13 HLG14 HLG15 HLG16 |
-| PAT_3965 | HUG | 2026-09-30 19:28 | 29.8 | ok | 40-1311 s | 233 | 222 | 4 | · | 5 | WM reference, 44 contacts (skipped as data) | BIDS TSV | 44 | · | · | 169 | 0 | · | cmd11 y1 y2 y3 y4 |
-| PAT_3975 | HUG | 2026-09-30 19:50 | 27.5 | ok | 200-1550 s | 226 | 216 | 8 | · | 15 | WM reference, 48 contacts (skipped as data) | BIDS TSV | 48 | · | · | 155 | 0 | · | TPG1 |
+| PAT_3965 | HUG | 2026-09-30 19:28 | 29.8 | ok | 40-1311 s | 233 | 222 | 4 | · | 6 | WM reference, 44 contacts (skipped as data) | BIDS TSV | 44 | · | · | 169 | 0 | · | cmd11 y1 y2 y3 y4 cmd12 |
+| PAT_3975 | HUG | 2026-09-30 19:50 | 27.5 | ok | 200-1550 s | 226 | 216 | 8 | · | 15 | WM reference, 48 contacts (skipped as data) | BIDS TSV | 48 | · | · | 141 | 0 | · | TPG1 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6 HAG1 HAG2 HAG3 HAD1 HAD2 HAD3 HAD4 FOD1 |
 | PAT_3780 | HUG | 2026-09-30 21:08 | 16.7 | ok | none | 152 | 136 | 5 | · | 1 | WM reference, 15 contacts (skipped as data) | BIDS TSV | 15 | · | · | 116 | 0 | · | FAP9 |
 | PAT_6953 | HUG | 2026-09-30 20:17 | 22.0 | ok | 189-1182 s | 193 | 182 | 5 | · | 0 | WM reference, 30 contacts (skipped as data) | BIDS TSV | 30 | · | · | 147 | 0 | · | · |
 | PAT_1327 | HUG | 2026-09-30 19:57 | 28.1 | ok | none | 236 | 224 | 10 | · | 6 | WM reference, 44 contacts (skipped as data) | BIDS TSV | 44 | · | · | 164 | 0 | · | CAG5 CPG1 IAG10 PHG2 PHG3 FOD7 |
@@ -47,27 +47,27 @@
 | PAT_5533 | 53 | 46 | 46 | 164 | 164 | 54 | 44 | 44 | 164 | 164 | 53 | 46 | 46 | 164 | 164 | 103x300 | 0 | audio/picture/reading |
 | PAT_6619 | 53 | 36 | 36 | 133 | 133 | 54 | 42 | 42 | 133 | 133 | 53 | 46 | 46 | 133 | 133 | 103x300 | 0 | audio/picture/reading |
 | EL030 | 53 | 39 | 39 | 83 | 83 | 54 | 44 | 44 | 83 | 83 | 44 | 31 | 31 | 83 | 83 | 103x300 | 0 | audio/picture/reading |
-| EL033 | 53 | 48 | 48 | 74 | 74 | 53 | 45 | 45 | 74 | 74 | 53 | 42 | 42 | 74 | 74 | 103x300 | 0 | audio/picture/reading |
+| EL033 | 53 | 48 | 48 | 61 | 74 | 53 | 45 | 45 | 61 | 74 | 53 | 42 | 42 | 61 | 74 | 103x300 | 0 | audio/picture/reading |
 | EL034 | 53 | 44 | 44 | 52 | 52 | 53 | 45 | 45 | 52 | 52 | 53 | 41 | 41 | 52 | 52 | 103x300 | 0 | audio/picture/reading |
-| EL035 | 53 | 45 | 45 | 98 | 98 | 54 | 50 | 50 | 98 | 98 | 53 | 44 | 44 | 98 | 98 | 103x300 | 0 | audio/picture/reading |
+| EL035 | 53 | 45 | 45 | 87 | 98 | 54 | 50 | 50 | 87 | 98 | 53 | 44 | 44 | 87 | 98 | 103x300 | 0 | audio/picture/reading |
 | EL036 | 53 | 45 | 45 | 48 | 48 | 54 | 45 | 45 | 48 | 48 | 53 | 35 | 35 | 48 | 48 | 103x300 | 0 | audio/picture/reading |
 | EL037 | 53 | 33 | 33 | 83 | 83 | 54 | 39 | 39 | 83 | 83 | 53 | 39 | 39 | 83 | 83 | 103x300 | 0 | audio/picture/reading |
 | EL038 | 53 | 28 | 28 | 61 | 66 | 51 | 51 | 51 | 61 | 66 | 53 | 42 | 42 | 61 | 66 | 103x300 | 0 | audio/picture/reading |
-| EL040 | 53 | 48 | 48 | 122 | 122 | 54 | 47 | 47 | 122 | 122 | 53 | 39 | 39 | 122 | 122 | 103x300 | 0 | audio/picture/reading |
+| EL040 | 53 | 48 | 48 | 120 | 122 | 54 | 47 | 47 | 120 | 122 | 53 | 39 | 39 | 120 | 122 | 103x300 | 0 | audio/picture/reading |
 | EL042 | 53 | 46 | 46 | 103 | 103 | 54 | 44 | 44 | 103 | 103 | 53 | 42 | 42 | 103 | 103 | 103x300 | 0 | audio/picture/reading |
 | EL043 | 53 | 25 | 22 | 64 | 64 | 54 | 25 | 25 | 64 | 64 | 53 | 20 | 20 | 64 | 64 | 103x300 | 0 | audio/picture/reading |
-| EL045 | 53 | 44 | 44 | 83 | 83 | 54 | 46 | 46 | 83 | 83 | 53 | 45 | 45 | 83 | 83 | 103x300 | 0 | audio/picture/reading |
+| EL045 | 53 | 44 | 44 | 70 | 83 | 54 | 46 | 46 | 70 | 83 | 53 | 45 | 45 | 70 | 83 | 103x300 | 0 | audio/picture/reading |
 | EL046 | 53 | 36 | 36 | 74 | 80 | 54 | 43 | 43 | 74 | 80 | 53 | 23 | 23 | 74 | 80 | 103x300 | 0 | audio/picture/reading |
 | EL048 | 53 | 39 | 39 | 59 | 59 | 54 | 42 | 42 | 59 | 59 | 53 | 34 | 34 | 59 | 59 | 103x300 | 0 | audio/picture/reading |
 | EL051 | 53 | 47 | 47 | 70 | 70 | 54 | 47 | 47 | 70 | 70 | 53 | 41 | 41 | 70 | 70 | 103x300 | 0 | audio/picture/reading |
 | EL052 | 53 | 42 | 42 | 84 | 84 | 54 | 47 | 47 | 84 | 84 | 53 | 42 | 42 | 84 | 84 | 103x300 | 0 | audio/picture/reading |
-| PAT_3455 | 48 | 42 | 42 | 95 | 95 | 53 | 47 | 47 | 95 | 95 | 51 | 40 | 40 | 95 | 95 | 103x300 | 0 | audio/picture/reading |
+| PAT_3455 | 48 | 42 | 42 | 93 | 95 | 53 | 47 | 47 | 93 | 95 | 51 | 40 | 40 | 93 | 95 | 103x300 | 0 | audio/picture/reading |
 | PAT_2868 | 53 | 40 | 40 | 39 | 39 | 54 | 46 | 46 | 39 | 39 | 53 | 51 | 51 | 39 | 39 | 103x300 | 0 | audio/picture/reading |
 | PAT_3066 | 50 | 32 | 32 | 152 | 152 | 54 | 50 | 50 | 152 | 152 | 50 | 44 | 44 | 152 | 152 | 103x300 | 0 | audio/picture/reading |
-| PAT_3390 | 53 | 46 | 46 | 96 | 96 | 54 | 49 | 49 | 96 | 96 | 53 | 43 | 43 | 96 | 96 | 103x300 | 0 | audio/picture/reading |
+| PAT_3390 | 53 | 46 | 46 | 95 | 96 | 54 | 49 | 49 | 95 | 96 | 53 | 43 | 43 | 95 | 96 | 103x300 | 0 | audio/picture/reading |
 | PAT_3415 | 53 | 45 | 45 | 29 | 129 | 54 | 49 | 49 | 29 | 129 | 53 | 45 | 45 | 29 | 129 | 103x300 | 0 | audio/picture/reading |
 | PAT_3965 | 50 | 45 | 45 | 169 | 169 | 51 | 48 | 48 | 169 | 169 | 51 | 43 | 43 | 169 | 169 | 103x300 | 0 | audio/picture/reading |
-| PAT_3975 | 50 | 40 | 40 | 155 | 155 | 50 | 40 | 40 | 155 | 155 | 50 | 29 | 29 | 155 | 155 | 103x300 | 0 | audio/picture/reading |
+| PAT_3975 | 50 | 40 | 40 | 141 | 155 | 50 | 40 | 40 | 141 | 155 | 50 | 29 | 29 | 141 | 155 | 103x300 | 0 | audio/picture/reading |
 | PAT_3780 | 50 | 39 | 39 | 116 | 116 | 51 | 46 | 46 | 116 | 116 | 49 | 42 | 42 | 116 | 116 | 103x300 | 0 | audio/picture/reading |
 | PAT_6953 | 53 | 39 | 39 | 147 | 147 | 51 | 42 | 42 | 147 | 147 | 53 | 38 | 38 | 147 | 147 | 103x300 | 0 | audio/picture/reading |
 | PAT_1327 | 52 | 34 | 34 | 164 | 164 | 54 | 51 | 51 | 164 | 164 | 53 | 43 | 43 | 164 | 164 | 103x300 | 0 | audio/picture/reading |
@@ -82,27 +82,27 @@
 | PAT_5533 | interp | per shaft | · | 114/128 over 16 shafts | 0 | 15 | 112/128 over 16 shafts | 0 | 16 | 112/128 over 16 shafts | 0 | 15 | 46 | 164 | 164 | 328 | 164 |
 | PAT_6619 | interp | per shaft | · | 80/104 over 13 shafts | 0 | 10 | 71/104 over 13 shafts | 0 | 7 | 78/104 over 13 shafts | 0 | 8 | 25 | 133 | 133 | 266 | 133 |
 | EL030 | interp | per shaft | · | 64/64 over 8 shafts | 0 | 7 | 64/64 over 8 shafts | 0 | 6 | 64/64 over 8 shafts | 0 | 7 | 20 | 83 | 83 | 166 | 83 |
-| EL033 | interp | per shaft | · | 72/72 over 9 shafts | 0 | 40 | 72/72 over 9 shafts | 0 | 6 | 72/72 over 9 shafts | 0 | 5 | 51 | 74 | 74 | 148 | 74 |
+| EL033 | interp | per shaft | · | 72/72 over 9 shafts | 0 | 40 | 72/72 over 9 shafts | 0 | 6 | 72/72 over 9 shafts | 0 | 5 | 51 | 61 | 61 | 122 | 61 |
 | EL034 | interp | per shaft | · | 71/72 over 9 shafts | 0 | 1 | 66/72 over 9 shafts | 0 | 7 | 71/72 over 9 shafts | 0 | 4 | 12 | 52 | 52 | 104 | 52 |
-| EL035 | interp | per shaft | · | 110/112 over 14 shafts | 1 | 38 | 111/112 over 14 shafts | 0 | 36 | 110/112 over 14 shafts | 0 | 34 | 109 | 98 | 98 | 196 | 98 |
+| EL035 | interp | per shaft | · | 110/112 over 14 shafts | 1 | 38 | 111/112 over 14 shafts | 0 | 36 | 110/112 over 14 shafts | 0 | 34 | 109 | 87 | 87 | 174 | 87 |
 | EL036 | interp | per shaft | 50.0 | 54/56 over 7 shafts | 0 | 8 | 55/56 over 7 shafts | 0 | 7 | 54/56 over 7 shafts | 0 | 8 | 23 | 48 | 48 | 96 | 48 |
 | EL037 | interp | per shaft | 50.0 | 88/88 over 11 shafts | 0 | 8 | 88/88 over 11 shafts | 0 | 7 | 88/88 over 11 shafts | 0 | 5 | 20 | 83 | 83 | 166 | 83 |
 | EL038 | interp | per shaft | · | 72/72 over 9 shafts | 0 | 8 | 72/72 over 9 shafts | 0 | 8 | 72/72 over 9 shafts | 0 | 9 | 25 | 61 | 61 | 122 | 61 |
-| EL040 | interp | per shaft | 50.0 | 128/128 over 16 shafts | 0 | 9 | 128/128 over 16 shafts | 0 | 14 | 128/128 over 16 shafts | 0 | 13 | 36 | 122 | 122 | 244 | 122 |
+| EL040 | interp | per shaft | 50.0 | 128/128 over 16 shafts | 0 | 9 | 128/128 over 16 shafts | 0 | 14 | 128/128 over 16 shafts | 0 | 13 | 36 | 120 | 120 | 240 | 120 |
 | EL042 | interp | per shaft | · | 79/80 over 10 shafts | 0 | 10 | 79/80 over 10 shafts | 0 | 9 | 80/80 over 10 shafts | 0 | 11 | 30 | 103 | 103 | 206 | 103 |
 | EL043 | interp | per shaft | · | 80/80 over 10 shafts | 0 | 5 | 80/80 over 10 shafts | 0 | 4 | 80/80 over 10 shafts | 0 | 5 | 14 | 64 | 64 | 128 | 64 |
-| EL045 | interp | per shaft | 50.0 | 83/108 over 9 shafts | 0 | 3 | 86/108 over 9 shafts | 0 | 0 | 83/108 over 9 shafts | 0 | 6 | 9 | 83 | 83 | 166 | 83 |
+| EL045 | interp | per shaft | 50.0 | 83/108 over 9 shafts | 0 | 3 | 86/108 over 9 shafts | 0 | 0 | 83/108 over 9 shafts | 0 | 6 | 9 | 70 | 70 | 140 | 70 |
 | EL046 | interp | per shaft | · | 87/88 over 11 shafts | 0 | 12 | 86/88 over 11 shafts | 0 | 12 | 87/88 over 11 shafts | 0 | 11 | 35 | 74 | 74 | 148 | 74 |
-| EL048 | interp | per shaft | 50.0 | 49/161 over 7 shafts | 14 | 54 | 49/161 over 7 shafts | 15 | 3 | 49/161 over 7 shafts | 15 | 3 | 104 | 59 | 59 | 118 | 59 |
+| EL048 | interp | per shaft | 50.0 | 51/161 over 7 shafts | 0 | 3 | 49/161 over 7 shafts | 0 | 4 | 53/161 over 7 shafts | 0 | 4 | 11 | 59 | 59 | 118 | 59 |
 | EL051 | interp | per shaft | · | 71/80 over 10 shafts | 0 | 27 | 76/80 over 10 shafts | 0 | 33 | 77/80 over 10 shafts | 0 | 29 | 89 | 70 | 70 | 140 | 70 |
 | EL052 | interp | per shaft | · | 92/112 over 14 shafts | 0 | 10 | 90/112 over 14 shafts | 0 | 12 | 93/112 over 14 shafts | 0 | 24 | 46 | 84 | 84 | 168 | 84 |
-| PAT_3455 | interp | per shaft | · | 89/96 over 12 shafts | 0 | 9 | 89/96 over 12 shafts | 0 | 7 | 89/96 over 12 shafts | 0 | 9 | 25 | 95 | 95 | 190 | 95 |
+| PAT_3455 | interp | per shaft | · | 89/96 over 12 shafts | 0 | 9 | 89/96 over 12 shafts | 0 | 7 | 89/96 over 12 shafts | 0 | 9 | 25 | 93 | 93 | 186 | 93 |
 | PAT_2868 | interp | per shaft | · | 30/104 over 13 shafts | 0 | 9 | 23/104 over 13 shafts | 2 | 16 | 26/104 over 13 shafts | 0 | 8 | 35 | 39 | 39 | 78 | 39 |
 | PAT_3066 | interp | per shaft | · | 29/136 over 17 shafts | 0 | 16 | 29/136 over 17 shafts | 0 | 17 | 29/136 over 17 shafts | 0 | 13 | 46 | 152 | 152 | 304 | 152 |
-| PAT_3390 | interp | per shaft | · | 12/88 over 11 shafts | 0 | 4 | 8/88 over 11 shafts | 0 | 5 | 10/88 over 11 shafts | 0 | 6 | 15 | 96 | 96 | 192 | 96 |
+| PAT_3390 | interp | per shaft | · | 12/88 over 11 shafts | 0 | 4 | 8/88 over 11 shafts | 0 | 5 | 10/88 over 11 shafts | 0 | 6 | 15 | 95 | 95 | 190 | 95 |
 | PAT_3415 | interp | per shaft | · | 10/24 over 3 shafts | 0 | 1 | 8/24 over 3 shafts | 0 | 2 | 8/24 over 3 shafts | 0 | 1 | 4 | 29 | 29 | 58 | 29 |
 | PAT_3965 | interp | per shaft | · | 130/144 over 18 shafts | 0 | 9 | 128/144 over 18 shafts | 0 | 5 | 128/144 over 18 shafts | 0 | 5 | 19 | 169 | 169 | 338 | 169 |
-| PAT_3975 | interp | per shaft | · | 14/136 over 17 shafts | 1 | 16 | 14/136 over 17 shafts | 1 | 10 | 17/136 over 17 shafts | 0 | 9 | 37 | 155 | 155 | 310 | 155 |
+| PAT_3975 | interp | per shaft | · | 14/136 over 17 shafts | 1 | 16 | 14/136 over 17 shafts | 1 | 10 | 17/136 over 17 shafts | 0 | 9 | 37 | 141 | 141 | 282 | 141 |
 | PAT_3780 | interp | per shaft | · | 18/104 over 13 shafts | 0 | 12 | 14/104 over 13 shafts | 0 | 13 | 16/104 over 13 shafts | 0 | 13 | 38 | 116 | 116 | 232 | 116 |
 | PAT_6953 | interp | per shaft | · | 30/128 over 16 shafts | 0 | 5 | 31/128 over 16 shafts | 0 | 4 | 33/128 over 16 shafts | 0 | 7 | 16 | 147 | 147 | 294 | 147 |
 | PAT_1327 | interp | per shaft | · | 40/144 over 18 shafts | 0 | 3 | 38/144 over 18 shafts | 0 | 4 | 36/144 over 18 shafts | 0 | 4 | 11 | 164 | 164 | 328 | 164 |
@@ -127,15 +127,15 @@
 - **EL030** bad (1): EntG_R18  
   WM reference (5): AHR8 AHR9 AR7 PHGR5 PHR5  
   cubes: same names as the old tree
-- **EL033** bad (0): ·  
+- **EL033** bad (15): pH_R7 aH_R12 aH_L1 aH_L2 aH_L3 aH_L4 aH_L5 aH_L6 aH_L7 aH_L8 aH_L9 aH_L10 aH_L11 aH_L12 PHG_R4  
   WM reference (10): AHR4 AL10 AL7 AR6 ENTGR4 PHGR4 PHGR7 PHR6 PHR8 STGR2  
-  cubes: same names as the old tree
+  change vs old tree: audio -13 [bad 13: aH_L1 aH_L10 aH_L11 aH_L2 aH_L3 aH_L4 aH_L5 aH_L6 aH_L7 aH_L8 aH_L9 aH_R12 pH_R7]; picture -13 [bad 13: aH_L1 aH_L10 aH_L11 aH_L2 aH_L3 aH_L4 aH_L5 aH_L6 aH_L7 aH_L8 aH_L9 aH_R12 pH_R7]; reading -13 [bad 13: aH_L1 aH_L10 aH_L11 aH_L2 aH_L3 aH_L4 aH_L5 aH_L6 aH_L7 aH_L8 aH_L9 aH_R12 pH_R7]
 - **EL034** bad (5): MFG-10 MFG-11 MFG-12 OFG-L15 aH-L12  
   WM reference (24): AHL7 ASFGL1 ASFGL3 CINGL4 CINGL5 CINGL8 CINGR1 CINGR10 CINGR11 CINGR6 CINGR8 CINGR9 MFG2 MFG3 OFGL11 OFGL12 OFGL5 OFGL6 OFGL7 OFGL8 PSFGL3 PSFGL4 PSFGL5 PSFGL6  
   cubes: same names as the old tree
-- **EL035** bad (13): EntG_R7 EntG_R8 EntG_R9 EntG_R10 EntG_R11 Fopc_R1 Fopc_R2 Fopc_R3 Fopc_R4 Fopc_R5 pHG_R10 pHG_R11 pHG_R12  
+- **EL035** bad (24): EntG_R7 EntG_R8 EntG_R9 EntG_R10 EntG_R11 Fopc_R1 Fopc_R2 Fopc_R3 Fopc_R4 Fopc_R5 pHG_R10 pHG_R11 pHG_R12 CinG_R1 CinG_R3 CinG_R5 CinG_R7 aI_R1 aI_R2 aI_R3 aI_R4 aI_R5 aI_R6 aI_R7  
   WM reference (10): AHL8 AL6 CINGR2 CINGR4 CINGR6 CINGR8 ENTGR3 OFR13 OFR16 PHGR2  
-  cubes: same names as the old tree
+  change vs old tree: audio -11 [bad 4: CinG_R1 CinG_R3 CinG_R5 CinG_R7; not in config lists (Unknown drop / aux / condition not run) 7: aI_R1 aI_R2 aI_R3 aI_R4 aI_R5 aI_R6 aI_R7]; picture -11 [bad 4: CinG_R1 CinG_R3 CinG_R5 CinG_R7; not in config lists (Unknown drop / aux / condition not run) 7: aI_R1 aI_R2 aI_R3 aI_R4 aI_R5 aI_R6 aI_R7]; reading -11 [bad 4: CinG_R1 CinG_R3 CinG_R5 CinG_R7; not in config lists (Unknown drop / aux / condition not run) 7: aI_R1 aI_R2 aI_R3 aI_R4 aI_R5 aI_R6 aI_R7]
 - **EL036** bad (9): pHG_R1 pHG_R2 pHG_R3 pHG_R4 pHG_R8 pHG_R9 pHG_R10 pHG_R11 pHG_R12  
   WM reference (4): PFCR5 PFCR6 PHGR6 PHGR7  
   cubes: same names as the old tree
@@ -147,21 +147,21 @@
   change vs old tree: audio -5 [bad 5: A_L1 LinG_R5 LinG_R6 pH_R1 pH_R2]; picture -5 [bad 5: A_L1 LinG_R5 LinG_R6 pH_R1 pH_R2]; reading -5 [bad 5: A_L1 LinG_R5 LinG_R6 pH_R1 pH_R2]
 - **EL040** bad (11): FP-R10 FP-R11 FP-R12 FP-R13 FP-R14 FP-R15 PlaT_L1 PlaT_L2 PlaT_L3 aH_R13 pPVH_L2  
   WM reference (9): AHL10 AR6 CINGL1 CINGR1 CINGR13 IPVHR8 OFR15 STGR2 STGR9  
-  cubes: same names as the old tree
+  change vs old tree: audio -2 [bad 2: aH_R13 pPVH_L2]; picture -2 [bad 2: aH_R13 pPVH_L2]; reading -2 [bad 2: aH_R13 pPVH_L2]
 - **EL042** bad (0): ·  
   WM reference (12): AHL5 ALR10 ALR14 ALR9 OFR6 PHR1 PHR2 PHR6 STGR1 STGR3 STGR7 STGR8  
   cubes: same names as the old tree
 - **EL043** bad (3): sSMG8 sSMG9 sSMG10  
   WM reference (28): A5 A6 HIP4 HIP5 HIP6 ISMG4 ISMG6 ISMG7 ITG5 ITG6 LING1 LING2 LING3 LING4 PL1 PL15 PL18 PL2 PL4 PL6 PL7 SSMG13 SSMG2 SSMG3 SSMG5 SSMG6 STG1 STG5  
   cubes: same names as the old tree
-- **EL045** bad (10): PlaT_L2 PlaT_L3 PlaT_L4 PlanTL4 A_R8 A_L2 A_L3 A_L4 STG_L1 STG_L2  
+- **EL045** bad (23): PlaT_L2 PlaT_L3 PlaT_L4 PlanTL4 A_R8 A_L2 A_L3 A_L4 STG_L1 STG_L2 TTG_L4 TTG_L7 TTG_L8 A_L1 A_L5 A_L6 EntG_L5 EntG_L6 EntG_L7 EntG_L8 EntG_L9 EntG_L10 EntG_L11  
   WM reference (4): AHL10 AHR8 AL7 PHL7  
-  cubes: same names as the old tree
+  change vs old tree: audio -13 [bad 13: A_L1 A_L5 A_L6 EntG_L10 EntG_L11 EntG_L5 EntG_L6 EntG_L7 EntG_L8 EntG_L9 TTG_L4 TTG_L7 TTG_L8]; picture -13 [bad 13: A_L1 A_L5 A_L6 EntG_L10 EntG_L11 EntG_L5 EntG_L6 EntG_L7 EntG_L8 EntG_L9 TTG_L4 TTG_L7 TTG_L8]; reading -13 [bad 13: A_L1 A_L5 A_L6 EntG_L10 EntG_L11 EntG_L5 EntG_L6 EntG_L7 EntG_L8 EntG_L9 TTG_L4 TTG_L7 TTG_L8]
 - **EL046** bad (6): A_L1 A_L2 aH_R12 pH_L1 pI_L1 pI_L4  
   WM reference (9): AHR8 ALL9 FOPL2 FPL11 FPL8 PHL11 PHL7 PLL17 PLL18  
   change vs old tree: audio -6 [wm_ref 4: Fp_L-8 Fp_L11 pH_L11 pI_L18; not in config lists (Unknown drop / aux / condition not run) 2: OF_L13 OF_L14]; picture -6 [wm_ref 4: Fp_L-8 Fp_L11 pH_L11 pI_L18; not in config lists (Unknown drop / aux / condition not run) 2: OF_L13 OF_L14]; reading -6 [wm_ref 4: Fp_L-8 Fp_L11 pH_L11 pI_L18; not in config lists (Unknown drop / aux / condition not run) 2: OF_L13 OF_L14]
-- **EL048** bad (10): A_R9 EKG EKG- EntG_R12 PHG_R15 aH_L8 aH_L9 pH_R13 pH_R14 pH_R15  
-  WM reference (11): AHL1 AHR5 AHR6 AL7 ENTGR7 PHGR1 PHGR10 PHGR6 PHGR7 PHR6 PHR8  
+- **EL048** bad (11): A_R9 EKG EKG- EntG_R12 PHG_R15 aH_L1 aH_L8 aH_L9 pH_R13 pH_R14 pH_R15  
+  WM reference (10): AHR5 AHR6 AL7 ENTGR7 PHGR1 PHGR10 PHGR6 PHGR7 PHR6 PHR8  
   cubes: same names as the old tree
 - **EL051** bad (41): EKG+ EKG- VIM_1 VIM_10 VIM_11 VIM_12 VIM_13 VIM_14 VIM_15 VIM_16 VIM_17 VIM_18 VIM_2 VIM_3 VIM_4 VIM_5 VIM_6 VIM_7 VIM_8 VIM_9 aH_R13 aSMG_4 aSMG_5 aSMG_6 aSMG_7 aSMG_8 pH_R10 pH_R11 pH_R12 pH_R13 pH_R7 pH_R8 pH_R9 pSPL_3 pSTG_3 pSTG_4 pSTG_5 pSTG_6 pSTG_7 pSTG_8 pSTG_9  
   WM reference (3): AHR11 AR6 AR9  
@@ -171,7 +171,7 @@
   cubes: same names as the old tree
 - **PAT_3455** bad (2): HAD9 HAD10  
   WM reference (21): CPD10 CPD11 CPD12 CPD2 CPD9 HPD5 HPD7 IMD11 IMD3 IMD4 IMD5 IPD14 IPD8 OPD5 OTD8 PHD5 PHD6 TOD6 TSP4 TSP5 TSP6  
-  cubes: same names as the old tree
+  change vs old tree: audio -2 [bad 2: HAD10 HAD9]; picture -2 [bad 2: HAD10 HAD9]; reading -2 [bad 2: HAD10 HAD9]
 - **PAT_2868** bad (1): IDM3  
   WM reference (23): FOP1 FOP2 IDM1 IDM4 POI3 POI4 POM1 POM5 POS5 POS6 PPI2 PPS1 PPS2 PPS3 PRI1 PRI2 PRI3 PRI4 PRI5 PRS5 SMA1 SMA2 SMA3  
   cubes: same names as the old tree
@@ -180,16 +180,16 @@
   cubes: same names as the old tree
 - **PAT_3390** bad (1): PHG12  
   WM reference (22): AG6 CAG10 CAG8 CAG9 CPG1 CPG2 CPG3 FOG10 FOG11 FOG12 FOG2 FOG4 FOG5 FOG9 HPG7 IAG1 IAG2 IAG3 IAG4 PHG5 TOL3 TOL4  
-  cubes: same names as the old tree
+  change vs old tree: audio -1 [bad 1: PHG12]; picture -1 [bad 1: PHG12]; reading -1 [bad 1: PHG12]
 - **PAT_3415** bad (18): HLG1 HLG2 HLG3 HLG4 HLG5 HLG6 HLG7 HLG8 HLG9 HLG10 HLG11 HLG12 HLG13 HLG14 HLG15 HLG16 HLG17 HLG18  
   WM reference (6): IMG15 IMG16 IMG17 IPG10 IPG12 IPG13  
   change vs old tree: audio -100 [wm_ref 6: IMG15 IMG16 IMG17 IPG10 IPG12 IPG13; not in config lists (Unknown drop / aux / condition not run) 94: GA1 GA2 GA3 GA4 GA5 GA6 GA7 GA8 GB1 GB2 GB3 GB4 GB5 GB6 GB7 GB8 GC1 GC2 GC3 GC4 GC5 GC6 GC7 GC8 GD1 GD2 GD3 GD4 GD5 GD6 GD7 GD8 GE1 GE2 GE3 GE4 GE5 GE6 GE7 GE8 GF1 GF2 GF3 GF4 GF5 GF6 GF7 GF8 GG1 GG2 GG3 GG4 GG5 GG6 GG7 GG8 GH1 GH2 GH3 GH4 GH5 GH6 GH7 GH8 OI1 OI2 OI3 OI4 OI5 OI6 OS1 OS2 OS3 OS4 OS5 OS6 TA1 TA2 TA3 TA4 TA5 TA6 TM1 TM2 TM3 TM4 TM5 TM6 TP1 TP2 TP3 TP4 TP5 TP6]; picture -100 [wm_ref 6: IMG15 IMG16 IMG17 IPG10 IPG12 IPG13; not in config lists (Unknown drop / aux / condition not run) 94: GA1 GA2 GA3 GA4 GA5 GA6 GA7 GA8 GB1 GB2 GB3 GB4 GB5 GB6 GB7 GB8 GC1 GC2 GC3 GC4 GC5 GC6 GC7 GC8 GD1 GD2 GD3 GD4 GD5 GD6 GD7 GD8 GE1 GE2 GE3 GE4 GE5 GE6 GE7 GE8 GF1 GF2 GF3 GF4 GF5 GF6 GF7 GF8 GG1 GG2 GG3 GG4 GG5 GG6 GG7 GG8 GH1 GH2 GH3 GH4 GH5 GH6 GH7 GH8 OI1 OI2 OI3 OI4 OI5 OI6 OS1 OS2 OS3 OS4 OS5 OS6 TA1 TA2 TA3 TA4 TA5 TA6 TM1 TM2 TM3 TM4 TM5 TM6 TP1 TP2 TP3 TP4 TP5 TP6]; reading -100 [wm_ref 6: IMG15 IMG16 IMG17 IPG10 IPG12 IPG13; not in config lists (Unknown drop / aux / condition not run) 94: GA1 GA2 GA3 GA4 GA5 GA6 GA7 GA8 GB1 GB2 GB3 GB4 GB5 GB6 GB7 GB8 GC1 GC2 GC3 GC4 GC5 GC6 GC7 GC8 GD1 GD2 GD3 GD4 GD5 GD6 GD7 GD8 GE1 GE2 GE3 GE4 GE5 GE6 GE7 GE8 GF1 GF2 GF3 GF4 GF5 GF6 GF7 GF8 GG1 GG2 GG3 GG4 GG5 GG6 GG7 GG8 GH1 GH2 GH3 GH4 GH5 GH6 GH7 GH8 OI1 OI2 OI3 OI4 OI5 OI6 OS1 OS2 OS3 OS4 OS5 OS6 TA1 TA2 TA3 TA4 TA5 TA6 TM1 TM2 TM3 TM4 TM5 TM6 TP1 TP2 TP3 TP4 TP5 TP6]
-- **PAT_3965** bad (5): cmd11 y1 y2 y3 y4  
+- **PAT_3965** bad (6): cmd11 y1 y2 y3 y4 cmd12  
   WM reference (44): AD9 CAD7 CAG2 CAG3 CAG5 CAG8 CMD12 CMD3 CMD9 CMG4 CMG7 CMG8 CMG9 CPD14 CPD15 CPD5 CPG10 CPG12 CPG3 CPG9 HAD7 HAG7 HPD5 HPG12 IAD1 IAD15 IAD16 IAD5 IAD6 IAD7 IAD8 IAG13 IAG16 IAG7 IMD11 IMD4 IMG16 IMG18 IMG3 IMG8 IMG9 POD1 POG1 POG3  
   cubes: same names as the old tree
 - **PAT_3975** bad (15): TPG1 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6 HAG1 HAG2 HAG3 HAD1 HAD2 HAD3 HAD4 FOD1  
   WM reference (48): AD7 AG6 CPD6 CPD7 CPD8 CPG10 CPG12 FOD11 FOD12 FOD13 FOD14 FOD3 FOD5 FOD6 FOD9 FOG1 FOG10 FOG8 FOG9 HAD11 HAG5 HAG7 IAD11 IAG1 IAG2 IAG3 IAG4 IAG6 IMD12 IMD14 IMD15 IMD16 IMD17 IMD18 IMD7 IMG10 IMG11 IMG12 IMG13 IMG14 IMG15 IMG4 IMG5 IMG8 PHD11 PHD7 PHG4 TPD2  
-  cubes: same names as the old tree
+  change vs old tree: audio -14 [bad 14: FOD1 HAD1 HAD2 HAD3 HAD4 HAG1 HAG2 HAG3 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6]; picture -14 [bad 14: FOD1 HAD1 HAD2 HAD3 HAD4 HAG1 HAG2 HAG3 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6]; reading -14 [bad 14: FOD1 HAD1 HAD2 HAD3 HAD4 HAG1 HAG2 HAG3 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6]
 - **PAT_3780** bad (1): FAP9  
   WM reference (15): FLP6 FMA6 FMA7 FMP8 FPS1 HAG4 IMG13 IMG17 IMG18 IMG4 IMG5 IMG6 IMG7 TOG2 TPG7  
   cubes: same names as the old tree
