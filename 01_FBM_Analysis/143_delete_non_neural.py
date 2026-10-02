@@ -16,6 +16,11 @@ is on disk is figures, and their rows in the per-trial score tables.
 WHAT COUNTS AS NON-NEURAL is not decided here: it is lf_io_utils._is_non_neural, the same test
 the export and the MicroEPI branch use, applied to the channel name in each file name.
 
+THE PHOTODIODE IS THE EXCEPTION (Lora, 2026-10-02). Its ERSP and HFA figures are kept: they
+are the check that the triggers sit where the screen changed, in the four HUG recordings
+that carry a "photo" channel (PAT_2868, 3390, 3415, 3455). It is still not data, so its rows
+leave the score tables and a Signal figure of it is removed - only ERSP/ and HFA/ stay.
+
 WHAT IT REMOVES, under outputs/<cfg.ERSP_TREE>/<pid>/LM/:
   - every per-channel file of such a channel, in whatever folder it sits (ERSP, HFA, Signal,
     and ERSP_matrix / ERSP_halves / ERSP_clean should one ever be there);
@@ -57,17 +62,24 @@ FILE_RE = re.compile(r"_(?:WM|CAR|NONE)_(?:ERSP|HFAtrials|HGtrials|SIGtrials)_(?
                      r"(?:_TN)?(?:_half[12])?(?:_CLEAN)?(?:_GO)?\.(?:png|npy|tif|tiff|json)$")
 
 
+KEEP_PHOTODIODE_IN = ("ERSP", cfg.HFA_DIR)      # the folders whose photodiode figures stay
+
+
+def is_photodiode(ch: str) -> bool:
+    return str(ch).strip().upper().startswith("PHOTO")
+
+
 def channel_of(fname: str):
     m = FILE_RE.search(fname)
     return m.group("ch") if m else None
 
 
 def scan_patient(pdir: Path):
-    """-> (files {channel: [paths]}, tables [(path, n_rows, channels)])"""
-    files, tables = {}, []
+    """-> (files {channel: [paths]}, tables [(path, n_rows, channels)], kept {channel: n photodiode figures left})"""
+    files, tables, kept = {}, [], {}
     lm = pdir / cfg.block_name
     if not lm.is_dir():
-        return files, tables
+        return files, tables, kept
     for root, _dirs, names in os.walk(lm):
         for n in names:
             if n.endswith("_trial_scores.tsv"):
@@ -83,8 +95,12 @@ def scan_patient(pdir: Path):
                 continue
             c = channel_of(n)
             if c and io._is_non_neural(c):
+                top = Path(root).relative_to(lm).parts[0] if Path(root) != lm else ""
+                if is_photodiode(c) and top in KEEP_PHOTODIODE_IN:
+                    kept[c] = kept.get(c, 0) + 1          # the trigger check: stays
+                    continue
                 files.setdefault(c, []).append(Path(root) / n)
-    return files, tables
+    return files, tables, kept
 
 
 def main() -> int:
@@ -100,9 +116,10 @@ def main() -> int:
 
     log, locked, tot_f, tot_r = [], [], 0, 0
     for pdir in pdirs:
-        files, tables = scan_patient(pdir)
+        files, tables, kept = scan_patient(pdir)
+        keep_note = ("   [kept: " + ", ".join(f"{k} {v} ERSP/HFA figures" for k, v in sorted(kept.items())) + "]") if kept else ""
         if not files and not tables:
-            print(f"{pdir.name:<10} nothing non-neural")
+            print(f"{pdir.name:<10} nothing to remove{keep_note}")
             continue
         chans = sorted(set(files) | {c for _, _, cs in tables for c in cs})
         n_f = sum(len(v) for v in files.values())
@@ -114,7 +131,7 @@ def main() -> int:
                 by_dir[k] = by_dir.get(k, 0) + 1
         print(f"{pdir.name:<10} {' '.join(chans):<22} {n_f:>3} files "
               f"({', '.join(f'{k} {v}' for k, v in sorted(by_dir.items()))})"
-              + (f" · {n_r} score rows in {len(tables)} table(s)" if tables else ""))
+              + (f" · {n_r} score rows in {len(tables)} table(s)" if tables else "") + keep_note)
         tot_f += n_f; tot_r += n_r
         for c, v in sorted(files.items()):
             for f in v:

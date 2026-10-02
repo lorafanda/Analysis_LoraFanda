@@ -1880,6 +1880,31 @@ def plot_hg_trials(
 # ----------------------------
 # The cleaned signal, trial by trial (the HFA raster's twin, 2026-10-02)
 # ----------------------------
+def microvolt_scale(signals, fs, *, max_channels=40, seconds=60.0):
+    """(factor that turns `signals` into µV, the measured robust SD in the array's own unit).
+
+    The loaders do not agree on a unit: Bern .h5, HUG .TRC and the MicroEPI .mat give µV, but
+    the five patients read from .edf (EL030 / 033 / 034 / 035 / 036) come through mne, which
+    returns VOLTS. Nothing in the pipeline minds - dB re baseline and z are unit-free - until
+    a figure draws the signal against a µV scale: the first Signal/ figures of those five were
+    flat lines (2026-10-02). The unit is read off the data rather than off the file type, so
+    a new loader cannot bring the bug back: a contact's robust SD is 10-150 in µV and
+    1e-5 to 1.5e-4 in volts, four orders of magnitude from the 1e-2 line between them.
+    """
+    import numpy as _np
+    X = _np.asarray(signals)
+    n, m = X.shape
+    k = int(min(n, float(seconds) * float(fs)))
+    s0 = max(0, (n - k) // 2)
+    cols = _np.linspace(0, m - 1, min(m, int(max_channels))).astype(int)
+    seg = X[s0:s0 + k][:, cols].astype(float)
+    sd = 1.4826 * _np.median(_np.abs(seg - _np.median(seg, axis=0)), axis=0)
+    med = float(_np.median(sd[_np.isfinite(sd) & (sd > 0)])) if _np.any(sd > 0) else float("nan")
+    if not _np.isfinite(med):
+        return 1.0, med
+    return (1e6 if med < 1e-2 else 1.0), med
+
+
 def plot_signal_trials(
     signals,
     fs,
@@ -1894,7 +1919,8 @@ def plot_signal_trials(
     reref_type="WM",
     time_window=(-1.0, 3.0),
     baseline_w=(-0.6, -0.1),
-    uv_per_row=300.0,             # THE SAME FOR EVERY PATIENT: one trial row is this many µV tall
+    uv_per_row=200.0,             # THE SAME FOR EVERY PATIENT: one trial row is this many µV tall
+    unit_scale=1.0,               # multiplies the signal into µV (1e6 for the volts of an .edf; see microvolt_scale)
     n_rows_fixed=58,              # y axis always spans this many rows, so the row pitch never changes
     figsize=(8, 10), dpi=200,
     save_dir=None,
@@ -1937,7 +1963,7 @@ def plot_signal_trials(
     from matplotlib.collections import LineCollection as _LC
 
     fs = float(fs)
-    sig = signals[:, int(channel_idx)].astype(float)
+    sig = signals[:, int(channel_idx)].astype(float) * float(unit_scale)
     onsets = _np.asarray(onsets, dtype=int)
     offsets = _np.asarray(offsets, dtype=int) if (offsets is not None and len(offsets)) else _np.array([], dtype=int)
     trialend = _np.asarray(trial_end_indices, dtype=int) if trial_end_indices is not None else None

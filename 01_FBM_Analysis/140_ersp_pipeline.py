@@ -108,6 +108,13 @@ fill_nans_nearest     = fe.fill_nans_nearest
 save_clean_png        = fe.save_clean_png
 plot_psd_overview     = fe.plot_psd_overview
 _is_non_neural        = io._is_non_neural
+
+
+def _is_photodiode(name) -> bool:
+    """The HUG photodiode channel ("photo" / "PHOTO"): kept for its figures, never data."""
+    return str(name).strip().upper().startswith("PHOTO")
+
+
 _ensure               = io.ensure_dir
 
 
@@ -411,9 +418,14 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             # skipped them, so no cube). _is_non_neural is the test the MicroEPI branch above
             # and the export already use. The photodiode extraction (--pd) loads the raw file
             # itself and is not affected.
-            _nn = [n for n in names if _is_non_neural(n)]
+            # THE PHOTODIODE STAYS, AS A FIGURES-ONLY CHANNEL (Lora, 2026-10-02): its ERSP and HFA
+            # raster are the check that the triggers sit where the screen changed. It is in the
+            # four HUG recordings that name it "photo" (PAT_2868, 3390, 3415, 3455). It is not
+            # data: no cube (the export skips it), no trial-score rows, no Signal figure, and it
+            # is its own "shaft" for the notch, so it decides nothing for a contact.
+            _nn = [n for n in names if _is_non_neural(n) and not _is_photodiode(n)]
             if _nn:
-                _kp = [i for i, n in enumerate(names) if not _is_non_neural(n)]
+                _kp = [i for i, n in enumerate(names) if not (_is_non_neural(n) and not _is_photodiode(n))]
                 signals = signals[:, _kp]
                 names = [names[i] for i in _kp]
                 print(f"  [{patient_id}] aux drop (non-neural): {' '.join(_nn)}")
@@ -791,6 +803,10 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                           f"({int(_kept_a.sum())} vs {len(on_c)}); the HG figure shows the kept trials only")
             print(f"  {cond}: ", end="", flush=True)
             _score_rows = []
+            # the Signal figures are drawn against a µV scale; the .edf patients arrive in volts
+            _uv_scale, _uv_sd = fe.microvolt_scale(sig_c, fs)
+            if _uv_scale != 1.0:
+                print(f"[signal in volts: robust SD {_uv_sd:.2e}; Signal figures x{_uv_scale:g}] ", end="", flush=True)
             for ci, chan_name in enumerate(names):
                 if chan_name in wm_skip: continue
                 if chan_name in micro_names_set: continue
@@ -826,7 +842,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                         sort_by="stim")
                 # the HFA raster's twin (2026-10-02): the same trials, order, marks and rejected
                 # rows, each row the broadband cleaned voltage as a trace, one µV scale for the cohort
-                if RUN_ERSP_PIPELINE and WRITE_SIGNAL_PLOTS:
+                if RUN_ERSP_PIPELINE and WRITE_SIGNAL_PLOTS and not _is_photodiode(chan_name):
                     fe.plot_signal_trials(
                         signals=sig_c, fs=fs,
                         onsets=(_hg_all["on"] if _hg_all is not None else on_c),
@@ -834,7 +850,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                         channel_idx=ci,
                         chan_name=chan_name, patient_id=patient_id, condition=cond, reref_type=reref,
                         time_window=cfg.time_window, baseline_w=cfg.baseline_w,
-                        uv_per_row=getattr(cfg, "signal_plot_uv_per_row", 300.0),
+                        uv_per_row=getattr(cfg, "signal_plot_uv_per_row", 200.0),
+                        unit_scale=_uv_scale,
                         n_rows_fixed=getattr(cfg, "signal_plot_rows", 58),
                         rejected_trials=(
                             [int(_hg_all["keep_pos"][i]) for i in res.get("dropped_trials", [])]
@@ -871,7 +888,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 # rejection rule would compare against. They are all-NaN unless a
                 # trial_reject_* threshold is set, which is why 145 sets an
                 # unreachable one - it turns the scoring on without dropping anything.
-                if EXPORT_TRIAL_SCORES:
+                if EXPORT_TRIAL_SCORES and not _is_non_neural(chan_name):
                     _sc = res.get("trial_scores") or []
                     _sh = res.get("trial_scores_hg") or []
                     _drop = set(res.get("dropped_trials") or [])

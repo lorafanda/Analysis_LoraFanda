@@ -142,7 +142,8 @@ bad_channels_manual = {
                  *[f"PHD{i}" for i in range(1, 7)], *[f"HAG{i}" for i in range(1, 4)],
                  *[f"HAD{i}" for i in range(1, 5)], "FOD1"],
     # 2026-10-02 (Lora). The photodiode channel she also named for PAT_3455 (and PAT_3415)
-    # is not a contact: the aux drop takes it since 2026-10-02.
+    # is not a contact and is not data, but its ERSP and HFA figures are kept as a trigger
+    # check: 140 carries it as a figures-only channel (no cube, no score rows, no Signal).
     "PAT_3455": ["HAD9", "HAD10"],
     "PAT_3390": ["PHG12"],
     "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
@@ -464,11 +465,13 @@ HFA_DIR = "HFA"          # the per-trial raster folder and file stem (<pid>_<con
 # order, marks and rejected rows, but each row is the broadband cleaned voltage as a trace
 # (<pid>/LM/Signal/<cond>/<pid>_<cond>_<ref>_SIGtrials_<ch>.png). ONE scale for the whole
 # cohort: a row is signal_plot_uv_per_row µV tall in every figure and the y axis always
-# spans signal_plot_rows rows, so deflections compare across patients. 300 µV is ~6-8
-# robust SDs of a typical channel (30-50 µV on all three systems, measured 10-02): an
-# ordinary trial stays on its row, an ictal spike runs into its neighbours.
+# spans signal_plot_rows rows, so deflections compare across patients. 200 µV (Lora,
+# 2026-10-02; 300 at first, 100 tried and unreadable) is ~4-6 robust SDs of a typical
+# channel (30-50 µV): an ordinary trial mostly stays on its row, an ictal spike runs into
+# its neighbours. The signal is put into µV first - the .edf patients arrive in volts
+# (lf_ersp.microvolt_scale).
 SIGNAL_DIR = "Signal"
-signal_plot_uv_per_row = 300.0
+signal_plot_uv_per_row = 200.0
 signal_plot_rows = 58
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
