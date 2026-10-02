@@ -4,7 +4,7 @@
 "raw_id": "G-06",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-24 11:38",
+"run_start": "2026-09-30 19:27",
 "status": "ok",
 "reference": "WM reference, 38 contacts (selective: WM contacts stay as data)",
 "wm_n": 38,
@@ -53,7 +53,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "700-2080 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "57",
+"unexplained_peaks": "48",
 "trials": {
 "audio": {
 "in": "53",
@@ -76,12 +76,18 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-6854_electrodes.tsv",
-"n_contacts": 216,
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
+"n_contacts": 184,
 "n_data": 175,
 "n_status": {
 "data": 175,
 "wm_ref": 0,
-"bad": 38,
+"bad": 6,
 "unknown": 3,
 "not_recorded": 0,
 "not_run": 0,
@@ -93,7 +99,7 @@
 "raw_id": "G-04",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-24 12:12",
+"run_start": "2026-09-30 19:27",
 "status": "ok",
 "reference": "WM reference, 18 contacts (selective: WM contacts stay as data)",
 "wm_n": 18,
@@ -160,7 +166,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "540-1840 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "41",
+"unexplained_peaks": "28",
 "trials": {
 "audio": {
 "in": "53",
@@ -183,12 +189,18 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-6704_electrodes.tsv",
-"n_contacts": 194,
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
+"n_contacts": 146,
 "n_data": 128,
 "n_status": {
 "data": 128,
 "wm_ref": 0,
-"bad": 55,
+"bad": 7,
 "unknown": 7,
 "not_recorded": 4,
 "not_run": 0,
@@ -200,7 +212,7 @@
 "raw_id": "G-01",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-24 12:45",
+"run_start": "2026-09-30 20:26",
 "status": "ok",
 "reference": "WM reference, 20 contacts (selective: WM contacts stay as data)",
 "wm_n": 20,
@@ -213,7 +225,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "190-1614 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "14",
+"unexplained_peaks": "12",
 "trials": {
 "audio": {
 "in": "53",
@@ -236,6 +248,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-5515_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 158,
 "n_data": 143,
 "n_status": {
@@ -253,7 +271,7 @@
 "raw_id": "G-02",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-24 13:10",
+"run_start": "2026-09-30 19:56",
 "status": "ok",
 "reference": "WM reference, 27 contacts (selective: WM contacts stay as data)",
 "wm_n": 27,
@@ -286,6 +304,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-5533_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 181,
 "n_data": 164,
 "n_status": {
@@ -303,7 +327,7 @@
 "raw_id": "G-03",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-24 13:37",
+"run_start": "2026-09-30 20:51",
 "status": "ok",
 "reference": "WM reference, 17 contacts (selective: WM contacts stay as data)",
 "wm_n": 17,
@@ -338,6 +362,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-6619_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 157,
 "n_data": 133,
 "n_status": {
@@ -355,7 +385,7 @@
 "raw_id": "EL030",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 13:58",
+"run_start": "2026-09-30 22:03",
 "status": "ok",
 "reference": "WM reference, 5 contacts (skipped as data)",
 "wm_n": 5,
@@ -390,6 +420,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL030_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 102,
 "n_data": 83,
 "n_status": {
@@ -399,7 +435,7 @@
 "unknown": 13,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -407,7 +443,7 @@
 "raw_id": "EL033",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 14:08",
+"run_start": "2026-09-30 21:32",
 "status": "ok",
 "reference": "WM reference, 10 contacts (skipped as data)",
 "wm_n": 10,
@@ -417,7 +453,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "280-1782 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "42",
+"unexplained_peaks": "51",
 "trials": {
 "audio": {
 "in": "53",
@@ -440,6 +476,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL033_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 92,
 "n_data": 74,
 "n_status": {
@@ -449,7 +491,7 @@
 "unknown": 8,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -457,7 +499,7 @@
 "raw_id": "EL034",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 14:20",
+"run_start": "2026-09-30 21:50",
 "status": "ok",
 "reference": "WM reference, 24 contacts (skipped as data)",
 "wm_n": 24,
@@ -496,6 +538,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL034_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 111,
 "n_data": 52,
 "n_status": {
@@ -505,7 +553,7 @@
 "unknown": 24,
 "not_recorded": 6,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -513,7 +561,7 @@
 "raw_id": "EL035",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 14:28",
+"run_start": "2026-09-30 21:14",
 "status": "ok",
 "reference": "WM reference, 10 contacts (skipped as data)",
 "wm_n": 10,
@@ -537,7 +585,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "112",
+"unexplained_peaks": "109",
 "trials": {
 "audio": {
 "in": "53",
@@ -560,6 +608,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL035_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 190,
 "n_data": 98,
 "n_status": {
@@ -569,7 +623,7 @@
 "unknown": 13,
 "not_recorded": 56,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -577,7 +631,7 @@
 "raw_id": "EL036",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 14:43",
+"run_start": "2026-09-30 22:17",
 "status": "ok",
 "reference": "WM reference, 4 contacts (skipped as data)",
 "wm_n": 4,
@@ -597,7 +651,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "21",
+"unexplained_peaks": "23",
 "trials": {
 "audio": {
 "in": "53",
@@ -620,6 +674,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL036_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 71,
 "n_data": 48,
 "n_status": {
@@ -629,7 +689,7 @@
 "unknown": 10,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -637,10 +697,10 @@
 "raw_id": "EL037",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-28 14:32",
+"run_start": "2026-09-30 21:40",
 "status": "ok",
-"reference": "WM reference, 13 contacts (skipped as data)",
-"wm_n": 13,
+"reference": "WM reference, 11 contacts (skipped as data)",
+"wm_n": 11,
 "wm_source": "BIDS TSV",
 "bad_n": 47,
 "bad_list": [
@@ -718,14 +778,20 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL037_electrodes.tsv",
-"n_contacts": 171,
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
+"n_contacts": 163,
 "n_data": 83,
 "n_status": {
 "data": 83,
-"wm_ref": 13,
-"bad": 17,
+"wm_ref": 11,
+"bad": 9,
 "unknown": 12,
-"not_recorded": 46,
+"not_recorded": 48,
 "not_run": 0,
 "aux": 0
 }
@@ -735,7 +801,7 @@
 "raw_id": "EL038",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 15:06",
+"run_start": "2026-09-30 21:42",
 "status": "ok",
 "reference": "WM reference, 9 contacts (skipped as data)",
 "wm_n": 9,
@@ -751,7 +817,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "24",
+"unexplained_peaks": "25",
 "trials": {
 "audio": {
 "in": "53",
@@ -774,6 +840,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL038_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 171,
 "n_data": 66,
 "n_status": {
@@ -791,12 +863,12 @@
 "raw_id": "EL040",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 15:15",
+"run_start": "2026-09-30 20:49",
 "status": "ok",
 "reference": "WM reference, 9 contacts (skipped as data)",
 "wm_n": 9,
 "wm_source": "BIDS TSV",
-"bad_n": 9,
+"bad_n": 11,
 "bad_list": [
 "FP-R10",
 "FP-R11",
@@ -806,7 +878,9 @@
 "FP-R15",
 "PlaT_L1",
 "PlaT_L2",
-"PlaT_L3"
+"PlaT_L3",
+"aH_R13",
+"pPVH_L2"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "100-1900 s",
@@ -834,6 +908,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL40_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 255,
 "n_data": 122,
 "n_status": {
@@ -851,7 +931,7 @@
 "raw_id": "EL042",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 15:33",
+"run_start": "2026-09-30 21:18",
 "status": "ok",
 "reference": "WM reference, 12 contacts (skipped as data)",
 "wm_n": 12,
@@ -884,6 +964,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL042_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 148,
 "n_data": 103,
 "n_status": {
@@ -893,7 +979,7 @@
 "unknown": 18,
 "not_recorded": 15,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -901,7 +987,7 @@
 "raw_id": "EL043",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-26 13:53",
+"run_start": "2026-09-30 21:04",
 "status": "ok",
 "reference": "WM reference, 28 contacts (skipped as data)",
 "wm_n": 28,
@@ -938,6 +1024,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL043_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 117,
 "n_data": 64,
 "n_status": {
@@ -947,7 +1039,7 @@
 "unknown": 11,
 "not_recorded": 11,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -955,7 +1047,7 @@
 "raw_id": "EL045",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-28 17:07",
+"run_start": "2026-09-30 21:52",
 "status": "ok",
 "reference": "WM reference, 4 contacts (skipped as data)",
 "wm_n": 4,
@@ -999,6 +1091,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL045_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 127,
 "n_data": 83,
 "n_status": {
@@ -1016,10 +1114,10 @@
 "raw_id": "EL046",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-26 13:53",
+"run_start": "2026-09-30 21:27",
 "status": "ok",
-"reference": "WM reference, 6 contacts (skipped as data)",
-"wm_n": 6,
+"reference": "WM reference, 9 contacts (skipped as data)",
+"wm_n": 9,
 "wm_source": "BIDS TSV",
 "bad_n": 6,
 "bad_list": [
@@ -1033,39 +1131,45 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "21120-23320 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "45",
+"unexplained_peaks": "35",
 "trials": {
 "audio": {
 "in": "53",
 "kept": "36",
 "used": "36",
-"cubes": "78"
+"cubes": "74"
 },
 "picture": {
 "in": "54",
 "kept": "43",
 "used": "43",
-"cubes": "78"
+"cubes": "74"
 },
 "reading": {
 "in": "53",
 "kept": "23",
 "used": "23",
-"cubes": "78"
+"cubes": "74"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL046_electrodes.tsv",
-"n_contacts": 196,
-"n_data": 78,
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
+"n_contacts": 194,
+"n_data": 74,
 "n_status": {
-"data": 78,
-"wm_ref": 6,
-"bad": 6,
-"unknown": 21,
-"not_recorded": 85,
+"data": 74,
+"wm_ref": 9,
+"bad": 4,
+"unknown": 23,
+"not_recorded": 84,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -1073,7 +1177,7 @@
 "raw_id": "EL048",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-24 11:53",
+"run_start": "2026-09-30 21:25",
 "status": "ok",
 "reference": "WM reference, 11 contacts (skipped as data)",
 "wm_n": 11,
@@ -1094,7 +1198,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "17700-19180 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "106",
+"unexplained_peaks": "104",
 "trials": {
 "audio": {
 "in": "53",
@@ -1117,6 +1221,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL048_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 78,
 "n_data": 59,
 "n_status": {
@@ -1126,7 +1236,7 @@
 "unknown": 0,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -1134,7 +1244,7 @@
 "raw_id": "EL051",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-29 14:42",
+"run_start": "2026-09-30 22:08",
 "status": "ok",
 "reference": "WM reference, 3 contacts (skipped as data)",
 "wm_n": 3,
@@ -1209,6 +1319,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL051_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 199,
 "n_data": 70,
 "n_status": {
@@ -1226,7 +1342,7 @@
 "raw_id": "EL052",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-29 14:42",
+"run_start": "2026-09-30 21:57",
 "status": "ok",
 "reference": "WM reference, 5 contacts (skipped as data)",
 "wm_n": 5,
@@ -1292,6 +1408,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-EL052_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 241,
 "n_data": 84,
 "n_status": {
@@ -1309,13 +1431,16 @@
 "raw_id": "PAT_3455",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 12:38",
+"run_start": "2026-09-30 20:39",
 "status": "ok",
 "reference": "WM reference, 21 contacts (skipped as data)",
 "wm_n": 21,
 "wm_source": "BIDS TSV",
-"bad_n": 0,
-"bad_list": [],
+"bad_n": 2,
+"bad_list": [
+"HAD9",
+"HAD10"
+],
 "notch": "interp \u00b7 per shaft",
 "crop": "250-1836 s",
 "conditions": "audio/picture/reading",
@@ -1342,6 +1467,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-3455_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 116,
 "n_data": 95,
 "n_status": {
@@ -1351,7 +1482,7 @@
 "unknown": 0,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -1359,7 +1490,7 @@
 "raw_id": "PAT_2868",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 12:57",
+"run_start": "2026-09-30 22:13",
 "status": "ok",
 "reference": "WM reference, 23 contacts (skipped as data)",
 "wm_n": 23,
@@ -1394,6 +1525,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-2868_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 63,
 "n_data": 39,
 "n_status": {
@@ -1403,7 +1540,7 @@
 "unknown": 0,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -1411,7 +1548,7 @@
 "raw_id": "PAT_3066",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 13:06",
+"run_start": "2026-09-30 20:24",
 "status": "ok",
 "reference": "WM reference, 46 contacts (skipped as data)",
 "wm_n": 46,
@@ -1444,6 +1581,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-3066_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 200,
 "n_data": 152,
 "n_status": {
@@ -1461,13 +1604,15 @@
 "raw_id": "PAT_3390",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 13:37",
+"run_start": "2026-09-30 21:42",
 "status": "ok",
 "reference": "WM reference, 22 contacts (skipped as data)",
 "wm_n": 22,
 "wm_source": "BIDS TSV",
-"bad_n": 0,
-"bad_list": [],
+"bad_n": 1,
+"bad_list": [
+"PHG12"
+],
 "notch": "interp \u00b7 per shaft",
 "crop": "170-1222 s",
 "conditions": "audio/picture/reading",
@@ -1494,6 +1639,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-3390_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 118,
 "n_data": 96,
 "n_status": {
@@ -1503,7 +1654,7 @@
 "unknown": 0,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -1511,7 +1662,7 @@
 "raw_id": "PAT_3415",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-29 18:56",
+"run_start": "2026-09-30 20:59",
 "status": "ok",
 "reference": "WM reference, 6 contacts (skipped as data)",
 "wm_n": 6,
@@ -1540,39 +1691,45 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "30-1500 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "45",
+"unexplained_peaks": "4",
 "trials": {
 "audio": {
 "in": "53",
 "kept": "45",
 "used": "45",
-"cubes": "123"
+"cubes": "29"
 },
 "picture": {
 "in": "54",
 "kept": "49",
 "used": "49",
-"cubes": "123"
+"cubes": "29"
 },
 "reading": {
 "in": "53",
 "kept": "45",
 "used": "45",
-"cubes": "123"
+"cubes": "29"
 }
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-3415_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 148,
-"n_data": 123,
+"n_data": 29,
 "n_status": {
-"data": 123,
+"data": 29,
 "wm_ref": 6,
 "bad": 18,
-"unknown": 1,
+"unknown": 95,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 1
+"aux": 0
 }
 },
 {
@@ -1580,7 +1737,7 @@
 "raw_id": "PAT_3965",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 14:20",
+"run_start": "2026-09-30 19:28",
 "status": "ok",
 "reference": "WM reference, 44 contacts (skipped as data)",
 "wm_n": 44,
@@ -1596,7 +1753,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "40-1311 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "22",
+"unexplained_peaks": "19",
 "trials": {
 "audio": {
 "in": "50",
@@ -1619,6 +1776,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-3965_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 218,
 "n_data": 169,
 "n_status": {
@@ -1628,7 +1791,7 @@
 "unknown": 4,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 4
+"aux": 0
 }
 },
 {
@@ -1636,19 +1799,33 @@
 "raw_id": "PAT_3975",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 14:49",
+"run_start": "2026-09-30 19:50",
 "status": "ok",
 "reference": "WM reference, 48 contacts (skipped as data)",
 "wm_n": 48,
 "wm_source": "BIDS TSV",
-"bad_n": 1,
+"bad_n": 15,
 "bad_list": [
-"TPG1"
+"TPG1",
+"PHD1",
+"PHD2",
+"PHD3",
+"PHD4",
+"PHD5",
+"PHD6",
+"HAG1",
+"HAG2",
+"HAG3",
+"HAD1",
+"HAD2",
+"HAD3",
+"HAD4",
+"FOD1"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "200-1550 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "36",
+"unexplained_peaks": "37",
 "trials": {
 "audio": {
 "in": "50",
@@ -1671,6 +1848,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-3975_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 212,
 "n_data": 155,
 "n_status": {
@@ -1680,7 +1863,7 @@
 "unknown": 8,
 "not_recorded": 0,
 "not_run": 0,
-"aux": 4
+"aux": 0
 }
 },
 {
@@ -1688,7 +1871,7 @@
 "raw_id": "PAT_3780",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 15:17",
+"run_start": "2026-09-30 21:08",
 "status": "ok",
 "reference": "WM reference, 15 contacts (skipped as data)",
 "wm_n": 15,
@@ -1723,6 +1906,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-3780_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 136,
 "n_data": 116,
 "n_status": {
@@ -1740,7 +1929,7 @@
 "raw_id": "PAT_6953",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 15:33",
+"run_start": "2026-09-30 20:17",
 "status": "ok",
 "reference": "WM reference, 30 contacts (skipped as data)",
 "wm_n": 30,
@@ -1773,6 +1962,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-PAT6953_space-T1w_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 182,
 "n_data": 147,
 "n_status": {
@@ -1790,7 +1985,7 @@
 "raw_id": "PAT_1327",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-24 14:44",
+"run_start": "2026-09-30 19:57",
 "status": "ok",
 "reference": "WM reference, 44 contacts (skipped as data)",
 "wm_n": 44,
@@ -1830,6 +2025,12 @@
 },
 "hg_reref": "WM",
 "anatomy_source": "sub-1327_electrodes.tsv",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
 "n_contacts": 224,
 "n_data": 164,
 "n_status": {
@@ -1899,6 +2100,7 @@
 "tree": "04_ersp_LM",
 "hfa_dir": "HG",
 "hfa_stem": "HGtrials",
+"report_dir": "Report",
 "n_contacts": 150,
 "n_data": 124,
 "n_status": {
@@ -1954,6 +2156,7 @@
 "tree": "04_ersp_LM",
 "hfa_dir": "HG",
 "hfa_stem": "HGtrials",
+"report_dir": "Report",
 "n_contacts": 202,
 "n_data": 146,
 "n_status": {
@@ -2025,6 +2228,7 @@
 "tree": "04_ersp_LM",
 "hfa_dir": "HG",
 "hfa_stem": "HGtrials",
+"report_dir": "Report",
 "n_contacts": 0,
 "n_data": 0,
 "n_status": {
