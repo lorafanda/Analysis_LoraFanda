@@ -48,7 +48,7 @@ track - with these things changed (2026-09-17):
      elevation convention) and switches the hemisphere filter to both if the contact was
      hidden by it. The ring is captioned with the contact's name on the brain itself.
      Order by shaft or worst-first on any number; size slider; excluded contacts on/off. "HG" on a tile (or "HG under every tile") adds the run's HG
-     trial rasters - the QC PNGs of 01_FBM_Analysis/outputs/03_ERSP/<pid>/LM/HFA/ - from
+     trial rasters - the QC PNGs of 01_FBM_Analysis/outputs/03_ERSP/<pid>/LM/PerTrial/HFA/ - from
      a LOCAL server, given as ?hg=<url> or typed into the bar's "QC root" field (kept in
      localStorage); the originals are ~2 GB and never go to the site. Since 2026-09-27 the
      bundle carries compact WebP copies (review/qc/, scripts/make_lm_qc_images.py: HG rasters
@@ -1161,7 +1161,7 @@ function rvHgUrl(c, cond) {
   // a non-cohort patient (asterisk) lives in the frozen 04_ersp_LM tree, one folder up from
   // the 03_ERSP root, with the old HG/ folder and _HGtrials_ stem; patients.json says which
   const tree = P && P.tree && P.tree !== "03_ERSP" ? root.replace(/03_ERSP\/$/, P.tree + "/") : root;
-  const dir = P && P.hfa_dir ? P.hfa_dir : "HFA", stem = P && P.hfa_stem ? P.hfa_stem : "HFAtrials";
+  const dir = P && P.hfa_dir ? P.hfa_dir : "PerTrial/HFA", stem = P && P.hfa_stem ? P.hfa_stem : "HFAtrials";
   return `${tree}${c.patient}/LM/${dir}/${cond}/${c.patient}_${cond}_${P ? P.hg_reref : "WM"}_${stem}_${c.name}.png`;
 }
 function rvHgRow(tile, c, on) {

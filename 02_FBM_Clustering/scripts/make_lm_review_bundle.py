@@ -707,7 +707,7 @@ def main() -> None:
         "n_time": NT // T_DS, "time_downsample": T_DS, "n_time_source": NT,
         "dtype": "uint8", "order": ["cond", "freq", "time"], "vmin": -VLIM, "vmax": VLIM, "nan_byte": 0,
         "file": "each contact row's `file`",
-        "hg_path": "{hg_root}/{patient}/LM/HFA/{cond}/{patient}_{cond}_{hg_reref}_HFAtrials_{name}.png",
+        "hg_path": "{hg_root}/{patient}/LM/{hfa_dir}/{cond}/{patient}_{cond}_{hg_reref}_{hfa_stem}_{name}.png (hfa_dir / hfa_stem per patient in patients.json: PerTrial/HFA + HFAtrials in 03_ERSP)",
         "psd_path": "{hg_root}/{patient}/LM/PSD_clean/{cond}/PSD/psd_by_shaft.png (per-shaft patients) or psd_allch_full.png",
         "iqr_path": "{hg_root}/{patient}/LM/Report/{patient}_{cond}_iqr_postDur_QC.png",
         "trials": "trials/{patient}.json: every trial of the run's tables with the reason it was dropped (lf_trials.collect_trials, the run's settings)",

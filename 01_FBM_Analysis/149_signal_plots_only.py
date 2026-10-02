@@ -126,6 +126,7 @@ def main() -> int:
             dst = tree / pid / cfg.block_name / sdir
             if dst.exists():
                 shutil.rmtree(dst)
+            dst.parent.mkdir(parents=True, exist_ok=True)      # PerTrial/ may not exist yet
             shutil.move(str(src), str(dst))
             print(f"  {n} figures -> {dst}")
         shutil.rmtree(tmp / pid, ignore_errors=True)

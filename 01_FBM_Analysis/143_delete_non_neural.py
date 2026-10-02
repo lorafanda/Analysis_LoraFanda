@@ -62,7 +62,7 @@ FILE_RE = re.compile(r"_(?:WM|CAR|NONE)_(?:ERSP|HFAtrials|HGtrials|SIGtrials)_(?
                      r"(?:_TN)?(?:_half[12])?(?:_CLEAN)?(?:_GO)?\.(?:png|npy|tif|tiff|json)$")
 
 
-KEEP_PHOTODIODE_IN = ("ERSP", cfg.HFA_DIR)      # the folders whose photodiode figures stay
+KEEP_PHOTODIODE_IN = ("ERSP", cfg.HFA_DIR, "HFA")   # the folders whose photodiode figures stay (either layout)
 
 
 def is_photodiode(ch: str) -> bool:
@@ -95,8 +95,8 @@ def scan_patient(pdir: Path):
                 continue
             c = channel_of(n)
             if c and io._is_non_neural(c):
-                top = Path(root).relative_to(lm).parts[0] if Path(root) != lm else ""
-                if is_photodiode(c) and top in KEEP_PHOTODIODE_IN:
+                rel = Path(root).relative_to(lm).as_posix() if Path(root) != lm else ""
+                if is_photodiode(c) and any(rel == k or rel.startswith(k + "/") for k in KEEP_PHOTODIODE_IN):
                     kept[c] = kept.get(c, 0) + 1          # the trigger check: stays
                     continue
                 files.setdefault(c, []).append(Path(root) / n)

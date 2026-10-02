@@ -460,17 +460,25 @@ outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora
 # make_lm_visualizer, make_s1_tab, make_patient_roster. Pooling, timing and classifying
 # scripts still name 04_* and will be moved when they are next run.
 ERSP_TREE = "03_ERSP"
-HFA_DIR = "HFA"          # the per-trial raster folder and file stem (<pid>_<cond>_<ref>_HFAtrials_<ch>.png)
+# THE PER-TRIAL PRODUCTS LIVE IN <pid>/LM/PerTrial/ (2026-10-02, Lora): the HFA rasters, the
+# Signal traces and the trial-score tables - everything that has one row per trial - so the
+# patient folder separates what is per trial from the averages (ERSP, ERSP_matrix, ...).
+# Every writer and reader takes the folder from these three names. Report/ stays where it
+# is: it holds the run's reports (trial filter, notch audit, montage), read by nine scripts.
+# 144_move_to_pertrial.py moves the folders of the patients already run.
+PERTRIAL_DIR = "PerTrial"
+HFA_DIR = PERTRIAL_DIR + "/HFA"                  # <pid>_<cond>_<ref>_HFAtrials_<ch>.png
+TRIALSCORES_DIR = PERTRIAL_DIR + "/TrialScores"  # <pid>_<cond>_trial_scores.tsv
 # THE CLEANED SIGNAL, TRIAL BY TRIAL (2026-10-02, Lora): the HFA raster's twin - same trials,
 # order, marks and rejected rows, but each row is the broadband cleaned voltage as a trace
-# (<pid>/LM/Signal/<cond>/<pid>_<cond>_<ref>_SIGtrials_<ch>.png). ONE scale for the whole
+# (<pid>/LM/PerTrial/Signal/<cond>/<pid>_<cond>_<ref>_SIGtrials_<ch>.png). ONE scale for the whole
 # cohort: a row is signal_plot_uv_per_row µV tall in every figure and the y axis always
 # spans signal_plot_rows rows, so deflections compare across patients. 200 µV (Lora,
 # 2026-10-02; 300 at first, 100 tried and unreadable) is ~4-6 robust SDs of a typical
 # channel (30-50 µV): an ordinary trial mostly stays on its row, an ictal spike runs into
 # its neighbours. The signal is put into µV first - the .edf patients arrive in volts
 # (lf_ersp.microvolt_scale).
-SIGNAL_DIR = "Signal"
+SIGNAL_DIR = PERTRIAL_DIR + "/Signal"
 signal_plot_uv_per_row = 200.0
 signal_plot_rows = 58
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself

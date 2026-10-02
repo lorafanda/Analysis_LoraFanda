@@ -50,7 +50,8 @@ FRACS = [0.10, 0.20, 0.30, 0.50]
 
 def load(patients=None) -> pd.DataFrame:
     rows = []
-    for f in sorted(glob.glob(str(TREE / "*" / "*" / "TrialScores" / "*_trial_scores.tsv"))):
+    # either layout: <pid>/LM/TrialScores/ (before 2026-10-02) or <pid>/LM/PerTrial/TrialScores/
+    for f in sorted(glob.glob(str(TREE / "*" / "*" / "**" / "*_trial_scores.tsv"), recursive=True)):
         d = pd.read_csv(f, sep="\t")
         if patients and str(d.patient.iloc[0]) not in patients:
             continue

@@ -80,8 +80,9 @@ def main() -> int:
         keep = []
         for pid in a.patient:
             out = m.out_id_for(pid) if hasattr(m, "out_id_for") else pid
-            d = Path(m.cfg.outputs_root) / OUT_NAME / str(out) / m.cfg.block_name / "TrialScores"
-            done = len(list(d.glob("*_trial_scores.tsv"))) if d.is_dir() else 0
+            # either layout: TrialScores/ (runs before 2026-10-02) or PerTrial/TrialScores/
+            d = Path(m.cfg.outputs_root) / OUT_NAME / str(out) / m.cfg.block_name
+            done = len(list(d.rglob("*_trial_scores.tsv"))) if d.is_dir() else 0
             (keep.append(pid) if done < 3
              else print(f"  skip {pid}: {done} score tables already there"))
         a.patient = keep

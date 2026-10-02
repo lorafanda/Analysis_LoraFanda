@@ -71,7 +71,7 @@ def main() -> int:
         # a non-cohort patient (patients.json: tree / hfa_dir / hfa_stem) is read from the
         # frozen 04_ersp_LM tree with its HG/ folder; the bundle keeps its own HG/ layout
         qc_root = os.path.join(os.path.dirname(QC), P["tree"]) if P.get("tree") and P["tree"] != os.path.basename(QC) else QC
-        hdir, hstem = P.get("hfa_dir", "HFA"), P.get("hfa_stem", "HFAtrials")
+        hdir, hstem = P.get("hfa_dir", "PerTrial/HFA"), P.get("hfa_stem", "HFAtrials")
         for cond in c["conds"]:
             src = os.path.join(qc_root, pid, "LM", hdir, cond, f"{pid}_{cond}_{ref}_{hstem}_{c['name']}.png")
             dst = os.path.join(OUT, pid, "HG", cond, f"{c['name']}.webp")

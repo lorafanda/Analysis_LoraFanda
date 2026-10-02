@@ -86,12 +86,12 @@ run_root_raw        = os.path.join(cfg.outputs_root, RAWONLY_SCRIPT_NAME)
 # this loop, and a forked 873-line pipeline drifts from the real one within a week.
 WRITE_MONTAGE      = True   # Report/<pid>_montage_overview.png
 WRITE_ERSP_PLOTS   = True   # ERSP/<cond>/*.png          (the per-channel ERSP figures)
-WRITE_HG_PLOTS     = True   # HFA/<cond>/*.png           (the per-trial high-frequency rasters; "HG" until 09-30)
-WRITE_SIGNAL_PLOTS = True   # Signal/<cond>/*.png        (the same rows as traces of the cleaned signal, 2026-10-02)
+WRITE_HG_PLOTS     = True   # PerTrial/HFA/<cond>/*.png  (the per-trial high-frequency rasters; "HG" until 09-30)
+WRITE_SIGNAL_PLOTS = True   # PerTrial/Signal/<cond>/*.png (the same rows as traces of the cleaned signal, 2026-10-02)
 WRITE_CUBES        = True   # ERSP_matrix/<cond>/*.npy   (what stage 02 clusters)
 WRITE_HALVES       = True   # ERSP_halves/<cond>/*.npy   (the split-half gate)
 WRITE_CLEAN_PNG    = True   # ERSP_clean/<cond>/*_CLEAN.png
-EXPORT_TRIAL_SCORES = True   # TrialScores/<cond>/<pid>_<cond>_trial_scores.tsv (in the 03_ERSP tree since 09-30; was 145's only)
+EXPORT_TRIAL_SCORES = True   # PerTrial/TrialScores/<pid>_<cond>_trial_scores.tsv (in the 03_ERSP tree since 09-30; was 145's only)
 
 ersp_params = fe.ERSPParams(
     nperseg=cfg.nperseg, nfft=cfg.nfft, noverlap=cfg.noverlap,
@@ -911,8 +911,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             print(" done")
 
             if EXPORT_TRIAL_SCORES and _score_rows:
-                _sdir = _ensure(io.patient_output_dir(run_root_ersp, patient_id,
-                                                      cfg.block_name, "TrialScores"))
+                _sdir = _ensure(io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
+                                                      getattr(cfg, "TRIALSCORES_DIR", "TrialScores")))
                 _sp = os.path.join(_sdir, f"{patient_id}_{cond}_trial_scores.tsv")
                 pd.DataFrame(_score_rows).to_csv(_sp, sep="	", index=False)
                 _n_ch = len(set(r["channel"] for r in _score_rows))
