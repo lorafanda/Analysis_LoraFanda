@@ -11,7 +11,9 @@ WHAT IS READ, at build time, and from where:
   the time of the last run                                                   outputs/03_ERSP/logs/<pid>_<stamp>.log
   the contacts that have cubes now                                           outputs/03_ERSP/<pid>/LM/ERSP_matrix/audio
   the contacts removed from the tree without a rerun, and when               outputs/03_ERSP/logs/*_deleted_<stamp>.tsv (143)
-  trials used, names that match no recorded channel                          outputs/03_ERSP/audit_140.tsv (141)
+  trials used                                                                outputs/03_ERSP/audit_140.tsv (141)
+(The audit's "listed but not recorded" column is NOT used: it compares the bad list with the ERSP
+figure names, and since the bad list is applied before the ERSP stage it names every listed contact.)
 
 WHAT IS WRITTEN BY HAND, because it cannot be read: WHY a contact is on the bad list (WHY) and
 what a check found (FOUND). WHY is tied to the config: a WHY entry that names a contact which
@@ -329,7 +331,6 @@ def rows() -> list[dict]:
         out.append(dict(pid=pid, raw=micro.get(pid, ""), run=run, n_c=n_c, wm=wm, bad=bad, why=why, uncovered=uncovered,
                         unk=(r["n_channels_unknown_dropped"] if r is not None else ""),
                         trials=("/".join(str(a[f"{c}_trials_used"] or "–") for c in CONDS) if a is not None else ""),
-                        not_rec=((a["bad_listed_not_in_recording"].split() if a is not None else [])),
                         removed_after=removed_after, removed_at=max((st for st, _, k in after if k == "bad-listed"), default=None),
                         special=special, found=FOUND.get(pid, []), owed=owed))
     return out
@@ -356,9 +357,6 @@ def patients_html() -> str:
             rem.append(f"<b>{_e(compress(names))}</b> — {why}" + (f" <span class=\"runid\">{date}</span>" if date else ""))
         if x["uncovered"]:
             rem.append(f"<b>{_e(compress(x['uncovered']))}</b> — {NOT_CHECKED}")
-        nr = [n_ for n_ in x["not_rec"] if n_ in x["bad"]]
-        if nr:
-            rem.append(f"<i>match no recorded channel ({len(nr)}): {_e(compress(nr))}</i>")
         if x["removed_after"]:
             rem.append(f"<i>removed from the tree after the last run, no rerun ({_t(x['removed_at'])}): {_e(compress(x['removed_after']))}</i>")
         fnd = [f"{txt} <span class=\"runid\">{date}</span>" for date, txt in x["found"]] + [_e(s) for s in x["special"]]
