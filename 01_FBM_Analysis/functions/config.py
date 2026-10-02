@@ -155,6 +155,9 @@ bad_channels_manual = {
     # showed no harmonic row more than 0.4 dB off its neighbours, like the rest of the patient.
     "EL035":[f"EntG_R{i}" for i in range(7,12)]+[f"Fopc_R{i}" for i in range(1,6)]+[f"pHG_R{i}" for i in range(10, 13)]
             + ["CinG_R1", "CinG_R3", "CinG_R5", "CinG_R7"] + [f"aI_R{i}" for i in range(1, 8)],
+    # EL033, 2026-10-02, by visual review of the 03_ERSP tree: pH_R7, aH_R12 and the whole
+    # aH_L shaft (12 recorded, 11 had cubes). None is in the white-matter reference.
+    "EL033": ["pH_R7", "aH_R12"] + [f"aH_L{i}" for i in range(1, 13)],
     "EL036": [f"pHG_R{i}" for i in range(1, 5)]+[f"pHG_R{i}" for i in range(8, 13)],
     "EL037": ["pH_R7","aH_R1","A_R10","A_R12","CinG_L12","CinG_L13","aI_L18"]
               + [f"pI_L{i}" for i in range(1, 17)]
