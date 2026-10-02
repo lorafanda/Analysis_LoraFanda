@@ -149,7 +149,14 @@ bad_channels_manual = {
     # check: 140 carries it as a figures-only channel (no cube, no score rows, no Signal).
     "PAT_3455": ["HAD9", "HAD10"],
     "PAT_3390": ["PHG12"],
-    "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
+    # PAT_3965, 2026-10-02: cmd12 was one of the 44 white-matter reference contacts. In the raw
+    # TRC it is cmd11's twin (already listed): SD 356 uV against a median of 73, 60-390 Hz floor
+    # 22.6 dB above the median channel, 50 Hz line +38 dB against +7. After the reference every
+    # line stood at the same amplitude and phase on the data contacts (CV 0.03-0.08, spread
+    # 0.3-6 deg) and at 43x on cmd12, which carried 99-101 % of it. Simulated without it: the
+    # lines before the notch go from 17-26 dB to 1-3 dB and the floor drops 1.1-1.9 dB in every
+    # band. The reference stays at 43 contacts.
+    "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4", "cmd12"],
     "EL030": ["EntG_R18"],  # example; fill after visual/clinical review
     # EL035, 2026-10-02 (Lora): the two shafts whose notch leaves a line above the floor - CinG_R
     # and aI_R, 6 of 24 bands each still > 3 dB up at 250 / 350 Hz in the block PSD (notch audit
