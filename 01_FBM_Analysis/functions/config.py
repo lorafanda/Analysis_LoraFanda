@@ -162,7 +162,12 @@ bad_channels_manual = {
               # 2026-09-28 (Lora, after the rerun): removed by hand from the outputs of every
               # condition and listed here so a rerun skips them.
               + ["aI_L2", "aI_L3", "aI_L4", "aI_L5", "A_L4", "pI_L14", "CinG_L2"],
-    "EL038": ["pH_R7","aH_L3","STO_R1","A_L7", "CinG_R2"],  # example; fill after visual/clinical review
+    # EL038, 2026-10-02 (Lora, from the review of the 03_ERSP tree): pH_R1, pH_R2, LinG_R5,
+    # LinG_R6, A_L1. None is one of its 9 WM reference contacts, so they were removed from
+    # the tree without a rerun (143_delete_non_neural.py --bad-listed --patients EL038
+    # --delete); a later run drops them before the reference and the notch like any other.
+    "EL038": ["pH_R7","aH_L3","STO_R1","A_L7", "CinG_R2",
+              "pH_R1", "pH_R2", "LinG_R5", "LinG_R6", "A_L1"],
     # "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44", "Pa52", "Pa54", "Pa62", "Pa36", "Pa61", "Pa45", "Pa59", "Pa38", "Pa30", "Pa50", "Pa35", "Pa58", "Pa46", "Pa27", "Pa43", "Pa29", "Pa28", "Pa42", "Pa34", "Pa31", "Pa55", "Pa10", "Pa33", "Pa19", "Pa57", "Pa39", "Pa22", "Pa20", "Pa47", "Pa14", "Pa4"],
     "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44"],
     "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"],

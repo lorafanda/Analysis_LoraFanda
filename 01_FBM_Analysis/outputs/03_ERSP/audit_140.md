@@ -1,4 +1,4 @@
-# 140 run audit - fmax 400 Hz - 2026-10-02 16:01
+# 140 run audit - fmax 400 Hz - 2026-10-02 17:44
 
 30 patients in cfg.patient_ids; 30 with a log; 30 ok. Cube trees: new `outputs\03_ERSP`, previous `outputs\04_ersp_LM_RAWONLY`.
 
@@ -17,7 +17,7 @@
 | EL035 | Bern | 2026-09-30 21:14 | 13.9 | ok | none | 156 | 125 | 3 | · | 13 | WM reference, 10 contacts (skipped as data) | BIDS TSV | 10 | PHGR10 | · | 98 | 0 | · | EntG_R7 EntG_R8 EntG_R9 EntG_R10 EntG_R11 Fopc_R1 Fopc_R2 Fopc_R3 Fopc_R4 Fopc_R5 pHG_R11 pHG_R12 |
 | EL036 | Bern | 2026-09-30 22:17 | 6.4 | ok | none | 108 | 72 | 10 | · | 9 | WM reference, 4 contacts (skipped as data) | BIDS TSV | 4 | · | · | 48 | 0 | · | pHG_R1 pHG_R2 pHG_R3 pHG_R4 pHG_R8 pHG_R9 pHG_R10 pHG_R11 pHG_R12 |
 | EL037 | Bern | 2026-09-30 21:40 | 12.4 | ok | none | 156 | 123 | 4 | · | 47 | WM reference, 11 contacts (skipped as data) | BIDS TSV | 11 | CINGL12 CINGL13 PHR7 PLL15 PLL16 | · | 83 | 0 | · | aH_R1 A_R10 A_R12 aI_L18 pI_L1 pI_L2 pI_L3 pI_L4 pI_L5 pI_L6 pI_L7 pI_L8 pI_L9 pI_L10 pI_L11 pI_L12 pI_L13 pI_L14 pI_L15 pI_L16 pI_R1 pI_R2 pI_R3 pI_R4 pI_R5 pI_R6 pI_R7 pI_R8 pI_R9 pI_R10 pI_R11 pI_R12 pI_R13 pI_R14 pI_R15 pI_R16 pH_R12 aI_L2 aI_L3 aI_L4 aI_L5 A_L4 pI_L14 CinG_L2 |
-| EL038 | Bern | 2026-09-30 21:42 | 8.6 | ok | none | 148 | 91 | 11 | · | 5 | WM reference, 9 contacts (skipped as data) | BIDS TSV | 9 | CINGR2 STOR1 | · | 66 | 0 | · | pH_R7 aH_L3 A_L7 |
+| EL038 | Bern | 2026-09-30 21:42 | 8.6 | ok | none | 148 | 91 | 11 | · | 10 | WM reference, 9 contacts (skipped as data) | BIDS TSV | 9 | CINGR2 STOR1 | · | 61 | 0 | · | pH_R7 aH_L3 A_L7 pH_R1 pH_R2 LinG_R5 LinG_R6 A_L1 |
 | EL040 | Bern | 2026-09-30 20:49 | 18.6 | ok | 100-1900 s | 171 | 139 | 3 | · | 11 | WM reference, 9 contacts (skipped as data) | BIDS TSV | 9 | · | · | 122 | 0 | · | FP-R10 FP-R11 FP-R12 FP-R13 FP-R14 FP-R15 PlaT_L1 PlaT_L2 PlaT_L3 |
 | EL042 | Bern | 2026-09-30 21:18 | 13.4 | ok | none | 153 | 118 | 2 | · | 0 | WM reference, 12 contacts (skipped as data) | BIDS TSV | 12 | · | · | 103 | 0 | · | · |
 | EL043 | Bern | 2026-09-30 21:04 | 14.5 | ok | 1810-4650 s | 140 | 107 | 11 | · | 3 | WM reference, 28 contacts (skipped as data) | BIDS TSV | 28 | · | · | 64 | 0 | · | sSMG8 sSMG9 sSMG10 |
@@ -52,7 +52,7 @@
 | EL035 | 53 | 45 | 45 | 98 | 98 | 54 | 50 | 50 | 98 | 98 | 53 | 44 | 44 | 98 | 98 | 103x300 | 0 | audio/picture/reading |
 | EL036 | 53 | 45 | 45 | 48 | 48 | 54 | 45 | 45 | 48 | 48 | 53 | 35 | 35 | 48 | 48 | 103x300 | 0 | audio/picture/reading |
 | EL037 | 53 | 33 | 33 | 83 | 83 | 54 | 39 | 39 | 83 | 83 | 53 | 39 | 39 | 83 | 83 | 103x300 | 0 | audio/picture/reading |
-| EL038 | 53 | 28 | 28 | 66 | 66 | 51 | 51 | 51 | 66 | 66 | 53 | 42 | 42 | 66 | 66 | 103x300 | 0 | audio/picture/reading |
+| EL038 | 53 | 28 | 28 | 61 | 66 | 51 | 51 | 51 | 61 | 66 | 53 | 42 | 42 | 61 | 66 | 103x300 | 0 | audio/picture/reading |
 | EL040 | 53 | 48 | 48 | 122 | 122 | 54 | 47 | 47 | 122 | 122 | 53 | 39 | 39 | 122 | 122 | 103x300 | 0 | audio/picture/reading |
 | EL042 | 53 | 46 | 46 | 103 | 103 | 54 | 44 | 44 | 103 | 103 | 53 | 42 | 42 | 103 | 103 | 103x300 | 0 | audio/picture/reading |
 | EL043 | 53 | 25 | 22 | 64 | 64 | 54 | 25 | 25 | 64 | 64 | 53 | 20 | 20 | 64 | 64 | 103x300 | 0 | audio/picture/reading |
@@ -87,7 +87,7 @@
 | EL035 | interp | per shaft | · | 110/112 over 14 shafts | 1 | 38 | 111/112 over 14 shafts | 0 | 36 | 110/112 over 14 shafts | 0 | 34 | 109 | 98 | 98 | 196 | 98 |
 | EL036 | interp | per shaft | 50.0 | 54/56 over 7 shafts | 0 | 8 | 55/56 over 7 shafts | 0 | 7 | 54/56 over 7 shafts | 0 | 8 | 23 | 48 | 48 | 96 | 48 |
 | EL037 | interp | per shaft | 50.0 | 88/88 over 11 shafts | 0 | 8 | 88/88 over 11 shafts | 0 | 7 | 88/88 over 11 shafts | 0 | 5 | 20 | 83 | 83 | 166 | 83 |
-| EL038 | interp | per shaft | · | 72/72 over 9 shafts | 0 | 8 | 72/72 over 9 shafts | 0 | 8 | 72/72 over 9 shafts | 0 | 9 | 25 | 66 | 66 | 132 | 66 |
+| EL038 | interp | per shaft | · | 72/72 over 9 shafts | 0 | 8 | 72/72 over 9 shafts | 0 | 8 | 72/72 over 9 shafts | 0 | 9 | 25 | 61 | 61 | 122 | 61 |
 | EL040 | interp | per shaft | 50.0 | 128/128 over 16 shafts | 0 | 9 | 128/128 over 16 shafts | 0 | 14 | 128/128 over 16 shafts | 0 | 13 | 36 | 122 | 122 | 244 | 122 |
 | EL042 | interp | per shaft | · | 79/80 over 10 shafts | 0 | 10 | 79/80 over 10 shafts | 0 | 9 | 80/80 over 10 shafts | 0 | 11 | 30 | 103 | 103 | 206 | 103 |
 | EL043 | interp | per shaft | · | 80/80 over 10 shafts | 0 | 5 | 80/80 over 10 shafts | 0 | 4 | 80/80 over 10 shafts | 0 | 5 | 14 | 64 | 64 | 128 | 64 |
@@ -142,9 +142,9 @@
 - **EL037** bad (47): pH_R7 aH_R1 A_R10 A_R12 CinG_L12 CinG_L13 aI_L18 pI_L1 pI_L2 pI_L3 pI_L4 pI_L5 pI_L6 pI_L7 pI_L8 pI_L9 pI_L10 pI_L11 pI_L12 pI_L13 pI_L14 pI_L15 pI_L16 pI_R1 pI_R2 pI_R3 pI_R4 pI_R5 pI_R6 pI_R7 pI_R8 pI_R9 pI_R10 pI_R11 pI_R12 pI_R13 pI_R14 pI_R15 pI_R16 pH_R12 aI_L2 aI_L3 aI_L4 aI_L5 A_L4 pI_L14 CinG_L2  
   WM reference (11): AHL8 AHR8 ALL11 AR9 CINGL1 ENTGL6 OFL13 OFL4 OFL5 PHL12 PHR1  
   cubes: same names as the old tree
-- **EL038** bad (5): pH_R7 aH_L3 STO_R1 A_L7 CinG_R2  
+- **EL038** bad (10): pH_R7 aH_L3 STO_R1 A_L7 CinG_R2 pH_R1 pH_R2 LinG_R5 LinG_R6 A_L1  
   WM reference (9): ALR10 LINGR2 LINGR9 OFR4 OFR5 PHL5 PHL6 PHL7 PHL8  
-  cubes: same names as the old tree
+  change vs old tree: audio -5 [bad 5: A_L1 LinG_R5 LinG_R6 pH_R1 pH_R2]; picture -5 [bad 5: A_L1 LinG_R5 LinG_R6 pH_R1 pH_R2]; reading -5 [bad 5: A_L1 LinG_R5 LinG_R6 pH_R1 pH_R2]
 - **EL040** bad (11): FP-R10 FP-R11 FP-R12 FP-R13 FP-R14 FP-R15 PlaT_L1 PlaT_L2 PlaT_L3 aH_R13 pPVH_L2  
   WM reference (9): AHL10 AR6 CINGL1 CINGR1 CINGR13 IPVHR8 OFR15 STGR2 STGR9  
   cubes: same names as the old tree

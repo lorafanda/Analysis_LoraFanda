@@ -676,8 +676,8 @@ def main() -> None:
     for raw in ids:
         pid = pid_of(raw)
         if partial and pid not in args.patients:
-            if pid in old_by_pat:                      # kept as it is, files included
-                contacts.extend(old_by_pat[pid])
+            if pid in old_by_pat or pid in old_pats:   # kept as it is, files included (a patient with no contact rows - PAT_6684 - keeps its card)
+                contacts.extend(old_by_pat.get(pid, []))
                 patients.append(old_pats.get(pid, {"patient": pid, "ran": False, "status": "not in bundle", "trials": {}, "n_status": {}}))
             continue
         if partial and not args.relabel:               # this patient's old files go

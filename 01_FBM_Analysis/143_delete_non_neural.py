@@ -6,6 +6,13 @@ the patients already in the 03_ERSP tree.
     python 143_delete_non_neural.py              list, per patient - deletes nothing
     python 143_delete_non_neural.py --delete     delete, and print what went per patient
     python 143_delete_non_neural.py --patients EL035 PAT_3455 [--delete]
+    python 143_delete_non_neural.py --bad-listed --patients EL038 [--delete]
+                                                 the same sweep for the contacts in cfg.bad_channels_manual:
+                                                 a contact bad-listed AFTER its patient was run, removed from
+                                                 the tree without a rerun (its cubes, halves, images, figures
+                                                 and score rows). Use it only when nothing else in the patient
+                                                 depends on the contact - not a reference contact; a rerun is
+                                                 still what makes the notch decide without it.
 
 WHY. For EL and HUG patients 140's aux drop used a short prefix list (MRK, MKR, X, ECG, EX,
 AUDIO), so EKG-, EMG-, the HUG photodiode ("photo") and PAT_3975's E1-E4 inputs survived it:
@@ -74,8 +81,12 @@ def channel_of(fname: str):
     return m.group("ch") if m else None
 
 
-def scan_patient(pdir: Path):
-    """-> (files {channel: [paths]}, tables [(path, n_rows, channels)], kept {channel: n photodiode figures left})"""
+def scan_patient(pdir: Path, is_target=None, keep_photodiode=True):
+    """-> (files {channel: [paths]}, tables [(path, n_rows, channels)], kept {channel: n photodiode figures left})
+
+    `is_target(channel_name)` says which channels go; the default is the non-neural test."""
+    if is_target is None:
+        is_target = io._is_non_neural
     files, tables, kept = {}, [], {}
     lm = pdir / cfg.block_name
     if not lm.is_dir():
@@ -89,14 +100,14 @@ def scan_patient(pdir: Path):
                 except Exception as e:
                     print(f"   [warn] {p.name}: {type(e).__name__}: {e}")
                     continue
-                hit = ch[ch.map(io._is_non_neural)]
+                hit = ch[ch.map(is_target)]
                 if len(hit):
                     tables.append((p, int(len(hit)), sorted(hit.unique())))
                 continue
             c = channel_of(n)
-            if c and io._is_non_neural(c):
+            if c and is_target(c):
                 rel = Path(root).relative_to(lm).as_posix() if Path(root) != lm else ""
-                if is_photodiode(c) and any(rel == k or rel.startswith(k + "/") for k in KEEP_PHOTODIODE_IN):
+                if keep_photodiode and is_photodiode(c) and any(rel == k or rel.startswith(k + "/") for k in KEEP_PHOTODIODE_IN):
                     kept[c] = kept.get(c, 0) + 1          # the trigger check: stays
                     continue
                 files.setdefault(c, []).append(Path(root) / n)
@@ -107,7 +118,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--delete", action="store_true", help="delete (default: list only)")
     ap.add_argument("--patients", nargs="*", help="folder names in the tree (PAT_/EL form); default: every patient")
+    ap.add_argument("--bad-listed", action="store_true",
+                    help="instead of the non-neural channels: the contacts in cfg.bad_channels_manual of each patient "
+                         "(for a contact bad-listed after its patient was run, removed without a rerun)")
     a = ap.parse_args()
+    what = "bad-listed contacts" if a.bad_listed else "non-neural channels"
 
     pdirs = sorted(p for p in TREE.iterdir() if (p / cfg.block_name).is_dir())
     if a.patients:
@@ -116,7 +131,13 @@ def main() -> int:
 
     log, locked, tot_f, tot_r = [], [], 0, 0
     for pdir in pdirs:
-        files, tables, kept = scan_patient(pdir)
+        if a.bad_listed:
+            bad = {io.normalize_label(b) for b in getattr(cfg, "bad_channels_manual", {}).get(pdir.name, [])}
+            target = (lambda ch, _bad=bad: io.normalize_label(ch) in _bad)
+            files, tables, kept = scan_patient(pdir, target, keep_photodiode=False) if bad else ({}, [], {})
+        else:
+            target = io._is_non_neural
+            files, tables, kept = scan_patient(pdir)
         keep_note = ("   [kept: " + ", ".join(f"{k} {v} ERSP/HFA figures" for k, v in sorted(kept.items())) + "]") if kept else ""
         if not files and not tables:
             print(f"{pdir.name:<10} nothing to remove{keep_note}")
@@ -147,7 +168,7 @@ def main() -> int:
             if a.delete:
                 try:
                     d = pd.read_csv(p, sep="\t")
-                    keep = ~d["channel"].astype(str).map(io._is_non_neural)
+                    keep = ~d["channel"].astype(str).map(target)
                     tmp = p.with_suffix(".tsv.tmp")
                     d[keep].to_csv(tmp, sep="\t", index=False)
                     os.replace(tmp, p); done = "rows removed"
@@ -155,7 +176,7 @@ def main() -> int:
                     done = "LOCKED"; locked.append(p)
             log.append(dict(patient=pdir.name, channel=" ".join(cs), kind="score rows", what=str(p.relative_to(TREE)), rows=n, result=done))
 
-    print(f"\n{tot_f} files and {tot_r} score rows of non-neural channels"
+    print(f"\n{tot_f} files and {tot_r} score rows of {what}"
           + (" deleted" if a.delete else " found (nothing deleted)")
           + (f"; {len(locked)} could not be touched (open in another program):" if locked else ""))
     for f in locked:
@@ -163,7 +184,7 @@ def main() -> int:
     if log and a.delete:                                  # a listing run leaves no trace in the tree
         out = TREE / "logs"
         out.mkdir(exist_ok=True)
-        path = out / f"non_neural_deleted_{datetime.now():%Y%m%d_%H%M%S}.tsv"
+        path = out / f"{'bad_listed' if a.bad_listed else 'non_neural'}_deleted_{datetime.now():%Y%m%d_%H%M%S}.tsv"
         pd.DataFrame(log).to_csv(path, sep="\t", index=False)
         print(f"list -> {path}")
     return 1 if locked else 0
