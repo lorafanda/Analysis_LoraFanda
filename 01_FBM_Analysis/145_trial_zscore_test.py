@@ -96,6 +96,7 @@ def main() -> int:
     m.WRITE_MONTAGE = False
     m.WRITE_ERSP_PLOTS = bool(a.keep_ersp_plots)
     m.WRITE_HG_PLOTS = True
+    m.WRITE_SIGNAL_PLOTS = False      # the signal-trace twin (2026-10-02) is not one of this tree's products
     m.WRITE_CUBES = False
     m.WRITE_HALVES = False
     m.WRITE_CLEAN_PNG = True

@@ -87,6 +87,7 @@ run_root_raw        = os.path.join(cfg.outputs_root, RAWONLY_SCRIPT_NAME)
 WRITE_MONTAGE      = True   # Report/<pid>_montage_overview.png
 WRITE_ERSP_PLOTS   = True   # ERSP/<cond>/*.png          (the per-channel ERSP figures)
 WRITE_HG_PLOTS     = True   # HFA/<cond>/*.png           (the per-trial high-frequency rasters; "HG" until 09-30)
+WRITE_SIGNAL_PLOTS = True   # Signal/<cond>/*.png        (the same rows as traces of the cleaned signal, 2026-10-02)
 WRITE_CUBES        = True   # ERSP_matrix/<cond>/*.npy   (what stage 02 clusters)
 WRITE_HALVES       = True   # ERSP_halves/<cond>/*.npy   (the split-half gate)
 WRITE_CLEAN_PNG    = True   # ERSP_clean/<cond>/*_CLEAN.png
@@ -662,6 +663,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                                          cond_groups=cond_groups, save_dir=report_dir, patient_id=patient_id)
             ersp_root = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "ERSP")
             hg_root   = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, cfg.HFA_DIR)
+            sig_root  = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
+                                              getattr(cfg, "SIGNAL_DIR", "Signal"))
 
         if RUN_CLUSTER_EXPORT:
             mat_root = _ensure(io.patient_output_dir(run_root_raw, patient_id, cfg.block_name, "ERSP_matrix"))
@@ -680,6 +683,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             if RUN_ERSP_PIPELINE:
                 ersp_dir = _ensure(os.path.join(ersp_root, cond))
                 hg_dir   = _ensure(os.path.join(hg_root, cond))
+                sig_dir  = os.path.join(sig_root, cond)       # created by the plot when it writes
             if RUN_CLUSTER_EXPORT:
                 out_mat  = _ensure(os.path.join(mat_root, cond))
                 out_half = os.path.join(io.patient_output_dir(run_root_raw, patient_id,
@@ -805,6 +809,26 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                         trial_z=_hg_trial_z(res, _hg_all),
                         vmin=cfg.hg_vmin, vmax=cfg.hg_vmax,
                         save_dir=hg_dir, add_separators=False, sort_ascending=True,
+                        trial_end_indices=(_hg_all["te"] if _hg_all is not None else te_c),
+                        sort_by="stim")
+                # the HFA raster's twin (2026-10-02): the same trials, order, marks and rejected
+                # rows, each row the broadband cleaned voltage as a trace, one µV scale for the cohort
+                if RUN_ERSP_PIPELINE and WRITE_SIGNAL_PLOTS:
+                    fe.plot_signal_trials(
+                        signals=sig_c, fs=fs,
+                        onsets=(_hg_all["on"] if _hg_all is not None else on_c),
+                        offsets=(_hg_all["off"] if _hg_all is not None else off_c),
+                        channel_idx=ci,
+                        chan_name=chan_name, patient_id=patient_id, condition=cond, reref_type=reref,
+                        time_window=cfg.time_window, baseline_w=cfg.baseline_w,
+                        uv_per_row=getattr(cfg, "signal_plot_uv_per_row", 300.0),
+                        n_rows_fixed=getattr(cfg, "signal_plot_rows", 58),
+                        rejected_trials=(
+                            [int(_hg_all["keep_pos"][i]) for i in res.get("dropped_trials", [])]
+                            if _hg_all is not None else res.get("dropped_trials")),
+                        exclude_reasons=(_hg_all["reason"] if _hg_all is not None else None),
+                        trial_z=_hg_trial_z(res, _hg_all),
+                        save_dir=sig_dir, sort_ascending=True,
                         trial_end_indices=(_hg_all["te"] if _hg_all is not None else te_c),
                         sort_by="stim")
 

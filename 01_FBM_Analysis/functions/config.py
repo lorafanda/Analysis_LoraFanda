@@ -448,6 +448,16 @@ outputs_root = r"\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_Lora
 # scripts still name 04_* and will be moved when they are next run.
 ERSP_TREE = "03_ERSP"
 HFA_DIR = "HFA"          # the per-trial raster folder and file stem (<pid>_<cond>_<ref>_HFAtrials_<ch>.png)
+# THE CLEANED SIGNAL, TRIAL BY TRIAL (2026-10-02, Lora): the HFA raster's twin - same trials,
+# order, marks and rejected rows, but each row is the broadband cleaned voltage as a trace
+# (<pid>/LM/Signal/<cond>/<pid>_<cond>_<ref>_SIGtrials_<ch>.png). ONE scale for the whole
+# cohort: a row is signal_plot_uv_per_row µV tall in every figure and the y axis always
+# spans signal_plot_rows rows, so deflections compare across patients. 300 µV is ~6-8
+# robust SDs of a typical channel (30-50 µV on all three systems, measured 10-02): an
+# ordinary trial stays on its row, an ictal spike runs into its neighbours.
+SIGNAL_DIR = "Signal"
+signal_plot_uv_per_row = 300.0
+signal_plot_rows = 58
 # script_name = "03_ersp_LM_20250923_masked"  # optional; your driver sets this itself
 
 # ── TRIAL REJECTION IN THE ERSP AVERAGE ──────────────────────────────────────

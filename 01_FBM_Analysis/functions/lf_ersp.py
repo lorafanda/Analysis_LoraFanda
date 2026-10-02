@@ -1878,6 +1878,233 @@ def plot_hg_trials(
     return out_path
 
 # ----------------------------
+# The cleaned signal, trial by trial (the HFA raster's twin, 2026-10-02)
+# ----------------------------
+def plot_signal_trials(
+    signals,
+    fs,
+    onsets,
+    offsets,
+    channel_idx,
+    *,
+    chan_name=None,
+    channel_names=None,
+    patient_id="",
+    condition="",
+    reref_type="WM",
+    time_window=(-1.0, 3.0),
+    baseline_w=(-0.6, -0.1),
+    uv_per_row=300.0,             # THE SAME FOR EVERY PATIENT: one trial row is this many µV tall
+    n_rows_fixed=58,              # y axis always spans this many rows, so the row pitch never changes
+    figsize=(8, 10), dpi=200,
+    save_dir=None,
+    sort_ascending=True,
+    trial_end_indices=None,
+    sort_by="stim",
+    rejected_trials=None,         # indices (ORIGINAL order) the ERSP average dropped
+    exclude_reasons=None,         # per-trial reason a trial never reached the ERSP
+    trial_z=None,                 # per-trial z of the high-gamma score, ORIGINAL order
+    max_plot_hz=512.0,            # traces are strided down to about this rate for drawing only
+):
+    """
+    The HFA raster with the colour replaced by the signal itself.
+
+    Same trials, same order, same marks as plot_hg_trials - sorted by stimulus duration,
+    onset line at 0, magenta offset ticks, trial numbers on the left, the trial z on the
+    right, the excluded trials drawn last in red with their reason - but each row is the
+    BROADBAND CLEANED VOLTAGE of that trial (the signal 140 hands to the ERSP: after the
+    reference and the notch, nothing else), as a trace.
+
+    WHAT MAKES TWO FIGURES COMPARABLE. One row is `uv_per_row` µV tall in every figure of
+    every patient, and the y axis always spans `n_rows_fixed` rows, so a millimetre of
+    deflection is the same number of µV everywhere; a patient with 30 trials leaves the
+    top of the axis empty rather than stretching. The three systems are all in µV at the
+    same scale (robust SD per channel 30-50 µV, checked 2026-10-02 on Bern h5, HUG TRC
+    and MicroEPI .mat), which is what makes one constant possible. The scale bar is drawn
+    beside the SHORTEST kept trial, where the row ends early and leaves room.
+
+    Each trial has its own pre-stimulus mean (baseline_w) subtracted - a constant per
+    trial, so the trace sits on its row; it is not a filter and removes no dynamics. A
+    deflection larger than the row runs into the neighbours on purpose: that overlap is
+    the ictal spike or the artefact this figure exists to show.
+
+    The ordering block below is plot_hg_trials' own, kept line for line so the two
+    figures of a channel can be read side by side row for row.
+    Returns the saved PNG path.
+    """
+    import numpy as _np
+    import matplotlib.pyplot as _plt
+    from matplotlib.collections import LineCollection as _LC
+
+    fs = float(fs)
+    sig = signals[:, int(channel_idx)].astype(float)
+    onsets = _np.asarray(onsets, dtype=int)
+    offsets = _np.asarray(offsets, dtype=int) if (offsets is not None and len(offsets)) else _np.array([], dtype=int)
+    trialend = _np.asarray(trial_end_indices, dtype=int) if trial_end_indices is not None else None
+    if onsets.size == 0:
+        raise ValueError("plot_signal_trials: no onsets provided.")
+    if offsets.size and offsets.size != onsets.size:
+        n = min(onsets.size, offsets.size)
+        onsets, offsets = onsets[:n], offsets[:n]
+    if trialend is not None and trialend.size != onsets.size:
+        n = min(onsets.size, trialend.size)
+        onsets = onsets[:n]
+        if offsets.size:
+            offsets = offsets[:n]
+        trialend = trialend[:n]
+    n_trials = onsets.size
+
+    _excl = None
+    if exclude_reasons is not None:
+        _excl = [str(r or "") for r in exclude_reasons]
+        if len(_excl) != n_trials:
+            raise ValueError(f"plot_signal_trials: exclude_reasons has {len(_excl)} entries "
+                             f"for {n_trials} trials.")
+    # an excluded trial can be unbounded; clip it to the longest trial that was kept
+    _cap = None
+    if _excl is not None and trialend is not None:
+        _kept_m = _np.array([not r for r in _excl], dtype=bool)
+        if _kept_m.any():
+            _cap = int(_np.max(trialend[_kept_m] - onsets[_kept_m]))
+
+    q = max(1, int(round(fs / float(max_plot_hz))))       # drawing stride only
+    traces, t_vecs, off_rel_s, total_s = [], [], [], []
+    for i, on in enumerate(onsets):
+        s = max(0, on + int(round(baseline_w[0] * fs)))
+        if trialend is not None:
+            e = int(trialend[i])
+        elif i < n_trials - 1:
+            e = int(onsets[i + 1])
+        elif i < offsets.size:
+            e = int(offsets[i] + 2.0 * fs)
+        else:
+            e = int(on + (time_window[1] - time_window[0]) * fs)
+        if _excl is not None and _cap is not None and _excl[i]:
+            e = min(e, int(on) + _cap)
+        e = max(s + 1, min(e, len(sig)))
+        seg = sig[s:e]
+        t_rel = (_np.arange(len(seg)) + s - on) / fs
+        bmask = (t_rel >= baseline_w[0]) & (t_rel < baseline_w[1])
+        if not _np.any(bmask):
+            bmask = _np.zeros(len(seg), dtype=bool); bmask[:max(1, len(seg) // 10)] = True
+        seg = seg - float(_np.mean(seg[bmask]))            # the trial's own pre-stimulus level
+        traces.append(seg[::q]); t_vecs.append(t_rel[::q])
+        off_rel_s.append((offsets[i] - on) / fs if i < offsets.size else _np.nan)
+        total_s.append(max(0.0, (e - on) / fs))
+
+    # ---- order: plot_hg_trials' rules (sort metric, then the excluded ones last by reason)
+    sb = (sort_by or "stim").lower()
+    can_resp = (trialend is not None) and (offsets.size == onsets.size)
+    can_total = trialend is not None
+    can_stim = offsets.size == onsets.size
+    if sb == "resp" and can_resp:
+        metric = (trialend - offsets) / fs
+    elif sb == "total" and can_total:
+        metric = (trialend - onsets) / fs
+    elif sb == "none":
+        metric = None
+    else:
+        metric = (offsets - onsets) / fs if can_stim else None
+    if metric is not None:
+        metric_f = _np.nan_to_num(metric.astype(float), nan=(_np.inf if sort_ascending else -_np.inf))
+        order = _np.argsort(metric_f) if sort_ascending else _np.argsort(-metric_f)
+    else:
+        order = _np.arange(n_trials)
+    _why = {}
+    if rejected_trials is not None:
+        for i in rejected_trials:
+            if 0 <= int(i) < n_trials:
+                _why[int(i)] = "power (dropped from the ERSP average)"
+    if _excl is not None:
+        for i, r in enumerate(_excl):
+            if r:
+                _why[i] = r
+    _rej_orig = set(_why)
+    if _rej_orig:
+        _keep_o = [int(o) for o in order if int(o) not in _rej_orig]
+        _rej_o = sorted((int(o) for o in order if int(o) in _rej_orig), key=lambda o: (_why[o], o))
+        order = _np.asarray(_keep_o + _rej_o, dtype=int)
+    _n_rej = len(_rej_orig)
+    _counts = {}
+    for _r in _why.values():
+        _counts[_r] = _counts.get(_r, 0) + 1
+    _rej_src = " · ".join(f"{v} {kk}" for kk, v in sorted(_counts.items(), key=lambda kv: (-kv[1], kv[0])))
+
+    if chan_name is None:
+        chan_name = (str(channel_names[channel_idx]) if (channel_names is not None and 0 <= channel_idx < len(channel_names))
+                     else f"Ch{channel_idx}")
+    title = (f"{patient_id} – {condition} – {reref_type}-ref cleaned signal: {chan_name}"
+             f"  |  sorted by: {sb}  |  {float(uv_per_row):g} µV per row")
+    if _n_rej:
+        import textwrap as _tw
+        _head = f"{_n_rej} of {n_trials} trials excluded, drawn at the end - {_rej_src}"
+        title += "\n" + "\n".join(_tw.wrap(_head, max(60, int(11.5 * float(figsize[0])))))
+    fname = f"{patient_id}_{condition}_{reref_type}_SIGtrials_{chan_name}.png"
+    out_path = os.path.join(save_dir, fname) if save_dir else fname
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+
+    t0 = min(tv[0] for tv in t_vecs)
+    t1 = max(tv[-1] for tv in t_vecs)
+    n_rows = max(int(n_rows_fixed), n_trials)
+    fig, ax = _plt.subplots(figsize=figsize, dpi=dpi)
+    segs_k, segs_r = [], []
+    for row, o in enumerate(order, start=1):
+        y = row + traces[int(o)] / float(uv_per_row)
+        (segs_r if int(o) in _rej_orig else segs_k).append(_np.column_stack([t_vecs[int(o)], y]))
+    if segs_k:
+        ax.add_collection(_LC(segs_k, colors="#1f2937", linewidths=0.32, rasterized=True, zorder=2))
+    if segs_r:
+        ax.add_collection(_LC(segs_r, colors="#c1121f", linewidths=0.32, rasterized=True, zorder=2))
+    ax.axvline(0.0, color="k", lw=1.0, zorder=3)
+    off_sorted = _np.asarray(off_rel_s, dtype=float)[order]
+    for row, x_ in enumerate(off_sorted, start=1):
+        if _np.isfinite(x_):
+            ax.plot([x_, x_], [row - 0.42, row + 0.42], color="m", lw=0.9, zorder=4)
+    for row, o in enumerate(order, start=1):
+        _is_rej = int(o) in _rej_orig
+        ax.text(t0 - 0.02, row, str(int(o) + 1), fontsize=4.6, va="center", ha="right", clip_on=False,
+                color=("#c1121f" if _is_rej else "k"), fontweight=("bold" if _is_rej else "normal"))
+        if trial_z is not None and int(o) < len(trial_z):
+            _zv = float(trial_z[int(o)])
+            if _np.isfinite(_zv):
+                _zc = "#c1121f" if _zv >= 3.0 else ("#d97706" if _zv >= 2.0 else "#6b7280")
+                ax.text(t1 + 0.02, row, f"{_zv:+.1f}", fontsize=4.6, color=_zc, va="center", ha="left",
+                        fontweight=("bold" if _zv >= 3.0 else "normal"), clip_on=False, zorder=6)
+        if _is_rej:
+            ax.text(t1, row, " " + _why[int(o)] + " ", fontsize=4.2, color="#c1121f", va="center", ha="right",
+                    zorder=6, bbox=dict(facecolor="white", edgecolor="none", alpha=0.72, pad=0.5))
+    if _n_rej and _n_rej < n_trials:
+        ax.hlines(n_trials - _n_rej + 0.5, t0, t1, colors="#c1121f", linestyles="--", linewidth=0.9, zorder=5)
+
+    # THE SCALE BAR, beside the shortest kept trial: its row ends first, so there is room
+    kept_rows = [(row, t_vecs[int(o)][-1]) for row, o in enumerate(order, start=1) if int(o) not in _rej_orig]
+    if kept_rows:
+        r_s, x_end = min(kept_rows, key=lambda rc: rc[1])
+        xb = x_end + 0.03 * (t1 - t0)
+        if xb + 0.10 * (t1 - t0) > t1:                    # every trial is as long as the axis: put it inside the right edge
+            xb = t1 - 0.12 * (t1 - t0)
+        ax.plot([xb, xb], [r_s - 0.5, r_s + 0.5], color="#0f766e", lw=2.0, solid_capstyle="butt", zorder=7)
+        ax.text(xb + 0.008 * (t1 - t0), r_s, f"{float(uv_per_row):g} µV", fontsize=6, color="#0f766e",
+                va="center", ha="left", zorder=7,
+                bbox=dict(facecolor="white", edgecolor="none", alpha=0.8, pad=0.6))
+
+    ax.set_xlim(t0, t1)
+    ax.set_ylim(0.2, n_rows + 0.8)
+    ax.set_yticks([])
+    ax.set_xlabel("Time (s) relative to onset   (magenta = stimulus offset)", fontsize=8)
+    ax.set_ylabel("Trials (sorted)", fontsize=8, labelpad=14)
+    ax.tick_params(labelsize=7)
+    ax.set_title(title, fontsize=8, linespacing=1.35)
+    for sp in ("top", "right", "left"):
+        ax.spines[sp].set_visible(False)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=dpi, facecolor="white")
+    _plt.close(fig)
+    return out_path
+
+
+# ----------------------------
 # Per-grid Common Average Reference (CAR)
 # ----------------------------
 def apply_grid_car(
