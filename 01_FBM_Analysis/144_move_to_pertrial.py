@@ -20,10 +20,9 @@ every reader asks cfg.product_dir(), which looks in PerTrial/ first and in the o
 when PerTrial/ has no such folder - so a tree can be read before, during and after this move.
 
 A move is a rename on the same volume: instant, and no file is rewritten. If the destination
-already exists (a patient re-run after the change has written PerTrial/HFA while an old HFA/ is
-still there), the OLD folder's files are moved in only where the new one has no file of that
-name - a newer figure is never replaced by an older one - and what is left over is reported,
-not deleted.
+already exists the two folders are merged file by file and the NEWER file wins, whichever
+folder it is in; the older duplicate is deleted. So it is safe to run again after a process
+that was still writing to the old places has finished.
 
 RUN IT WHEN NO 140 PROCESS IS WRITING. A run started before the change still writes to the
 old places; run this again afterwards (it is safe to repeat).
@@ -49,20 +48,33 @@ def n_files(d: Path) -> int:
 
 
 def merge(src: Path, dst: Path, apply: bool) -> tuple[int, int]:
-    """Move src's files into an existing dst where dst has no such file. (moved, left)"""
+    """Move src's files into an existing dst; where both have a file of that name THE NEWER ONE
+    WINS, whichever side it is on, and the older one is deleted. (moved, older dropped)
+
+    Both directions happen: a patient re-run after the change has newer files in PerTrial/, and
+    a process started before the change (149 on 2026-10-02) wrote NEWER figures into the old
+    place after the first move - 16 patients had the 200 µV Signal figures in Signal/ and the
+    300 µV ones in PerTrial/Signal/."""
     moved = left = 0
     for root, _dirs, files in os.walk(src):
         rel = Path(root).relative_to(src)
         for f in files:
             a, b = Path(root) / f, dst / rel / f
             if b.exists():
-                left += 1                       # the newer one stays; the old one is reported
+                if a.stat().st_mtime > b.stat().st_mtime:      # the old place holds the newer file
+                    if apply:
+                        os.replace(a, b)
+                    moved += 1
+                else:                                           # PerTrial already has the newer one
+                    if apply:
+                        a.unlink()
+                    left += 1
                 continue
             if apply:
                 b.parent.mkdir(parents=True, exist_ok=True)
                 os.replace(a, b)
             moved += 1
-    if apply and left == 0:                      # nothing left behind: clear the empty shell
+    if apply:                                    # every file went one way or the other: clear the empty shell
         for root, dirs, files in os.walk(src, topdown=False):
             if not files and not dirs:
                 try:
@@ -112,11 +124,9 @@ def main() -> int:
                 tot += n
             else:
                 moved, left = merge(src, dst, a.apply)
-                notes.append(f"{old} -> {new}  {moved} files merged"
-                             + (f", {left} older duplicates left in {old}/" if left else ""))
+                notes.append(f"{old} -> {new}  {moved} files merged (newer wins)"
+                             + (f", {left} older duplicates in {old}/ {'deleted' if a.apply else 'would be deleted'}" if left else ""))
                 tot += moved
-                if left:
-                    problems.append(f"{pdir.name}/{old}: {left} files stay - {new} already has newer ones of the same name")
         print(f"{pdir.name:<10} " + ("  |  ".join(notes) if notes else "nothing to move"))
 
     print(f"\n{tot} files {'moved' if a.apply else 'would move'}")
