@@ -167,7 +167,15 @@ bad_channels_manual = {
             + ["CinG_R1", "CinG_R3", "CinG_R5", "CinG_R7"] + [f"aI_R{i}" for i in range(1, 8)],
     # EL033, 2026-10-02, by visual review of the 03_ERSP tree: pH_R7, aH_R12 and the whole
     # aH_L shaft (12 recorded, 11 had cubes). None is in the white-matter reference.
-    "EL033": ["pH_R7", "aH_R12"] + [f"aH_L{i}" for i in range(1, 13)],
+    # PHG_R4 (2026-10-02, later the same day) was one of the 10 white-matter reference contacts.
+    # After the reference its 60-390 Hz floor sits 18.2 / 14.8 / 8.3 dB above the median data
+    # contact (audio / picture / reading block) and it carries 98-102 % of the line every data
+    # contact shares, at 9.0x their amplitude - one tenth of it went into everything. Simulated
+    # without it: the lines before the notch go from 17-37 dB to 1-12 dB, the floor of the
+    # audio block drops 7-10 dB (picture 0.5-2.3, reading 0.2-0.4), and no band is left more
+    # than 1 dB above the floor (26 of 56 were > 3 dB in audio). The reference stays at 9.
+    # The 13 contacts above were judged by eye on cubes that carried that noise.
+    "EL033": ["pH_R7", "aH_R12"] + [f"aH_L{i}" for i in range(1, 13)] + ["PHG_R4"],
     "EL036": [f"pHG_R{i}" for i in range(1, 5)]+[f"pHG_R{i}" for i in range(8, 13)],
     "EL037": ["pH_R7","aH_R1","A_R10","A_R12","CinG_L12","CinG_L13","aI_L18"]
               + [f"pI_L{i}" for i in range(1, 17)]
