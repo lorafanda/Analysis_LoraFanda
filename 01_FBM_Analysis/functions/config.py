@@ -148,7 +148,13 @@ bad_channels_manual = {
     "PAT_3390": ["PHG12"],
     "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
     "EL030": ["EntG_R18"],  # example; fill after visual/clinical review
-    "EL035":[f"EntG_R{i}" for i in range(7,12)]+[f"Fopc_R{i}" for i in range(1,6)]+[f"pHG_R{i}" for i in range(10, 13)],
+    # EL035, 2026-10-02 (Lora): the two shafts whose notch leaves a line above the floor - CinG_R
+    # and aI_R, 6 of 24 bands each still > 3 dB up at 250 / 350 Hz in the block PSD (notch audit
+    # of the 09-30 run). The data contacts of both are listed: CinG_R1/3/5/7 (CinG_R2/4/6/8 are
+    # WM reference contacts and stay in the reference) and aI_R1-7. For the record, their cubes
+    # showed no harmonic row more than 0.4 dB off its neighbours, like the rest of the patient.
+    "EL035":[f"EntG_R{i}" for i in range(7,12)]+[f"Fopc_R{i}" for i in range(1,6)]+[f"pHG_R{i}" for i in range(10, 13)]
+            + ["CinG_R1", "CinG_R3", "CinG_R5", "CinG_R7"] + [f"aI_R{i}" for i in range(1, 8)],
     "EL036": [f"pHG_R{i}" for i in range(1, 5)]+[f"pHG_R{i}" for i in range(8, 13)],
     "EL037": ["pH_R7","aH_R1","A_R10","A_R12","CinG_L12","CinG_L13","aI_L18"]
               + [f"pI_L{i}" for i in range(1, 17)]
