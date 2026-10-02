@@ -19,7 +19,7 @@ patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","E
 # its presets, path override, bad lists and discharge spans below stay as the record of
 # the work. 02_FBM_Clustering/functions/lf_concat.DEFAULT_EXCLUDE_PATIENTS keeps it out of
 # every cohort cache built from now on.
-# THE 29 CLUSTERING PATIENTS (2026-09-30, Lora): EL044 (ECoG, audio block only) and PAT_3301
+# THE 30 PATIENTS OF THE 03_ERSP TREE (2026-09-30, Lora; 32 minus the two below): EL044 (ECoG, audio block only) and PAT_3301
 # (picture naming only) left this list with the move to the 03_ERSP tree - neither can enter
 # a three-condition cohort, and the new tree is built for the cohort only. Their presets
 # and bad lists below stay; their 04_ersp_LM* outputs stay as they were.
@@ -125,14 +125,26 @@ bad_channels_manual = {
     # muscle on lateral temporal contacts) were looked at and kept. The 28 WM reference
     # contacts are all within +7 dB (pl2) of the median.
     "EL043": ["sSMG8", "sSMG9", "sSMG10"],
-    "EL040": [ f"PlaT_L{i}" for i in range(1, 4)],  # example; fill after visual/clinical review
+    # 2026-10-02 (Lora, from the HFA / ERSP review of the 03_ERSP tree): aH_R13, pPVH_L2
+    "EL040": [ f"PlaT_L{i}" for i in range(1, 4)] + ["aH_R13", "pPVH_L2"],
     # PAT_3415: the whole HLG shaft. Until 2026-09-29 the range stopped at 17 and HLG18 - the one
     # contact left - was a ninth of the WM reference with a 70-150 Hz floor 26.8 dB above the
     # patient's depth median and the speech-muscle signature (broadband 150-400 Hz rise through
     # the response half, a 180 Hz line): every cube of the 09-24 run carries it.
     "PAT_3415": [ f"HLG{i}" for i in range(1, 19)],
     "PAT_3780": ["FAP9"],  # example; fill after visual/clinical review
-    "PAT_3975": ["TPG1"],  # example; fill after visual/clinical review
+    # PAT_3975, 2026-10-02 (Lora): PHD1-6, HAG1-3, HAD1-4 and FOD1 carry a lot of ictal activity
+    # (the 03_ERSP review; the 145 tables had already put its HAD / FOD / IAD contacts among the
+    # channels with the most MAD-outlier trials). All 14 are recorded under these names and
+    # none is one of its 48 WM reference contacts. Its "E1-E4" are auxiliary inputs, not a
+    # shaft: they leave with the aux drop (140, 2026-10-02), not through this list.
+    "PAT_3975": ["TPG1",
+                 *[f"PHD{i}" for i in range(1, 7)], *[f"HAG{i}" for i in range(1, 4)],
+                 *[f"HAD{i}" for i in range(1, 5)], "FOD1"],
+    # 2026-10-02 (Lora). The photodiode channel she also named for PAT_3455 (and PAT_3415)
+    # is not a contact: the aux drop takes it since 2026-10-02.
+    "PAT_3455": ["HAD9", "HAD10"],
+    "PAT_3390": ["PHG12"],
     "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4"],
     "EL030": ["EntG_R18"],  # example; fill after visual/clinical review
     "EL035":[f"EntG_R{i}" for i in range(7,12)]+[f"Fopc_R{i}" for i in range(1,6)]+[f"pHG_R{i}" for i in range(10, 13)],

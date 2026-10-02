@@ -404,6 +404,19 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 print(f"  [{patient_id}] aux drop: {_n_before} → {len(names)} channels")
         else:
             signals, names, *_ = io.filter_aux_channels(signals, names)
+            # THE FULL NON-NEURAL TEST FOR EL / HUG TOO (2026-10-02, Lora). filter_aux_channels
+            # knows the prefixes MRK / MKR / X / ECG / EX / AUDIO only, so EKG-, EMG-, the HUG
+            # photodiode ("photo") and PAT_3975's E1-E4 inputs came through, went into the
+            # notch's montage and got ERSP / HFA / Signal figures in 13 patients (the export
+            # skipped them, so no cube). _is_non_neural is the test the MicroEPI branch above
+            # and the export already use. The photodiode extraction (--pd) loads the raw file
+            # itself and is not affected.
+            _nn = [n for n in names if _is_non_neural(n)]
+            if _nn:
+                _kp = [i for i, n in enumerate(names) if not _is_non_neural(n)]
+                signals = signals[:, _kp]
+                names = [names[i] for i in _kp]
+                print(f"  [{patient_id}] aux drop (non-neural): {' '.join(_nn)}")
 
         # ── EL prefix / grid filter — EL ONLY
         if (not is_microepi) and str(pid_raw).startswith("EL"):
