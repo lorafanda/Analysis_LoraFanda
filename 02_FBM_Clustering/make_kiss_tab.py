@@ -632,6 +632,122 @@ ENTRIES.append(dict(
 ))
 
 
+# ── the two counters to convex NMF (2026-10-07) ──────────────────────────────
+ENTRIES.append(dict(
+    id="kiss-dpca",
+    label="dPCA, step by step",
+    q="What does demixed PCA do with the condition labels that convex NMF does not?",
+    body=[
+        "<b>Step one is arithmetic, not fitting.</b> Every electrode was recorded in "
+        "three conditions. Average the three and you have the part of its response that "
+        "is the same whatever the input &mdash; the <b>common part</b>. Subtract that "
+        "average from each condition and what is left is the <b>condition part</b>: how "
+        "audio, picture and reading each differ from the average. The labels decide the "
+        "split; nothing is estimated yet.",
+        "<b>Step two finds components inside each part.</b> A component is a time "
+        "course (one per condition in the condition part) plus a <i>signed</i> weight on "
+        "every electrode. An electrode's record is weight &times; component, summed. "
+        "That is the whole output: a few time courses and, for each, a map of weights.",
+        "<b>What the split costs.</b> A response that exists in one modality only is "
+        "cut in three by the average: a third of it counts as common, two thirds as "
+        "specific. Panel B of the figure shows this happen to the audio transient. It is "
+        "not a bug; it is what &ldquo;common&rdquo; means under this definition, and it "
+        "has to be remembered when the common component is read.",
+        "<b>What it adds over convex NMF.</b> One number convex NMF cannot give: how much "
+        "of the recorded variance depends on the input modality and how much does not, "
+        "and which electrodes carry each. <b>What it lacks.</b> A component is a "
+        "direction with signed weights, not an average of real electrodes you could have "
+        "recorded; the weights do not say which electrodes are <i>of a type</i>. And "
+        "with trial averages only (the tree keeps no single trials) the regularisation "
+        "and the checks run on the odd / even halves instead of held-out trials.",
+    ],
+    figs=[("E.15", "demixed PCA, step by step, on the same twelve electrodes in three conditions",
+           "E15_dpca_explained.png",
+           "demixed PCA explained on twelve synthetic electrodes recorded in three "
+           "conditions: the split into a common and a condition part, the recovered "
+           "components against the planted shapes, the signed weights, one electrode "
+           "rebuilt, and the variance split by the labels")],
+))
+
+ENTRIES.append(dict(
+    id="kiss-cp",
+    label="CP tensor decomposition, step by step",
+    q="What does a tensor decomposition keep that convex NMF throws away, and what does "
+      "it assume in return?",
+    body=[
+        "<b>What an electrode is.</b> Not a strip of numbers but a block: bands &times; "
+        "time &times; condition. Convex NMF unrolls that block into one strip of numbers "
+        "and compares strips, so inside a component which band, when, and in which "
+        "condition are all mixed into one axis. CP keeps the block.",
+        "<b>What a component is.</b> Four vectors: a band profile, a time course, a "
+        "weight per condition and a loading per electrode. Multiply them and you get a "
+        "full block; the data is the sum of a few such blocks. Every part can be read on "
+        "its own &mdash; the condition weights, in particular, are where the labels enter "
+        "and say by themselves where a component lives (the figure recovers "
+        "<code>[1, 1, 1]</code> for the common burst and <code>[0, 1, 0]</code> for the "
+        "picture-only drop).",
+        "<b>What it assumes in return.</b> Inside one component the time course is the "
+        "same in every band, and the band profile the same at every moment. A real "
+        "response in which high gamma rises while beta falls at a different moment is "
+        "<i>two</i> CP components for one physiological event. When many components are "
+        "needed the fit becomes unstable, which is why the rank is read from how well "
+        "two halves of the trials agree rather than from the fit alone.",
+        "<b>Where it stands here.</b> On the real cubes the quick run gave three generic "
+        "components and unstable agreement between halves; it has not produced a result "
+        "and is parked.",
+    ],
+    figs=[("E.16", "CP / PARAFAC, step by step, on the same twelve electrodes as blocks of bands × time × condition",
+           "E16_cp_explained.png",
+           "a CP tensor decomposition explained on twelve synthetic electrodes recorded as "
+           "four bands by forty time points by three conditions: the data as blocks, one "
+           "component as four vectors, the recovered factors against the planted ones, "
+           "the loadings, one electrode rebuilt, and the same record unrolled into the "
+           "strip convex NMF would see")],
+))
+
+ENTRIES.append(dict(
+    id="kiss-counters",
+    label="cNMF vs dPCA vs CP",
+    q="Same electrodes, three decompositions: what is an electrode, what is a component, "
+      "and where do the labels go?",
+    body=[
+        "<table style=\"border-collapse:collapse;margin:0 0 8px;font-size:0.92em\">"
+        "<tr><th style=\"text-align:left;padding:3px 10px 3px 0\"></th>"
+        "<th style=\"text-align:left;padding:3px 10px\">convex NMF</th>"
+        "<th style=\"text-align:left;padding:3px 10px\">dPCA</th>"
+        "<th style=\"text-align:left;padding:3px 10px\">CP</th></tr>"
+        "<tr><td style=\"padding:3px 10px 3px 0\"><b>an electrode is</b></td>"
+        "<td style=\"padding:3px 10px\">a non-negative mix of a few real electrodes' profiles</td>"
+        "<td style=\"padding:3px 10px\">a signed sum of a few population directions, each tied to a task variable</td>"
+        "<td style=\"padding:3px 10px\">a sum of blocks, each one band profile &times; one time course &times; condition weights</td></tr>"
+        "<tr><td style=\"padding:3px 10px 3px 0\"><b>a component is</b></td>"
+        "<td style=\"padding:3px 10px\">a response you could have recorded (an average of real ones)</td>"
+        "<td style=\"padding:3px 10px\">a direction; its time course per condition and a signed weight map</td>"
+        "<td style=\"padding:3px 10px\">four readable vectors</td></tr>"
+        "<tr><td style=\"padding:3px 10px 3px 0\"><b>the labels</b></td>"
+        "<td style=\"padding:3px 10px\">unused</td>"
+        "<td style=\"padding:3px 10px\">split the data before the fit</td>"
+        "<td style=\"padding:3px 10px\">enter as condition weights</td></tr>"
+        "<tr><td style=\"padding:3px 10px 3px 0\"><b>what is lost</b></td>"
+        "<td style=\"padding:3px 10px\">any statement about modality; K is hard to defend</td>"
+        "<td style=\"padding:3px 10px\">the archetype: nothing says which electrodes are of a type</td>"
+        "<td style=\"padding:3px 10px\">responses that are not separable in band and time</td></tr>"
+        "</table>",
+        "<b>What they are for.</b> Convex NMF answers &ldquo;which electrodes resemble "
+        "each other&rdquo;; dPCA answers &ldquo;how much of what was recorded depends on "
+        "the input modality, and where&rdquo;; CP would answer &ldquo;which "
+        "band-by-time-by-condition blocks build the cohort&rdquo; if the responses were "
+        "separable. None of the three types electrodes better than another; dPCA is a "
+        "labelled complement to convex NMF, not a replacement, and CP is parked.",
+        "<b>What they share.</b> All three fit the same unit-normed cubes, so all three "
+        "inherit whatever is in them: the muscle signal on the response half, the "
+        "unresolved rows below 12 Hz, the &plusmn;0.3 dB baseline banding. A better "
+        "decomposition does not repair its input.",
+    ],
+    figs=[],
+))
+
+
 NAV = ('    <button class="nk" data-t="kiss"><span class="dot"></span>'
        "KISS &middot; plain words</button>")
 CSS = "  .nk .dot{background:#c98f00}"
