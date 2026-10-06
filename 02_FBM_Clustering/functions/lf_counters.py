@@ -194,3 +194,184 @@ def newest_cnmf(feature_set: str):
             return dict(run=r, G=np.load(r / "G_loadings.npy"), C=np.load(r / "components.npy"),
                         keys=list(lab["patient_id"].astype(str) + "|" + lab["contact_norm"].astype(str)))
     return None
+
+
+# ---------------------------------------------------------------------------------------
+# Shared by the partition counters of 2026-10-07 (run_crosshalf_clustering.py,
+# run_kmedoids.py, run_consensus_halves.py, run_tight_peeling.py): the 13-170 Hz feature
+# set, the muscle flag, a k-medoids, the cross-half distance, subsample stability, cluster
+# fingerprints and the two figures every one of them draws.
+# ---------------------------------------------------------------------------------------
+HARM_ROWS: set = set()
+for _h in (50, 100, 150, 200, 250, 300, 350, 400):
+    HARM_ROWS |= {int(round(_h / DF_HZ)) + _d for _d in (-1, 0, 1)}
+
+
+def band_features(X_concat: np.ndarray, lo: float = 13.0, hi: float = 170.0, bins: int = 30):
+    """(n, n_bands * 3 * bins) and the bands used: the 15-band edges that fall inside
+    [lo, hi), `bins` per condition, condition-major like the pipeline's concat features.
+    13-170 Hz is the set the split-half measurement of 2026-10-07 found most dependable:
+    no rows the 128-ms window cannot resolve, no copies of HG above 170 Hz."""
+    from functions.lf_features import FREQ_BANDS_15_TO_400HZ as B15
+    bands = [tuple(b) for b in B15 if b[0] >= lo and b[1] <= hi]
+    Y = band_tensor(X_concat, bands, time_bins=bins)                    # (n, B, T, C)
+    return np.transpose(Y, (0, 3, 1, 2)).reshape(Y.shape[0], -1).astype(np.float64), bands
+
+
+def muscle_flags(X_concat: np.ndarray) -> np.ndarray:
+    """The speech-muscle signature of the 2026-10-05 audit, per electrode: in some condition
+    the response-half mean at 70-150 Hz is >= 1.5 dB and the one at 250-400 Hz is >= 0.75 dB
+    and >= 40 % of it. Mains rows are left out of both bands."""
+    hg = [r for r in range(103) if 70 <= FREQ[r] < 150 and r not in HARM_ROWS]
+    hi = [r for r in range(103) if 250 <= FREQ[r] < 400 and r not in HARM_ROWS]
+    flag = np.zeros(X_concat.shape[0], bool)
+    for b in range(3):
+        blk = X_concat[:, :, b * N_TIME + 150:(b + 1) * N_TIME]
+        g, h = blk[:, hg, :].mean((1, 2)), blk[:, hi, :].mean((1, 2))
+        flag |= (g >= 1.5) & (h >= 0.75) & (h >= 0.4 * g)
+    return flag
+
+
+def unit_norm(F: np.ndarray) -> np.ndarray:
+    nrm = np.linalg.norm(F, axis=1, keepdims=True)
+    nrm[nrm == 0] = 1.0
+    return F / nrm
+
+
+def corr_distance(F: np.ndarray) -> np.ndarray:
+    """1 - Pearson r between electrodes (shape only), zero diagonal."""
+    Z = F - F.mean(1, keepdims=True)
+    Z = Z / np.maximum(np.linalg.norm(Z, axis=1, keepdims=True), 1e-12)
+    D = 1.0 - Z @ Z.T
+    np.fill_diagonal(D, 0.0)
+    return np.clip(D, 0.0, 2.0)
+
+
+def cross_half_distance(F1: np.ndarray, F2: np.ndarray) -> np.ndarray:
+    """Euclidean distance between electrode i in half 1 and electrode j in half 2 (unit-normed),
+    symmetrised. An electrode's own trial noise sits only on the diagonal, which is zeroed."""
+    from scipy.spatial.distance import cdist
+    D12 = cdist(unit_norm(F1), unit_norm(F2))
+    D = 0.5 * (D12 + D12.T)
+    np.fill_diagonal(D, 0.0)
+    return D
+
+
+def ward_on_distance(D: np.ndarray, k: int) -> np.ndarray:
+    from scipy.cluster.hierarchy import fcluster, linkage
+    from scipy.spatial.distance import squareform
+    Z = linkage(squareform(D, checks=False), method="ward")
+    return fcluster(Z, t=k, criterion="maxclust") - 1
+
+
+def kmedoids(D: np.ndarray, k: int, *, n_init: int = 10, max_iter: int = 100, seed: int = 0):
+    """Alternating k-medoids on a precomputed distance matrix: assign to the nearest medoid,
+    move each medoid to the member with the smallest summed distance, until nothing moves.
+    The best of n_init random starts. Returns (labels, medoids, cost)."""
+    rng = np.random.default_rng(seed)
+    n = D.shape[0]
+    best = None
+    for _ in range(n_init):
+        med = rng.choice(n, k, replace=False)
+        for _it in range(max_iter):
+            lab = np.argmin(D[:, med], axis=1)
+            new = med.copy()
+            for j in range(k):
+                m = np.flatnonzero(lab == j)
+                if m.size:
+                    new[j] = m[np.argmin(D[np.ix_(m, m)].sum(1))]
+            if np.array_equal(new, med):
+                break
+            med = new
+        lab = np.argmin(D[:, med], axis=1)
+        cost = float(D[np.arange(n), med[lab]].sum())
+        if best is None or cost < best[2]:
+            best = (lab, med, cost)
+    return best
+
+
+def match_labels(a: np.ndarray, b: np.ndarray):
+    """Relabel b onto a by the Hungarian method on the overlap table; (b_matched, agreement)."""
+    from scipy.optimize import linear_sum_assignment
+    ka, kb = int(a.max()) + 1, int(b.max()) + 1
+    M = np.zeros((ka, kb))
+    for i, j in zip(a, b):
+        M[i, j] += 1
+    r, c = linear_sum_assignment(-M)
+    remap = {int(cj): int(ri) for ri, cj in zip(r, c)}
+    bm = np.array([remap.get(int(x), ka + int(x)) for x in b])
+    return bm, float(M[r, c].sum() / len(a))
+
+
+def subsample_stability(cluster_fn, n: int, labels: np.ndarray, *, n_rounds: int = 20, frac: float = 0.8, seed: int = 0):
+    """Co-association over random subsamples (a pair counts only in rounds where both were
+    drawn); per cluster of `labels`, the mean co-association among its members.
+    cluster_fn(idx) must return labels for the electrodes idx. Returns (per_cluster, C)."""
+    rng = np.random.default_rng(seed)
+    C = np.zeros((n, n)); N = np.zeros((n, n))
+    for _ in range(n_rounds):
+        idx = np.sort(rng.choice(n, int(frac * n), replace=False))
+        lab = np.asarray(cluster_fn(idx))
+        C[np.ix_(idx, idx)] += (lab[:, None] == lab[None, :]); N[np.ix_(idx, idx)] += 1
+    with np.errstate(invalid="ignore"):
+        C = np.where(N > 0, C / N, np.nan)
+    per = {}
+    for k in np.unique(labels):
+        m = np.flatnonzero(labels == k)
+        per[int(k)] = float(np.nanmean(C[np.ix_(m, m)][np.triu_indices(m.size, 1)])) if m.size > 1 else float("nan")
+    return per, C
+
+
+def fingerprints(X_concat: np.ndarray, labels: np.ndarray) -> pd.DataFrame:
+    """Per cluster: size, HG (70-150 Hz) in the stimulus and the response half per condition,
+    beta (13-30 Hz) per condition. Means in dB over the cluster's electrodes."""
+    hg = [r for r in range(103) if 70 <= FREQ[r] < 150 and r not in HARM_ROWS]
+    beta = [r for r in range(103) if 13 <= FREQ[r] < 30 and r not in HARM_ROWS]
+    rows = []
+    for k in np.unique(labels):
+        m = labels == k
+        rec = dict(cluster=int(k), n=int(m.sum()))
+        for b, c in enumerate(CONDS):
+            blk = X_concat[m][:, :, b * N_TIME:(b + 1) * N_TIME]
+            rec[f"hg_stim_{c}"] = float(blk[:, hg, :150].mean()); rec[f"hg_resp_{c}"] = float(blk[:, hg, 150:].mean())
+            rec[f"beta_{c}"] = float(blk[:, beta, :].mean())
+        rows.append(rec)
+    return pd.DataFrame(rows)
+
+
+def cluster_maps(labels: np.ndarray, xyz: np.ndarray, out: Path, title: str):
+    """Three projections of fsaverage, one colour per cluster; labels < 0 in grey."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    labels = np.asarray(labels)
+    ok = ~np.isnan(xyz).any(1)
+    cols = plt.get_cmap("tab10")(np.clip(labels, 0, None) % 10)
+    cols[labels < 0] = (0.78, 0.78, 0.78, 1.0)
+    fig, axes = plt.subplots(1, 3, figsize=(13, 4.2))
+    for a, (p, q, ti) in zip(axes, [(0, 1, "axial"), (0, 2, "sagittal"), (1, 2, "coronal")]):
+        a.scatter(xyz[ok, p], xyz[ok, q], c=cols[ok], s=12, lw=0); a.set_aspect("equal"); a.axis("off"); a.set_title(ti, fontsize=9)
+    fig.suptitle(title, x=.02, ha="left", fontsize=10); fig.tight_layout(); fig.savefig(out, dpi=150); plt.close(fig)
+
+
+def cluster_courses(X_concat: np.ndarray, labels: np.ndarray, out: Path, title: str):
+    """Mean HG (70-150 Hz) time course per cluster and condition, from the 300-bin cubes."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    labels = np.asarray(labels)
+    hg = [r for r in range(103) if 70 <= FREQ[r] < 150 and r not in HARM_ROWS]
+    ks = np.unique(labels)
+    cc = {"audio": "#e06c9f", "picture": "#4a6fa5", "reading": "#8c6d46"}
+    fig, axes = plt.subplots(len(ks), 1, figsize=(7.5, 1.4 * len(ks) + 0.6), sharex=True, squeeze=False)
+    t = np.linspace(0, 100, N_TIME, endpoint=False)
+    for i, k in enumerate(ks):
+        a = axes[i][0]; m = labels == k
+        for b, c in enumerate(CONDS):
+            a.plot(t, X_concat[m][:, hg, b * N_TIME:(b + 1) * N_TIME].mean((0, 1)), color=cc[c], lw=1.4, label=c if i == 0 else None)
+        a.axvline(50, color="0.7", lw=.8, ls=":"); a.axhline(0, color="0.85", lw=.8)
+        a.set_ylabel(("scattered" if k < 0 else f"cluster {k}") + f"\nn = {int(m.sum())}", fontsize=8)
+        a.spines[["top", "right"]].set_visible(False)
+    axes[0][0].legend(fontsize=7, ncol=3, frameon=False, loc="upper left")
+    axes[-1][0].set_xlabel("% of the warped trial (50 = GO); mean HG, dB")
+    fig.suptitle(title, x=.02, ha="left", fontsize=10); fig.tight_layout(); fig.savefig(out, dpi=150); plt.close(fig)
