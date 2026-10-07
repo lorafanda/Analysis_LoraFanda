@@ -36,7 +36,6 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, Rectangle, FancyBboxPatch
 
 ROOT = Path(__file__).resolve().parent
-RAW = ROOT / "outputs" / "04_ersp_LM_RAWONLY"
 OUT = ROOT / "outputs" / "preprocessing_docs"
 OUT.mkdir(parents=True, exist_ok=True)
 
@@ -51,8 +50,10 @@ INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 BLUE, RED, GREEN, ORANGE, PURPLE = "#4a6fa5", "#c1121f", "#1b7837", "#e08214", "#5b2c83"
 MONO = {"family": "DejaVu Sans Mono"}
 FS_DS, NPERSEG, NOVERLAP, NFFT = 1000.0, 128, 108, 256
-EX = RAW / "EL033" / "LM" / "ERSP_matrix" / "audio" / "EL033_audio_WM_ERSP_aH_L11_TN.npy"
-EXH = RAW / "EL033" / "LM" / "ERSP_halves" / "audio"
+# the example cube: a real audio response from the 03_ERSP tree (EL033 A_L8: +3.3 dB in the
+# response half, 0 in the stimulus half; not on EL033's bad list, so a rerun keeps it)
+EX_PID, EX_CH, EX_COND = "EL033", "A_L8", "audio"
+EX = ROOT / "outputs" / cfg.ERSP_TREE / EX_PID / "LM" / "ERSP_matrix" / EX_COND / f"{EX_PID}_{EX_COND}_WM_ERSP_{EX_CH}_TN.npy"
 
 
 def arrow(ax, x0, y0, x1, y1, col=MUTED, lw=1.8):
@@ -306,7 +307,7 @@ def p3():
     d.text(75, 376, "stimulus", ha="center", fontsize=8, color=INK)
     d.text(225, 376, "post", ha="center", fontsize=8, color=INK)
     d.set_xlabel("time bin (0–299)", fontsize=8.4); d.set_ylabel("Hz", fontsize=8.4)
-    d.set_title("D · averaged over trials, time-normalised\nA REAL cube: EL033 aH_L11, audio",
+    d.set_title(f"D · averaged over trials, time-normalised\nA REAL cube: {EX_PID} {EX_CH}, {EX_COND}",
                 fontsize=9.4, loc="left", color=GREEN)
     d.tick_params(labelsize=7.4, colors=MUTED)
     fig.colorbar(im, ax=d, fraction=0.04, pad=0.02, label="dB re baseline")

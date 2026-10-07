@@ -38,7 +38,7 @@ sys.path.insert(0, str(REPO / "01_FBM_Analysis" / "functions"))
 import config as cfg  # noqa: E402
 
 RAW = "//nasac-m2.unige.ch/m-HumanNeuronLab/DATARAW"
-AUDIT = REPO / "01_FBM_Analysis" / "outputs" / "04_ersp_LM" / "audit_140.tsv"
+AUDIT = REPO / "01_FBM_Analysis" / "outputs" / "03_ERSP" / "audit_140.tsv"   # the one tree since 2026-09-30
 OUT = ROOT / "patient_meta.csv"
 LANG_RX = re.compile(r"lang(?:uage)?[-_]([A-Za-z]{2,4})", re.I)
 CENTRE = {"Bern": "Bern", "HUG": "Geneva", "MicroEPI": "Geneva"}

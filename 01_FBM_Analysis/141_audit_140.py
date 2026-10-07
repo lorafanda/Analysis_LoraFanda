@@ -5,8 +5,8 @@
 
 Reads, per patient of cfg.patient_ids, from the one tree outputs/<cfg.ERSP_TREE> (03_ERSP since
 2026-09-30): the newest 140 log (logs/<pid>_<stamp>.log), the WM re-referencing report
-(wm_reref_report.tsv), the IQR trial report (<pid>/LM/PerTrial/Report/<pid>_IQR.tsv) and the cubes; for the
-comparison, the previous tree (outputs/04_ersp_LM_RAWONLY, the frozen 04_* way). Config is read live, so the
+(wm_reref_report.tsv), the IQR trial report (<pid>/LM/PerTrial/Report/<pid>_IQR.tsv) and the cubes. Config is
+read live, so the
 bad list / reference route columns describe what the code would do NOW - if a list changed after the
 run, the cube-count check at the end of the row is where it shows.
 
@@ -30,7 +30,6 @@ from functions import config as cfg   # noqa: E402
 QC_ROOT = os.path.join("outputs", cfg.ERSP_TREE)      # QC figures and cubes in one tree since 2026-09-30
 LOG_DIR = os.path.join(QC_ROOT, "logs")
 NEW_ROOT = QC_ROOT
-OLD_ROOT = os.path.join("outputs", "04_ersp_LM_RAWONLY")     # the previous way, frozen
 CONDS = ("audio", "picture", "reading")
 MICRO_RE = re.compile(r"^[A-Za-z]+m\d+$")           # ADm3, FODm12 ... the microwire bundles
 CUBE_RE = re.compile(r"_(?:WM|CAR)_ERSP_(.+)_TN\.npy$")
@@ -252,14 +251,12 @@ def main():
         # ---- per condition
         iqr_path = os.path.join(cfg.product_dir(os.path.join(QC_ROOT, pid, "LM"), "Report"), f"{pid}_IQR.tsv")
         iqr = pd.read_csv(iqr_path, sep="\t").set_index("condition") if os.path.exists(iqr_path) else None
-        tot_new = tot_old = 0
-        change_notes = []
+        tot_new = 0
         shapes_all = set()
         for c in CONDS:
             pc = L["per_cond"][c]
             new = cube_names(NEW_ROOT, pid, c)
-            old = cube_names(OLD_ROOT, pid, c)
-            tot_new += len(new); tot_old += len(old)
+            tot_new += len(new)
             n_in = int(iqr.loc[c, "n_in"]) if iqr is not None and c in iqr.index else ""
             n_kept = int(iqr.loc[c, "n_kept"]) if iqr is not None and c in iqr.index else ""
             r[f"{c}_trials_in"] = n_in
@@ -273,7 +270,6 @@ def main():
             r[f"{c}_comb_fit"] = pc.get("comb_fit", "")
             r[f"{c}_removed_not_drawn"] = pc.get("removed_not_drawn", "")
             r[f"{c}_cubes"] = len(new)
-            r[f"{c}_cubes_old"] = len(old)
             shapes = set()
             nan_files = 0
             for i, f in enumerate(sorted(new.values())):
@@ -288,14 +284,7 @@ def main():
             r[f"{c}_clean_png"] = len(glob.glob(os.path.join(NEW_ROOT, pid, "LM", "ERSP_clean", c, "*.png")))
             r[f"{c}_qc_ersp_png"] = len(glob.glob(os.path.join(QC_ROOT, pid, "LM", "ERSP", c, "*.png")))
             r[f"{c}_qc_hg_png"] = len(glob.glob(os.path.join(cfg.product_dir(os.path.join(QC_ROOT, pid, "LM"), "HFA"), c, "*.png")))
-            gone = set(old) - set(new)
-            added = set(new) - set(old)
-            if gone:
-                change_notes.append(f"{c} -{len(gone)} [{fmt_groups(classify(gone, bad, wm_used, pid))}]")
-            if added:
-                change_notes.append(f"{c} +{len(added)} [{' '.join(sorted(added))}]")
         r["cubes_total"] = tot_new
-        r["cubes_total_old"] = tot_old
         r["shapes"] = "/".join(f"{a}x{b}" for a, b in sorted(shapes_all)) if shapes_all else ""
         r["microwire_cubes_left"] = sum(1 for c in CONDS for n in cube_names(NEW_ROOT, pid, c) if MICRO_RE.match(n))
         # channels the cubes do not account for: neural - (WM skipped as data) - cubes per condition
@@ -333,7 +322,6 @@ def main():
         else:
             r["qc_channels"] = r["removed_by_bad_list"] = r["removed_not_in_bad_list"] = r["bad_listed_not_in_recording"] = r["aliased_shafts"] = ""
         r["conditions_out"] = "/".join(c for c in CONDS if r[f"{c}_cubes"]) or "none"
-        r["change_vs_old"] = "; ".join(change_notes) if change_notes else ("identical names" if tot_old else "no old tree")
         rows.append(r)
 
     df = pd.DataFrame(rows)
@@ -353,7 +341,7 @@ def main():
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     md = [f"# 140 run audit - fmax 400 Hz - {stamp}", "",
           f"{len(df)} patients in cfg.patient_ids; {int((df.log != 'NOT RUN').sum())} with a log; "
-          f"{int(df.status.eq('ok').sum())} ok. Cube trees: new `{NEW_ROOT}`, previous `{OLD_ROOT}`.", "",
+          f"{int(df.status.eq('ok').sum())} ok. Cube tree: `{NEW_ROOT}`.", "",
           "## 1. Run, channels, reference", "",
           md_table(["patient", "system", "run_start", "run_min", "status", "crop_cfg", "ch_in", "ch_neural",
                     "unknown_dropped", "aux_dropped", "bad_listed_n", "reference", "wm_source", "wm_n",
@@ -363,7 +351,7 @@ def main():
                     "bad listed", "reference", "WM source", "WM n", "WM excluded (bad)", "WM kept as data",
                     "ch at ERSP stage", "removed: bad list", "removed: not listed", "listed but not recorded"]),
           "", "## 2. Trials and cubes per condition", "",
-          md_table(["patient"] + [f"{c}_{k}" for c in CONDS for k in ("trials_in", "trials_kept_iqr", "trials_used", "cubes", "cubes_old")]
+          md_table(["patient"] + [f"{c}_{k}" for c in CONDS for k in ("trials_in", "trials_kept_iqr", "trials_used", "cubes")]
                    + ["shapes", "microwire_cubes_left", "conditions_out"],
                    ["patient"] + [f"{c[:3]} {k}" for c in CONDS for k in ("in", "IQR kept", "used", "cubes", "old")]
                    + ["shape", "microwire cubes", "conditions"]),

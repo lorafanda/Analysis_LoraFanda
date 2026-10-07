@@ -16,7 +16,7 @@ from the pooling cache - so it always shows the run as it is on disk:
     activity_viz/review/manifest.json    format of the ERSP files, build stamp, source tree
     activity_viz/review/patients.json    one row per patient of cfg.patient_ids: run status,
                                          trials per condition, reference route, notch, bad count
-                                         (from 01_FBM_Analysis/outputs/04_ersp_LM/audit_140.tsv,
+                                         (from 01_FBM_Analysis/outputs/03_ERSP/audit_140.tsv,
                                          written by 141_audit_140.py - run that first)
     activity_viz/review/contacts.json    one row per contact: names, shaft, fsaverage xyz,
                                          native label (BIDS electrodes TSV tissueLabel, or the
@@ -38,7 +38,7 @@ STATUS of a contact (why it is or is not in the cubes):
     not_recorded  in the electrodes table but nowhere in the run
     not_run       the patient has no 140 log
 
-The "at the ERSP stage" set is the QC figure set (outputs/04_ersp_LM/<pid>/LM/ERSP/<cond>/),
+The "at the ERSP stage" set is the QC figure set (outputs/03_ERSP/<pid>/LM/ERSP/<cond>/),
 which 140 draws for every channel it processes, bad ones included.
 
 NAMES. Recording and anatomy table are joined with the key precompute_activity_cube.py uses
@@ -73,25 +73,18 @@ NASAC = "//nasac-m2.unige.ch/m-HumanNeuronLab"
 CUBES = os.path.join(A01, "outputs", cfg.ERSP_TREE)     # one tree since 2026-09-30 (03_ERSP)
 QC = CUBES
 AUDIT = os.path.join(QC, "audit_140.tsv")
-# THE NON-COHORT PATIENTS (2026-09-30, Lora): the review shows every patient that was ever
-# processed, and marks the ones outside the clustering dataset with an asterisk. They are
-# not in cfg.patient_ids and were never run into 03_ERSP, so their cubes and figures come
-# from the frozen 04_* trees (HG/ and _HGtrials_ there), and their audit row from that
-# tree's audit. The reason each one is out is what the asterisk explains on the page.
+# THE NON-COHORT PATIENTS (2026-09-30, Lora): listed with an asterisk and the reason they are
+# outside the clustering dataset. They are not in cfg.patient_ids and were never run into
+# 03_ERSP; the frozen 04_* trees that held their cubes were archived on 2026-10-07 (Lora:
+# everything works with 03_ERSP only), so they appear with their note and no data.
 NON_COHORT = {"EL044": "ECoG grids only, and only the audio block was recorded",
               "PAT_3301": "picture naming only - no audio or reading block",
               "PAT_6684": "excluded after the seizure review (bad_time_spans)"}
-FROZEN_CUBES = os.path.join(A01, "outputs", "04_ersp_LM_RAWONLY")
-FROZEN_QC = os.path.join(A01, "outputs", "04_ersp_LM")
-FROZEN_AUDIT = os.path.join(FROZEN_QC, "audit_140.tsv")
 
 
 def tree_of(pid: str) -> dict:
-    """Where a patient's cubes, QC figures and rasters are: the 03_ERSP tree for the cohort,
-    the frozen 04_* trees for the non-cohort patients."""
-    if pid in NON_COHORT:
-        return {"cubes": FROZEN_CUBES, "qc": FROZEN_QC, "hfa": "HG", "hfa_dir": "HG", "hfa_stem": "HGtrials",
-                "report_dir": "Report", "tree": "04_ersp_LM"}
+    """Where a patient's cubes, QC figures and rasters are: the 03_ERSP tree, for everyone
+    (the frozen 04_* trees of the non-cohort patients were archived on 2026-10-07)."""
     # hfa / "Report" are the bare folder names this script looks for (cfg.product_dir: PerTrial/
     # first, the old place while a patient has not been moved); hfa_dir / report_dir are what the
     # page is told, and that is the PerTrial layout - the tree's layout since 2026-10-02
@@ -637,16 +630,6 @@ def main() -> None:
     audit = pd.read_csv(AUDIT, sep="\t", dtype=str).fillna("").set_index("patient") if os.path.exists(AUDIT) else None
     if audit is None:
         print(f"[warn] {AUDIT} missing - run 01_FBM_Analysis/141_audit_140.py first; patients.json will be thin")
-    # the non-cohort patients' rows come from the frozen tree's audit (they were never run
-    # into 03_ERSP); until 03_ERSP has an audit of its own, so do everyone else's
-    if os.path.exists(FROZEN_AUDIT):
-        frozen = pd.read_csv(FROZEN_AUDIT, sep="\t", dtype=str).fillna("").set_index("patient")
-        if audit is None:
-            audit = frozen
-            print(f"[warn] using the frozen audit {FROZEN_AUDIT} for every patient until 03_ERSP is audited")
-        else:
-            extra = frozen.loc[[p for p in NON_COHORT if p in frozen.index and p not in audit.index]]
-            audit = pd.concat([audit, extra])
     coords = {}
     for f in glob.glob(os.path.join(RECON, "coords", "*_contacts_fsaverage.csv")):
         if "ALL_PATIENTS" in f:
@@ -708,7 +691,7 @@ def main() -> None:
     manifest = {
         "built": datetime.now().strftime("%Y-%m-%d %H:%M"), "source_tree": CUBES.replace("\\", "/"),
         "n_patient": len(patients), "n_contact": len(contacts), "n_data": sum(1 for r in contacts if r["file"]),
-        "non_cohort": NON_COHORT, "frozen_tree": FROZEN_QC.replace("\\", "/"),
+        "non_cohort": NON_COHORT,
         "conditions": CONDS, "n_cond": len(CONDS), "n_freq": NF, "f_hz": [0.0, (NF - 1) * F_STEP], "fmax_source_hz": (NF - 1) * F_STEP,
         "n_time": NT // T_DS, "time_downsample": T_DS, "n_time_source": NT,
         "dtype": "uint8", "order": ["cond", "freq", "time"], "vmin": -VLIM, "vmax": VLIM, "nan_byte": 0,

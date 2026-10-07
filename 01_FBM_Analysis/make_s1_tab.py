@@ -36,8 +36,6 @@ from make_s1_patients import patients_html                            # noqa: E4
 OUT = ROOT / "outputs" / "_status_png"
 TREE = ROOT / "outputs" / cfg.ERSP_TREE          # one tree since 2026-09-30 (03_ERSP): cubes + QC figures
 AUDIT = TREE / "audit_140.tsv"
-# until the 03_ERSP rerun has been audited, the table is the last one of the frozen 04_* way
-AUDIT_FALLBACK = ROOT / "outputs" / "04_ersp_LM" / "audit_140.tsv"
 QC = TREE
 SITE = Path("C:/Users/fanda/lorafanda.github.io/analysis_status.html")
 FIGROOT = "01_FBM_Analysis/outputs/_status_png"
@@ -82,7 +80,7 @@ def fig(name: str, num: str, title: str, bullets: list[str], runid: str, *, sub:
 
 
 # ---------------------------------------------------------------------------------------
-AUDIT_USED = AUDIT if AUDIT.exists() else AUDIT_FALLBACK
+AUDIT_USED = AUDIT
 
 
 def read_audit() -> pd.DataFrame | None:
@@ -164,7 +162,7 @@ def build(a: pd.DataFrame | None) -> str:
     S.append('    <div class="eyebrow" style="color:var(--s1)">Stage 01</div>')
     S.append('    <h2 class="title">Signal → ERSP</h2>')
     S.append('    <p class="lead">Raw sEEG → one <b>ERSP cube</b> per electrode × condition (103 freq × 300 warped time bins, dB re baseline). '
-             'Producer: <code>140_ersp_pipeline.py</code>. Tree: <code>outputs/03_ERSP</code> (one folder per patient, cubes and QC together, since 2026-09-30; <code>04_ersp_LM*</code> frozen as the previous way). '
+             'Producer: <code>140_ersp_pipeline.py</code>. Tree: <code>outputs/03_ERSP</code> (one folder per patient, cubes and QC together, since 2026-09-30; the previous <code>04_ersp_LM*</code> trees archived on 2026-10-07). '
              f'Outline form, {today}; numbers from <code>audit_140.tsv</code>.</p>')
 
     # ---- status -------------------------------------------------------------------
@@ -230,7 +228,7 @@ def build(a: pd.DataFrame | None) -> str:
         "<b>cubes</b> · <code>outputs/03_ERSP/&lt;pid&gt;/LM/ERSP_matrix/&lt;cond&gt;/&lt;pid&gt;_&lt;cond&gt;_&lt;WM|CAR&gt;_ERSP_&lt;ch&gt;_TN.npy</code> (103 × 300 float) · <code>ERSP_halves/&lt;cond&gt;/…_half1|2.npy</code> · <code>ERSP_clean/&lt;cond&gt;/*_CLEAN.png</code> · <code>wm_reref_report.tsv</code>",
         "<b>QC</b> · <code>outputs/03_ERSP/&lt;pid&gt;/LM/</code> (same folder as the cubes): <code>ERSP/&lt;cond&gt;/*.png</code> (every channel that reaches the ERSP: not the bad-listed, not the reference contacts) · <code>PerTrial/</code> (everything with one row per trial, since 2026-10-02): <code>HFA/&lt;cond&gt;/*_HFAtrials_&lt;ch&gt;.png</code> (“HG” in the old tree), <code>Signal/&lt;cond&gt;/*_SIGtrials_&lt;ch&gt;.png</code>, <code>TrialScores/*_trial_scores.tsv</code>, <code>Report/</code> (<code>_IQR.tsv</code>, <code>_&lt;cond&gt;_iqr_postDur_QC.png</code>, <code>_montage_overview.png</code>, <code>_notch_audit.tsv</code>, <code>_unexplained_peaks.tsv</code>) · <code>PSD_raw</code>, <code>PSD_clean</code> · <code>Report/</code>: <code>_IQR.tsv</code>, <code>_&lt;cond&gt;_iqr_postDur_QC.png</code>, <code>_montage_overview.png</code>, <code>_notch_audit.tsv</code>, <code>_unexplained_peaks.tsv</code> · <code>logs/&lt;pid&gt;_&lt;stamp&gt;.log</code>",
         "<b>audit</b> · <code>outputs/03_ERSP/audit_140.tsv</code>, <code>.md</code> · <b>review bundle</b> · <code>02_FBM_Clustering/outputs/250_recon/fsaverage/activity_viz/review/</code> (<code>make_lm_review_bundle.py</code>)",
-        "<b>previous trees</b> · <code>04_ersp_LM_RAWONLY</code> + <code>04_ersp_LM</code> (the way up to 2026-09-29, 32 patients, frozen 09-30 for the comparison with 03_ERSP: <code>compare_140_trees.py</code>) · <code>04_ersp_LM_RAWONLY_old</code>, <code>04_ersp_LM_old</code> (run of 2026-08-16 + reruns; 0–500 Hz cubes) · <b>RT tree</b> · <code>05_ERSP_LM_RAWONLY_RealTime</code> (notebook 150, GO-locked, see History)",
+        "<b>previous trees</b> · <code>04_ersp_LM_RAWONLY</code> + <code>04_ersp_LM</code> (the way up to 2026-09-29, 32 patients, frozen 09-30 for the comparison with 03_ERSP: <code>compare_140_trees.py</code>; archived with that script on 2026-10-07) · <code>04_ersp_LM_RAWONLY_old</code>, <code>04_ersp_LM_old</code> (run of 2026-08-16 + reruns; 0–500 Hz cubes) · <b>RT tree</b> · <code>05_ERSP_LM_RAWONLY_RealTime</code> (notebook 150, GO-locked, see History)",
         "<b>stale cubes</b> · 140 never clears a patient folder → after a rerun that removes channels, audit by mtime before any cohort build",
         # 2026-09-22: what the cube is normalised TO is the first thing stage 02's distance
         # metric sees, so it belongs here and not only in the clustering tab.
