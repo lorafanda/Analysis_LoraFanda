@@ -532,7 +532,7 @@ def load_raw_for_patient(patient_id, raw_dir):
             sig, fs, names = load_h5(path)
         else:
             raise ValueError(f"RAW_CONCAT: unsupported file {fn}")
-        names = [str(n) for n in names]
+        names = [concat_renamed(n, patient_id) for n in names]
         if names0 is None:
             names0, fs0 = names, float(fs)
         elif names != names0 or float(fs) != fs0:
@@ -543,6 +543,21 @@ def load_raw_for_patient(patient_id, raw_dir):
     sig = np.concatenate(parts, axis=0)
     log(f"[raw] {patient_id}: {len(parts)} files joined -> {sig.shape[0]} samples, {sig.shape[0] / fs0:.0f} s")
     return sig, names0, fs0
+
+
+def concat_renamed(name, patient_id):
+    """A channel name after cfg.RAW_CONCAT_RENAME for this patient: a shaft prefix spelled
+    differently in one of the joined files (EL031's antSUP -> antSFG), the number kept."""
+    try:
+        from functions import config as _cfg
+        ren = (getattr(_cfg, "RAW_CONCAT_RENAME", {}) or {}).get(str(patient_id), {})
+    except Exception:
+        ren = {}
+    s = "" if name is None else str(name)
+    for old, new in ren.items():
+        if s.startswith(old) and s[len(old):].isdigit():
+            return new + s[len(old):]
+    return s
 
 
 def load_first_raw_in_dir(raw_dir):

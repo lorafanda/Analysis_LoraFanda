@@ -334,7 +334,8 @@ def load_patient_raw(
                 sig, fs, names = _load_el_edf(p)
             else:
                 sig, fs, names = _load_el_h5(p)
-            names = np.array([str(n) for n in names], dtype=object)
+            from functions.lf_io_utils import concat_renamed          # cfg.RAW_CONCAT_RENAME (EL031)
+            names = np.array([concat_renamed(n, patient_id) for n in names], dtype=object)
             if names0 is None:
                 names0, fs0 = names, float(fs)
             elif list(names) != list(names0) or float(fs) != fs0:

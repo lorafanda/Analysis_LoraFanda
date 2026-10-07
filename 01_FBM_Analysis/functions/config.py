@@ -23,7 +23,7 @@ patient_ids = ["G-06", "G-04", "G-05", "G-01", "G-02","G-03", "EL030","EL033","E
 # (picture naming only) left this list with the move to the 03_ERSP tree - neither can enter
 # a three-condition cohort, and the new tree is built for the cohort only. Their presets
 # and bad lists below stay; their 04_ersp_LM* outputs stay as they were.
-patient_ids = ["G-06", "G-04", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL045","EL046","EL048", "EL051","EL052","PAT_3455","PAT_2868","PAT_3066", "PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]
+patient_ids = ["G-06", "G-04", "G-01","G-02", "G-03", "EL030","EL031","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL045","EL046","EL048", "EL051","EL052","PAT_3455","PAT_2868","PAT_3066", "PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]
 
 block_name  = "LM"
 conditions_expected = ("picture", "audio", "reading")
@@ -295,8 +295,13 @@ bad_channels_manual = {
 # BIDS_elec/SEEG-BERN now, so the TSV route finds them first and the Lookup entries below
 # are no longer reached. The set is left empty rather than deleted, with the dirs, so a
 # patient can be put back on the workbook route if a table ever goes missing.
-LOOKUP_ANATOMY_PATIENTS = set()
+LOOKUP_ANATOMY_PATIENTS = {"EL031"}
 LOOKUP_ANATOMY_DIRS = {
+    # EL031 (2026-10-07): no BIDS electrodes table; Electrodes/Lookup.xlsx has the 48 lead
+    # contacts under their recording names (natus), all with MNI coordinates, 8 of them
+    # white matter (antSFG1-4, latSFG1, aCinG4, aCinG9, posSFG3) - a thin reference like
+    # PAT_6953's - and 5 out of the brain (latSFG8, SPL9-12), see LOOKUP_OUT_OF_BRAIN.
+    "EL031": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL031\Electrodes",
     # the workbooks sit in raw/overview/, and the finder does not recurse -
     # pointing at raw/ gave "Lookup fallback failed" and no WM channels at all
     "EL046": r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\SEEG_EXPERIMENTS_BERN\EL046\anatomy\raw\overview",
@@ -392,6 +397,9 @@ LOOKUP_OUT_OF_BRAIN = {
               "pH_R15"],
     "EL051": [],   # read 2026-09-15: every isOut flag in EL051_Lookup.xlsx is on an unplugged contact
     "EL052": [],   # read 2026-09-17: all 29 isOut contacts are unplugged; nothing recorded is out
+    # EL031, read 2026-10-07 from Electrodes/Lookup.xlsx: five plugged contacts flagged isOut,
+    # all recorded under these names in the three EDF files.
+    "EL031": ["latSFG8", "SPL9", "SPL10", "SPL11", "SPL12"],
 }
 for _pid, _out in LOOKUP_OUT_OF_BRAIN.items():
     bad_channels_manual[_pid] = sorted(
@@ -590,7 +598,7 @@ ersp_trial_reject_z = {"PAT_6684": 3.0}
 ersp_trial_reject_hg_mad = {"default": 3.5, "PAT_6684": 3.5}
 ersp_trial_reject_hg_z = {}
 
-notch_patients  = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049","EL051","EL052", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]
+notch_patients  = ["G-06", "G-04", "PAT_6684", "G-01","G-02", "G-03", "EL030","EL031","EL033","EL034","EL035","EL036","EL037","EL038","EL040","EL042","EL043","EL044","EL045","EL046","EL048","EL049","EL051","EL052", "PAT_3455","PAT_2868","PAT_3066", "PAT_3301","PAT_3390","PAT_3415","PAT_3965","PAT_3975","PAT_3780","PAT_6953","PAT_1327"]
 # IDs or substrings to match
     
 # notch_patients  = ["3415","EL034","EL035","EL036","EL040","EL042"]   # IDs or substrings to match
@@ -901,6 +909,15 @@ EL_PRESETS = {
     "EL051": dict(trig="DC6", flip=False, time_range=(0, -1), invalid_trials=[],
                   trial_ids=["picture"]*54 + ["auditory"]*53 + ["reading"]*53, fake_trials=[],
                   manual_trig="prep0/EL051_LM_manual_trigs_concat.tsv"),
+    # EL031 (2026-10-07): three recordings joined by RAW_CONCAT, one block each. Detection
+    # is bypassed: el031_build_triggers.py reads DC6 of each file, drops the 3 training
+    # picture trials and the strays (6 picture rows in the audio session, 3 picture + 1
+    # audio in the sentence session), and writes the triggers on the joined axis plus the
+    # merged events table 140 reads. 51 picture, 23 auditory (the patient fell asleep,
+    # 20 correct), 53 reading - the builder warns if the recordings give other counts.
+    "EL031": dict(trig="DC6", flip=False, time_range=(0, -1), invalid_trials=[],
+                  trial_ids=["picture"]*51 + ["auditory"]*23 + ["reading"]*53, fake_trials=[],
+                  manual_trig="prep0/EL031_LM_manual_trigs_concat.tsv"),
     # EL052 (2026-09-15): one recording, blocks run AUDIO -> READING -> PICTURE, logged in two
     # files. Its photodiode is inverted (dark while a stimulus is on), so flip=True; the two
     # dips after 1640 s are not trials. Detection is bypassed: el052_build_triggers.py reads
@@ -942,6 +959,22 @@ RAW_CONCAT = {
     # the audio / reading tables are file 1's and need no shift.
     "EL043": ["EL043_20250617_16h01m36_63min_HUG_LM.h5",
               r"2ndrun_PictureNaming\EL043_20250618_11h04m06_15min_HUG_LM.h5"],
+    # EL031 (2026-10-07): three recordings, one block each, in the order the blocks were
+    # run - pictures (19 Mar 09:29, 912 s), audio (19 Mar 10:45, 846 s, stopped after 23
+    # trials), sentence (20 Mar 14:22, 846 s). el031_build_triggers.py writes the manual
+    # triggers on this joined axis; see RAW_CONCAT_RENAME for the shaft the 20 Mar file
+    # spells differently.
+    "EL031": ["EL031_20240319_HUG_picturesLM.EDF",
+              "EL031_20240319_HUG_audioLM.EDF",
+              "EL031_20240320_HUG_sentenceLM.EDF"],
+}
+
+# A shaft spelled differently in one of a patient's RAW_CONCAT files: {patient: {old
+# prefix: new prefix}}, applied to every file's channel names before they are compared
+# and joined (the contact number is kept). EL031's first shaft is antSFG1-8 in the two
+# 19 March files and in the Lookup workbook, antSUP1-8 in the 20 March file.
+RAW_CONCAT_RENAME = {
+    "EL031": {"antSUP": "antSFG"},
 }
 
 # MICROEPI_PATIENTS = ["G-01","G-02","G-03","G-04","G-05"]
