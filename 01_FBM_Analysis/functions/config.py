@@ -135,7 +135,13 @@ bad_channels_manual = {
     # patient's depth median and the speech-muscle signature (broadband 150-400 Hz rise through
     # the response half, a 180 Hz line): every cube of the 09-24 run carries it.
     "PAT_3415": [ f"HLG{i}" for i in range(1, 19)],
-    "PAT_3780": ["FAP9"],  # example; fill after visual/clinical review
+    # PAT_3780, 2026-10-07 (first review of this patient; whole-block spectra of the 140 run,
+    # three blocks alike). FAP9 is a dead channel in the raw. HAG1 sits 10.5 dB above the
+    # patient median at 70-150 Hz and 13.5 dB at 30-70 Hz with a 30-100 Hz hump, HAG2 5.4 / 8.2 dB
+    # (the same hump), TPG1 7.6 dB and TPG2 5.7 dB at 70-150 Hz. None of them is a WM reference
+    # contact, so the reference does not move. Candidates left in for now, 4 dB above the median:
+    # TPG3 (70-150 Hz), FAS1 (both bands); FAS2 / FAS3 / FSS2 at 30-70 Hz only.
+    "PAT_3780": ["FAP9", "HAG1", "HAG2", "TPG1", "TPG2"],
     # PAT_3975, 2026-10-02 (Lora): PHD1-6, HAG1-3, HAD1-4 and FOD1 carry a lot of ictal activity
     # (the 03_ERSP review; the 145 tables had already put its HAD / FOD / IAD contacts among the
     # channels with the most MAD-outlier trials). All 14 are recorded under these names and
