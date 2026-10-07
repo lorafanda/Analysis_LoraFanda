@@ -437,6 +437,14 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 keep = [i for i, nm in enumerate(names)
                         if any(str(nm).startswith(p) for p in prefixes)
                         and any(c.isdigit() for c in str(nm))]
+            elif str(pid_raw) in getattr(cfg, "EL_DEPTH_KEEP_PREFIXES", {}):
+                # contacts not named the Bern way (EL031: antSFG1, SPL12 ...): keep the
+                # listed shafts, drop the scalp EEG and the rest (cfg.EL_DEPTH_KEEP_PREFIXES)
+                prefixes = cfg.EL_DEPTH_KEEP_PREFIXES[str(pid_raw)]
+                keep = [i for i, nm in enumerate(names)
+                        if any(str(nm).startswith(p) for p in prefixes)
+                        and any(c.isdigit() for c in str(nm))]
+                print(f"  [{patient_id}] EL name filter by shaft prefix {prefixes}: {len(keep)} of {len(names)} channels kept")
             else:
                 keep = [i for i, nm in enumerate(names) if ("_" in str(nm) or "-" in str(nm))]
             signals = signals[:, keep]

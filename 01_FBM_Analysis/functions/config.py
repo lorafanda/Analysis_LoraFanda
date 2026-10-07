@@ -64,6 +64,15 @@ GRID_CAR_PATIENTS = {"EL044"}
 # a WM one - it would take the older set as stale.
 WHOLE_CAR_PATIENTS = set()   # EL052 until 2026-09-29: its Lookup had no plugged WM contact; its BIDS TSV has 29
 EL_GRID_KEEP_PREFIXES = {"EL044": ("P", "p", "T")}
+# EL depth patients whose contacts are NOT named the Bern way (shaft_L1 / shaft-L1): the EL
+# name filter keeps a name only when it has an underscore or a dash, which for EL031 kept
+# nothing at all (2026-10-07, "no neural channels"). Listed here, a patient keeps exactly
+# the contacts that start with one of these shaft names and carry a number; the scalp
+# EEG (Fp1, F3, ...), EOG, DC and the rest go. EL031's five shafts, as spelled in the
+# recordings and in its Lookup workbook.
+EL_DEPTH_KEEP_PREFIXES = {
+    "EL031": ("antSFG", "latSFG", "aCinG", "posSFG", "SPL"),
+}
 # Patients with BOTH grid (ECoG) and depth (SEEG) electrodes. For these:
 #   * WM reref still runs (uses depth-electrode WM contacts as usual)
 #   * Channels with empty / "Unknown" tissueLabel that match one of these
