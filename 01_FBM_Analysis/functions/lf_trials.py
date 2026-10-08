@@ -118,6 +118,14 @@ def collect_trials(
         cols = {c.lower() for c in df.columns}
         need = {"sample", "sample_offsets", "trial_end"}
         if not need.issubset(cols):
+            # A manual trigger table (EL031_LM_manual_trigs_concat.tsv, written by a
+            # *_build_triggers.py script) holds only sample / sample_offsets: it is the
+            # INPUT of 140 --pd, which turns it into the per-condition tables read here.
+            # EL051's was moved to prep0/hide by hand after --pd; skipping it by name
+            # saves that step (2026-10-08).
+            if "manual_trig" in os.path.basename(path).lower():
+                print(f"  [trials] skipping {os.path.basename(path)} — a manual trigger table, not a trial table")
+                continue
             raise ValueError(f"[{os.path.basename(path)}] Missing {need}. Found: {sorted(cols)}")
 
         on   = df[[c for c in df.columns if c.lower()=="sample"][0]].to_numpy(dtype=np.int64)
