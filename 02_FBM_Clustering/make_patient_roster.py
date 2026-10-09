@@ -70,6 +70,10 @@ NOTES = {
              "all-three-conditions rule either.",
     "PAT_6684": "MicroEPI G-05 run on its Micromed TRC (PATH_OVERRIDES); excluded after the "
                 "seizure review - the discharge spans are in bad_time_spans.",
+    "EL031": "Three one-block recordings (March 2024) joined, triggers from DC6 per file; the "
+             "audio block stopped after 23 trials with the patient asleep and 8 survive the "
+             "response-window filters (reading 27 of 53, picture 47 of 51). Excluded whole-"
+             "patient on 2026-10-09; its 140 run (whole-recording CAR) stays for a look.",
     "PAT_3415": "Only three depth shafts: IMG and IPG are the reference, HLG1-18 is bad-listed. "
                 "GA-GH is an 8x8 grid (dropped on read), OI / OS / TA / TM / TP are subdural "
                 "strips (BIDS type n/a, same as the grid) - the electrodes that reach the "

@@ -87,7 +87,12 @@ DEFAULT_CONDITIONS: Tuple[str, ...] = ("audio", "picture", "reading")
 # are dropped as before - the contact-level rule below is what does it. That leaves the
 # same OI / OS / TM / TP coverage the cohort carried through v7. EL044 stays a whole-
 # patient exclusion because it has no depth contacts at all.
-DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_6684")
+#
+# EL031 (2026-10-09, Lora): processed by 140 (three one-block recordings joined, CAR), but
+# its audio block stopped after 23 trials with the patient asleep and only 8 survive the
+# response-window filters (reading keeps 27 of 53, picture 47 of 51). Too little for a
+# three-condition cohort; out as a whole patient, its cubes stay in 03_ERSP for a look.
+DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_6684", "EL031")
 DEFAULT_FMAX = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30
