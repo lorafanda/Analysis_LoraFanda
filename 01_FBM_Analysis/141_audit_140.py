@@ -353,7 +353,7 @@ def main():
           "", "## 2. Trials and cubes per condition", "",
           md_table(["patient"] + [f"{c}_{k}" for c in CONDS for k in ("trials_in", "trials_kept_iqr", "trials_used", "cubes")]
                    + ["shapes", "microwire_cubes_left", "conditions_out"],
-                   ["patient"] + [f"{c[:3]} {k}" for c in CONDS for k in ("in", "IQR kept", "used", "cubes", "old")]
+                   ["patient"] + [f"{c[:3]} {k}" for c in CONDS for k in ("in", "IQR kept", "used", "cubes")]
                    + ["shape", "microwire cubes", "conditions"]),
           "", "## 3. Notch and QC", "",
           md_table(["patient", "notch_method", "notch_scope", "notch_Q_max"] + [f"{c}_{k}" for c in CONDS for k in ("notched", "comb_left", "offcomb_peaks")]
@@ -363,8 +363,7 @@ def main():
           "", "## 4. Bad lists and WM references", ""]
     for _, row in df.iterrows():
         md.append(f"- **{row.patient}** bad ({row.bad_listed_n}): {row.bad_list or '·'}  \n"
-                  f"  WM reference ({row.wm_n}): {row.wm_list or '·'}"
-                  + (f"  \n  change vs old tree: {row.change_vs_old}" if row.change_vs_old != "identical names" else "  \n  cubes: same names as the old tree"))
+                  f"  WM reference ({row.wm_n}): {row.wm_list or '·'}")
     md_txt = "\n".join(md) + "\n"
     out_md = os.path.join(QC_ROOT, "audit_140.md")
     open(out_md, "w", encoding="utf-8").write(md_txt)
