@@ -17,6 +17,9 @@ SOURCE = paper2_outline.md next to this script. Lora edits that file and re-runs
     `code`, **bold**, *italic*   -> as in Markdown; [cite: Author et al. 2019, sec 2.3 par 1] -> a
                                     citation chip (rendered at the bullet's confidence)
     > text                       -> a note box (the "fill in" hints)
+    -! text  -2! text ...        -> the same bullet marked NEW (green ink: what changed since the
+                                    last read; drop the "!" once Lora has seen it)
+    {{text}}                     -> a new phrase inside an older bullet, green
 Nothing else in the site file is touched; the nav button is added once (make_site_ui.py
 groups it under "Writing" - add "outline" to GROUPS there).
 """
@@ -47,6 +50,7 @@ CSS = """<style id="outline-css">
   #outline .note{border-left:3px solid var(--line);background:var(--chip);padding:8px 12px;margin:8px 0;font-size:13.5px;color:var(--muted)}
   #outline ul{margin:4px 0 0;padding-left:20px} #outline li{margin:3px 0} #outline li ul{margin-top:2px}
   #outline h4{margin:14px 0 4px}
+  #outline .new{color:#1b7f3b} #outline .new code,#outline .new b,#outline .new i{color:inherit} #outline li.new::marker{color:#1b7f3b}
 </style>"""
 
 _e = html.escape
@@ -55,6 +59,7 @@ _e = html.escape
 def inline(s: str) -> str:
     """Markdown-ish inline: escape, then `code`, **bold**, *italic*, [cite: ...]."""
     s = _e(s)
+    s = re.sub(r"\{\{(.+?)\}\}", r'<span class="new">\1</span>', s)          # green: new since the last read
     s = re.sub(r"\[cite:\s*([^\]]+)\]", lambda m: f'<span class="cite">{m.group(1).strip()}</span>', s)
     s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
     s = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
@@ -76,7 +81,8 @@ def build(md: str) -> str:
            f'black was read from the code or the run, lighter is memory, a guess, or a slot to fill. '
            f'Source: <code>02_FBM_Clustering/paper2_outline.md</code>, rebuilt {today}.</p>',
            '    <div class="legend"><span class="cf1">read from the code / run</span><span class="cf2">from the pipeline as I know it</span>'
-           '<span class="cf3">plausible, check</span><span class="cf4">your slot: citation section / paragraph, number, decision</span></div>']
+           '<span class="cf3">plausible, check</span><span class="cf4">your slot: citation section / paragraph, number, decision</span>'
+           '<span class="new">green: new since 2026-10-07</span></div>']
     stack: list[int] = []          # open <ul> indent levels
     open_div = False
     n_bul = 0
@@ -88,7 +94,7 @@ def build(md: str) -> str:
     for raw in md.splitlines():
         if not raw.strip():
             continue
-        m = re.match(r"^(\s*)-(\d)?\s+(.*)$", raw)
+        m = re.match(r"^(\s*)-(\d)?(!)?\s+(.*)$", raw)
         if raw.startswith("# "):
             close_lists()
             if open_div:
@@ -103,11 +109,11 @@ def build(md: str) -> str:
             close_lists()
             out.append(f'    <div class="note">{inline(raw[2:].strip())}</div>')
         elif m:
-            indent, cf, text = len(m.group(1)) // 2, m.group(2) or "1", m.group(3)
+            indent, cf, new, text = len(m.group(1)) // 2, m.group(2) or "1", m.group(3), m.group(4)
             close_lists(indent)
             if not stack or stack[-1] < indent:
                 stack.append(indent); out.append("<ul>")
-            out.append(f'<li class="cf{cf}">{inline(text)}</li>'); n_bul += 1
+            out.append(f'<li class="cf{cf}{" new" if new else ""}">{inline(text)}</li>'); n_bul += 1
         else:                      # a plain line: a bullet at level 0, confidence 1
             close_lists(0)
             if not stack:

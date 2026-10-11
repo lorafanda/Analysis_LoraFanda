@@ -47,41 +47,57 @@ GROUPS = [   # (header or None, [data-t ...]) in display order
 ANSWERS = {
     "overview": dict(
         one="the cohort and where every tab stands",
-        html=("<p>Cohort <b>v11</b>: 1487 gated electrodes from 30 patients (2026-09-26), on a cube tree whose "
-              "preprocessing is uniform for the first time — every patient at fmax 400 with a per-shaft spectrum-interpolation "
-              "notch. PAT_1327 joins; PAT_6684 (G-05) and EL044 are out; PAT_3415 is in with its depth electrodes only; "
-              "PAT_3301 cannot enter, it has only picture naming. One line per tab, the tab's own Answer behind each:</p>"
+        html=("<p>Cohort <span class=\"new\"><b>v15</b> (built 2026-10-09 from the 03_ERSP tree): 1613 gated electrodes from 29 patients, "
+              "2976 with cubes in all three conditions</span>, every patient at fmax 400 with the per-shaft spectrum-interpolation "
+              "notch. PAT_6684 (G-05) and EL044 are out; PAT_3301 cannot enter, it has only picture naming. "
+              "<span class=\"new\">New since 2026-10-07, in green on every tab: PAT_3780's trial tables were 180 s early (its photodiode is the "
+              "envelope difference of X1 and X2) and it was re-timed and rerun (gated 49 → 92); EL031 was processed and excluded "
+              "(8 audio trials after the filters); PAT_3415 contributes nothing in this tree (its depth contacts left as Unknown); "
+              "the 04 trees are archived. All twelve clustering runs are refitted on v15 (2026-10-09, K 5–30); the LM visualizer "
+              "(10-09) and the cluster visualizer (10-11) are on v15. Not yet on v15: FIG 4 / 5, the held-out curves, 249, 252.</span> "
+              "One line per tab, the tab's own Answer behind each:</p>"
               "<!--TABLIST-->"),
-        status="v11 cache built 2026-09-26 · stage-02 runs in progress (240 / 241, then 242 and 249) · nothing on this page is a v11 result yet"),
+        status="v15 cache 2026-10-09 · 12 fits on v15 (10-09) · FIG 4/5, held-out curves, 249 and 252 still to run · LM and cluster visualizers on v15"),
     "outline": dict(
         one="the paper as bullets, preprocessing → clustering outputs, darkness = confidence; source paper2_outline.md (make_outline_tab.py)",
         html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
               "run, lightest = a slot for a citation's section / paragraph, a number or a decision). Edit "
               "<code>02_FBM_Clustering/paper2_outline.md</code> and re-run <code>make_outline_tab.py --insert</code>.</p>"),
-        status="built 2026-09-24 for the lab presentation; numbers from the v9 cache and the 2026-09-24 audit"),
+        status="rebuilt 2026-10-12 on v15 (green lines and phrases are new since 10-07); the rest from the v9 / v11 reads of September"),
     "s1": dict(
-        one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched, trial-filtered; halves beside; 31 of 31 patients ok (rebuilt 09-18 → 09-24, all at fmax 400)",
+        one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched per shaft, trial-filtered; halves beside; 31 of 31 patients ok (29 in the cohort), every one on a BIDS white-matter reference (EL044 grid CAR, EL031 whole-recording CAR)",
         html=("<ul>"
               "<li><b>product</b>: cube 103 freq × 300 warped bins, dB re baseline (−0.4, −0.1 s), GO at bin 150 · odd / even halves beside every cube</li>"
-              "<li><b>chain</b>: load → channels out (aux, Unknown, bad) → WM reference (grid / whole CAR where no WM) → notch per block (z ≥ 3; iir or spectrum interpolation) → trials (accuracy, stimulus ≥ 0.5 s, post 1–10 s, IQR 1.5) → STFT 1 kHz, bins ≤ 400 Hz → warp → mean</li>"
-              "<li><b>run</b>: <code>140_ersp_pipeline.py</code> per patient, 31 patients, fmax 400 Hz (was 500), in five waves — 16 on 09-18, PAT_6953 09-21, eight 09-22, four 09-23, EL038 and PAT_6854 09-24 · audit table + review mode per contact</li>"
-              "<li><b>done since</b>: EL043 on its two recordings joined (3 conditions), G-04 / G-06 with the reference without bad contacts, PAT_6953; no stale cube in the tree · <b>open</b>: 137 contacts without anatomy link (alias decision), QC pass in review mode</li>"
+              "<li><b>chain</b>: load → channels out (aux, Unknown, <b>bad list — before everything since 09-28</b>) → WM reference (mean of ≥ 3 BIDS-table WM contacts; responsive ones kept as data) → notch per condition block and per shaft (z ≥ 3; spectrum interpolation, random phase, width from the PSD plus a per-patient floor where a trial-locked residue survives; second combs for EL048 railway and EL045 screen) → trials (accuracy, stimulus ≥ 0.5 s, post 0.2–10 s, IQR 1.5) → STFT 1 kHz, bins ≤ 400 Hz → warp → mean</li>"
+              "<li><b>run</b>: <code>140_ersp_pipeline.py</code> per patient, 32 patients: 26 on 09-24, EL043 / EL046 09-26, EL037 / EL045 09-28, EL051 / EL052 09-29 · audit table (141) + review mode per contact · stale files of removed contacts swept by hand (142 for the rest)</li>"
+              "<li><b>done since 09-24</b>: bad list applied before the notch, 350 Hz width floor (EL037 / EL045), EL045 screen comb, EL051 / EL052 on their FreeSurfer recon with a checked WM reference, PAT_1327 in · <b>open</b>: v13 cache and fits on this tree, aparc labels for PAT_1327 / EL051 / EL052 (211), the drop-before-notch reaches the other bad-listed patients only at their next run</li>"
+              "<li class=\"new\"><b>since 10-07</b>: PAT_3780's trial tables were 180 s early (the 2025 manual table) — its photodiode is the "
+              "envelope of X1 minus the envelope of X2 (<code>pat_3780_build_triggers.py</code>); tables rebuilt, FAP9 / HAG1 / HAG2 / TPG1 / TPG2 "
+              "bad-listed, 140 rerun 10-07 (112 cubes; 39 / 46 / 42 trials used), the four removed shafts' orphan cubes swept with "
+              "<code>142_stale_cubes.py --delete</code> before v15 · EL031 onboarded (three one-block EDFs joined, DC6 triggers per file, "
+              "51 / 23 / 53 trials, whole-recording CAR, run 10-09) and excluded: 8 audio trials after the filters · PAT_3975 checked the same way, "
+              "its tables are right · 141's readable audit fixed (a leftover of the archived 04 tree) · 03_ERSP is the only tree (04_* archived 10-07) · "
+              "the Word report of 09-28 → 10-09 is in <code>01_FBM_Analysis/outputs/preprocessing_docs/</code></li>"
               "</ul>"),
-        status="04_ersp_LM_RAWONLY = the fmax-400 tree · 32 / 32 ok, every one interp + per shaft · 30 run 09-24, EL043 / EL046 09-26 · previous tree = _old"),
+        status="03_ERSP = the only tree (04_* archived 10-07) · 31 / 31 ok, 29 in the cohort · last runs 10-07 (PAT_3780) and 10-09 (EL031) · audit 10-09 · was: 04_ersp_LM_RAWONLY = the tree v13 reads · 32 / 32 ok, interp + per shaft, BIDS WM references 3–53 contacts (EL044 grid CAR) · last runs 09-29 (EL051, EL052) · previous tree = _old"),
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
-        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same 1487 electrodes, K = 5…30. "
+        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same <span class=\"new\">1613 electrodes (v15; 1487 on v11)</span>, K = 5…30. "
               "K is read where convex NMF's bi-cross-validated curve peaks (v10 gave 10 / 12 / 14 / 16 for HFA / 15 bands / 5 bands / "
               "5 bands z; v11's are not known until 249 has run) because it is the only method whose curve turns over; the cross-method figures are cut at K = 8. "
               "The durable result is negative, then graded: hard partitions of these data are not reproducible across "
               "preprocessing, most electrodes have no majority component, and two algorithms on one feature set agree on "
               "~60% of electrodes where two feature sets under one algorithm agree on ~40% (chance 12%). The graded "
               "decomposition is the analysis; an argmax map is only ever shown beside its loadings.</p>"
-              "<ul><li><b>No result on this tab is v11 yet.</b> 240 and 241 are running on the v11 cache, 242 follows 240, then 249. "
-              "The result blocks below are emptied until those runs exist, rather than showing v10 numbers under a v11 heading.</li>"
+              "<ul><li class=\"new\"><b>v15, 2026-10-09:</b> all twelve runs refitted on the 1613 electrodes (240 / 241 / 242 as terminal scripts with "
+              "<code>--no-heldout</code>, 18:02–18:31), centroids and rasters drawn, the coverage and centroid bundles on main and "
+              "<code>cluster_visualizer.html</code> on them (K 5–12). FIG 4's correspondence on concat_hg at K 6–12: the three algorithms share "
+              "51–64 % of the diagonal against 8–21 % for random pairings (z 2.8–9.6). Not yet on v15: the FIG 4 / 5 figure set (the panels of "
+              "10-09 were drawn from September tables), the held-out curves and K selection, 249's statistics (so the visualizer's report has no "
+              "per-cluster cards) and 252. The result blocks below are still the emptied v11 ones.</li>"
               "<li>K=8 (largest K with no one-patient cluster on HFA) or the held-out peaks — which one the paper reports.</li>"
               "<li>The native stability sweep has not been re-run since v8.</li></ul>"),
-        status="v11 cache 2026-09-26 · 240 / 241 running, 242 and 249 to follow · the result blocks are empty until then"),
+        status="v15 cache 2026-10-09 · 12 runs on v15 · FIG 4/5, held-out curves, 249 and 252 pending · the result blocks are the emptied v11 ones"),
     "lana": dict(
         one="language-network proximity predicts more HFA while hearing the prompt and while speaking, less during visual encoding",
         html=("<p>Against LanA (an 806-subject probabilistic atlas of the language network), being closer to the network "
@@ -126,12 +142,16 @@ ANSWERS = {
         status="audits 2026-09-15/16 · reruns pending"),
     "caveats": dict(
         one="what is open — the reruns, G-02's 14 trials, G-03's raw check, one cohort-changing regex, and two paper decisions",
-        html=("<p>Open, in order: G-02's 14 mis-timed trials — correct, drop or leave; G-03's raw timing check; notebook 150 "
+        html=("<p class=\"new\">Open on 2026-10-12: the paper phase on the v15 runs (FIG 4 / 5 at K 6–12), then the five brain-render figures "
+              "and the site phase; the held-out curves (select) and 249 / 252; PAT_3415's depth contacts dropped as Unknown by the 03_ERSP run "
+              "(0 electrodes in v15); PAT_3780's TPG3 / FAS1 and EL040's CinG_R13 to look at in the raw; EL031's reconstruction; the four "
+              "partition counters of 10-07 to redo on v15 (they ran on v13, with PAT_3780's wrong windows).</p>"
+              "<p>Open, in order: G-02's 14 mis-timed trials — correct, drop or leave; G-03's raw timing check; notebook 150 "
               "and <code>build_timing_table.py</code> still key on G-05; the 24 Paper 2 figures still on v8; the editorial choice "
               "between opening A and B (FIG C.4a/b) and whether HFA stays the headline; pooling (460/465) still on a pre-v8 "
               "cohort, so S1's role side and cluster side come from different samples.</p>"
               "<p>Everything under a <i>Done</i> heading below is duplicated in the lab notebook and is proposed for deletion.</p>"),
-        status="open list re-read 2026-09-24 · the MicroEPI reruns, EL051/EL052 and the micro-shaft regex are done"),
+        status="open list re-read 2026-10-12 (green) · earlier: the MicroEPI reruns, EL051/EL052 and the micro-shaft regex are done"),
 }
 
 # group key -> role; keys are the h3 id when it has one, else the slug of its text (the runtime's rule)
@@ -221,6 +241,8 @@ ENTRY = re.compile(
     r'|(?P<btn><button class="(?P<cls>[^"]*)" data-t="(?P<t>[^"]+)">.*?</button>)', re.S)
 
 CSS = r"""<style id="ui-css">
+  /* green ink = new since the last read (2026-10-07); the generators mark it with class "new" */
+  .new{color:#1b7f3b} .new code,.new b,.new i{color:inherit} li.new::marker{color:#1b7f3b}
   /* ---- nav groups, search, retired ---- */
   .ui-navh{font-size:10.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);
     margin:14px 10px 3px;display:flex;align-items:center;gap:8px}
