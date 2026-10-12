@@ -4,12 +4,12 @@
 "raw_id": "G-06",
 "system": "MicroEPI",
 "ran": true,
-"run_start": "2026-09-30 19:27",
+"run_start": "2026-10-12 13:53",
 "status": "ok",
-"reference": "WM reference, 38 contacts (selective: WM contacts stay as data)",
-"wm_n": 38,
+"reference": "WM reference, 36 contacts (selective: WM contacts stay as data)",
+"wm_n": 36,
 "wm_source": "BIDS TSV (MicroEPI)",
-"bad_n": 38,
+"bad_n": 50,
 "bad_list": [
 "IAD1",
 "TBG1",
@@ -17,6 +17,18 @@
 "HAG1",
 "HAG2",
 "IAD10",
+"IMG1",
+"TBG3",
+"TBG4",
+"IPG16",
+"IMG2",
+"HAG3",
+"HAD1",
+"HAD2",
+"AG1",
+"AG2",
+"AD1",
+"AD2",
 "HADm1",
 "HADm2",
 "HADm3",
@@ -53,25 +65,25 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "700-2080 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "48",
+"unexplained_peaks": "49",
 "trials": {
 "audio": {
 "in": "53",
 "kept": "41",
 "used": "41",
-"cubes": "175"
+"cubes": "163"
 },
 "picture": {
 "in": "54",
 "kept": "47",
 "used": "47",
-"cubes": "175"
+"cubes": "163"
 },
 "reading": {
 "in": "53",
 "kept": "28",
 "used": "28",
-"cubes": "175"
+"cubes": "163"
 }
 },
 "hg_reref": "WM",
@@ -83,11 +95,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 184,
-"n_data": 175,
+"n_data": 163,
 "n_status": {
-"data": 175,
+"data": 163,
 "wm_ref": 0,
-"bad": 6,
+"bad": 18,
 "unknown": 3,
 "not_recorded": 0,
 "not_run": 0,
@@ -104,7 +116,7 @@
 "reference": "WM reference, 18 contacts (selective: WM contacts stay as data)",
 "wm_n": 18,
 "wm_source": "BIDS TSV (MicroEPI)",
-"bad_n": 56,
+"bad_n": 57,
 "bad_list": [
 "ainp1",
 "IAD1",
@@ -114,6 +126,7 @@
 "FOD1",
 "FOD5",
 "FOD6",
+"FPD6",
 "HADm1",
 "HADm2",
 "HADm3",
@@ -172,19 +185,19 @@
 "in": "53",
 "kept": "46",
 "used": "46",
-"cubes": "128"
+"cubes": "127"
 },
 "picture": {
 "in": "54",
 "kept": "51",
 "used": "51",
-"cubes": "128"
+"cubes": "127"
 },
 "reading": {
 "in": "53",
 "kept": "46",
 "used": "46",
-"cubes": "128"
+"cubes": "127"
 }
 },
 "hg_reref": "WM",
@@ -196,11 +209,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 146,
-"n_data": 128,
+"n_data": 127,
 "n_status": {
-"data": 128,
+"data": 127,
 "wm_ref": 0,
-"bad": 7,
+"bad": 8,
 "unknown": 7,
 "not_recorded": 4,
 "not_run": 0,
@@ -390,9 +403,10 @@
 "reference": "WM reference, 5 contacts (skipped as data)",
 "wm_n": 5,
 "wm_source": "BIDS TSV",
-"bad_n": 1,
+"bad_n": 2,
 "bad_list": [
-"EntG_R18"
+"EntG_R18",
+"aH_L11"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "280-1600 s",
@@ -403,19 +417,19 @@
 "in": "53",
 "kept": "39",
 "used": "39",
-"cubes": "83"
+"cubes": "82"
 },
 "picture": {
 "in": "54",
 "kept": "44",
 "used": "44",
-"cubes": "83"
+"cubes": "82"
 },
 "reading": {
 "in": "44",
 "kept": "31",
 "used": "31",
-"cubes": "83"
+"cubes": "82"
 }
 },
 "hg_reref": "WM",
@@ -427,11 +441,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 102,
-"n_data": 83,
+"n_data": 82,
 "n_status": {
-"data": 83,
+"data": 82,
 "wm_ref": 5,
-"bad": 1,
+"bad": 2,
 "unknown": 13,
 "not_recorded": 0,
 "not_run": 0,
@@ -576,17 +590,18 @@
 "system": "Bern",
 "ran": true,
 "run_start": "2026-09-30 21:50",
-"status": "ok",
-"reference": "WM reference, 24 contacts (skipped as data)",
-"wm_n": 24,
+"status": "error-other",
+"reference": "WM reference, 23 contacts (skipped as data)",
+"wm_n": 23,
 "wm_source": "BIDS TSV",
-"bad_n": 5,
+"bad_n": 6,
 "bad_list": [
 "MFG-10",
 "MFG-11",
 "MFG-12",
 "OFG-L15",
-"aH-L12"
+"aH-L12",
+"aH-L7"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
@@ -624,8 +639,8 @@
 "n_data": 52,
 "n_status": {
 "data": 52,
-"wm_ref": 24,
-"bad": 5,
+"wm_ref": 23,
+"bad": 6,
 "unknown": 24,
 "not_recorded": 6,
 "not_run": 0,
@@ -723,7 +738,7 @@
 "reference": "WM reference, 4 contacts (skipped as data)",
 "wm_n": 4,
 "wm_source": "BIDS TSV",
-"bad_n": 9,
+"bad_n": 12,
 "bad_list": [
 "pHG_R1",
 "pHG_R2",
@@ -733,7 +748,10 @@
 "pHG_R9",
 "pHG_R10",
 "pHG_R11",
-"pHG_R12"
+"pHG_R12",
+"A_R9",
+"A_R10",
+"A_R11"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
@@ -744,19 +762,19 @@
 "in": "53",
 "kept": "45",
 "used": "45",
-"cubes": "48"
+"cubes": "45"
 },
 "picture": {
 "in": "54",
 "kept": "45",
 "used": "45",
-"cubes": "48"
+"cubes": "45"
 },
 "reading": {
 "in": "53",
 "kept": "35",
 "used": "35",
-"cubes": "48"
+"cubes": "45"
 }
 },
 "hg_reref": "WM",
@@ -768,11 +786,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 71,
-"n_data": 48,
+"n_data": 45,
 "n_status": {
-"data": 48,
+"data": 45,
 "wm_ref": 4,
-"bad": 9,
+"bad": 12,
 "unknown": 10,
 "not_recorded": 0,
 "not_run": 0,
@@ -1028,8 +1046,10 @@
 "reference": "WM reference, 12 contacts (skipped as data)",
 "wm_n": 12,
 "wm_source": "BIDS TSV",
-"bad_n": 0,
-"bad_list": [],
+"bad_n": 1,
+"bad_list": [
+"EntG_R4"
+],
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
 "conditions": "audio/picture/reading",
@@ -1039,19 +1059,19 @@
 "in": "53",
 "kept": "46",
 "used": "46",
-"cubes": "103"
+"cubes": "102"
 },
 "picture": {
 "in": "54",
 "kept": "44",
 "used": "44",
-"cubes": "103"
+"cubes": "102"
 },
 "reading": {
 "in": "53",
 "kept": "42",
 "used": "42",
-"cubes": "103"
+"cubes": "102"
 }
 },
 "hg_reref": "WM",
@@ -1063,11 +1083,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 148,
-"n_data": 103,
+"n_data": 102,
 "n_status": {
-"data": 103,
+"data": 102,
 "wm_ref": 12,
-"bad": 0,
+"bad": 1,
 "unknown": 18,
 "not_recorded": 15,
 "not_run": 0,
@@ -1224,13 +1244,14 @@
 "reference": "WM reference, 9 contacts (skipped as data)",
 "wm_n": 9,
 "wm_source": "BIDS TSV",
-"bad_n": 6,
+"bad_n": 7,
 "bad_list": [
 "A_L1",
 "A_L2",
 "aH_R12",
 "pH_L1",
 "pI_L1",
+"pI_L2",
 "pI_L4"
 ],
 "notch": "interp \u00b7 per shaft",
@@ -1242,19 +1263,19 @@
 "in": "53",
 "kept": "36",
 "used": "36",
-"cubes": "74"
+"cubes": "73"
 },
 "picture": {
 "in": "54",
 "kept": "43",
 "used": "43",
-"cubes": "74"
+"cubes": "73"
 },
 "reading": {
 "in": "53",
 "kept": "23",
 "used": "23",
-"cubes": "74"
+"cubes": "73"
 }
 },
 "hg_reref": "WM",
@@ -1265,10 +1286,10 @@
 "hfa_dir": "PerTrial/HFA",
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
-"n_contacts": 194,
-"n_data": 74,
+"n_contacts": 193,
+"n_data": 73,
 "n_status": {
-"data": 74,
+"data": 73,
 "wm_ref": 9,
 "bad": 4,
 "unknown": 23,
@@ -1537,38 +1558,55 @@
 "raw_id": "PAT_3455",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-30 20:39",
+"run_start": "2026-10-12 16:28",
 "status": "ok",
-"reference": "WM reference, 21 contacts (skipped as data)",
-"wm_n": 21,
+"reference": "WM reference, 11 contacts (skipped as data)",
+"wm_n": 11,
 "wm_source": "BIDS TSV",
-"bad_n": 2,
+"bad_n": 19,
 "bad_list": [
 "HAD9",
-"HAD10"
+"HAD10",
+"OTD8",
+"HPD1",
+"IMD1",
+"IPD1",
+"HAD1",
+"AD1",
+"OPD1",
+"PHD1",
+"CPD2",
+"CPD9",
+"CPD10",
+"CPD11",
+"CPD12",
+"OPD5",
+"TSP4",
+"TSP5",
+"TSP6"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "250-1836 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "25",
+"unexplained_peaks": "21",
 "trials": {
 "audio": {
 "in": "48",
 "kept": "42",
 "used": "42",
-"cubes": "93"
+"cubes": "86"
 },
 "picture": {
 "in": "53",
 "kept": "47",
 "used": "47",
-"cubes": "93"
+"cubes": "86"
 },
 "reading": {
 "in": "51",
 "kept": "40",
 "used": "40",
-"cubes": "93"
+"cubes": "86"
 }
 },
 "hg_reref": "WM",
@@ -1580,11 +1618,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 116,
-"n_data": 93,
+"n_data": 86,
 "n_status": {
-"data": 93,
-"wm_ref": 21,
-"bad": 2,
+"data": 86,
+"wm_ref": 11,
+"bad": 19,
 "unknown": 0,
 "not_recorded": 0,
 "not_run": 0,
@@ -1848,14 +1886,15 @@
 "reference": "WM reference, 43 contacts (skipped as data)",
 "wm_n": 43,
 "wm_source": "BIDS TSV",
-"bad_n": 6,
+"bad_n": 7,
 "bad_list": [
 "cmd11",
 "y1",
 "y2",
 "y3",
 "y4",
-"cmd12"
+"cmd12",
+"had2"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "40-1311 s",
@@ -1866,19 +1905,19 @@
 "in": "50",
 "kept": "45",
 "used": "45",
-"cubes": "169"
+"cubes": "168"
 },
 "picture": {
 "in": "51",
 "kept": "48",
 "used": "48",
-"cubes": "169"
+"cubes": "168"
 },
 "reading": {
 "in": "51",
 "kept": "43",
 "used": "43",
-"cubes": "169"
+"cubes": "168"
 }
 },
 "hg_reref": "WM",
@@ -1890,11 +1929,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 218,
-"n_data": 169,
+"n_data": 168,
 "n_status": {
-"data": 169,
+"data": 168,
 "wm_ref": 43,
-"bad": 2,
+"bad": 3,
 "unknown": 4,
 "not_recorded": 0,
 "not_run": 0,
@@ -1906,12 +1945,12 @@
 "raw_id": "PAT_3975",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-30 19:50",
+"run_start": "2026-10-12 15:34",
 "status": "ok",
-"reference": "WM reference, 48 contacts (skipped as data)",
-"wm_n": 48,
+"reference": "WM reference, 11 contacts (MANUAL list)",
+"wm_n": 11,
 "wm_source": "BIDS TSV",
-"bad_n": 15,
+"bad_n": 53,
 "bad_list": [
 "TPG1",
 "PHD1",
@@ -1927,30 +1966,68 @@
 "HAD2",
 "HAD3",
 "HAD4",
-"FOD1"
+"FOD1",
+"TPG2",
+"TPG3",
+"TPG4",
+"TPG5",
+"TPD1",
+"TPD2",
+"TPD3",
+"TPD4",
+"TPD5",
+"AD1",
+"AD2",
+"AD3",
+"AD4",
+"AD5",
+"AD6",
+"AD7",
+"AD8",
+"AD9",
+"AD10",
+"AG1",
+"AG2",
+"AG3",
+"AG4",
+"AG5",
+"HAD5",
+"HAD6",
+"HAD7",
+"HAD8",
+"PHG1",
+"PHG2",
+"AG6",
+"IAG1",
+"IAG2",
+"IAG3",
+"IAG4",
+"IMD16",
+"IMD17",
+"IMD18"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "200-1550 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "37",
+"unexplained_peaks": "21",
 "trials": {
 "audio": {
 "in": "50",
 "kept": "40",
 "used": "40",
-"cubes": "141"
+"cubes": "140"
 },
 "picture": {
 "in": "50",
 "kept": "40",
 "used": "40",
-"cubes": "141"
+"cubes": "140"
 },
 "reading": {
 "in": "50",
 "kept": "29",
 "used": "29",
-"cubes": "141"
+"cubes": "140"
 }
 },
 "hg_reref": "WM",
@@ -1962,11 +2039,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 212,
-"n_data": 141,
+"n_data": 140,
 "n_status": {
-"data": 141,
-"wm_ref": 48,
-"bad": 15,
+"data": 140,
+"wm_ref": 11,
+"bad": 53,
 "unknown": 8,
 "not_recorded": 0,
 "not_run": 0,
@@ -2101,14 +2178,16 @@
 "reference": "WM reference, 44 contacts (skipped as data)",
 "wm_n": 44,
 "wm_source": "BIDS TSV",
-"bad_n": 6,
+"bad_n": 8,
 "bad_list": [
 "CAG5",
 "CPG1",
 "IAG10",
 "PHG2",
 "PHG3",
-"FOD7"
+"FOD7",
+"HAG2",
+"AG8"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
@@ -2119,19 +2198,19 @@
 "in": "52",
 "kept": "34",
 "used": "34",
-"cubes": "164"
+"cubes": "162"
 },
 "picture": {
 "in": "54",
 "kept": "51",
 "used": "51",
-"cubes": "164"
+"cubes": "162"
 },
 "reading": {
 "in": "53",
 "kept": "43",
 "used": "43",
-"cubes": "164"
+"cubes": "162"
 }
 },
 "hg_reref": "WM",
@@ -2143,11 +2222,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 224,
-"n_data": 164,
+"n_data": 162,
 "n_status": {
-"data": 164,
+"data": 162,
 "wm_ref": 44,
-"bad": 6,
+"bad": 8,
 "unknown": 10,
 "not_recorded": 0,
 "not_run": 0,
