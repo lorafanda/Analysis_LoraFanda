@@ -105,12 +105,14 @@ def build(md: str) -> str:
                 out.append("    </div>"); open_div = False
             pur = raw.startswith("#+ ")
             t = raw[3:].strip() if pur else raw[2:].strip()
-            out.append(f'    <h3 id="{slug(t)}"{" class=\"pur\"" if pur else ""}>{inline(t)}</h3>')
+            cls = ' class="pur"' if pur else ""
+            out.append(f'    <h3 id="{slug(t)}"{cls}>{inline(t)}</h3>')
             out.append('    <div class="method">'); open_div = True
         elif raw.startswith("## ") or raw.startswith("##+ "):
             close_lists()
             pur = raw.startswith("##+ ")
-            out.append(f'    <h4{" class=\"pur\"" if pur else ""}>{inline((raw[4:] if pur else raw[3:]).strip())}</h4>')
+            cls = ' class="pur"' if pur else ""
+            out.append(f'    <h4{cls}>{inline((raw[4:] if pur else raw[3:]).strip())}</h4>')
         elif raw.startswith("> "):
             close_lists()
             out.append(f'    <div class="note">{inline(raw[2:].strip())}</div>')
