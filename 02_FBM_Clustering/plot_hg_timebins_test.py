@@ -188,7 +188,7 @@ def main() -> int:
         if i == 0:
             ax.set_ylabel("HG course, scaled to its peak", fontsize=8)
             h0, l0 = ax.get_legend_handles_labels()
-            fig.legend(h0, l0, loc="upper right", ncol=len(l0), fontsize=7.5, frameon=False, bbox_to_anchor=(0.99, 0.945))
+            fig.legend(h0, l0, loc="center", ncol=len(l0), fontsize=8, frameon=False, bbox_to_anchor=(0.5, 0.555))
     # (a) agreement heatmap
     ax = fig.add_subplot(gs[1, 0:2])
     im = ax.imshow(A, vmin=0, vmax=1, cmap="viridis")
