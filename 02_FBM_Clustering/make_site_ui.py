@@ -54,10 +54,14 @@ ANSWERS = {
               "envelope difference of X1 and X2) and it was re-timed and rerun (gated 49 → 92); EL031 was processed and excluded "
               "(8 audio trials after the filters); PAT_3415 contributes nothing in this tree (its depth contacts left as Unknown); "
               "the 04 trees are archived. All twelve clustering runs are refitted on v15 (2026-10-09, K 5–30); the LM visualizer "
-              "(10-09) and the cluster visualizer (10-11) are on v15. Not yet on v15: FIG 4 / 5, the held-out curves, 249, 252.</span> "
+              "(10-09) and the cluster visualizer (10-11) are on v15; FIG 4 / 5 ran on it on 10-12. "
+              "On 10-12 the channel decisions came: 67 contacts bad-listed across 10 patients from the contact-noise audit (148, measured on the "
+              "WM-referenced signal, the only view that shows a noisy contact) and the figures; PAT_3975 moved to a deep white-matter reference "
+              "(11 contacts: the gyral-WM rule had given it 48 next to cortex); PAT_6854, PAT_3975 and PAT_3455 rerun. So v15 is stale and "
+              "<b>v16</b> is next; every stage-02 number waits for it.</span> "
               "One line per tab, the tab's own Answer behind each:</p>"
               "<!--TABLIST-->"),
-        status="v15 cache 2026-10-09 · 12 fits on v15 (10-09) · FIG 4/5, held-out curves, 249 and 252 still to run · LM and cluster visualizers on v15"),
+        status="v15 cache 2026-10-09, stale since the 10-12 channel decisions and three reruns · v16 next · 12 fits + FIG 4/5 on v15 · LM and cluster visualizers on v15"),
     "outline": dict(
         one="the paper as bullets, preprocessing → clustering outputs, darkness = confidence; source paper2_outline.md (make_outline_tab.py)",
         html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
@@ -78,8 +82,16 @@ ANSWERS = {
               "51 / 23 / 53 trials, whole-recording CAR, run 10-09) and excluded: 8 audio trials after the filters · PAT_3975 checked the same way, "
               "its tables are right · 141's readable audit fixed (a leftover of the archived 04 tree) · 03_ERSP is the only tree (04_* archived 10-07) · "
               "the Word report of 09-28 → 10-09 is in <code>01_FBM_Analysis/outputs/preprocessing_docs/</code></li>"
+              "<li class=\"new\"><b>10-12, channel decisions</b>: a noisy contact is visible only in the WM-referenced time domain (the cubes, the raw and "
+              "the trial scores each divide it out), so <code>148_contact_noise_audit.py</code> measures every contact there as a multiple of its own "
+              "montage median; the worst 8 per patient and PAT_3975's whole reference are below as ERSP + HFA + Signal rows. 67 contacts bad-listed in "
+              "10 patients (PAT_3975 39, PAT_3455 17, PAT_6854 12, EL036 3, single contacts elsewhere), each entry in config saying what measured what. "
+              "PAT_3975 runs on 11 deep-WM contacts now (<code>MANUAL_WM_CHANNELS</code>: the <code>wm-</code> rule only ever picks gyral WM, and its 48 "
+              "sat 3.5 mm from cortex at 0.95× the grey amplitude); PAT_3455's reference 20 → 11. Rerun: PAT_6854, PAT_3975, PAT_3455; the others' contacts "
+              "removed with 143 (logged). 147 keeps every channel in <code>03_ERSP-allchan-wm</code> for looking at what was removed; 141 reads finished runs "
+              "only; one overview PDF per patient (<code>01_FBM_LM_report.py</code>); the whole chain is <code>RUNBOOK_new_cohort.md</code>.</li>"
               "</ul>"),
-        status="03_ERSP = the only tree (04_* archived 10-07) · 31 / 31 ok, 29 in the cohort · last runs 10-07 (PAT_3780) and 10-09 (EL031) · audit 10-09 · was: 04_ersp_LM_RAWONLY = the tree v13 reads · 32 / 32 ok, interp + per shaft, BIDS WM references 3–53 contacts (EL044 grid CAR) · last runs 09-29 (EL051, EL052) · previous tree = _old"),
+        status="03_ERSP = the only tree (04_* archived 10-07) · 31 / 31 ok, 29 in the cohort · last runs 10-12 (PAT_6854, PAT_3975, PAT_3455), 10-09 (EL031), 10-07 (PAT_3780) · audit 10-12 · was: 04_ersp_LM_RAWONLY = the tree v13 reads · 32 / 32 ok, interp + per shaft, BIDS WM references 3–53 contacts (EL044 grid CAR) · last runs 09-29 (EL051, EL052) · previous tree = _old"),
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
         html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same <span class=\"new\">1613 electrodes (v15; 1487 on v11)</span>, K = 5…30. "
@@ -97,7 +109,7 @@ ANSWERS = {
               "per-cluster cards) and 252. The result blocks below are still the emptied v11 ones.</li>"
               "<li>K=8 (largest K with no one-patient cluster on HFA) or the held-out peaks — which one the paper reports.</li>"
               "<li>The native stability sweep has not been re-run since v8.</li></ul>"),
-        status="v15 cache 2026-10-09 · 12 runs on v15 · FIG 4/5, held-out curves, 249 and 252 pending · the result blocks are the emptied v11 ones"),
+        status="v15 cache 2026-10-09 · 12 runs and FIG 4/5 on v15 · stale since the 10-12 reruns: v16 next · held-out curves, 249 and 252 pending · the result blocks are the emptied v11 ones"),
     "lana": dict(
         one="language-network proximity predicts more HFA while hearing the prompt and while speaking, less during visual encoding",
         html=("<p>Against LanA (an 806-subject probabilistic atlas of the language network), being closer to the network "
@@ -142,8 +154,9 @@ ANSWERS = {
         status="audits 2026-09-15/16 · reruns pending"),
     "caveats": dict(
         one="what is open — the reruns, G-02's 14 trials, G-03's raw check, one cohort-changing regex, and two paper decisions",
-        html=("<p class=\"new\">Open on 2026-10-12: the paper phase on the v15 runs (FIG 4 / 5 at K 6–12), then the five brain-render figures "
-              "and the site phase; the held-out curves (select) and 249 / 252; PAT_3415's depth contacts dropped as Unknown by the 03_ERSP run "
+        html=("<p class=\"new\">Open on 2026-10-12 evening: cohort <b>v16</b> after today's channel decisions and the three reruns (141 → 142 → "
+              "rebuild_concat_cache --version 16 → the three fit scripts → the driver), then everything cohort-bound again: bundles, both visualizers, "
+              "FIG 4 / 5 (done on v15 at K 6–12, to redo), the five brain-render figures and the site phase; the held-out curves (select) and 249 / 252; PAT_3415's depth contacts dropped as Unknown by the 03_ERSP run "
               "(0 electrodes in v15); PAT_3780's TPG3 / FAS1 and EL040's CinG_R13 to look at in the raw; EL031's reconstruction; the four "
               "partition counters of 10-07 to redo on v15 (they ran on v13, with PAT_3780's wrong windows).</p>"
               "<p>Open, in order: G-02's 14 mis-timed trials — correct, drop or leave; G-03's raw timing check; notebook 150 "
