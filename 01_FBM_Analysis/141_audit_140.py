@@ -54,7 +54,32 @@ def system_of(raw):
 
 
 def newest_log(pid):
+    """The newest log of a run that FINISHED, not simply the newest log.
+
+    An interrupted 140 leaves a log behind like any other, and it is the newest one. Before
+    2026-10-12 this returned it, so the audit described a run that wrote nothing: PAT_3975
+    showed two aborted 16-line attempts (16:24, 16:25) instead of the 15:34 run its cubes
+    actually came from, with its trial counts blank, and EL034 showed a 12:28 run that died
+    in the picture block while the tree was still the 09-30 one.
+
+    "Pipeline done" is 140's own last word before the per-patient report. If no log has it
+    the newest is returned anyway - a patient whose every run was interrupted still has to
+    appear in the table - and the row then reads as the aborted run it is.
+    """
     logs = sorted(glob.glob(os.path.join(LOG_DIR, f"{pid}_*.log")))
+    for p in reversed(logs):
+        try:
+            with open(p, encoding="utf-8", errors="replace") as fh:
+                s = fh.read()
+        except OSError:
+            continue
+        # "Pipeline done" alone is not enough: 140 prints it before the per-patient report
+        # even when process_patient returned an error, so EL034's 12:24 run - which failed
+        # at the reference and wrote nothing - carried it while the tree stayed on 09-30.
+        # The report line is the real verdict: "    OK " for a run that produced products,
+        # "  ERR" for one that did not.
+        if "Pipeline done" in s and "\n    OK " in s:
+            return p
     return logs[-1] if logs else None
 
 

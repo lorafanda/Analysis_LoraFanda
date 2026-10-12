@@ -62,7 +62,7 @@ GRID_CAR_PATIENTS = {"EL044"}
 # this set 140 writes "_CAR_" files instead of "_WM_" ones; both land in the same patient
 # folder and are told apart by that tag, so do not run 142 --delete between a CAR run and
 # a WM one - it would take the older set as stale.
-WHOLE_CAR_PATIENTS = set()   # EL052 until 2026-09-29: its Lookup had no plugged WM contact; its BIDS TSV has 29
+WHOLE_CAR_PATIENTS = {"EL031"} #set()   # EL052 until 2026-09-29: its Lookup had no plugged WM contact; its BIDS TSV has 29
 EL_GRID_KEEP_PREFIXES = {"EL044": ("P", "p", "T")}
 # EL depth patients whose contacts are NOT named the Bern way (shaft_L1 / shaft-L1): the EL
 # name filter keeps a name only when it has an underscore or a dash, which for EL031 kept
@@ -156,13 +156,62 @@ bad_channels_manual = {
     # channels with the most MAD-outlier trials). All 14 are recorded under these names and
     # none is one of its 48 WM reference contacts. Its "E1-E4" are auxiliary inputs, not a
     # shaft: they leave with the aux drop (140, 2026-10-02), not through this list.
+    # 2026-10-12 (Lora, from the figures): the whole of TPG and TPD, all of AD, AG1-5,
+    # PHG1-2 and HAD5-8 - 30 more contacts, 31 with TPG1 which was already here. Checked
+    # against the reference THIS patient now runs with (the 11 deep-WM contacts of
+    # MANUAL_WM_CHANNELS: CPD2 CPG3-7 FOG3 IAD9 IAG8 IMD9 IMD10): not one of the 31 is in
+    # it, so the mean does not move and no re-run was needed - only the products of the 31
+    # had to go. Under the OLD 48-contact gyral reference AD7 and TPD2 were members; that
+    # reference was replaced by the 15:34 run, so it no longer matters.
+    # What they are, by the anatomy table, since the list is not only "noisy WM": AD1-4 and
+    # AG1-4 are amygdala, AD5-6 / AG5 are Inf-Lat-Vent (CSF, not tissue), AD10 / TPD5 /
+    # TPG5 / HAD5 are cortex (ctx-), and the remaining 17 are gyral WM. On 148 they run
+    # 1.4-4.7x broadband; PHG1/PHG2 are the only two that stand out in high gamma
+    # (4.2x / 3.3x) rather than broadband.
     "PAT_3975": ["TPG1",
                  *[f"PHD{i}" for i in range(1, 7)], *[f"HAG{i}" for i in range(1, 4)],
-                 *[f"HAD{i}" for i in range(1, 5)], "FOD1"],
+                 *[f"HAD{i}" for i in range(1, 5)], "FOD1",
+                 *[f"TPG{i}" for i in range(2, 6)], *[f"TPD{i}" for i in range(1, 6)],
+                 *[f"AD{i}" for i in range(1, 11)], *[f"AG{i}" for i in range(1, 6)],
+                 *[f"HAD{i}" for i in range(5, 9)], "PHG1", "PHG2",
+                 # third pass the same day: eight more, all of them members of the OLD
+                 # 48-contact gyral reference and none of the current 11, so again no
+                 # re-run - only their products had to go. IMD16-18 are the ones that
+                 # stand out in high gamma rather than broadband (1.52-1.63x). Note the
+                 # shafts: IAG8, IMD9 and IMD10 ARE in the current reference and sit a few
+                 # contacts away from IAG1-4 and IMD16-18, so anything shaft-wide here is
+                 # still inside the mean through those three.
+                 "AG6", *[f"IAG{i}" for i in range(1, 5)],
+                 *[f"IMD{i}" for i in range(16, 19)]],
     # 2026-10-02 (Lora). The photodiode channel she also named for PAT_3455 (and PAT_3415)
     # is not a contact and is not data, but its ERSP and HFA figures are kept as a trigger
     # check: 140 carries it as a figures-only channel (no cube, no score rows, no Signal).
-    "PAT_3455": ["HAD9", "HAD10"],
+    # 2026-10-12. Measured on the WM-referenced signal (the montage median is sd 36.8 uV,
+    # 70-150 Hz 1.51 uV), not on the cubes: the cube is dB re baseline, so a contact that
+    # is equally noisy in baseline and trial normalises away to look ordinary. OTD8 is the
+    # only reference contact worth removing - 1.70x in high gamma, and the one WM contact
+    # with a task response of its own (+0.56 dB), which a reference must not have. The
+    # rest are shaft-entry contacts at 1.7-3.4x the montage. CPD1, TOD1 and TSP1 are NOT
+    # here: they measure 1.01x, 0.77x and 0.59x, so "contact 1 is noisy" is not a rule.
+    # 2026-10-12, second pass (Lora, from the figures): nine more, all of them members of
+    # the 20-contact mean the 13:48 run used, so this one DOES need a 140 re-run - the
+    # reference goes 20 -> 11 (HPD5 HPD7 IMD3 IMD4 IMD5 IMD11 IPD8 IPD14 PHD5 PHD6 TOD6)
+    # and every one of the 86 channels changes value. No products are lost: 140 writes none
+    # for a reference contact, so these nine have no cubes to delete.
+    # Two things on the record, because the measurement argues the other way. The anatomy
+    # is sound: all nine are gyral WM at weight 1.00, and this patient's reference does NOT
+    # sit on cortex the way PAT_3975's did (median 10.5 mm to the nearest non-WM contact,
+    # only 3 of 20 within 5 mm; CPD2 and TSP6 at 3.5 mm are the exceptions). And CPD9-12
+    # are the deepest (14-17.5 mm) and quietest (0.39-0.81x) contacts in the pool, while
+    # HPD5 / HPD7 (1.21x / 1.27x) stay in. This is her read of the traces over the numbers.
+    # The bad list, not WM_NOT_REFERENCE: she wants them out of the analysis too.
+    "PAT_3455": ["HAD9", "HAD10",
+                 "OTD8",                                     # 1.07x sd, 1.70x HG, in the WM reference
+                 "HPD1", "IMD1", "IPD1", "HAD1", "AD1",      # 3.39, 3.08, 2.75, 2.22, 2.11x sd
+                 "OPD1", "PHD1",                             # 1.87x, 1.71x sd
+                 "CPD2", "CPD9", "CPD10", "CPD11", "CPD12",  # wm-rh-supramarginal / -posteriorcingulate
+                 "OPD5",                                     # wm-rh-postcentral
+                 "TSP4", "TSP5", "TSP6"],                    # wm-rh-superiortemporal
     "PAT_3390": ["PHG12"],
     # PAT_3965, 2026-10-02: cmd12 was one of the 44 white-matter reference contacts. In the raw
     # TRC it is cmd11's twin (already listed): SD 356 uV against a median of 73, 60-390 Hz floor
@@ -171,8 +220,13 @@ bad_channels_manual = {
     # 0.3-6 deg) and at 43x on cmd12, which carried 99-101 % of it. Simulated without it: the
     # lines before the notch go from 17-26 dB to 1-3 dB and the floor drops 1.1-1.9 dB in every
     # band. The reference stays at 43 contacts.
-    "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4", "cmd12"],
-    "EL030": ["EntG_R18"],  # example; fill after visual/clinical review
+    "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4", "cmd12",
+                 "had2"],  # 2026-10-13 (Lora, from 148): 5.9x broadband
+    # neither of these had a bad list before 2026-10-13; these two came out of 148
+    "EL042": ["EntG_R4"],  # 2026-10-13 (Lora, from 148): 29.2x HG
+    "EL046": ["pI_L2"],  # 2026-10-13 (Lora, from 148): 18.6x HG
+    "EL030": ["EntG_R18",
+              "aH_L11"],  # 2026-10-13 (Lora, from 148): 10.8x broadband, a step through the whole ERSP
     # EL035, 2026-10-02 (Lora): the two shafts whose notch leaves a line above the floor - CinG_R
     # and aI_R, 6 of 24 bands each still > 3 dB up at 250 / 350 Hz in the block PSD (notch audit
     # of the 09-30 run). The data contacts of both are listed: CinG_R1/3/5/7 (CinG_R2/4/6/8 are
@@ -194,7 +248,11 @@ bad_channels_manual = {
     # response-half rise is broadband to 400 Hz on every contact and grows towards the
     # outermost one, the speech-muscle signature, not a neural response.
     "EL033": [f"aH_L{i}" for i in range(1, 13)] + ["PHG_R4"],
-    "EL036": [f"pHG_R{i}" for i in range(1, 5)]+[f"pHG_R{i}" for i in range(8, 13)],
+    "EL036": [f"pHG_R{i}" for i in range(1, 5)]+[f"pHG_R{i}" for i in range(8, 13)]
+             # 2026-10-12 (Lora, by eye on the figures). 148 does not flag these at all:
+             # 0.7x / 0.7x / 1.2x their own montage median. Deleted without a rerun; none
+             # of the three is in the WM reference, so no other channel is affected.
+             + ["A_R9", "A_R10", "A_R11"],
     "EL037": ["pH_R7","aH_R1","A_R10","A_R12","CinG_L12","CinG_L13","aI_L18"]
               + [f"pI_L{i}" for i in range(1, 17)]
               + [f"pI_R{i}" for i in range(1, 17)]
@@ -215,13 +273,15 @@ bad_channels_manual = {
               "pH_R1", "pH_R2", "LinG_R5", "LinG_R6", "A_L1"],
     # "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44", "Pa52", "Pa54", "Pa62", "Pa36", "Pa61", "Pa45", "Pa59", "Pa38", "Pa30", "Pa50", "Pa35", "Pa58", "Pa46", "Pa27", "Pa43", "Pa29", "Pa28", "Pa42", "Pa34", "Pa31", "Pa55", "Pa10", "Pa33", "Pa19", "Pa57", "Pa39", "Pa22", "Pa20", "Pa47", "Pa14", "Pa4"],
     "EL044": ["T57","postP1","T9","T39","T10","Pa63","Pa48","Pa1","Pa53", "Pa60", "Pa51", "Pa37", "Pa44"],
-    "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12"],
+    "EL034": ["MFG-10","MFG-11","MFG-12","OFG-L15","aH-L12",
+              "aH-L7"],  # 2026-10-13 (Lora, from 148): 19.2x HG, and it was IN the WM reference
     "PAT_2868": ["IDM3"],
     # PAT_1327, 2026-09-24, by visual review of the first run. All five are recorded under
     # exactly these names (checked against the TRC's 236 channels) and none of them is in
     # the white-matter reference, so it stays at its 44 contacts.
     "PAT_1327": ["CAG5", "CPG1", "IAG10", "PHG2", "PHG3",
-                 "FOD7"],   # 2026-09-29 (Lora); its files were removed from the 140 outputs by hand
+                 "FOD7",   # 2026-09-29 (Lora); its files were removed from the 140 outputs by hand
+                 "HAG2", "AG8"],  # 2026-10-13 (Lora, from 148): 5.9x broadband, 5.2x HG
     # PAT_6684 (G-05) on its TRC, 2026-09-13, by visual review. CAG1/CAG2 are WM contacts:
     # listing them here also keeps them out of the WM reference.
     "PAT_6684": ["FPG10", "FPG5", "FPG9", "FPG8", "FOM7", "FOM11","CAG1", "FOL8", "CAG2",
@@ -229,12 +289,21 @@ bad_channels_manual = {
                  "IMG13", "IMG14", "IMG15", "FOM10","HPG1","HPG8","HPG7","HPG6","HPG5","CAG6","HAG5","HAG8","HAG7","HAG4","HAG3","HAG2","FOL2","AG5","AG4","AG3","AG2","HAG6","FOL11","TSP1","CAG3"],
 
 "PAT_6704": ["ainp1", "IAD1", "AD8", "HAD7", "IPD8", "FOD1", "FOD5", "FOD6",
+             "FPD6",  # 2026-10-13 (Lora, from 148): 7.7x broadband, 63.9x HG
              # and the microwires, 12 per bundle in the export
              *[f"HADm{i}" for i in range(1, 13)],
              *[f"PHDm{i}" for i in range(1, 13)],
              *[f"TPDm{i}" for i in range(1, 13)],
              *[f"FODm{i}" for i in range(1, 13)]],
 "PAT_6854": ["IAD1", "TBG1", "TBG2", "HAG1", "HAG2", "IAD10",
+             "IMG1",  # 2026-10-12 (Lora, from 148): 13.4x HG, and it was IN the WM reference
+             # 2026-10-12 (Lora, by eye on the Signal and HFA figures). Only HAD1/HAD2 stand
+             # out on 148 (2.7-3.2x broadband); the rest sit at 0.8-2.2x their own montage
+             # median, so these are her verdict on the traces, not a measurement.
+             # TBG4 is IN the WM reference and these were deleted without a rerun, so the
+             # other channels of this patient still carry it in their mean.
+             "TBG3", "TBG4", "IPG16", "IMG2", "HAG3", "HAD1", "HAD2",
+             "AG1", "AG2", "AD1", "AD2",
              # and the microwires, 8 per bundle in the export
              *[f"HADm{i}" for i in range(1, 9)],
              *[f"ADm{i}" for i in range(1, 9)],
@@ -391,6 +460,39 @@ CHANNEL_SHAFT_ALIAS = {
 MANUAL_WM_CHANNELS = {
     # "PAT_6953": ["AD7", "AD8", "HPD4", "HPD5", "TPD5", "TPD6", "TPD7",
     #              "IPD8", "IPD9"],
+
+    # PAT_3975 is here for a DIFFERENT reason from PAT_6953 above: it has a perfectly
+    # good electrodes TSV, and the automatic rule read it correctly. The rule itself is
+    # the problem for this patient (Lora, 2026-10-12).
+    #
+    # derive_wm_channels_from_electrodes_tsv takes tissueWeights_1 > 0.97 AND a
+    # tissueLabel whose first token starts with "wm-". In FreeSurfer "wm-<hemi>-<parcel>"
+    # is GYRAL white matter: the core directly under that parcel's cortical ribbon. The
+    # DEEP white matter is "Left-/Right-UnsegmentedWhiteMatter", which does not start with
+    # "wm-" and so can never be selected. The rule therefore picks the white matter
+    # nearest to cortex and discards the white matter farthest from it.
+    #
+    # For PAT_3975 that gave a 48-contact reference whose members sit a median of 3.5 mm
+    # - one contact step - from the nearest non-WM contact, carrying 0.95x the broadband
+    # and 0.85x the high-gamma amplitude of the grey contacts and the same dB modulation.
+    # It was not a silent baseline: subtracting it took part of the real response out of
+    # all 204 channels. (Measured on the 03_ERSP-allchan-wm tree, where --keep-wm draws
+    # the reference contacts as data; it was not the dB normalisation and not a shared-
+    # reference artefact - between-shaft cube correlation is only +0.17.)
+    #
+    # These 11 are every contact at Unsegmented(deep) white matter > 0.97, the same purity
+    # the rule uses. All 11 are in the recording, none is bad-listed, each is quieter than
+    # the montage median (broadband 0.44-1.15x, high gamma 0.46-0.72x), and they sit a
+    # median of 28 mm from the nearest non-WM contact. Two costs, accepted deliberately:
+    #   * 11 is a thin pool, so the mean is noisier - 0.20x vs 0.13x the montage median
+    #     broadband, 0.15x vs 0.12x in high gamma. About 1.5x, not an order of magnitude,
+    #     because each member is individually so much quieter.
+    #   * 5 of the 11 are on CPG, so the reference is weighted toward that shaft.
+    # Nothing else changes: this dict is the first thing _wm_labels_from_anatomy checks and
+    # it is read per patient, so no other patient's reference moves. 140 must be re-run for
+    # PAT_3975, and wm_indices_for_patient logs how many of the 11 it matched.
+    "PAT_3975": ["CPD2", "CPG3", "CPG4", "CPG5", "CPG6", "CPG7",
+                 "FOG3", "IAD9", "IAG8", "IMD9", "IMD10"],
 }
 
 # Contacts flagged isOut=TRUE in the Lookup sit OUTSIDE the brain, so they are

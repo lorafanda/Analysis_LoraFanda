@@ -17,6 +17,8 @@ stored as a JPEG (150 dpi) - a vector PDF of 30 pages of images came to 83 MB.
 from __future__ import annotations
 
 import argparse
+import csv
+import glob
 import re
 import sys
 from pathlib import Path
@@ -34,9 +36,13 @@ from functions import config as cfg                      # noqa: E402
 TREE = HERE / "outputs" / cfg.ERSP_TREE
 CONDS = ("audio", "picture", "reading")
 PAGE = (16.5, 11.7)                                      # A3 landscape, inches
-PER_PAGE = 6                                             # contacts per page, and always this many columns
+PER_PAGE = 4                                             # contacts per page, and always this many columns
 CH_RE = re.compile(r"_(?:WM|CAR|NONE)_ERSP_(.+)_TN_CLEAN\.png$")
-ROWS = (("ERSP clean", 300), ("HFA trials", 520), ("Signal trials", 520))   # label, thumbnail width px
+# label, thumbnail width px. Four columns on an A3 page give each contact about 4 inches,
+# which is 600 px at 150 dpi, so the thumbnails are sized for that rather than for six.
+ROWS = (("ERSP clean", 460), ("HFA trials", 780), ("Signal trials", 780))
+# row heights: the HFA raster loses a little to the signal traces, which were cramped
+HEIGHTS = (1.0, 1.35, 2.85)
 
 
 def shaft(ch: str) -> str:
@@ -62,6 +68,37 @@ def one(d: Path, pattern: str):
 
 
 DPI = 150
+# the contact's name: kept, bad-listed, and in the white-matter reference. The WM colour
+# is a dark amber rather than a true yellow, which is unreadable on white.
+GOOD, BAD, WMC = "#2e7d32", "#c1121f", "#b8860b"
+BIDS = Path(r"\\nasac-m2.unige.ch\m-HumanNeuronLab\DATARAW\BIDS_elec")
+
+
+def norm(s: str) -> str:
+    """lf_io_utils.normalize_label, without importing it (that module wants mne)."""
+    return str(s).replace("_", "").replace("-", "").upper()
+
+
+def wm_contacts(pid: str) -> set[str]:
+    """The contacts in the white-matter reference, by the pipeline's own rule:
+    lf_io_utils.derive_wm_channels_from_electrodes_tsv wants tissueWeights_1 > 0.97 AND
+    the first tissueLabel token to start with 'wm-'. Reproduced rather than imported,
+    because that module pulls in mne. Returns normalised names."""
+    num = pid.replace("PAT_", "")
+    out = set()
+    for sub in (f"MICROEPI/sub-{num}", f"SEEG-HUG/sub-{num}", f"SEEG-BERN/sub-{pid}"):
+        for p in glob.glob(str(BIDS / sub / "ieeg" / "*_electrodes.tsv")):
+            with open(p, newline="", encoding="utf-8", errors="replace") as fh:
+                for r in csv.DictReader(fh, delimiter="\t"):
+                    try:
+                        w1 = float(r.get("tissueWeights_1", "nan"))
+                    except (TypeError, ValueError):
+                        continue
+                    tok = str(r.get("tissueLabel", "")).strip().split()
+                    if w1 > 0.97 and tok and tok[0].startswith("wm-"):
+                        out.add(norm(r["name"]))
+            return out
+    return out
 
 
 def page(fig):
@@ -92,6 +129,20 @@ def report(pid: str) -> Path | None:
         fig.suptitle(f"{pid}  ·  03_ERSP overview", fontsize=13, x=0.01, ha="left")
         fig.tight_layout(rect=(0, 0, 1, 0.97)); yield page(fig)
 
+        # ---- page 2: the trigger channel the trials were cut from, if it has been drawn
+        # Collected, not computed: make_photodiode_figures.py reads the raw recording and
+        # writes one PNG per patient, and this picks it up if it is there. A patient whose
+        # figure has not been made simply has no such page.
+        pdp = TREE.parent / "photodiode_check" / f"{pid}_photodiode.png"
+        im = thumb(pdp, 3000)
+        if im is not None:
+            fig, ax = plt.subplots(figsize=PAGE)
+            ax.axis("off")
+            ax.imshow(im)
+            fig.suptitle(f"{pid}  ·  the trigger channel, and the onsets taken from it",
+                         fontsize=13, x=0.01, ha="left")
+            fig.tight_layout(rect=(0, 0, 1, 0.97)); yield page(fig)
+
         # ---- contacts, by shaft, from the clean ERSP images
         chans = {}
         for c in CONDS:
@@ -99,6 +150,27 @@ def report(pid: str) -> Path | None:
                 m = CH_RE.search(f.name)
                 if m:
                     chans.setdefault(m.group(1), {})[c] = f
+        if not chans:
+            # a --fast run writes no ERSP_clean, so the contact list comes from the
+            # per-trial plots instead; those pages then have an empty first row
+            for c in CONDS:
+                for f in (sig / c).glob("*_SIGtrials_*.png"):
+                    m = re.search(r"_SIGtrials_(.+)\.png$", f.name)
+                    if m:
+                        chans.setdefault(m.group(1), {})
+        # the bad-listed contacts have no figures at all - 140 writes nothing for them -
+        # so they are put back here as empty cells with a red name. Without this a removed
+        # contact simply vanishes and a shaft reads as if it never had one.
+        wm = wm_contacts(pid)
+        listed = getattr(cfg, "bad_channels_manual", {}).get(pid, []) or []
+        have = {norm(ch) for ch in chans}
+        bad = set()
+        for b in listed:
+            if norm(b) in have:
+                bad.add(next(ch for ch in chans if norm(ch) == norm(b)))
+            else:
+                chans.setdefault(b, {})
+                bad.add(b)
         shafts = {}
         for ch in chans:
             shafts.setdefault(shaft(ch), []).append(ch)
@@ -110,7 +182,8 @@ def report(pid: str) -> Path | None:
             for c in CONDS:
                 for pi, part in enumerate(parts, 1):
                     fig, axes = plt.subplots(3, PER_PAGE, figsize=PAGE, squeeze=False,
-                                             gridspec_kw=dict(height_ratios=[1, 1.5, 2.4], wspace=0.03, hspace=0.04))
+                                             gridspec_kw=dict(height_ratios=list(HEIGHTS),
+                                                              wspace=0.03, hspace=0.06))
                     for ax in axes.ravel():
                         ax.axis("off")
                     for j, ch in enumerate(part):
@@ -119,9 +192,19 @@ def report(pid: str) -> Path | None:
                                 thumb(one(sig / c, f"*_SIGtrials_{ch}.png"), ROWS[2][1]))
                         for i, im in enumerate(imgs):
                             if im is not None:
-                                axes[i, j].imshow(im, aspect="auto")
+                                # no aspect="auto": that stretched every panel to fill its
+                                # cell, so the same raster looked a different shape on a
+                                # full page than on a half-empty one
+                                axes[i, j].imshow(im)
                             if i == 0:
-                                axes[i, j].set_title(ch, fontsize=8, pad=2)
+                                # bad wins over WM in the colour, but both are named: a
+                                # bad contact that is IN the reference is the case that
+                                # matters (it puts its noise on every other channel)
+                                is_bad, is_wm = ch in bad, norm(ch) in wm
+                                tag = ("  · bad" if is_bad else "") + ("  · WM ref" if is_wm else "")
+                                axes[i, j].set_title(ch + tag, fontsize=9, pad=2,
+                                                     color=BAD if is_bad else (WMC if is_wm else GOOD),
+                                                     fontweight="bold")
                     for i, (lab, _) in enumerate(ROWS):
                         axes[i, 0].text(-0.06, 0.5, lab, transform=axes[i, 0].transAxes, rotation=90,
                                         va="center", ha="right", fontsize=8)
@@ -147,7 +230,13 @@ def report(pid: str) -> Path | None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--patients", nargs="*")
+    ap.add_argument("--tree", default=None,
+                    help="read another tree under outputs/ "
+                         "(03_ERSP-allchan, 03_ERSP-allchan-ref)")
     a = ap.parse_args()
+    if a.tree:
+        global TREE
+        TREE = HERE / 'outputs' / a.tree
     pids = a.patients or sorted(p.name for p in TREE.iterdir() if (p / cfg.block_name).is_dir())
     for pid in pids:
         report(pid)

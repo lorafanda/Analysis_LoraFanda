@@ -54,7 +54,12 @@ def R(prefix: str, a: int, b: int) -> list[str]:
 # ---------------------------------------------------------------------------------------
 WHY = {
     "EL033": [
-        ("2026-10-02", ["pH_R7", "aH_R12"] + R("aH_L", 1, 12),
+        # pH_R7 and aH_R12 were in this entry until 2026-10-12 and are not on EL033's bad
+        # list - they belong to other patients (pH_R7 to EL037 / EL038 / EL051, aH_R12 to
+        # EL046 / EL052). Both still have all three cubes here, so they were never removed
+        # from EL033 either. The stray names tripped this module's own guard and blocked
+        # every rebuild of the s1 tab.
+        ("2026-10-02", R("aH_L", 1, 12),
          "visual review of the 03_ERSP tree (striped, “notched” ERSPs); removed from the tree without a rerun. Judged on cubes that carried PHG_R4's noise — see the finding"),
         ("2026-10-02", ["PHG_R4"],
          "white-matter reference contact: after the reference its 60–390 Hz floor sits 18 / 15 / 8 dB above the median data contact (audio / picture / reading) and it carries 98–102 % of the line every data contact shares, at 9.0× their amplitude"),
@@ -84,9 +89,23 @@ WHY = {
         ("2026-09-28", ["A_L2", "A_L3", "A_L4", "STG_L1", "STG_L2"], "the deepest 350 Hz stripe of the patient (−1.7 dB rows)"),
         ("2026-10-02", ["TTG_L4", "TTG_L7", "TTG_L8", "A_L1", "A_L5", "A_L6"] + R("EntG_L", 5, 11), "visual review of the 03_ERSP tree; removed from the tree without a rerun"),
     ],
+    "EL034": [
+        ("2026-10-12", ["aH-L7"],
+         "19.2× its own montage median at 70–150 Hz (148, on the WM-referenced signal). It is in this patient's white-matter mean, so 140 wrote it no products in 03_ERSP and only the <code>147 --keep-wm</code> audit tree held its figures. Removing it changes the reference and therefore every channel: THE RERUN IS STILL OWED and this tree is the 09-30 run"),
+    ],
+    "EL036": [
+        ("2026-10-12", ["A_R9", "A_R10", "A_R11"],
+         "Lora, on the figures. 148 does not flag them at all — 0.7× / 0.7× / 1.2× their own montage median — so this is a verdict on the traces, not a measurement. None is in the white-matter reference; removed from the tree without a rerun"),
+    ],
+    "EL042": [
+        ("2026-10-12", ["EntG_R4"],
+         "3.5× broadband and 29.2× at 70–150 Hz (148); not a reference contact; removed from the tree without a rerun"),
+    ],
     "EL046": [
         ("2026-09-24", ["pI_L1", "pI_L4", "aH_R12", "A_L1", "pH_L1", "A_L2"],
          "the out-of-brain list (<code>LOOKUP_OUT_OF_BRAIN</code>): pI_L1 / pI_L4 from the anatomy review, the other four added after the 09-24 rerun"),
+        ("2026-10-12", ["pI_L2"],
+         "3.1× broadband and 18.6× at 70–150 Hz (148); not a reference contact; removed from the tree without a rerun"),
     ],
     "EL048": [
         ("2026-10-02", ["aH_L1"],
@@ -109,29 +128,61 @@ WHY = {
     "PAT_1327": [
         ("2026-09-24", ["CAG5", "CPG1", "IAG10", "PHG2", "PHG3"], "visual review of the first run; none is a reference contact"),
         ("2026-09-29", ["FOD7"], "Lora; its files removed by hand"),
+        ("2026-10-12", ["HAG2", "AG8"],
+         "148: HAG2 5.9× broadband / 4.3× high gamma, AG8 2.2× / 5.2× their own montage median; neither is a reference contact; removed from the tree without a rerun"),
     ],
     "PAT_3390": [("2026-10-02", ["PHG12"], "review of the 03_ERSP tree; removed from the tree without a rerun")],
     "PAT_3415": [
         ("2026-09-30", R("HLG", 1, 18), "the whole shaft sits 25–28 dB above the other depth contacts at 70–150 Hz (a connector, not tissue); HLG18 had been a ninth of the reference until 09-29"),
     ],
-    "PAT_3455": [("2026-10-02", ["HAD9", "HAD10"], "review of the 03_ERSP tree; removed from the tree without a rerun")],
+    "PAT_3455": [
+        ("2026-10-02", ["HAD9", "HAD10"], "review of the 03_ERSP tree; removed from the tree without a rerun"),
+        ("2026-10-12", ["OTD8"],
+         "white-matter reference contact: 1.70× the montage median at 70–150 Hz and the one contact in the mean with a task response of its own (+0.56 dB), which a reference must not have. Measured on the WM-referenced signal, not on the cubes — a contact equally noisy in baseline and trial normalises away to look ordinary in dB re baseline"),
+        ("2026-10-12", ["HPD1", "IMD1", "IPD1", "HAD1", "AD1", "OPD1", "PHD1"],
+         "the shaft-entry contacts, 1.7–3.4× the montage median (148). CPD1, TOD1 and TSP1 are deliberately NOT on the list — they measure 1.01×, 0.77× and 0.59× — so “contact 1 is noisy” is not a rule here. Removed from the tree without a rerun"),
+        ("2026-10-12", ["CPD2", "CPD9", "CPD10", "CPD11", "CPD12", "OPD5", "TSP4", "TSP5", "TSP6"],
+         "Lora, on the figures: nine members of the 20-contact white-matter mean, so the reference went 20 → 11 and the patient was rerun — every one of the 86 channels changed value. The measurement argues the other way and is recorded as such: all nine are gyral white matter at weight 1.00, this patient's reference does not sit on cortex the way PAT_3975's did (median 10.5 mm to the nearest non-WM contact, only 3 of 20 within 5 mm), CPD9–12 are the deepest (14–17.5 mm) and quietest (0.39–0.81×) contacts in the pool, and HPD5 / HPD7 at 1.21× / 1.27× remain in the mean"),
+    ],
     "PAT_3965": [
         ("2026-10-02", ["cmd12"],
          "white-matter reference contact, cmd11's twin: 356 µV SD in the raw file against a median of 73, 60–390 Hz floor 22.6 dB above the median channel; after the reference it carried 99–101 % of the line every data contact shares, at 43× their amplitude"),
         ("2026-10-02", ["cmd11", "y1", "y2"], "measured in the raw file 10-02: 60–390 Hz floor 22–23 dB above the median channel (on the list before that)"),
+        ("2026-10-12", ["had2"],
+         "5.9× broadband and 4.8× at 70–150 Hz its own montage median (148); not a reference contact; removed from the tree without a rerun"),
     ],
     "PAT_3975": [
         ("2026-10-02", R("PHD", 1, 6) + R("HAG", 1, 3) + R("HAD", 1, 4) + ["FOD1"], "ictal activity (Lora, review of the 03_ERSP tree); none is a reference contact; removed from the tree without a rerun"),
+        # THE REFERENCE CHANGED FOR THIS PATIENT - see cfg.MANUAL_WM_CHANNELS["PAT_3975"].
+        # The 48 gyral-WM contacts the rule selected sat a median of 3.5 mm from the nearest
+        # grey contact and carried 0.95x / 0.85x the amplitude of the grey contacts with the
+        # same dB modulation, so the mean was not a silent baseline. It now runs on the 11
+        # UNSEGMENTED (deep) white-matter contacts instead.
+        ("2026-10-12", R("TPG", 1, 5) + R("TPD", 1, 5) + R("AD", 1, 10) + R("AG", 1, 5)
+                       + R("HAD", 5, 8) + ["PHG1", "PHG2"],
+         "Lora, on the figures, after the reference was moved to the deep white matter. 31 contacts, 1.4–4.7× their own montage median on 148, PHG1 / PHG2 the only two that stand out in high gamma (4.2× / 3.3×) rather than broadband. Not all of it is “noisy white matter”: AD1–4 and AG1–4 are amygdala, AD5–6 and AG5 are Inf-Lat-Vent (CSF, not tissue), AD10 / TPD5 / TPG5 / HAD5 are cortex, the other 17 are gyral WM. None was in the new 11-contact reference, so no rerun was needed — only their products went"),
+        ("2026-10-12", ["AG6"] + R("IAG", 1, 4) + R("IMD", 16, 18),
+         "the same pass, eight more: all were members of the OLD 48-contact gyral reference and none of the current 11, so again products only. IMD16–18 stand out in high gamma (1.52–1.63×) rather than broadband. Note the shafts: IAG8, IMD9 and IMD10 ARE in the current reference and sit a few contacts from these, so anything shaft-wide here is still inside the mean through those three"),
     ],
     "PAT_5515": [("2026-09-15", ["FOD6", "FOD8"], "44× / 28× the median high gamma after the notch")],
     "PAT_6704": [
         ("", R("HADm", 1, 12) + R("PHDm", 1, 12) + R("TPDm", 1, 12) + R("FODm", 1, 12), "the microwires of the export, 12 per bundle (not macro contacts)"),
         ("", ["ainp1"], "analog input"),
+        ("2026-10-12", ["FPD6"],
+         "7.7× broadband and 64× at 70–150 Hz its own montage median (148), the worst single contact of the cohort on high gamma; not a reference contact; removed from the tree without a rerun"),
     ],
     "PAT_6854": [
         ("", R("HADm", 1, 8) + R("ADm", 1, 8) + R("HAGm", 1, 8) + R("AGm", 1, 8), "the microwires of the export, 8 per bundle (not macro contacts)"),
+        ("2026-10-12", ["IMG1"],
+         "13.4× the montage median at 70–150 Hz AND in the white-matter mean. On a MicroEPI patient a reference contact still gets products — that branch of 140 sets <code>wm_skip = set()</code>, unlike the EL / PAT path — so IMG1 was both in the mean and in the concat. Rerun on 10-12 with it out of both"),
+        ("2026-10-12", ["TBG3", "TBG4", "IPG16", "IMG2", "HAG3", "HAD1", "HAD2", "AG1", "AG2", "AD1", "AD2"],
+         "Lora, on the figures. Only HAD1 / HAD2 stand out on 148 (2.7× / 3.2× broadband); the other nine sit at 0.8–2.2× their own montage median, so this is a verdict on the traces. TBG4 is in the white-matter mean and these were deleted without a rerun, so the other channels of this patient still carry it in their reference"),
     ],
-    "EL030": [("", ["EntG_R18"], "placeholder entry (“example” in the config)")],
+    "EL030": [
+        ("", ["EntG_R18"], "placeholder entry (“example” in the config)"),
+        ("2026-10-12", ["aH_L11"],
+         "10.8× its own montage median broadband (148) — the one contact of the first eight candidates reviewed that actually looked broken, and the only one that was worst on broadband rather than high gamma; not a reference contact; removed from the tree without a rerun"),
+    ],
     "PAT_3780": [("", ["FAP9"], "placeholder entry (“example” in the config)")],
 }
 
