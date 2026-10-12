@@ -63,6 +63,9 @@ def main() -> None:
     ap.add_argument("--commit", action="store_true", help="make the commits (default: print the plan)")
     ap.add_argument("--push", action="store_true", help="push main afterwards (needs --commit)")
     ap.add_argument("--label", default=None, help="cohort label for the messages (default: the cache name of the first run's manifest, e.g. 'cohort v15')")
+    ap.add_argument("--with-stats", action="store_true",
+                    help="also commit each manifest run's cluster_statistics.json (249's output; the report's per-cluster cards read it from main - "
+                         "nothing else of a run folder goes, the chip and raster PNGs are thousands of files)")
     a = ap.parse_args()
 
     man = json.load(open(os.path.join(REPO, COV, "manifest.json"), encoding="utf-8"))
@@ -84,6 +87,17 @@ def main() -> None:
     files, skipped = [], []
     for path, st in changed_files():
         (files if wanted(path) else skipped).append(path)
+    if a.with_stats:
+        # run id "cnmf__concat_hg__20261012_184011" -> outputs/clustering/cnmf/concat_hg/runs/20261012_184011
+        for rid in runs:
+            method, fset, stamp = rid.split("__")
+            rel = f"02_FBM_Clustering/outputs/clustering/{method}/{fset}/runs/{stamp}/cluster_statistics.json"
+            if not os.path.exists(os.path.join(REPO, rel)):
+                print(f"  (no cluster_statistics.json yet for {rid} - 249 has not reached it)")
+            elif git("status", "--short", "--", rel).stdout.strip():
+                files.append(rel)
+            else:
+                print(f"  ({rid}: cluster_statistics.json already on main)")
     if not files:
         print("nothing to commit: main already holds these bundles")
         return
