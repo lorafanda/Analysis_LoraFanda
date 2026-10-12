@@ -1,0 +1,335 @@
+{
+ "source_cube": "//isis.unige.ch/medecine/HumanNeuronLab/ANALYSIS/FLM/Analysis_LoraFanda/01_FBM_Analysis/outputs/03_ERSP/PAT_3455/LM/ERSP_matrix/audio/PAT_3455_audio_WM_ERSP_OTD2_TN.npy",
+ "patient": "PAT_3455",
+ "condition": "audio",
+ "contact": "OTD2",
+ "freq_axis": "linspace(0, 398.4375, 103); a row belongs to a band when its centre is in [lo, hi)",
+ "time": "300 bins per condition; a time bin is the mean of 300 / bins consecutive bins",
+ "sets": [
+  {
+   "name": "concat_hg",
+   "bands_hz": [
+    [
+     70.0,
+     150.0
+    ]
+   ],
+   "time_bins": 300,
+   "features": 900,
+   "rows_per_band": [
+    21
+   ],
+   "strip_min_max_db": [
+    -1.8572897911071777,
+    4.061625003814697
+   ]
+  },
+  {
+   "name": "concat_rawds",
+   "bands_hz": [
+    [
+     1.0,
+     4.0
+    ],
+    [
+     4.0,
+     8.0
+    ],
+    [
+     8.0,
+     13.0
+    ],
+    [
+     13.0,
+     20.0
+    ],
+    [
+     20.0,
+     30.0
+    ],
+    [
+     30.0,
+     50.0
+    ],
+    [
+     50.0,
+     70.0
+    ],
+    [
+     70.0,
+     100.0
+    ],
+    [
+     100.0,
+     130.0
+    ],
+    [
+     130.0,
+     170.0
+    ],
+    [
+     170.0,
+     220.0
+    ],
+    [
+     220.0,
+     270.0
+    ],
+    [
+     270.0,
+     320.0
+    ],
+    [
+     320.0,
+     360.0
+    ],
+    [
+     360.0,
+     400.0
+    ]
+   ],
+   "time_bins": 30,
+   "features": 1350,
+   "rows_per_band": [
+    1,
+    1,
+    1,
+    2,
+    2,
+    5,
+    5,
+    8,
+    8,
+    10,
+    13,
+    13,
+    12,
+    11,
+    10
+   ],
+   "strip_min_max_db": [
+    -2.9815797805786133,
+    3.585604429244995
+   ]
+  },
+  {
+   "name": "concat_bands5",
+   "bands_hz": [
+    [
+     1.0,
+     20.0
+    ],
+    [
+     20.0,
+     70.0
+    ],
+    [
+     70.0,
+     170.0
+    ],
+    [
+     170.0,
+     270.0
+    ],
+    [
+     270.0,
+     400.0
+    ]
+   ],
+   "time_bins": 30,
+   "features": 450,
+   "rows_per_band": [
+    5,
+    12,
+    26,
+    26,
+    33
+   ],
+   "strip_min_max_db": [
+    -2.3578715324401855,
+    2.983243703842163
+   ]
+  },
+  {
+   "name": "concat_bands5z",
+   "bands_hz": [
+    [
+     1.0,
+     20.0
+    ],
+    [
+     20.0,
+     70.0
+    ],
+    [
+     70.0,
+     170.0
+    ],
+    [
+     170.0,
+     270.0
+    ],
+    [
+     270.0,
+     400.0
+    ]
+   ],
+   "time_bins": 30,
+   "features": 450,
+   "rows_per_band": [
+    5,
+    12,
+    26,
+    26,
+    33
+   ],
+   "strip_min_max_db": [
+    -2.3578715324401855,
+    2.983243703842163
+   ]
+  },
+  {
+   "name": "counters 13-170",
+   "bands_hz": [
+    [
+     13.0,
+     20.0
+    ],
+    [
+     20.0,
+     30.0
+    ],
+    [
+     30.0,
+     50.0
+    ],
+    [
+     50.0,
+     70.0
+    ],
+    [
+     70.0,
+     100.0
+    ],
+    [
+     100.0,
+     130.0
+    ],
+    [
+     130.0,
+     170.0
+    ]
+   ],
+   "time_bins": 30,
+   "features": 630,
+   "rows_per_band": [
+    2,
+    2,
+    5,
+    5,
+    8,
+    8,
+    10
+   ],
+   "strip_min_max_db": [
+    -2.9815797805786133,
+    3.585604429244995
+   ]
+  },
+  {
+   "name": "hg150",
+   "bands_hz": [
+    [
+     70.0,
+     150.0
+    ]
+   ],
+   "time_bins": 150,
+   "features": 450,
+   "rows_per_band": [
+    21
+   ],
+   "strip_min_max_db": [
+    -1.7775144577026367,
+    3.7814788818359375
+   ]
+  },
+  {
+   "name": "hg100",
+   "bands_hz": [
+    [
+     70.0,
+     150.0
+    ]
+   ],
+   "time_bins": 100,
+   "features": 300,
+   "rows_per_band": [
+    21
+   ],
+   "strip_min_max_db": [
+    -1.7637611627578735,
+    3.7151012420654297
+   ]
+  },
+  {
+   "name": "hg60",
+   "bands_hz": [
+    [
+     70.0,
+     150.0
+    ]
+   ],
+   "time_bins": 60,
+   "features": 180,
+   "rows_per_band": [
+    21
+   ],
+   "strip_min_max_db": [
+    -1.745962381362915,
+    3.537290573120117
+   ]
+  },
+  {
+   "name": "hg30",
+   "bands_hz": [
+    [
+     70.0,
+     150.0
+    ]
+   ],
+   "time_bins": 30,
+   "features": 90,
+   "rows_per_band": [
+    21
+   ],
+   "strip_min_max_db": [
+    -1.3924789428710938,
+    3.1633236408233643
+   ]
+  },
+  {
+   "name": "low+hg30",
+   "bands_hz": [
+    [
+     13.0,
+     70.0
+    ],
+    [
+     70.0,
+     150.0
+    ]
+   ],
+   "time_bins": 30,
+   "features": 180,
+   "rows_per_band": [
+    14,
+    21
+   ],
+   "strip_min_max_db": [
+    -1.3924789428710938,
+    3.1633236408233643
+   ]
+  }
+ ]
+}
