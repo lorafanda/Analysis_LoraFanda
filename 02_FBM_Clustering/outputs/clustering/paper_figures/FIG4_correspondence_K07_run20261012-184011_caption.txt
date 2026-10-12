@@ -1,0 +1,15 @@
+FIG 4  Cluster correspondence, K = 7.
+
+Clusters from two solutions are PAIRED by the correlation between their mean 5 bands z responses, each electrode z-scored across its own features first and the mean across a solution's clusters removed, and the pairing is TESTED on how many electrodes the paired clusters share. The two quantities are independent: nothing about a shape correlation forces two clusters to hold the same electrodes.
+
+Every cluster is described in the same space (concat_bands5z, from concat_source_v16, 1607 electrodes) whatever feature set produced it, so a clustering fitted on HFA and one fitted on 15 bands can be compared at all. Cells give the Jaccard overlap of the matched pair; stars are the permutation p against the plain null (1000 draws, cluster sizes kept, the matching redone in every draw). * p<0.05, ** p<0.01, *** p<0.001.
+
+cnmf_vs_kmeans_concat_hg: matched r +0.89 against -0.15 unmatched (gap +1.03); mean Jaccard 0.44 hard, 0.19 weighted; 7 of 7 pairs above the plain null, 7 above the within-patient null. Runs 20261012_184011 and 20261012_182452.
+cnmf_vs_hierarchical_concat_hg: matched r +0.69 against -0.11 unmatched (gap +0.81); mean Jaccard 0.38 hard, 0.17 weighted; 6 of 7 pairs above the plain null, 6 above the within-patient null. Runs 20261012_184011 and 20261012_182510.
+kmeans_vs_hierarchical_concat_hg: matched r +0.80 against -0.13 unmatched (gap +0.93); mean Jaccard 0.41 hard, 0.41 weighted; 6 of 7 pairs above the plain null, 6 above the within-patient null. Runs 20261012_182452 and 20261012_182510.
+cnmf_concat_hg_vs_concat_bands5: matched r +0.56 against -0.09 unmatched (gap +0.65); mean Jaccard 0.23 hard, 0.42 weighted; 6 of 7 pairs above the plain null, 4 above the within-patient null. Runs 20261012_184011 and 20261012_185604.
+cnmf_concat_hg_vs_concat_bands5z: matched r +0.65 against -0.11 unmatched (gap +0.76); mean Jaccard 0.24 hard, 0.44 weighted; 6 of 7 pairs above the plain null, 5 above the within-patient null. Runs 20261012_184011 and 20261012_190229.
+cnmf_concat_hg_vs_concat_rawds: matched r +0.47 against -0.08 unmatched (gap +0.55); mean Jaccard 0.18 hard, 0.38 weighted; 5 of 7 pairs above the plain null, 4 above the within-patient null. Runs 20261012_184011 and 20261012_184855.
+
+The within-patient null keeps each cluster's patient composition, so a pair that clears it corresponds beyond the two solutions having grouped the same patient together. Weighted rows use P(belonging) as the weight and the weighted Jaccard, which is the plain Jaccard exactly for k-means and Ward.
+Written 2026-10-12 20:54.
