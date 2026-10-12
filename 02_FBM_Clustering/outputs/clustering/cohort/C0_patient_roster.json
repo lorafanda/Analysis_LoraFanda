@@ -1,5 +1,5 @@
 {
- "cache": "concat_source_v15",
+ "cache": "concat_source_v16",
  "rows": [
   {
    "patient": "EL030",
@@ -7,11 +7,11 @@
    "cls": "good",
    "centre": "Bern",
    "language": "GER",
-   "gated": 72,
+   "gated": 71,
    "cubes": {
-    "audio": 83,
-    "picture": 83,
-    "reading": 83
+    "audio": 82,
+    "picture": 82,
+    "reading": 82
    },
    "subdural_in_cache": 0,
    "run": "2026-09-30",
@@ -20,7 +20,7 @@
     "window 280-1600 s",
     "manual trigger table",
     "9 invalid trials",
-    "1 bad-listed",
+    "2 bad-listed",
     "14 Unknown-tissue contacts dropped"
    ],
    "why": [],
@@ -90,9 +90,9 @@
    },
    "subdural_in_cache": 0,
    "run": "2026-09-30",
-   "reference": "WM reference, 24 contacts \u00b7 BIDS TSV",
+   "reference": "WM reference, 23 contacts \u00b7 BIDS TSV",
    "rules": [
-    "5 bad-listed",
+    "6 bad-listed",
     "1 shaft aliases",
     "27 Unknown-tissue contacts dropped"
    ],
@@ -129,18 +129,18 @@
    "cls": "good",
    "centre": "Bern",
    "language": "GER",
-   "gated": 28,
+   "gated": 25,
    "cubes": {
-    "audio": 48,
-    "picture": 48,
-    "reading": 48
+    "audio": 45,
+    "picture": 45,
+    "reading": 45
    },
    "subdural_in_cache": 0,
    "run": "2026-09-30",
    "reference": "WM reference, 4 contacts \u00b7 BIDS TSV",
    "rules": [
     "9 invalid trials",
-    "9 bad-listed",
+    "12 bad-listed",
     "10 Unknown-tissue contacts dropped"
    ],
    "why": [],
@@ -254,9 +254,9 @@
    "language": "GER",
    "gated": 60,
    "cubes": {
-    "audio": 103,
-    "picture": 103,
-    "reading": 103
+    "audio": 102,
+    "picture": 102,
+    "reading": 102
    },
    "subdural_in_cache": 0,
    "run": "2026-09-30",
@@ -264,6 +264,7 @@
    "rules": [
     "photodiode flipped",
     "9 invalid trials",
+    "1 bad-listed",
     "1 shaft aliases",
     "2 Unknown-tissue contacts dropped"
    ],
@@ -359,9 +360,9 @@
    "language": "GER",
    "gated": 47,
    "cubes": {
-    "audio": 74,
-    "picture": 74,
-    "reading": 74
+    "audio": 73,
+    "picture": 73,
+    "reading": 73
    },
    "subdural_in_cache": 0,
    "run": "2026-09-30",
@@ -369,7 +370,7 @@
    "rules": [
     "window 21120-23320 s",
     "9 invalid trials",
-    "6 bad-listed",
+    "7 bad-listed",
     "2 shaft aliases",
     "2 Unknown-tissue contacts dropped"
    ],
@@ -480,18 +481,18 @@
    "cls": "good",
    "centre": "Geneva",
    "language": "FRE",
-   "gated": 111,
+   "gated": 110,
    "cubes": {
-    "audio": 164,
-    "picture": 164,
-    "reading": 164
+    "audio": 162,
+    "picture": 162,
+    "reading": 162
    },
    "subdural_in_cache": 0,
    "run": "2026-09-30",
    "reference": "WM reference, 44 contacts \u00b7 BIDS TSV",
    "rules": [
     "2 raw files joined",
-    "6 bad-listed",
+    "8 bad-listed",
     "10 Unknown-tissue contacts dropped"
    ],
    "why": [],
@@ -679,15 +680,15 @@
    "language": "FRE",
    "gated": 73,
    "cubes": {
-    "audio": 93,
-    "picture": 93,
-    "reading": 93
+    "audio": 86,
+    "picture": 86,
+    "reading": 86
    },
    "subdural_in_cache": 0,
-   "run": "2026-09-30",
-   "reference": "WM reference, 21 contacts \u00b7 BIDS TSV",
+   "run": "2026-10-12",
+   "reference": "WM reference, 11 contacts \u00b7 BIDS TSV",
    "rules": [
-    "2 bad-listed"
+    "19 bad-listed"
    ],
    "why": [],
    "note": ""
@@ -722,15 +723,15 @@
    "language": "FRE",
    "gated": 77,
    "cubes": {
-    "audio": 169,
-    "picture": 169,
-    "reading": 169
+    "audio": 168,
+    "picture": 168,
+    "reading": 168
    },
    "subdural_in_cache": 0,
    "run": "2026-10-05",
    "reference": "WM reference, 43 contacts \u00b7 BIDS TSV",
    "rules": [
-    "6 bad-listed",
+    "7 bad-listed",
     "4 Unknown-tissue contacts dropped"
    ],
    "why": [],
@@ -742,17 +743,18 @@
    "cls": "good",
    "centre": "Geneva",
    "language": "GER",
-   "gated": 97,
+   "gated": 108,
    "cubes": {
-    "audio": 141,
-    "picture": 141,
-    "reading": 141
+    "audio": 140,
+    "picture": 140,
+    "reading": 140
    },
    "subdural_in_cache": 0,
-   "run": "2026-09-30",
-   "reference": "WM reference, 48 contacts \u00b7 BIDS TSV",
+   "run": "2026-10-12",
+   "reference": "WM reference, 11 contacts (MANUAL list) \u00b7 BIDS TSV",
    "rules": [
-    "15 bad-listed",
+    "manual WM list",
+    "53 bad-listed",
     "8 Unknown-tissue contacts dropped"
    ],
    "why": [],
@@ -881,9 +883,9 @@
    "language": "FRE",
    "gated": 43,
    "cubes": {
-    "audio": 128,
-    "picture": 128,
-    "reading": 128
+    "audio": 127,
+    "picture": 127,
+    "reading": 127
    },
    "subdural_in_cache": 0,
    "run": "2026-09-30",
@@ -891,7 +893,7 @@
    "rules": [
     "MicroEPI .mat loader, macros only",
     "WM kept as data: THD1, THD3, THD4",
-    "56 bad-listed",
+    "57 bad-listed",
     "6 Unknown-tissue contacts dropped"
    ],
    "why": [],
@@ -924,18 +926,18 @@
    "cls": "good",
    "centre": "Geneva",
    "language": "FRE",
-   "gated": 137,
+   "gated": 125,
    "cubes": {
-    "audio": 175,
-    "picture": 175,
-    "reading": 175
+    "audio": 163,
+    "picture": 163,
+    "reading": 163
    },
    "subdural_in_cache": 0,
-   "run": "2026-09-30",
-   "reference": "WM reference, 38 contacts \u00b7 BIDS TSV (MicroEPI)",
+   "run": "2026-10-12",
+   "reference": "WM reference, 36 contacts \u00b7 BIDS TSV (MicroEPI)",
    "rules": [
     "MicroEPI .mat loader, macros only",
-    "38 bad-listed",
+    "50 bad-listed",
     "3 Unknown-tissue contacts dropped"
    ],
    "why": [],
