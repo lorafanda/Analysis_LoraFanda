@@ -67,7 +67,7 @@ ANSWERS = {
         html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
               "run, lightest = a slot for a citation's section / paragraph, a number or a decision). Edit "
               "<code>02_FBM_Clustering/paper2_outline.md</code> and re-run <code>make_outline_tab.py --insert</code>.</p>"),
-        status="rebuilt 2026-10-12 on v15 (green lines and phrases are new since 10-07); the rest from the v9 / v11 reads of September"),
+        status="rebuilt 2026-10-13: purple = the script-by-script methods (140 → FIG 5), to review; green = new since 10-07; the rest from the v9 / v11 reads of September"),
     "s1": dict(
         one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched per shaft, trial-filtered; halves beside; 31 of 31 patients ok (29 in the cohort), every one on a BIDS white-matter reference (EL044 grid CAR, EL031 whole-recording CAR)",
         html=("<ul>"
@@ -256,6 +256,8 @@ ENTRY = re.compile(
 CSS = r"""<style id="ui-css">
   /* green ink = new since the last read (2026-10-07); the generators mark it with class "new" */
   .new{color:#1b7f3b} .new code,.new b,.new i{color:inherit} li.new::marker{color:#1b7f3b}
+  /* purple ink = new writing to review (the script-by-script methods, 2026-10-13) */
+  .pur{color:#6a3fb5} .pur code,.pur b,.pur i{color:inherit} li.pur::marker{color:#6a3fb5}
   /* ---- nav groups, search, retired ---- */
   .ui-navh{font-size:10.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);
     margin:14px 10px 3px;display:flex;align-items:center;gap:8px}
