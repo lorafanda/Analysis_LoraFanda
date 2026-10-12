@@ -1,5 +1,5 @@
 {
- "target": "concat_source_v15",
+ "target": "concat_source_v16",
  "versions": {
   "concat_source_v13": {
    "patients": 30,
@@ -31,6 +31,19 @@
    "patients": 29,
    "gated": 1613,
    "cubes": 9057,
+   "centres": {
+    "Bern": 15,
+    "Geneva": 14
+   },
+   "languages": {
+    "GER": 16,
+    "FRE": 13
+   }
+  },
+  "concat_source_v16": {
+   "patients": 29,
+   "gated": 1607,
+   "cubes": 8967,
    "centres": {
     "Bern": 15,
     "Geneva": 14

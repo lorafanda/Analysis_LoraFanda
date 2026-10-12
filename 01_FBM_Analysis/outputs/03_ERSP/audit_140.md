@@ -1,4 +1,4 @@
-# 140 run audit - fmax 400 Hz - 2026-10-12 17:13
+# 140 run audit - fmax 400 Hz - 2026-10-12 18:09
 
 31 patients in cfg.patient_ids; 31 with a log; 30 ok. Cube tree: `outputs\03_ERSP`.
 
@@ -33,7 +33,7 @@
 | PAT_3390 | HUG | 2026-09-30 21:42 | 15.1 | ok | 170-1222 s | 130 | 119 | 0 | · | 1 | WM reference, 22 contacts (skipped as data) | BIDS TSV | 22 | · | · | 95 | 0 | · | PHG12 |
 | PAT_3415 | HUG | 2026-09-30 20:59 | 5.0 | ok | 30-1500 s | 171 | 149 | 96 | · | 18 | WM reference, 6 contacts (skipped as data) | BIDS TSV | 6 | HLG17 HLG18 | IMG8 IPG15 | 29 | 0 | · | HLG1 HLG2 HLG3 HLG4 HLG5 HLG6 HLG7 HLG8 HLG9 HLG10 HLG11 HLG12 HLG13 HLG14 HLG15 HLG16 |
 | PAT_3965 | HUG | 2026-10-05 23:06 | 32.4 | ok | 40-1311 s | 233 | 222 | 4 | · | 7 | WM reference, 43 contacts (skipped as data) | BIDS TSV | 43 | CMD12 | · | 168 | 0 | · | cmd11 y1 y2 y3 y4 had2 |
-| PAT_3975 | HUG | 2026-10-12 15:34 | 30.4 | ok | 200-1550 s | 226 | 212 | 8 | · | 53 | WM reference, 11 contacts (MANUAL list) | BIDS TSV | 11 | · | · | 151 | 0 | · | TPG1 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6 HAG1 HAG2 HAG3 HAD1 HAD2 HAD3 HAD4 FOD1 TPG2 TPG3 TPG4 TPG5 TPD1 TPD2 TPD3 TPD4 TPD5 AD1 AD2 AD3 AD4 AD5 AD6 AD7 AD8 AD9 AD10 AG1 AG2 AG3 AG4 AG5 HAD5 HAD6 HAD7 HAD8 PHG1 PHG2 AG6 IAG1 IAG2 IAG3 IAG4 IMD16 IMD17 IMD18 |
+| PAT_3975 | HUG | 2026-10-12 15:34 | 30.4 | ok | 200-1550 s | 226 | 212 | 8 | · | 53 | WM reference, 11 contacts (MANUAL list) | BIDS TSV | 11 | · | · | 140 | 0 | · | TPG1 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6 HAG1 HAG2 HAG3 HAD1 HAD2 HAD3 HAD4 FOD1 TPG2 TPG3 TPG4 TPG5 TPD1 TPD2 TPD3 TPD4 TPD5 AD1 AD2 AD3 AD4 AD5 AD6 AD7 AD8 AD9 AD10 AG1 AG2 AG3 AG4 AG5 HAD5 HAD6 HAD7 HAD8 PHG1 PHG2 AG6 IAG1 IAG2 IAG3 IAG4 IMD16 IMD17 IMD18 |
 | PAT_3780 | HUG | 2026-10-07 22:12 | 19.3 | ok | none | 152 | 136 | 5 | · | 5 | WM reference, 15 contacts (skipped as data) | BIDS TSV | 15 | · | · | 112 | 0 | · | FAP9 HAG1 HAG2 TPG1 TPG2 |
 | PAT_6953 | HUG | 2026-09-30 20:17 | 22.0 | ok | 189-1182 s | 193 | 182 | 5 | · | 0 | WM reference, 30 contacts (skipped as data) | BIDS TSV | 30 | · | · | 147 | 0 | · | · |
 | PAT_1327 | HUG | 2026-09-30 19:57 | 28.1 | ok | none | 236 | 224 | 10 | · | 8 | WM reference, 44 contacts (skipped as data) | BIDS TSV | 44 | · | · | 162 | 0 | · | CAG5 CPG1 IAG10 PHG2 PHG3 FOD7 HAG2 AG8 |
@@ -69,7 +69,7 @@
 | PAT_3390 | 53 | 46 | 46 | 95 | 54 | 49 | 49 | 95 | 53 | 43 | 43 | 95 | 103x300 | 0 | audio/picture/reading |
 | PAT_3415 | 53 | 45 | 45 | 29 | 54 | 49 | 49 | 29 | 53 | 45 | 45 | 29 | 103x300 | 0 | audio/picture/reading |
 | PAT_3965 | 50 | 45 | 45 | 168 | 51 | 48 | 48 | 168 | 51 | 43 | 43 | 168 | 103x300 | 0 | audio/picture/reading |
-| PAT_3975 | 50 | 40 | 40 | 151 | 50 | 40 | 40 | 151 | 50 | 29 | 29 | 151 | 103x300 | 0 | audio/picture/reading |
+| PAT_3975 | 50 | 40 | 40 | 140 | 50 | 40 | 40 | 140 | 50 | 29 | 29 | 140 | 103x300 | 0 | audio/picture/reading |
 | PAT_3780 | 50 | 39 | 39 | 112 | 51 | 46 | 46 | 112 | 49 | 42 | 42 | 112 | 103x300 | 0 | audio/picture/reading |
 | PAT_6953 | 53 | 39 | 39 | 147 | 51 | 42 | 42 | 147 | 53 | 38 | 38 | 147 | 103x300 | 0 | audio/picture/reading |
 | PAT_1327 | 52 | 34 | 34 | 162 | 54 | 51 | 51 | 162 | 53 | 43 | 43 | 162 | 103x300 | 0 | audio/picture/reading |
@@ -105,7 +105,7 @@
 | PAT_3390 | interp | per shaft | · | 12/88 over 11 shafts | 0 | 4 | 8/88 over 11 shafts | 0 | 5 | 10/88 over 11 shafts | 0 | 6 | 15 | 95 | 95 | 190 | 95 |
 | PAT_3415 | interp | per shaft | · | 10/24 over 3 shafts | 0 | 1 | 8/24 over 3 shafts | 0 | 2 | 8/24 over 3 shafts | 0 | 1 | 4 | 29 | 29 | 58 | 29 |
 | PAT_3965 | interp | per shaft | · | 49/144 over 18 shafts | 0 | 9 | 49/144 over 18 shafts | 0 | 5 | 52/144 over 18 shafts | 0 | 5 | 19 | 168 | 168 | 336 | 168 |
-| PAT_3975 | interp | per shaft | · | 11/128 over 16 shafts | 0 | 7 | 11/128 over 16 shafts | 0 | 6 | 13/128 over 16 shafts | 0 | 8 | 21 | 151 | 151 | 302 | 151 |
+| PAT_3975 | interp | per shaft | · | 11/128 over 16 shafts | 0 | 7 | 11/128 over 16 shafts | 0 | 6 | 13/128 over 16 shafts | 0 | 8 | 21 | 140 | 140 | 280 | 140 |
 | PAT_3780 | interp | per shaft | · | 13/104 over 13 shafts | 0 | 13 | 16/104 over 13 shafts | 0 | 12 | 16/104 over 13 shafts | 0 | 12 | 37 | 112 | 112 | 224 | 112 |
 | PAT_6953 | interp | per shaft | · | 30/128 over 16 shafts | 0 | 5 | 31/128 over 16 shafts | 0 | 4 | 33/128 over 16 shafts | 0 | 7 | 16 | 147 | 147 | 294 | 147 |
 | PAT_1327 | interp | per shaft | · | 40/144 over 18 shafts | 0 | 3 | 38/144 over 18 shafts | 0 | 4 | 36/144 over 18 shafts | 0 | 4 | 11 | 162 | 162 | 324 | 162 |
