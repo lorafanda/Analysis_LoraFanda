@@ -96,3 +96,59 @@ key resources table.
 Not in this list: the clinical and language-mapping literature the Introduction's
 `[REF]` slots need (ESM outcomes, high-gamma as a proxy for firing, passive-mapping
 vs ESM agreement). That is a separate list, and one you know better than I do.
+
+---
+
+## The language-mapping literature (Tandon lab, added 2026-10-12)
+
+The Introduction's `[REF]` slots. Intracranial naming studies with the same three cue
+modalities as ours, the grouped surface mapping they rest on, and the one clustering
+paper whose method is closest to this one. Verified against the papers on 2026-10-12.
+
+**21. Forseth et al. 2018 — a lexical semantic hub for heteromodal naming** · `forseth2018hub`
+Picture naming and auditory-description naming on grids and depths; grouped surface maps
+pick out responses shared by both cues (mFus, IPS, IFG) from the modality-specific ones,
+and only mFus stimulation breaks both tasks. The conceptual twin of our audio/picture
+split and the place to anchor "heteromodal" in the Introduction; its mFus hub is what our
+modality-general cluster should be compared against in the Discussion.
+
+**22. Snyder, Forseth & Tandon 2022 — heteromodal cued speech production networks (AES abstract)** · `snyder2022heteromodal`
+The same three cues as ours (pictures, auditory descriptions, orthographic descriptions),
+high gamma 65–115 Hz; heteromodal activity in IFG, mFus and IPS after the sensory stage.
+Abstract only, so cite it as such; it is the closest task match in print.
+
+**23. Woolnough et al. 2026 — medial pulvinar as a causal hub for heteromodal naming** · `woolnough2026pulvinar`
+Pictures, auditory and written descriptions again, but the naming signature is a
+low-frequency (8–20 Hz) suppression common to all three cues, and stimulation of the
+nucleus induces anomia. The reference for why our feature sets keep the bands below
+high gamma (bands5, bands5z, the 13–170 Hz counters) instead of high gamma alone.
+
+**24. Woolnough et al. 2023 — two frontotemporal networks for sentence reading** · `woolnough2023reading`
+Two networks told apart by their time courses (IFG before MTG, ramping over the
+sentence; STG before IFG, strongest for word lists). The nearest precedent for
+"networks defined by temporal profiles", which is what our clusters are; Discussion.
+
+**25. Woolnough et al. 2021 — orthographic and lexical dynamics in the ventral visual pathway** · `woolnough2021vwfa`
+Mid-fusiform is the first lexicality-sensitive site, before the visual word form area,
+and its stimulation stops reading. For the reading condition and for reading our
+ventral-temporal clusters.
+
+**26. Forseth et al. 2020 — language prediction mechanisms in human auditory cortex** · `forseth2020prediction`
+Depth probes along the supratemporal plane: Heschl's gyrus phase predicts timing, planum
+temporale high gamma is suppressed during production. For the audio condition and for
+the response-half suppression we see on auditory contacts.
+
+**27. Kadipasaoglu et al. 2014 — SB-MEMA** · `kadipasaoglu2014sbmema`
+Surface-based mixed-effects multilevel analysis of grouped electrocorticography: the
+method behind 21–26 and the comparison point for our fsaverage maps (STAR Methods, the
+"group-level mapping" paragraph).
+
+**28. Yellapantula et al. 2021 — NetDI** · `yellapantula2021netdi`
+Picture naming; high-gamma power against graph-theoretic network measures. A methods
+comparison, cite only where we say that power alone is what we cluster.
+
+**29. Yu et al. 2024 — a left-lateralized dorsolateral prefrontal network for naming (NYU, not Tandon)** · `yu2024dlpfc`
+Unsupervised clustering of electrode time courses across naming tasks finds a naming
+network at the IFG/MFG border peaking ~450 ms before articulation, distinct from a
+pre-articulatory cluster (~250 ms). The closest method to ours; the Discussion should say
+where our clusters agree with theirs. Preprint.
