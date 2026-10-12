@@ -1,0 +1,4 @@
+method,method_label,neighbours_sharing_label,over_chance
+kmeans,k-means,0.3147479775980087,1.780609730338661
+hierarchical,Ward,0.35787181082762914,1.6612025014803795
+cnmf,convex NMF,0.26533914125700064,1.7105606258148633
