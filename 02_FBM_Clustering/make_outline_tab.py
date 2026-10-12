@@ -140,13 +140,16 @@ def build(md: str) -> str:
 def insert(block: str) -> None:
     s = SITE.read_text(encoding="utf-8")
     if B_SEC in s and E_SEC in s:
+        # cut the old block out wherever it is, then put the new one at the right place: until
+        # 2026-10-13 it was spliced before <section id="paper">, which sits INSIDE the manuscript
+        # tab's own BEGIN/END markers, so every make_paper_tab.py --insert swallowed the outline.
         i, j = s.index(B_SEC), s.index(E_SEC) + len(E_SEC)
-        s = s[:i] + block + s[j:]
-        print("replaced the generated block")
-    else:
-        k = s.index(ANCHOR_SEC)
-        s = s[:k] + block + "\n\n" + s[k:]
-        print("inserted the section before the manuscript tab")
+        s = s[:i] + s[j:].lstrip("\n")
+        print("removed the previous block")
+    B_PAPER = "<!-- BEGIN paper2 tab"
+    k = s.index(B_PAPER) if B_PAPER in s else s.index(ANCHOR_SEC)
+    s = s[:k] + block + "\n\n" + s[k:]
+    print("inserted the section before the manuscript tab's block" if B_PAPER in s else "inserted the section before the manuscript tab")
     if 'data-t="outline"' not in s:
         # own marker pair after the manuscript tab's, so neither generator rewrites the other's button
         nav_end = s.index("</nav>")
