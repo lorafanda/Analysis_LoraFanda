@@ -23,6 +23,9 @@ WHAT IT ANSWERS
   electrodes.tsv   one row per electrode: keys, published label, every set's label matched to the
                    published ids, margin, the two half labels, the reliable flag, HG amplitude, xyz
   reliability.tsv  one row per set
+  <run>/reliability.csv   beside the compared run's labels.csv (--publish-set, default hg300 = the run's
+                   own features): per electrode reliable / margin / half labels, for the cluster
+                   visualizer (make_coverage_bundle.py puts it into contacts.json, the chips show it)
 
 "Reliable" = the electrode gets the same component from the full fit and from each trial half,
 the halves assigned with the FULL fit's components held fixed. That isolates trial noise from the
@@ -64,6 +67,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("run_dir")
     ap.add_argument("--set", default="hg60", help="the set of G2's electrode view")
+    ap.add_argument("--publish-set", default="hg300", help="whose reliability goes beside the run's labels.csv for the cluster visualizer (hg300 = the run's own features); 'none' to skip")
     a = ap.parse_args()
     out = Path(a.run_dir)
     man = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
@@ -152,6 +156,16 @@ def main() -> int:
         tab[f"{s}_half1"], tab[f"{s}_half2"] = half_lab[s]
         tab[f"{s}_reliable"] = reliable[s]
     tab.to_csv(out / "electrodes.tsv", sep="\t", index=False)
+    # the run's own reliability, beside its labels.csv: make_coverage_bundle.py carries it into the
+    # cluster visualizer's contacts.json, where every chip shows the reliable share of its dots
+    ps = a.publish_set if a.publish_set in sets else None
+    if ps:
+        relcsv = pd.DataFrame({"patient_id": df["patient_id"], "electrode": df["electrode"], "contact_norm": df["contact_norm"],
+                               "set": ps, "reliable": reliable[ps].astype(int), "halves_ok": ok.astype(int),
+                               "margin": np.round(margins[ps], 4), "half1": half_lab[ps][0], "half2": half_lab[ps][1],
+                               "label": matched[ps], "hg_resp_db": np.round(amp, 3), "test_run": out.name})
+        relcsv.to_csv(run / "reliability.csv", index=False)
+        print(f"-> {run / 'reliability.csv'}  ({ps}: {int(reliable[ps][ok].sum())} of {int(ok.sum())} reliable)")
 
     # ================================ G1 ================================
     fig = plt.figure(figsize=(21, 10.5), dpi=150)
