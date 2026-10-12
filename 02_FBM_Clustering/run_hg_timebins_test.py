@@ -22,9 +22,12 @@ unless --k / --n-iter say otherwise. Hard label = argmax of the row-normalised l
 top_weight and margin as publish_decomposition.
 
 MEASURED, per set
-    vs today     ARI, NMI and Hungarian overlap of the hard labels against the run's labels at
-                 the same K (cluster_labels_by_k.csv); mean correlation of the matched
-                 components on the set's grid (HG part only for the lowhg sets)
+    vs today     ARI, NMI and Hungarian overlap of the hard labels against the run's PUBLISHED
+                 labels (labels.csv) when K is the run's K, else against the sweep's refit at K
+                 (cluster_labels_by_k.csv); mean correlation of the matched components on the
+                 set's grid (HG part only for the lowhg sets). ari_fit_floor is the run's own
+                 published fit against its sweep refit at the same K: two fits of the same
+                 features, so no set can be expected to agree with today more than that
     split-half   fit the odd-trial half and the even-trial half separately; ARI between the
                  two labelings (the halves are read once per cache by lf_counters)
     stability    co-association over subsamples (80 % of the electrodes, --rounds rounds),
@@ -140,6 +143,7 @@ def main() -> int:
     ap.add_argument("--n-sub", type=int, help="smoke test: a random subset of this many electrodes")
     ap.add_argument("--quick", action="store_true", help="few rounds, few iterations")
     ap.add_argument("--allow-stale", action="store_true", help="accept a run fitted on an older cache")
+    ap.add_argument("--seed", type=int, default=0, help="random_state of the fits (today's run: 0)")
     a = ap.parse_args()
     t_start = time.time()
 
@@ -171,10 +175,21 @@ def main() -> int:
     n_iter_part = 60 if a.quick else max(100, n_iter // 2)
     rounds = 3 if a.quick else a.rounds
 
+    from sklearn.metrics import adjusted_rand_score as ARI, normalized_mutual_info_score as NMI
+    # today's labels: the published fit (labels.csv) at the run's K, the sweep's refit otherwise
+    pub = pd.read_csv(run["run"] / "labels.csv")
     by_k = pd.read_csv(run["run"] / "cluster_labels_by_k.csv")
-    today = by_k[f"k_{K}"].to_numpy(int) if f"k_{K}" in by_k else None
-    if today is None:
-        print(f"today's run has no labels at K = {K} (cluster_labels_by_k.csv): the 'vs today' columns stay empty")
+    pub_col = [c for c in pub.columns if c.startswith("cluster_")]
+    K_run = int(run["G"].shape[1])
+    if K == K_run and pub_col:
+        today, today_src = pub[pub_col[0]].to_numpy(int), f"labels.csv {pub_col[0]} (the published fit)"
+    elif f"k_{K}" in by_k:
+        today, today_src = by_k[f"k_{K}"].to_numpy(int), f"cluster_labels_by_k.csv k_{K} (the sweep's refit)"
+    else:
+        today, today_src = None, "none"
+        print(f"today's run has no labels at K = {K}: the 'vs today' columns stay empty")
+    floor = float(ARI(pub[pub_col[0]], by_k[f"k_{K_run}"])) if pub_col and f"k_{K_run}" in by_k else float("nan")
+    print(f"[today] labels: {today_src}; fit-to-fit floor (published fit vs sweep refit at K = {K_run}): ARI {floor:.3f}")
 
     # ---- hg300 = the run's own features ----------------------------------------------------
     hg900 = CC.concat_hg_features(X).astype(np.float64)                 # (n, 900)
@@ -221,7 +236,6 @@ def main() -> int:
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     out = OUT_ROOT / run_id
     out.mkdir(parents=True, exist_ok=True)
-    from sklearn.metrics import adjusted_rand_score as ARI, normalized_mutual_info_score as NMI
     ks = list(range(int(a.ks.split("-")[0]), int(a.ks.split("-")[1]) + 1))
     labels = pd.DataFrame({"patient_id": df["patient_id"], "contact_norm": df["contact_norm"], "electrode": df["electrode"]})
     if today is not None:
@@ -232,9 +246,9 @@ def main() -> int:
         t0 = time.time()
         T = feature_tensor(name, X, hg900)
         F = flat(T)
-        lab, Gn, C, top, margin = fit(F, K, n_iter, prep, patient)
+        lab, Gn, C, top, margin = fit(F, K, n_iter, prep, patient, seed=a.seed)
         t_fit = time.time() - t0
-        rec = dict(set=name, bins=bins_of(name), bands=T.shape[2], features=F.shape[1], K=K, n=n, fit_s=round(t_fit, 1))
+        rec = dict(set=name, bins=bins_of(name), bands=T.shape[2], features=F.shape[1], K=K, n=n, seed=a.seed, ari_fit_floor=round(floor, 3), fit_s=round(t_fit, 1))
         # vs today
         if today is not None:
             bm, agree = LCn.match_labels(today, lab)
@@ -247,11 +261,11 @@ def main() -> int:
         # split-half
         T1 = feature_tensor(name, X1[ok_half], hg1)
         T2 = feature_tensor(name, X2[ok_half], hg2)
-        l1 = fit(flat(T1), K, n_iter_part, prep, patient[ok_half], seed=1)[0]
-        l2 = fit(flat(T2), K, n_iter_part, prep, patient[ok_half], seed=2)[0]
+        l1 = fit(flat(T1), K, n_iter_part, prep, patient[ok_half], seed=a.seed + 1)[0]
+        l2 = fit(flat(T2), K, n_iter_part, prep, patient[ok_half], seed=a.seed + 2)[0]
         rec.update(ari_halves=ARI(l1, l2), nmi_halves=NMI(l1, l2), n_halves=int(ok_half.sum()))
         # stability over subsamples
-        per, _ = LCn.subsample_stability(lambda idx: fit(F[idx], K, n_iter_part, prep, patient[idx])[0], n, lab, n_rounds=rounds, frac=0.8)
+        per, _ = LCn.subsample_stability(lambda idx: fit(F[idx], K, n_iter_part, prep, patient[idx], seed=a.seed)[0], n, lab, n_rounds=rounds, frac=0.8, seed=a.seed)
         sizes = {int(k): int((lab == k).sum()) for k in np.unique(lab)}
         rec["stability"] = float(sum(per[k] * sizes[k] for k in per if np.isfinite(per[k])) / max(sum(sizes[k] for k in per if np.isfinite(per[k])), 1))
         rec["stability_min"] = float(np.nanmin(list(per.values())))
@@ -289,6 +303,7 @@ def main() -> int:
     manifest = dict(run_id=run_id, question="HG at coarser time, and with the band below, under convex NMF",
                     cache=cache, compared_run=str(run["run"]), K=K, n_iter=n_iter, n_iter_partial=n_iter_part,
                     preprocessing=prep, sets=a.sets, n_electrodes=n, muscle_dropped=bool(a.drop_muscle),
+                    compared_labels=today_src, ari_fit_floor=floor, seed=a.seed,
                     n_sub=a.n_sub, rounds=rounds, rank_curve=bool(a.rank_curve), ks=ks if a.rank_curve else None,
                     seconds=round(time.time() - t_start), built=datetime.now().strftime("%Y-%m-%d %H:%M"))
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1, default=LCn._json_default), encoding="utf-8")
