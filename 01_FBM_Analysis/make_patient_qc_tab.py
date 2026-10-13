@@ -236,10 +236,15 @@ def build_patient(pid: str, a: pd.Series, r: pd.Series | None, max_ref: int, exa
             blocks.append(fig("P.5", f"The strongest audio responder: {ch} ({ex['hg_resp_db']:+.2f} dB at 70&ndash;150 Hz in the response half)",
                               items, "largest response-half HG mean of the audio cubes, bad-listed contacts excluded"))
     # the run line
+    try:
+        n_used = int(float(r["n_channels_used"])) if r is not None else 0
+    except (TypeError, ValueError):
+        n_used = 0
+    used = f", {n_used} used" if n_used > 0 else ""
     tr = " / ".join(str(a.get(f"{c}_trials_used", "")) for c in CONDS)
     run = str(a.get("run_start", ""))[:16]
     line = (f'    <p class="pqc-run" style="font-size:13px;line-height:1.5"><b>run</b> {run} &middot; <b>channels</b> {a.get("ch_in", "")} in, {a.get("ch_neural", "")} neural'
-            f'{(", " + str(r["n_channels_used"]) + " used") if r is not None else ""} &middot; <b>trials used</b> {tr} (audio / picture / reading)'
+            f'{used} &middot; <b>trials used</b> {tr} (audio / picture / reading)'
             f' &middot; <b>reference</b> WM {len(wm_used)}: {" ".join(wm_used) or "&ndash;"}'
             f' &middot; <b>bad list</b> {str(a.get("bad_list", "")) or "&ndash;"}</p>')
     html = (f'    <div class="pq-pane" id="pq-pane-{pid}">\n    <h3 id="pqc-{pid}">{pid}</h3>\n{line}\n'
