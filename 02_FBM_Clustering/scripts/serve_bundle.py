@@ -16,6 +16,10 @@ import os
 import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+import mimetypes
+
+mimetypes.add_type("image/webp", ".webp")      # Windows' registry has no entry for it; without this the
+                                                   # QC images come as application/octet-stream and do not draw
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
