@@ -67,7 +67,7 @@ ANSWERS = {
         html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
               "run, lightest = a slot for a citation's section / paragraph, a number or a decision). Edit "
               "<code>02_FBM_Clustering/paper2_outline.md</code> and re-run <code>make_outline_tab.py --insert</code>.</p>"),
-        status="rebuilt 2026-10-13: purple = the script-by-script methods (140 → FIG 5), to review; green = new since 10-07; the rest from the v9 / v11 reads of September"),
+        status="rebuilt 2026-10-13 on v16 (1607 / 2946 / 29): purple = the script-by-script methods (140 → FIG 5), to review; green = new since 10-07; the rest from the v9 / v11 reads of September"),
     "s1": dict(
         one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched per shaft, trial-filtered; halves beside; 31 of 31 patients ok (29 in the cohort), every one on a BIDS white-matter reference (EL044 grid CAR, EL031 whole-recording CAR)",
         html=("<ul>"
@@ -94,22 +94,22 @@ ANSWERS = {
         status="03_ERSP = the only tree (04_* archived 10-07) · 31 / 31 ok, 29 in the cohort · last runs 10-12 (PAT_6854, PAT_3975, PAT_3455), 10-09 (EL031), 10-07 (PAT_3780) · audit 10-12 · was: 04_ersp_LM_RAWONLY = the tree v13 reads · 32 / 32 ok, interp + per shaft, BIDS WM references 3–53 contacts (EL044 grid CAR) · last runs 09-29 (EL051, EL052) · previous tree = _old"),
     "s2": dict(
         one="no reproducible hard partition; a graded convex-NMF description; the representation matters more than the algorithm",
-        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same <span class=\"new\">1613 electrodes (v15; 1487 on v11)</span>, K = 5…30. "
+        html=("<p>Three algorithms (k-means, Ward, convex NMF) on four feature sets of the same <span class=\"new\">1607 electrodes (v16)</span>, K = 5…30. "
               "K is read where convex NMF's bi-cross-validated curve peaks (v10 gave 10 / 12 / 14 / 16 for HFA / 15 bands / 5 bands / "
               "5 bands z; v11's are not known until 249 has run) because it is the only method whose curve turns over; the cross-method figures are cut at K = 8. "
               "The durable result is negative, then graded: hard partitions of these data are not reproducible across "
               "preprocessing, most electrodes have no majority component, and two algorithms on one feature set agree on "
               "~60% of electrodes where two feature sets under one algorithm agree on ~40% (chance 12%). The graded "
               "decomposition is the analysis; an argmax map is only ever shown beside its loadings.</p>"
-              "<ul><li class=\"new\"><b>v15, 2026-10-09:</b> all twelve runs refitted on the 1613 electrodes (240 / 241 / 242 as terminal scripts with "
-              "<code>--no-heldout</code>, 18:02–18:31), centroids and rasters drawn, the coverage and centroid bundles on main and "
-              "<code>cluster_visualizer.html</code> on them (K 5–12). FIG 4's correspondence on concat_hg at K 6–12: the three algorithms share "
-              "51–64 % of the diagonal against 8–21 % for random pairings (z 2.8–9.6). Not yet on v15: the FIG 4 / 5 figure set (the panels of "
-              "10-09 were drawn from September tables), the held-out curves and K selection, 249's statistics (so the visualizer's report has no "
-              "per-cluster cards) and 252. The result blocks below are still the emptied v11 ones.</li>"
+              "<ul><li class=\"new\"><b>v16, 2026-10-12 → 13:</b> all twelve runs refitted on the 1607 electrodes (240 / 241 / 242 as terminal scripts with "
+              "<code>--no-heldout</code>), 249's statistics at K 7 / 7 / 6 / 8, centroids and rasters drawn, the coverage and centroid bundles, the "
+              "statistics and the K 5–12 centroid chips on main, <code>cluster_visualizer.html</code> on them. FIG 4's correspondence on concat_hg at "
+              "K 5–9: the three algorithms share 42–76 % of the diagonal against 11–20 % for random pairings (z 3.2–7.6); two feature sets under one "
+              "algorithm 27–43 % (z 2.0–5.2). FIG 2, 3, 4, 5 and the C-figures are on v16. Not yet on v16: FIG 1 and the held-out curves (select) and "
+              "252. The result blocks below are still the emptied v11 text.</li>"
               "<li>K=8 (largest K with no one-patient cluster on HFA) or the held-out peaks — which one the paper reports.</li>"
               "<li>The native stability sweep has not been re-run since v8.</li></ul>"),
-        status="v15 cache 2026-10-09 · 12 runs and FIG 4/5 on v15 · stale since the 10-12 reruns: v16 next · held-out curves, 249 and 252 pending · the result blocks are the emptied v11 ones"),
+        status="v16 cache 2026-10-12 · 12 runs, 249, FIG 2/3/4/5 and the bundles on v16 (10-13) · FIG 1 / held-out curves (select) and 252 pending · the result blocks are the emptied v11 text"),
     "lana": dict(
         one="language-network proximity predicts more HFA while hearing the prompt and while speaking, less during visual encoding",
         html=("<p>Against LanA (an 806-subject probabilistic atlas of the language network), being closer to the network "
@@ -154,9 +154,10 @@ ANSWERS = {
         status="audits 2026-09-15/16 · reruns pending"),
     "caveats": dict(
         one="what is open — the reruns, G-02's 14 trials, G-03's raw check, one cohort-changing regex, and two paper decisions",
-        html=("<p class=\"new\">Open on 2026-10-12 evening: cohort <b>v16</b> after today's channel decisions and the three reruns (141 → 142 → "
-              "rebuild_concat_cache --version 16 → the three fit scripts → the driver), then everything cohort-bound again: bundles, both visualizers, "
-              "FIG 4 / 5 (done on v15 at K 6–12, to redo), the five brain-render figures and the site phase; the held-out curves (select) and 249 / 252; PAT_3415's depth contacts dropped as Unknown by the 03_ERSP run "
+        html=("<p class=\"new\">Open on 2026-10-13: FIG 1 and the held-out curves (the select phase) on v16, and 252; the LanA tables "
+              "(<code>04_FBM_Pooling/make_lana_runs.py</code> on the current coordinates: the 2026-09-07 tables FIG 0 and FIG 3 run on cover 1403 of 1607 "
+              "electrodes, PAT_1327 / EL051 / EL052 absent); two site-phase steps that fail for old reasons (make_norm_notes.py's text correction, "
+              "audit_site_figures.py's missing patient folder); the four partition counters on v16; PAT_3415's depth contacts dropped as Unknown by the 03_ERSP run "
               "(0 electrodes in v15); PAT_3780's TPG3 / FAS1 and EL040's CinG_R13 to look at in the raw; EL031's reconstruction; the four "
               "partition counters of 10-07 to redo on v15 (they ran on v13, with PAT_3780's wrong windows).</p>"
               "<p>Open, in order: G-02's 14 mis-timed trials — correct, drop or leave; G-03's raw timing check; notebook 150 "
@@ -164,7 +165,7 @@ ANSWERS = {
               "between opening A and B (FIG C.4a/b) and whether HFA stays the headline; pooling (460/465) still on a pre-v8 "
               "cohort, so S1's role side and cluster side come from different samples.</p>"
               "<p>Everything under a <i>Done</i> heading below is duplicated in the lab notebook and is proposed for deletion.</p>"),
-        status="open list re-read 2026-10-12 (green) · earlier: the MicroEPI reruns, EL051/EL052 and the micro-shaft regex are done"),
+        status="open list re-read 2026-10-13 (green) · earlier: the MicroEPI reruns, EL051/EL052 and the micro-shaft regex are done"),
 }
 
 # group key -> role; keys are the h3 id when it has one, else the slug of its text (the runtime's rule)

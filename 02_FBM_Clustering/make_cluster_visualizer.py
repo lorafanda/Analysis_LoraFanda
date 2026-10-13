@@ -42,7 +42,9 @@ A COPY OF clustering_visualizer.html WITH FIVE CHANGES AND NO OTHERS.
    in the DOM, because render(), autoScale() and the report write into them, and are
    hidden. UI2_CSS and UI2_JS below hold the whole of it.
 
-5. NO BRAIN CAPTURES IN THE REPORT (REPORT_3D = False). The three stills and the 360
+5. BRAIN CAPTURES IN THE REPORT (REPORT_3D: False / "stills" / True; "stills" since 2026-10-13 -
+   the three probability stills and the three glass stills of every cluster at the K on
+   screen, no turns, no every-K pass). With False: the three stills and the 360
    turn per cluster, the two whole-cohort turns and every cluster at every K are not
    captured and the sections built from them are not written. Everything else in the
    report is untouched - centroids, rasters, composition bars, K panel, published
@@ -79,7 +81,11 @@ PAPER_K = 8
 # for the cluster card until I decide to put them back". Everything else in the report is
 # untouched: the centroids, the rasters, the composition bars, the K panel, the published
 # figures. True brings every render back and nothing else moves.
-REPORT_3D = False
+# "stills" (2026-10-13, Lora: "include the brain screenshots the way it used to"): the three
+# probability stills and the three glass stills of every cluster AT THE K ON SCREEN come back;
+# the 360 turns, the two whole-cohort turns and the every-cluster-at-every-K pass stay out,
+# so a report still takes seconds, not minutes, and stays small.
+REPORT_3D = "stills"
 FSETS = ["concat_bands5z", "concat_hg", "concat_rawds", "concat_bands5"]   # standard first
 METHODS = ["cnmf", "kmeans", "hierarchical"]          # archetypal analysis dropped 2026-09-06
 COHORT_FALLBACK = "cohort1_n29"   # only used if a manifest carries several cohorts
@@ -230,6 +236,7 @@ UI2_CSS = r"""
                border:1px solid rgba(255,255,255,.14); color:var(--fg); font:inherit; font-size:11px; }
   #ui2 .u2ch .sw { width:9px; height:9px; border-radius:2px; background:var(--c); flex:none; }
   #ui2 .u2ch i { font-style:normal; font-size:9.5px; color:var(--muted); }
+  #ui2 .u2ch em.rl { font-style:normal; font-size:9px; font-weight:700; margin-left:1px; }
   #ui2 .u2ch:hover { border-color:var(--accent); }
   #ui2 .u2ch.on { background:#1d2029; border-color:var(--c); box-shadow:inset 0 0 0 1px var(--c); }
   #ui2 .u2ch.on i { color:#cdd3dc; }
@@ -399,10 +406,10 @@ const u2Rows  = c => (RUN && RUN.cluster_sizes && RUN.cluster_sizes[String(c)]) 
 // composition of those dots. Counted over localised contacts, which is fewer than the
 // run's rows: the tooltips carry both.
 const u2TallyCache = new Map();
-function u2TallyOf(key, lab, load, cohortId) {
-  const ck = `${key}|${state.minLoad}`;
+function u2TallyOf(key, lab, load, cohortId, rel) {
+  const ck = `${key}|${state.minLoad}|${rel ? "r" : "-"}`;
   if (u2TallyCache.has(ck)) return u2TallyCache.get(ck);
-  const n = {}, pat = {};
+  const n = {}, pat = {}, rl = {};
   if (lab && CONTACTS) {
     for (const i of (CONTACTS.cohorts[cohortId] || [])) {
       const L = lab[i];
@@ -413,16 +420,27 @@ function u2TallyOf(key, lab, load, cohortId) {
         n[c] = (n[c] || 0) + 1;
         const m = pat[c] || (pat[c] = {});
         m[p] = (m[p] || 0) + 1;
+        if (rel && rel[i] === 1) rl[c] = (rl[c] || 0) + 1;
       }
     }
   }
-  const out = { n, pat };
+  const out = { n, pat, rel: rel ? rl : null };
   if (u2TallyCache.size > 80) u2TallyCache.clear();
   u2TallyCache.set(ck, out);
   return out;
 }
+// RELIABILITY (2026-10-13): contacts.json["reliability"][run] marks, per contact, whether it
+// gets the same component from the full fit and from each trial half (plot_hg_timebins_test).
+// Measured at the run's published K only, so the chips show it at that K and not at others.
+const relForK = () => (RUN0 && CONTACTS && CONTACTS.reliability && Number(KSEL) === Number(RUN0.k))
+  ? (CONTACTS.reliability[RUN0.id] || null) : null;
 const u2Now   = () => u2TallyOf(`${RUN0 ? RUN0.id : "?"}|${KSEL}`, labelsForK(), loadingsForK(),
-                                RUN ? RUN.cohort_id : "");
+                                RUN ? RUN.cohort_id : "", relForK());
+const u2RelPct = c => { const T = u2Now(); if (!T.rel || !T.n[c]) return null;
+  return Math.round(100 * (T.rel[c] || 0) / T.n[c]); };
+const u2RelCol = p => p >= 70 ? "#7fd38a" : p >= 50 ? "#f0c060" : "#f08080";
+const u2RelText = c => { const p = u2RelPct(c); return p == null ? "" :
+  ` · ${p}% reliable (${u2Now().rel[c] || 0} of ${u2Size(c)} drawn: same component from both trial halves)`; };
 const u2Size  = c => u2Now().n[c] || 0;          // contacts drawn at the current minimum
 
 // ── one patient, more than half the cluster ──────────────────────────────────
@@ -853,9 +871,11 @@ function u2Chips() {
          + `data-c="${d.cluster}" style="--c:${u2CSS(u2Hue(i, K))}" `
          + `title="position #${i + 1} in figure order · cluster ${d.cluster} · `
          + `${u2Size(d.cluster)} contacts drawn of ${u2Rows(d.cluster)} in the run`
-         + `${u2esc(u2DomText(dom))}">`
+         + `${u2esc(u2DomText(dom))}${u2esc(u2RelText(d.cluster))}">`
          + `<span class="sw"></span><b>#${i + 1}</b>${u2DomMark(dom)}`
-         + `<i>${u2Size(d.cluster)}</i></button>`;
+         + `<i>${u2Size(d.cluster)}</i>`
+         + (u2RelPct(d.cluster) == null ? "" : `<em class="rl" style="color:${u2RelCol(u2RelPct(d.cluster))}">${u2RelPct(d.cluster)}%</em>`)
+         + `</button>`;
   }).join("");
   box.querySelectorAll("button[data-map]").forEach(b => {
     b.onclick = () => u2ClickChip(b.dataset.map, Number(b.dataset.c));
@@ -865,14 +885,16 @@ function u2Chips() {
   $("u2selnote").textContent = UI2.mode === "overlay"
     ? `${UI2.sel.size} selected`
     : (d ? `#${pos + 1} · cluster ${d.cluster} · n=${u2Size(d.cluster)}`
-         + (dm ? ` (${dm.pid} ${u2DomPct(dm)}%)` : "") : "");
+         + (dm ? ` (${dm.pid} ${u2DomPct(dm)}%)` : "")
+         + (u2RelPct(d.cluster) == null ? "" : ` · ${u2RelPct(d.cluster)}% reliable`) : "");
 }
 
 function u2Note() {
   const n = $("u2modenote");
   if (!n) return;
   n.innerHTML = UI2.mode === "single"
-    ? "One cluster on the glass brain."
+    ? "One cluster on the glass brain." + (relForK() ? " The coloured % on a chip: its drawn contacts "
+        + "that get the same component from both trial halves (green ≥ 70, amber ≥ 50)." : "")
     : UI2.mode === "overlay"
       ? "Click chips to add or drop clusters. A contact in more than one selected cluster "
         + "is drawn <b>white and larger</b>."
@@ -1274,6 +1296,13 @@ function labelColour(s, i, n) {
   return `hsl(${hueOf(s)} 52% ${n && i === n - 1 ? 78 : 56}%)`;
 }
 
+// Fixed, so a centre or a language keeps its colour between the cohort bars at the top
+// and every cluster's own bars below - the hash colour would have given the same label
+// one colour in one place and another elsewhere, which is exactly what stops the two
+// being read against each other. Matches FIG C.0 on the status page.
+const CEN_PAL_JS = { Bern: "#5b6bbf", Geneva: "#c77f2a" };
+const LANG_PAL_JS = { GER: "#7d5ba6", FRE: "#3f9e8c", ENG: "#b5651d", ITA: "#8aa62f" };
+
 // The patients of the run on screen, once each.
 function runPatients() {
   const lab = labelsForK(), out = new Set();
@@ -1298,13 +1327,15 @@ function patientsBy(field) {
   const keys = [...cnt.keys()].sort((a, b) =>
     (a === "unknown") - (b === "unknown") || cnt.get(b) - cnt.get(a) || a.localeCompare(b));
   const tot = [...cnt.values()].reduce((a, b) => a + b, 0);
+  const pal = field === "centre" ? CEN_PAL_JS : (field === "lang" ? LANG_PAL_JS : null);
+  const nm = field === "centre" ? CENTRE_NAME : null;
   return {
     tot,
     items: keys.map(k => ({
-      label: k, value: cnt.get(k),
-      color: k === "unknown" ? "#c8ccd2" : labelColour(k)
+      label: (nm && nm[k]) || k, value: cnt.get(k),
+      color: k === "unknown" ? "#c8ccd2" : ((pal && pal[k]) || labelColour(k))
     })),
-    cap: keys.map(k => `${esc(k)} ${cnt.get(k)}`).join(" · ")
+    cap: keys.map(k => `${esc((nm && nm[k]) || k)} ${cnt.get(k)}`).join(" · ")
   };
 }
 
@@ -1355,13 +1386,64 @@ function regionItemsFor(cid, topN) {
   };
 }
 
-// The second track under a cluster's patient composition. Same width, thinner, its own
-// caption - compact enough to sit in the existing cell without a new column.
+// A cluster's electrodes split by one patient_meta field. Counted over ELECTRODES, not
+// patients, so it reads against the patient composition bar directly above it: the
+// question is how much of THIS cluster came from one centre or one language, and a
+// cluster carried by a single centre is the confound worth seeing.
+function clusterSplitBy(cid, field) {
+  const meta = CONTACTS.patient_meta;
+  if (!meta) return null;
+  const lab = labelsForK(), cnt = new Map();
+  let n = 0;
+  for (const i of (CONTACTS.cohorts[RUN.cohort_id] || [])) {
+    const L = lab && lab[i];
+    if (!Array.isArray(L) || L.indexOf(cid) < 0) continue;
+    const v = (meta[CONTACTS.patient[i]] || {})[field] || "unknown";
+    cnt.set(v, (cnt.get(v) || 0) + 1);
+    n++;
+  }
+  if (!n) return null;
+  const keys = [...cnt.keys()].sort((a, b) =>
+    (a === "unknown") - (b === "unknown") || cnt.get(b) - cnt.get(a) || a.localeCompare(b));
+  return { tot: n, keys, cnt };
+}
+
+// The recording centres by the names Lora uses for them.
+const CENTRE_NAME = { Bern: "InselSpital", Geneva: "HUG" };
+
+function miniSplit(cid, field, pal, rename) {
+  const d = clusterSplitBy(cid, field);
+  if (!d) return "";
+  const items = d.keys.map(k => ({
+    label: (rename && rename[k]) || k, value: d.cnt.get(k),
+    color: k === "unknown" ? "#c8ccd2" : pal(k)
+  }));
+  const cap = items.map(it => `${esc(it.label)} ${(100 * it.value / d.tot).toFixed(0)}%`).join(" · ");
+  return `<div style="flex:1 1 0;min-width:0">
+      <div class="sbtrack">${stackbar(items, d.tot, 7)}</div>
+      <div class="sbcap" style="opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cap}</div>
+    </div>`;
+}
+
+// The native anatomy (top 3 plus the rest), under the cluster's patient composition and
+// in the same cell. Centre and language used to sit here too, squeezed in beside it;
+// they are a column of their own now (centreLangCell), because who recorded a cluster
+// and in what language is read across clusters, and a reader cannot compare values that
+// are buried at three different widths inside another column.
 function regionTrack(cid) {
-  const d = regionItemsFor(cid, 6);
+  const d = regionItemsFor(cid, 3);
   if (!d) return "";
   return `<div class="sbtrack" style="margin-top:3px">${stackbar(d.items, d.tot, 9)}</div>
-    <div class="sbcap" style="opacity:.85">${d.cap}</div>`;
+     <div class="sbcap" style="opacity:.85">${d.cap}</div>`;
+}
+
+// The condensed centre / language column of a cluster card. Stacked, not side by side:
+// the column is narrow, and two full-width bars read better than two half-width ones.
+function centreLangCell(cid) {
+  const cen = miniSplit(cid, "centre", k => CEN_PAL_JS[k] || "#9aa3ad", CENTRE_NAME);
+  const lan = miniSplit(cid, "lang", k => LANG_PAL_JS[k] || "#9aa3ad", null);
+  if (!cen && !lan) return "<div></div>";
+  return `<div style="display:flex;flex-direction:column;gap:4px;min-width:0">${cen}${lan}</div>`;
 }
 '''
 
@@ -2020,7 +2102,9 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         "const PAPER_K = " + str(PAPER_K) + ";\n"
         "// the viewer's brain captures in the saved report; REPORT_3D in "
         "make_cluster_visualizer.py\n"
-        "const REPORT_3D = " + ("true" if REPORT_3D else "false") + ";\n", "report: the flag")
+        "const REPORT_3D = " + ("true" if REPORT_3D else "false") + ";\n"
+        "// turns and the every-K brains only in the full mode (REPORT_3D = True in the generator)\n"
+        "const REPORT_FULL = " + ("true" if REPORT_3D is True else "false") + ";\n", "report: the flag")
     sub("      const st = render(); await sleep(80);\n"
         "      const shots = [];\n"
         "      for (const [az, el] of VIEWS) shots.push(await captureView(az, el, CAPW, true));\n"
@@ -2031,14 +2115,28 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         "      if (REPORT_3D) {\n"
         "        await sleep(80);\n"
         "        for (const [az, el] of VIEWS) shots.push(await captureView(az, el, CAPW, true));\n"
-        "        spinFrames = await captureSpin(0, SPIN_N, SPIN_W, true);\n"
+        "        if (REPORT_FULL) spinFrames = await captureSpin(0, SPIN_N, SPIN_W, true);\n"
         "      }\n", "report: per-cluster captures")
 
     # the glass pass - stills, turns and every cluster at every K - skipped whole, so the
     # surface is never swapped and nothing needs restoring
     i = s.index("    const glassWas = { glass: state.glass, byCluster: state.elecByCluster,")
     j = s.index("    // ── whole-run figures", i)
-    s = s[:i] + "    if (REPORT_3D) {\n" + s[i:j].rstrip() + "\n    }\n\n" + s[j:]
+    seg = s[i:j]
+    # inside the pass, the turns and the every-K brains are the full mode's; the glass stills
+    # of the clusters on screen are what "stills" keeps
+    for old, new in (
+        ("      glassCovSpin = await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox);\n",
+         "      if (REPORT_FULL) glassCovSpin = await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox);\n"),
+        ("        blocks[i].glassSpin = await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox);\n",
+         "        blocks[i].glassSpin = REPORT_FULL ? await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox) : [];\n"),
+        ("      if (SWEEP && SWEEP.ks && SWEEP.ks.length > 1) {\n",
+         "      if (REPORT_FULL && SWEEP && SWEEP.ks && SWEEP.ks.length > 1) {\n"),
+    ):
+        if seg.count(old) != 1:
+            raise SystemExit(f"anchor inside the glass pass matches {seg.count(old)} times:\n{old}")
+        seg = seg.replace(old, new)
+    s = s[:i] + "    if (REPORT_3D) {\n" + seg.rstrip() + "\n    }\n\n" + s[j:]
     n_patch += 1
 
     # the per-cluster probability stills, the glass stills and the two captions
@@ -2052,7 +2150,7 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     b = '${spin(glassSpin, `Cluster ${k} contacts`)}\n      </div>\n    </div>'
     i = s.index(a)
     j = s.index(b, i) + len(b)
-    s = s[:i] + '    ${!REPORT_3D ? "" : `' + s[i:j].lstrip() + '`}\n' + s[j:]
+    s = s[:i] + '    ${!REPORT_FULL ? "" : `' + s[i:j].lstrip() + '`}\n' + s[j:]
     n_patch += 1
 
     # ... and the two whole-cohort turn sections
@@ -2061,7 +2159,7 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         raise SystemExit(f"anchor for the glass turn sections matches {s.count(a)} times")
     i = s.index(a)
     j = s.index("${resultsHTML}", i)
-    s = s[:i] + '${!REPORT_3D ? "" : `' + s[i:j].rstrip() + '`}\n\n' + s[j:]
+    s = s[:i] + '${!REPORT_FULL ? "" : `' + s[i:j].rstrip() + '`}\n\n' + s[j:]
     n_patch += 1
 
     # ---- report images: de-duplicate on the FINISHED document, not at build time ------
@@ -2113,8 +2211,53 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         '  ${cohortBarsHTML()}\n  ${summary}\n  ${note("overview")}',
         "report extras: centre and language bars")
 
-    # a second, thinner track under each cluster's patient composition - in the same
-    # cell, so the card grid keeps its five columns and nothing reflows
+    # Centre and language get a column of their own on both card grids. These run AFTER
+    # the "K rows" patches above, so every anchor here is the already-patched text: the
+    # grid is eight columns by now, not the six in the source file, and the K panel's
+    # header already lists KROW_REPS rather than a single "centroid".
+    sub("grid-template-columns:30px 1fr 1fr 1fr 1.25fr 1.25fr .85fr 1.05fr;gap:8px",
+        "grid-template-columns:30px 1fr 1fr 1fr 1.25fr 1.25fr .85fr 1.05fr .72fr;gap:8px",
+        "report extras: card grid gains a column")
+
+    # The current-K header still names one centroid where its row draws three, so it was
+    # already two cells short of its own grid and everything after the chip sat a column
+    # to the left of what it labelled. It gets the K panel's KROW_REPS labels, and then
+    # both headers get the new one.
+    D = "·"
+    tail_h = (f'${{VIEWS.map(v => `<div>${{esc(v[2])}}</div>`).join("")}}'
+              f'<div>who is in it {D} samples</div></div>')
+    reps = '${KROW_REPS.map(r => `<div>${REP_LABEL[r] || r}</div>`).join("")}'
+    for ind, old_head, tag in (
+        ("  ", "<div></div><div>centroid</div>", "cards"),
+        ("        ", "<div></div>" + reps, "K panel"),
+    ):
+        sub(f'{ind}<div class="cardhead">{old_head}\n{ind}  {tail_h}',
+            f'{ind}<div class="cardhead"><div></div>{reps}\n{ind}  '
+            + tail_h[:-len("</div>")] + f'<div>centre {D} language</div></div>',
+            f"report extras: centre/language header ({tag})")
+
+    # The axis row under each grid is spacers plus one bar scale, so it needs as many
+    # cells as the grid has columns: the current-K row carried five spacers against eight
+    # columns, the K panel seven. Both go to eight, for nine columns.
+    # The leading newline pins the indentation - without it the two-space form is a
+    # substring of the eight-space one and the anchor matches both grids.
+    cell = "<div></div>"
+    for ind, n_old, tag in (("  ", 5, "cards"), ("        ", 7, "K panel")):
+        sub(f'\n{ind}<div class="cardaxis">{cell * n_old}',
+            f'\n{ind}<div class="cardaxis">{cell * 8}',
+            f"report extras: centre/language axis spacer ({tag})")
+    for tail, cid, ind, tag in (
+        ('${RUN.cluster_patients[String(k)]} patients${\n'
+         '            top ? " · " + esc(top[0]) + " " + (100 * top[1] / (tot || 1)).toFixed(0)'
+         ' + "%" : ""}</div>\n        </div>', "k", "        ", "cards"),
+        ('${(st.cluster_patients || {})[String(c)] || 0} patients${\n'
+         '                top ? " · " + esc(top[0]) + " " + (100 * top[1] / (tot || 1)).toFixed(0)'
+         ' + "%" : ""}</div>\n            </div>', "c", "            ", "K panel"),
+    ):
+        sub(tail, tail + f"\n{ind}${{centreLangCell({cid})}}",
+            f"report extras: centre/language column ({tag})")
+
+    # the anatomy track stays under each cluster's patient composition, in that cell
     # the two row builders name the cluster differently - `k` in the cards, `c` in the
     # K panel - so each patch passes its own variable rather than binding a shared name
     for anchor, cid, tag in (
