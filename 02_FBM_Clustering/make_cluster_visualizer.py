@@ -2112,10 +2112,12 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         "      const st = render();          // the stats are read either way\n"
         "      const shots = [];\n"
         "      let spinFrames = [];\n"
-        "      if (REPORT_3D) {\n"
+        "      if (REPORT_FULL) {\n"
+        "        // the probability stills and turn: painted-surface captures, which the glass-only\n"
+        "        // page cannot make (render() paints no vertex in glass mode) - full mode only\n"
         "        await sleep(80);\n"
         "        for (const [az, el] of VIEWS) shots.push(await captureView(az, el, CAPW, true));\n"
-        "        if (REPORT_FULL) spinFrames = await captureSpin(0, SPIN_N, SPIN_W, true);\n"
+        "        spinFrames = await captureSpin(0, SPIN_N, SPIN_W, true);\n"
         "      }\n", "report: per-cluster captures")
 
     # the glass pass - stills, turns and every cluster at every K - skipped whole, so the
@@ -2139,10 +2141,21 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     s = s[:i] + "    if (REPORT_3D) {\n" + seg.rstrip() + "\n    }\n\n" + s[j:]
     n_patch += 1
 
-    # the per-cluster probability stills, the glass stills and the two captions
+    # the per-cluster probability stills (full mode only: painted-surface captures the
+    # glass-only page cannot make), then the glass stills with a caption that no longer
+    # points at "the probability maps above" when there are none
     i = s.index('  <p class="sechint">P(cluster ${k} | labelled electrode within')
-    j = s.index('  <div style="margin-top:16px">\n    <div class="${raster', i)
-    s = s[:i] + '  ${!REPORT_3D ? "" : `' + s[i:j].rstrip() + '`}\n' + s[j:]
+    m = s.index('  <div class="brains glass">', i)
+    j = s.index('  <div style="margin-top:16px">\n    <div class="${raster', m)
+    glass = s[m:j]
+    c0 = glass.index('  <p class="sechint">The contacts themselves on a glass brain, captured from the viewer at')
+    c1 = glass.index("</p>", c0) + len("</p>")
+    cap_full = glass[c0:c1]
+    cap_stills = ('  <p class="sechint">The contacts themselves on a glass brain, captured from the viewer at three '
+                  'angles, with no ${frozen.radius}&nbsp;mm smoothing &mdash; this is where the electrodes are.</p>')
+    glass = glass[:c0] + "${REPORT_FULL ? `" + cap_full + "` : `" + cap_stills + "`}" + glass[c1:]
+    s = (s[:i] + '  ${!REPORT_FULL ? "" : `' + s[i:m].rstrip() + '`}\n'
+         + '  ${!REPORT_3D ? "" : `' + glass.rstrip() + '`}\n' + s[j:])
     n_patch += 1
 
     # ... the per-cluster pair of turns ...
