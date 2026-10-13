@@ -619,24 +619,26 @@ def main() -> int:
     contacts_json["reliability"] = {}
     for L in loaded:
         f = L["run"] / "reliability.csv"
-        if not f.exists():
-            continue
-        rel = pd.read_csv(f)
-        if "halves_ok" in rel:
-            rel = rel[rel["halves_ok"] == 1]
-        rel = rel.assign(key=[f"{p}|{norm(e)}" for p, e in zip(rel["patient_id"], rel["electrode"])])
-        d = rel.groupby("key")["reliable"].min().to_dict()
-        vals = co_all["key"].map(d)
-        contacts_json["reliability"][L["entry"]["id"]] = [None if v != v else int(v) for v in vals]
-        lr = L["lab"].merge(rel[["key", "reliable"]].drop_duplicates("key"), on="key", how="left")
-        per = {str(k): round(float(lr.loc[lr[L["ccol"]] == k, "reliable"].mean()), 3) for k in L["clusters"]}
-        L["entry"]["reliability"] = {
-            "set": str(rel["set"].iloc[0]) if "set" in rel and len(rel) else "",
-            "test_run": str(rel["test_run"].iloc[0]) if "test_run" in rel and len(rel) else "",
-            "n": int(len(d)), "share": round(float(rel["reliable"].mean()), 3), "per_cluster": per,
-            "definition": "same component from the full fit and from each trial half, components held fixed"}
-        print(f"      {L['key']}/{L['run'].name}: reliability for {len(d)} contacts, "
-              f"{100 * rel['reliable'].mean():.0f} % reliable")
+        # an `if`, not a `continue`: the per-K labels and the graded membership below are
+        # in this same loop and must run for every run (2026-10-13: a `continue` here
+        # left 11 of 12 runs without a sweep entry, and the report without its table)
+        if f.exists():
+            rel = pd.read_csv(f)
+            if "halves_ok" in rel:
+                rel = rel[rel["halves_ok"] == 1]
+            rel = rel.assign(key=[f"{p}|{norm(e)}" for p, e in zip(rel["patient_id"], rel["electrode"])])
+            d = rel.groupby("key")["reliable"].min().to_dict()
+            vals = co_all["key"].map(d)
+            contacts_json["reliability"][L["entry"]["id"]] = [None if v != v else int(v) for v in vals]
+            lr = L["lab"].merge(rel[["key", "reliable"]].drop_duplicates("key"), on="key", how="left")
+            per = {str(k): round(float(lr.loc[lr[L["ccol"]] == k, "reliable"].mean()), 3) for k in L["clusters"]}
+            L["entry"]["reliability"] = {
+                "set": str(rel["set"].iloc[0]) if "set" in rel and len(rel) else "",
+                "test_run": str(rel["test_run"].iloc[0]) if "test_run" in rel and len(rel) else "",
+                "n": int(len(d)), "share": round(float(rel["reliable"].mean()), 3), "per_cluster": per,
+                "definition": "same component from the full fit and from each trial half, components held fixed"}
+            print(f"      {L['key']}/{L['run'].name}: reliability for {len(d)} contacts, "
+                  f"{100 * rel['reliable'].mean():.0f} % reliable")
 
         # PER-K LABELS. Same vector as above, once per cut in the run's own sweep, so
         # the K control has something to switch to without refitting anything. Written
