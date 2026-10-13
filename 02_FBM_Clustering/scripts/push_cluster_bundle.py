@@ -66,6 +66,9 @@ def main() -> None:
     ap.add_argument("--with-stats", action="store_true",
                     help="also commit each manifest run's cluster_statistics.json (249's output; the report's per-cluster cards read it from main - "
                          "nothing else of a run folder goes, the chip and raster PNGs are thousands of files)")
+    ap.add_argument("--with-chips", action="store_true",
+                    help="also commit each manifest run's centroid chips at the manifest's sweep K values (cluster_centroids/k_K/*.png, "
+                         "~70 PNGs per run for K 5-12): the report's K chips read them from main (2026-10-13)")
     a = ap.parse_args()
 
     man = json.load(open(os.path.join(REPO, COV, "manifest.json"), encoding="utf-8"))
@@ -98,6 +101,16 @@ def main() -> None:
                 files.append(rel)
             else:
                 print(f"  ({rid}: cluster_statistics.json already on main)")
+    if a.with_chips:
+        import glob
+        ks = man.get("sweep_ks") or list(range(5, 13))
+        for rid in runs:
+            method, fset, stamp = rid.split("__")
+            for k in ks:
+                for p in sorted(glob.glob(os.path.join(REPO, f"02_FBM_Clustering/outputs/clustering/{method}/{fset}/runs/{stamp}/cluster_centroids/k_{k}/*.png"))):
+                    rel = os.path.relpath(p, REPO).replace("\\", "/")
+                    if git("status", "--short", "--", rel).stdout.strip():
+                        files.append(rel)
     if not files:
         print("nothing to commit: main already holds these bundles")
         return
