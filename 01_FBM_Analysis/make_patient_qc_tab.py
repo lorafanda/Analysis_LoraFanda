@@ -204,12 +204,13 @@ def build_patient(pid: str, a: pd.Series, r: pd.Series | None, max_ref: int, exa
     st = lm / "ERSP_noref" / "audio" / f"{pid}_audio_NOREF_summary.tsv"
     if st.exists():
         for rr in pd.read_csv(st, sep="\t").itertuples():
-            summ[norm(rr.contact)] = (float(rr.hg_resp_db), float(rr.hg_absmax_db))
+            summ[norm(rr.contact)] = (float(rr.hg_resp_db), float(rr.hg_absmax_db), float(getattr(rr, "mu_resp_db", float("nan"))))
     items, lost = [], []
     for ch in wm_used[:max_ref]:
         got = 0
         num = summ.get(norm(ch))
-        tag = f" &middot; HG response {num[0]:+.2f} dB, peak |{num[1]:.1f}|" if num else ""
+        tag = (f" &middot; response half: 70&ndash;150 Hz {num[0]:+.2f} dB (peak |{num[1]:.1f}|), 250&ndash;400 Hz {num[2]:+.2f} dB"
+               if num else "")
         for kind, _sub, _tag, _tail, label in NOREF:
             hit = nidx[kind].get(norm(ch))
             if not hit:
@@ -223,7 +224,9 @@ def build_patient(pid: str, a: pd.Series, r: pd.Series | None, max_ref: int, exa
     note = f"{len(wm_used)} contacts in the white-matter mean; notch and per-trial baseline only, no reference"
     if summ:
         worst = max(summ.items(), key=lambda kv: abs(kv[1][0]))
-        note += f"; audio response half at 70&ndash;150 Hz: {min(v[0] for v in summ.values()):+.2f} to {max(v[0] for v in summ.values()):+.2f} dB, largest |mean| {worst[0]} ({worst[1][0]:+.2f} dB)"
+        note += (f"; audio response half at 70&ndash;150 Hz: {min(v[0] for v in summ.values()):+.2f} to {max(v[0] for v in summ.values()):+.2f} dB "
+                 f"(largest |mean| {worst[0]}, {worst[1][0]:+.2f} dB); at 250&ndash;400 Hz (speech muscle): "
+                 f"{min(v[2] for v in summ.values()):+.2f} to {max(v[2] for v in summ.values()):+.2f} dB")
     if len(wm_used) > max_ref:
         note += f"; the first {max_ref} drawn, the rest in the tree"
     if lost:

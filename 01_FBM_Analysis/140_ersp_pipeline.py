@@ -383,9 +383,14 @@ def write_wm_noref_figures(wm_names, wm_block, fs, *, patient_id, pid_raw, cond,
     they carry. Here they get the same three figures as every other contact - the notch, decided
     per shaft among themselves, and the per-trial baseline, no reference - into ERSP_noref/<cond>/,
     PerTrial/HFA_noref/<cond>/ and PerTrial/Signal_noref/<cond>/, tagged NOREF in the file name.
-    A reference contact with a line, a burst or a task response of its own is seen here before it
-    is averaged into every other channel. No cube and no trial scores: nothing downstream reads
-    these folders (the export, 141, the LM bundle and the cache all look elsewhere).
+    A reference contact with a line, a burst or a task response of its
+    own is seen here before it is averaged into every other channel. The ERSP array of each
+    contact is kept beside its figure (ERSP_noref/<cond>/*_TN.npy) and a summary TSV per
+    condition says, per contact, the mean dB in the stimulus and the response half at 70-150 Hz,
+    4-30 Hz, 20-170 Hz and 250-400 Hz (the speech-muscle band of the 2026-10-05 audit), and the
+    largest 10-bin-smoothed |dB| at 70-150 Hz - the numbers behind "nothing in the reference
+    responds". Nothing downstream reads these folders (the export, 141, the LM bundle and the
+    cache all look at ERSP_matrix / ERSP / the _WM_ names).
     Returns the number of contacts drawn."""
     if wm_block.shape[1] == 0:
         return 0
@@ -406,12 +411,31 @@ def write_wm_noref_figures(wm_names, wm_block, fs, *, patient_id, pid_raw, cond,
         return ([int(hg_all["keep_pos"][i]) for i in res.get("dropped_trials", [])]
                 if hg_all is not None else res.get("dropped_trials"))
 
+    _rows = []
     for k, ch in enumerate(wm_names):
         res = fe.compute_ersp(signals=wm_c, fs=fs, onsets=on_c, offsets=off_c, channel_idx=k,
                               trial_ends=te_c, mode=cfg.mode, time_window=cfg.time_window,
                               params=ersp_params)
         fe.plot_ersp(res, patient_id=patient_id, condition=cond, reref_type="NOREF", chan_name=ch,
                      save_dir=_mk(ersp_dir), params=ersp_params, plot_title=False, save_sidecar=False)
+        A = np.asarray(res["avg_db"], float)
+        _mode_tag = "_TN" if str(res["meta"]["mode"]).upper() == "TN" else ""
+        np.save(os.path.join(ersp_dir, f"{patient_id}_{cond}_NOREF_ERSP_{ch}{_mode_tag}.npy"), A)
+        _fr = np.asarray(res["f"], float)
+        _mains = np.zeros(_fr.size, bool)
+        for _h in np.arange(50.0, float(_fr.max()) + 1, 50.0):
+            _mains |= np.abs(_fr - _h) <= 1.1 * float(np.median(np.diff(_fr)))
+        _bands = {"hg": (70, 150), "lf": (4, 30), "bb": (20, 170), "mu": (250, 400)}
+        _half = A.shape[1] // 2
+        _row = dict(patient=patient_id, condition=cond, contact=ch,
+                    n_trials=int(len(on_c)) - int(len(res.get("dropped_trials") or [])))
+        for _nm, (_lo, _hi) in _bands.items():
+            _m = (_fr >= _lo) & (_fr < _hi) & ~_mains
+            _row[f"{_nm}_stim_db"] = round(float(A[_m, :_half].mean()), 3)
+            _row[f"{_nm}_resp_db"] = round(float(A[_m, _half:].mean()), 3)
+        _hgm = (_fr >= 70) & (_fr < 150) & ~_mains
+        _row["hg_absmax_db"] = round(float(np.abs(np.convolve(A[_hgm].mean(0), np.ones(10) / 10, mode="same")).max()), 3)
+        _rows.append(_row)
         fe.plot_hg_trials(
             signals=wm_c, fs=fs, onsets=_on, offsets=_off, channel_idx=k,
             chan_name=ch, patient_id=patient_id, condition=cond, reref_type="NOREF",
@@ -430,6 +454,9 @@ def write_wm_noref_figures(wm_names, wm_block, fs, *, patient_id, pid_raw, cond,
             rejected_trials=_rej(res), exclude_reasons=_reasons, trial_z=_hg_trial_z(res, hg_all),
             save_dir=sig_dir, sort_ascending=True, trial_end_indices=_te, sort_by="stim")
         del res
+    if _rows:
+        pd.DataFrame(_rows).to_csv(os.path.join(ersp_dir, f"{patient_id}_{cond}_NOREF_summary.tsv"),
+                                   sep="\t", index=False)
     return len(wm_names)
 
 
