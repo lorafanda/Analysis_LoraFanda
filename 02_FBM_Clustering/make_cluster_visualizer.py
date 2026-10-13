@@ -2120,6 +2120,26 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         "        spinFrames = await captureSpin(0, SPIN_N, SPIN_W, true);\n"
         "      }\n", "report: per-cluster captures")
 
+    # A LATERAL STILL IS ONE HEMISPHERE (2026-10-13, Lora: "remove the hemisphere behind when
+    # screenshotting"; both laterals, surface and dots). contactsHemi() dropped only the far
+    # side's dots, and only in the every-K pass: the glass stills of the report kept both
+    # hemispheres and both sides' dots, which through the glass read as if they were all on
+    # the near side. farHemi() hides the far hemisphere's mesh as well (Niivue skips a mesh
+    # whose .visible is false); the stills loops in the glass pass call it per view, and the
+    # dorsal view keeps both.
+    sub('const HEMI_FOR_VIEW = ["lh", "rh", "both"];   // matches VIEWS\n',
+        'const HEMI_FOR_VIEW = ["lh", "rh", "both"];   // matches VIEWS\n'
+        '// The far hemisphere itself, not only its dots, for the lateral stills of the report: the\n'
+        '// near side is drawn alone (Niivue skips a mesh whose .visible is false), its contacts\n'
+        '// filtered by contactsHemi. "both" restores the scene.\n'
+        'function farHemi(near) {\n'
+        '  for (const h of ["lh", "rh"]) {\n'
+        '    const m = hemis[h] && hemis[h].mesh;\n'
+        '    if (m) m.visible = (near === "both" || h === near);\n'
+        '  }\n'
+        '  contactsHemi(near);          // re-emits the dots and redraws\n'
+        '}\n', "report: farHemi")
+
     # the glass pass - stills, turns and every cluster at every K - skipped whole, so the
     # surface is never swapped and nothing needs restoring
     i = s.index("    const glassWas = { glass: state.glass, byCluster: state.elecByCluster,")
@@ -2163,6 +2183,29 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
          "          for (const s of rowIds) { const b = blocks.find(x => Number(x.d.cluster) === match(s)); byId[String(s)] = b ? b.glassShots : null; }\n"
          "          KBRAINS[KSEL] = byId;\n"
          "        } }\n"),
+        # a lateral still is one hemisphere (farHemi above): set per view, restored after;
+        # the same in the full mode's every-K pass and in the finally
+        ("        for (let v = 0; v < VIEWS.length; v++) {\n"
+         "          const [az, el] = VIEWS[v];\n"
+         "          gs.push(gBox[v] ? await captureRaw(az, el, CAPW, gBox[v], true)\n"
+         "                          : await captureView(az, el, CAPW, true));\n"
+         "        }\n"
+         "        blocks[i].glassShots = gs;\n",
+         "        for (let v = 0; v < VIEWS.length; v++) {\n"
+         "          const [az, el] = VIEWS[v];\n"
+         "          farHemi(HEMI_FOR_VIEW[v]);   // a lateral still is one hemisphere; dorsal keeps both\n"
+         "          await sleep(40);\n"
+         "          gs.push(gBox[v] ? await captureRaw(az, el, CAPW, gBox[v], true)\n"
+         "                          : await captureView(az, el, CAPW, true));\n"
+         "        }\n"
+         "        farHemi(\"both\");\n"
+         "        blocks[i].glassShots = gs;\n"),
+        ("              contactsHemi(HEMI_FOR_VIEW[v]);\n",
+         "              farHemi(HEMI_FOR_VIEW[v]);\n"),
+        ("            contactsHemi(\"both\");\n",
+         "            farHemi(\"both\");\n"),
+        ("      contactsHemi(\"both\");  // a pass that failed mid-view must not leave dots missing\n",
+         "      farHemi(\"both\");  // a pass that failed mid-view must not leave dots or a hemisphere missing\n"),
     ):
         if seg.count(old) != 1:
             raise SystemExit(f"anchor inside the glass pass matches {seg.count(old)} times:\n{old}")
