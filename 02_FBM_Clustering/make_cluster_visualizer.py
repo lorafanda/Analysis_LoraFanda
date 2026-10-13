@@ -2134,6 +2134,13 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
          "        blocks[i].glassSpin = REPORT_FULL ? await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox) : [];\n"),
         ("      if (SWEEP && SWEEP.ks && SWEEP.ks.length > 1) {\n",
          "      if (REPORT_FULL && SWEEP && SWEEP.ks && SWEEP.ks.length > 1) {\n"),
+        # stills mode: the K on screen gets its table brains from the stills just captured,
+        # so the per-K cluster table (chip, centroids, three views, composition) is drawn
+        # at the exported cut without the every-K pass
+        ("        blocks[i].glassSpin = REPORT_FULL ? await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox) : [];\n      }\n",
+         "        blocks[i].glassSpin = REPORT_FULL ? await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox) : [];\n      }\n"
+         "      { const idsNow = ((SWEEP && SWEEP.stats && SWEEP.stats[String(KSEL)]) || {}).clusters || [];\n"
+         "        if (idsNow.length) KBRAINS[KSEL] = idsNow.map(c => { const b = blocks.find(x => x.d.cluster === c); return b ? b.glassShots : null; }); }\n"),
     ):
         if seg.count(old) != 1:
             raise SystemExit(f"anchor inside the glass pass matches {seg.count(old)} times:\n{old}")
@@ -2157,6 +2164,16 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     s = (s[:i] + '  ${!REPORT_FULL ? "" : `' + s[i:m].rstrip() + '`}\n'
          + '  ${!REPORT_3D ? "" : `' + glass.rstrip() + '`}\n' + s[j:])
     n_patch += 1
+
+    # THE PER-K CLUSTER TABLE DOES NOT WAIT FOR BRAINS (2026-10-13, Lora: "the main cluster
+    # card ... the first big figure that shows comparisons of all clusters like a table" was
+    # missing). The K panel drew its rows - chip, centroids, three views, composition,
+    # centre / language - only when the every-K brain captures existed, and those left with
+    # the 3D flag on 2026-09-07, so the table had been gone since. It is drawn whenever the
+    # cut has clusters; a view cell without a capture is simply empty.
+    sub("      ${(B.brains && B.brains.some(Boolean)) ? `",
+        "      ${(B.ids && B.ids.length) ? `",
+        "K panel: the table does not wait for brains")
 
     # ... the per-cluster pair of turns ...
     a = '    <div style="margin-top:14px">\n      <h2 class="sec">Seen from every angle</h2>'
