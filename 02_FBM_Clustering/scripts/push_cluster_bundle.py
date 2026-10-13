@@ -106,8 +106,12 @@ def main() -> None:
         ks = man.get("sweep_ks") or list(range(5, 13))
         for rid in runs:
             method, fset, stamp = rid.split("__")
-            for k in ks:
-                for p in sorted(glob.glob(os.path.join(REPO, f"02_FBM_Clustering/outputs/clustering/{method}/{fset}/runs/{stamp}/cluster_centroids/k_{k}/*.png"))):
+            base = f"02_FBM_Clustering/outputs/clustering/{method}/{fset}/runs/{stamp}/cluster_centroids"
+            # the sweep cuts' chips (k_K/) and the published cut's flat chips (cluster_NN.png):
+            # the report's table shows the published fit at the published K (2026-10-13)
+            pats = [os.path.join(REPO, base, f"k_{k}", "*.png") for k in ks] + [os.path.join(REPO, base, "cluster_*.png")]
+            for pat in pats:
+                for p in sorted(glob.glob(pat)):
                     rel = os.path.relpath(p, REPO).replace("\\", "/")
                     if git("status", "--short", "--", rel).stdout.strip():
                         files.append(rel)

@@ -2139,8 +2139,30 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         # at the exported cut without the every-K pass
         ("        blocks[i].glassSpin = REPORT_FULL ? await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox) : [];\n      }\n",
          "        blocks[i].glassSpin = REPORT_FULL ? await captureSpin(0, SPIN_N, SPIN_W, true, gSpinBox) : [];\n      }\n"
-         "      { const idsNow = ((SWEEP && SWEEP.stats && SWEEP.stats[String(KSEL)]) || {}).clusters || [];\n"
-         "        if (idsNow.length) KBRAINS[KSEL] = idsNow.map(c => { const b = blocks.find(x => x.d.cluster === c); return b ? b.glassShots : null; }); }\n"),
+         "      { // table brains for the exported cut, keyed by the row's cluster id (the sweep column's).\n"
+         "        // At the published K of a convex-NMF run the fit on screen (run_decomposition, 300\n"
+         "        // iterations) and the sweep's fit at that K (1000) are different clusterings, so a\n"
+         "        // sweep cluster takes the stills of the published cluster it overlaps most; for\n"
+         "        // k-means, Ward and every re-cut K the two are the same partition and the id matches.\n"
+         "        const kNow = String(KSEL), pubK = Number(RUN0.k);\n"
+         "        const rowIds = ((SWEEP && SWEEP.stats && SWEEP.stats[kNow]) || {}).clusters || [];\n"
+         "        if (rowIds.length) {\n"
+         "          let match = (s) => Number(s);\n"
+         "          const sw = SWEEP.labels && SWEEP.labels[kNow], pb = CONTACTS.runs && CONTACTS.runs[RUN0.id];\n"
+         "          if (Number(KSEL) === pubK && sw && pb) {\n"
+         "            const ov = {};\n"
+         "            for (let i = 0; i < sw.length; i++) {\n"
+         "              const a = sw[i], b = pb[i];\n"
+         "              if (!Array.isArray(a) || !Array.isArray(b)) continue;\n"
+         "              for (const s of a) { const row = ov[s] || (ov[s] = {}); for (const p of b) row[p] = (row[p] || 0) + 1; }\n"
+         "            }\n"
+         "            match = (s) => { const row = ov[s] || {}; const best = Object.keys(row).sort((x, y) => row[y] - row[x])[0];\n"
+         "                             return best == null ? Number(s) : Number(best); };\n"
+         "          }\n"
+         "          const byId = {};\n"
+         "          for (const s of rowIds) { const b = blocks.find(x => Number(x.d.cluster) === match(s)); byId[String(s)] = b ? b.glassShots : null; }\n"
+         "          KBRAINS[KSEL] = byId;\n"
+         "        } }\n"),
     ):
         if seg.count(old) != 1:
             raise SystemExit(f"anchor inside the glass pass matches {seg.count(old)} times:\n{old}")
@@ -2174,6 +2196,26 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     sub("      ${(B.brains && B.brains.some(Boolean)) ? `",
         "      ${(B.ids && B.ids.length) ? `",
         "K panel: the table does not wait for brains")
+
+    # THE EXPORTED CUT'S ROWS ARE THE CLUSTERS ON SCREEN (2026-10-13, Lora: "c1 c2 c3 ...
+    # need to match the glass brain screenshot"). The table took every K's ids from the
+    # sweep column, but at the PUBLISHED K of a convex-NMF run the published fit and the
+    # sweep's fit at that K are two different clusterings (run_decomposition at 300
+    # iterations vs sweep_decomposition at 1000): the stills, the sections and the flat
+    # chips are the published one's, so a sweep id of the same number sat next to another
+    # cluster's brain. The exported cut now takes RUN's clusters, sizes and composition -
+    # the published fit at the published K, the sweep cut elsewhere, exactly what the
+    # sections use - and the published cut's chips are the flat cluster_NN.png.
+    # The table's rows are the sweep column's ids in FIGURE ORDER (figureOrder above), and the
+    # brains were a positional array in id order - row i took brain i, so after the first
+    # reordered cluster every row showed another cluster's brain. Brains are keyed by the
+    # row's cluster id now, in both passes.
+    sub("          const g = (B.brains || [])[i];\n",
+        "          const g = (B.brains || {})[String(c)] || null;   // keyed by the row's cluster id\n",
+        "K panel: brains looked up by cluster id")
+    sub("          KBRAINS[kk] = shots;\n",
+        "          KBRAINS[kk] = Object.fromEntries(ids.map((c, j) => [String(c), shots[j]]));\n",
+        "glass pass: every-K brains keyed by cluster id")
 
     # ... the per-cluster pair of turns ...
     a = '    <div style="margin-top:14px">\n      <h2 class="sec">Seen from every angle</h2>'
