@@ -242,7 +242,8 @@ def build_patient(pid: str, a: pd.Series, r: pd.Series | None, max_ref: int, exa
             f'{(", " + str(r["n_channels_used"]) + " used") if r is not None else ""} &middot; <b>trials used</b> {tr} (audio / picture / reading)'
             f' &middot; <b>reference</b> WM {len(wm_used)}: {" ".join(wm_used) or "&ndash;"}'
             f' &middot; <b>bad list</b> {str(a.get("bad_list", "")) or "&ndash;"}</p>')
-    html = f'    <h3 id="pqc-{pid}">{pid}</h3>\n{line}\n' + "\n".join(blocks)
+    html = (f'    <div class="pq-pane" id="pq-pane-{pid}">\n    <h3 id="pqc-{pid}">{pid}</h3>\n{line}\n'
+            + "\n".join(blocks) + "\n    </div>")
     return html, missing, dict(files=nfiles, mb=nbytes / 1e6, blocks=len(blocks))
 
 
@@ -253,13 +254,14 @@ def build(patients: list, max_ref: int) -> tuple[str, dict]:
     ex_path = OUT / "example_contacts.json"
     examples = json.loads(ex_path.read_text(encoding="utf-8")) if ex_path.exists() else {}
     OUT.mkdir(parents=True, exist_ok=True)
-    parts, report = [], {}
+    parts, report, done = [], {}, []
     for pid in patients:
         if pid not in audit.index:
             print(f"  !! {pid}: not in the audit, skipped")
             continue
         html, missing, st = build_patient(pid, audit.loc[pid], rep.loc[pid] if pid in rep.index else None, max_ref, examples)
         parts.append(html)
+        done.append(pid)
         report[pid] = dict(st, missing=missing)
         print(f"  {pid:<9} {st['blocks']} blocks, {st['files']:>3} files, {st['mb']:.2f} MB" + (f"  missing {len(missing)}" if missing else ""), flush=True)
     ex_path.write_text(json.dumps(examples, indent=1), encoding="utf-8")
@@ -272,9 +274,25 @@ def build(patients: list, max_ref: int) -> tuple[str, dict]:
             "notch, the trial report, the cleaned signal of every contact in the white-matter reference, and the strongest "
             "audio responder's HFA raster and ERSP. Pick a patient on the strip. A reference contact that carries a line "
             "or broadband noise shows in P.4 before it shows anywhere else; the per-contact HFA rasters and ERSPs of the "
-            "whole montage are in the tree and in the LM visualizer's review mode, not here.</p>"]
-    body = "\n".join(parts)
-    tail = ["  </section>", E_SEC]
+            "whole montage are in the tree and in the LM visualizer's review mode, not here.</p>",
+            # the patients as a row of tabs. The class pf-bar tells make_site_ui's runtime that this tab
+            # brings its own strip (it would otherwise fold 30 headings into a dropdown); the buttons and
+            # panes carry their own names (pq-) so the paper tab's bar script leaves them alone.
+            "    <style>#pqc .pf-bar button.on{background:" + ACC + ";border-color:" + ACC + "}"
+            "#pqc .pq-pane{display:none}#pqc .pq-pane.on{display:block}</style>",
+            '    <div class="pf-bar pq-bar">',
+            "\n".join('      <button type="button" data-pq="%s"%s>%s</button>' % (p, ' class="on"' if i == 0 else "", p)
+                      for i, p in enumerate(done)),
+            "    </div>"]
+    body = "\n".join(parts).replace(f'<div class="pq-pane" id="pq-pane-{done[0]}">', f'<div class="pq-pane on" id="pq-pane-{done[0]}">', 1) if done else ""
+    tail = ['    <script>(function(){const sec=document.getElementById("pqc");if(!sec)return;const bar=sec.querySelector(".pq-bar");',
+            '      function show(k,push){sec.querySelectorAll(".pq-pane").forEach(p=>p.classList.toggle("on",p.id==="pq-pane-"+k));',
+            '        bar.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.pq===k));',
+            '        if(push)history.replaceState(null,"",location.pathname+location.search+"#pqc-"+k);}',
+            '      bar.querySelectorAll("button").forEach(b=>{b.onclick=()=>show(b.dataset.pq,true);});',
+            '      const h=location.hash||"";if(h.indexOf("#pqc-")===0){const k=h.slice(5);if(sec.querySelector("#pq-pane-"+k))show(k,false);}',
+            '    })();</script>',
+            "  </section>", E_SEC]
     return "\n".join(head) + "\n" + body + "\n" + "\n".join(tail), report
 
 
