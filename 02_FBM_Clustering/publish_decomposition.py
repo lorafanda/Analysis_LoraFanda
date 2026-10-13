@@ -40,6 +40,15 @@ FSET_LABELS = {
     "concat_bands5": "Concatenated 5 bands [a|p|r]",
     "concat_bands5z": "Concatenated 5 bands, z-scored [a|p|r]",
     "concat_hg_all": "Concatenated HG, ungated [a|p|r]",
+    "concat_bands15": "Concatenated 15 bands x 30 bins [a|p|r]",
+    "concat_bands2": "Concatenated 2 bands, 30-50 + 70-150 Hz [a|p|r]",
+    "concat_hfa": "Concatenated HFA 70-150 Hz x 30 bins [a|p|r]",
+    "concat_hfa300": "Concatenated HFA 70-150 Hz x 300 bins [a|p|r]",
+    "concat_hfa200": "Concatenated HFA 70-150 Hz x 200 bins [a|p|r]",
+    "concat_hfa150": "Concatenated HFA 70-150 Hz x 150 bins [a|p|r]",
+    "concat_hfa100": "Concatenated HFA 70-150 Hz x 100 bins [a|p|r]",
+    "concat_hfa30": "Concatenated HFA 70-150 Hz x 30 bins [a|p|r]",
+    "concat_hfa10": "Concatenated HFA 70-150 Hz x 10 bins [a|p|r]",
 }
 # SRC is no longer hard-coded. It is read from the decomposition's own meta.json,
 # because pinning it to one run is what let the loadings and the labels drift onto

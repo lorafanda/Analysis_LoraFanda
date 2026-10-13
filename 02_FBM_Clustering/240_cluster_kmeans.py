@@ -45,7 +45,13 @@ FIT_SPACE   = 'unit-norm'   # 'dB' reproduces the runs made before 2026-09-06
 # after a rebuild silently used the previous cohort. Set LF_CONCAT_CACHE to
 # reproduce a published run on its own cache.
 CACHE_DIR   = CC.DEFAULT_CONCAT_CACHE
-FEATURE_SETS= ['concat_hg', 'concat_rawds', 'concat_bands5', 'concat_bands5z']
+FEATURE_SETS= ['concat_bands15', 'concat_bands5', 'concat_bands2', 'concat_hfa']
+# ---- the HFA time-bin sweep (2026-10-13) -----------------------------------------------
+# concat_hfa at other time resolutions, same 70-150 Hz band, same anti-aliased resize.
+# Not in FEATURE_SETS: they are fitted only when named with --feature-set, e.g.
+#     python 240_cluster_kmeans.py --feature-set concat_hfa300 concat_hfa30 --ks 5 6 7 8 9 10
+TIMEBIN_SETS = {'concat_hfa300': 300, 'concat_hfa200': 200, 'concat_hfa150': 150, 'concat_hfa100': 100, 'concat_hfa30': 30, 'concat_hfa10': 10}
+
 K_RANGE     = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
 N_ITER      = 1000          # convex NMF fit iterations (final fits)
 RANDOM_STATE= cfg.RANDOM_STATE
@@ -53,11 +59,12 @@ RANDOM_STATE= cfg.RANDOM_STATE
 # ---- terminal flags (the notebook has none; defaults reproduce it) ----------------------
 ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
 ap.add_argument('--ks', type=int, nargs='+', default=K_RANGE, help='K values to fit (default: the notebook\'s 5..30)')
-ap.add_argument('--feature-set', nargs='+', default=FEATURE_SETS, choices=FEATURE_SETS, help='feature sets to fit (default: all four)')
+ap.add_argument('--feature-set', nargs='+', default=FEATURE_SETS, choices=FEATURE_SETS + list(TIMEBIN_SETS), help='feature sets to fit (default: all four)')
 ap.add_argument('--no-heldout', action='store_true', help='skip section 3, the bi-cross-validated held-out curve (make_heldout_variance.py)')
 args = ap.parse_args()
 K_RANGE = sorted(set(args.ks))
-FEATURE_SETS = [f for f in FEATURE_SETS if f in args.feature_set]
+FEATURE_SETS = [f for f in list(FEATURE_SETS) + list(TIMEBIN_SETS)
+                if f in args.feature_set]
 
 
 INPUT_DIR = Path(r'\\nasac-m2.unige.ch\m-HumanNeuronLab\ANALYSIS\FLM\Analysis_LoraFanda\01_FBM_Analysis\outputs\03_ERSP')
@@ -84,17 +91,31 @@ df_contacts, X_concat = CC.build_concat_dataset(
     INPUT_DIR, conditions=('audio','picture','reading'),
     require_high_activity=True, cache_dir=CACHE_DIR, verbose=True)
 
-X = {'concat_hg':     CC.concat_hg_features(X_concat, hg_band=(70.0,150.0), fmax=398.4375),
-     'concat_rawds':  CC.concat_rawds_features(X_concat, n_blocks=3, fmax_hz=398.4375),
-     # concat_bands5 is the SAME builder with 5 band edges instead of 15, each a
-     # union of contiguous 15-band edges. It averages the ORIGINAL frequency bins,
-     # so a wide band is weighted by the bins it contains rather than giving a 3 Hz
-     # sub-band the same say as a 40 Hz one - and the two sets stay nested.
+X = {# 2026-10-13: the four sets differ in FREQUENCY RESOLUTION ONLY - 15 / 5 / 2 / 1
+     # bands on one shared 30-bin time grid, 1350 / 450 / 180 / 90 features. concat_hg
+     # (the same HFA band at the cube's 300 bins) and concat_rawds / concat_bands5z are
+     # still in lf_concat and every run fitted on them still resolves; they are just not
+     # in this comparison any more.
+     'concat_bands15': CC.concat_bands15_features(X_concat, n_blocks=3, fmax_hz=398.4375),
+     # the same builder with 5 band edges instead of 15, each a union of contiguous
+     # 15-band edges. It averages the ORIGINAL frequency bins, so a wide band is
+     # weighted by the bins it contains rather than giving a 3 Hz sub-band the same say
+     # as a 40 Hz one - and the two sets stay nested.
      'concat_bands5': CC.concat_bands5_features(X_concat, n_blocks=3, fmax_hz=398.4375),
-     # the same five bands with each one z-scored to equal weight. NOT dB any
-     # more - the units are SD within a band - and it is a COHORT-level rescale,
-     # so it changes with the cohort and must be rebuilt when the cohort does.
-     'concat_bands5z': CC.concat_bands5z_features(X_concat, n_blocks=3, fmax_hz=398.4375)}
+     # low gamma 30-50 Hz and HFA 70-150 Hz, nothing else. 50-70 Hz is left out rather
+     # than averaged in: it is the least informative stretch of the spectrum (eta2
+     # 0.11-0.14, bottom two of fifteen).
+     'concat_bands2': CC.concat_bands2_features(X_concat, n_blocks=3, fmax_hz=398.4375),
+     # 70-150 Hz on the same 30-bin grid as the band sets - NOT concat_hg, which is the
+     # same band at 300 bins and is what the time-bin sweep varies.
+     'concat_hfa': CC.concat_hfa_features(X_concat, n_blocks=3, fmax_hz=398.4375)}
+# the sweep sets are built only when asked for: each one is a full pass over the
+# cohort's cubes, and the four standard sets are what a plain run is for
+for _fs in FEATURE_SETS:
+    if _fs in TIMEBIN_SETS:
+        X[_fs] = CC.concat_hfa_features(X_concat, n_blocks=3, fmax_hz=398.4375,
+                                        time_bins_out=TIMEBIN_SETS[_fs])
+
 
 print(f'\ncohort: {len(df_contacts)} electrodes · '
       f'{df_contacts.patient_id.nunique()} patients')

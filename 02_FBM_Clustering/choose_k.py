@@ -63,7 +63,7 @@ DEC = CLUST / "decomposition"
 # (20260817_171544 / 20260817_171634); by 2026-09-27 both folders had been deleted, so
 # the script could not run at all, and while they existed they silently held the August
 # cohort whatever had been rebuilt since. Resolved per call instead - see _source.
-SOURCES = ("concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z")
+SOURCES = ("concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa")
 
 
 def _source(fs):

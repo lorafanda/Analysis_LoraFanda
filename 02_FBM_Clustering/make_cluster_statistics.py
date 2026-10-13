@@ -66,6 +66,7 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
+import re
 import numpy as np
 import pandas as pd
 
@@ -202,6 +203,111 @@ def coherence(labs: dict, xyz: np.ndarray) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _shaft_of(name: str) -> str:
+    """The shaft a contact belongs to: its name with the trailing contact number off."""
+    return re.sub(r"\d+$", "", str(name))
+
+
+def shaft_null_groups(shafts, sizes, rng):
+    """Fake patients built from whole SHAFTS, not single electrodes.
+
+    The electrode-level null only controls for HOW MANY electrodes are removed. A real
+    patient is not a random scatter: its contacts sit on a handful of shafts, in one
+    brain, through one reference, with correlated noise. Removing one takes out a
+    coherent block, which is a strictly stronger perturbation than removing the same
+    count at random - so the real result sits below that null almost by construction and
+    the comparison says nothing. Permuting whole shafts keeps the block structure and
+    only destroys WHICH PATIENT a block belongs to, which is the thing being tested.
+
+    Sizes are matched as closely as whole shafts allow: shafts are dealt into groups
+    until each reaches its target, so a group is within one shaft of its real
+    counterpart rather than exact.
+    """
+    uniq = list(pd.unique(shafts))
+    rng.shuffle(uniq)
+    by = {u: np.flatnonzero(shafts == u) for u in uniq}
+    fake = np.empty(len(shafts), dtype=object)
+    gi, filled = 0, 0
+    for u in uniq:
+        if gi < len(sizes) - 1 and filled >= sizes[gi]:
+            gi += 1
+            filled = 0
+        fake[by[u]] = f"S{gi}"
+        filled += len(by[u])
+    return fake
+
+
+def predict_any(A_fit, labels_fit, A_new, k, method):
+    """Place NEW rows with a model fitted on A_fit - the step the refit test never takes.
+
+    cnmf   each new electrode gets its own loadings by non-negative least squares onto
+           the fitted components (the projection cv_rank_curve already uses), then the
+           argmax of the row-normalised loadings, exactly as the pipeline hardens a fit.
+    kmeans nearest centroid, which is what KMeans.predict is.
+    Ward   has no out-of-sample rule at all, so nearest centroid of the fitted clusters
+           stands in. That is the usual stand-in and it is stated rather than hidden:
+           Ward's number here is 'nearest centroid of a Ward partition', not Ward.
+    """
+    if method == "cnmf":
+        from scipy.optimize import nnls
+        import lf_decompose as LD
+        _, _, comp = LD.convex_nmf(A_fit, k, n_iter=300, random_state=0)
+        B = comp.T                                        # n_features x k
+        G = np.vstack([nnls(B, x)[0] for x in A_new])
+        return (G / np.maximum(G.sum(1, keepdims=True), 1e-12)).argmax(1)
+    cent = np.vstack([A_fit[labels_fit == c].mean(0) if (labels_fit == c).any()
+                      else np.full(A_fit.shape[1], np.inf) for c in range(k)])
+    d = ((A_new[:, None, :] - cent[None, :, :]) ** 2).sum(2)
+    return d.argmin(1)
+
+
+def lopo_predict(X, groups, k, method, *, seed=42):
+    """THE generalization test: does a patient land where the full cohort put it?
+
+    For each patient: fit on everyone else, then PLACE that patient's electrodes with
+    those components and compare against the full-cohort fit. lopo_any never touches the
+    held-out patient - it refits on the rest and asks whether that looks like the whole -
+    so a cluster that exists only because a patient is in the fit passes it and fails
+    this one.
+
+    The two solutions label clusters in their own arbitrary order, so the mapping is
+    learned on the KEPT electrodes, where both exist, by Hungarian matching on the
+    contingency table, and then applied to the held-out patient's predictions. Nothing
+    about the held-out patient is used to build the mapping.
+
+    Reported per patient:
+        acc         share of the patient's electrodes placed in the full fit's cluster
+        chance      the same share for the best constant guess (the patient's modal
+                    cluster in the full fit) - a patient whose electrodes are all in one
+                    cluster is easy, and without this the accuracy cannot be read
+        lift        acc - chance
+    """
+    from scipy.optimize import linear_sum_assignment
+    A = MS.unit(X) if MS.SPACE[method] == "unit-norm" else X
+    base = MS.fit_any(A, k, seed, method)
+    rows = []
+    for g in np.unique(groups):
+        held = groups == g
+        keep = ~held
+        lab_keep = MS.fit_any(A[keep], k, seed, method)
+        # align the two labellings on the kept electrodes only
+        C = np.zeros((k, k), float)
+        for a_, b_ in zip(lab_keep, base[keep]):
+            C[a_, b_] += 1
+        r, c = linear_sum_assignment(-C)
+        m = dict(zip(r, c))
+        pred = predict_any(A[keep], lab_keep, A[held], k, method)
+        pred = np.array([m.get(int(p), -1) for p in pred])
+        truth = base[held]
+        acc = float((pred == truth).mean())
+        vals, cnt = np.unique(truth, return_counts=True)
+        chance = float(cnt.max() / cnt.sum())
+        rows.append(dict(group=str(g), n_held_out=int(held.sum()),
+                         acc=acc, chance=chance, lift=acc - chance,
+                         n_clusters_truth=int(len(vals))))
+    return pd.DataFrame(rows)
+
+
 def lopo_any(X, groups, k, method, *, seed=42):
     """Leave-one-group-out ARI against the full-cohort solution, for ANY method.
 
@@ -223,7 +329,7 @@ def lopo_any(X, groups, k, method, *, seed=42):
     return pd.DataFrame(rows)
 
 
-def lopo_null_any(X, groups, k, method, *, n_rep=10, seed=0):
+def lopo_null_any(X, groups, k, method, *, n_rep=10, seed=0, shafts=None):
     """The same test with FAKE groups of identical sizes - otherwise a leave-one-out
     number cannot be read at all, because removing that many electrodes costs ARI on
     its own."""
@@ -231,12 +337,16 @@ def lopo_null_any(X, groups, k, method, *, n_rep=10, seed=0):
     sizes = pd.Series(groups).value_counts().to_numpy()
     out = []
     for rep in range(n_rep):
-        idx = rng.permutation(len(X))
-        fake = np.empty(len(X), dtype=object)
-        s = 0
-        for i, sz in enumerate(sizes):
-            fake[idx[s:s + sz]] = f"F{i}"
-            s += sz
+        if shafts is not None:
+            # whole shafts, so the fake group is a coherent block like a real patient
+            fake = shaft_null_groups(np.asarray(shafts), sizes, rng)
+        else:
+            idx = rng.permutation(len(X))
+            fake = np.empty(len(X), dtype=object)
+            s = 0
+            for i, sz in enumerate(sizes):
+                fake[idx[s:s + sz]] = f"F{i}"
+                s += sz
         d = lopo_any(X, fake, k, method, seed=seed + rep)
         out.append(dict(rep=rep, mean=float(d["ari"].mean()), min=float(d["ari"].min())))
     return pd.DataFrame(out)
@@ -314,23 +424,57 @@ def main() -> int:
     coh = coherence(labs, xyz)
     coh.to_csv(OUT / "stats_coherence.csv", index=False)
 
-    lopo_rows, lopo_sum = [], {}
+    lopo_rows, lopo_sum, lopo_pred = [], {}, {}
     if not a.skip_lopo:
-        print("\n[4/4] leave-one-patient-out vs size-matched null")
+        # THE PRIMARY GENERALIZATION TEST (2026-10-13). lopo_any refits on everyone else
+        # and asks whether that looks like the full fit - it never touches the held-out
+        # patient, so a cluster that exists only because a patient is in the fit passes
+        # it. lopo_predict places that patient with the other patients' components and
+        # asks whether it lands where the full fit put it, which is the question.
+        print("\n[4/5] leave-one-patient-out PREDICTION  (the generalization test)")
+        pred_rows = []
+        shafts = np.array([_shaft_of(e) for e in meta["electrode"]])
+        for m in ORDER:
+            t0 = time.time()
+            p = lopo_predict(X, pats, K, m)
+            p.insert(0, "method", m)
+            pred_rows.append(p)
+            lopo_pred[m] = dict(acc_mean=float(p["acc"].mean()),
+                                acc_median=float(p["acc"].median()),
+                                acc_min=float(p["acc"].min()),
+                                chance_mean=float(p["chance"].mean()),
+                                lift_mean=float(p["lift"].mean()),
+                                worst_patient=str(p.loc[p["acc"].idxmin(), "group"]))
+            print(f"  {LABEL[m]:<15} placed correctly {100*p['acc'].mean():.1f}% "
+                  f"(median {100*p['acc'].median():.1f}, worst "
+                  f"{100*p['acc'].min():.1f} = {lopo_pred[m]['worst_patient']})"
+                  f"   best constant guess {100*p['chance'].mean():.1f}%"
+                  f"   lift {100*p['lift'].mean():+.1f}   ({time.time()-t0:.0f}s)")
+        pd.concat(pred_rows).to_csv(OUT / "stats_lopo_predict.csv", index=False)
+
+        # the refit test is kept as the secondary number, with a SHAFT-level null: the
+        # electrode-level one only controls for how many electrodes are removed, and a
+        # real patient is a coherent block, so the real result sat below that null by
+        # construction. The per-patient table is what to read, not the minimum - a
+        # minimum over 29 folds is an extreme value driven by one patient.
+        print("\n[5/5] leave-one-patient-out refit vs shaft-matched null")
         for m in ORDER:
             t0 = time.time()
             d = lopo_any(X, pats, K, m)
             d.insert(0, "method", m)
             lopo_rows.append(d)
-            nl = lopo_null_any(X, pats, K, m, n_rep=a.lopo_reps)
-            z = (d["ari"].min() - nl["min"].mean()) / max(nl["min"].std(), 1e-9)
+            nl = lopo_null_any(X, pats, K, m, n_rep=a.lopo_reps, shafts=shafts)
+            z = (d["ari"].mean() - nl["mean"].mean()) / max(nl["mean"].std(), 1e-9)
             lopo_sum[m] = dict(real_mean=float(d["ari"].mean()),
+                               real_median=float(d["ari"].median()),
                                real_min=float(d["ari"].min()),
-                               null_min_mean=float(nl["min"].mean()),
-                               null_min_sd=float(nl["min"].std()), z=float(z),
-                               degenerate=int(d["degenerate"].sum()))
-            print(f"  {LABEL[m]:<15} min {d['ari'].min():.3f}  null "
-                  f"{nl['min'].mean():.3f}+/-{nl['min'].std():.3f}  z {z:+.2f}"
+                               null_mean=float(nl["mean"].mean()),
+                               null_sd=float(nl["mean"].std()), z=float(z),
+                               degenerate=int(d["degenerate"].sum()),
+                               null_kind="shaft-permuted")
+            print(f"  {LABEL[m]:<15} mean {d['ari'].mean():.3f} median "
+                  f"{d['ari'].median():.3f} min {d['ari'].min():.3f}  null "
+                  f"{nl['mean'].mean():.3f}+/-{nl['mean'].std():.3f}  z {z:+.2f}"
                   f"   ({time.time()-t0:.0f}s)")
         pd.concat(lopo_rows).to_csv(OUT / "stats_lopo.csv", index=False)
 
@@ -357,7 +501,7 @@ def main() -> int:
         x_train_identical=True, n_gated=int(is_gated.sum()),
         n_added=int((~is_gated).sum()),
         baseline_pct_added=100 * float((~is_gated).mean()),
-        n_null=a.n_null, lopo=lopo_sum,
+        n_null=a.n_null, lopo=lopo_sum, lopo_predict=lopo_pred,
         contingency=cont,
         written=time.strftime("%Y-%m-%d %H:%M:%S"))
     (OUT / "stats_summary.json").write_text(json.dumps(summary, indent=2))
@@ -395,6 +539,7 @@ def main() -> int:
                 neighbours_sharing_label=float(co.iloc[0].neighbours_sharing_label),
                 over_chance=float(co.iloc[0].over_chance)) if len(co) else None),
             lopo=lopo_sum.get(m),
+            lopo_predict=lopo_pred.get(m),
             agreement_with=pairs,
             cluster_sizes=[int(v) for v in
                            sizes[sizes.method == m].sort_values("cluster").n],

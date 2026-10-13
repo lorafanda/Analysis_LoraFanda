@@ -101,19 +101,29 @@ BG_RADIUS = RC.DEPTH_RADIUS     # the electrode that is not in this cluster, in 
 DANGER = 0.50                   # more than half a cluster from one patient
 N_PERM = 400                    # permutations for the size-matched random draw
 
-FSETS = ["concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z"]
-TAG = {"concat_hg": "a", "concat_rawds": "b", "concat_bands5": "c",
-       "concat_bands5z": "d"}
-FS_LABEL = {"concat_hg": "high gamma (70-150 Hz) x time",
+# 2026-10-13: the four sets of the comparison differ in FREQUENCY RESOLUTION ONLY -
+# 15 / 5 / 2 / 1 bands on one shared 30-bin time grid. The old names stay in the maps
+# below so a figure can still be drawn on an older run (concat_hg is the same HFA band
+# at the cube's 300 bins; bands5z was the per-band z-score and is out of the comparison).
+FSETS = ["concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa"]
+TAG = {"concat_bands15": "a", "concat_bands5": "b", "concat_bands2": "c",
+       "concat_hfa": "d", "concat_hg": "e", "concat_rawds": "f", "concat_bands5z": "g"}
+FS_LABEL = {"concat_bands15": "15 frequency bands x 30 time bins",
+            "concat_bands5": "5 frequency bands x 30 time bins",
+            "concat_bands2": "2 bands (30-50 and 70-150 Hz) x 30 time bins",
+            "concat_hfa": "HFA (70-150 Hz) x 30 time bins",
+            "concat_hg": "high gamma (70-150 Hz) x 300 time bins",
             "concat_rawds": "15 frequency bands x time",
-            "concat_bands5": "5 frequency bands x time",
             "concat_bands5z": "5 frequency bands x time, z-scored per band"}
-FS_SHORT = {"concat_hg": "HG", "concat_rawds": "15 bands",
-            "concat_bands5": "5 bands", "concat_bands5z": "5 bands, z"}
+FS_SHORT = {"concat_bands15": "15 bands", "concat_bands5": "5 bands",
+            "concat_bands2": "2 bands", "concat_hfa": "HFA",
+            "concat_hg": "HG, 300 bins", "concat_rawds": "15 bands",
+            "concat_bands5z": "5 bands, z"}
 # bands5z is a per-band z-score, so its values are STANDARD DEVIATIONS, not decibels.
 # Labelling that axis "dB" would be a units error on the face of a paper figure.
-UNITS = {"concat_hg": "dB vs baseline", "concat_rawds": "dB vs baseline",
-         "concat_bands5": "dB vs baseline",
+UNITS = {"concat_bands15": "dB vs baseline", "concat_bands5": "dB vs baseline",
+         "concat_bands2": "dB vs baseline", "concat_hfa": "dB vs baseline",
+         "concat_hg": "dB vs baseline", "concat_rawds": "dB vs baseline",
          "concat_bands5z": "SD (per-band z-score)"}
 COND_LABEL = {"audio": "audio", "picture": "picture", "reading": "reading (sentences)"}
 # The picture stimulus is a real line drawing and cannot be reproduced as a glyph. Crop

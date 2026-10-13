@@ -96,7 +96,7 @@ import lf_runs as LR            # noqa: E402
 # figure went missing from every listing that looks in the right place.
 OUT = ROOT / "outputs" / "clustering" / "paper_figures"
 SPACE_FSET = "concat_bands5z"           # the yardstick every cluster is described in
-ALGO_FSET = "concat_hg"                 # axis A is run on HFA
+ALGO_FSET = "concat_bands15"                 # axis A is run on HFA
 METHOD_LABEL = {"cnmf": "convex NMF", "kmeans": "k-means", "hierarchical": "Ward"}
 FS_LABEL = {"concat_hg": "HFA", "concat_rawds": "15 bands",
             "concat_bands5": "5 bands", "concat_bands5z": "5 bands z"}

@@ -44,6 +44,7 @@ axis when ranking a concat_* run.
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from typing import Iterable, List, Optional, Sequence, Tuple
 
@@ -96,6 +97,11 @@ DEFAULT_EXCLUDE_PATIENTS: Tuple[str, ...] = ("EL044", "PAT_6684", "EL031")
 DEFAULT_FMAX = 398.4375   # 102 x 3.90625 Hz: the last bin of the 0-400 Hz cube (was 500 = bin 128 of the 0-500 one), 2026-09-18
 DEFAULT_HG_BAND = (70.0, 150.0)
 DEFAULT_DS_TIME_BINS = 30
+# The two band lists of the 2026-10-13 four-set comparison (hfa / bands2 / bands5 /
+# bands15 on one 30-bin grid). FREQ_BANDS_15_TO_400HZ and FREQ_BANDS_5_TO_400HZ are the
+# other two and live in lf_features with the argument for their edges.
+FREQ_BAND_HFA: List[Tuple[float, float]] = [DEFAULT_HG_BAND]          # 70-150 Hz
+FREQ_BANDS_2: List[Tuple[float, float]] = [(30.0, 50.0), (70.0, 150.0)]
 # Ungated source cache (separate from the gated canonical cache: different params).
 #
 # VERSIONED, because params.json does not record WHICH patients went into a cube:
@@ -343,6 +349,54 @@ def concat_bands5_features(X_concat: np.ndarray, *, n_blocks: int = 3,
                                  fmax_hz=fmax_hz, time_bins_out=time_bins_out)
 
 
+def concat_hfa_features(X_concat: np.ndarray, *, n_blocks: int = 3,
+                        fmax_hz: float = DEFAULT_FMAX,
+                        time_bins_out: int = DEFAULT_DS_TIME_BINS) -> np.ndarray:
+    """(n, 1 x n_blocks*30): 70-150 Hz mean on the SAME 30-bin grid as the band sets.
+
+    NOT concat_hg. concat_hg is the same band at the cube's full 300 bins (1 x 900) and
+    stays exactly as it is, with every run ever fitted on it. This one exists so that
+    hfa / bands2 / bands5 / bands15 differ in FREQUENCY RESOLUTION ONLY - one shared time
+    grid, 90 / 180 / 450 / 1350 features - which is the comparison those four are for
+    (2026-10-13, Lora). The time axis is the anti-aliased resize in
+    lf_features.downsample_ersp_to_bands, the same one stage-04 pooling uses, so any
+    bin count is available: the time-bin sweep is this builder at time_bins_out =
+    300 / 200 / 150 / 100 / 30 / 10.
+    """
+    return concat_rawds_features(X_concat, n_blocks=n_blocks,
+                                 freq_band_edges=FREQ_BAND_HFA,
+                                 fmax_hz=fmax_hz, time_bins_out=time_bins_out)
+
+
+def concat_bands15_features(X_concat: np.ndarray, *, n_blocks: int = 3,
+                            fmax_hz: float = DEFAULT_FMAX,
+                            time_bins_out: int = DEFAULT_DS_TIME_BINS) -> np.ndarray:
+    """(n, 15 x n_blocks*30): the 15 canonical bands - concat_rawds under the name the
+    four-set comparison uses. Identical features, byte for byte; the name is the only
+    difference, and concat_rawds keeps resolving so existing runs are untouched."""
+    return concat_rawds_features(X_concat, n_blocks=n_blocks,
+                                 freq_band_edges=FREQ_BANDS_15_TO_400HZ,
+                                 fmax_hz=fmax_hz, time_bins_out=time_bins_out)
+
+
+def concat_bands2_features(X_concat: np.ndarray, *, n_blocks: int = 3,
+                           fmax_hz: float = DEFAULT_FMAX,
+                           time_bins_out: int = DEFAULT_DS_TIME_BINS) -> np.ndarray:
+    """(n, 2 x n_blocks*30): low gamma 30-50 Hz and HFA 70-150 Hz, nothing else.
+
+    The gamma band stops at 50, not at the 5-band set's 70, because 50-70 Hz is the
+    stretch that set already calls the least informative (eta2 0.11-0.14, bottom two of
+    fifteen) and Lora wanted it out rather than averaged in (2026-10-13).
+
+    30-50 is an exact 15-band bin. 70-150 is NOT: it splits the 130-170 bin, so this
+    set is not nested inside bands15 the way bands5 is - it matches concat_hg's band
+    instead, which is the point of comparison that was wanted. 70-170 would nest.
+    """
+    return concat_rawds_features(X_concat, n_blocks=n_blocks,
+                                 freq_band_edges=FREQ_BANDS_2,
+                                 fmax_hz=fmax_hz, time_bins_out=time_bins_out)
+
+
 def concat_bands5z_features(X_concat: np.ndarray, *, n_blocks: int = 3,
                             fmax_hz: float = DEFAULT_FMAX,
                             time_bins_out: int = DEFAULT_DS_TIME_BINS) -> np.ndarray:
@@ -390,21 +444,33 @@ def concat_raw_features(X_concat: np.ndarray) -> np.ndarray:
 
 def concat_feature_names(kind: str, *, n_blocks: int = 3,
                          conditions: Sequence[str] = DEFAULT_CONDITIONS,
-                         n_time_block: int = 300) -> List[str]:
+                         n_time_block: int = 300,
+                         n_time_ds: int = DEFAULT_DS_TIME_BINS) -> List[str]:
     """Human-readable column names, e.g. 'audio|70-150Hz|t012'."""
     conds = list(conditions)[:n_blocks]
     if kind in ("concat_hg", "concat_hg_all"):
         # concat_hg_all is the SAME representation on the ungated electrode set, so the
         # columns are identical and every downstream reshape keeps working.
         return [f"{c}|hg|t{t:03d}" for c in conds for t in range(n_time_block)]
-    if kind in ("concat_rawds", "concat_bands5", "concat_bands5z"):
-        # bands5z is bands5 rescaled, so the columns are identical and every reshape,
-        # grid and centroid renderer downstream keeps working unchanged
-        edges = (FREQ_BANDS_5_TO_400HZ if kind.startswith("concat_bands5")
-                 else FREQ_BANDS_15_TO_400HZ)
+    # the HFA time-bin sweep: concat_hfa<N> is concat_hfa at N bins, and the bin count has
+    # to come out of the NAME. 240 and 241 call this as concat_feature_names(fs) with no
+    # other argument, so without this the schema they save would claim 30 bins while
+    # X_train has N of them, and run_decomposition's schema assert fires on the mismatch.
+    _m = re.fullmatch(r"concat_hfa(\d+)", str(kind))
+    if _m:
+        kind, n_time_ds = "concat_hfa", int(_m.group(1))
+    if kind in ("concat_rawds", "concat_bands5", "concat_bands5z", "concat_bands15",
+                "concat_bands2", "concat_hfa"):
+        # bands5z is bands5 rescaled and bands15 is rawds renamed, so in both cases the
+        # columns are identical to what they stand in for and every reshape, grid and
+        # centroid renderer downstream keeps working unchanged
+        edges = {"concat_bands5": FREQ_BANDS_5_TO_400HZ,
+                 "concat_bands5z": FREQ_BANDS_5_TO_400HZ,
+                 "concat_bands2": FREQ_BANDS_2,
+                 "concat_hfa": FREQ_BAND_HFA}.get(kind, FREQ_BANDS_15_TO_400HZ)
         bands = [f"{int(lo)}-{int(hi)}" for lo, hi in edges]
         return [f"{c}|{b}Hz|t{t:02d}" for b in bands for c in conds
-                for t in range(DEFAULT_DS_TIME_BINS)]
+                for t in range(n_time_ds)]
     if kind == "concat_raw":
         return [f"{c}|f{f:03d}|t{t:03d}" for f in range(103) for c in conds
                 for t in range(n_time_block)]

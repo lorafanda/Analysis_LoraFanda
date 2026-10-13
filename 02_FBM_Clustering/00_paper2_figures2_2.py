@@ -89,7 +89,7 @@ REF_FSET = P2.MATCH_REF_FSET
 # concat_hg by default for the algorithm half - the representation the field starts
 # from, and the one the published FIG 2 was drawn on. The paper's standard is
 # concat_bands5z; pass --algo-feature-set to draw the half on any of the four.
-DEFAULT_ALGO_FSET = "concat_hg"
+DEFAULT_ALGO_FSET = "concat_bands15"
 
 
 # ---- loading any solution ----------------------------------------------------

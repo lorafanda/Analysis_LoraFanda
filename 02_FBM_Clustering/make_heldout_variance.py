@@ -152,9 +152,12 @@ def bicv(X, ks, method, *, n_row_folds=4, n_col_folds=4, n_iter=150, seed=0,
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    # 2026-10-13: the default is the four-set comparison (15 / 5 / 2 / 1 bands on one
+    # 30-bin grid). concat_hg / concat_rawds / concat_bands5z are still accepted - 240
+    # to 242 pass whatever they were run with, and old runs are still re-scorable.
     ap.add_argument("--feature-set", nargs="+",
-                    default=["concat_hg", "concat_rawds", "concat_bands5",
-                             "concat_bands5z"])
+                    default=["concat_bands15", "concat_bands5", "concat_bands2",
+                             "concat_hfa"])
     ap.add_argument("--ks", nargs="+", type=int, default=DEFAULT_KS)
     ap.add_argument("--spaces", choices=["home", "unit", "both"], default="both")
     # three parallel kernels each sweep ONE method and write their own files, so they
@@ -196,6 +199,28 @@ def main() -> int:
                                                                fmax_hz=398.4375),
             "concat_bands5z": lambda: CC.concat_bands5z_features(Xc, n_blocks=3,
                                                                  fmax_hz=398.4375),
+            "concat_bands15": lambda: CC.concat_bands15_features(Xc, n_blocks=3,
+                                                                 fmax_hz=398.4375),
+            "concat_bands2": lambda: CC.concat_bands2_features(Xc, n_blocks=3,
+                                                               fmax_hz=398.4375),
+            "concat_hfa": lambda: CC.concat_hfa_features(Xc, n_blocks=3,
+                                                         fmax_hz=398.4375),
+            # the HFA time-bin sweep: the same builder at another time_bins_out. Written
+            # out one by one with the number in the call - a `lambda b=b:` here closed
+            # over a name that does not exist at this scope and raised NameError the
+            # first time 240 called this script (2026-10-13).
+            "concat_hfa300": lambda: CC.concat_hfa_features(
+                Xc, n_blocks=3, fmax_hz=398.4375, time_bins_out=300),
+            "concat_hfa200": lambda: CC.concat_hfa_features(
+                Xc, n_blocks=3, fmax_hz=398.4375, time_bins_out=200),
+            "concat_hfa150": lambda: CC.concat_hfa_features(
+                Xc, n_blocks=3, fmax_hz=398.4375, time_bins_out=150),
+            "concat_hfa100": lambda: CC.concat_hfa_features(
+                Xc, n_blocks=3, fmax_hz=398.4375, time_bins_out=100),
+            "concat_hfa30": lambda: CC.concat_hfa_features(
+                Xc, n_blocks=3, fmax_hz=398.4375, time_bins_out=30),
+            "concat_hfa10": lambda: CC.concat_hfa_features(
+                Xc, n_blocks=3, fmax_hz=398.4375, time_bins_out=10),
         }
         unknown = [f for f in a.feature_set if f not in builders]
         if unknown:
