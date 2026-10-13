@@ -47,21 +47,21 @@ GROUPS = [   # (header or None, [data-t ...]) in display order
 ANSWERS = {
     "overview": dict(
         one="the cohort and where every tab stands",
-        html=("<p>Cohort <span class=\"new\"><b>v15</b> (built 2026-10-09 from the 03_ERSP tree): 1613 gated electrodes from 29 patients, "
-              "2976 with cubes in all three conditions</span>, every patient at fmax 400 with the per-shaft spectrum-interpolation "
-              "notch. PAT_6684 (G-05) and EL044 are out; PAT_3301 cannot enter, it has only picture naming. "
+        html=("<p>Cohort <span class=\"new\"><b>v16</b> (built 2026-10-12 18:17 from the 03_ERSP tree, after the channel decisions): "
+              "1607 gated electrodes from 29 patients, 2946 with cubes in all three conditions; 4580 trials in, 3638 used (79.4 %)</span>, "
+              "every patient at fmax 400 with the per-shaft spectrum-interpolation notch. PAT_6684 (G-05), EL044 and EL031 are out; "
+              "PAT_3301 cannot enter, it has only picture naming. "
               "<span class=\"new\">New since 2026-10-07, in green on every tab: PAT_3780's trial tables were 180 s early (its photodiode is the "
               "envelope difference of X1 and X2) and it was re-timed and rerun (gated 49 → 92); EL031 was processed and excluded "
               "(8 audio trials after the filters); PAT_3415 contributes nothing in this tree (its depth contacts left as Unknown); "
-              "the 04 trees are archived. All twelve clustering runs are refitted on v15 (2026-10-09, K 5–30); the LM visualizer "
-              "(10-09) and the cluster visualizer (10-11) are on v15; FIG 4 / 5 ran on it on 10-12. "
-              "On 10-12 the channel decisions came: 67 contacts bad-listed across 10 patients from the contact-noise audit (148, measured on the "
-              "WM-referenced signal, the only view that shows a noisy contact) and the figures; PAT_3975 moved to a deep white-matter reference "
-              "(11 contacts: the gyral-WM rule had given it 48 next to cortex); PAT_6854, PAT_3975 and PAT_3455 rerun. So v15 is stale and "
-              "<b>v16</b> is next; every stage-02 number waits for it.</span> "
+              "the 04 trees are archived. On 10-12 the channel decisions: 67 contacts bad-listed across 10 patients from the contact-noise audit "
+              "(148, measured on the WM-referenced signal, the only view that shows a noisy contact) and the figures; PAT_3975 on a deep "
+              "white-matter reference (11 contacts: the gyral-WM rule had given it 48 next to cortex); PAT_6854, PAT_3975 and PAT_3455 rerun. "
+              "On v16 (10-12 → 13): all twelve clustering runs (K 5–30), 249's statistics (K 7 / 7 / 6 / 8), FIG 0 / 2 / 3 / 4 / 5, the C-figures, "
+              "the LM and cluster visualizers with their bundles. Not on v16: FIG 1 and the held-out curves (select), 252.</span> "
               "One line per tab, the tab's own Answer behind each:</p>"
               "<!--TABLIST-->"),
-        status="v15 cache 2026-10-09, stale since the 10-12 channel decisions and three reruns · v16 next · 12 fits + FIG 4/5 on v15 · LM and cluster visualizers on v15"),
+        status="v16 cache 2026-10-12 · 12 fits, 249, FIG 0/2/3/4/5 and both visualizers on v16 (10-13) · FIG 1, held-out curves (select) and 252 pending"),
     "outline": dict(
         one="the paper as bullets, preprocessing → clustering outputs, darkness = confidence; source paper2_outline.md (make_outline_tab.py)",
         html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
@@ -78,7 +78,7 @@ ANSWERS = {
               "<li class=\"new\"><b>since 10-07</b>: PAT_3780's trial tables were 180 s early (the 2025 manual table) — its photodiode is the "
               "envelope of X1 minus the envelope of X2 (<code>pat_3780_build_triggers.py</code>); tables rebuilt, FAP9 / HAG1 / HAG2 / TPG1 / TPG2 "
               "bad-listed, 140 rerun 10-07 (112 cubes; 39 / 46 / 42 trials used), the four removed shafts' orphan cubes swept with "
-              "<code>142_stale_cubes.py --delete</code> before v15 · EL031 onboarded (three one-block EDFs joined, DC6 triggers per file, "
+              "<code>142_stale_cubes.py --delete</code> before the cohort build · EL031 onboarded (three one-block EDFs joined, DC6 triggers per file, "
               "51 / 23 / 53 trials, whole-recording CAR, run 10-09) and excluded: 8 audio trials after the filters · PAT_3975 checked the same way, "
               "its tables are right · 141's readable audit fixed (a leftover of the archived 04 tree) · 03_ERSP is the only tree (04_* archived 10-07) · "
               "the Word report of 09-28 → 10-09 is in <code>01_FBM_Analysis/outputs/preprocessing_docs/</code></li>"
@@ -157,9 +157,9 @@ ANSWERS = {
         html=("<p class=\"new\">Open on 2026-10-13: FIG 1 and the held-out curves (the select phase) on v16, and 252; the LanA tables "
               "(<code>04_FBM_Pooling/make_lana_runs.py</code> on the current coordinates: the 2026-09-07 tables FIG 0 and FIG 3 run on cover 1403 of 1607 "
               "electrodes, PAT_1327 / EL051 / EL052 absent); two site-phase steps that fail for old reasons (make_norm_notes.py's text correction, "
-              "audit_site_figures.py's missing patient folder); the four partition counters on v16; PAT_3415's depth contacts dropped as Unknown by the 03_ERSP run "
-              "(0 electrodes in v15); PAT_3780's TPG3 / FAS1 and EL040's CinG_R13 to look at in the raw; EL031's reconstruction; the four "
-              "partition counters of 10-07 to redo on v15 (they ran on v13, with PAT_3780's wrong windows).</p>"
+              "audit_site_figures.py's missing patient folder); the four partition counters of 10-07 to redo on v16 (they ran on v13, with PAT_3780's "
+              "wrong windows); PAT_3415's depth contacts dropped as Unknown by the 03_ERSP run (0 electrodes in v16); PAT_3780's TPG3 / FAS1 and "
+              "EL040's CinG_R13 to look at in the raw; EL031's reconstruction.</p>"
               "<p>Open, in order: G-02's 14 mis-timed trials — correct, drop or leave; G-03's raw timing check; notebook 150 "
               "and <code>build_timing_table.py</code> still key on G-05; the 24 Paper 2 figures still on v8; the editorial choice "
               "between opening A and B (FIG C.4a/b) and whether HFA stays the headline; pooling (460/465) still on a pre-v8 "
