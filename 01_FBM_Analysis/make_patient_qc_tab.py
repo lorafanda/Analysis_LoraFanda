@@ -329,7 +329,11 @@ def main() -> int:
         i = s.index(anchor)
         s = s[:i] + html + "\n\n" + s[i:]
         print("inserted the patient qc section before #caveats")
-    if B_NAV in s and E_NAV in s:
+    # the nav button: once. make_site_ui.py --insert regroups the nav and keeps the button but not
+    # these markers, so the test is the button itself, not the markers.
+    if 'data-t="pqc"' in s:
+        print("nav button already there (make_site_ui.py keeps it when it regroups the nav)")
+    elif B_NAV in s and E_NAV in s:
         i, j = s.index(B_NAV), s.index(E_NAV) + len(E_NAV)
         s = s[:i] + B_NAV + "\n" + NAV + "\n    " + E_NAV + s[j:]
     else:
