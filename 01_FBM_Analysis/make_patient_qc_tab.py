@@ -15,9 +15,10 @@ sub-tab strip, so the top row of the tab is the patients)
   P.1  montage overview                   PerTrial/Report/<pid>_montage_overview.png
   P.2  PSD per shaft, raw and clean       PSD_raw | PSD_clean/<cond>/PSD/psd_by_shaft.png, three conditions
   P.3  the trial report per condition     PerTrial/Report/<pid>_<cond>_iqr_postDur_QC.png
-  P.4  the reference contacts             PerTrial/Signal/audio/<pid>_audio_WM_SIGtrials_<ch>.png for every
-                                          contact in the white-matter mean (the cleaned, WM-referenced signal,
-                                          trial by trial): a bad reference contact shows here first
+  P.4  the reference contacts themselves  ERSP_noref | PerTrial/HFA_noref | PerTrial/Signal_noref/audio/
+                                          <pid>_audio_NOREF_<ERSP|HFAtrials|SIGtrials>_<ch>.png for every contact
+                                          in the white-matter mean, unreferenced (notch + baseline only; 140
+                                          since 2026-10-13, or --wm-noref-only): a bad reference contact shows here
   P.5  the strongest audio responder      its HFA raster and ERSP (chosen from the cubes: the largest
                                           70-150 Hz response-half mean, bad-listed contacts excluded)
 
@@ -123,14 +124,23 @@ def strongest_audio_contact(pid: str, bad: set) -> tuple[str, float] | None:
     return best
 
 
-def sig_index(pid: str) -> dict:
-    """norm(contact) -> file name of its audio Signal figure."""
-    d = signal_dir(TREE / pid / "LM") / "audio"
+NOREF = (("ersp", "ERSP_noref", "_NOREF_ERSP_", "_TN.png", "ERSP"),
+         ("hfa", cfg.HFA_DIR + "_noref", "_NOREF_HFAtrials_", ".png", "HFA raster"),
+         ("sig", getattr(cfg, "SIGNAL_DIR", "Signal") + "_noref", "_NOREF_SIGtrials_", ".png", "signal, trial by trial"))
+
+
+def noref_index(pid: str) -> dict:
+    """kind -> {norm(contact): (path, label)}: the unreferenced figures 140 writes for the contacts of
+    the white-matter mean (write_wm_noref_figures, 2026-10-13), audio block."""
     out = {}
-    if d.is_dir():
-        for f in os.listdir(d):
-            if f.endswith(".png") and "_WM_SIGtrials_" in f:
-                out[norm(f.split("_WM_SIGtrials_")[1][:-4])] = f
+    for kind, sub, tag, tail, label in NOREF:
+        d = TREE / pid / "LM" / sub / "audio"
+        m = {}
+        if d.is_dir():
+            for f in os.listdir(d):
+                if f.endswith(tail) and tag in f:
+                    m[norm(f.split(tag)[1][:-len(tail)])] = (d / f, label)
+        out[kind] = m
     return out
 
 
@@ -187,33 +197,47 @@ def build_patient(pid: str, a: pd.Series, r: pd.Series | None, max_ref: int, exa
     if items:
         blocks.append(fig("P.3", "Trial report: post-stimulus durations and the IQR rule, per condition", items,
                           f"{cfg.REPORT_DIR}/{pid}_&lt;cond&gt;_iqr_postDur_QC.png"))
-    # P.4 the reference contacts
-    sidx = sig_index(pid)
+    # P.4 the reference contacts themselves, unreferenced: the NOREF figures of 140 (2026-10-13)
+    nidx = noref_index(pid)
+    # the numbers 140 writes beside the figures: per contact, the 70-150 Hz mean in the response half (audio)
+    summ = {}
+    st = lm / "ERSP_noref" / "audio" / f"{pid}_audio_NOREF_summary.tsv"
+    if st.exists():
+        for rr in pd.read_csv(st, sep="\t").itertuples():
+            summ[norm(rr.contact)] = (float(rr.hg_resp_db), float(rr.hg_absmax_db))
     items, lost = [], []
     for ch in wm_used[:max_ref]:
-        f = sidx.get(norm(ch))
-        if not f:
+        got = 0
+        num = summ.get(norm(ch))
+        tag = f" &middot; HG response {num[0]:+.2f} dB, peak |{num[1]:.1f}|" if num else ""
+        for kind, _sub, _tag, _tail, label in NOREF:
+            hit = nidx[kind].get(norm(ch))
+            if not hit:
+                continue
+            p = copy(hit[0], f"ref_{norm(ch)}_{kind}.webp", 900)
+            if p:
+                items.append((p, f"{ch} &middot; {label}{tag if kind == 'ersp' else ''}"))
+                got += 1
+        if not got:
             lost.append(ch)
-            continue
-        p = copy(signal_dir(lm) / "audio" / f, f"ref_{norm(ch)}.webp", 1100)
-        if p:
-            items.append((p, ch))
-    note = f"{len(wm_used)} contacts in the white-matter mean"
+    note = f"{len(wm_used)} contacts in the white-matter mean; notch and per-trial baseline only, no reference"
+    if summ:
+        worst = max(summ.items(), key=lambda kv: abs(kv[1][0]))
+        note += f"; audio response half at 70&ndash;150 Hz: {min(v[0] for v in summ.values()):+.2f} to {max(v[0] for v in summ.values()):+.2f} dB, largest |mean| {worst[0]} ({worst[1][0]:+.2f} dB)"
     if len(wm_used) > max_ref:
         note += f"; the first {max_ref} drawn, the rest in the tree"
     if lost:
-        note += f"; no Signal figure for {' '.join(lost)}"
+        note += f"; not drawn yet: {' '.join(lost)}"
     if items:
-        blocks.append(fig("P.4", "The reference contacts: cleaned, WM-referenced signal, trial by trial (audio block)", items, note))
+        blocks.append(fig("P.4", "The reference contacts themselves, unreferenced (audio block): ERSP, HFA raster and signal per contact", items, note))
     elif wm_used:
         blocks.append('    <div class="pqc-fig" style="margin:10px 0 18px"><div class="cap"><div class="fignum">FIG P.4'
                       f'<div class="runid">{len(wm_used)} contacts in the white-matter mean: {" ".join(wm_used)}</div></div>'
                       '<h4>The reference contacts themselves: no figure yet</h4></div>'
-                      '<p style="font-size:13px;color:var(--muted)">140 draws the Signal / HFA / ERSP figures for the exported '
-                      'channels only; the contacts of the white-matter mean leave the montage with the reference, so nothing in '
-                      'the tree shows what they carry. This slot fills by itself once <code>PerTrial/Signal/audio/</code> holds a '
-                      '<code>_WM_SIGtrials_&lt;contact&gt;.png</code> for them (the EL048 / EL033 reference checks of 2026-10-02 '
-                      'were drawn from a scratch probe for that reason).</p></div>')
+                      '<p style="font-size:13px;color:var(--muted)">Since 2026-10-13 140 draws the contacts of the white-matter '
+                      'mean unreferenced (notch and per-trial baseline only) into <code>ERSP_noref/</code>, '
+                      '<code>PerTrial/HFA_noref/</code> and <code>PerTrial/Signal_noref/</code>; this patient has not been run '
+                      'since. <code>140_ersp_pipeline.py --patient &lt;pid&gt; --wm-noref-only</code> draws just these.</p></div>')
     # P.5 the strongest audio responder
     key = f"{pid}"
     ex = examples.get(key)

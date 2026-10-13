@@ -6,6 +6,9 @@
     python .\140_ersp_pipeline.py --patient G-01            (MicroEPI .mat patient -> PAT_5515)
     python .\140_ersp_pipeline.py --patient EL030 --pd      (also redo the photodiode trial tables first)
     python .\140_ersp_pipeline.py --patient EL030 --no-qc   (cubes and CLEAN PNGs only, no ERSP / HFA / PSD figures)
+    python .\140_ersp_pipeline.py --patient PAT_3455 --wm-noref-only
+                                                    (only the reference contacts, unreferenced: ERSP_noref /
+                                                     PerTrial/HFA_noref / PerTrial/Signal_noref; the run untouched)
 
 Run it from anywhere; it changes into 01_FBM_Analysis itself, the way the notebook kernel
 sits there. Use the same Python the notebook runs in (it needs mne, h5py, scipy).
@@ -92,6 +95,9 @@ WRITE_CUBES        = True   # ERSP_matrix/<cond>/*.npy   (what stage 02 clusters
 WRITE_HALVES       = True   # ERSP_halves/<cond>/*.npy   (the split-half gate)
 WRITE_CLEAN_PNG    = True   # ERSP_clean/<cond>/*_CLEAN.png
 EXPORT_TRIAL_SCORES = True   # PerTrial/TrialScores/<pid>_<cond>_trial_scores.tsv (in the 03_ERSP tree since 09-30; was 145's only)
+WRITE_WM_NOREF     = getattr(cfg, "write_wm_noref_figures", True)   # ERSP_noref/, PerTrial/HFA_noref/, PerTrial/Signal_noref/:
+                                                                     # the reference contacts, unreferenced (2026-10-13, see write_wm_noref_figures)
+WM_NOREF_ONLY      = False  # --wm-noref-only: only those figures; the run's products, report and logs untouched
 
 ersp_params = fe.ERSPParams(
     nperseg=cfg.nperseg, nfft=cfg.nfft, noverlap=cfg.noverlap,
@@ -369,6 +375,64 @@ def _hg_trial_z(res, hg_all):
     return out
 
 
+
+def write_wm_noref_figures(wm_names, wm_block, fs, *, patient_id, pid_raw, cond, on_c, off_c, te_c,
+                           hg_all, ersp_dir, hg_dir, sig_dir):
+    """THE REFERENCE CONTACTS THEMSELVES, UNREFERENCED (2026-10-13, Lora). The contacts of the
+    white-matter mean leave the montage with the reference, so no figure in the tree showed what
+    they carry. Here they get the same three figures as every other contact - the notch, decided
+    per shaft among themselves, and the per-trial baseline, no reference - into ERSP_noref/<cond>/,
+    PerTrial/HFA_noref/<cond>/ and PerTrial/Signal_noref/<cond>/, tagged NOREF in the file name.
+    A reference contact with a line, a burst or a task response of its own is seen here before it
+    is averaged into every other channel. No cube and no trial scores: nothing downstream reads
+    these folders (the export, 141, the LM bundle and the cache all look elsewhere).
+    Returns the number of contacts drawn."""
+    if wm_block.shape[1] == 0:
+        return 0
+
+    def _mk(d):
+        os.makedirs(d, exist_ok=True)
+        return d
+
+    wm_c = apply_notch_with_audit(np.ascontiguousarray(wm_block), fs, patient_id, pid_raw,
+                                  audit=None, names=list(wm_names))
+    uv_scale, _ = fe.microvolt_scale(wm_c, fs)
+    _on = hg_all["on"] if hg_all is not None else on_c
+    _off = hg_all["off"] if hg_all is not None else off_c
+    _te = hg_all["te"] if hg_all is not None else te_c
+    _reasons = hg_all["reason"] if hg_all is not None else None
+
+    def _rej(res):
+        return ([int(hg_all["keep_pos"][i]) for i in res.get("dropped_trials", [])]
+                if hg_all is not None else res.get("dropped_trials"))
+
+    for k, ch in enumerate(wm_names):
+        res = fe.compute_ersp(signals=wm_c, fs=fs, onsets=on_c, offsets=off_c, channel_idx=k,
+                              trial_ends=te_c, mode=cfg.mode, time_window=cfg.time_window,
+                              params=ersp_params)
+        fe.plot_ersp(res, patient_id=patient_id, condition=cond, reref_type="NOREF", chan_name=ch,
+                     save_dir=_mk(ersp_dir), params=ersp_params, plot_title=False, save_sidecar=False)
+        fe.plot_hg_trials(
+            signals=wm_c, fs=fs, onsets=_on, offsets=_off, channel_idx=k,
+            chan_name=ch, patient_id=patient_id, condition=cond, reref_type="NOREF",
+            time_window=cfg.time_window, baseline_w=cfg.baseline_w,
+            hg_band=cfg.hg_band, smooth_ms=cfg.hg_smooth_ms,
+            rejected_trials=_rej(res), exclude_reasons=_reasons, trial_z=_hg_trial_z(res, hg_all),
+            vmin=cfg.hg_vmin, vmax=cfg.hg_vmax,
+            save_dir=_mk(hg_dir), add_separators=False, sort_ascending=True,
+            trial_end_indices=_te, sort_by="stim")
+        fe.plot_signal_trials(
+            signals=wm_c, fs=fs, onsets=_on, offsets=_off, channel_idx=k,
+            chan_name=ch, patient_id=patient_id, condition=cond, reref_type="NOREF",
+            time_window=cfg.time_window, baseline_w=cfg.baseline_w,
+            uv_per_row=getattr(cfg, "signal_plot_uv_per_row", 200.0), unit_scale=uv_scale,
+            n_rows_fixed=getattr(cfg, "signal_plot_rows", 58),
+            rejected_trials=_rej(res), exclude_reasons=_reasons, trial_z=_hg_trial_z(res, hg_all),
+            save_dir=sig_dir, sort_ascending=True, trial_end_indices=_te, sort_by="stim")
+        del res
+    return len(wm_names)
+
+
 def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_PSD_PLOTS,
                     INCLUDE_MICROEPI_MICROS):
     # the patient's own entry first, then the "default" key (2026-09-30); a table with
@@ -525,6 +589,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                   f"{' ...' if len(_dropped_bad) > 12 else ''}")
 
         # ── REREFERENCING
+        _wm_raw = None    # (names, columns) of the reference contacts BEFORE the reference, for the NOREF figures
         if is_microepi:
             pid_str = str(pid_raw)
             preset  = cfg.MICROEPI_MAT_PRESETS.get(pid_str, {})
@@ -538,6 +603,9 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             # the bad list stays out of the reference here as it does for EL / PAT (2026-09-21:
             # until now the MicroEPI reference averaged bad-listed contacts in - PAT_6704 had 4)
             _bad_norm_ref = {io.normalize_label(b) for b in getattr(cfg, "bad_channels_manual", {}).get(patient_id, [])}
+            _wm_cap = [n for n in wm_names_raw if io.normalize_label(n) not in _bad_norm_ref]
+            if _wm_cap:
+                _wm_raw = (_wm_cap, signals[:, [names.index(n) for n in _wm_cap]].astype(float).copy())
             try:
                 signals, wm_used, wm_excl = mm.apply_wm_reref_selective(
                     signals, names, wm_names_raw, is_micro, apply_wm_to_micros=False,
@@ -592,6 +660,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 report["wm_channels_used"]            = f"CAR:all({len(_good)})"
                 report["wm_channels_excluded_as_bad"] = "|".join(sorted(n for n in names if io.normalize_label(n) in _bad_norm_for_report))
             elif wm_usable:
+                _wm_cap = [n for n in names if io.alias_label(n, patient_id) in set(wm_usable)]
+                _wm_raw = (_wm_cap, signals[:, [names.index(n) for n in _wm_cap]].astype(float).copy())
                 try:
                     signals, reref, wm_skip = apply_wm_reref(
                         signals, names, patient_id, electrodes_tsv_pattern=_wm_tsv)
@@ -663,7 +733,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                   + (", decided and applied PER SHAFT" if per_shaft else ""))
 
         report_dir  = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
-                                            getattr(cfg, "REPORT_DIR", "Report"))
+                                            getattr(cfg, "REPORT_DIR", "Report") + ("_noref" if WM_NOREF_ONLY else ""))
         report_path = os.path.join(report_dir, f"{patient_id}_IQR.tsv")
         all_trials = {}
         cond_groups = tr.collect_trials(prep_dir, fs, outlier_method="IQR",
@@ -692,7 +762,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             cond_groups = rebased
 
         if RUN_ERSP_PIPELINE:
-            if WRITE_MONTAGE:
+            if WRITE_MONTAGE and not WM_NOREF_ONLY:
                 tr.plot_montage_overview(signals=signals, fs=fs, names=names,
                                          cond_groups=cond_groups, save_dir=report_dir, patient_id=patient_id)
             ersp_root = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "ERSP")
@@ -816,7 +886,19 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             _uv_scale, _uv_sd = fe.microvolt_scale(sig_c, fs)
             if _uv_scale != 1.0:
                 print(f"[signal in volts: robust SD {_uv_sd:.2e}; Signal figures x{_uv_scale:g}] ", end="", flush=True)
+            # the reference contacts themselves, unreferenced (2026-10-13): write_wm_noref_figures
+            if RUN_ERSP_PIPELINE and WRITE_WM_NOREF and _wm_raw is not None:
+                _blk = _wm_raw[1][b0:b1] if notch_scope != "file" else _wm_raw[1]
+                _n_noref = write_wm_noref_figures(
+                    _wm_raw[0], _blk, fs, patient_id=patient_id, pid_raw=pid_raw, cond=cond,
+                    on_c=on_c, off_c=off_c, te_c=te_c, hg_all=_hg_all,
+                    ersp_dir=os.path.join(io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "ERSP_noref"), cond),
+                    hg_dir=os.path.join(io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, cfg.HFA_DIR + "_noref"), cond),
+                    sig_dir=os.path.join(io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
+                                                               getattr(cfg, "SIGNAL_DIR", "Signal") + "_noref"), cond))
+                print(f"[reference contacts, unreferenced: {_n_noref} x ERSP / HFA / Signal -> *_noref] ", end="", flush=True)
             for ci, chan_name in enumerate(names):
+                if WM_NOREF_ONLY: continue
                 if chan_name in wm_skip: continue
                 if chan_name in micro_names_set: continue
                 if RUN_CLUSTER_EXPORT and chan_name in skip and not RUN_ERSP_PIPELINE: continue
@@ -929,11 +1011,11 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 print(f"  [{patient_id} | {cond}] trial scores -> {os.path.basename(_sp)} "
                       f"({_n_ch} channels x {_n_tr} trials)")
 
-        # ── PER-BLOCK CLEANING REPORT
-        if notch_audit_rows:
+        # ── PER-BLOCK CLEANING REPORT (not in the noref-only mode: the run's files stay as they are)
+        if notch_audit_rows and not WM_NOREF_ONLY:
             pd.DataFrame(notch_audit_rows).to_csv(
                 os.path.join(report_dir, f"{patient_id}_notch_audit.tsv"), sep="\t", index=False)
-        if notch_scope != "file":
+        if notch_scope != "file" and not WM_NOREF_ONLY:
             pd.DataFrame(peak_rows, columns=["condition", "shaft", "freq_hz", "z", "peak_db", "above_db", "on_comb"]).to_csv(
                 os.path.join(report_dir, f"{patient_id}_unexplained_peaks.tsv"), sep="\t", index=False)
             print(f"  [{patient_id}] notch audit -> {patient_id}_notch_audit.tsv, "
@@ -990,14 +1072,20 @@ def main():
     ap.add_argument("--no-export", action="store_true", help="skip the cubes, halves and CLEAN PNGs")
     ap.add_argument("--no-psd", action="store_true", help="keep the QC but skip the dpi-600 PSD montages")
     ap.add_argument("--macros-only", action="store_true", help="MicroEPI patients: skip the micro wires")
+    ap.add_argument("--wm-noref-only", action="store_true",
+                    help="only the reference contacts' unreferenced figures (*_noref folders); cubes, QC figures, report row and logs/ untouched")
     a = ap.parse_args()
 
     RUN_ERSP_PIPELINE  = not a.no_qc
     RUN_CLUSTER_EXPORT = not a.no_export
     DO_MONTAGE_PSD_PLOTS = not a.no_psd
     INCLUDE_MICROEPI_MICROS = not a.macros_only
+    global WM_NOREF_ONLY
+    if a.wm_noref_only:
+        WM_NOREF_ONLY = True
+        RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_PSD_PLOTS = True, False, False
 
-    log_dir = os.path.join(run_root_ersp, "logs")
+    log_dir = os.path.join(run_root_ersp, "logs_wm_noref" if WM_NOREF_ONLY else "logs")   # 141 reads logs/: a check is not a run
     os.makedirs(log_dir, exist_ok=True)
     for pid_raw in a.patient:
         # config keys are ints for the old HUG spelling (3455) and strings otherwise
@@ -1027,7 +1115,10 @@ def main():
             print("WM REREFERENCING REPORT (this patient)")
             print("=" * 72)
             print_report_line(row)
-            merge_report(row)
+            if WM_NOREF_ONLY:
+                print("  (--wm-noref-only: the report row is not merged into wm_reref_report.tsv)")
+            else:
+                merge_report(row)
         finally:
             sys.stdout = tee._o
             tee._f.close()
