@@ -469,6 +469,22 @@
         "per_cluster": {},
         "overview": []
       },
+      "reliability": {
+        "set": "hg300",
+        "test_run": "20261012_233324",
+        "n": 1607,
+        "share": 0.492,
+        "per_cluster": {
+          "0": 0.514,
+          "1": 0.42,
+          "2": 0.604,
+          "3": 0.558,
+          "4": 0.589,
+          "5": 0.416,
+          "6": 0.434
+        },
+        "definition": "same component from the full fit and from each trial half, components held fixed"
+      },
       "sweep": {
         "ks": [
           5,
