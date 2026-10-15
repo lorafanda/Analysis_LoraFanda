@@ -87,7 +87,7 @@ def draw(pid, cond, ch, M, labels, order, meanz, cube, vmin, vmax, png):
     ax.set_title(f"{pid} - {cond} - WM-ref HFA trials, TIME-NORMALISED: {ch}\n"
                  f"0 = onset, 50 = GO/offset, 100 = trial end (cube bin b at b/3 %); baseline block on the left", fontsize=9)
     plt.setp(ax.get_xticklabels(), visible=False)
-    cb = fig.colorbar(im, ax=[ax, ax2], fraction=0.03, pad=0.01); cb.set_label("high-gamma z-score", fontsize=8)
+    cb = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.06); cb.set_label("high-gamma z-score", fontsize=8)
     xs = np.concatenate([np.linspace(x0, 0, NB, endpoint=False), np.linspace(0, 50, NS, endpoint=False), np.linspace(50, 100, NP, endpoint=False)])
     ax2.plot(xs, meanz, color="#1f4e9c", lw=1.2, label="mean z over trials (this raster)")
     ax2.axhline(0, color="k", lw=0.5); ax2.axvline(0, color="k", lw=1); ax2.axvline(50, color="m", lw=1.2, ls=":")
