@@ -281,7 +281,11 @@ bad_channels_manual = {
     # the white-matter reference, so it stays at its 44 contacts.
     "PAT_1327": ["CAG5", "CPG1", "IAG10", "PHG2", "PHG3",
                  "FOD7",   # 2026-09-29 (Lora); its files were removed from the 140 outputs by hand
-                 "HAG2", "AG8"],  # 2026-10-13 (Lora, from 148): 5.9x broadband, 5.2x HG
+                 "HAG2", "AG8",   # 2026-10-13 (Lora, from 148): 5.9x broadband, 5.2x HG
+                 "HAG1", "HAG3", "HAG4", "HAG5", "HAG6", "HAG7", "HAG8", "HAG9", "HAG10", "HAG11", "HAG12",
+                 # 2026-10-16 (Lora): the whole HAG shaft. HAG5 was a WM reference contact of the 10-12 run;
+                 # listed here it leaves the reference at the next run.
+                 "AG4", "AG5", "AG6", "AG7", "AG9", "AG10"],   # 2026-10-16 (Lora): AG4-10 (AG8 above)
     # PAT_6684 (G-05) on its TRC, 2026-09-13, by visual review. CAG1/CAG2 are WM contacts:
     # listing them here also keeps them out of the WM reference.
     "PAT_6684": ["FPG10", "FPG5", "FPG9", "FPG8", "FOM7", "FOM11","CAG1", "FOL8", "CAG2",
