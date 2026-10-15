@@ -6,6 +6,8 @@ outputs/03_ERSP changes.
     python .\140_crosschannel_test.py --patient PAT_3455        (then: 140 without those trials)
     python .\140_crosschannel_test.py --patient PAT_3455 --k 2.5
                                       (mark again at another k from the 150 table - arithmetic, no recomputation)
+    python .\140_crosschannel_test.py --patient PAT_3455 --r 0.4
+                                      (a fixed cut on r_mean instead, the same for every condition)
     python .\140_crosschannel_test.py --patient PAT_3455 --trials audio:7,14 picture:35,2 reading:38
                                       (your own list, the HFA figure's trial numbers)
     python .\140_crosschannel_test.py --patient PAT_3455 --no-psd   (anything after the patient goes to 140)
@@ -45,6 +47,8 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--patient", required=True)
 ap.add_argument("--k", type=float, default=None,
                 help="mark again at this k (r_mean > median + k MAD) instead of taking 150's marks")
+ap.add_argument("--r", type=float, default=None,
+                help="a fixed cut instead: remove every trial with r_mean above this (e.g. 0.4), same for all conditions")
 ap.add_argument("--trials", nargs="*", default=None, metavar="COND:N,N",
                 help="your own list instead, e.g. audio:7,14 picture:35 (HFA figure numbers)")
 ap.add_argument("--src", default=os.path.join("outputs", "_trial_crosschannel"), help="where 150 wrote its tables")
@@ -79,6 +83,10 @@ if a.trials:
             sys.exit(f"{cond}: trial(s) {missing} are not in the 150 table (kept trials only, HFA numbers)")
         chosen[cond] = t[t.trial_label.isin(want)]
     how = "your list"
+elif a.r is not None:
+    for cond, t in tabs.items():
+        chosen[cond] = t[t.r_mean > float(a.r)]
+    how = f"r_mean > {a.r:g}"
 elif a.k is not None:
     for cond, t in tabs.items():
         r = t.r_mean.to_numpy(float)
