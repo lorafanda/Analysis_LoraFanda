@@ -82,49 +82,27 @@ DEFAULT_RADIUS = 10.0
 # count is a property of whatever cohort was last built. Every gated concat run said
 # "1266-electrode concat cohort" while holding 1693. The count is composed back in
 # after grouping, from the runs.
-TRACKS = [
-    ("cnmf/concat_hg", "Convex NMF - graded (argmax)", "gated concat cohort"),
-    ("cnmf/concat_rawds", "Convex NMF 15-band - graded (argmax)", "gated concat cohort"),
-    ("kmeans/concat_hg", "K-means · concatenated", "gated concat cohort"),
-    ("hierarchical/concat_hg", "Ward · concatenated", "gated concat cohort"),
-    ("kmeans/concat_rawds", "K-means · concat 15-band", "gated concat cohort"),
-    ("hierarchical/concat_rawds", "Ward · concat 15-band", "gated concat cohort"),
-    # THE 5-BAND SETS. A track missing from this list is invisible to the visualizer
-    # however complete its runs are - which is exactly what happened to concat_bands5
-    # and concat_bands5z: fitted on all three methods and unreachable from the page.
-    ("cnmf/concat_bands5", "Convex NMF 5-band - graded (argmax)", "gated concat cohort"),
-    ("cnmf/concat_bands5z", "Convex NMF 5-band z - graded (argmax)", "gated concat cohort"),
-    ("kmeans/concat_bands5", "K-means · concat 5-band", "gated concat cohort"),
-    ("kmeans/concat_bands5z", "K-means · concat 5-band, z-scored", "gated concat cohort"),
-    ("hierarchical/concat_bands5", "Ward · concat 5-band", "gated concat cohort"),
-    ("hierarchical/concat_bands5z", "Ward · concat 5-band, z-scored", "gated concat cohort"),
-    # THE 2026-10-13 FAMILY: four feature sets that differ only in frequency resolution
-    # (15 / 5 / 2 bands / HFA), each fitted on all three methods on cohort v16 and each
-    # cut at the largest K with no cluster over half one patient (7 / 6 / 7 / 8).
-    # concat_bands5 is shared with the block above and is not repeated here.
-    ("cnmf/concat_bands15", "Convex NMF · 15 bands (v16)", "gated concat cohort"),
-    ("kmeans/concat_bands15", "K-means · 15 bands (v16)", "gated concat cohort"),
-    ("hierarchical/concat_bands15", "Ward · 15 bands (v16)", "gated concat cohort"),
-    ("cnmf/concat_bands2", "Convex NMF · 2 bands (v16)", "gated concat cohort"),
-    ("kmeans/concat_bands2", "K-means · 2 bands (v16)", "gated concat cohort"),
-    ("hierarchical/concat_bands2", "Ward · 2 bands (v16)", "gated concat cohort"),
-    ("cnmf/concat_hfa", "Convex NMF · HFA only (v16)", "gated concat cohort"),
-    ("kmeans/concat_hfa", "K-means · HFA only (v16)", "gated concat cohort"),
-    ("hierarchical/concat_hfa", "Ward · HFA only (v16)", "gated concat cohort"),
-    # archetypal analysis, the fourth method. Listed for all four feature sets; a track
-    # with no runs yet is skipped, so these populate as 243 produces them.
-    # archetypal analysis dropped 2026-09-06: its runs, outputs and bundle entries are gone
-    ("cnmf/concat_hg_all", "Convex NMF - ungated (argmax)", "ungated concat cohort"),
-    ("kmeans/concat_hg_all", "K-means · concatenated, ungated", "ungated concat cohort"),
-    ("hierarchical/concat_hg_all", "Ward · concatenated, ungated", "ungated concat cohort"),
-    # THE 2026-07-19 PER-TASK TRACKS ARE OUT (2026-09-15). Their bundle folders were retired
-    # from git on 2026-09-10 (.gitignore, *__20260719_*), so the full clustering_visualizer
-    # offered four runs whose every file 404s. One cohort on the page, as decided then.
-    # ("kmeans/hg", "K-means · per-condition", "2026-07-19 per-task cohort"),
-    # ("hierarchical/hg", "Ward · per-condition", "2026-07-19 per-task cohort"),
-    # ("kmeans/rawds", "K-means · per-condition 15-band", "2026-07-19 per-task cohort"),
-    # ("hierarchical/rawds", "Ward · per-condition 15-band", "2026-07-19 per-task cohort"),
+# THE FOUR FEATURE SETS THE PAGE SHOWS, crossed with the three methods. Keep this in step
+# with FSETS in make_cluster_visualizer.py: a track missing here is invisible to the page
+# however complete its runs are, which is what happened to concat_bands5 and concat_bands5z
+# in September and to the whole 10-13 family until 10-16. Written as a cross product rather
+# than twenty hand-maintained lines so that a missing one is visible at a glance.
+#
+# Retired 2026-10-16: concat_hg, concat_rawds (the pre-10-13 HFA and 15-band sets) and
+# concat_bands5z (z-scored, unit "z" where the rest are dB). They duplicated the current
+# four under near-identical names and their files are off main. The ungated concat_hg_all
+# tracks went with them: a different cohort, no runs since archetypal analysis was dropped.
+_FSET_LABEL = [
+    ("concat_bands2",  "2 bands (v16)"),
+    ("concat_bands5",  "5 bands (v16)"),
+    ("concat_bands15", "15 bands (v16)"),
+    ("concat_hfa",     "HFA only (v16)"),
 ]
+_METHOD_LABEL = [
+    ("cnmf", "Convex NMF"), ("kmeans", "K-means"), ("hierarchical", "Ward"),
+]
+TRACKS = [(f"{m}/{f}", f"{ml} · {fl}", "gated concat cohort")
+          for f, fl in _FSET_LABEL for m, ml in _METHOD_LABEL]
 
 # runs known to be unusable; see the scout notes in the commit message
 SKIP_RUNS = {
