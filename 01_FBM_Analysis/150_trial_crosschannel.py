@@ -134,12 +134,20 @@ def capture_patient(m, pid):
         n = len(blk["on"])
         labels = np.arange(1, n + 1)
         rec = (cap["all_trials"] or {}).get(cond)
-        if rec is not None:
-            keep_pos = np.flatnonzero(np.asarray(rec["keep"], bool))
-            if len(keep_pos) == n:
-                labels = keep_pos + 1                 # the number the HFA figure prints beside the row
+        if rec is not None and n:
+            # 140's own numbering (the HFA figure, TrialScores): the position among the trials
+            # whose span lies INSIDE the block - a removed trial that runs out of the block is
+            # not counted - so the whole table goes into block coordinates first, as 140 does
+            keep_a = np.asarray(rec["keep"], bool)
+            on_a = np.asarray(rec["on"], float)
+            te_a = np.asarray(rec["tend"], float)
+            kept_on = on_a[keep_a]
+            shift = (float(kept_on[0]) - float(blk["on"][0])) if kept_on.size else 0.0
+            inb = (on_a - shift >= 0) & (te_a - shift <= blk["sig"].shape[0])
+            if int((keep_a & inb).sum()) == n:
+                labels = np.flatnonzero(keep_a[inb]) + 1      # the number the HFA figure prints beside the row
             else:
-                print(f"  [{pid} | {cond}] trial tables disagree ({len(keep_pos)} vs {n}); trials numbered 1..{n}")
+                print(f"  [{pid} | {cond}] trial tables disagree ({int((keep_a & inb).sum())} vs {n}); trials numbered 1..{n}")
         out.append(dict(cond=cond, fs=blk["fs"], sig=blk["sig"], names=names, chan_idx=blk["chan_idx"],
                         on=blk["on"], off=blk["off"], te=blk["te"], labels=labels))
     return out, row
@@ -172,6 +180,7 @@ def trial_z_courses(block, cfg):
         e = max(s + 1, min(int(te[t]), sig.shape[0]))
         segs.append((s, e))
     chans = [block["names"][ci] for ci in block["chan_idx"]]
+    t0 = np.array([(s - int(on[t])) / fs for t, (s, e) in enumerate(segs)])   # each course's first sample, s from the onset
     Z = [np.full((len(chans), e - s), np.nan) for s, e in segs]
     for row, ci in enumerate(block["chan_idx"]):
         env = hg_envelope(sig[:, ci].astype(float), fs, cfg.hg_band, cfg.hg_smooth_ms)
@@ -185,15 +194,17 @@ def trial_z_courses(block, cfg):
             Z[t][row] = (seg - mu) / sd
         sys.stdout.write("."); sys.stdout.flush()
     print()
-    return chans, Z
+    return chans, Z, t0
 
 
-def crosschannel(Z):
-    """Per trial: r_mean, r_i per channel, peak of the across-channel mean z."""
+def crosschannel(Z, t0, fs):
+    """Per trial: r_mean, r_i per channel, the peak of the across-channel mean z and when it is
+    (s from the onset)."""
     n = len(Z)
     C = Z[0].shape[0]
     r_mean = np.full(n, np.nan)
     peak_z = np.full(n, np.nan)
+    peak_t = np.full(n, np.nan)
     R = np.full((C, n), np.nan)
     for t, M in enumerate(Z):
         M = np.asarray(M, float)
@@ -207,11 +218,12 @@ def crosschannel(Z):
             r_mean[t] = (np.nansum(Cm) - np.trace(Cm)) / (c * (c - 1))
         mean_all = np.nanmean(M, 0)
         peak_z[t] = float(np.nanmax(mean_all))
+        peak_t[t] = float(t0[t]) + float(np.nanargmax(mean_all)) / float(fs)
         if C >= 2:
             others = (np.nansum(M, 0)[None, :] - M) / (C - 1)        # mean of the other channels, per channel
             Oc = others - others.mean(1, keepdims=True)
             R[:, t] = (Mc * Oc).mean(1) / (sd * Oc.std(1) + 1e-12)
-    return r_mean, peak_z, R
+    return r_mean, peak_z, peak_t, R
 
 
 def mark(r_mean, k):
@@ -341,14 +353,17 @@ def main():
         print(f"[150] {patient_id} | {blk['cond']}: {len(blk['chan_idx'])} channels x {len(blk['on'])} trials, "
               f"HG envelope z {cfg.hg_band[0]:g}-{cfg.hg_band[1]:g} Hz, {cfg.hg_smooth_ms} ms boxcar, "
               f"baseline {cfg.baseline_w}")
-        chans, Z = trial_z_courses(blk, cfg)
-        r_mean, peak_z, R = crosschannel(Z)
+        chans, Z, t0 = trial_z_courses(blk, cfg)
+        r_mean, peak_z, peak_t, R = crosschannel(Z, t0, blk["fs"])
+        go_t = (blk["off"] - blk["on"]) / blk["fs"]                 # the stimulus offset = the GO cue, s from the onset
         marked, thr = mark(r_mean, a.k)
         results.append(dict(cond=blk["cond"], chans=chans, labels=blk["labels"], r_mean=r_mean, peak_z=peak_z,
                             R=R, marked=marked, thr=thr))
         df = pd.DataFrame(dict(patient=patient_id, condition=blk["cond"], trial=np.arange(len(r_mean)),
                                trial_label=blk["labels"], n_channels=len(chans),
                                r_mean=np.round(r_mean, 4), peak_z=np.round(peak_z, 3),
+                               peak_t_s=np.round(peak_t, 3),                 # when the shared course peaks, s from the onset
+                               peak_after_go_s=np.round(peak_t - go_t, 3),   # the same, s from the GO cue (negative = during the stimulus)
                                threshold=np.round(thr, 4), marked=marked.astype(int)))
         tsv = os.path.join(out_dir, f"{patient_id}_{blk['cond']}_trial_crosschannel.tsv")
         df.to_csv(tsv, sep="\t", index=False)
