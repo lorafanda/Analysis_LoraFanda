@@ -69,7 +69,8 @@ FILE_RE = re.compile(r"_(?:WM|CAR|NONE)_(?:ERSP|HFAtrials|HGtrials|SIGtrials)_(?
                      r"(?:_TN)?(?:_half[12])?(?:_CLEAN)?(?:_GO)?\.(?:png|npy|tif|tiff|json)$")
 
 
-KEEP_PHOTODIODE_IN = ("ERSP", cfg.HFA_DIR, "HFA")   # the folders whose photodiode figures stay (either layout)
+KEEP_PHOTODIODE_IN = ("ERSP", cfg.HFA_DIR, "HFA",
+                      getattr(cfg, "PHOTODIODE_DIR", "PerTrial/Photodiode"))   # the folders whose photodiode figures stay (any layout; PerTrial/Photodiode since 2026-10-16)
 
 
 def is_photodiode(ch: str) -> bool:
