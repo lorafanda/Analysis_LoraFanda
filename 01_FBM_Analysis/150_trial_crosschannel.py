@@ -133,6 +133,7 @@ def capture_patient(m, pid):
         names = cap["names"] or [f"ch{i}" for i in range(blk["sig"].shape[1])]
         n = len(blk["on"])
         labels = np.arange(1, n + 1)
+        times = dict(on_s=np.full(n, np.nan), off_s=np.full(n, np.nan), tend_s=np.full(n, np.nan))
         rec = (cap["all_trials"] or {}).get(cond)
         if rec is not None and n:
             # 140's own numbering (the HFA figure, TrialScores): the position among the trials
@@ -146,10 +147,13 @@ def capture_patient(m, pid):
             inb = (on_a - shift >= 0) & (te_a - shift <= blk["sig"].shape[0])
             if int((keep_a & inb).sum()) == n:
                 labels = np.flatnonzero(keep_a[inb]) + 1      # the number the HFA figure prints beside the row
+                sel = keep_a & inb                            # the kept trials on the recording clock, for bad_time_spans
+                times = dict(on_s=on_a[sel] / blk["fs"], off_s=np.asarray(rec["off"], float)[sel] / blk["fs"],
+                             tend_s=te_a[sel] / blk["fs"])
             else:
                 print(f"  [{pid} | {cond}] trial tables disagree ({int((keep_a & inb).sum())} vs {n}); trials numbered 1..{n}")
         out.append(dict(cond=cond, fs=blk["fs"], sig=blk["sig"], names=names, chan_idx=blk["chan_idx"],
-                        on=blk["on"], off=blk["off"], te=blk["te"], labels=labels))
+                        on=blk["on"], off=blk["off"], te=blk["te"], labels=labels, **times))
     return out, row
 
 
@@ -361,6 +365,8 @@ def main():
                             R=R, marked=marked, thr=thr))
         df = pd.DataFrame(dict(patient=patient_id, condition=blk["cond"], trial=np.arange(len(r_mean)),
                                trial_label=blk["labels"], n_channels=len(chans),
+                               onset_s=np.round(blk["on_s"], 3), offset_s=np.round(blk["off_s"], 3),   # recording clock,
+                               tend_s=np.round(blk["tend_s"], 3),                                     # for bad_time_spans
                                r_mean=np.round(r_mean, 4), peak_z=np.round(peak_z, 3),
                                peak_t_s=np.round(peak_t, 3),                 # when the shared course peaks, s from the onset
                                peak_after_go_s=np.round(peak_t - go_t, 3),   # the same, s from the GO cue (negative = during the stimulus)
