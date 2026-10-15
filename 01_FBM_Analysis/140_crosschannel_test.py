@@ -6,8 +6,10 @@ outputs/03_ERSP changes.
     python .\140_crosschannel_test.py --patient PAT_3455        (then: 140 without those trials)
     python .\140_crosschannel_test.py --patient PAT_3455 --k 2.5
                                       (mark again at another k from the 150 table - arithmetic, no recomputation)
-    python .\140_crosschannel_test.py --patient PAT_3455 --r 0.4
-                                      (a fixed cut on r_mean instead, the same for every condition)
+    python .\140_crosschannel_test.py --patient PAT_3455 --r 0.3
+                                      (a fixed cut on r_mean instead, the same for every condition; --min-keep 25 by
+                                       default: a condition never goes below 25 kept trials, the least correlated of
+                                       the chosen ones are put back first)
     python .\140_crosschannel_test.py --patient PAT_3455 --trials audio:7,14 picture:35,2 reading:38
                                       (your own list, the HFA figure's trial numbers)
     python .\140_crosschannel_test.py --patient PAT_3455 --no-psd   (anything after the patient goes to 140)
@@ -51,6 +53,9 @@ ap.add_argument("--r", type=float, default=None,
                 help="a fixed cut instead: remove every trial with r_mean above this (e.g. 0.4), same for all conditions")
 ap.add_argument("--trials", nargs="*", default=None, metavar="COND:N,N",
                 help="your own list instead, e.g. audio:7,14 picture:35 (HFA figure numbers)")
+ap.add_argument("--min-keep", type=int, default=25,
+                help="never leave a condition with fewer kept trials than this (default 25): the least correlated of the "
+                     "chosen trials are put back until it holds; the duration rule may still move 1-3 trials either way")
 ap.add_argument("--src", default=os.path.join("outputs", "_trial_crosschannel"), help="where 150 wrote its tables")
 ap.add_argument("--out", default=os.path.join("outputs", "_crosschannel_test"),
                 help="test output root; the tree is <out>/<cfg.ERSP_TREE>/<pid>/LM/ (default outputs/_crosschannel_test)")
@@ -100,6 +105,15 @@ else:
     for cond, t in tabs.items():
         chosen[cond] = t[t.marked == 1]
     how = "150's marks"
+
+# ---- the floor: at least --min-keep trials stay in every condition
+for cond, rows in list(chosen.items()):
+    room = len(tabs[cond]) - int(a.min_keep)
+    if len(rows) > room:
+        kept_back = rows.sort_values("r_mean", ascending=False).iloc[max(room, 0):]
+        chosen[cond] = rows.sort_values("r_mean", ascending=False).iloc[:max(room, 0)]
+        print(f"[crosschannel test] {cond}: only {max(room, 0)} of the {len(rows)} chosen trials go, so that {a.min_keep} stay; "
+              f"put back (least correlated first): " + " ".join(f"{int(x.trial_label)} (r {x.r_mean:.2f})" for x in kept_back.sort_values("r_mean").itertuples()))
 
 # ---- one 20 ms span just after each onset; no other trial of the table may touch it
 pre = abs(float(cfg.baseline_w[0]))            # collect_trials counts a trial from onset - baseline to its end
