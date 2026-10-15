@@ -95,7 +95,7 @@ WRITE_CUBES        = True   # ERSP_matrix/<cond>/*.npy   (what stage 02 clusters
 WRITE_HALVES       = True   # ERSP_halves/<cond>/*.npy   (the split-half gate)
 WRITE_CLEAN_PNG    = True   # ERSP_clean/<cond>/*_CLEAN.png
 EXPORT_TRIAL_SCORES = True   # PerTrial/TrialScores/<pid>_<cond>_trial_scores.tsv (in the 03_ERSP tree since 09-30; was 145's only)
-WRITE_WM_NOREF     = getattr(cfg, "write_wm_noref_figures", True)   # ERSP_noref/, PerTrial/HFA_noref/, PerTrial/Signal_noref/:
+WRITE_WM_NOREF     = getattr(cfg, "write_wm_noref_figures", False)   # OFF since 2026-10-16 (Lora): no *_noref folders in a run; --wm-noref-only still makes them on demand   # ERSP_noref/, PerTrial/HFA_noref/, PerTrial/Signal_noref/:
                                                                      # the reference contacts, unreferenced (2026-10-13, see write_wm_noref_figures)
 WM_NOREF_ONLY      = False  # --wm-noref-only: only those figures; the run's products, report and logs untouched
 
