@@ -230,7 +230,11 @@ def main() -> int:
         # compare grid. Only when the order is proven the same for every run, or the
         # names would come from one run and be drawn against another's rows.
         row_keys=(row_names[ref_id] if aligned else None),
-        feature_sets={f: {k: v for k, v in m.items() if k != "sha"} for f, m in xhash.items()},
+        # the sha STAYS. x_<fset>.bin is the only bundle file with a stable name and
+        # contents that change on every cohort rebuild, so the page keys its URL on this
+        # to defeat a browser cache that would otherwise pair an old matrix with new
+        # labels - the right clusters drawn on the wrong electrodes, silently.
+        feature_sets=xhash,
         runs=index)).encode("utf-8"))
     total = sum(p.stat().st_size for p in OUT.iterdir())
     print(f"  -> {OUT}  ({len(index)} runs, {total/1e6:.1f} MB in all)")

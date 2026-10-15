@@ -258,6 +258,13 @@ UI2_CSS = r"""
   #ui2 #cpPaperRow { display:block; color:var(--muted); font-size:10.5px; margin-top:6px;
                      cursor:pointer; line-height:1.35; }
   #ui2 #cpPaperRow input { accent-color:var(--accent); margin-right:4px; }
+  /* the strip answers "is this centroid a type, or the mean of unlike things", which
+     no centroid can show - too good to leave on a single unadvertised keystroke */
+  #ui2 #cpSamp { display:block; width:100%; margin-top:7px; height:25px; cursor:pointer;
+                 border-radius:6px; background:#15161b; color:var(--fg); font-size:10.5px;
+                 border:1px solid rgba(255,255,255,.14); }
+  #ui2 #cpSamp:hover { background:#1d1f27; }
+  #ui2 #cpSamp .hint { color:var(--muted); }
   #ui2 .u2t .ownkey { color:#3fb950; }
   #ui2 .segs button { padding:4px 0; font-size:11.5px; }
   #ui2 #u2gridby button { font-size:10.5px; }
@@ -682,6 +689,7 @@ function u2Build() {
   // the centroid's "paper definition" toggle belongs with the other centroid controls
   // now that nothing is written under the centroid itself
   $("u2cenwrap").appendChild($("cpPaperRow"));
+  { const b = $("cpSamp"); if (b) $("u2cenwrap").appendChild(b); }
   // the surface / radius / ceiling / contrast / vertex-gate controls: hidden, kept
   document.querySelectorAll("#ctlBody .grp").forEach(g => { g.style.display = "none"; });
   const g = document.createElement("div");
@@ -908,9 +916,36 @@ function u2Runs() {
   }
   box.innerHTML = h;
   box.querySelectorAll("button[data-run]").forEach(b => { b.onclick = () => u2GoRun(b.dataset.run); });
-  $("u2runnote").innerHTML = `<b>${u2esc(U2_MLABEL[cur.method] || cur.method)}</b> · `
+  u2RunNote();
+}
+
+// The run note, on its own because it has to be redrawn after the centroid index lands
+// and u2Build() cannot do that: u2Build assigns $("ui2").innerHTML, and the init sequence
+// appendChild's cpPaperRow and cpSamp INTO that markup, so re-running it throws them away
+// and the next drawCentroid() reads .checked off a null cpPaper.
+function u2RunNote() {
+  const box = $("u2runnote");
+  if (!box || !RUN0) return;
+  const cur = u2Split(RUN0.id);
+  // HOW FAR THIS RUN IS FROM THE ONE BEFORE IT. The matrix exists to be compared across,
+  // and until now you compared from memory. Both labelings come from the centroid bundle,
+  // so they are the same electrodes in the same order at the same K.
+  let cmp = "";
+  if (U2_PREV && CEN && CEN.meta.labels && U2_PREV.id !== RUN0.id
+      && U2_PREV.k === Number(KSEL)) {
+    const now = CEN.meta.labels[String(KSEL)];
+    const r = now ? u2ARI(U2_PREV.lab, now) : null;
+    if (r !== null) cmp = ` · <b>ARI ${r.toFixed(2)}</b> against ${u2esc(U2_PREV.name)},`
+                        + ` the run you came from`;
+  }
+  // and WHEN the numbers on screen were built. The bundle has always recorded this and the
+  // page has never shown it, on a page whose standing failure is serving a cohort that has
+  // since been refitted.
+  const gen = CEN_INDEX && CEN_INDEX.generated;
+  box.innerHTML = `<b>${u2esc(U2_MLABEL[cur.method] || cur.method)}</b> · `
     + `${u2esc(REP_LABEL[cur.fset] || cur.fset)} — switching keeps K and the position, so `
-    + `you land on the matched cluster`;
+    + `you land on the matched cluster` + cmp
+    + (gen ? ` · bundle built ${u2esc(gen)}` : "");
 }
 
 function u2Chips() {
@@ -997,12 +1032,49 @@ function u2ClickChip(mapId, cid) {
   if (UI2.mode === "grid" && UI2.gridOpen) u2Grid();
 }
 
+// ADJUSTED RAND INDEX over two labelings of the same electrodes: 1 is the same
+// partition, 0 is what chance would give, and it is the number the paper already uses
+// for cross-algorithm agreement, so the page and the table speak the same language.
+function u2ARI(a, b) {
+  if (!a || !b) return null;
+  const n = Math.min(a.length, b.length);
+  const tab = new Map(), ra = new Map(), rb = new Map();
+  let N = 0;
+  for (let i = 0; i < n; i++) {
+    const x = a[i], y = b[i];
+    if (x === undefined || y === undefined || x === null || y === null || x < 0 || y < 0) continue;
+    const key = x + "," + y;
+    tab.set(key, (tab.get(key) || 0) + 1);
+    ra.set(x, (ra.get(x) || 0) + 1);
+    rb.set(y, (rb.get(y) || 0) + 1);
+    N++;
+  }
+  if (N < 2) return null;
+  const c2 = v => v * (v - 1) / 2;
+  let sij = 0, sa = 0, sb = 0;
+  for (const v of tab.values()) sij += c2(v);
+  for (const v of ra.values()) sa += c2(v);
+  for (const v of rb.values()) sb += c2(v);
+  const exp = sa * sb / c2(N), max = (sa + sb) / 2;
+  return max === exp ? null : (sij - exp) / (max - exp);
+}
+let U2_PREV = null;          // {id, k, lab, name} - the run the matrix was last on
+
 async function u2GoRun(id) {
   if (!id || UI2.busy || (RUN0 && RUN0.id === id)) return;
   const pos = u2Pos();
+  // remembered BEFORE the switch, while CEN still holds the outgoing run. The labels
+  // array survives because loadCentroids() replaces CEN rather than mutating it.
+  const was = (RUN0 && CEN && CEN.meta.labels && CEN.meta.labels[String(KSEL)])
+    ? (() => { const s = u2Split(RUN0.id);
+               return { id: RUN0.id, k: Number(KSEL), lab: CEN.meta.labels[String(KSEL)],
+                        name: (U2_MLABEL[s.method] || s.method) + " · "
+                              + (REP_LABEL[s.fset] || s.fset) }; })()
+    : null;
   u2Lock(true);
   try {
     await selectRun(id, true);            // keepK: the same cut under the other algorithm
+    U2_PREV = was;
     const defs = u2Defs(), d = defs[Math.min(pos, defs.length - 1)];
     if (d) { UI2.sel = new Set([d.cluster]); u2Pick(d.id); }
   } catch (e) {
@@ -1258,20 +1330,6 @@ function cenRowName(i) {
   const p = String(keys[i]).split("|");
   return { pid:p[0] || "", el:p[1] || ("row " + i) };
 }
-// THE SAMPLES' OWN SCALE, for the "own scale" button. The centroid's limits are the 99th
-// percentile of |cluster MEAN|, and a single electrode is several times noisier than any
-// mean of them, so on the shared scale most panels saturate. Same rule, measured on the
-// rows actually shown: p99 of |value| for the heatmap, p0.5/p99.5 for the line. Every
-// third feature is enough to put a percentile on 400 x 1350 numbers.
-function u2SampLimits(rows, g) {
-  const X = _cenX.get(g.rep), s = CEN_INDEX.x_scale, v = [];
-  for (const r of rows) { const b = r.i * g.F; for (let f = 0; f < g.F; f += 3) v.push(X[b + f] * s); }
-  if (!v.length) return null;
-  const abs = v.map(Math.abs).sort((a, b) => a - b), srt = v.slice().sort((a, b) => a - b);
-  const q = (arr, p) => arr[Math.min(arr.length - 1, Math.max(0, Math.floor(p * arr.length)))];
-  const vlim = q(abs, 0.99) || 1, lo = q(srt, 0.005), hi = q(srt, 0.995);
-  return { vlim, ylo:Math.min(lo, 0) * 1.06, yhi:Math.max(hi, 0) * 1.06 };
-}
 
 function u2SampClose() {
   UI2.samp = null;
@@ -1332,17 +1390,16 @@ function u2Samples() {
   }
   rows.sort((a, b) => (b.w - a.w) || (a.i - b.i));
   if (!rows.length) return note("no electrode in this cluster at that definition");
-  const own = UI2.samp.scale === "own" ? u2SampLimits(rows, g) : null;
   const nm = (RUN && RUN.clusters) ? RUN.clusters.map(Number).indexOf(cid) + 1 : 0;
   const defTxt = byLoad
     ? `loading \u2265 ${state.minLoad.toFixed(2)} \u00b7 ${r.nMembers} of them are argmax members`
     : weighted ? `argmax members \u00b7 ${r.nPass} clear loading ${state.minLoad.toFixed(2)}`
                : "members of a hard partition \u00b7 no loadings to order by";
-  const scTxt = own
-    ? `own scale, \u00b1${own.vlim.toFixed(1)} ${g.unit} \u2014 readable per electrode, NOT comparable with the centroid`
-    // a line panel is bounded by CEN_YLIM, a heatmap by CEN_VLIM - say the one the
-    // reader is actually looking at
-    : `the shared \u00b1${g.nb <= 2 ? CEN_YLIM : CEN_VLIM} ${g.unit} scale \u2014 the same on every feature set, `
+  // a line panel is bounded by CEN_YLIM, a heatmap by CEN_VLIM - name the one the reader
+  // is actually looking at. There is no per-strip scale any more: the limits are fixed
+  // and shared, so the escape hatch this used to need is gone with it.
+  const scTxt =
+      `the shared \u00b1${g.nb <= 2 ? CEN_YLIM : CEN_VLIM} ${g.unit} scale \u2014 the same on every feature set, `
       + `so this panel, the centroid above it and any other run are comparable by eye`;
   S.innerHTML =
     `<div class="sh">
@@ -1351,7 +1408,6 @@ function u2Samples() {
        <div class="sp"></div>
        <button type="button" data-a="load"${weighted ? "" : " disabled"}>loading</button>
        <button type="button" data-a="argmax">argmax</button>
-       <button type="button" data-a="scale">${own ? "centroid scale" : "own scale"}</button>
        <button type="button" data-a="close">close \u2715</button>
      </div><div class="rows">`
     + rows.map(x => {
@@ -1369,8 +1425,7 @@ function u2Samples() {
     b.onclick = () => {
       const a = b.dataset.a;
       if (a === "close") return u2SampClose();
-      if (a === "scale") UI2.samp.scale = own ? "centroid" : "own";
-      else UI2.samp.by = a;
+      UI2.samp.by = a;
       u2Samples();
     };
   });
@@ -1388,7 +1443,6 @@ function u2Samples() {
       el.dataset.drawn = "1";
       const cv = el.querySelector("canvas"), st = cenRow(Number(el.dataset.i), g.rep);
       if (!cv || !st) continue;
-      if (own) st.lim = own;
       renderCentroid(cv.getContext("2d"), cv.width, cv.height, k, cid, g.rep, 0, false,
                      cv.width / 380, st);
     }
@@ -1812,6 +1866,8 @@ def build_html(order):
         '    <label id="cpRepRow">shown on <select id="cpRep"></select> '
         '<span class="hint">— the same clusters, averaged over another representation '
         'of the same electrodes</span></label>\n'
+        '    <button type="button" id="cpSamp">the electrodes behind this cluster '
+        '<span class="hint">(v)</span></button>\n'
         '    <label id="cpPaperRow"><input type="checkbox" id="cpPaper"> paper definition '
         '<span class="hint">(FIG 1: argmax members, unweighted)</span></label>\n'
         '  </div>', "centroid panel markup")
@@ -1871,7 +1927,19 @@ async function cenIndex() {
 }
 async function cenX(fset) {
   let X = _cenX.get(fset);
-  if (!X) { X = new Int16Array(await (await fetch(CENTROIDS + "x_" + fset + ".bin")).arrayBuffer()); _cenX.set(fset, X); }
+  if (!X) {
+    // THE ONLY BUNDLE FILE WHOSE NAME DOES NOT CHANGE WHEN ITS CONTENTS DO. index.json
+    // and every run JSON are fetched no-store; the loadings and the sweep files carry a
+    // run stamp. This matrix does neither, so after a cohort rebuild a browser can serve
+    // it from cache and draw today's labels against last month's electrode rows - the
+    // right clusters on the wrong brains, with no symptom at all. Keying the URL on the
+    // matrix's own sha makes a rebuilt matrix a different URL, so there is no check to
+    // forget. make_centroid_bundle.py publishes that sha for exactly this.
+    const m = CEN_INDEX && CEN_INDEX.feature_sets && CEN_INDEX.feature_sets[fset];
+    const v = m && m.sha ? "?v=" + encodeURIComponent(m.sha) : "";
+    X = new Int16Array(await (await fetch(CENTROIDS + "x_" + fset + ".bin" + v)).arrayBuffer());
+    _cenX.set(fset, X);
+  }
   return X;
 }
 async function loadCentroids(runId) {
@@ -1882,7 +1950,7 @@ async function loadCentroids(runId) {
     const W = meta.w_file ? new Uint16Array(await (await fetch(CENTROIDS + meta.w_file)).arrayBuffer()) : null;
     CEN = { meta, W };
     // reachable from the console, so the report's image path can be checked without
-    // running a whole export: cvDebug.centroidImage(8, 3, "concat_hg", 0.4, 640, 300)
+    // running a whole export: cvDebug.centroidImage(8, 3, "concat_bands15", 0.4, 640, 300)
     window.cvDebug = { centroidImage: (...a) => centroidImage(...a), cenMean: (...a) => cenMean(...a),
                        cenX: (...a) => cenX(...a), reps: KROW_REPS };
     // "shown on": the run's own representation, plus every other one the bundle proved
@@ -1895,11 +1963,18 @@ async function loadCentroids(runId) {
     sel.value = CEN_REP;
     $("cpRepRow").style.display = fsets.length > 1 ? "" : "none";
     await cenX(CEN_REP);
+    // the run note carries the bundle build date, and the index it reads that from has
+    // only just arrived - the note was first drawn before any of this existed.
+    u2RunNote();       // NOT u2Build: that rebuilds the panel and drops cpPaper
   } catch (e) { console.warn("no live centroid for", runId, e); }
   drawCentroid();
 }
 // the representations a report's K rows show, in this order
-const KROW_REPS = ["concat_bands15", "concat_bands5", "concat_hfa"];
+// the representations the report draws a centroid cell for, per K row. The report's
+// grid widths and its axis spacers are derived from this length, so adding one here is
+// enough - it used to be three while the page showed four sets, and 2 bands was simply
+// missing from every exported report.
+const KROW_REPS = ["concat_bands2", "concat_bands5", "concat_bands15", "concat_hfa"];
 function cenGeom(rep) {
   const r = rep || CEN_REP, g = CEN_INDEX.feature_sets[r];
   if (!g) return null;
@@ -2077,7 +2152,7 @@ function centroidImage(k, j, rep, min, w, h) {
 function centroidCells(three, fallback) {
   if (three && three.some(x => x && x.data))
     return three.map((im, q) => cellImg(im, REP_LABEL[KROW_REPS[q]] || KROW_REPS[q])).join("");
-  return cellImg(fallback, "centroid") + "<div></div><div></div>";
+  return cellImg(fallback, "centroid") + "<div></div>".repeat(KROW_REPS.length - 1);
 }
 function drawCentroid() {
   const P = $("centroidPanel"); if (!P) return;
@@ -2122,7 +2197,13 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     sub('  $("mapSel").onchange = e => { state.map = e.target.value; autoScale(); render(); updateElectrodes(); };',
         '  $("mapSel").onchange = e => { state.map = e.target.value; autoScale(); render(); updateElectrodes(); drawCentroid(); };\n'
         '  $("cpPaper").onchange = drawCentroid;   // the centroid panel\'s "paper definition" toggle\n'
-        '  $("cpRep").onchange = async e => { CEN_REP = e.target.value; await cenX(CEN_REP); drawCentroid(); };',
+        '  $("cpSamp").onclick = () => {   // the same path as the v key, grid and all\n'
+        '    const d = curDef(); if (!d || d.cluster === undefined) return;\n'
+        '    if (!UI2.gridOpen) { u2SetMode("grid"); if (!UI2.gridOpen) return; }\n'
+        '    u2SampToggle(d.cluster, RUN0.id);\n'
+        '  };\n'
+        '  $("cpRep").onchange = async e => { CEN_REP = e.target.value; await cenX(CEN_REP);\n'
+        '    drawCentroid(); if (UI2.samp) u2Samples(); };   // the strip is drawn ON this too',
         "centroid: on map")
     sub('    $("minLoadVal").textContent = state.minLoad.toFixed(2);\n    updateElectrodes();\n  };',
         '    $("minLoadVal").textContent = state.minLoad.toFixed(2);\n'
@@ -2624,7 +2705,8 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     # grid is eight columns by now, not the six in the source file, and the K panel's
     # header already lists KROW_REPS rather than a single "centroid".
     sub("grid-template-columns:30px 1fr 1fr 1fr 1.25fr 1.25fr .85fr 1.05fr;gap:8px",
-        "grid-template-columns:30px 1fr 1fr 1fr 1.25fr 1.25fr .85fr 1.05fr .72fr;gap:8px",
+        "grid-template-columns:30px ${'1fr '.repeat(KROW_REPS.length)}"
+        "1.25fr 1.25fr .85fr 1.05fr .72fr;gap:8px",
         "report extras: card grid gains a column")
 
     # The current-K header still names one centroid where its row draws three, so it was
@@ -2652,7 +2734,10 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
     cell = "<div></div>"
     for ind, n_old, tag in (("  ", 5, "cards"), ("        ", 7, "K panel")):
         sub(f'\n{ind}<div class="cardaxis">{cell * n_old}',
-            f'\n{ind}<div class="cardaxis">{cell * 8}',
+            # derived, like the grid width above: the axis row is spacers plus one bar
+            # scale, and the columns are 1 index + KROW_REPS + 3 views + 2. A hardcoded 8
+            # was right for three representations and silently wrong for four.
+            f'\n{ind}<div class="cardaxis">${{"<div></div>".repeat(KROW_REPS.length + 5)}}',
             f"report extras: centre/language axis spacer ({tag})")
     for tail, cid, ind, tag in (
         ('${RUN.cluster_patients[String(k)]} patients${\n'
