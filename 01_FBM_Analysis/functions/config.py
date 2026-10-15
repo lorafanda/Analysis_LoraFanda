@@ -638,6 +638,7 @@ ERSP_TREE = "03_ERSP"
 # frozen 04_* trees, which keep their layout.
 PERTRIAL_DIR = "PerTrial"
 HFA_DIR = PERTRIAL_DIR + "/HFA"                  # <pid>_<cond>_<ref>_HFAtrials_<ch>.png
+PHOTODIODE_DIR = PERTRIAL_DIR + "/Photodiode"    # the photodiode channel's own ERSP + HFA figures (2026-10-16), not among the contacts
 TRIALSCORES_DIR = PERTRIAL_DIR + "/TrialScores"  # <pid>_<cond>_trial_scores.tsv
 REPORT_DIR = PERTRIAL_DIR + "/Report"            # <pid>_IQR.tsv, *_iqr_postDur_QC.png, notch audit, montage
 

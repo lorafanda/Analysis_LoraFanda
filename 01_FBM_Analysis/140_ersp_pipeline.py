@@ -794,6 +794,9 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                                          cond_groups=cond_groups, save_dir=report_dir, patient_id=patient_id)
             ersp_root = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "ERSP")
             hg_root   = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, cfg.HFA_DIR)
+            # the photodiode channel is drawn like a contact but filed apart (2026-10-16, Lora)
+            photo_root = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
+                                               getattr(cfg, "PHOTODIODE_DIR", "PerTrial/Photodiode"))
             sig_root  = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
                                               getattr(cfg, "SIGNAL_DIR", "Signal"))
 
@@ -815,6 +818,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 ersp_dir = _ensure(os.path.join(ersp_root, cond))
                 hg_dir   = _ensure(os.path.join(hg_root, cond))
                 sig_dir  = os.path.join(sig_root, cond)       # created by the plot when it writes
+                photo_dir = os.path.join(photo_root, cond)    # created when the photodiode channel is drawn
             if RUN_CLUSTER_EXPORT:
                 out_mat  = _ensure(os.path.join(mat_root, cond))
                 out_half = os.path.join(io.patient_output_dir(run_root_raw, patient_id,
@@ -938,8 +942,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 if RUN_ERSP_PIPELINE and WRITE_ERSP_PLOTS:
                     fe.plot_ersp(res, patient_id=patient_id, condition=cond,
                                  reref_type=reref, chan_name=chan_name,
-                                 save_dir=ersp_dir, params=ersp_params,
-                                 plot_title=False, save_sidecar=False)
+                                 save_dir=(_ensure(photo_dir) if _is_photodiode(chan_name) else ersp_dir),
+                                 params=ersp_params, plot_title=False, save_sidecar=False)
                 if RUN_ERSP_PIPELINE and WRITE_HG_PLOTS:
                     fe.plot_hg_trials(
                         signals=sig_c, fs=fs,
@@ -955,7 +959,8 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                         exclude_reasons=(_hg_all["reason"] if _hg_all is not None else None),
                         trial_z=_hg_trial_z(res, _hg_all),
                         vmin=cfg.hg_vmin, vmax=cfg.hg_vmax,
-                        save_dir=hg_dir, add_separators=False, sort_ascending=True,
+                        save_dir=(_ensure(photo_dir) if _is_photodiode(chan_name) else hg_dir),
+                        add_separators=False, sort_ascending=True,
                         trial_end_indices=(_hg_all["te"] if _hg_all is not None else te_c),
                         sort_by="stim")
                 # the HFA raster's twin (2026-10-02): the same trials, order, marks and rejected
