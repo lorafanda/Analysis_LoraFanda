@@ -98,6 +98,19 @@ TRACKS = [
     ("kmeans/concat_bands5z", "K-means · concat 5-band, z-scored", "gated concat cohort"),
     ("hierarchical/concat_bands5", "Ward · concat 5-band", "gated concat cohort"),
     ("hierarchical/concat_bands5z", "Ward · concat 5-band, z-scored", "gated concat cohort"),
+    # THE 2026-10-13 FAMILY: four feature sets that differ only in frequency resolution
+    # (15 / 5 / 2 bands / HFA), each fitted on all three methods on cohort v16 and each
+    # cut at the largest K with no cluster over half one patient (7 / 6 / 7 / 8).
+    # concat_bands5 is shared with the block above and is not repeated here.
+    ("cnmf/concat_bands15", "Convex NMF · 15 bands (v16)", "gated concat cohort"),
+    ("kmeans/concat_bands15", "K-means · 15 bands (v16)", "gated concat cohort"),
+    ("hierarchical/concat_bands15", "Ward · 15 bands (v16)", "gated concat cohort"),
+    ("cnmf/concat_bands2", "Convex NMF · 2 bands (v16)", "gated concat cohort"),
+    ("kmeans/concat_bands2", "K-means · 2 bands (v16)", "gated concat cohort"),
+    ("hierarchical/concat_bands2", "Ward · 2 bands (v16)", "gated concat cohort"),
+    ("cnmf/concat_hfa", "Convex NMF · HFA only (v16)", "gated concat cohort"),
+    ("kmeans/concat_hfa", "K-means · HFA only (v16)", "gated concat cohort"),
+    ("hierarchical/concat_hfa", "Ward · HFA only (v16)", "gated concat cohort"),
     # archetypal analysis, the fourth method. Listed for all four feature sets; a track
     # with no runs yet is skipped, so these populate as 243 produces them.
     # archetypal analysis dropped 2026-09-06: its runs, outputs and bundle entries are gone

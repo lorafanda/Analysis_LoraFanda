@@ -46,7 +46,11 @@ CLUST = ROOT / "outputs" / "clustering"
 MANIFEST = ROOT / "outputs" / "250_recon" / "fsaverage" / "coverage_viz" / "manifest.json"
 OUT = CLUST / "paper_web" / "centroids"
 
-FSETS = ["concat_bands5z", "concat_hg", "concat_rawds", "concat_bands5"]
+# The 2026-10-13 family first (15 / 5 / 2 bands / HFA, the sets the paper compares), then
+# the sets that came before it. A feature set missing here has no x_<fset>.bin, so the
+# page cannot draw a centroid on it even when the run is in the coverage manifest.
+# the four the page shows; keep in step with FSETS in make_cluster_visualizer.py
+FSETS = ["concat_bands2", "concat_bands5", "concat_bands15", "concat_hfa"]
 METHODS = ["cnmf", "kmeans", "hierarchical"]          # archetypal analysis dropped 2026-09-06
 COHORT_FALLBACK = "cohort1_n29"   # only used if a manifest carries several cohorts
 
@@ -206,10 +210,13 @@ def main() -> int:
     # on" selector only if this says so.
     def norm(s):
         return str(s).replace("_", "").replace("-", "").upper()
-    row_keys = {}
+    row_keys, row_names = {}, {}
     for method, fset, rid, stamp in runs:
         lab = pd.read_csv(CLUST / method / fset / "runs" / stamp / "labels.csv")
         row_keys[rid] = [f"{p}|{norm(e)}" for p, e in zip(lab["patient_id"], lab["electrode"])]
+        # the same order, un-normalised: the page puts these on the sample panels,
+        # and norm() has thrown away the separators that make a name readable
+        row_names[rid] = [f"{p}|{e}" for p, e in zip(lab["patient_id"], lab["electrode"])]
     ref_id = runs[0][2]
     aligned = all(v == row_keys[ref_id] for v in row_keys.values())
     key_sha = hashlib.sha256("\n".join(row_keys[ref_id]).encode()).hexdigest()[:12]
@@ -219,6 +226,10 @@ def main() -> int:
     verified_write(OUT / "index.json", json.dumps(dict(
         generated=dt.date.today().isoformat(), x_scale=X_SCALE, w_scale=W_SCALE,
         rows_aligned=bool(aligned), row_key_sha=key_sha,
+        # which electrode each ROW of x_<fset>.bin is, for the samples strip under the
+        # compare grid. Only when the order is proven the same for every run, or the
+        # names would come from one run and be drawn against another's rows.
+        row_keys=(row_names[ref_id] if aligned else None),
         feature_sets={f: {k: v for k, v in m.items() if k != "sha"} for f, m in xhash.items()},
         runs=index)).encode("utf-8"))
     total = sum(p.stat().st_size for p in OUT.iterdir())
