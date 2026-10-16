@@ -241,10 +241,26 @@ def bundles_check(cube_t, hfa_t, newest_run, cur_runs):
         age("coverage_viz/manifest.json", os.path.getmtime(mf), newest_run, "newest fit")
         j = json.load(open(mf, encoding="utf-8"))
         listed = {r.get("run") for r in j.get("runs", [])}
-        disk = {r["run"] for r in cur_runs}
+        # only the feature sets the page actually publishes can be "missing". TRACKS is
+        # the list that decides what the bundle carries, so read it rather than assume
+        # every run on the cache belongs: narrowing it to the current four is a decision,
+        # not a gap, and the retired sets were reading as MISSING 9.
+        live_fsets = set()
+        try:
+            import importlib.util as _ilu
+            _s = _ilu.spec_from_file_location("_mcb", os.path.join(os.path.dirname(os.path.abspath(__file__)), "make_coverage_bundle.py"))
+            _m = _ilu.module_from_spec(_s)
+            _s.loader.exec_module(_m)
+            live_fsets = {t[0].split("/")[1] for t in _m.TRACKS}
+        except Exception as e:
+            print(f"   (could not read TRACKS: {e})")
+        disk = {r["run"] for r in cur_runs
+                if not live_fsets or r.get("fset") in live_fsets}
+        retired = len(cur_runs) - len(disk)
         say("OK" if disk <= listed else "STALE", "   runs the manifest lists",
-            f"{len(listed)} listed, {len(disk)} on this cache"
-            + (f"   MISSING {len(disk - listed)}" if disk - listed else ""))
+            f"{len(listed)} listed, {len(disk)} on this cache in a published feature set"
+            + (f"   MISSING {len(disk - listed)}" if disk - listed else "")
+            + (f"  ({retired} run(s) of retired sets ignored)" if retired else ""))
         say("INFO", "   cohorts", str({k: len(v) for k, v in j.get("cohorts", {}).items()}))
     else:
         say("STALE", "coverage_viz/manifest.json", "MISSING")
