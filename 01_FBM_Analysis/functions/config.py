@@ -169,6 +169,7 @@ bad_channels_manual = {
     # 1.4-4.7x broadband; PHG1/PHG2 are the only two that stand out in high gamma
     # (4.2x / 3.3x) rather than broadband.
     "PAT_3975": ["TPG1",
+                 "CPD1", "CPD2", "CPD3", "CPD4",   # 2026-10-16 (Lora): ictal activity; CPD2 was a WM reference contact of the 10-12 run
                  *[f"PHD{i}" for i in range(1, 7)], *[f"HAG{i}" for i in range(1, 4)],
                  *[f"HAD{i}" for i in range(1, 5)], "FOD1",
                  *[f"TPG{i}" for i in range(2, 6)], *[f"TPD{i}" for i in range(1, 6)],
@@ -932,6 +933,11 @@ min_stim_s   = 0.5
 min_post_s   = 0.2
 max_post_s   = 10.0
 iqr_k        = 1.5
+# A LOWER-FENCE k per patient (2026-10-16, Lora): the IQR rule drops a response shorter than
+# Q1 - k*IQR; a patient listed here uses this k on that side only, the upper fence keeps
+# iqr_k. PAT_3975: more lenient towards fast responses (3.0 keeps picture trial 34 at 1.40 s,
+# the one fast response the 1.5 fence took; the other duration outliers are slow ones).
+iqr_k_low    = {"PAT_3975": 3.0}
 hg_band      = (70.0, 150.0)
 hg_smooth_ms = 25
 hg_vmin      = -6.5

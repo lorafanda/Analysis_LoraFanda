@@ -13,6 +13,7 @@ def collect_trials(
     *,
     outlier_method="IQR",
     iqr_k=1.5,
+    iqr_k_low=None,               # k for the LOWER fence only (fast responses); None = iqr_k
     min_stim_s=0.5,
     min_post_s=1.0,
     max_post_s=5.0,
@@ -250,9 +251,11 @@ def collect_trials(
             if method_norm == "iqr":
                 q1, q3 = np.percentile(pdur, [25, 75])
                 iqr = q3 - q1
-                lo, hi = q1 - float(iqr_k) * iqr, q3 + float(iqr_k) * iqr
+                k_lo = float(iqr_k) if iqr_k_low is None else float(iqr_k_low)
+                lo, hi = q1 - k_lo * iqr, q3 + float(iqr_k) * iqr
                 _mark(keep & ~((post_s >= lo) & (post_s <= hi)),
-                      f"duration outlier (IQR k={float(iqr_k):g})")
+                      f"duration outlier (IQR k={float(iqr_k):g}"
+                      + (f", low k={k_lo:g}" if k_lo != float(iqr_k) else "") + ")")
                 keep &= (post_s >= lo) & (post_s <= hi)
 
             elif method_norm == "zscore":

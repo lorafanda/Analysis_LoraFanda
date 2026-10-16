@@ -765,6 +765,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
         all_trials = {}
         cond_groups = tr.collect_trials(prep_dir, fs, outlier_method="IQR",
                                         iqr_k=cfg.iqr_k, report_path=report_path,
+                                        iqr_k_low=getattr(cfg, "iqr_k_low", {}).get(str(patient_id), None),
                                         patient_id=patient_id, max_post_s=cfg.max_post_s,
                                         min_stim_s=cfg.min_stim_s, min_post_s=cfg.min_post_s,
                                         all_out=all_trials,
