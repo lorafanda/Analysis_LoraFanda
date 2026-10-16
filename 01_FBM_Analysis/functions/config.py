@@ -222,7 +222,11 @@ bad_channels_manual = {
     # lines before the notch go from 17-26 dB to 1-3 dB and the floor drops 1.1-1.9 dB in every
     # band. The reference stays at 43 contacts.
     "PAT_3965": ["cmd11", "y1", "y2", "y3", "y4", "cmd12",
-                 "had2"],  # 2026-10-13 (Lora, from 148): 5.9x broadband
+                 "had2",   # 2026-10-13 (Lora, from 148): 5.9x broadband
+                 "had1", "had3", "had4", "ad1", "ad2", "ad3", "ad4", "ad5", "cmd1", "cmd2", "cmd3", "cmd4"],
+                 # 2026-10-16 (Lora): seizure / ictal activity on had1-4, ad1-5, cmd1-4. cmd3 was a WM
+                 # reference contact of the 10-05 run (leaves the reference at the next run); cmd1 is
+                 # not in the recording's montage.
     # neither of these had a bad list before 2026-10-13; these two came out of 148
     "EL042": ["EntG_R4"],  # 2026-10-13 (Lora, from 148): 29.2x HG
     "EL046": ["pI_L2"],  # 2026-10-13 (Lora, from 148): 18.6x HG
