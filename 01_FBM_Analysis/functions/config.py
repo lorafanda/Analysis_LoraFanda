@@ -500,7 +500,8 @@ MANUAL_WM_CHANNELS = {
     # Nothing else changes: this dict is the first thing _wm_labels_from_anatomy checks and
     # it is read per patient, so no other patient's reference moves. 140 must be re-run for
     # PAT_3975, and wm_indices_for_patient logs how many of the 11 it matched.
-    "PAT_3975": ["CPD2", "CPG3", "CPG4", "CPG5", "CPG6", "CPG7",
+    "PAT_3975": ["CPG3", "CPG4", "CPG5", "CPG6", "CPG7",     # CPD2 taken out 2026-10-16: bad-listed (ictal), so it was dropped
+                                                            # before the reference anyway ("manual list matched 10/11")
                  "FOG3", "IAD9", "IAG8", "IMD9", "IMD10"],
 }
 
