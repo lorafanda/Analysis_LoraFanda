@@ -25,6 +25,7 @@ source clock from the dataset cache instead; --no-badlist skips the bad-list pro
 from __future__ import annotations
 
 import argparse
+import csv
 import datetime as dt
 import glob
 import json
@@ -74,6 +75,28 @@ def newest(pattern, recursive=True):
 
 def head(t):
     print(f"\n{'=' * 78}\n{t}\n{'=' * 78}")
+
+
+def usable(cwd):
+    """GIT NEEDS A REAL LOCAL DIRECTORY AS cwd. The server reaches this repo as
+    \\\\nasac-m2.unige.ch\\... and CreateProcess refuses a UNC cwd with WinError 267; the
+    push worktrees exist on the laptop only, and the server has no remote. Every git-backed
+    row is laptop-only and says so rather than raising."""
+    return bool(cwd) and os.path.isdir(cwd) and not str(cwd).replace("/", "\\").startswith("\\\\")
+
+
+def git(args, cwd):
+    if not usable(cwd):
+        return None
+    try:
+        r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    # NOT .strip(): porcelain lines start with a space for "modified, not staged", and
+    # stripping the whole block eats the first line's, which then cuts a character off
+    # that file's name.
+    return r.stdout.rstrip("\n")
 
 
 # ---------------------------------------------------------------- 1. the source clock
@@ -232,8 +255,81 @@ def runs_check(cache_name, cache_t):
 
 
 # ------------------------------------------------------- 5. the published bundles
+# ------------------------------------------------------------------------ 5. the recon
+def recon_check(cache_name):
+    """Where every coordinate, neighbour radius and anatomical label comes from.
+
+    Nothing audited this until 2026-10-16, and that is exactly how the 10-12 regeneration
+    went unnoticed for four days: 36 contacts had moved up to 70.6 mm, 12 had been renamed
+    (EL051 pSTG_R* -> pSTG_*), and the outputs were never committed. None of them happened
+    to be cohort electrodes, so nothing published moved - but that was luck, not a check.
+    """
+    head("5.  RECON  -  the coordinates the bundles and every brain plot are built on")
+    coords = os.path.join(FS, "coords")
+    status = os.path.join(os.path.dirname(FS), "_step1_tkrRAS_status.tsv")
+    allcsv = os.path.join(coords, "ALL_PATIENTS_contacts_fsaverage.csv")
+
+    # did step 1 run, and did every patient come back OK?
+    if os.path.exists(status):
+        with open(status, encoding="utf-8", newline="") as fh:
+            rows = list(csv.DictReader(fh, delimiter="\t"))
+        bad = [r.get("pid") for r in rows if (r.get("status") or "").upper() != "OK"]
+        say("OK" if rows and not bad else "STALE", "   step 1 tkrRAS",
+            f"{len(rows)} patients, run {ts(os.path.getmtime(status))}"
+            + (f"   NOT OK: {', '.join(x for x in bad[:6] if x)}" if bad else ", all OK"))
+    else:
+        say("STALE", "   step 1 tkrRAS", "MISSING _step1_tkrRAS_status.tsv")
+
+    # the fsaverage table every downstream artefact reads
+    t_all = os.path.getmtime(allcsv) if os.path.exists(allcsv) else 0
+    if t_all:
+        with open(allcsv, encoding="utf-8", newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        pats = {r.get("patient") for r in rows}
+        say("INFO", "   ALL_PATIENTS_contacts_fsaverage",
+            f"{len(rows)} contacts, {len(pats)} patients, written {ts(t_all)}")
+    else:
+        say("STALE", "   ALL_PATIENTS_contacts_fsaverage", "MISSING")
+
+    # THE ROW THAT WAS MISSING. A regenerated recon that is never committed leaves git HEAD
+    # describing coordinates nobody is using any more.
+    rel = os.path.relpath(coords, R).replace("\\", "/")
+    out = git(["status", "--porcelain", "--", rel], R)
+    if out is None:
+        say("INFO", "   coords committed?", "git cannot run here (UNC repo) - laptop only")
+    else:
+        dirty = [l[3:] for l in out.splitlines() if l.strip()]
+        say("OK" if not dirty else "STALE", "   coords committed?",
+            "committed" if not dirty else
+            f"{len(dirty)} file(s) modified or untracked"
+            f"   e.g. {os.path.basename(dirty[0])}")
+
+    # contacts.json is DERIVED from those coordinates, so it may not be older than them
+    contacts = os.path.join(COV, "contacts.json")
+    age("   coverage contacts.json", os.path.getmtime(contacts) if os.path.exists(contacts) else 0,
+        t_all, "coords", grace_s=120)
+
+    # and does every electrode in the cohort actually have a reconstruction? That is
+    # check_recon_name_match.py's table; read it rather than redo the matching here.
+    nm = os.path.join(CLUST, "name_match", cache_name or "", "name_match_per_patient.csv")
+    if os.path.exists(nm):
+        with open(nm, encoding="utf-8", newline="") as fh:
+            rows = list(csv.DictReader(fh))
+        n = lambda r, k: int(float(r.get(k) or 0))
+        in_cohort = sum(n(r, "in_cohort") for r in rows)
+        miss = [r for r in rows if n(r, "unmatched_in_cohort") > 0]
+        age("   name match table", os.path.getmtime(nm), t_all, "coords", grace_s=120)
+        say("OK" if not miss else "STALE", "   cohort electrodes with a recon",
+            f"{in_cohort} in the cohort, all matched" if not miss else
+            f"{sum(n(r, 'unmatched_in_cohort') for r in miss)} of {in_cohort} unmatched: "
+            + ", ".join(r.get("patient", "?") for r in miss[:5]))
+    else:
+        say("WARN", "   name match table",
+            f"not run for {cache_name} - check_recon_name_match.py writes it")
+
+
 def bundles_check(cube_t, hfa_t, newest_run, cur_runs):
-    head("5.  BUNDLES  -  what the two visualizer pages read")
+    head("6.  BUNDLES  -  what the two visualizer pages read")
 
     print("\n-- cluster_visualizer (main) --")
     mf = os.path.join(COV, "manifest.json")
@@ -304,30 +400,14 @@ def bundles_check(cube_t, hfa_t, newest_run, cur_runs):
 
 # --------------------------------------------------------------- 6. pushed or not
 def pushed_check():
-    head("6.  PUSHED?  -  a correct local tree and a wrong live page")
+    head("7.  PUSHED?  -  a correct local tree and a wrong live page")
 
     # GIT NEEDS A REAL LOCAL DIRECTORY AS cwd. The server reaches this repo as
     # \\nasac-m2.unige.ch\... and CreateProcess refuses a UNC cwd with WinError 267; the
     # push worktrees exist on the laptop only, and the server has no remote. So this whole
     # section is laptop-only, and on the server it says so rather than raising.
-    def usable(cwd):
-        return bool(cwd) and os.path.isdir(cwd) and not str(cwd).replace("/", "\\").startswith("\\\\")
-
-    def git(args, cwd):
-        if not usable(cwd):
-            return None
-        try:
-            r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True,
-                               encoding="utf-8", errors="replace")
-        except OSError:
-            return None
-        # NOT .strip(): porcelain lines start with a space for "modified, not staged", and
-        # stripping the whole block eats the first line's, which then cuts a character off
-        # that file's name.
-        return r.stdout.rstrip("\n")
-
     if not usable(R):
-        say("INFO", "section 6 skipped", "the repo is a UNC path, so git cannot run here: "
+        say("INFO", "section 7 skipped", "the repo is a UNC path, so git cannot run here: "
                                          "this is the server. Sections 1-5 and 7 above are "
                                          "machine-independent; run the audit on the laptop "
                                          "for the push state (and push from there).")
@@ -397,7 +477,7 @@ def pushed_check():
 
 # ------------------------------------------------------------------ 7. the figures
 def figures_check(newest_run, cur_runs):
-    head("7.  FIGURES")
+    head("8.  FIGURES")
     pf = os.path.join(CLUST, "paper_figures")
     if os.path.isdir(pf):
         png = glob.glob(os.path.join(pf, "*.png"))
@@ -447,6 +527,7 @@ def main():
     if a.quick:
         cube_t = hfa_t = cache_t          # the cache stands in for the source clock
     newest_run, cur = runs_check(cache_name, cache_t)
+    recon_check(cache_name)
     bundles_check(cube_t, hfa_t, newest_run, cur)
     pushed_check()
     figures_check(newest_run, cur)
