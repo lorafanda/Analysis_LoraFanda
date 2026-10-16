@@ -13,6 +13,33 @@ wrong.
 
 ---
 
+## 0 · Before anything, and after everything
+
+### `audit_freshness.py` — is any artefact older than what it is built from?
+
+```bash
+python 02_FBM_Clustering/audit_freshness.py --quick
+```
+
+| | |
+|---|---|
+| **needs** | nothing; it reads mtimes, manifests and `git status` |
+| **writes** | nothing |
+| **read by** | you, before quoting a number and before pushing |
+
+Eight sections in pipeline order — SOURCE, BAD LISTS, DATASET CACHE, CLUSTERING RUNS,
+RECON, BUNDLES, PUSHED?, FIGURES — each artefact marked OK / STALE / WARN against the
+thing it is derived from. `--quick` skips the per-patient 03_ERSP walk, `--no-badlist`
+skips section 2.
+
+This answers "is what I am looking at current" without opening anything, and every
+silent-staleness trap below has a row in it. The RECON section is the newest (2026-10-16):
+it is what finally caught a 10-12 reconstruction that had been regenerated and never
+committed — 36 contacts had moved up to 70.6 mm and 12 had been renamed, and only
+`git status` knew.
+
+---
+
 ## A · Preprocessing — one patient at a time
 
 ### 1. `141_audit_140.py` — is any patient's run older than its config?
@@ -51,6 +78,29 @@ python 01_FBM_Analysis/142_stale_cubes.py --delete   # and delete
 bad-listed, newly a reference contact, newly Unknown — keeps its cubes, halves, CLEAN
 images and QC figures from the earlier run, and those enter the next cohort build as if
 they were current. v8 carried 48 of them. `--patients` narrows it.
+
+### 2b. `152_tree_audit.py` — every file checked against what 140 writes now
+
+```bash
+python 01_FBM_Analysis/152_tree_audit.py                      # list
+python 01_FBM_Analysis/152_tree_audit.py --patients PAT_1327  # one patient
+python 01_FBM_Analysis/152_tree_audit.py --delete             # and remove
+```
+
+| | |
+|---|---|
+| **needs** | an `outputs/03_ERSP` tree and a current `config.py` |
+| **writes** | `outputs/03_ERSP/tree_audit.tsv`, one row per finding |
+| **read by** | you; `--delete` acts on it |
+
+Wider than step 2. Where 142 asks "is this cube older than its run", this checks the whole
+tree against what 140 would write today: layout and legal file names, anything older than
+the last run, channels with no current cube, and channels that must have **no file at
+all** — bad-listed, a WM reference contact, non-neural. It also flags what it will not
+delete: incomplete channels, stale trial-score rows, patients with no log or no OK row in
+`wm_reref_report`.
+
+`delete` = orphan, stale or forbidden. `flag` = fix it with a rerun or with 143.
 
 ### 3. `140_ersp_pipeline.py` — the analysis, per patient
 
@@ -251,7 +301,7 @@ python 02_FBM_Clustering/make_cluster_statistics.py --feature-set concat_bands15
 
 | | |
 |---|---|
-| **needs** | steps 8–10, and the fsaverage coordinate table (step 18) for the coherence number |
+| **needs** | steps 8–10, and the fsaverage coordinate table (**step 17**, not 18) for the coherence number |
 | **writes** | `outputs/clustering/statistics/<fset>_K<k>/` — `stats_separation.csv`, `stats_agreement.csv`, `stats_coherence.csv`, **`stats_lopo_predict.csv`**, `stats_lopo.csv`, `stats_cluster_sizes.csv`, `stats_labels.npy`, `stats_summary.json`, plus one JSON per run for the visualizer |
 | **read by** | `make_cluster_figures.py`, `make_cluster_webblock.py`, the cluster visualizer |
 
@@ -264,6 +314,18 @@ exists only because a patient is in the fit passes it. Its null now permutes who
 
 Use each set's clean K from step 14 — at a K where a cluster is one patient, LOPO is
 partly re-measuring the dominance you already measured.
+
+**The reference it compares against is refitted, not the published run.** The script
+refits the full cohort internally at a fixed seed and scores the held-out patient against
+that, so the number describes the METHOD rather than the exact partition in the figures.
+Convex NMF is non-convex, so the two differ a little: for PAT_1327 the dominant cluster
+holds 92 electrodes in the published run and 90 in the refit. That is the right choice for
+the test — one seed is then one self-consistent experiment — but worth knowing before
+quoting a per-patient number beside a per-patient number taken from the run.
+
+**Read the lift, not the accuracy.** The file carries the best constant guess beside the
+score, and the gap between them is the result: a patient whose electrodes are 82% one
+cluster scores 96% by being easy, not by being well predicted.
 
 ---
 
@@ -300,7 +362,7 @@ python 02_FBM_Clustering/00_paper2_figure5_confusion.py --k 5 6 7 8 9 10
 
 | | |
 |---|---|
-| **needs** | steps 8–10; FIG 1 needs `heldout_peaks_cnmf.csv`; FIG 2/3 and FIG 1 need the coordinate table (step 18) for their brain panels |
+| **needs** | steps 8–10; FIG 1 needs `heldout_peaks_cnmf.csv`; FIG 2/3 and FIG 1 need the coordinate table (**step 17**, not 18) for their brain panels |
 | **writes** | `outputs/clustering/paper_figures/` — `FIG4_correspondence_K<NN>_run<id>.png`, `FIG4_matched_*.csv`, `FIG4_corr_*.csv`, `FIG4_summary_*.csv`, `FIG4_K<NN>.png`, `FIG5_pairs_*.csv`, `FIG5_KbyK_*.csv` and the figure PNGs |
 | **read by** | `make_paper_figures_webblock.py`, `make_paper_tab.py` → the site |
 
@@ -345,6 +407,27 @@ Jupyter, Run All.
 "EL052"]` leaves a two-patient `ALL_PATIENTS` file and everything downstream silently
 matches ~60 electrodes. Set `ONLY = []` for a full rebuild.
 
+### 17b. `check_recon_name_match.py` — does every cohort electrode have a recon?
+
+```bash
+python 02_FBM_Clustering/check_recon_name_match.py
+```
+
+| | |
+|---|---|
+| **needs** | step 17, and the current cache (step 7) |
+| **writes** | `outputs/clustering/name_match/<cache>/` — `name_match_per_patient.csv`, `_shafts`, `_candidates`, `_unmatched_recon`, `_unmatched_recorded` |
+| **read by** | `audit_freshness.py` section 5, and you |
+
+Recording names against reconstruction names, per patient, with `in_cohort` and
+`unmatched_in_cohort` beside them. **The column that matters is `unmatched_in_cohort`:** a
+shaft named differently in the two places is only a problem if it carries cohort
+electrodes. `RECON_ALIAS` in 250 is where a rename is declared.
+
+On 2026-10-16: 44 patients, 43 recorded electrodes with no recon contact, 0 of them in the
+cohort — the only mismatching patient is EL031, which has recordings but no
+reconstruction and is excluded for exactly that reason.
+
 ### 18. `252_clustering_recon.ipynb` — the 3-D brain per cluster
 
 Jupyter, with `RUN_FILTER = [{'feature_set': '<fset>', 'method': 'cnmf'}]`.
@@ -388,8 +471,40 @@ script that regenerates each stale figure, so its output is the task list.
 **`make_site_ui.py --insert` goes last** — it is the page's runtime layer and wraps
 whatever blocks are on the page at the time.
 
-**A track missing from `TRACKS` in `make_coverage_bundle.py` is invisible to the
-visualizer** however complete its runs are. New feature sets need adding there.
+**THE PAGE IS A SEPARATE ARTEFACT FROM THE BUNDLE.** `push_cluster_bundle.py` ships the
+data; it does not touch the HTML. Any change to the visualizer itself must be rebuilt and
+committed to the **site** repo, or none of it ships:
+
+```bash
+python 02_FBM_Clustering/make_cluster_visualizer.py
+cd ~/lorafanda.github.io && git commit --only -F <msg> -- cluster_visualizer.html cluster_visualizer_order.json && git push
+```
+
+It patches `clustering_visualizer.html` → `cluster_visualizer.html` and prints the run
+count: **4 feature sets · 3 methods = 12 runs**. A different number means one of the lists
+below is out of step. In October 2026 a samples panel sat written-but-unshipped for three
+days because only the bundle was pushed.
+
+**A NEW FEATURE SET HAS TO BE ADDED TO SIX LISTS**, and each fails silently and
+differently — the rebuild still exits 0:
+
+| file | list | what it decides | failure if missed |
+|---|---|---|---|
+| `make_coverage_bundle.py` | `TRACKS` | which runs enter the bundle | the run is not in the data |
+| `make_centroid_bundle.py` | `FSETS` | which `x_<fset>.bin` exist | no centroid can be drawn |
+| `make_cluster_visualizer.py` | `FSETS` | which runs reach the page at all | missing from the run matrix |
+| `make_cluster_visualizer.py` | `U2_FSETS` | matrix row order, up/down cycling | not in the matrix |
+| `make_cluster_visualizer.py` | `REP_LABEL` | the "shown on" names | an unlabelled raw-key chip |
+| `make_cluster_visualizer.py` | `KROW_REPS` | the report's per-K rows | left out of every export |
+
+Nothing walks the runs directory, so absence is the failure mode and no assertion catches
+it. `audit_freshness.py` section 6 compares the manifest against the fits, which is the
+cheap way to notice.
+
+**Retired 2026-10-16:** `concat_bands5z`, `concat_hg` and `concat_rawds` are out of all six
+lists and their files are off `main` (586 files, 762 MB). They duplicated the current four
+under near-identical names, and `concat_bands5z` was in `z` units where the others are dB,
+which made one shared colour scale meaningless.
 
 The page fetches every figure from
 `raw.githubusercontent.com/lorafanda/Analysis_LoraFanda/main`, so an uncommitted figure is
@@ -405,13 +520,14 @@ git commit --only -F <message file> -- <paths>
 ## The short order
 
 ```
-141 → 142 --delete → 140 (per patient)          A
+audit_freshness                                  0   (and again at the end)
+141 → 142/152 --delete → 140 (per patient)       A
 rebuild_concat_cache --dry-run → --apply         B
 240 → 242, and 241                               C   (242 needs 240 first)
 249  →  make_cluster_statistics per set          D
 make_k_tradeoff_figure, the paper figures        E
-250 → 252                                        F
-bundles → push → the --insert scripts → site     G
+250 → check_recon_name_match → 252               F
+bundles → push → make_cluster_visualizer → site  G
 ```
 
 Skipping a step does not fail loudly. That is the whole reason this file exists.
