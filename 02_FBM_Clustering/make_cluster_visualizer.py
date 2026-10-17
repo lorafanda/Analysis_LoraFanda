@@ -1007,12 +1007,28 @@ function u2Lock(on) { UI2.busy = on; $("ui2").classList.toggle("u2busy", on); }
 
 // Selecting a cluster goes through the (hidden) map select, so everything wired to it —
 // the render, the contacts, the centroid panel — happens exactly as it always did.
+// The open samples strip is drawn for ONE cluster, and UI2.samp.cid was written in
+// exactly one place - u2SampToggle - so selecting another cluster left the strip on
+// the previous one under a grid and a centroid that had both moved. Every selection
+// change in single and grid mode funnels through u2Pick, so it follows from here.
+function u2SampFollow(cid) {
+  if (!UI2.samp || cid === undefined || cid === null) return;
+  // a panel belonging to another run is not ours to re-aim: cluster 3 of k-means is
+  // not cluster 3 of cNMF. u2Grid() closes it on a run change, which is correct.
+  if (UI2.samp.runId !== (RUN0 && RUN0.id)) return;
+  if (UI2.samp.cid === Number(cid)) return;
+  UI2.samp.cid = Number(cid);
+  u2Samples();
+}
+
 function u2Pick(mapId) {
   const sel = $("mapSel");
   if (!sel) return;
   state.map = mapId;
   sel.value = mapId;
   sel.dispatchEvent(new Event("change"));
+  const d = u2Defs().find(x => x.id === mapId);
+  if (d) u2SampFollow(d.cluster);
   u2Sync();
 }
 
@@ -1191,7 +1207,11 @@ function u2GridSoon() {
 }
 function u2MinLoad() {
   if (!UI2.on) return;
-  u2Chips(); u2Cens(); u2GridSoon();
+  // drawCentroid too: the panel is computed FROM state.minLoad - renderCentroid takes
+  // it and cenMean weights every electrode by it - so without this the slider moved
+  // the number and left the drawing at the previous threshold. The strip follows on
+  // u2GridSoon's rebuild, which is debounced on purpose: it can hold 1400 canvases.
+  u2Chips(); u2Cens(); drawCentroid(); u2GridSoon();
 }
 
 function u2CloseGrid() {
@@ -2192,7 +2212,13 @@ function figureOrder(runId, k, ids) {""", "centroid panel js")
         '  loadCentroids(r.id);                 // the panel follows; it draws when its data lands\n}',
         "centroid: on run select")
     sub("        refreshMapList();\n        autoScale(); render(); updateElectrodes();\n      } finally",
-        "        refreshMapList();\n        autoScale(); render(); updateElectrodes(); drawCentroid();\n      } finally",
+        "        refreshMapList();\n        autoScale(); render(); updateElectrodes(); drawCentroid();\n"
+        "        // AND THE GRID, through u2GridSoon rather than u2Grid: u2Grid is\n"
+        "        // REFUSED while a capture is in flight, which silently drops the\n"
+        "        // refresh and leaves the panels, and the strip under them, at the\n"
+        "        // old cut. u2GridSoon retries until the lock clears, and it is a\n"
+        "        // no-op when the grid is shut.\n"
+        "        if (UI2.on) u2GridSoon();\n      } finally",
         "centroid: on K")
     sub('  $("mapSel").onchange = e => { state.map = e.target.value; autoScale(); render(); updateElectrodes(); };',
         '  $("mapSel").onchange = e => { state.map = e.target.value; autoScale(); render(); updateElectrodes(); drawCentroid(); };\n'
