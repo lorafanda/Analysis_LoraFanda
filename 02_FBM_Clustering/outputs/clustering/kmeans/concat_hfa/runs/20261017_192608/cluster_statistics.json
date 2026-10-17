@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "feature_set": "concat_hfa",
+  "K": 6,
+  "method": "kmeans",
+  "method_label": "k-means",
+  "valid_only_at_K": true,
+  "n_electrodes": 1587,
+  "n_patients": 29,
+  "cohort_cache": "concat_source_v17",
+  "separation": {
+    "space": "unit-norm",
+    "silhouette": 0.1055353692759279,
+    "null_mean": 0.10901885646581767,
+    "null_sd": 0.00364090411693541,
+    "z": -0.9567643305097164,
+    "n_null": 50,
+    "other_space": "dB",
+    "other_space_z": -8.350825140034951
+  },
+  "anatomical_coherence": {
+    "neighbours_sharing_label": 0.33434152488972907,
+    "over_chance": 1.5768670688579158
+  },
+  "lopo": {
+    "real_mean": 0.5552806074153757,
+    "real_median": 0.5544535365895275,
+    "real_min": 0.3754258854622821,
+    "null_mean": 0.5792542729772964,
+    "null_sd": 0.07488518857183142,
+    "z": -0.32013894895817313,
+    "degenerate": 0,
+    "null_kind": "shaft-permuted"
+  },
+  "lopo_predict": {
+    "acc_mean": 0.7437924702639159,
+    "acc_median": 0.8,
+    "acc_min": 0.32,
+    "chance_mean": 0.5133375241498125,
+    "lift_mean": 0.23045494611410355,
+    "worst_patient": "EL036"
+  },
+  "agreement_with": {
+    "Ward": {
+      "ari": 0.3919180135434726,
+      "nmi": 0.42663698651124
+    },
+    "convex NMF": {
+      "ari": 0.2808490097401062,
+      "nmi": 0.35536848051295605
+    }
+  },
+  "cluster_sizes": [
+    143,
+    238,
+    221,
+    340,
+    125,
+    520
+  ],
+  "written": "2026-10-17 23:48:00"
+}
