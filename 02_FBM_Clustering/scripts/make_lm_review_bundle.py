@@ -338,6 +338,52 @@ def metrics(A: np.ndarray) -> dict:
     return {"power": round(power, 3), "hg": round(hg, 3), "stripe": round(stripe, 3)}
 
 
+def gate_constants() -> dict:
+    """lf_dataset's DEFAULT_* gate thresholds, parsed from the file (01_FBM_Analysis/functions and
+    02_FBM_Clustering/functions are both packages named `functions`, so no import)."""
+    src = os.path.join(os.path.dirname(A01), "02_FBM_Clustering", "functions", "lf_dataset.py")
+    out = {"thr_pos": 2.2, "noise_k": 2.0, "min_prop_pos": 0.02, "thr_neg": -3.0, "min_prop_neg": 0.04}
+    try:
+        txt = io.open(src, encoding="utf-8").read()
+        for key in list(out):
+            m = re.search(r"^DEFAULT_" + key.upper() + r"\s*=\s*([-+]?\d*\.?\d+)", txt, flags=re.M)
+            if m:
+                out[key] = float(m.group(1))
+    except OSError:
+        pass
+    return out
+
+
+GATE = gate_constants()
+
+
+def halves_noise(stem_path: str) -> float:
+    """sd(half1 - half2) / 2 in dB, the cube's noise as lf_dataset._halves_noise computes it."""
+    h1 = stem_path.replace("ERSP_matrix", "ERSP_halves").replace("_TN.npy", "_TN_half1.npy")
+    h2 = h1.replace("_half1.npy", "_half2.npy")
+    if not (os.path.exists(h1) and os.path.exists(h2)):
+        return float("nan")
+    a, b = np.load(h1), np.load(h2)
+    if a.shape != b.shape:
+        return float("nan")
+    d = (a - b).astype(np.float32)
+    if np.isfinite(d).sum() < 100:
+        return float("nan")
+    return float(np.nanstd(d)) / 2.0
+
+
+def gate_numbers(A: np.ndarray, noise: float) -> dict:
+    """The gate as lf_dataset applies it to this cube: the threshold raised by the noise, the share
+    of bins above it and below the negative one (NaN bins count as not beyond, as there)."""
+    thr_up = max(GATE["thr_pos"], GATE["noise_k"] * noise) if np.isfinite(noise) else GATE["thr_pos"]
+    thr_dn = min(GATE["thr_neg"], -GATE["noise_k"] * noise) if np.isfinite(noise) else GATE["thr_neg"]
+    with np.errstate(invalid="ignore"):
+        pp, pn = float((A > thr_up).mean()), float((A < thr_dn).mean())
+    return {"noise": round(noise, 4) if np.isfinite(noise) else float("nan"), "thr": round(thr_up, 3),
+            "prop_pos": round(pp, 5), "prop_neg": round(pn, 5),
+            "gate": bool(pp >= GATE["min_prop_pos"] or pn >= GATE["min_prop_neg"])}
+
+
 def reliability(stem_path: str) -> float:
     h1 = stem_path.replace("ERSP_matrix", "ERSP_halves").replace("_TN.npy", "_TN_half1.npy")
     h2 = h1.replace("_half1.npy", "_half2.npy")
@@ -567,8 +613,11 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
                     continue
                 arr[ci] = quantise(A)
                 mm = metrics(A)
+                noise = float("nan")
                 if not args.no_halves:
                     mm["rel"] = round(reliability(f), 3)
+                    noise = halves_noise(f)
+                mm.update(gate_numbers(A, noise))          # the gate window (v): noise, thr, prop_pos, prop_neg, gate
                 row["m"][c] = {k: nan_to_none(v) for k, v in mm.items()}
             row["file"] = f"{tmp_prefix}{n_tmp}.bin"
             n_tmp += 1
@@ -695,6 +744,7 @@ def main() -> None:
         "conditions": CONDS, "n_cond": len(CONDS), "n_freq": NF, "f_hz": [0.0, (NF - 1) * F_STEP], "fmax_source_hz": (NF - 1) * F_STEP,
         "n_time": NT // T_DS, "time_downsample": T_DS, "n_time_source": NT,
         "dtype": "uint8", "order": ["cond", "freq", "time"], "vmin": -VLIM, "vmax": VLIM, "nan_byte": 0,
+        "gate": {**GATE, "score": "per contact: max over conditions of prop_pos (share of bins above max(thr_pos, noise_k x noise)); passes at >= min_prop_pos, or prop_neg >= min_prop_neg"},
         "file": "each contact row's `file`",
         "hg_path": "{hg_root}/{patient}/LM/{hfa_dir}/{cond}/{patient}_{cond}_{hg_reref}_{hfa_stem}_{name}.png (hfa_dir / hfa_stem per patient in patients.json: PerTrial/HFA + HFAtrials in 03_ERSP)",
         "psd_path": "{hg_root}/{patient}/LM/PSD_clean/{cond}/PSD/psd_by_shaft.png (per-shaft patients) or psd_allch_full.png",
