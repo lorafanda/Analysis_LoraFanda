@@ -96,7 +96,6 @@ OUT = os.path.join(BUNDLE, "review")
 
 CONDS = ["audio", "picture", "reading"]
 NF, NT, T_DS, VLIM = 103, 300, 2, 10.0
-NF_H, F_STEP_H, NT_H, T_DS_H = 52, 2, 75, 4     # the halves thumbnails (gate window's border band): every 2nd row, time / 4 = 23 KB per contact
 F_STEP = 3.90625
 CUBE_RE = re.compile(r"_(?:WM|CAR)_ERSP_(.+)_TN\.npy$")
 PNG_RE = re.compile(r"_(?:WM|CAR)_ERSP_(.+)_TN\.png$")
@@ -380,11 +379,6 @@ def halves_noise(hv) -> float:
     return float(np.nanstd(d)) / 2.0
 
 
-def halves_path(ersp_file: str) -> str:
-    """The halves thumbnail file of an ERSP thumbnail file: ersp/<name>.bin -> ersp_halves/<name>.bin."""
-    return ersp_file.replace("ersp/", "ersp_halves/", 1)
-
-
 def gate_numbers(A: np.ndarray, noise: float) -> dict:
     """The gate as lf_dataset applies it to this cube: the threshold raised by the noise, the share
     of bins above it and below the negative one (NaN bins count as not beyond, as there)."""
@@ -412,16 +406,6 @@ def reliability(hv) -> float:
 
 def quantise(A: np.ndarray) -> np.ndarray:
     m = A.reshape(NF, NT // T_DS, T_DS)
-    with np.errstate(invalid="ignore"):
-        m = np.nanmean(m, axis=2)
-    q = np.clip((m + VLIM) * (254.0 / (2 * VLIM)), 0, 254) + 1.0
-    q[~np.isfinite(m)] = 0
-    return q.astype(np.uint8)
-
-
-def quantise_half(A: np.ndarray) -> np.ndarray:
-    """A half on the coarse grid (every F_STEP_H-th row, time / T_DS_H), the byte scale of quantise."""
-    m = A[::F_STEP_H][:NF_H].reshape(NF_H, NT_H, T_DS_H)
     with np.errstate(invalid="ignore"):
         m = np.nanmean(m, axis=2)
     q = np.clip((m + VLIM) * (254.0 / (2 * VLIM)), 0, 254) + 1.0
@@ -625,7 +609,6 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
             row["m"], row["file"] = prev[(pid, name)]["m"], prev[(pid, name)]["file"]
         elif status == "data":
             arr = np.zeros((len(CONDS), NF, NT // T_DS), dtype=np.uint8)
-            arrh, any_h = np.zeros((2, len(CONDS), NF_H, NT_H), dtype=np.uint8), False
             for ci, c in enumerate(CONDS):
                 f = cubes[c].get(name)
                 if not f:
@@ -641,16 +624,11 @@ def build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix):
                     hv = load_halves(f)
                     mm["rel"] = round(reliability(hv), 3)
                     noise = halves_noise(hv)
-                    if hv is not None and hv[0].shape == (NF, NT):      # the gate window's border band
-                        arrh[0, ci], arrh[1, ci] = quantise_half(hv[0]), quantise_half(hv[1])
-                        any_h = True
                 mm.update(gate_numbers(A, noise))          # the gate window (v): noise, thr, prop_pos, prop_neg, gate
                 row["m"][c] = {k: nan_to_none(v) for k, v in mm.items()}
             row["file"] = f"{tmp_prefix}{n_tmp}.bin"
             n_tmp += 1
             arr.tofile(os.path.join(OUT, row["file"]))
-            if any_h:
-                arrh.tofile(os.path.join(OUT, halves_path(row["file"])))
         rows.append(row)
 
     # one shaft, one spelling: contacts of a shaft that the recording names aH_L and the
@@ -721,7 +699,6 @@ def main() -> None:
             aparc[(str(r["patient"]), norm_el(r["electrode"]))] = str(r["aparc_label"])
 
     os.makedirs(os.path.join(OUT, "ersp"), exist_ok=True)
-    os.makedirs(os.path.join(OUT, "ersp_halves"), exist_ok=True)
     old_rows = load_json(os.path.join(OUT, "contacts.json"), [])
     old_pats = {p["patient"]: p for p in load_json(os.path.join(OUT, "patients.json"), [])}
     old_by_pat = {}
@@ -730,7 +707,7 @@ def main() -> None:
     prev = {(r["patient"], r["name"]): r for r in old_rows} if args.relabel else {}
     partial = bool(args.patients)
     if not partial and not args.relabel:
-        for old in glob.glob(os.path.join(OUT, "ersp", "*.bin")) + glob.glob(os.path.join(OUT, "ersp_halves", "*.bin")):
+        for old in glob.glob(os.path.join(OUT, "ersp", "*.bin")):
             os.remove(old)
 
     patients, contacts = [], []
@@ -744,17 +721,14 @@ def main() -> None:
             continue
         if partial and not args.relabel:               # this patient's old files go
             for r in old_by_pat.get(pid, []):
-                for p in ((r["file"], halves_path(r["file"])) if r.get("file") else ()):
-                    if os.path.exists(os.path.join(OUT, p)):
-                        os.remove(os.path.join(OUT, p))
+                if r.get("file") and os.path.exists(os.path.join(OUT, r["file"])):
+                    os.remove(os.path.join(OUT, r["file"]))
         rows, prow = build_patient(raw, pid, audit, coords, aparc, args, prev, tmp_prefix=f"ersp/_tmp_{pid}_")
         # final file names: r<index in contacts.json> on a full build, <pid>_<j> on a partial one
         for j, r in enumerate(rows):
             if r["file"] and r["file"].startswith("ersp/_tmp_"):
                 final = f"ersp/{pid}_{j}.bin" if partial else f"ersp/r{len(contacts) + j}.bin"
                 os.replace(os.path.join(OUT, r["file"]), os.path.join(OUT, final))
-                if os.path.exists(os.path.join(OUT, halves_path(r["file"]))):
-                    os.replace(os.path.join(OUT, halves_path(r["file"])), os.path.join(OUT, halves_path(final)))
                 r["file"] = final
         contacts.extend(rows)
         patients.append(prow)
@@ -777,10 +751,6 @@ def main() -> None:
         "conditions": CONDS, "n_cond": len(CONDS), "n_freq": NF, "f_hz": [0.0, (NF - 1) * F_STEP], "fmax_source_hz": (NF - 1) * F_STEP,
         "n_time": NT // T_DS, "time_downsample": T_DS, "n_time_source": NT,
         "dtype": "uint8", "order": ["cond", "freq", "time"], "vmin": -VLIM, "vmax": VLIM, "nan_byte": 0,
-        "halves": None if args.no_halves else {
-            "file": "the contact's `file` with ersp/ -> ersp_halves/ (absent when the cube has no halves)",
-            "order": ["half", "cond", "freq", "time"], "n_half": 2, "n_cond": len(CONDS), "n_freq": NF_H, "f_step": F_STEP_H,
-            "n_time": NT_H, "time_downsample": T_DS_H, "dtype": "uint8", "vmin": -VLIM, "vmax": VLIM, "nan_byte": 0},
         "gate": {**GATE, "score": "per contact: max over conditions of prop_pos (share of bins above max(thr_pos, noise_k x noise)); passes at >= min_prop_pos, or prop_neg >= min_prop_neg"},
         "file": "each contact row's `file`",
         "hg_path": "{hg_root}/{patient}/LM/{hfa_dir}/{cond}/{patient}_{cond}_{hg_reref}_{hfa_stem}_{name}.png (hfa_dir / hfa_stem per patient in patients.json: PerTrial/HFA + HFAtrials in 03_ERSP)",
@@ -797,14 +767,8 @@ def main() -> None:
     stray = [f for f in os.listdir(os.path.join(OUT, "ersp")) if "ersp/" + f not in referenced]
     for f in stray:                                    # a file no row names any more
         os.remove(os.path.join(OUT, "ersp", f))
-    referenced_h = {halves_path(f) for f in referenced}
-    stray_h = [f for f in os.listdir(os.path.join(OUT, "ersp_halves")) if "ersp_halves/" + f not in referenced_h]
-    for f in stray_h:
-        os.remove(os.path.join(OUT, "ersp_halves", f))
-    stray += stray_h
-    have_h = [f for f in referenced_h if os.path.exists(os.path.join(OUT, f))]
-    size = sum(os.path.getsize(os.path.join(OUT, f)) for f in list(referenced) + have_h) / 1e6
-    print(f"\n[done] {len(patients)} patients, {len(contacts)} contacts ({manifest['n_data']} with ERSP, {len(have_h)} with halves, {size:.0f} MB) -> {OUT}"
+    size = sum(os.path.getsize(os.path.join(OUT, f)) for f in referenced) / 1e6
+    print(f"\n[done] {len(patients)} patients, {len(contacts)} contacts ({manifest['n_data']} with ERSP, {size:.0f} MB) -> {OUT}"
           + (f" · {len(stray)} stray files removed" if stray else ""))
 
 
