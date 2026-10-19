@@ -33,8 +33,8 @@ reads what an earlier one wrote:
   audit    141_audit_140.py writes audit_140.tsv, which the s1 tab, the figure audit and
            the LM review bundle all read. It is first because three later phases need it.
   select   make_heldout_variance.py and choose_k.py write the held-out curves. NINE
-           scripts read heldout_variance.csv - among them 00_Paper2_Figures.py,
-           make_cluster_webblock.py and make_normalisation_figures.py - so if this does
+           scripts read heldout_variance.csv - among them 00_Paper2_Figures.py and
+           make_cluster_webblock.py - so if this does
            not run first, every K curve in the rebuild is drawn from the previous
            cohort's file and nothing says so. This phase was missing until 2026-09-27.
   runs     per-run products (centroids, rasters) the gallery and the visualizer read.
@@ -168,12 +168,9 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
         ("paper", False, CLUST, ["00_paper2_figure5_confusion.py", "--k", *ks]),
 
         # ---- stage02: the figures the status page carries
-        ("stage02", False, CLUST, ["make_separation_figure.py"]),
-        ("stage02", False, CLUST, ["make_separation_across_features.py"]),
         ("stage02", False, CLUST, ["make_decomposition_figure.py"]),
         ("stage02", False, CLUST, ["make_overview_options.py"]),
         ("stage02", False, CLUST, ["make_component_anatomy.py", "--run", newest_cnmf_hg()]),
-        ("stage02", False, CLUST, ["make_membership_explainer.py"]),     # E12
         # DROPPED 2026-09-28, at Lora's word - both failed every run on missing inputs
         # that are not part of this rebuild, and a permanent FAIL in the summary trains
         # you to stop reading it:
@@ -185,7 +182,6 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
 
         # ---- norm and prep. The --insert halves of these live in the site phase: they
         # write to the site checkout, which only exists on the laptop.
-        ("norm", False, CLUST, ["make_normalisation_figures.py"]),
         ("prep", False, PREP, ["make_preprocessing_figures.py"]),
 
         # ---- bundles. The LM review bundle goes FIRST: it is the only place the BIDS
@@ -215,7 +211,6 @@ def plan(ks: list[str]) -> list[tuple[str, bool, Path, list[str]]]:
         ("site", False, CLUST, ["make_cluster_webblock.py", "--insert"]),
         ("site", False, CLUST, ["make_s2_gallery.py", "--insert"]),
         ("site", False, CLUST, ["make_paper_tab.py", "--insert"]),
-        ("site", False, CLUST, ["make_norm_notes.py", "--insert"]),
         ("site", False, PREP, ["make_s1_tab.py", "--insert"]),
         ("site", False, CLUST, ["make_site_ui.py", "--insert"]),
         ("site", False, CLUST, ["audit_site_figures.py", "--csv"]),
