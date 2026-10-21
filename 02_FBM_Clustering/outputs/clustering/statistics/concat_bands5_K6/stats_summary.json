@@ -13,31 +13,63 @@
   "n_gated": 1607,
   "n_added": 0,
   "baseline_pct_added": 0.0,
-  "n_null": 50,
+  "n_null": 10,
   "lopo": {
     "kmeans": {
       "real_mean": 0.7303288717077879,
+      "real_median": 0.7314795773908687,
       "real_min": 0.5870210644367053,
-      "null_min_mean": 0.504543757137521,
-      "null_min_sd": 0.04958227634414727,
-      "z": 1.6634433386380825,
-      "degenerate": 0
+      "null_mean": 0.6756984766200895,
+      "null_sd": 0.08937319311221982,
+      "z": 0.6112615336357373,
+      "degenerate": 0,
+      "null_kind": "shaft-permuted"
     },
     "hierarchical": {
       "real_mean": 0.6559452263484423,
+      "real_median": 0.6273474305069437,
       "real_min": 0.4824180557276946,
-      "null_min_mean": 0.38139234260006194,
-      "null_min_sd": 0.025087919060606863,
-      "z": 4.026866990585264,
-      "degenerate": 0
+      "null_mean": 0.5660878127523337,
+      "null_sd": 0.01399906753044555,
+      "z": 6.418814210352534,
+      "degenerate": 0,
+      "null_kind": "shaft-permuted"
     },
     "cnmf": {
       "real_mean": 0.735035113492291,
+      "real_median": 0.7793280609574126,
       "real_min": 0.43077189876716593,
-      "null_min_mean": 0.43496708680358315,
-      "null_min_sd": 0.055511762743347355,
-      "z": -0.0755729565968427,
-      "degenerate": 0
+      "null_mean": 0.6349727045097688,
+      "null_sd": 0.11024745721626358,
+      "z": 0.9076164794099312,
+      "degenerate": 0,
+      "null_kind": "shaft-permuted"
+    }
+  },
+  "lopo_predict": {
+    "kmeans": {
+      "acc_mean": 0.8049769619621002,
+      "acc_median": 0.8775510204081632,
+      "acc_min": 0.14285714285714285,
+      "chance_mean": 0.599918971848404,
+      "lift_mean": 0.20505799011369633,
+      "worst_patient": "PAT_3965"
+    },
+    "hierarchical": {
+      "acc_mean": 0.6118530739949805,
+      "acc_median": 0.6046511627906976,
+      "acc_min": 0.136986301369863,
+      "chance_mean": 0.7382674701620812,
+      "lift_mean": -0.12641439616710085,
+      "worst_patient": "PAT_3455"
+    },
+    "cnmf": {
+      "acc_mean": 0.840602804687396,
+      "acc_median": 0.8852459016393442,
+      "acc_min": 0.3333333333333333,
+      "chance_mean": 0.5525252429099958,
+      "lift_mean": 0.28807756177740024,
+      "worst_patient": "PAT_5515"
     }
   },
   "contingency": {
@@ -192,5 +224,5 @@
       ]
     ]
   },
-  "written": "2026-10-12 22:12:43"
+  "written": "2026-10-15 18:29:29"
 }
