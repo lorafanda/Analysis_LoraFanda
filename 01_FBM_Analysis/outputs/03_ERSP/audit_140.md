@@ -1,6 +1,6 @@
-# 140 run audit - fmax 400 Hz - 2026-10-12 18:09
+# 140 run audit - fmax 400 Hz - 2026-10-17 23:48
 
-31 patients in cfg.patient_ids; 31 with a log; 30 ok. Cube tree: `outputs\03_ERSP`.
+31 patients in cfg.patient_ids; 31 with a log; 31 ok. Cube tree: `outputs\03_ERSP`.
 
 ## 1. Run, channels, reference
 
@@ -14,7 +14,7 @@
 | EL030 | Bern | 2026-09-30 22:03 | 10.3 | ok | 280-1600 s | 137 | 103 | 14 | · | 2 | WM reference, 5 contacts (skipped as data) | BIDS TSV | 5 | · | · | 82 | 0 | · | EntG_R18 aH_L11 |
 | EL031 | Bern | 2026-10-09 10:45 | 6.6 | ok | none | 83 | 48 | 0 | · | 5 | WM reference, 0 contacts (skipped as data) | Lookup workbook | 0 | · | · | 43 | 0 | · | SPL10 SPL11 SPL12 SPL9 latSFG8 |
 | EL033 | Bern | 2026-10-05 23:39 | 9.3 | ok | 280-1782 s | 124 | 92 | 8 | · | 13 | WM reference, 9 contacts (skipped as data) | BIDS TSV | 9 | PHGR4 | · | 63 | 0 | · | aH_L1 aH_L2 aH_L3 aH_L4 aH_L5 aH_L6 aH_L7 aH_L8 aH_L9 aH_L10 aH_L11 aH_L12 |
-| EL034 | Bern | 2026-09-30 21:50 | 7.4 | error-other | none | 137 | 105 | 27 | · | 6 | WM reference, 23 contacts (skipped as data) | BIDS TSV | 23 | AHL7 | · | 52 | 0 | · | MFG-10 MFG-11 MFG-12 OFG-L15 aH-L12 |
+| EL034 | Bern | 2026-10-16 02:18 | 7.9 | ok | none | 137 | 105 | 27 | · | 6 | WM reference, 23 contacts (skipped as data) | BIDS TSV | 23 | AHL7 | · | 52 | 0 | · | MFG-10 MFG-11 MFG-12 OFG-L15 aH-L12 |
 | EL035 | Bern | 2026-09-30 21:14 | 13.9 | ok | none | 156 | 125 | 3 | · | 24 | WM reference, 10 contacts (skipped as data) | BIDS TSV | 10 | PHGR10 | · | 87 | 0 | · | EntG_R7 EntG_R8 EntG_R9 EntG_R10 EntG_R11 Fopc_R1 Fopc_R2 Fopc_R3 Fopc_R4 Fopc_R5 pHG_R11 pHG_R12 CinG_R1 CinG_R3 CinG_R5 CinG_R7 aI_R1 aI_R2 aI_R3 aI_R4 aI_R5 aI_R6 aI_R7 |
 | EL036 | Bern | 2026-09-30 22:17 | 6.4 | ok | none | 108 | 72 | 10 | · | 12 | WM reference, 4 contacts (skipped as data) | BIDS TSV | 4 | · | · | 45 | 0 | · | pHG_R1 pHG_R2 pHG_R3 pHG_R4 pHG_R8 pHG_R9 pHG_R10 pHG_R11 pHG_R12 A_R9 A_R10 A_R11 |
 | EL037 | Bern | 2026-09-30 21:40 | 12.4 | ok | none | 156 | 123 | 4 | · | 47 | WM reference, 11 contacts (skipped as data) | BIDS TSV | 11 | CINGL12 CINGL13 PHR7 PLL15 PLL16 | · | 83 | 0 | · | aH_R1 A_R10 A_R12 aI_L18 pI_L1 pI_L2 pI_L3 pI_L4 pI_L5 pI_L6 pI_L7 pI_L8 pI_L9 pI_L10 pI_L11 pI_L12 pI_L13 pI_L14 pI_L15 pI_L16 pI_R1 pI_R2 pI_R3 pI_R4 pI_R5 pI_R6 pI_R7 pI_R8 pI_R9 pI_R10 pI_R11 pI_R12 pI_R13 pI_R14 pI_R15 pI_R16 pH_R12 aI_L2 aI_L3 aI_L4 aI_L5 A_L4 pI_L14 CinG_L2 |
@@ -27,16 +27,16 @@
 | EL048 | Bern | 2026-10-02 20:53 | 11.5 | ok | 17700-19180 s | 111 | 78 | 7 | · | 11 | WM reference, 10 contacts (skipped as data) | BIDS TSV | 10 | AHL1 | · | 59 | 0 | · | A_R9 EKG EKG- EntG_R12 PHG_R15 aH_L8 aH_L9 pH_R13 pH_R14 pH_R15 |
 | EL051 | Bern | 2026-09-30 22:08 | 8.9 | ok | none | 155 | 122 | 18 | · | 41 | WM reference, 3 contacts (skipped as data) | BIDS TSV | 3 | PHR8 VIMR12 | POp_R1 | 70 | 0 | · | EKG+ EKG- VIM_1 VIM_10 VIM_11 VIM_12 VIM_13 VIM_14 VIM_15 VIM_16 VIM_17 VIM_18 VIM_2 VIM_3 VIM_4 VIM_5 VIM_6 VIM_7 VIM_8 VIM_9 aH_R13 aSMG_4 aSMG_5 aSMG_6 aSMG_7 aSMG_8 pH_R10 pH_R11 pH_R12 pH_R13 pH_R7 pH_R9 pSPL_3 pSTG_3 pSTG_4 pSTG_5 pSTG_6 pSTG_7 pSTG_8 pSTG_9 |
 | EL052 | Bern | 2026-09-30 21:57 | 11.2 | ok | 0-1640 s | 163 | 128 | 14 | · | 32 | WM reference, 5 contacts (skipped as data) | BIDS TSV | 5 | PULR16 | · | 84 | 0 | · | ANT_R14 ANT_R15 A_L10 A_L11 A_L12 A_L13 A_L9 A_R10 A_R11 A_R12 A_R13 A_R9 Chin- EKG- EMG- EntG_R11 PrCG_R6 PrCG_R7 Pul_R11 aH_L10 aH_L11 aH_L12 aH_L13 aH_L7 aH_L8 aH_L9 aH_R1 aH_R12 aH_R13 pH_L12 pH_L13 |
-| PAT_3455 | HUG | 2026-10-12 16:28 | 17.6 | ok | 250-1836 s | 121 | 117 | 0 | · | 19 | WM reference, 11 contacts (skipped as data) | BIDS TSV | 11 | CPD10 CPD11 CPD12 CPD2 CPD9 OPD5 OTD8 TSP4 TSP5 TSP6 | · | 87 | 0 | photo | HAD9 HAD10 HPD1 IMD1 IPD1 HAD1 AD1 OPD1 PHD1 |
+| PAT_3455 | HUG | 2026-10-16 00:59 | 17.6 | ok | 250-1836 s | 121 | 117 | 0 | · | 19 | WM reference, 11 contacts (skipped as data) | BIDS TSV | 11 | CPD10 CPD11 CPD12 CPD2 CPD9 OPD5 OTD8 TSP4 TSP5 TSP6 | · | 86 | 0 | · | HAD9 HAD10 HPD1 IMD1 IPD1 HAD1 AD1 OPD1 PHD1 |
 | PAT_2868 | HUG | 2026-09-30 22:13 | 7.9 | ok | 140-1500 s | 74 | 64 | 0 | · | 1 | WM reference, 23 contacts (skipped as data) | BIDS TSV | 23 | · | · | 39 | 0 | · | IDM3 |
 | PAT_3066 | HUG | 2026-09-30 20:24 | 25.2 | ok | 260-1900 s | 212 | 200 | 2 | · | 0 | WM reference, 46 contacts (skipped as data) | BIDS TSV | 46 | · | · | 152 | 0 | · | · |
 | PAT_3390 | HUG | 2026-09-30 21:42 | 15.1 | ok | 170-1222 s | 130 | 119 | 0 | · | 1 | WM reference, 22 contacts (skipped as data) | BIDS TSV | 22 | · | · | 95 | 0 | · | PHG12 |
 | PAT_3415 | HUG | 2026-09-30 20:59 | 5.0 | ok | 30-1500 s | 171 | 149 | 96 | · | 18 | WM reference, 6 contacts (skipped as data) | BIDS TSV | 6 | HLG17 HLG18 | IMG8 IPG15 | 29 | 0 | · | HLG1 HLG2 HLG3 HLG4 HLG5 HLG6 HLG7 HLG8 HLG9 HLG10 HLG11 HLG12 HLG13 HLG14 HLG15 HLG16 |
-| PAT_3965 | HUG | 2026-10-05 23:06 | 32.4 | ok | 40-1311 s | 233 | 222 | 4 | · | 7 | WM reference, 43 contacts (skipped as data) | BIDS TSV | 43 | CMD12 | · | 168 | 0 | · | cmd11 y1 y2 y3 y4 had2 |
-| PAT_3975 | HUG | 2026-10-12 15:34 | 30.4 | ok | 200-1550 s | 226 | 212 | 8 | · | 53 | WM reference, 11 contacts (MANUAL list) | BIDS TSV | 11 | · | · | 140 | 0 | · | TPG1 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6 HAG1 HAG2 HAG3 HAD1 HAD2 HAD3 HAD4 FOD1 TPG2 TPG3 TPG4 TPG5 TPD1 TPD2 TPD3 TPD4 TPD5 AD1 AD2 AD3 AD4 AD5 AD6 AD7 AD8 AD9 AD10 AG1 AG2 AG3 AG4 AG5 HAD5 HAD6 HAD7 HAD8 PHG1 PHG2 AG6 IAG1 IAG2 IAG3 IAG4 IMD16 IMD17 IMD18 |
+| PAT_3965 | HUG | 2026-10-16 16:45 | 29.4 | ok | 40-1311 s | 233 | 222 | 4 | · | 19 | WM reference, 42 contacts (skipped as data) | BIDS TSV | 42 | CMD12 CMD3 | · | 158 | 0 | · | cmd11 y1 y2 y3 y4 had2 had1 had3 had4 ad1 ad2 ad3 ad4 ad5 cmd1 cmd2 cmd4 |
+| PAT_3975 | HUG | 2026-10-16 16:19 | 24.7 | ok | 200-1550 s | 226 | 212 | 8 | · | 57 | WM reference, 10 contacts (MANUAL list) | BIDS TSV | 10 | CPD2 | · | 137 | 0 | · | TPG1 CPD1 CPD3 CPD4 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6 HAG1 HAG2 HAG3 HAD1 HAD2 HAD3 HAD4 FOD1 TPG2 TPG3 TPG4 TPG5 TPD1 TPD2 TPD3 TPD4 TPD5 AD1 AD2 AD3 AD4 AD5 AD6 AD7 AD8 AD9 AD10 AG1 AG2 AG3 AG4 AG5 HAD5 HAD6 HAD7 HAD8 PHG1 PHG2 AG6 IAG1 IAG2 IAG3 IAG4 IMD16 IMD17 IMD18 |
 | PAT_3780 | HUG | 2026-10-07 22:12 | 19.3 | ok | none | 152 | 136 | 5 | · | 5 | WM reference, 15 contacts (skipped as data) | BIDS TSV | 15 | · | · | 112 | 0 | · | FAP9 HAG1 HAG2 TPG1 TPG2 |
 | PAT_6953 | HUG | 2026-09-30 20:17 | 22.0 | ok | 189-1182 s | 193 | 182 | 5 | · | 0 | WM reference, 30 contacts (skipped as data) | BIDS TSV | 30 | · | · | 147 | 0 | · | · |
-| PAT_1327 | HUG | 2026-09-30 19:57 | 28.1 | ok | none | 236 | 224 | 10 | · | 8 | WM reference, 44 contacts (skipped as data) | BIDS TSV | 44 | · | · | 162 | 0 | · | CAG5 CPG1 IAG10 PHG2 PHG3 FOD7 HAG2 AG8 |
+| PAT_1327 | HUG | 2026-10-16 01:24 | 26.5 | ok | none | 236 | 224 | 10 | · | 25 | WM reference, 43 contacts (skipped as data) | BIDS TSV | 43 | HAG5 | · | 146 | 0 | · | CAG5 CPG1 IAG10 PHG2 PHG3 FOD7 HAG2 AG8 HAG1 HAG3 HAG4 HAG6 HAG7 HAG8 HAG9 HAG10 HAG11 HAG12 AG4 AG5 AG6 AG7 AG9 AG10 |
 
 ## 2. Trials and cubes per condition
 
@@ -63,16 +63,16 @@
 | EL048 | 53 | 39 | 39 | 59 | 54 | 42 | 42 | 59 | 53 | 34 | 34 | 59 | 103x300 | 0 | audio/picture/reading |
 | EL051 | 53 | 47 | 47 | 70 | 54 | 47 | 47 | 70 | 53 | 41 | 41 | 70 | 103x300 | 0 | audio/picture/reading |
 | EL052 | 53 | 42 | 42 | 84 | 54 | 47 | 47 | 84 | 53 | 42 | 42 | 84 | 103x300 | 0 | audio/picture/reading |
-| PAT_3455 | 48 | 42 | 42 | 86 | 53 | 47 | 47 | 86 | 51 | 40 | 40 | 86 | 103x300 | 0 | audio/picture/reading |
+| PAT_3455 | 48 | 38 | 38 | 86 | 53 | 40 | 40 | 86 | 51 | 32 | 32 | 86 | 103x300 | 0 | audio/picture/reading |
 | PAT_2868 | 53 | 40 | 40 | 39 | 54 | 46 | 46 | 39 | 53 | 51 | 51 | 39 | 103x300 | 0 | audio/picture/reading |
 | PAT_3066 | 50 | 32 | 32 | 152 | 54 | 50 | 50 | 152 | 50 | 44 | 44 | 152 | 103x300 | 0 | audio/picture/reading |
 | PAT_3390 | 53 | 46 | 46 | 95 | 54 | 49 | 49 | 95 | 53 | 43 | 43 | 95 | 103x300 | 0 | audio/picture/reading |
 | PAT_3415 | 53 | 45 | 45 | 29 | 54 | 49 | 49 | 29 | 53 | 45 | 45 | 29 | 103x300 | 0 | audio/picture/reading |
-| PAT_3965 | 50 | 45 | 45 | 168 | 51 | 48 | 48 | 168 | 51 | 43 | 43 | 168 | 103x300 | 0 | audio/picture/reading |
-| PAT_3975 | 50 | 40 | 40 | 140 | 50 | 40 | 40 | 140 | 50 | 29 | 29 | 140 | 103x300 | 0 | audio/picture/reading |
+| PAT_3965 | 50 | 45 | 45 | 158 | 51 | 48 | 48 | 158 | 51 | 43 | 43 | 158 | 103x300 | 0 | audio/picture/reading |
+| PAT_3975 | 50 | 36 | 36 | 137 | 50 | 37 | 37 | 137 | 50 | 26 | 26 | 137 | 103x300 | 0 | audio/picture/reading |
 | PAT_3780 | 50 | 39 | 39 | 112 | 51 | 46 | 46 | 112 | 49 | 42 | 42 | 112 | 103x300 | 0 | audio/picture/reading |
 | PAT_6953 | 53 | 39 | 39 | 147 | 51 | 42 | 42 | 147 | 53 | 38 | 38 | 147 | 103x300 | 0 | audio/picture/reading |
-| PAT_1327 | 52 | 34 | 34 | 162 | 54 | 51 | 51 | 162 | 53 | 43 | 43 | 162 | 103x300 | 0 | audio/picture/reading |
+| PAT_1327 | 52 | 34 | 34 | 146 | 54 | 51 | 51 | 146 | 53 | 43 | 43 | 146 | 103x300 | 0 | audio/picture/reading |
 
 ## 3. Notch and QC
 
@@ -86,7 +86,7 @@
 | EL030 | interp | per shaft | · | 64/64 over 8 shafts | 0 | 7 | 64/64 over 8 shafts | 0 | 6 | 64/64 over 8 shafts | 0 | 7 | 20 | 82 | 82 | 164 | 82 |
 | EL031 | interp | per shaft | · | 39/40 over 5 shafts | 0 | 5 | 39/40 over 5 shafts | 0 | 4 | 40/40 over 5 shafts | 0 | 2 | 11 | 43 | 43 | 86 | 43 |
 | EL033 | interp | per shaft | · | 54/56 over 7 shafts | 0 | 5 | 51/56 over 7 shafts | 0 | 5 | 54/56 over 7 shafts | 0 | 4 | 14 | 63 | 63 | 126 | 63 |
-| EL034 | interp | per shaft | · | 71/72 over 9 shafts | 0 | 1 | 66/72 over 9 shafts | 0 | 7 | 71/72 over 9 shafts | 0 | 4 | 12 | 53 | 52 | 104 | 52 |
+| EL034 | interp | per shaft | · | 57/64 over 8 shafts | 0 | 1 | 57/64 over 8 shafts | 0 | 7 | 59/64 over 8 shafts | 0 | 3 | 11 | 52 | 52 | 104 | 52 |
 | EL035 | interp | per shaft | · | 110/112 over 14 shafts | 1 | 38 | 111/112 over 14 shafts | 0 | 36 | 110/112 over 14 shafts | 0 | 34 | 109 | 87 | 87 | 174 | 87 |
 | EL036 | interp | per shaft | 50.0 | 54/56 over 7 shafts | 0 | 8 | 55/56 over 7 shafts | 0 | 7 | 54/56 over 7 shafts | 0 | 8 | 23 | 45 | 45 | 90 | 45 |
 | EL037 | interp | per shaft | 50.0 | 88/88 over 11 shafts | 0 | 8 | 88/88 over 11 shafts | 0 | 7 | 88/88 over 11 shafts | 0 | 5 | 20 | 83 | 83 | 166 | 83 |
@@ -99,16 +99,16 @@
 | EL048 | interp | per shaft | 50.0 | 51/161 over 7 shafts | 0 | 3 | 49/161 over 7 shafts | 0 | 4 | 53/161 over 7 shafts | 0 | 4 | 11 | 59 | 59 | 118 | 59 |
 | EL051 | interp | per shaft | · | 71/80 over 10 shafts | 0 | 27 | 76/80 over 10 shafts | 0 | 33 | 77/80 over 10 shafts | 0 | 29 | 89 | 70 | 70 | 140 | 70 |
 | EL052 | interp | per shaft | · | 92/112 over 14 shafts | 0 | 10 | 90/112 over 14 shafts | 0 | 12 | 93/112 over 14 shafts | 0 | 24 | 46 | 84 | 84 | 168 | 84 |
-| PAT_3455 | interp | per shaft | · | 89/96 over 12 shafts | 0 | 7 | 89/96 over 12 shafts | 0 | 7 | 89/96 over 12 shafts | 0 | 7 | 21 | 87 | 87 | 172 | 86 |
+| PAT_3455 | interp | per shaft | · | 89/96 over 12 shafts | 0 | 7 | 89/96 over 12 shafts | 0 | 7 | 89/96 over 12 shafts | 0 | 7 | 21 | 86 | 86 | 172 | 86 |
 | PAT_2868 | interp | per shaft | · | 30/104 over 13 shafts | 0 | 9 | 23/104 over 13 shafts | 2 | 16 | 26/104 over 13 shafts | 0 | 8 | 35 | 39 | 39 | 78 | 39 |
 | PAT_3066 | interp | per shaft | · | 29/136 over 17 shafts | 0 | 16 | 29/136 over 17 shafts | 0 | 17 | 29/136 over 17 shafts | 0 | 13 | 46 | 152 | 152 | 304 | 152 |
 | PAT_3390 | interp | per shaft | · | 12/88 over 11 shafts | 0 | 4 | 8/88 over 11 shafts | 0 | 5 | 10/88 over 11 shafts | 0 | 6 | 15 | 95 | 95 | 190 | 95 |
 | PAT_3415 | interp | per shaft | · | 10/24 over 3 shafts | 0 | 1 | 8/24 over 3 shafts | 0 | 2 | 8/24 over 3 shafts | 0 | 1 | 4 | 29 | 29 | 58 | 29 |
-| PAT_3965 | interp | per shaft | · | 49/144 over 18 shafts | 0 | 9 | 49/144 over 18 shafts | 0 | 5 | 52/144 over 18 shafts | 0 | 5 | 19 | 168 | 168 | 336 | 168 |
-| PAT_3975 | interp | per shaft | · | 11/128 over 16 shafts | 0 | 7 | 11/128 over 16 shafts | 0 | 6 | 13/128 over 16 shafts | 0 | 8 | 21 | 140 | 140 | 280 | 140 |
+| PAT_3965 | interp | per shaft | · | 48/144 over 18 shafts | 0 | 8 | 51/144 over 18 shafts | 0 | 6 | 53/144 over 18 shafts | 0 | 5 | 19 | 158 | 158 | 316 | 158 |
+| PAT_3975 | interp | per shaft | · | 11/104 over 13 shafts | 0 | 5 | 8/104 over 13 shafts | 0 | 5 | 12/104 over 13 shafts | 0 | 5 | 15 | 137 | 137 | 274 | 137 |
 | PAT_3780 | interp | per shaft | · | 13/104 over 13 shafts | 0 | 13 | 16/104 over 13 shafts | 0 | 12 | 16/104 over 13 shafts | 0 | 12 | 37 | 112 | 112 | 224 | 112 |
 | PAT_6953 | interp | per shaft | · | 30/128 over 16 shafts | 0 | 5 | 31/128 over 16 shafts | 0 | 4 | 33/128 over 16 shafts | 0 | 7 | 16 | 147 | 147 | 294 | 147 |
-| PAT_1327 | interp | per shaft | · | 40/144 over 18 shafts | 0 | 3 | 38/144 over 18 shafts | 0 | 4 | 36/144 over 18 shafts | 0 | 4 | 11 | 162 | 162 | 324 | 162 |
+| PAT_1327 | interp | per shaft | · | 36/136 over 17 shafts | 0 | 4 | 34/136 over 17 shafts | 0 | 4 | 32/136 over 17 shafts | 0 | 4 | 12 | 146 | 146 | 292 | 146 |
 
 ## 4. Bad lists and WM references
 
@@ -164,13 +164,13 @@
   WM reference (22): AG6 CAG10 CAG8 CAG9 CPG1 CPG2 CPG3 FOG10 FOG11 FOG12 FOG2 FOG4 FOG5 FOG9 HPG7 IAG1 IAG2 IAG3 IAG4 PHG5 TOL3 TOL4
 - **PAT_3415** bad (18): HLG1 HLG2 HLG3 HLG4 HLG5 HLG6 HLG7 HLG8 HLG9 HLG10 HLG11 HLG12 HLG13 HLG14 HLG15 HLG16 HLG17 HLG18  
   WM reference (6): IMG15 IMG16 IMG17 IPG10 IPG12 IPG13
-- **PAT_3965** bad (7): cmd11 y1 y2 y3 y4 cmd12 had2  
-  WM reference (43): AD9 CAD7 CAG2 CAG3 CAG5 CAG8 CMD3 CMD9 CMG4 CMG7 CMG8 CMG9 CPD14 CPD15 CPD5 CPG10 CPG12 CPG3 CPG9 HAD7 HAG7 HPD5 HPG12 IAD1 IAD15 IAD16 IAD5 IAD6 IAD7 IAD8 IAG13 IAG16 IAG7 IMD11 IMD4 IMG16 IMG18 IMG3 IMG8 IMG9 POD1 POG1 POG3
-- **PAT_3975** bad (53): TPG1 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6 HAG1 HAG2 HAG3 HAD1 HAD2 HAD3 HAD4 FOD1 TPG2 TPG3 TPG4 TPG5 TPD1 TPD2 TPD3 TPD4 TPD5 AD1 AD2 AD3 AD4 AD5 AD6 AD7 AD8 AD9 AD10 AG1 AG2 AG3 AG4 AG5 HAD5 HAD6 HAD7 HAD8 PHG1 PHG2 AG6 IAG1 IAG2 IAG3 IAG4 IMD16 IMD17 IMD18  
-  WM reference (11): CPD2 CPG3 CPG4 CPG5 CPG6 CPG7 FOG3 IAD9 IAG8 IMD10 IMD9
+- **PAT_3965** bad (19): cmd11 y1 y2 y3 y4 cmd12 had2 had1 had3 had4 ad1 ad2 ad3 ad4 ad5 cmd1 cmd2 cmd3 cmd4  
+  WM reference (42): AD9 CAD7 CAG2 CAG3 CAG5 CAG8 CMD9 CMG4 CMG7 CMG8 CMG9 CPD14 CPD15 CPD5 CPG10 CPG12 CPG3 CPG9 HAD7 HAG7 HPD5 HPG12 IAD1 IAD15 IAD16 IAD5 IAD6 IAD7 IAD8 IAG13 IAG16 IAG7 IMD11 IMD4 IMG16 IMG18 IMG3 IMG8 IMG9 POD1 POG1 POG3
+- **PAT_3975** bad (57): TPG1 CPD1 CPD2 CPD3 CPD4 PHD1 PHD2 PHD3 PHD4 PHD5 PHD6 HAG1 HAG2 HAG3 HAD1 HAD2 HAD3 HAD4 FOD1 TPG2 TPG3 TPG4 TPG5 TPD1 TPD2 TPD3 TPD4 TPD5 AD1 AD2 AD3 AD4 AD5 AD6 AD7 AD8 AD9 AD10 AG1 AG2 AG3 AG4 AG5 HAD5 HAD6 HAD7 HAD8 PHG1 PHG2 AG6 IAG1 IAG2 IAG3 IAG4 IMD16 IMD17 IMD18  
+  WM reference (10): CPG3 CPG4 CPG5 CPG6 CPG7 FOG3 IAD9 IAG8 IMD10 IMD9
 - **PAT_3780** bad (5): FAP9 HAG1 HAG2 TPG1 TPG2  
   WM reference (15): FLP6 FMA6 FMA7 FMP8 FPS1 HAG4 IMG13 IMG17 IMG18 IMG4 IMG5 IMG6 IMG7 TOG2 TPG7
 - **PAT_6953** bad (0): ·  
   WM reference (30): AD6 FOD6 FOD9 GHD3 GHD6 HPD5 HPD6 IAD8 IMD10 IMD13 IMD14 IMD5 IPD10 IPD11 IPD14 IPD15 IPD16 IPD9 OID4 OSD1 OSD2 OSD3 OSD6 PHD4 PHD7 TPD1 TPD2 TPD3 TPD9 TPG5
-- **PAT_1327** bad (8): CAG5 CPG1 IAG10 PHG2 PHG3 FOD7 HAG2 AG8  
-  WM reference (44): CAD1 CAD5 CAG1 CAG10 CAG7 CPD1 CPD13 CPD14 CPG12 CPG14 CPG15 CPG2 FOG10 FOG13 FOG4 FOG5 FOG8 FOG9 HAG5 IAD14 IAD15 IAD3 IAD4 IAD8 IAG1 IAG14 IAG2 IAG3 IAG4 IAG6 IMG1 IMG10 IMG11 IMG17 IMG2 IPD1 IPD11 IPD12 IPD13 IPD14 IPD15 IPD7 PHG7 TSG4
+- **PAT_1327** bad (25): CAG5 CPG1 IAG10 PHG2 PHG3 FOD7 HAG2 AG8 HAG1 HAG3 HAG4 HAG5 HAG6 HAG7 HAG8 HAG9 HAG10 HAG11 HAG12 AG4 AG5 AG6 AG7 AG9 AG10  
+  WM reference (43): CAD1 CAD5 CAG1 CAG10 CAG7 CPD1 CPD13 CPD14 CPG12 CPG14 CPG15 CPG2 FOG10 FOG13 FOG4 FOG5 FOG8 FOG9 IAD14 IAD15 IAD3 IAD4 IAD8 IAG1 IAG14 IAG2 IAG3 IAG4 IAG6 IMG1 IMG10 IMG11 IMG17 IMG2 IPD1 IPD11 IPD12 IPD13 IPD14 IPD15 IPD7 PHG7 TSG4
