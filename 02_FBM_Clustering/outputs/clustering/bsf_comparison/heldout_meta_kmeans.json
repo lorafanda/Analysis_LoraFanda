@@ -34,15 +34,12 @@
     "kmeans"
   ],
   "feature_sets": [
-    "concat_hg",
-    "concat_rawds",
+    "concat_bands15",
     "concat_bands5",
-    "concat_bands5z"
+    "concat_bands2",
+    "concat_hfa"
   ],
   "spaces": "home",
-  "sources": {
-    "concat_hg": "kmeans\\concat_hg\\runs\\20260817_171544",
-    "concat_rawds": "kmeans\\concat_rawds\\runs\\20260817_171634"
-  },
-  "written": "2026-09-15 00:51:24"
+  "sources": {},
+  "written": "2026-10-17 19:32:58"
 }

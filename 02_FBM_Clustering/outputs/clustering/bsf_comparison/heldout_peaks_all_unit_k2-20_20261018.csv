@@ -1,0 +1,13 @@
+feature_set,scheme,method_label,k_peak,peak,at_k8,monotone,k_max_tested
+concat_bands15,unit-norm,Ward,20,0.40126490418207106,0.3303879915565898,True,20
+concat_bands15,unit-norm,convex NMF,20,0.592126574986848,0.4868431081087283,True,20
+concat_bands15,unit-norm,k-means,20,0.4037870165937645,0.33488846193375504,True,20
+concat_bands2,unit-norm,Ward,20,0.42931387932597026,0.3644679307300991,True,20
+concat_bands2,unit-norm,convex NMF,20,0.6576124642145289,0.5634371578638108,True,20
+concat_bands2,unit-norm,k-means,20,0.4355512566890756,0.3717005193124126,True,20
+concat_bands5,unit-norm,Ward,20,0.46086639334430324,0.38419270897635877,True,20
+concat_bands5,unit-norm,convex NMF,20,0.6727010204523765,0.5439346815528676,True,20
+concat_bands5,unit-norm,k-means,20,0.46604941066247974,0.3887973836369755,True,20
+concat_hfa,unit-norm,Ward,20,0.5899036400500258,0.521352332259245,True,20
+concat_hfa,unit-norm,convex NMF,20,0.7595415908082511,0.7056863625688824,True,20
+concat_hfa,unit-norm,k-means,20,0.5960685330892955,0.5302527726499715,True,20

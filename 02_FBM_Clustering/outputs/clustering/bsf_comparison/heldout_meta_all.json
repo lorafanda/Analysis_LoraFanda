@@ -1,0 +1,56 @@
+{
+  "ks": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30
+  ],
+  "row_folds": 4,
+  "col_folds": 4,
+  "n_iter": {
+    "kmeans": 300,
+    "hierarchical": 300,
+    "cnmf": 300
+  },
+  "methods": [
+    "kmeans",
+    "hierarchical",
+    "cnmf"
+  ],
+  "feature_sets": [
+    "concat_bands15",
+    "concat_bands5",
+    "concat_bands2",
+    "concat_hfa"
+  ],
+  "spaces": "home",
+  "sources": {
+    "kmeans": "heldout_variance_kmeans.csv (2026-10-17 19:32:58)",
+    "hierarchical": "heldout_variance_hierarchical.csv (2026-10-17 19:37:44)",
+    "cnmf": "heldout_variance_cnmf.csv (2026-10-17 20:57:55)"
+  },
+  "note": "ALL = the three per-method home passes written by 240/241/242 on v17, merged 2026-10-21; the 2026-10-18 00:06 ALL (make_paper2_outputs select phase: --spaces unit, K 2-20, 150 iterations) is kept as *_unit_k2-20_20261018.*",
+  "written": "2026-10-21 18:18:13"
+}

@@ -1,0 +1,9 @@
+patient_id,electrode,n_cond,n_high,norm,excluded_patient,filtered,gated,in_cohort,matched,matched_via_raw_only,has_xyz
+EL044,P10,1,1,P10,True,False,True,False,False,False,False
+EL044,P3,1,0,P3,True,False,False,False,False,False,False
+EL044,P4,1,1,P4,True,False,True,False,False,False,False
+EL044,P7,1,1,P7,True,False,True,False,False,False,False
+EL044,P8,1,1,P8,True,False,True,False,False,False,False
+EL044,P9,1,1,P9,True,False,True,False,False,False,False
+EL044,T7,1,1,T7,True,False,True,False,False,False,False
+EL044,T8,1,1,T8,True,False,True,False,False,False,False

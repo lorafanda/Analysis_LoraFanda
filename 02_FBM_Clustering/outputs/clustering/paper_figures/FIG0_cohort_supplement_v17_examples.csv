@@ -1,0 +1,7 @@
+side,patient,electrode,condition,bins_pos,need_pos,bins_neg,need_neg,passes,margin,thr_pos,thr_neg
+kept,EL051,ANT_4,audio,147,618,17,1236,False,0.23786407766990292,2.2,-3.0
+kept,EL051,ANT_4,picture,92,618,35,1236,False,0.14886731391585759,2.2,-3.0
+kept,EL051,ANT_4,reading,622,618,22,1236,True,1.0064724919093853,2.2,-3.0
+discarded,EL051,ANT_1,audio,166,618,11,1236,False,0.26860841423948223,2.2,-3.0
+discarded,EL051,ANT_1,picture,144,618,21,1236,False,0.23300970873786409,2.2,-3.0
+discarded,EL051,ANT_1,reading,613,618,34,1236,False,0.9919093851132685,2.2,-3.0
