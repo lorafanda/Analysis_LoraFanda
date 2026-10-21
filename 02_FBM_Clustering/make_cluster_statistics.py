@@ -237,28 +237,42 @@ def shaft_null_groups(shafts, sizes, rng):
     return fake
 
 
-def predict_any(A_fit, labels_fit, A_new, k, method):
-    """Place NEW rows with a model fitted on A_fit - the step the refit test never takes.
+def fit_with_predictor(A_fit, k, seed, method):
+    """(labels on A_fit, a function that places NEW rows with THAT SAME fit).
 
-    cnmf   each new electrode gets its own loadings by non-negative least squares onto
-           the fitted components (the projection cv_rank_curve already uses), then the
-           argmax of the row-normalised loadings, exactly as the pipeline hardens a fit.
+    ONE FIT, both outputs. An earlier version took the labels from MS.fit_any and then
+    called convex_nmf AGAIN inside the predictor, with a different seed - two independent
+    convex NMF solutions with their own component orders. The cluster mapping was learned
+    from one and applied to the other, so cNMF scored 12-20% placement, below chance,
+    while k-means scored 90% on the same cohorts. That gap was the bug, not a result.
+
+    cnmf   components from the fit; a new electrode gets its own loadings by non-negative
+           least squares onto them (the projection cv_rank_curve already uses), then the
+           argmax of the row-normalised loadings, as the pipeline hardens a fit.
     kmeans nearest centroid, which is what KMeans.predict is.
     Ward   has no out-of-sample rule at all, so nearest centroid of the fitted clusters
-           stands in. That is the usual stand-in and it is stated rather than hidden:
-           Ward's number here is 'nearest centroid of a Ward partition', not Ward.
+           stands in. Stated rather than hidden: Ward's number here is 'nearest centroid
+           of a Ward partition', not Ward.
     """
     if method == "cnmf":
         from scipy.optimize import nnls
         import lf_decompose as LD
-        _, _, comp = LD.convex_nmf(A_fit, k, n_iter=300, random_state=0)
+        _, G, comp = LD.convex_nmf(A_fit, k, n_iter=300, random_state=seed)
+        labels = (G / np.maximum(G.sum(1, keepdims=True), 1e-12)).argmax(1)
         B = comp.T                                        # n_features x k
-        G = np.vstack([nnls(B, x)[0] for x in A_new])
-        return (G / np.maximum(G.sum(1, keepdims=True), 1e-12)).argmax(1)
-    cent = np.vstack([A_fit[labels_fit == c].mean(0) if (labels_fit == c).any()
+
+        def place(A_new, _B=B):
+            H = np.vstack([nnls(_B, x)[0] for x in A_new])
+            return (H / np.maximum(H.sum(1, keepdims=True), 1e-12)).argmax(1)
+        return labels, place
+
+    labels = MS.fit_any(A_fit, k, seed, method)
+    cent = np.vstack([A_fit[labels == c].mean(0) if (labels == c).any()
                       else np.full(A_fit.shape[1], np.inf) for c in range(k)])
-    d = ((A_new[:, None, :] - cent[None, :, :]) ** 2).sum(2)
-    return d.argmin(1)
+
+    def place(A_new, _c=cent):
+        return ((A_new[:, None, :] - _c[None, :, :]) ** 2).sum(2).argmin(1)
+    return labels, place
 
 
 def lopo_predict(X, groups, k, method, *, seed=42):
@@ -284,27 +298,34 @@ def lopo_predict(X, groups, k, method, *, seed=42):
     """
     from scipy.optimize import linear_sum_assignment
     A = MS.unit(X) if MS.SPACE[method] == "unit-norm" else X
-    base = MS.fit_any(A, k, seed, method)
     rows = []
-    for g in np.unique(groups):
-        held = groups == g
-        keep = ~held
-        lab_keep = MS.fit_any(A[keep], k, seed, method)
-        # align the two labellings on the kept electrodes only
-        C = np.zeros((k, k), float)
-        for a_, b_ in zip(lab_keep, base[keep]):
-            C[a_, b_] += 1
-        r, c = linear_sum_assignment(-C)
-        m = dict(zip(r, c))
-        pred = predict_any(A[keep], lab_keep, A[held], k, method)
-        pred = np.array([m.get(int(p), -1) for p in pred])
-        truth = base[held]
-        acc = float((pred == truth).mean())
-        vals, cnt = np.unique(truth, return_counts=True)
-        chance = float(cnt.max() / cnt.sum())
-        rows.append(dict(group=str(g), n_held_out=int(held.sum()),
-                         acc=acc, chance=chance, lift=acc - chance,
-                         n_clusters_truth=int(len(vals))))
+    for sd in ([seed] if np.isscalar(seed) else list(seed)):
+        # the reference solution is refitted per seed too, so a seed is one whole
+        # self-consistent experiment: convex NMF is non-convex and a single
+        # initialisation gives a number with no error bar at all
+        base = MS.fit_any(A, k, sd, method)
+        for g in np.unique(groups):
+            held = groups == g
+            keep = ~held
+            lab_keep, place = fit_with_predictor(A[keep], k, sd, method)
+            # align the two labellings on the kept electrodes only
+            C = np.zeros((k, k), float)
+            for a_, b_ in zip(lab_keep, base[keep]):
+                C[a_, b_] += 1
+            r, c = linear_sum_assignment(-C)
+            m = dict(zip(r, c))
+            # a matched pair with no shared electrodes is an arbitrary mapping - rare,
+            # but it would be read as a failure of the patient rather than of the match
+            arbitrary = int((C[r, c] == 0).sum())
+            pred = np.array([m.get(int(p), -1) for p in place(A[held])])
+            truth = base[held]
+            acc = float((pred == truth).mean())
+            vals, cnt = np.unique(truth, return_counts=True)
+            chance = float(cnt.max() / cnt.sum())
+            rows.append(dict(seed=int(sd), group=str(g), n_held_out=int(held.sum()),
+                             acc=acc, chance=chance, lift=acc - chance,
+                             n_clusters_truth=int(len(vals)),
+                             arbitrary_mappings=arbitrary))
     return pd.DataFrame(rows)
 
 
