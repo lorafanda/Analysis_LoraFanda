@@ -15,5 +15,5 @@ HFA vs 5 bands: matched r +0.54 against -0.11 for unmatched pairs; mean adjusted
 HFA vs 5 bands z: matched r +0.59 against -0.11 for unmatched pairs; mean adjusted overlap 0.21 (raw Jaccard 0.28); 5 of 6 pairs above the free null, 4 above the within-patient null; diagonal share 0.41 of 1624 electrodes against 0.16 +- 0.08 for random pairings (z 3.1, p < 0.01). Runs 20260924_021756 and 20260924_024006.
 HFA vs 15 bands: matched r +0.45 against -0.09 for unmatched pairs; mean adjusted overlap 0.15 (raw Jaccard 0.23); 5 of 6 pairs above the free null, 4 above the within-patient null; diagonal share 0.36 of 1624 electrodes against 0.17 +- 0.06 for random pairings (z 3.0, p < 0.01). Runs 20260924_021756 and 20260924_022631.
 
-Dots mark clusters more than half held by one patient: cnmf on concat_hg c5 (60%); hierarchical on concat_hg c4 (100%). The within-patient null cannot move a cluster confined to a single patient, so its sd is zero and its z undefined; such a pair is reported without a within-patient p rather than with a p of 1.
-Written 2026-09-24 07:21 from FIG4_matched_K06.csv.
+Dots mark clusters more than half held by one patient: cnmf on concat_hg c5 (68%); kmeans on concat_hg c3 (71%). The within-patient null cannot move a cluster confined to a single patient, so its sd is zero and its z undefined; such a pair is reported without a within-patient p rather than with a p of 1.
+Written 2026-10-09 18:24 from FIG4_matched_K06.csv.
