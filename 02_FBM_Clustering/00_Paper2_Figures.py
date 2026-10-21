@@ -72,6 +72,13 @@ COORDS = (ROOT / "outputs" / "250_recon" / "fsaverage" / "coords"
 MESHES = ROOT / "outputs" / "250_recon" / "fsaverage" / "meshes"
 HELDOUT = CLUST / "bsf_comparison" / "heldout_variance_ALL.csv"
 PEAKS = CLUST / "bsf_comparison" / "heldout_peaks_cnmf.csv"
+# THE SCHEME LABEL IS THE NAME OF THE PASS that wrote the row - "home" (each method's own
+# space) or "unit-norm" (the common-ground pass of make_heldout_variance.py --spaces). Every
+# home space IS unit-norm since 2026-09-06, so the two passes are the same numbers (0 of
+# 156 summary rows differed on 2026-09-28), and a table written with --spaces unit carries
+# "unit-norm" only. Filtering on "home" alone drew an EMPTY panel A in all four v17 FIG 1
+# figures on 2026-10-19, with no warning. Every reader of the table accepts both.
+HOME_SCHEMES = ("home", "unit-norm")
 # THE THREE ALGORITHMS FIG 1 CAN BE DRAWN FOR. cnmf is graded: every electrode has a
 # loading on every cluster, and the renders fade by it. k-means and Ward are HARD
 # partitions: an electrode is in one cluster and in no other, so its "loading" is 1
@@ -641,7 +648,7 @@ def patient_bar(ax, d, j, pcol):
 # ---- panel A -----------------------------------------------------------------
 def panel_A(ax, fset, k, method="cnmf"):
     hv = pd.read_csv(HELDOUT)
-    hv = hv[(hv.method == method) & (hv.scheme == "home")]
+    hv = hv[(hv.method == method) & hv.scheme.isin(HOME_SCHEMES)]
     for fs in FSETS:
         s = (hv[hv.feature_set == fs].groupby("k")["var_explained"]
              .agg(["mean", "std"]).reset_index().sort_values("k"))
@@ -1162,12 +1169,24 @@ def generalization_by_k(d):
                 continue
             share.append(np.bincount(codes[sel], minlength=P).max() / n)
             size.append(n)
-        share, size = np.array(share), np.array(size)
+        share, size = np.array(share), np.array(size, dtype=float)
         dom = share > DANGER
+        # THE SHARE ITSELF, with its spread. Both fractions above count only what is
+        # already over DANGER, so below the line they are flat at zero and a partition
+        # of 45%-one-patient clusters reads the same as one of 15%. Weighted by
+        # cluster size, so this is per ELECTRODE: a 90% cluster of 9 electrodes and
+        # one of 300 are the same point unweighted and very different here.
+        w = size / size.sum()
+        mw = float((share * w).sum())
         rows.append(dict(k=k, n_clusters=len(share), n_dominated=int(dom.sum()),
                          frac_clusters=float(dom.mean()),
                          frac_electrodes=float(size[dom].sum() / size.sum()),
-                         median_share=float(np.median(share))))
+                         median_share=float(np.median(share)),
+                         worst=float(share.max()),
+                         share_mean=float(share.mean()),
+                         share_sd=float(share.std(ddof=0)),
+                         share_mean_w=mw,
+                         share_sd_w=float(np.sqrt((w * (share - mw) ** 2).sum()))))
     return pd.DataFrame(rows).sort_values("k").reset_index(drop=True)
 
 
@@ -1187,7 +1206,7 @@ def panel_D(ax, d, gk, fset):
     # the held-out curve on the same x, faint, because the whole point is that the two
     # criteria pull in opposite directions and the reader has to see both at once
     hv = pd.read_csv(HELDOUT)
-    hv = hv[(hv.method == d.get("method", "cnmf")) & (hv.scheme == "home")
+    hv = hv[(hv.method == d.get("method", "cnmf")) & hv.scheme.isin(HOME_SCHEMES)
             & (hv.feature_set == fset)]
     if not hv.empty:
         sv = hv.groupby("k")["var_explained"].mean().reset_index().sort_values("k")
@@ -1390,7 +1409,7 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     method, hard = d["method"], d["hard"]
     ML = METHOD_LABEL[method]
     hv = pd.read_csv(HELDOUT)
-    hv = hv[(hv.method == method) & (hv.scheme == "home")]
+    hv = hv[(hv.method == method) & hv.scheme.isin(HOME_SCHEMES)]
     curve = hv.groupby(["feature_set", "k"])["var_explained"].mean().reset_index()
     peaks = {f: (int(g.loc[g.var_explained.idxmax(), "k"]),
                  float(g.var_explained.max()))
@@ -1594,7 +1613,7 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("-" * 100)
     A(f"BLOCK ORDER IS NOT CLUSTER ORDER.  Order used: {order_note}.")
     A("")
-    A("Every run labels the SAME 1693 electrodes in the SAME order, so two solutions at")
+    A(f"Every run labels the SAME {n} electrodes in the SAME order, so two solutions at")
     A("one K can be matched 1:1 by Hungarian assignment, and block position can be made")
     A(f"to mean the same cluster in every figure. {MATCH_REF_FSET} ({MATCH_REF_METHOD})")
     A("defines the sequence; its own blocks are ordered by how alike a cluster's three")
@@ -1602,7 +1621,9 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("")
     A("THE REFERENCE IS TAKEN AT THIS FIGURE'S OWN K, so both sides of the match have")
     A("equal K by construction - which 1:1 assignment requires. It follows that a set of")
-    A("figures drawn at DIFFERENT K (the held-out peaks: 11, 12, 14, 13) is matched to a")
+    pk_txt = ", ".join(str(peaks[f_][0]) if f_ in peaks else "?" for f_ in FSETS)
+    A(f"figures drawn at DIFFERENT K (the held-out peaks: {pk_txt} for "
+      f"{', '.join(FS_SHORT[f_] for f_ in FSETS)}) is matched to a")
     A("different reference solution in each figure, and their positions are NOT")
     A("comparable with one another. Only a set drawn at one shared K is.")
     A("")
@@ -1660,7 +1681,7 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("the axis is percent-of-trial and not seconds.")
     if len(d["bands"]) == 1:
         A("")
-        A("concat_hg is a single band (70-150 Hz mean), so the cluster mean is a LINE:")
+        A(f"{fset} is a single band ({d['bands'][0]}), so the cluster mean is a LINE:")
         A(f"the mean over the cluster's electrodes, in {UNITS[fset]}, with a shaded")
         A("band at +/- 1 STANDARD DEVIATION ACROSS THOSE ELECTRODES.")
         A("")
@@ -1695,7 +1716,7 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("same quantity in both representations: +/- 1 STANDARD DEVIATION across the")
     A("electrodes in the cluster, at each point.")
     A("")
-    A("  concat_hg     a shaded band at mean +/- 1 SD")
+    A("  a single-band set (concat_hfa)   a shaded band at mean +/- 1 SD, the mean a line")
     A("  the band sets an OUTLINE enclosing the time-frequency bins where |mean| > SD,")
     A("                i.e. exactly the bins where that band would not span zero")
     A("")
@@ -1809,8 +1830,10 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("  - No statistical test of the clustering. Separation against a matched null,")
     A("    anatomical coherence and leave-one-patient-out are reported separately, and")
     A("    are valid at ONE K only because each is scored against a null refitted at")
-    A("    that K. At the time of writing they exist for concat_hg and concat_rawds")
-    A("    only; concat_bands5 and concat_bands5z have no statistics at any K.")
+    have_stats = (CLUST / "statistics" / f"{fset}_K{K}" / "stats_summary.json").exists()
+    A("    that K. They are written by 249 / make_cluster_statistics.py into")
+    A(f"    outputs/clustering/statistics/<set>_K<K>/ - for this set at K = {K}: "
+      f"{'present' if have_stats else 'not run yet'}.")
     A("  - Panel D and the patient bars are about PATIENT COMPOSITION, which is")
     A("    necessary for a cluster to be a population response type and is not")
     A("    sufficient. A cluster can draw on every patient and still not replicate.")

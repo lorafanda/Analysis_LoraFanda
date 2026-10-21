@@ -494,7 +494,7 @@ def main() -> int:
     f = CLUST / "bsf_comparison" / "heldout_variance_ALL.csv"
     if f.exists():
         d = pd.read_csv(f)
-        d = d[(d.feature_set == FSET) & (d.scheme == "home")]
+        d = d[(d.feature_set == FSET) & d.scheme.isin(("home", "unit-norm"))]
         hv = d if not d.empty else None
 
     made = []

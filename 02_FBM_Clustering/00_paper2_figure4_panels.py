@@ -70,20 +70,29 @@ from matplotlib.gridspec import GridSpec
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "functions"))
 import lf_runs as LR                     # noqa: E402
+import importlib.util
+# the labels and the algorithm set of the correspondence script, so the titles follow
+# whatever it wrote (it moved to concat_bands15 / bands5 / bands2 / hfa on 2026-10-19)
+_spec = importlib.util.spec_from_file_location("f4", ROOT / "00_paper2_figure4_correspondence.py")
+F4 = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(F4)
 
 OUT = ROOT / "outputs" / "clustering" / "paper_figures"
 INK, MUTED, GREY, PALE = "#1b1b1b", "#6b6b6b", "#b9b9b9", "#ededed"
 ALGO_C, FEAT_C = "#1f5f8b", "#a4501f"     # axis A, axis B
 
-TITLE = {
-    "cnmf_vs_kmeans_concat_hg":         ("convex NMF", "k-means"),
-    "cnmf_vs_hierarchical_concat_hg":   ("convex NMF", "Ward"),
-    "kmeans_vs_hierarchical_concat_hg": ("k-means", "Ward"),
-    "cnmf_concat_hg_vs_concat_bands5":  ("HFA", "5 bands"),
-    "cnmf_concat_hg_vs_concat_bands5z": ("HFA", "5 bands z"),
-    "cnmf_concat_hg_vs_concat_rawds":   ("HFA", "15 bands"),
-}
-ORDER = list(TITLE)
+# comparison name -> (label of side 1, label of side 2); filled by load() from the summary
+# table, so a renamed or added feature set needs no edit here. Was a hardcoded map on
+# the retired sets (concat_hg / bands5z / rawds) until 2026-10-21, which left the v17
+# tables unmatched and the figure empty.
+TITLE = {}
+REF_FSET = [None]                        # the feature set axis A is run on (side 1 of every cnmf pair)
+
+
+def pair_labels(s):
+    """(a, b) for one summary row: method names on axis A, feature-set names on axis B."""
+    if str(s.axis).startswith("A"):
+        return (F4.METHOD_LABEL.get(s.method_1, s.method_1), F4.METHOD_LABEL.get(s.method_2, s.method_2))
+    return (F4.FS_LABEL.get(s.feature_set_1, s.feature_set_1), F4.FS_LABEL.get(s.feature_set_2, s.feature_set_2))
 
 
 def adjust(j, j0):
@@ -122,8 +131,13 @@ def load(k, weighting, raw):
     matched["value"] = (matched.overlap if raw
                         else adjust(matched.overlap, matched.null_plain_mean))
     summary = pd.read_csv(OUT / f"FIG4_summary_{tag}.csv")
-    summary = summary.set_index("comparison").loc[
-        [c for c in ORDER if c in set(summary.comparison)]].reset_index()
+    # axis A (algorithms) first, then axis B (feature sets), each in the order written
+    is_a = summary.axis.astype(str).str.startswith("A")
+    summary = pd.concat([summary[is_a], summary[~is_a]], ignore_index=True)
+    TITLE.clear()
+    for _, s in summary.iterrows():
+        TITLE[s.comparison] = pair_labels(s)
+    REF_FSET[0] = str(summary[is_a].feature_set_1.iloc[0]) if is_a.any() else str(summary.feature_set_1.iloc[0])
     mats = {}
     for name in summary.comparison:
         d = pd.read_csv(OUT / f"FIG4_corr_{name}_{tag}.csv")
@@ -193,7 +207,7 @@ def panel_rank(ax, matched, summary, ylab):
         ax.plot(g["rank"], g.value, "-o", ms=3.2, lw=1.25, color=c, alpha=.85,
                 label=f"{a} vs {b}")
     ax.axhline(0, color=GREY, lw=1.0, zorder=0)
-    ax.text(7.45, 0.018, "chance", fontsize=6.8, color=MUTED, va="bottom", ha="left")
+    ax.text(int(matched["rank"].max()) - 0.55, 0.018, "chance", fontsize=6.8, color=MUTED, va="bottom", ha="left")
     ax.set_xlabel("match rank   (greedy, by centroid correlation)", fontsize=8, color=MUTED)
     ax.set_ylabel(ylab, fontsize=8, color=MUTED)
     ax.set_xticks(range(1, int(matched["rank"].max()) + 1))
@@ -220,7 +234,7 @@ def panel_summary(ax, matched, summary):
         nsig.append(int(((g.p_plain < .05) & (g.p_within < .05)).sum()))
     ax.barh(ys, vals, color=cols, height=.52, alpha=.9)
     for y, v, n, lb in zip(ys, vals, nsig, labs):
-        ax.text(v + .008, y, f"{n}/8", va="center", fontsize=6.6, color=MUTED)
+        ax.text(v + .008, y, f"{n}/{len(g)}", va="center", fontsize=6.6, color=MUTED)
         ax.text(0.004, y + .40, lb, va="bottom", ha="left", fontsize=7, color=INK)
     ax.set_yticks([]); ax.set_ylim(-0.7, len(ys) - 0.15)
     ax.set_xlabel("mean adjusted overlap", fontsize=8, color=MUTED)
@@ -230,13 +244,13 @@ def panel_summary(ax, matched, summary):
         ax.spines[s].set_visible(False)
     ax.spines["bottom"].set_color(GREY)
     ax.set_title("agreement, all pairs", fontsize=8.8, color=INK, pad=5)
-    ax.text(0.0, -0.62, "n/8 = pairs clearing both nulls", fontsize=6.3,
+    ax.text(0.0, -0.62, "n/K = pairs clearing both nulls", fontsize=6.3,
             color=MUTED, ha="left", va="center")
 
 
 def panel_left_out(ax, matched, summary, k):
-    names = [n for n in summary.comparison
-             if n.startswith("cnmf_vs_") or n.startswith("cnmf_concat_hg_vs")]
+    names = [s.comparison for _, s in summary.iterrows()
+             if s.method_1 == "cnmf" and s.feature_set_1 == REF_FSET[0]]
     G = np.full((k, len(names)), np.nan)
     P = np.zeros((k, len(names)), bool)
     for c, name in enumerate(names):
@@ -258,7 +272,7 @@ def panel_left_out(ax, matched, summary, k):
     ax.tick_params(length=1.8, colors=MUTED, pad=1.5)
     for sp in ax.spines.values():
         sp.set_color(GREY)
-    ax.set_title("every convex-NMF-on-HFA cluster,\nagainst everything else",
+    ax.set_title(f"every convex-NMF-on-{F4.FS_LABEL.get(REF_FSET[0], REF_FSET[0])} cluster,\nagainst everything else",
                  fontsize=8.8, color=INK, pad=5)
     return im
 
@@ -269,7 +283,7 @@ def caption(matched, summary, k, weighting, onepat, raw):
             "adjusted overlap (J - J0)/(1 - J0), 0 at chance and 1 at identity")
     L = [f"FIG 4  Cluster correspondence at K = {k} ({weighting} weighting).", "",
          "Clusters from two solutions are PAIRED by the correlation between their mean "
-         "5-band z-scored responses - each electrode z-scored across its own features "
+         f"{F4.FS_LABEL.get(F4.SPACE_FSET, F4.SPACE_FSET)} responses - each electrode z-scored across its own features "
          "first, and the mean across a solution's clusters removed - and the pairing is "
          "TESTED on the electrodes the paired clusters share. Nothing about a shape "
          "correlation forces two clusters to hold the same electrodes, so the overlap "
@@ -297,9 +311,9 @@ def caption(matched, summary, k, weighting, onepat, raw):
          "That null re-pairs without re-clustering, so it measures how much of the "
          "diagonal the alignment earned; whether the two solutions agree more than "
          "arbitrary partitions would is what the per-pair nulls above test.",
-         "B  Adjusted overlap by match rank. C  Mean over all eight pairs, with the "
-         "number clearing both nulls. D  Each convex-NMF-on-HFA cluster against the "
-         "five comparisons it appears in; a dot marks a pair clearing both nulls.",
+         "B  Adjusted overlap by match rank. C  Mean over all matched pairs, with the "
+         f"number clearing both nulls. D  Each convex-NMF-on-{F4.FS_LABEL.get(REF_FSET[0], REF_FSET[0])} cluster against the "
+         "comparisons it appears in; a dot marks a pair clearing both nulls.",
          ""]
     for _, s in summary.iterrows():
         a, b = TITLE[s.comparison]

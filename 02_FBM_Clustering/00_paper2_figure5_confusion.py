@@ -5,8 +5,8 @@
     python 00_paper2_figure5_confusion.py --k 6 7 8 9 10  # one figure per K, plus the K-by-K panel
 
 THE QUESTION. FIG 4 compares solutions two at a time and only along one axis at a time
-(algorithms on HFA; feature sets under convex NMF). This puts all nine solutions -
-three algorithms x three feature sets - on both axes of one matrix, so "does the
+(algorithms on one set; feature sets under convex NMF). This puts all twelve solutions -
+three algorithms x four feature sets - on both axes of one matrix, so "does the
 algorithm matter more than the representation" is read off one picture.
 
 THE NUMBER. For a pair of solutions at the same K, the contingency table C (k x k,
@@ -27,9 +27,9 @@ the chance-corrected share (obs - null) / (1 - null), 0 at chance and 1 at ident
 
 THE K-BY-K PANEL (when several K are given). For each solution, the same share between
 its own partition at K_a and at K_b (rectangular table, min(K_a, K_b) matched pairs):
-how much of a partition survives when K moves. Nine small matrices, one per solution.
+how much of a partition survives when K moves. One small matrix per solution.
 
-Every run is the newest under outputs/clustering/<method>/<feature_set>/runs; the nine
+Every run is the newest under outputs/clustering/<method>/<feature_set>/runs; all of them
 must have been fitted on the same cohort, which is checked, not assumed. Written to
 outputs/clustering/paper_figures/FIG5_*.
 """
@@ -57,9 +57,12 @@ _spec = importlib.util.spec_from_file_location("f4", ROOT / "00_paper2_figure4_c
 F4 = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(F4)
 
 METHODS = ["kmeans", "hierarchical", "cnmf"]
-FSETS = ["concat_hg", "concat_rawds", "concat_bands5z"]
+# the four current feature sets (2026-10-21; was concat_hg / rawds / bands5z, all retired)
+FSETS = ["concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa"]
+MAIN_FSET = F4.ALGO_FSET                 # names the files, as FIG 4 does
 ML = {"kmeans": "k-means", "hierarchical": "Ward", "cnmf": "cNMF"}
-FL = {"concat_hg": "HFA", "concat_rawds": "15 bands", "concat_bands5z": "5 bands z"}
+FL = {"concat_bands15": "15 bands", "concat_bands5": "5 bands", "concat_bands2": "2 bands",
+      "concat_hfa": "HFA"}
 INK, MUTED = "#1b1b1b", "#6b6b6b"
 CMAP = LinearSegmentedColormap.from_list("share", ["#f7f7f5", "#c9d7e6", "#5b8fc4", "#1f4e79"])
 
@@ -145,14 +148,14 @@ def heat(ax, M, names, title, vmin, vmax, pv=None, fmt="{:.2f}"):
             s = fmt.format(v)
             if pv is not None and i != j and pv[i, j] >= 0.05:
                 s += "\nns"
-            ax.text(j, i, s, ha="center", va="center", fontsize=6.6,
+            ax.text(j, i, s, ha="center", va="center", fontsize=6.6 if nn <= 9 else 5.4,
                     color="white" if dark else INK, fontweight="bold" if i != j else "normal")
     ax.set_xticks(range(nn)); ax.set_yticks(range(nn))
     ax.set_xticklabels([label(n) for n in names], fontsize=6.4, rotation=40, ha="right")
     ax.set_yticklabels([label(n) for n in names], fontsize=6.4)
     ax.tick_params(length=0)
-    # block lines between algorithms
-    for b in (2.5, 5.5):
+    # block lines between algorithms (names are method-major: len(FSETS) per method)
+    for b in np.arange(len(FSETS), nn - 1, len(FSETS)) - 0.5:
         ax.axhline(b, color="white", lw=2.2); ax.axvline(b, color="white", lw=2.2)
     for s in ax.spines.values():
         s.set_visible(False)
@@ -162,7 +165,7 @@ def heat(ax, M, names, title, vmin, vmax, pv=None, fmt="{:.2f}"):
 
 def draw(res, path, n_perm):
     k, names = res["k"], res["names"]
-    fig, axs = plt.subplots(1, 3, figsize=(15.5, 5.6))
+    fig, axs = plt.subplots(1, 3, figsize=(15.5, 5.6) if len(names) <= 9 else (18.5, 6.6))
     im0 = heat(axs[0], res["S"], names, f"A   diagonal share, K = {k}   (Hungarian on shared electrodes)", 0, 1, pv=res["PV"])
     heat(axs[1], res["NULL"], names, f"B   chance: mean of {n_perm} label shuffles", 0, 1)
     im2 = heat(axs[2], res["ADJ"], names, "C   chance-corrected  (share - chance) / (1 - chance)", 0, 1, pv=res["PV"])
@@ -172,7 +175,7 @@ def draw(res, path, n_perm):
     cb.ax.tick_params(labelsize=7, colors=MUTED, length=2)
     R = res["rows"]
     same_a = R[R.same_algorithm & ~R.same_feature]; same_f = R[R.same_feature & ~R.same_algorithm]; nei = R[~R.same_algorithm & ~R.same_feature]
-    fig.suptitle(f"FIG 5   nine solutions against each other at K = {k}   -   {res['n']} electrodes   -   "
+    fig.suptitle(f"FIG 5   {len(names)} solutions against each other at K = {k}   -   {res['n']} electrodes   -   "
                  f"across algorithms (same features) median {same_f.diagonal_share.median():.2f}, "
                  f"across features (same algorithm) {same_a.diagonal_share.median():.2f}, both differ {nei.diagonal_share.median():.2f}   "
                  f"-   chance {R.null_mean.median():.2f}", fontsize=9.5, color=INK, x=0.02, ha="left")
@@ -185,7 +188,7 @@ def kk_panel(ks, n_perm, seed, path):
     rng = np.random.default_rng(seed)
     sols = {k: load_all(k)[0] for k in ks}
     names = list(sols[ks[0]])
-    fig, axs = plt.subplots(3, 3, figsize=(11, 10.5))
+    fig, axs = plt.subplots(len(METHODS), len(FSETS), figsize=(3.6 * len(FSETS), 3.5 * len(METHODS)))
     rows = []
     for ax, nm in zip(axs.ravel(), names):
         M = np.eye(len(ks)); ADJ = np.eye(len(ks))
@@ -227,22 +230,22 @@ def main() -> int:
     for k in a.k:
         t0 = datetime.now()
         res = matrix_at_k(k, a.n_perm, a.seed)
-        run_tag = res["sols"][("cnmf", "concat_hg")]["run"].name.replace("_", "-")
+        run_tag = res["sols"][("cnmf", MAIN_FSET)]["run"].name.replace("_", "-")
         tag = f"K{k:02d}_run{run_tag}"
         draw(res, OUT / f"FIG5_{tag}.png", a.n_perm)
         res["rows"].to_csv(OUT / f"FIG5_pairs_{tag}.csv", index=False)
         allrows.append(res["rows"])
         R = res["rows"]
-        print(f"K={k}: {res['n']} electrodes, 36 pairs, {a.n_perm} shuffles each, "
+        print(f"K={k}: {res['n']} electrodes, {len(R)} pairs, {a.n_perm} shuffles each, "
               f"{(datetime.now() - t0).seconds}s | share: across algorithms median "
               f"{R[R.same_feature].diagonal_share.median():.3f}, across features "
               f"{R[R.same_algorithm].diagonal_share.median():.3f}, both differ "
               f"{R[~R.same_feature & ~R.same_algorithm].diagonal_share.median():.3f} | chance "
-              f"{R.null_mean.median():.3f} | pairs not above chance: {int((R.p_value >= 0.05).sum())}/36"
+              f"{R.null_mean.median():.3f} | pairs not above chance: {int((R.p_value >= 0.05).sum())}/{len(R)}"
               f" -> FIG5_{tag}.png")
     if len(a.k) > 1:
         # named with the run id like every other paper figure, so the web block keeps one
-        rt = "run" + F4.LR.newest_run("cnmf", "concat_hg").name.replace("_", "-")
+        rt = "run" + F4.LR.newest_run("cnmf", MAIN_FSET).name.replace("_", "-")
         pd.concat(allrows, ignore_index=True).to_csv(OUT / f"FIG5_pairs_allK_{rt}.csv", index=False)
         kk = kk_panel(a.k, a.n_perm, a.seed, OUT / f"FIG5_KbyK_{rt}.png")
         kk.to_csv(OUT / f"FIG5_KbyK_{rt}.csv", index=False)

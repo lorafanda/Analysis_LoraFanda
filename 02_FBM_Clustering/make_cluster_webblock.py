@@ -85,7 +85,7 @@ def discover():
         p = pd.read_csv(pk)
         p = p[p.method_label == "convex NMF"]
         if "scheme" in p.columns:
-            p = p[p.scheme == "home"]
+            p = p[p.scheme.isin(("home", "unit-norm"))]   # both pass labels, see 00_Paper2_Figures.HOME_SCHEMES
         want = {(r.feature_set, int(r.k_peak)) for r in p.itertuples()}
         keep = [t for t in out
                 if (t[1].get("feature_set"), int(t[1].get("K", -1))) in want]

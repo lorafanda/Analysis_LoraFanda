@@ -52,12 +52,20 @@ _spec.loader.exec_module(P2)
 OUT = P2.OUT
 INK, MUTED, GREY, RED, GREEN = P2.INK, P2.MUTED, P2.GREY, P2.RED, P2.GREEN
 
-FSET, K = "concat_hg", 8
+FSET, K = "concat_bands15", 7           # the driver's MAIN / K_MAIN (run_paper_figures_v17.py)
 PX = 1200                                  # Cell Reports: 1200 x 1200, minimal text
 # cluster id -> the label its shape earns. Checked against FIG 1a below.
-SHOW = [(1, "Production"), (3, "Auditory onset"), (6, "Ramp to cue"),
-        (4, "Suppression"), (5, "Reading only")]
-RAMP_ID = 6     # "Ramp to cue" is checked against a MEASURED ramp index in main()
+# PROVISIONAL for the v17 15-band K = 7 fit (2026-10-21): the four labels were read off
+# FIG 1a's blocks by Claude and are not yet Lora's - rename or re-pick before the
+# abstract is used. c5 = 70-400 Hz burst after the GO cue in every condition; c0 =
+# 13-50 Hz decrease through stimulus and response; c2 = broadband high-frequency
+# decrease during the stimulus halves; c4 = 1-13 Hz increase, strongest after the cue.
+SHOW = [(5, "Production"), (0, "Beta decrease"), (2, "Broadband decrease"),
+        (4, "Low-frequency rise")]
+# A SHOW entry carrying this label must be the cluster the pre-cue ramp measurement in
+# main() picks, or the script refuses. On the 15-band K = 7 fit no cluster ramps before
+# the cue (every HFA pre-cue slope is negative), so no entry carries it.
+RAMP_LABEL = "Ramp to cue"
 TILE_BG, TILE_EC = "#f6f7f9", "#dde2e8"
 
 
@@ -90,11 +98,11 @@ def numbers():
     first_bad = gen[gen.n_dominated > 0].k.min()
     n["k_first_onepatient"] = int(first_bad) if pd.notna(first_bad) else None
 
-    ea = pd.read_csv(need(OUT / f"FIG2_agreement_K{K}_electrode_agreement.csv"))
+    ea = pd.read_csv(need(OUT / f"FIG2_agreement_{FSET}_K{K}_electrode_agreement.csv"))
     N = int(ea.n_feature_sets.iloc[0])
     n["n_fsets"] = N
     n["pct_all_agree"] = 100 * float((ea.feature_set_agreement == N).mean())
-    cap = need(OUT / f"FIG2_agreement_K{K}_caption.txt").read_text(encoding="utf-8")
+    cap = need(OUT / f"FIG2_agreement_{FSET}_K{K}_caption.txt").read_text(encoding="utf-8")
     m = re.search(r"feature sets\s+all \d agree:\s*([\d.]+)%\s*\(chance ([\d.]+)%\)", cap)
     n["pct_chance"] = float(m.group(2)) if m else None
 
@@ -108,6 +116,12 @@ def numbers():
     n["lana_n_sig_sh"] = int((la.q_mean_sh < 0.05).sum())
     n["lana_n_clusters"] = int(len(la))
     n["lana_max_abs_rho"] = float(la.rho.abs().max())
+    # the type every algorithm finds: the reference cluster of FIG 2's algorithm half with
+    # the highest minimum Jaccard against k-means and Ward - read from the table, not by eye
+    ca = pd.read_csv(need(OUT / f"FIG2_agreement_{FSET}_K{K}_cluster_agreement.csv"))
+    alg = ca[(ca.half == "algorithm") & (ca.solution != "convex NMF")]
+    jmin = alg.groupby("reference_cluster").jaccard.min()
+    n["robust_cluster"], n["robust_minJ"] = int(jmin.idxmax()), float(jmin.max())
     return n
 
 
@@ -139,11 +153,18 @@ def main() -> int:
     # is AT the cue and its pre-cue slope is negative; c6 rises before it in all three).
     nt = d["nt"]
     g0, g1 = int(0.20 * nt), int(0.50 * nt)
-    ramp = np.array([(means[j][:, 0, int(0.30 * nt):g1].mean(1)
-                      - means[j][:, 0, :g0].mean(1)).mean() for j in range(K)])
-    if int(ramp.argmax()) != RAMP_ID:
-        raise SystemExit(f"largest pre-cue ramp is c{int(ramp.argmax())}, not "
-                         f"c{RAMP_ID} - relabel SHOW before drawing")
+    # on the HFA rows (>= 70 Hz) whatever the feature set: band 0 of a band set is 1-4 Hz
+    hfa = [i for i, b in enumerate(d["bands"]) if P2.band_centre(b) >= 70] or [0]
+    ramp_c = np.stack([means[j][:, hfa, int(0.30 * nt):g1].mean(axis=(1, 2))
+                       - means[j][:, hfa, :g0].mean(axis=(1, 2)) for j in range(K)])
+    ramp = ramp_c.mean(1)
+    RAMP_ID = int(ramp.argmax()) if float(ramp.max()) > 0 else None
+    ramp_ids = [j for j, nm in SHOW if nm == RAMP_LABEL]
+    if ramp_ids and ramp_ids[0] != RAMP_ID:
+        best = (f"c{int(ramp.argmax())} ({ramp.max():+.2f} dB)" if RAMP_ID is not None
+                else "none - every HFA pre-cue slope is negative")
+        raise SystemExit(f"largest pre-cue ramp is {best}, not c{ramp_ids[0]} - "
+                         "relabel SHOW before drawing")
 
     # the labels in SHOW belong to THIS numbering: refuse to draw if the run has moved
     pc = pd.read_csv(need(OUT / f"FIG1a_{FSET}_cnmf_K{K}_patients.csv"))
@@ -157,7 +178,7 @@ def main() -> int:
     fig.patch.set_facecolor("white")
 
     # ---- title ----------------------------------------------------------------
-    fig.text(0.5, 0.952, "Eight response types in human language cortex",
+    fig.text(0.5, 0.952, f"{K} response types in human language cortex",
              ha="center", va="center", fontsize=24, weight="bold", color=INK)
     fig.text(0.5, 0.916, f"sEEG  ·  {d['n_patients']} patients  ·  {len(d['X'])} "
              f"electrodes  ·  one task, three inputs  ·  convex NMF, K = {K}",
@@ -167,7 +188,7 @@ def main() -> int:
     P2.trial_strip(fig.add_axes([0.17, 0.828, 0.66, 0.062]), d)
 
     # ---- four of the eight types -------------------------------------------------
-    fig.text(0.05, 0.792, f"Five of the {K} types", fontsize=13, weight="bold",
+    fig.text(0.05, 0.792, f"{len(SHOW)} of the {K} types", fontsize=13, weight="bold",
              color=INK, va="bottom")
     fig.text(0.95, 0.792, "mean ± 1 SD across electrodes   ·   dashed = GO cue   ·   "
              "each hemisphere from its own side", fontsize=9, color=MUTED, ha="right",
@@ -234,13 +255,15 @@ def main() -> int:
     t.text(0.07, 0.47, f"of electrodes are put in the same type\nby all "
            f"{n['n_fsets']} feature sets{ch}.", fontsize=9.6, color=INK, va="top",
            linespacing=1.35)
-    c3 = P2.cluster_col(3, K)
-    for q in range(4):
-        t.add_patch(Rectangle((0.07 + q * 0.062, 0.155), 0.048, 0.085, fc=c3,
+    jr = n["robust_cluster"]
+    jr_name = dict(SHOW).get(jr, f"c{jr}")
+    cr = P2.cluster_col(jr, K)
+    for q in range(3):
+        t.add_patch(Rectangle((0.07 + q * 0.062, 0.155), 0.048, 0.085, fc=cr,
                               ec="none"))
-    t.text(0.07 + 4 * 0.062 + 0.015, 0.195, "the auditory-onset type is\nfound by "
-           "every feature set\nand every algorithm", fontsize=8.6, color=INK,
-           va="center", linespacing=1.3)
+    t.text(0.07 + 3 * 0.062 + 0.015, 0.195, f"the {jr_name.lower()} type (c{jr}) is\n"
+           f"found by every algorithm\n(Jaccard \u2265 {n['robust_minJ']:.2f} with k-means and Ward)",
+           fontsize=8.6, color=INK, va="center", linespacing=1.3)
 
     # (c) anatomy
     t = tile(fig, 0.05 + 2 * (tw + tg), ty, tw, th)
@@ -270,7 +293,7 @@ def main() -> int:
     # ---- the sentence ------------------------------------------------------------
     fig.text(0.5, 0.135, "A response type is what an electrode does — not where it sits.",
              ha="center", va="center", fontsize=18, weight="bold", color=INK)
-    fig.text(0.5, 0.082, "high-gamma (70–150 Hz) time courses, time-warped so the GO "
+    fig.text(0.5, 0.082, f"{P2.FS_LABEL[FSET]}, time-warped so the GO "
              "cue falls at 50% of every block  ·  nulls: shaft-shift and within-patient "
              "permutation  ·  FDR across types",
              ha="center", va="center", fontsize=8.6, color=MUTED)
@@ -285,6 +308,12 @@ def main() -> int:
         if im.size != (PX, PX):
             raise SystemExit(f"{p.name} is {im.size}, not {(PX, PX)}")
 
+    if RAMP_ID is not None and ramp_ids:
+        ramp_note = [f"  c{RAMP_ID} carries the label; its ramp is positive in "
+                     f"{int((ramp_c[RAMP_ID] > 0).sum())} of 3 conditions."]
+    else:
+        ramp_note = ["  No cluster of this fit ramps before the cue - every HFA pre-cue slope",
+                     "  is negative - so no type is labelled 'Ramp to cue'."]
     names = ", ".join(f"c{j} = {nm}" for j, nm in SHOW)
     P2.save_text("\n".join([
         f"GRAPHICAL ABSTRACT   ·   {PX} x {PX} px   ·   {FSET}, convex NMF, K = {K}",
@@ -301,10 +330,7 @@ def main() -> int:
         "averaged over the three conditions. The cluster drawn under that name must be",
         f"the largest, or this script refuses to run. Ranked (dB):",
         "  " + "   ".join(f"c{j} {ramp[j]:+.2f}" for j in np.argsort(-ramp)),
-        f"  c{RAMP_ID} is also the only cluster whose ramp is positive in all three "
-        "conditions. It is the candidate premotor type; the coordinate table carries",
-        "  no gyral labels, so that stays a candidate. By mean MNI position it is the",
-        "  most dorsal cluster and sits near y = 0, left-leaning.",
+        *ramp_note,
         "",
         "NUMBERS and where each comes from:",
         f"  K = {K}; held-out peak K = {n['k_peak']}      heldout_peaks_cnmf.csv",
@@ -320,9 +346,9 @@ def main() -> int:
         f"  {n['lana_n_sig_sh']} of {n['lana_n_clusters']} above the shaft null at "
         f"q < 0.05; largest |rho| = {n['lana_max_abs_rho']:.3f}   FIG3_..._clusters.csv",
         "",
-        "'The auditory-onset type is found by every feature set and algorithm' is "
-        "FIG 2B/E read by eye (c3 is the one row with no low cell); re-check if FIG 2 "
-        "is re-run.",
+        f"'The {jr_name.lower()} type is found by every algorithm' is read from "
+        "FIG2_..._cluster_agreement.csv: the reference cluster with the highest minimum "
+        f"Jaccard against k-means and Ward (c{jr}, {n['robust_minJ']:.2f}).",
     ]), p.with_name(p.stem + "_caption.txt"))
     print(f"  {time.time() - t0:.0f}s  -> {p.name}  ({PX}x{PX})")
     return 0

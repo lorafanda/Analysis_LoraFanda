@@ -197,7 +197,7 @@ def fig3_bullets(png: Path):
 
 def _peak_k_text():
     """The held-out peaks as 249 measured them, in FS_ORDER, e.g. "9 / 12 / 13 / 14"."""
-    order = ["concat_hg", "concat_rawds", "concat_bands5", "concat_bands5z"]
+    order = ["concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa"]
     try:
         d = json.loads((ROOT / "outputs" / "clustering" / "bsf_comparison"
                         / "peak_k.json").read_text(encoding="utf-8"))
@@ -329,7 +329,7 @@ def fig5_bullets(png):
             f"<b>{both.diagonal_share.median():.2f}</b>; chance (labels shuffled across electrodes, "
             f"cluster sizes kept) <b>{d.null_mean.median():.2f}</b>.")]
     ns = int((d.p_value >= 0.05).sum())
-    out.append(f"<b>{36 - ns} of 36 pairs</b> sit above the 95th percentile of their own null"
+    out.append(f"<b>{len(d) - ns} of {len(d)} pairs</b> sit above the 95th percentile of their own null"
                + (f"; the {ns} that do not are marked <i>ns</i>." if ns else "."))
     return out
 
@@ -376,10 +376,12 @@ def build():
          "LanA probabilistic language atlas. LanA is a prior about a LOCATION, not a "
          "measurement in a patient, so a cluster scoring high sits where language "
          "cortex usually is; whether it responded to language is FIG 1.</p>",
-         "      <p style='margin:8px 0 0'><b>FIG 1 is cut at each feature set's held-out "
-         f"peak</b> ({_peak_k_text()}), on convex NMF; FIG 2 and FIG 3 are cut at "
-         "<b>K = 8</b>, FIG 4 at K = 8 with the neighbouring K either side. The peaks and "
-         "K = 8 disagree, and the disagreement is the point &mdash; held-out variance "
+         "      <p style='margin:8px 0 0'><b>FIG 1 is cut at each feature set's own K</b> "
+         "(15 bands 7, 5 bands 8, 2 bands 10, HFA 6: the largest K with no cluster more "
+         "than half one patient, 249 on the v17 runs), on convex NMF; FIG 2 and FIG 3 are "
+         "cut at <b>K = 7</b> on 15 bands, FIG 4 at K = 7, 8 and 10, FIG 5 at K = 5 to 10. "
+         f"The held-out peaks ({_peak_k_text()}) and those K disagree, and the disagreement "
+         "is the point &mdash; held-out variance "
          "cannot see a cluster that is one patient's electrode strip, because splitting a "
          "cohort until each patient has their own component fits held-out data perfectly "
          "well; the generalization sweep in each FIG 1 says where those clusters "

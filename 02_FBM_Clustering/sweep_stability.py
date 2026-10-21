@@ -62,13 +62,11 @@ CLUST = ROOT / "outputs" / "clustering"
 
 # The runs the K control is offered on. Resolved by track, newest run each, so a
 # re-publish does not leave this pointing at a superseded id.
+# the four live feature sets x three methods (2026-10-21; concat_hg / rawds / bands5z
+# were retired on 10-16 and have no v17 run)
 NEW_CONCAT_TRACKS = [
-    ("cnmf", "concat_hg"), ("cnmf", "concat_rawds"), ("cnmf", "concat_bands5"),
-    ("cnmf", "concat_bands5z"),
-    ("kmeans", "concat_hg"), ("kmeans", "concat_rawds"), ("kmeans", "concat_bands5"),
-    ("kmeans", "concat_bands5z"),
-    ("hierarchical", "concat_hg"), ("hierarchical", "concat_rawds"),
-    ("hierarchical", "concat_bands5"), ("hierarchical", "concat_bands5z"),
+    (m, f) for m in ("cnmf", "kmeans", "hierarchical")
+    for f in ("concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa")
 ]
 
 
@@ -259,7 +257,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default=None)
     ap.add_argument("--new-concat", action="store_true",
-                    help="the six 2026-08 concat runs the K control is offered on")
+                    help="the newest run of every live feature set x method (12)")
     ap.add_argument("--ks", type=int, nargs="+", default=list(range(5, 13)))
     ap.add_argument("--n-runs", type=int, default=50)
     ap.add_argument("--subsample-frac", type=float, default=0.8)

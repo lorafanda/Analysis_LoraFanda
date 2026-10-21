@@ -54,7 +54,11 @@ sys.path.insert(0, str(ROOT / "04_FBM_Pooling"))
 from functions import lf_atlas_corr as A                      # noqa: E402
 
 COORDS = ROOT / "02_FBM_Clustering" / "outputs" / "250_recon" / "fsaverage" / "coords"
-ERSP = ROOT / "01_FBM_Analysis" / "outputs" / "04_ersp_LM_RAWONLY"
+# THE LIVE TREE, not the frozen one. 04_ersp_LM_RAWONLY was archived and then deleted
+# from disk and from git, so this pointed at nothing and ersp_index() raised on
+# iterdir(). The layout is identical - <pid>/LM/ERSP_matrix/<cond>/*.npy - so only
+# the root moves. Source of truth is cfg.ERSP_TREE in 01_FBM_Analysis/functions.
+ERSP = ROOT / "01_FBM_Analysis" / "outputs" / "03_ERSP"
 ATLAS = ROOT / "04_FBM_Pooling" / "federenko_atlas" / "langloc_n806_p_0.05_atlas.nii"
 CLUST = ROOT / "02_FBM_Clustering" / "outputs" / "clustering"
 

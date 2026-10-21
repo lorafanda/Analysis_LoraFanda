@@ -1573,13 +1573,20 @@ EXAMPLES = {
 ROOT = Path(__file__).resolve().parent
 FIGDIR = ROOT / "outputs" / "clustering" / "paper_figures"
 FIGDIR_REL = "02_FBM_Clustering/outputs/clustering/paper_figures"
-FS_ORDER = ["concat_bands5z", "concat_hg", "concat_rawds", "concat_bands5"]
-FS_ROLE = {"concat_bands5z": "standard", "concat_hg": "state of the art",
-           "concat_rawds": "candidate", "concat_bands5": "candidate"}
-FS_NAME = {"concat_hg": "HFA (70-150 Hz)", "concat_rawds": "15 bands",
-           "concat_bands5": "5 bands", "concat_bands5z": "5 bands, z-scored"}
-FIG1_TAG = {"concat_hg": "a", "concat_rawds": "b", "concat_bands5": "c",
-            "concat_bands5z": "d"}
+# THE FOUR LIVE FEATURE SETS, EACH AT ITS OWN K (2026-10-21). The K is the dominance rule
+# of 249 on the v17 runs (largest K with no cluster more than half one patient); the
+# single-set figures (FIG 0, 2, 3) and the abstract are drawn for concat_bands15. Until
+# 2026-10-21 this tab was keyed on the retired sets at K = 8 and would have published
+# the 10-12 renders as the paper.
+FS_ORDER = ["concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa"]
+FS_ROLE = {"concat_bands15": "main", "concat_bands5": "candidate",
+           "concat_bands2": "candidate", "concat_hfa": "state of the art"}
+FS_NAME = {"concat_bands15": "15 bands", "concat_bands5": "5 bands",
+           "concat_bands2": "2 bands (30-50, 70-150 Hz)", "concat_hfa": "HFA (70-150 Hz)"}
+FIG1_TAG = {"concat_bands15": "a", "concat_bands5": "b", "concat_bands2": "c",
+            "concat_hfa": "d"}
+K_SET = {"concat_bands15": 7, "concat_bands5": 8, "concat_bands2": 10, "concat_hfa": 6}
+MAIN_SET, K_MAIN = "concat_bands15", 7
 # THE HELD-OUT PEAK K IS MEASURED, NOT DECIDED HERE. 249 writes it; hardcoding it meant
 # the tab kept quoting the previous cohort's peaks after a refit (on v7 three of the four
 # moved). The literals survive only as a fallback for a tree where 249 has not run.
@@ -1669,61 +1676,78 @@ def carousels():
     tr = _tracked()
     fig1, fig2, fig3 = [], [], []
     for fs in FS_ORDER:
-        t, r, nm = FIG1_TAG[fs], FS_ROLE[fs], FS_NAME[fs]
-        fig1.append(_slide(f"FIG 1{t}  ·  {nm}  ·  K = 8",
-                           f"FIG1{t}_{fs}_cnmf_K8.png", r,
-                           f"00_Paper2_Figures.py --feature-set {fs} --k 8", tr))
-        fig2.append(_slide(f"FIG 2  ·  algorithms on {nm}  ·  K = 8",
-                           f"FIG2_agreement_{fs}_K8.png", r,
-                           f"00_paper2_figures2_2.py --k 8 --algo-feature-set {fs}", tr,
-                           fallback="FIG2_agreement_K8.png" if fs == "concat_hg"
-                           else None))
-        fig3.append(_slide(f"FIG 3  ·  LanA  ·  {nm}  ·  K = 8",
-                           f"FIG3_lana_{fs}_K8.png", r,
-                           f"00_paper2_figure3_lana.py --feature-set {fs} --k 8", tr))
+        t, r, nm, k = FIG1_TAG[fs], FS_ROLE[fs], FS_NAME[fs], K_SET[fs]
+        fig1.append(_slide(f"FIG 1{t}  ·  {nm}  ·  K = {k}",
+                           f"FIG1{t}_{fs}_cnmf_K{k}.png", r,
+                           f"00_Paper2_Figures.py --feature-set {fs} --k {k}", tr))
+        # FIG 2 and FIG 3 are drawn for the main set; another set appears only once
+        # its render exists, so the carousel does not fill with placeholders
+        s2 = _slide(f"FIG 2  ·  algorithms on {nm}  ·  K = {k}",
+                    f"FIG2_agreement_{fs}_K{k}.png", r,
+                    f"00_paper2_figures2_2.py --k {k} --algo-feature-set {fs}", tr)
+        if fs == MAIN_SET or s2["state"] != "missing":
+            fig2.append(s2)
+        s3 = _slide(f"FIG 3  ·  LanA  ·  {nm}  ·  K = {k}",
+                    f"FIG3_lana_{fs}_K{k}.png", r,
+                    f"00_paper2_figure3_lana.py --feature-set {fs} --k {k}", tr)
+        if fs == MAIN_SET or s3["state"] != "missing":
+            fig3.append(s3)
     # the two hard partitions at the same K, after the cNMF K = 8 set and before the
     # held-out peaks, so everything cut at 8 sits together
+    # the hard-method and held-out-peak variants of FIG 1 are listed only where a render
+    # exists (none on v17 so far)
     for method, algo in (("kmeans", "k-means"), ("hierarchical", "Ward")):
         for fs in FS_ORDER:
-            t, nm = FIG1_TAG[fs], FS_NAME[fs]
-            fig1.append(_slide(f"FIG 1{t}  ·  {nm}  ·  {algo}  ·  K = 8",
-                               f"FIG1{t}_{fs}_{method}_K8.png", algo,
-                               f"00_Paper2_Figures.py --feature-set {fs} --k 8 "
-                               f"--method {method}", tr))
+            t, nm, k = FIG1_TAG[fs], FS_NAME[fs], K_SET[fs]
+            s = _slide(f"FIG 1{t}  ·  {nm}  ·  {algo}  ·  K = {k}",
+                       f"FIG1{t}_{fs}_{method}_K{k}.png", algo,
+                       f"00_Paper2_Figures.py --feature-set {fs} --k {k} "
+                       f"--method {method}", tr)
+            if s["state"] != "missing":
+                fig1.append(s)
     for fs in FS_ORDER:
-        t, nm, pk = FIG1_TAG[fs], FS_NAME[fs], PEAK_K[fs]
-        fig1.append(_slide(f"FIG 1{t}  ·  {nm}  ·  held-out peak K = {pk}",
-                           f"FIG1{t}_{fs}_cnmf_K{pk}.png", "held-out peak",
-                           f"00_Paper2_Figures.py --feature-set {fs}", tr))
-    ga = [_slide("Graphical abstract  ·  HG  ·  K = 8",
-                 "GA_graphical_abstract_concat_hg_K8.png", "state of the art",
+        t, nm, pk = FIG1_TAG[fs], FS_NAME[fs], PEAK_K.get(fs)
+        if pk is None or pk == K_SET[fs]:
+            continue
+        s = _slide(f"FIG 1{t}  ·  {nm}  ·  held-out peak K = {pk}",
+                   f"FIG1{t}_{fs}_cnmf_K{pk}.png", "held-out peak",
+                   f"00_Paper2_Figures.py --feature-set {fs}", tr)
+        if s["state"] != "missing":
+            fig1.append(s)
+    ga = [_slide(f"Graphical abstract  ·  {FS_NAME[MAIN_SET]}  ·  K = {K_MAIN}",
+                 f"GA_graphical_abstract_{MAIN_SET}_K{K_MAIN}.png", "main",
                  "make_graphical_abstract.py", tr)]
     # FIG 4 - cluster correspondence. It carries K as K08 rather than K8, and its
     # weighted variant puts the run id BEFORE the suffix (FIG4_K08_run<id>_weighted.png),
     # which resolve_fig's anchored pattern is built to refuse, so that one is found
     # directly. Two slides: the hard-label figure and the loading-weighted one.
-    fig4 = [_slide("FIG 4  ·  cluster correspondence  ·  hard labels  ·  K = 8",
-                   "FIG4_K08.png", "HG",
-                   "00_paper2_figure4_correspondence.py --k 8  then  "
-                   "00_paper2_figure4_panels.py --k 8", tr)]
-    _w = sorted(FIGDIR.glob("FIG4_K08_run*_weighted.png"))
-    fig4.append(_slide("FIG 4  ·  cluster correspondence  ·  weighted by loading  ·  K = 8",
-                       _w[-1].name if _w else "FIG4_K08_weighted.png", "weighted",
-                       "00_paper2_figure4_panels.py --k 8 --weighting weighted", tr))
+    fig4 = []
+    for k in (K_MAIN, 8, 10):
+        s = _slide(f"FIG 4  ·  cluster correspondence  ·  hard labels  ·  K = {k}",
+                   f"FIG4_K{k:02d}.png", FS_NAME[MAIN_SET],
+                   f"00_paper2_figure4_correspondence.py --k {k}  then  "
+                   f"00_paper2_figure4_panels.py --k {k}", tr)
+        if s["state"] != "missing":
+            fig4.append(s)
+    _w = sorted(FIGDIR.glob(f"FIG4_K{K_MAIN:02d}_run*_weighted.png"))
+    if _w:
+        fig4.append(_slide(f"FIG 4  ·  cluster correspondence  ·  weighted by loading  ·  K = {K_MAIN}",
+                           _w[-1].name, "weighted",
+                           f"00_paper2_figure4_panels.py --k {K_MAIN} --weighting weighted", tr))
     # FIG 5 - the nine-solution matrix, and its K-by-K supplement. Named like FIG 4
     # (K08 + run id), found directly; absent until 00_paper2_figure5_confusion.py has run
     # on the current cohort, and then the slide is simply not there rather than empty.
     fig5 = []
-    _f5 = sorted(FIGDIR.glob("FIG5_K08_run*.png"))
+    _f5 = sorted(FIGDIR.glob(f"FIG5_K{K_MAIN:02d}_run*.png"))
     if _f5:
-        fig5.append(_slide("FIG 5  ·  nine solutions against each other  ·  K = 8",
-                           _f5[-1].name, "HG / 15 bands / 5 bands z",
-                           "00_paper2_figure5_confusion.py --k 6 7 8 9 10", tr))
+        fig5.append(_slide(f"FIG 5  ·  twelve solutions against each other  ·  K = {K_MAIN}",
+                           _f5[-1].name, "3 algorithms x 4 feature sets",
+                           "00_paper2_figure5_confusion.py --k 5 6 7 8 9 10", tr))
     _kk = sorted(FIGDIR.glob("FIG5_KbyK_run*.png"))
     if _kk:
         fig5.append(_slide("FIG 5  ·  K by K  ·  each solution against itself at another K",
                            _kk[-1].name, "K = 6 .. 10",
-                           "00_paper2_figure5_confusion.py --k 6 7 8 9 10", tr))
+                           "00_paper2_figure5_confusion.py --k 5 6 7 8 9 10", tr))
     out = {"results.f1": fig1, "results.f2": fig2, "results.f3": fig3,
            "results.f4": fig4,
            "figs.f1": fig1, "figs.f2": fig2, "figs.f3": fig3, "figs.f4": fig4,

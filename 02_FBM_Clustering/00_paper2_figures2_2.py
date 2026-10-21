@@ -86,6 +86,7 @@ FS_SHORT = P2.FS_SHORT
 # half, matching FIG 1's block order so the two figures number clusters the same way.
 REF_METHOD = "cnmf"
 REF_FSET = P2.MATCH_REF_FSET
+N_PERM_NULL = 1000     # the per-cell Jaccard null and the electrode-agreement null (was 200 until 2026-10-21)
 # concat_hg by default for the algorithm half - the representation the field starts
 # from, and the one the published FIG 2 was drawn on. The paper's standard is
 # concat_bands5z; pass --algo-feature-set to draw the half on any of the four.
@@ -296,7 +297,7 @@ def electrode_agreement(sols, ref_i, maps_in_ref_space, order):
     return _modal_count(T, K), T
 
 
-def electrode_agreement_null(sols, ref_i, order, n_perm=200, seed=0):
+def electrode_agreement_null(sols, ref_i, order, n_perm=N_PERM_NULL, seed=0):
     """The same count when the other solutions are random. Returns fractions per count.
 
     Each non-reference solution's labels are PERMUTED - which keeps its cluster sizes
@@ -404,7 +405,7 @@ def self_stability(sol, k):
     return None, None
 
 
-def cluster_jaccard_null(sols, ref_i, order, n_perm=200, seed=1):
+def cluster_jaccard_null(sols, ref_i, order, n_perm=N_PERM_NULL, seed=1):
     """A null Jaccard for EVERY CELL, not one line for the panel.
 
     Chance overlap between two clusters depends on their sizes, so a single threshold
@@ -1078,7 +1079,7 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self, notes):
     A("threshold would be too strict for the big rows and too lax for the small ones.")
     A("Each non-reference solution's labels are permuted with its cluster sizes")
     A("preserved and re-matched to the reference the way the real ones are; a cell that")
-    A("does not reach the mean of that null is HATCHED. 200 permutations.")
+    A(f"does not reach the mean of that null is HATCHED. {N_PERM_NULL} permutations.")
     A("")
     A("EVERY MATRIX RUNS 0 TO 1 - ARI and NMI in A.2/D.2, the Jaccard matrices in B/E and")
     A("their worst-of and others columns - so a shade means the same thing wherever it")
@@ -1123,7 +1124,7 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self, notes):
     A("pipeline optimises the alignment before counting, so a null that skipped that")
     A("step would be far too easy to beat and the panel would overstate itself. The")
     A("overlap basis is used throughout, because a permuted partition has no loadings")
-    A("left to correlate. 200 permutations.")
+    A(f"left to correlate. {N_PERM_NULL} permutations.")
     A("")
     A("AGREEMENT IS NOT CORRECTNESS. Four representations can agree perfectly on one")
     A("patient's electrode strip.")

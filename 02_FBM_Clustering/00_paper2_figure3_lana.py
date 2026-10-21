@@ -110,6 +110,19 @@ def lana_lookup():
             d.drop_duplicates("key").set_index("key").P_lana)
     if not tabs:
         raise SystemExit(f"no LanA atlas tables under {ATLAS}")
+    # TABLES ARE GROUPED BY THE DATE THEY WERE SAMPLED. The atlas is re-sampled whenever
+    # the reconstruction changes (2026-10-12: 36 contacts moved, 12 renamed), and two
+    # samplings disagree exactly for the contacts that moved - 0.51 between 20260907 and
+    # 20261019 - so only the tables of ONE date can be checked against each other. The
+    # newest date is the one on the current coordinates; older ones are named, not used.
+    # Until 2026-10-21 the reference was the table with the most rows, which was the OLD
+    # sampling (3380 rows against 2946), and every current table failed against it.
+    stamp = lambda name: name.split("/")[1].split("_")[0]
+    newest = max(stamp(n) for n in tabs)
+    older = sorted({stamp(n) for n in tabs} - {newest})
+    tabs = {n: v for n, v in tabs.items() if stamp(n) == newest}
+    if older:
+        print(f"    atlas sampling {newest} used; older samplings ignored: {', '.join(older)}")
     # the most USABLE values, not the most rows - a row whose P_lana is NaN covers
     # nothing
     best = max(tabs, key=lambda t: int(np.isfinite(tabs[t]).sum()))
@@ -836,7 +849,8 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("    that reason alone; the within-patient null does not remove it, because it is")
     A("    a property of where a cluster is, not of which patients it draws on.")
     A("  - Not a statement about K. The clusters are whatever this K produced.")
-    A("  - The 297 electrodes with no LanA value are excluded from every number here,")
+    n_missing = int((~d["has"]).sum())
+    A(f"  - The {n_missing} electrodes with no LanA value are excluded from every number here,")
     A("    not counted as zero.")
     P2.save_text("\n".join(L) + "\n", path)
 

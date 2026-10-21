@@ -23,10 +23,10 @@ THE TWO AXES.
     B  same algorithm, different feature sets   convex NMF on HFA against 5-band,
                                                 5-band z-scored and 15-band
 
-ONE DESCRIPTION SPACE FOR EVERY CLUSTER: concat_bands5z. A clustering fitted on HFA and
+ONE DESCRIPTION SPACE FOR EVERY CLUSTER: concat_bands5. A clustering fitted on HFA and
 one fitted on 15 bands live in feature spaces of different size, so their centroids
 cannot be correlated as they stand. Every cluster is therefore described by the mean
-concat_bands5z representation OF ITS MEMBER ELECTRODES - the cross-space view the
+concat_bands5 representation OF ITS MEMBER ELECTRODES - the cross-space view the
 cluster visualizer draws, built here from the concat cache at full precision rather than
 from the quantised web bundle. The clustering is whatever it is; only the yardstick is
 shared.
@@ -95,11 +95,19 @@ import lf_runs as LR            # noqa: E402
 # wrote to outputs/paper_figures, one directory up from where FIG 0-3 live, so the
 # figure went missing from every listing that looks in the right place.
 OUT = ROOT / "outputs" / "clustering" / "paper_figures"
-SPACE_FSET = "concat_bands5z"           # the yardstick every cluster is described in
+# THE YARDSTICK every cluster is described in. Was concat_bands5z until 2026-10-19,
+# which is retired and has no v17 run. bands5 is the same five bands WITHOUT the
+# per-band z-scoring, so the space no longer has equal variance per band and a
+# correlation in it leans toward the bands that vary most - a change in what
+# "similar" means, not a rename.
+SPACE_FSET = "concat_bands5"
 ALGO_FSET = "concat_bands15"                 # axis A is run on HFA
 METHOD_LABEL = {"cnmf": "convex NMF", "kmeans": "k-means", "hierarchical": "Ward"}
-FS_LABEL = {"concat_hg": "HFA", "concat_rawds": "15 bands",
-            "concat_bands5": "5 bands", "concat_bands5z": "5 bands z"}
+FS_LABEL = {"concat_bands2": "2 bands", "concat_bands5": "5 bands",
+            "concat_bands15": "15 bands", "concat_hfa": "HFA",
+            # retired, kept so an older run still draws a label rather than raising
+            "concat_hg": "HFA (pre-10-13)", "concat_rawds": "15 bands (pre-10-13)",
+            "concat_bands5z": "5 bands z (retired)"}
 
 INK, MUTED, GREY = "#1b1b1b", "#6b6b6b", "#c9c9c9"
 
@@ -161,7 +169,7 @@ def solution(method: str, fset: str, k: int):
 
 
 def description_space():
-    """The concat_bands5z features of the whole cohort, with their keys.
+    """The concat_bands5 features of the whole cohort, with their keys.
 
     Built from the concat cache rather than from any run's X_train, so a cluster found
     in ANY feature set can be described here. The cache pointer resolves to the newest
@@ -172,7 +180,7 @@ def description_space():
     df, X_concat = CC.build_concat_dataset(
         params["input_dir"], conditions=("audio", "picture", "reading"),
         require_high_activity=True, cache_dir=cache, verbose=False)
-    Z = CC.concat_bands5z_features(X_concat, n_blocks=3, fmax_hz=398.4375)
+    Z = CC.concat_bands5_features(X_concat, n_blocks=3, fmax_hz=398.4375)
     keys = [f"{p}|{norm(e)}" for p, e in zip(df.patient_id, df.electrode)]
     return dict(Z=np.asarray(Z, float), keys=keys, cache=cache.name, n=len(keys))
 
@@ -417,7 +425,7 @@ def compare(space, Zz, spec, k1, k2, n_perm, seed, verbose=True):
     # the contingency table, the diagonal share, and the pairing null
     A = contingency(s1, s2, k1, k2)
     diag = diagonal_share(A, pairs)
-    null_diag = pairing_null(A, n_draw=100, seed=seed + 7)
+    null_diag = pairing_null(A, n_draw=1000, seed=seed + 7)
     z_diag = ((diag - null_diag.mean()) / null_diag.std(ddof=1)
               if null_diag.std(ddof=1) > 1e-12 else float("nan"))
     p_diag = (1.0 + float((null_diag >= diag).sum())) / (len(null_diag) + 1.0)
@@ -565,12 +573,17 @@ def main() -> int:
                 title=f"{METHOD_LABEL[m1]} vs {METHOD_LABEL[m2]}\non {FS_LABEL[af]}",
                 lab_a=METHOD_LABEL[m1], lab_b=METHOD_LABEL[m2]))
     if a.pairs in ("all", "feature"):
-        for f2 in ("concat_bands5", "concat_bands5z", "concat_rawds"):
+        # referenced to ALGO_FSET, the same set axis A is run on, against the other
+        # three current sets. Was concat_hg vs bands5 / bands5z / rawds: one retired
+        # reference and two retired comparators, none of which has a v17 run.
+        ref = ALGO_FSET
+        for f2 in [f for f in ("concat_bands15", "concat_bands5", "concat_bands2",
+                               "concat_hfa") if f != ref]:
             specs.append(dict(
-                axis="B feature sets", a=("cnmf", "concat_hg"), b=("cnmf", f2),
-                name=f"cnmf_concat_hg_vs_{f2}",
-                title=f"convex NMF\n{FS_LABEL['concat_hg']} vs {FS_LABEL[f2]}",
-                lab_a=FS_LABEL["concat_hg"], lab_b=FS_LABEL[f2]))
+                axis="B feature sets", a=("cnmf", ref), b=("cnmf", f2),
+                name=f"cnmf_{ref}_vs_{f2}",
+                title=f"convex NMF\n{FS_LABEL[ref]} vs {FS_LABEL[f2]}",
+                lab_a=FS_LABEL[ref], lab_b=FS_LABEL[f2]))
 
     OUT.mkdir(parents=True, exist_ok=True)
     print(f"  description space: {SPACE_FSET}")

@@ -61,7 +61,7 @@ def variance_curves(method: str, fsets: list[str]) -> dict[str, pd.DataFrame]:
         raise SystemExit(f"{P2.HELDOUT} missing - run 240 / 241 / 242 (they write the "
                          "three halves of it) or make_heldout_variance.py")
     hv = pd.read_csv(P2.HELDOUT)
-    hv = hv[(hv.method == method) & (hv.scheme == "home")]
+    hv = hv[(hv.method == method) & hv.scheme.isin(P2.HOME_SCHEMES)]
     out = {}
     for fs in fsets:
         s = (hv[hv.feature_set == fs].groupby("k")["var_explained"]
@@ -167,6 +167,18 @@ def main() -> int:
         if t is None:
             continue
         ls = styles[i % len(styles)]
+        # the share itself, mean +/- SD per electrode, behind the two failure lines.
+        # Those only count clusters already over DANGER, so without this the panel is
+        # flat at zero wherever the rule passes and shows nothing about how close it
+        # came. Same axis: all three are a percentage of the solution that is one
+        # patient. Drawn only when the columns are present, so an older table still
+        # plots.
+        if "share_mean_w" in t.columns:
+            lo = 100 * (t.share_mean_w - t.share_sd_w).clip(lower=0)
+            hi = 100 * (t.share_mean_w + t.share_sd_w)
+            axD.fill_between(t.k, lo, hi, color="#9aa3ab", alpha=0.085, lw=0, zorder=1)
+            axD.plot(t.k, 100 * t.share_mean_w, ls=ls, lw=1.1, color="#6b7480",
+                     alpha=0.8, zorder=2)
         axD.plot(t.k, 100 * t.frac_clusters, ls=ls, lw=1.9, color=P2.RED, alpha=0.9,
                  zorder=4)
         axD.plot(t.k, 100 * t.frac_electrodes, ls=ls, lw=1.4, color="#e08214",
@@ -183,7 +195,9 @@ def main() -> int:
     axD.legend(fontsize=8, frameon=False, loc="upper left", handlelength=2.4,
                title="line style = feature set", title_fontsize=7.6)
     axD.set_title(f"red = clusters > {100*a.danger:.0f}% one patient,   "
-                  "orange = electrodes in them\ntriangle = largest K with none",
+                  "orange = electrodes in them\n"
+                  "grey = the share itself, mean \u00b1 SD per electrode   \u00b7   "
+                  "triangle = largest K with none",
                   fontsize=10, loc="left")
 
     fig.tight_layout()
