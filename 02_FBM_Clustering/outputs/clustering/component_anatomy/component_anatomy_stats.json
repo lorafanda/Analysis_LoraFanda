@@ -1,26 +1,26 @@
 {
-  "run": "cnmf/concat_hg/runs/20260818_112939",
-  "source": "cnmf_concat_hg_20260818_112939__with_fsaverage.csv",
-  "n_contacts": 1029,
+  "run": "cnmf/concat_hg/runs/20261012_184011",
+  "source": "cnmf_concat_hg_20261012_184011__with_fsaverage.csv",
+  "n_contacts": 1575,
   "K": 7,
-  "n_patients": 25,
+  "n_patients": 29,
   "frame": "fsaverage",
   "grid_step_mm": 2.0,
   "cube_mm": 10.0,
   "min_contacts": 3,
-  "n_voxels": 14927,
-  "n_perm": 10000,
+  "n_voxels": 23490,
+  "n_perm": 1000,
   "fdr_q": 0.05,
-  "expected_by_chance": 746,
-  "p_floor": 0.0001,
+  "expected_by_chance": 1174,
+  "p_floor": 0.001,
   "maxstat_threshold_within_patient": [
-    0.7285177395789665,
-    0.7309148775225703,
-    0.7505927779188115,
-    0.7549813954615868,
-    0.8496718321572153,
-    0.6484103591385223,
-    0.8104478477687069
+    0.6755411042334978,
+    0.747626158643054,
+    0.7396508433753692,
+    0.6978266902982905,
+    0.8049613122070962,
+    0.6262538714732346,
+    0.6369520794681502
   ],
-  "n_survive_correction": 5
+  "n_survive_correction": 2
 }
