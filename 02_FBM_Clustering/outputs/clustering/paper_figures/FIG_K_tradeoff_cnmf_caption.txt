@@ -1,0 +1,8 @@
+Held-out variance and patient dominance over K, convex NMF.
+
+Left: held-out variance explained, one line per feature set, marker at each set's own peak. Right: the share of clusters more than 50% one patient (red) and the share of electrodes in those clusters (orange); the triangle marks the largest K at which no cluster is over that line.
+
+  15 frequency bands x 30 time bins:  peak K 30  clean up to K 7
+  5 frequency bands x 30 time bins:  peak K 30  clean up to K 8
+  2 bands (30-50 and 70-150 Hz) x 30 time bins:  peak K 29  clean up to K 10
+  HFA (70-150 Hz) x 30 time bins:  peak K 29  clean up to K 6
