@@ -34,7 +34,8 @@ FOUR PANELS, ONE CLAIM EACH.
         the matching, count the electrodes that land on the diagonal of the contingency
         table, and divide by all of them. This is the one-to-one matching accuracy of the
         two solutions - purity with the bijection enforced - and it is quoted against
-        random bijections of the same two clusterings (100 draws), which land about 1/K
+        random bijections of the same two clusterings (1000 draws by default; the count
+        is in the summary table), which land about 1/K
         of the mass on the diagonal. That null re-pairs but does not re-cluster, so it
         says how much of the diagonal the ALIGNMENT earned, not whether the two solutions
         agree more than arbitrary partitions would. The per-pair nulls answer the latter.
@@ -278,7 +279,19 @@ def panel_left_out(ax, matched, summary, k):
 
 
 # ---- caption ------------------------------------------------------------------
-def caption(matched, summary, k, weighting, onepat, raw):
+def caption(matched, summary, k, weighting, onepat, raw, n_perm=None):
+    # the per-pair nulls' draw count is not in the matched table: main() reads it from
+    # the correspondence caption of the same run; failing that, the smallest p gives
+    # it back (p = (c + 1) / (n + 1), so the smallest possible p is 1 / (n + 1))
+    if n_perm is None:
+        try:
+            p_min = float(matched.p_plain.min())
+            n_perm = int(round(1.0 / p_min)) - 1 if p_min > 0 else None
+        except Exception:
+            n_perm = None
+    draws = f"{n_perm} draws" if n_perm else "the recorded number of draws"
+    n_bij = (int(summary.diag_n_draw.iloc[0]) if "diag_n_draw" in summary.columns
+             else 1000)
     unit = ("raw Jaccard" if raw else
             "adjusted overlap (J - J0)/(1 - J0), 0 at chance and 1 at identity")
     L = [f"FIG 4  Cluster correspondence at K = {k} ({weighting} weighting).", "",
@@ -301,13 +314,13 @@ def caption(matched, summary, k, weighting, onepat, raw):
          "how strong its pairing was; cluster ids are printed on both axes, because a "
          "row no longer means the same cluster across panels. The box says how that "
          "pair stands against the nulls: solid above both, dashed above the free null "
-         "only, grey not above chance (1000 draws, cluster sizes kept, the matching "
+         f"only, grey not above chance ({draws}, cluster sizes kept, the matching "
          "redone in every draw; the second null permutes only within patient). A dashed "
          "rule separates columns left unmatched.",
          "Each title also gives the DIAGONAL SHARE - the fraction of all electrodes "
          "lying on the matched diagonal of the contingency table of hard labels, which "
          "is the one-to-one matching accuracy of the two solutions - against random "
-         "bijections of the same two clusterings (100 draws, about 1/K by construction). "
+         f"bijections of the same two clusterings ({n_bij} draws, about 1/K by construction). "
          "That null re-pairs without re-clustering, so it measures how much of the "
          "diagonal the alignment earned; whether the two solutions agree more than "
          "arbitrary partitions would is what the per-pair nulls above test.",
@@ -327,7 +340,7 @@ def caption(matched, summary, k, weighting, onepat, raw):
                  + (f"within-patient null; diagonal share {s.diag_share:.2f} of "
                     f"{int(s.n_electrodes)} electrodes against "
                     f"{s.diag_null_mean:.2f} +- {s.diag_null_sd:.2f} for random pairings "
-                    f"(z {s.diag_z:.1f}, p < {1.0 / s.diag_n_draw:.2f})"
+                    f"(z {s.diag_z:.1f}, p {'< 0.001' if s.diag_p < 0.001 else '= ' + format(s.diag_p, '.3f')})"
                     if "diag_share" in summary.columns else "within-patient null")
                  + f". Runs {s.run_1} and {s.run_2}.")
     L.append("")
@@ -430,7 +443,16 @@ def main() -> int:
     fig.savefig(png, dpi=300, facecolor="white")
     plt.close(fig)
     txt = OUT / f"FIG4_{tag}{sfx}_caption.txt"
-    body = caption(matched, summary, a.k, a.weighting, onepat, a.raw_jaccard)
+    # the per-pair draw count, as the correspondence step of this run recorded it
+    n_perm = None
+    try:
+        import re as _re
+        ctxt = (OUT / f"FIG4_correspondence_{tag}_caption.txt").read_text(encoding="utf-8")
+        m_ = _re.search(r"\((\d+) draws, cluster sizes kept", ctxt)
+        n_perm = int(m_.group(1)) if m_ else None
+    except Exception:
+        n_perm = None
+    body = caption(matched, summary, a.k, a.weighting, onepat, a.raw_jaccard, n_perm=n_perm)
     txt.write_text(body, encoding="utf-8")
     if txt.read_text(encoding="utf-8") != body:
         raise SystemExit(f"{txt} did not survive the write")

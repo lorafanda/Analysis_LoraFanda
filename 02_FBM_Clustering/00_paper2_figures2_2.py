@@ -5,12 +5,12 @@ left out.
 
     python 00_paper2_figures2_2.py                    K = 8, both halves
     python 00_paper2_figures2_2.py --k 12
-    python 00_paper2_figures2_2.py --algo-feature-set concat_rawds
+    python 00_paper2_figures2_2.py --algo-feature-set concat_bands5
 
 TWO HALVES, THE SAME THREE QUESTIONS EACH.
 
-    top     FEATURE SETS   convex NMF on concat_hg / concat_rawds / concat_bands5 /
-                           concat_bands5z - does the representation change the answer?
+    top     FEATURE SETS   convex NMF on concat_bands15 / concat_bands5 / concat_bands2 /
+                           concat_hfa - does the representation change the answer?
     bottom  ALGORITHMS     convex NMF / k-means / Ward on one feature set -
                            does the method change the answer?
 
@@ -87,9 +87,8 @@ FS_SHORT = P2.FS_SHORT
 REF_METHOD = "cnmf"
 REF_FSET = P2.MATCH_REF_FSET
 N_PERM_NULL = 1000     # the per-cell Jaccard null and the electrode-agreement null (was 200 until 2026-10-21)
-# concat_hg by default for the algorithm half - the representation the field starts
-# from, and the one the published FIG 2 was drawn on. The paper's standard is
-# concat_bands5z; pass --algo-feature-set to draw the half on any of the four.
+# concat_bands15 by default for the algorithm half - the paper's main set on v17
+# (2026-10-21); pass --algo-feature-set to draw the half on any of the four.
 DEFAULT_ALGO_FSET = "concat_bands15"
 
 
@@ -973,8 +972,7 @@ def caption_2(path, k, d, algo_fset, fs, al, vmax, fs_self, al_self, notes):
     A("or under one method, this is the figure that says so.")
     A("")
     A(f"  {algo_fset} carries the algorithm half; the same half can be drawn on any of the")
-    A("  four feature sets with --algo-feature-set, and the paper's standard is")
-    A("  concat_bands5z.")
+    A(f"  four feature sets with --algo-feature-set; the paper's main set is {DEFAULT_ALGO_FSET}.")
     A("")
     A("EVERY SOLUTION LABELS THE SAME ELECTRODES IN THE SAME ORDER. That is what makes")
     A("any of this comparable, and it is checked rather than assumed: a solution that is")

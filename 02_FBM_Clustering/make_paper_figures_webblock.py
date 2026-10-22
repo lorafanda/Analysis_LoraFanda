@@ -101,8 +101,8 @@ def fig0_bullets(png: Path):
             k0 = kept.iloc[0]
             d0 = disc.loc[disc.margin.idxmax()]
             b.append(f"At the line: <b>{k0.patient} {k0.electrode}</b> is kept on "
-                     f"{k0.condition} with {int(k0.bins_pos)} of the {int(k0.need_pos)} "
-                     f"bins the gate needs; <b>{d0.electrode}</b> is discarded, its best "
+                     f"{k0.condition} with {int(k0.bins_pos)} bins against the "
+                     f"{int(k0.need_pos)} the gate needs; <b>{d0.electrode}</b> is discarded, its best "
                      f"condition ({d0.condition}) reaching {int(d0.bins_pos)}.")
     return b
 
@@ -166,7 +166,9 @@ def fig2_bullets(png: Path):
 
 
 def fig3_bullets(png: Path):
-    """What FIG 3 found, from the per-cluster table written beside it."""
+    """What FIG 3 found, from the per-cluster table written beside it. The shaft-shift
+    null leads (labels rolled along each shaft: the null the figure stars); the weaker
+    within-patient null is named second, as on the figure."""
     stem = png.with_suffix("").name
     f = FIGDIR / f"{stem}_clusters.csv"
     if not f.exists():
@@ -174,14 +176,22 @@ def fig3_bullets(png: Path):
     d = pd.read_csv(f)
     top = d.loc[d.mean_P.idxmax()]
     base = float(d.baseline_P.iloc[0])
-    b = [f"<b>{int((d.q_mean < 0.05).sum())} of {len(d)}</b> clusters sit in more LanA "
-         f"than a within-patient permutation of the same electrodes would give "
-         f"(q &lt; 0.05). The cohort mean is {base:.3f}.",
+    sh = "q_mean_sh" in d.columns
+    q_m = d.q_mean_sh if sh else d.q_mean
+    q_r = d.q_rho_sh if sh else d.q_rho
+    null = ("the shaft-shift null (labels rolled along each shaft)" if sh
+            else "a within-patient permutation of the same electrodes")
+    b = [f"<b>{int((q_m < 0.05).sum())} of {len(d)}</b> clusters sit in more LanA than "
+         f"{null} allows (q &lt; 0.05)"
+         + (f"; against the weaker within-patient null it is "
+            f"{int((d.q_mean < 0.05).sum())} of {len(d)}." if sh else ".")
+         + f" The cohort mean is {base:.3f}.",
          f"Most language-aligned: <b>c{int(top.cluster)}</b> at {top.mean_P:.3f} "
-         f"(q = {top.q_mean:.2g}); least: c{int(d.loc[d.mean_P.idxmin(), 'cluster'])} "
-         f"at {d.mean_P.min():.3f}.",
-         f"<b>{int((d.q_rho < 0.05).sum())} of {len(d)}</b> loading-vs-P(LanA) "
-         f"correlations survive FDR, and none is large "
+         + (f"(shaft-shift q = {top.q_mean_sh:.2g}, within-patient q = {top.q_mean:.2g})"
+            if sh else f"(q = {top.q_mean:.2g})")
+         + f"; least: c{int(d.loc[d.mean_P.idxmin(), 'cluster'])} at {d.mean_P.min():.3f}.",
+         f"<b>{int((q_r < 0.05).sum())} of {len(d)}</b> loading-vs-P(LanA) correlations "
+         f"pass {'the shaft-shift null after FDR' if sh else 'FDR'}, and none is large "
          f"(|rho| at most {d.rho.abs().max():.2f}) &mdash; belonging more strongly to a "
          f"cluster barely predicts sitting further into language cortex."]
     thin = d[d.coverage < 0.70]
@@ -196,14 +206,19 @@ def fig3_bullets(png: Path):
 
 
 def _peak_k_text():
-    """The held-out peaks as 249 measured them, in FS_ORDER, e.g. "9 / 12 / 13 / 14"."""
+    """The convex-NMF held-out peaks as make_heldout_variance measured them (home
+    scheme, bsf_comparison/heldout_peaks_cnmf.csv), in FS_ORDER, e.g. "30 / 30 / 29 / 29".
+    Not peak_k.json: that file holds 249's chosen K (the dominance rule), not a peak."""
     order = ["concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa"]
+    f = ROOT / "outputs" / "clustering" / "bsf_comparison" / "heldout_peaks_cnmf.csv"
     try:
-        d = json.loads((ROOT / "outputs" / "clustering" / "bsf_comparison"
-                        / "peak_k.json").read_text(encoding="utf-8"))
+        d = pd.read_csv(f)
+        if "scheme" in d.columns and (d.scheme == "home").any():
+            d = d[d.scheme == "home"]
+        pk = {r.feature_set: int(r.k_peak) for r in d.itertuples()}
     except Exception:
         return "not measured yet"
-    return " / ".join(str(d[f]) for f in order if f in d) or "not measured yet"
+    return " / ".join(str(pk[x]) for x in order if x in pk) or "not measured yet"
 
 
 def newest_only(figs):
@@ -338,7 +353,8 @@ def build():
     figs = (sorted(FIGDIR.glob("FIG0*.png")) + sorted(FIGDIR.glob("FIG1*.png"))
             + sorted(FIGDIR.glob("FIG2*.png")) + sorted(FIGDIR.glob("FIG3*.png"))
             + sorted(FIGDIR.glob("FIG4_K*.png"))
-            + sorted(FIGDIR.glob("FIG5_K*.png")) + sorted(FIGDIR.glob("FIG5_KbyK_run*.png")))
+            + [f for f in sorted(FIGDIR.glob("FIG5_K*.png")) if "KbyK" not in f.stem]
+            + sorted(FIGDIR.glob("FIG5_KbyK_run*.png")))
     # the display-rule variants (_minP040, _minP040w) are versions to look at, not
     # the figures the paper carries, so they stay out of this block
     figs = [f for f in figs if "_minP" not in f.stem]
@@ -356,21 +372,26 @@ def build():
     tracked = tracked_files()
 
     P = [BEGIN,
-         '    <h3 id="paper2figs">Paper 2 figures</h3>',
+         '    <h3 id="paper2figs">Paper 2 v17 &middot; figures</h3>',
          '    <div class="method" style="border-left:4px solid var(--s2)">',
          "      <b>Built by <code>00_paper2_figure0_coverage.py</code>, "
          "<code>00_Paper2_Figures.py</code>, <code>00_paper2_figures2_2.py</code>, "
-         "<code>00_paper2_figure3_lana.py</code> and "
-         "<code>00_paper2_figure4_correspondence.py</code>, driven and explained by "
-         "<code>000_Paper2_figures.ipynb</code>.</b> Nothing is written on a figure: "
-         "each one ships a <code>_caption.txt</code> beside it with the full "
-         "provenance, and the numbers behind every panel as CSV. The bullets below are "
-         "read from those files when this section is generated, so a verdict here "
-         "cannot outlive the figure it describes.",
+         "<code>00_paper2_figure3_lana.py</code>, "
+         "<code>00_paper2_figure4_correspondence.py</code> with "
+         "<code>00_paper2_figure4_panels.py</code>, and "
+         "<code>00_paper2_figure5_confusion.py</code>, run in that order by "
+         "<code>run_paper_figures_v17.py</code>; every figure here is on cohort v17 "
+         "(1587 gated electrodes of 2917 seen, 29 patients, the twelve runs of "
+         "2026-10-17).</b> Nothing is written on a figure: each one ships the numbers "
+         "behind its panels as CSV and, except FIG 5, a <code>_caption.txt</code> with "
+         "the full provenance. The bullets below are read from those files when this "
+         "section is generated, so a verdict here cannot outlive the figure it "
+         "describes.",
          "      <p style='margin:8px 0 0'><b>FIG 0 comes first because everything else "
          "is computed on it</b> &mdash; who the cohort is, how much of it the atlas can "
-         "see, and what the responsiveness gate is deciding at the line: one bin in "
-         "38,700 separates an electrode that is kept from one that is not.</p>",
+         "see, and what the responsiveness gate is deciding at the line: 618 of the "
+         "30,900 bins of a cube (2% above +2.2 dB, or 1,236 below -3.0 dB) separate "
+         "an electrode that is kept from one that is not.</p>",
          "      <p style='margin:8px 0 0'><b>FIG 3 asks a different question and its "
          "answer is mostly negative</b> &mdash; where the clusters sit relative to the "
          "LanA probabilistic language atlas. LanA is a prior about a LOCATION, not a "
@@ -380,7 +401,8 @@ def build():
          "(15 bands 7, 5 bands 8, 2 bands 10, HFA 6: the largest K with no cluster more "
          "than half one patient, 249 on the v17 runs), on convex NMF; FIG 2 and FIG 3 are "
          "cut at <b>K = 7</b> on 15 bands, FIG 4 at K = 7, 8 and 10, FIG 5 at K = 5 to 10. "
-         f"The held-out peaks ({_peak_k_text()}) and those K disagree, and the disagreement "
+         f"The convex-NMF held-out peaks (K = {_peak_k_text()}: the top of the sweep or "
+         "one below it, no curve turns over) and those K disagree, and the disagreement "
          "is the point &mdash; held-out variance "
          "cannot see a cluster that is one patient's electrode strip, because splitting a "
          "cohort until each patient has their own component fits held-out data perfectly "
@@ -423,9 +445,9 @@ def build():
                    f"generalization curve, and one block per cluster with its mean, "
                    f"two hemisphere renders and its patient composition")
         elif stem.startswith("FIG2"):
-            # FIG2_agreement_<fset>_K8; the older FIG2_agreement_K8 was concat_hg
+            # FIG2_agreement_<fset>_K<k>_run<id>
             rest = stem[len("FIG2_agreement_"):]
-            fset = rest.split("_K")[0] if "_K" in rest else "concat_hg"
+            fset = rest.split("_K")[0] if "_K" in rest else rest
             num, title = f"2 &middot; K={k}", f"agreement, algorithms on {fset}, K = {k}"
             bullets = fig2_bullets(png)
             alt = ("six panels: pairwise agreement, per-cluster agreement and "
@@ -446,9 +468,9 @@ def build():
                            "two K: the fraction of electrodes that stay together when K moves."]
                 alt = "nine small K-by-K matrices, one per algorithm and feature set"
             else:
-                num, title = f"5 &middot; K={k}", f"nine solutions against each other, K = {k}"
+                num, title = f"5 &middot; K={k}", f"twelve solutions against each other, K = {k}"
                 bullets = fig5_bullets(png)
-                alt = ("three 9 x 9 matrices of algorithm x feature set: the observed diagonal "
+                alt = ("three 12 x 12 matrices of algorithm x feature set: the observed diagonal "
                        "share, its chance level, and the chance-corrected value")
         else:
             fset = stem.split("_K")[0][len("FIG3_lana_"):]

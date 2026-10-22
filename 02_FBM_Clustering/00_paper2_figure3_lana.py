@@ -26,8 +26,8 @@ low one does not mean it did not.
 TWO THINGS THIS FIGURE REFUSES TO DO QUIETLY.
 
   Electrodes are not independent. Contacts on one shaft sit millimetres apart, share a
-  patient and share an atlas neighbourhood, so a correlation across 1400 electrodes has
-  nothing like 1400 degrees of freedom. Two nulls: a SHAFT-SHIFT that rolls each
+  patient and share an atlas neighbourhood, so a correlation across every electrode has
+  nothing like that many degrees of freedom. Two nulls: a SHAFT-SHIFT that rolls each
   shaft's labels along itself, keeping the spatial smoothness that makes neighbouring
   contacts alike, and a within-patient shuffle of P_lana that does not. The first is
   the one that counts. Confidence intervals bootstrap PATIENTS, not electrodes, for the
@@ -389,7 +389,7 @@ def panel_rho(ax, R, d, chars, ext):
     y = np.arange(len(R))[::-1]
     cols = [P2.cluster_col(int(c), K) for c in R.cluster]
     # anything inside this band is a negligible correlation by any convention, however
-    # small its p-value gets with 1400 electrodes
+    # small its p-value gets with this many electrodes
     ax.axvspan(-0.1, 0.1, color=GREY, alpha=0.30, lw=0, zorder=0)
     ax.barh(y, R.rho, color=cols, height=0.7, lw=0, zorder=2)
     ax.errorbar(R.rho, y, xerr=[R.rho - R.rho_lo, R.rho_hi - R.rho], fmt="none",
@@ -508,9 +508,10 @@ def reading_notes(R, d):
         f"doing the work.",
         f"The largest |rho| is {R.rho.abs().max():.2f}. Significance here is nearly "
         f"free at this sample size; the effect size is the result.",
-        f"Only {100*d['has'].mean():.0f}% of electrodes have a LanA value, and the "
-        f"missing ones are WHOLE PATIENTS rather than a random scatter - the atlas run "
-        f"predates part of the cohort. "
+        (f"Only {100*d['has'].mean():.0f}% of electrodes have a LanA value, and the "
+         f"missing ones are WHOLE PATIENTS rather than a random scatter - the atlas run "
+         f"predates part of the cohort. " if not bool(d["has"].all()) else
+         "Every electrode has a LanA value, so coverage is not a caveat here. ")
         + (f"Coverage is below {100*MIN_COVERAGE:.0f}% for {', '.join(thin)}, whose "
            f"{'means are' if len(thin) > 1 else 'mean is'} not comparable with the rest."
            if thin else "Every cluster is above the coverage floor here."),
@@ -708,11 +709,17 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("only where BOTH have a value - a contact the atlas could not sample is a")
     A("coverage difference, not a disagreement about a number.")
     A("")
-    A("The missing electrodes are NOT missing at random: the atlas run predates part of")
-    A("the cohort, so whole patients have no value at all. A cluster drawn mostly from")
-    A("those patients would look like it sits outside language cortex when in truth it")
-    A("has not been measured against the atlas. Per-cluster coverage is printed under")
-    A(f"every bar in panel A and anything below {100*MIN_COVERAGE:.0f}% is marked in red.")
+    if bool(d["has"].all()):
+        A("Every electrode has a LanA value, so coverage is not a caveat on this figure.")
+        A("The safeguards stay for a cohort whose atlas run lags its reconstruction:")
+        A("per-cluster coverage is printed under every bar in panel A and anything below")
+        A(f"{100*MIN_COVERAGE:.0f}% is marked in red.")
+    else:
+        A("The missing electrodes are NOT missing at random: the atlas run predates part of")
+        A("the cohort, so whole patients have no value at all. A cluster drawn mostly from")
+        A("those patients would look like it sits outside language cortex when in truth it")
+        A("has not been measured against the atlas. Per-cluster coverage is printed under")
+        A(f"every bar in panel A and anything below {100*MIN_COVERAGE:.0f}% is marked in red.")
     if len(d["lana_missing_by_patient"]):
         A("")
         A("  electrodes with no LanA value, by patient:")
@@ -743,7 +750,7 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("THE SECOND NULL, KEPT FOR COMPARISON")
     A("-" * 100)
     A("Contacts on one shaft sit millimetres apart, share a patient, and share an atlas")
-    A("neighbourhood, so a correlation across ~1400 electrodes has nothing like 1400")
+    A(f"neighbourhood, so a correlation across {int(d['has'].sum())} electrodes has nothing like that many")
     A("degrees of freedom. The weaker null permutes P_lana WITHIN EACH PATIENT: that")
     A("keeps each patient's own atlas values and coverage exactly as they are and")
     A("breaks only the link between a contact's position and its cluster. A null that")
@@ -821,9 +828,14 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("")
     A(f"  {int((R.q_rho_sh < 0.05).sum())} of {k} correlations pass the shaft-shift")
     A(f"  null; {int((R.q_rho < 0.05).sum())} pass the weaker within-patient one.")
-    A(f"  NONE reaches |rho| = 0.10 (largest {R.rho.abs().max():.3f}). At "
-      f"{int(R.n_lana.sum())} electrodes a q-value is nearly free; the effect size is")
-    A("  the result, and the effect size is negligible.")
+    n_big = int((R.rho.abs() >= 0.10).sum())
+    big = R.loc[R.rho.abs().idxmax()]
+    A((f"  NONE reaches |rho| = 0.10 (largest {R.rho.abs().max():.3f}). " if n_big == 0 else
+       f"  {n_big} of {k} reach |rho| = 0.10 (largest c{int(big.cluster)} at {big.rho:+.3f}); "
+       f"the rest sit inside the band. ")
+      + f"At {int(R.n_lana.sum())} electrodes a q-value is nearly free; the effect size is")
+    A("  the result, and " + ("the effect size is negligible." if n_big == 0 else
+                            "even the largest is small by any convention."))
     A("A rho near zero means the cluster is placed independently of the atlas. That is a")
     A("result, not a failure - it says the clustering found structure the atlas does not")
     A("describe.")
@@ -850,8 +862,11 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("    a property of where a cluster is, not of which patients it draws on.")
     A("  - Not a statement about K. The clusters are whatever this K produced.")
     n_missing = int((~d["has"]).sum())
-    A(f"  - The {n_missing} electrodes with no LanA value are excluded from every number here,")
-    A("    not counted as zero.")
+    if n_missing:
+        A(f"  - The {n_missing} electrodes with no LanA value are excluded from every number here,")
+        A("    not counted as zero.")
+    else:
+        A("  - Every electrode has a LanA value; nothing is excluded.")
     P2.save_text("\n".join(L) + "\n", path)
 
 

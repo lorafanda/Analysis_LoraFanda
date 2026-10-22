@@ -47,8 +47,8 @@ GROUPS = [   # (header or None, [data-t ...]) in display order
 ANSWERS = {
     "overview": dict(
         one="the cohort and where every tab stands",
-        html=("<p>Cohort <span class=\"new\"><b>v16</b> (built 2026-10-12 18:17 from the 03_ERSP tree, after the channel decisions): "
-              "1607 gated electrodes from 29 patients, 2946 with cubes in all three conditions; 4580 trials in, 3638 used (79.4 %)</span>, "
+        html=("<p>Cohort <span class=\"new\"><b>v17</b> (built 2026-10-17 19:24 from the 03_ERSP tree): "
+              "1587 gated electrodes from 29 patients, 2917 with cubes in all three conditions; 4580 trials in, 3609 used (78.8 %)</span>, "
               "every patient at fmax 400 with the per-shaft spectrum-interpolation notch. PAT_6684 (G-05), EL044 and EL031 are out; "
               "PAT_3301 cannot enter, it has only picture naming. "
               "<span class=\"new\">New since 2026-10-07, in green on every tab: PAT_3780's trial tables were 180 s early (its photodiode is the "
@@ -57,17 +57,19 @@ ANSWERS = {
               "the 04 trees are archived. On 10-12 the channel decisions: 67 contacts bad-listed across 10 patients from the contact-noise audit "
               "(148, measured on the WM-referenced signal, the only view that shows a noisy contact) and the figures; PAT_3975 on a deep "
               "white-matter reference (11 contacts: the gyral-WM rule had given it 48 next to cortex); PAT_6854, PAT_3975 and PAT_3455 rerun. "
-              "On v16 (10-12 → 13): all twelve clustering runs (K 5–30), 249's statistics (K 7 / 7 / 6 / 8), FIG 0 / 2 / 3 / 4 / 5, the C-figures, "
-              "the LM and cluster visualizers with their bundles. Not on v16: FIG 1 and the held-out curves (select), 252.</span> "
+              "On v17 (10-17 → 21): all twelve clustering runs (K 5–30), 249's statistics with the dominance rule (K 7 / 8 / 10 / 6 for "
+              "15 bands / 5 bands / 2 bands / HFA), the held-out curves (K 5–30, no curve turns over), the native stability sweep, 252, "
+              "FIG 0 / 1a–d / 2 / 3 / 4 / 5 and the graphical abstract (10-21). Older: the LM and cluster visualizers and their bundles "
+              "(v15 / v16).</span> "
               "One line per tab, the tab's own Answer behind each:</p>"
               "<!--TABLIST-->"),
-        status="v16 cache 2026-10-12 · 12 fits, 249, FIG 0/2/3/4/5 and both visualizers on v16 (10-13) · FIG 1, held-out curves (select) and 252 pending"),
+        status="v17 cache 2026-10-17 · 12 fits, 249 (K 7/8/10/6), held-out curves, stability sweep, 252, FIG 0/1a–d/2/3/4/5 + abstract on v17 (10-21) · LM / cluster visualizers still v15 / v16"),
     "outline": dict(
         one="the paper as bullets, preprocessing → clustering outputs, darkness = confidence; source paper2_outline.md (make_outline_tab.py)",
         html=("<p>Every section in Cell Reports order as bullet points, each line shaded by how sure it is (black = read from the code or a "
               "run, lightest = a slot for a citation's section / paragraph, a number or a decision). Edit "
               "<code>02_FBM_Clustering/paper2_outline.md</code> and re-run <code>make_outline_tab.py --insert</code>.</p>"),
-        status="rebuilt 2026-10-13 on v16 (1607 / 2946 / 29): purple = the script-by-script methods (140 → FIG 5), to review; green = new since 10-07; the rest from the v9 / v11 reads of September"),
+        status="rebuilt 2026-10-22 on v17 (1587 / 2917 / 29): every Results and Figures line re-read against the v17 runs and figures; purple = the script-by-script methods (140 → FIG 5), to review; green = new since 10-07"),
     "s1": dict(
         one="one ERSP cube per electrode × condition: 103 × 300 (0–400 Hz, warped), WM-referenced, notched per shaft, trial-filtered; halves beside; 31 of 31 patients ok (29 in the cohort), every one on a BIDS white-matter reference (EL044 grid CAR, EL031 whole-recording CAR)",
         html=("<ul>"
