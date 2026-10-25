@@ -31,11 +31,10 @@ CSV, so they are compared with a tolerance rather than for exact equality, and
 only where BOTH have a value - a contact the atlas could not sample is a
 coverage difference, not a disagreement about a number.
 
-The missing electrodes are NOT missing at random: the atlas run predates part of
-the cohort, so whole patients have no value at all. A cluster drawn mostly from
-those patients would look like it sits outside language cortex when in truth it
-has not been measured against the atlas. Per-cluster coverage is printed under
-every bar in panel A and anything below 70% is marked in red.
+Every electrode has a LanA value, so coverage is not a caveat on this figure.
+The safeguards stay for a cohort whose atlas run lags its reconstruction:
+per-cluster coverage is printed under every bar in panel A and anything below
+70% is marked in red.
 
 THE NULLS, AND WHY THERE ARE TWO
 ----------------------------------------------------------------------------------------------------
@@ -59,7 +58,7 @@ atlas is broken. This is the null that counts, marked * on the figure.
 THE SECOND NULL, KEPT FOR COMPARISON
 ----------------------------------------------------------------------------------------------------
 Contacts on one shaft sit millimetres apart, share a patient, and share an atlas
-neighbourhood, so a correlation across ~1400 electrodes has nothing like 1400
+neighbourhood, so a correlation across 1587 electrodes has nothing like that many
 degrees of freedom. The weaker null permutes P_lana WITHIN EACH PATIENT: that
 keeps each patient's own atlas values and coverage exactly as they are and
 breaks only the link between a contact's position and its cluster. A null that
@@ -132,8 +131,8 @@ mutually consistent.
 
   3 of 7 correlations pass the shaft-shift
   null; 2 pass the weaker within-patient one.
-  NONE reaches |rho| = 0.10 (largest 0.140). At 1587 electrodes a q-value is nearly free; the effect size is
-  the result, and the effect size is negligible.
+  1 of 7 reach |rho| = 0.10 (largest c1 at +0.140); the rest sit inside the band. At 1587 electrodes a q-value is nearly free; the effect size is
+  the result, and even the largest is small by any convention.
 A rho near zero means the cluster is placed independently of the atlas. That is a
 result, not a failure - it says the clustering found structure the atlas does not
 describe.
@@ -158,9 +157,8 @@ is 1 and 2. Where those differ, the smoothness was doing the work.
 The largest |rho| is 0.14. Significance here is nearly free at this sample size; the effect size is
 the result.
 
-Only 100% of electrodes have a LanA value, and the missing ones are WHOLE PATIENTS rather than a
-random scatter - the atlas run predates part of the cohort. Every cluster is above the coverage
-floor here.
+Every electrode has a LanA value, so coverage is not a caveat here. Every cluster is above the
+coverage floor here.
 
 The K correlations are NOT independent: loadings sum to 1, so one cluster tracking the atlas forces
 the others negative by arithmetic. Only the positive end is interpretable alone.
@@ -178,5 +176,4 @@ WHAT THIS FIGURE DOES NOT SHOW
     that reason alone; the within-patient null does not remove it, because it is
     a property of where a cluster is, not of which patients it draws on.
   - Not a statement about K. The clusters are whatever this K produced.
-  - The 297 electrodes with no LanA value are excluded from every number here,
-    not counted as zero.
+  - Every electrode has a LanA value; nothing is excluded.

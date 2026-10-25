@@ -9,8 +9,7 @@ feature set fixed at concat_bands15. If a result only exists in one representati
 or under one method, this is the figure that says so.
 
   concat_bands15 carries the algorithm half; the same half can be drawn on any of the
-  four feature sets with --algo-feature-set, and the paper's standard is
-  concat_bands5z.
+  four feature sets with --algo-feature-set; the paper's main set is concat_bands15.
 
 EVERY SOLUTION LABELS THE SAME ELECTRODES IN THE SAME ORDER. That is what makes
 any of this comparable, and it is checked rather than assumed: a solution that is
@@ -112,7 +111,7 @@ THE PER-CELL NULL. A chance Jaccard depends on the two clusters' sizes, so one
 threshold would be too strict for the big rows and too lax for the small ones.
 Each non-reference solution's labels are permuted with its cluster sizes
 preserved and re-matched to the reference the way the real ones are; a cell that
-does not reach the mean of that null is HATCHED. 200 permutations.
+does not reach the mean of that null is HATCHED. 1000 permutations.
 
 EVERY MATRIX RUNS 0 TO 1 - ARI and NMI in A.2/D.2, the Jaccard matrices in B/E and
 their worst-of and others columns - so a shade means the same thing wherever it
@@ -150,7 +149,7 @@ reference, the way the real ones are. Re-matching is the point: the observed
 pipeline optimises the alignment before counting, so a null that skipped that
 step would be far too easy to beat and the panel would overstate itself. The
 overlap basis is used throughout, because a permuted partition has no loadings
-left to correlate. 200 permutations.
+left to correlate. 1000 permutations.
 
 AGREEMENT IS NOT CORRECTNESS. Four representations can agree perfectly on one
 patient's electrode strip.
@@ -180,7 +179,7 @@ PROVENANCE
     hierarchical  concat_bands15   hierarchical/concat_bands15/runs/20261017_193312   (hard labels)
   geometry and block order from concat_bands5 (cnmf) at K=7
   built by      00_paper2_figures2_2.py --k 7 --algo-feature-set concat_bands15
-  built on      2026-10-21 21:50
+  built on      2026-10-25 18:30
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
