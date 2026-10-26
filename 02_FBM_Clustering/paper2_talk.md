@@ -175,7 +175,7 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
   bands keeps 0.90 of its partition from K 7 to 8. *Sentence:* the partition is stable in K and
   far from chance everywhere.
 - **FIG 3 — where the types sit (LanA).** New panel A: violins of P(LanA) per cluster, every
-  electrode a point, hollow below a loading of 0.3. Cohort mean 0.142;
+  electrode at or above a loading of 0.3 a point, greyer and smaller the weaker it belongs. Cohort mean 0.142;
   c1 0.207 beats only the within-patient null (q 0.001; shaft-shift q 0.37); c1 and c5 keep 55 %
   of their electrodes inside the network at P ≥ 0.1 vs 41 % in the cohort, c0 and c6 32–33 %;
   nothing beats the shaft-shift null. FIG 3b (spin null, dry run): no cluster beyond a rotated
@@ -194,7 +194,7 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
 |---|---|---|
 | K | 7 / 8 / 10 / 6 by the dominance rule; cross-method figures at K 7 | Keep. Show the held-out peaks only as the triangle on FIG 1A. |
 | Membership used in every count and test | argmax of the sum-normalised loadings (FIG 1 sizes, FIG 2–5, FIG 3 tests) | Keep; the loading changes how an electrode is DRAWN, never a number. Say so once. |
-| Loading display rule | **Decided 2026-10-26: the 0.3 cut everywhere, applied.** FIG 1 renders and the graphical abstract: full cluster colour, full radius and opaque at a loading ≥ 0.30 on the cluster shown, grey and faint below (one constant, `LOAD_CUT`). FIG 3 A: filled above, hollow below. The site's visualizer still ramps at 0.5; it is not a paper figure. | Done. Redraw FIG 1a–d, the abstract and FIG 3. |
+| Loading display rule | **Decided 2026-10-26: the 0.3 cut everywhere, applied.** An electrode below a loading of 0.30 on the cluster shown is not drawn (FIG 1 renders, the graphical abstract, FIG 3 A); above it the ramps stay: greyer and smaller for a smaller loading, full colour from 0.5, full size from 0.7 (one constant, `LOAD_CUT`). The site's visualizer still draws everything; it is not a paper figure. | Done. Redraw FIG 1a–d, the abstract and FIG 3. |
 | Which loading file | the figures read the K-sweep loadings (1000 iterations: own loading median 0.41, range 0.20–0.88, 15.5 % below 0.3); the outline's "median top loading 0.48, 27 % ≥ 0.5" was read from another fit | Quote the sweep numbers and fix the outline line. |
 | LanA thresholds | 0.1 and 0.2 | Show 0.1 in the talk, keep 0.2 in the table. |
 | Null sizes | FIG 2 1000 permutations; FIG 3 5000 + 5000, 2000 bootstraps; FIG 3b 5000 spins (to run); FIG 4 5000 at K 7 / 10, 1000 at K 8; FIG 5 1000 | Rerun FIG 4 K 8 at 5000 so one sentence covers FIG 4. |

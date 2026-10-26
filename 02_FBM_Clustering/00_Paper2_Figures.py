@@ -80,27 +80,34 @@ PEAKS = CLUST / "bsf_comparison" / "heldout_peaks_cnmf.csv"
 # figures on 2026-10-19, with no warning. Every reader of the table accepts both.
 HOME_SCHEMES = ("home", "unit-norm")
 # THE THREE ALGORITHMS FIG 1 CAN BE DRAWN FOR. cnmf is graded: every electrode has a
-# loading on every cluster, and the renders apply the LOAD_CUT to it. k-means and Ward are HARD
+# loading on every cluster, and the renders fade by it. k-means and Ward are HARD
 # partitions: an electrode is in one cluster and in no other, so its "loading" is 1
 # there and 0 everywhere else, and the one rendering rule below draws members in
-# full colour at full radius and every other electrode as the faint grey background.
+# full colour at full radius; every other electrode is below LOAD_CUT and not drawn.
 METHODS = ("cnmf", "kmeans", "hierarchical")
 HARD = {"kmeans", "hierarchical"}
 METHOD_LABEL = {"cnmf": "convex NMF", "kmeans": "k-means", "hierarchical": "Ward"}
 
 INK, MUTED, GREY = "#1b232c", "#68727d", "#c9ced4"
 RED, GREEN, BLUE = "#c1121f", "#1b7837", "#4a6fa5"
-# THE 0.3 CUT (Lora, 2026-10-26): one rule wherever an electrode is drawn by its loading,
-# in every figure of the paper. At or above LOAD_CUT on THIS cluster the electrode is
-# drawn in FULL cluster colour, at full radius and opaque; below it, grey 148 at the
-# smallest radius and ALPHA_FLOOR opacity - the brain-render equivalent of the hollow
-# point of FIG 3 A. It replaces the visualizer's three ramps (colour to 0.5, size to
-# 0.7, opacity), which clustering_visualizer.html on the site still uses. A rendering
-# choice: it changes how a loading is drawn, never the loading, the label, or any
-# number reported anywhere - membership in every count and test stays the argmax.
+# THE VISUALIZER'S OWN RULE, transcribed from clustering_visualizer.html rather than
+# invented here. updateElectrodes() reaches FULL cluster colour at a loading of 0.5 and
+# fades toward grey 148 only BELOW that; radius and opacity track a separate ramp. An
+# earlier version here ramped colour across the whole range, so a typical loading -
+# the median is 0.33 - landed a third of the way out of grey and every render came out
+# muddy. Matching the JS is what makes these look like the brains on the site.
 BG = np.array([148, 148, 148]) / 255.0                      # the visualizer's grey 148
-LOAD_CUT = 0.30             # at or above this loading on the cluster shown: full colour
-ALPHA_FLOOR = 0.10          # opacity below the cut; full opacity at or above it
+COLOR_FULL = 0.50           # at or above this loading the electrode is FULL cluster colour
+ALPHA_FLOOR = 0.10          # opacity at a loading of zero; full opacity at LOAD_CAP
+# LOADING CAP for the SIZE ramp. An electrode at or above this is drawn at full radius.
+# It is a rendering choice: it changes how a loading is drawn, never the loading, the
+# label, or any number reported anywhere.
+LOAD_CAP = 0.70
+# THE 0.3 CUT (Lora, 2026-10-26): an electrode below this loading on the cluster shown is
+# NOT DRAWN at all; at or above it the three ramps above apply unchanged, so a weaker
+# member is still smaller and greyer. Display only: which electrodes a count or a test
+# uses is the argmax membership, never this. FIG 3 A applies the same cut to its points.
+LOAD_CUT = 0.30
 RENDER_PX = (1100, 820)         # cropped to the brain afterwards, so this is headroom
 BG_RADIUS = RC.DEPTH_RADIUS     # the electrode that is not in this cluster, in mm
 DANGER = 0.50                   # more than half a cluster from one patient
@@ -167,20 +174,37 @@ def band_centre(lab: str) -> float:
 
 
 def loading_t(w, k):
-    """Normalised loading -> SIZE weight: 1 at or above LOAD_CUT, 0 below. `k` is kept
-    in the signature for the callers that pass it; the cut does not depend on it."""
-    return (np.asarray(w, float) >= LOAD_CUT).astype(float)
+    """Normalised loading -> 0..1 SIZE weight, saturating at LOAD_CAP.
+
+    Defined once and used by the renders AND by the caption's statistics, so the
+    numbers printed beside a figure cannot drift from the ones it was drawn with.
+    """
+    return np.clip((np.asarray(w) - 1 / k) / (LOAD_CAP - 1 / k), 0, 1)
 
 
 def loading_alpha(w):
-    """Loading -> opacity: fully opaque at or above LOAD_CUT, ALPHA_FLOOR below, so the
-    electrodes below the cut sink into the background and still show the coverage."""
-    return np.where(np.asarray(w, float) >= LOAD_CUT, 1.0, ALPHA_FLOOR)
+    """Loading -> opacity. Full at LOAD_CAP, ALPHA_FLOOR at zero, linear between.
+
+    Deliberately measured from ZERO rather than from 1/K, unlike the colour and size
+    ramps: this channel is meant to sink the whole uninvolved population into the
+    background, and a floor anchored at 1/K would leave everything below a flat mixture
+    at full transparency and everything just above it nearly solid.
+    """
+    return ALPHA_FLOOR + (1.0 - ALPHA_FLOOR) * np.clip(np.asarray(w, float) / LOAD_CAP,
+                                                       0, 1)
 
 
 def loading_rgb(w, k, base):
-    """Loading -> RGB: full cluster colour at or above LOAD_CUT, grey 148 below."""
-    g = (np.asarray(w, float) >= LOAD_CUT).astype(float)[:, None]
+    """Normalised loading -> RGB, the way clustering_visualizer.html does it.
+
+    FULL cluster colour at or above COLOR_FULL; below it, mixed toward the same grey
+    every other electrode is drawn in, reaching it exactly at a flat 1/K mixture. The
+    colour therefore says "is this electrode expressing this component at all", and the
+    radius says "how strongly" - two channels for two questions, which is the split the
+    JS makes and the reason its brains read clearly.
+    """
+    w = np.asarray(w, float)
+    g = np.clip((w - 1 / k) / (COLOR_FULL - 1 / k), 0, 1)[:, None]
     return BG[None, :] + g * (np.asarray(base)[None, :] - BG[None, :])
 
 
@@ -548,8 +572,9 @@ def render_hemi(side: str, d: dict, j: int, zoom: float = 1.30):
     on the right for R. Drawing both from the same side, as an earlier version did,
     shows one hemisphere from inside the head.
 
-    EVERY electrode of the hemisphere is drawn by ONE rule applied to its own loading
-    on THIS cluster - colour, size and opacity all read from that single number. There
+    EVERY electrode of the hemisphere at or above LOAD_CUT is drawn by ONE rule applied
+    to its own loading on THIS cluster - colour, size and opacity all read from that
+    single number; below the cut it is not drawn (Lora, 2026-10-26). There
     is no separate background layer and no special case for the argmax winner, so an
     electrode's appearance says what it expresses rather than which column happened to
     be largest, and the two layers can no longer disagree.
@@ -560,6 +585,7 @@ def render_hemi(side: str, d: dict, j: int, zoom: float = 1.30):
     sel = ok & cluster_weights(d, j)[0]
     if MIN_P > 0:
         ok = ok & (d["Gn"][:, j] >= MIN_P)
+    ok = ok & (d["Gn"][:, j] >= LOAD_CUT)          # the cut: below it, not drawn
     actor = None
     if ok.sum():
         w = d["Gn"][ok, j]                     # EVERY electrode's loading on THIS cluster
@@ -1345,16 +1371,18 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
         kax.set_ylabel("membership (hard partition)", fontsize=6.2, color=MUTED,
                        labelpad=1.5)
     else:
-        # the cut has two states too (2026-10-26): grey below LOAD_CUT, full colour
-        # at or above it
-        kax.imshow(np.stack([BG, base0])[:, None, :], aspect="auto", origin="lower",
-                   extent=(0, 1, 0, 2))
+        # the ramp starts at the cut: nothing below LOAD_CUT is drawn (2026-10-26)
+        lo, hi = LOAD_CUT, max(LOAD_CAP, COLOR_FULL) * 1.12
+        tt = np.linspace(lo, hi, 256)
+        ramp = loading_rgb(tt, K, base0)
+        kax.imshow(ramp[:, None, :], aspect="auto", origin="lower",
+                   extent=(0, 1, lo, hi))
         kax.set_xticks([])
-        kax.set_yticks([0.5, 1.5])
-        kax.set_yticklabels([f"< {LOAD_CUT:.2f}", f"\u2265 {LOAD_CUT:.2f}"], fontsize=5.8,
-                            color=MUTED)
-        kax.set_ylabel("loading on this cluster", fontsize=6.2, color=MUTED,
-                       labelpad=1.5)
+        kax.set_yticks([lo, COLOR_FULL, LOAD_CAP])
+        kax.set_yticklabels([f"{LOAD_CUT:.2f}", f"{COLOR_FULL:.2f}", f"{LOAD_CAP:.2f}"],
+                            fontsize=5.8, color=MUTED)
+        kax.set_ylabel(f"loading on this cluster\n(< {LOAD_CUT:.2f} not drawn)",
+                       fontsize=6.2, color=MUTED, labelpad=1.5)
     kax.yaxis.tick_right()
     kax.tick_params(length=2, colors=MUTED, pad=1.4)
     for s_ in kax.spines.values():
@@ -1408,6 +1436,7 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     fit = json.loads(mf.read_text()).get("params", {}) if mf.exists() else {}
     fit = {a_: b_ for a_, b_ in fit.items() if a_ != "k_range"}
     w_own = d["Gn"][np.arange(n), d["lab"]]
+    t = loading_t(w_own, K)
     ylim_lo = float((means - sds).min()) * 1.06
     ylim_hi = float((means + sds).max()) * 1.06
     cache = sorted(p.name for p in (ROOT / "outputs" / "_dataset")
@@ -1749,53 +1778,69 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
         A(f"  side taken from sign(x) because the coordinate table had no hemi   "
           f"{d['n_hemi_from_x']}")
     A("")
-    A(f"COLOUR, SIZE AND OPACITY: THE {LOAD_CUT:.2f} CUT (Lora, 2026-10-26). One rule wherever")
-    A("an electrode is drawn by its loading, in every figure of the paper. The site's")
-    A("visualizer still ramps (full colour at 0.5), the one place that differs.")
+    A("COLOUR AND SIZE, THE VISUALIZER'S OWN RULE. This is transcribed from")
+    A("clustering_visualizer.html's updateElectrodes(), not invented here, so these")
+    A("renders and the brains on the site read the same way.")
     A("")
     if hard:
         A("THIS IS A HARD PARTITION, so w is 1 for the electrodes in the cluster and 0 for")
         A("every other electrode: members draw in full cluster colour, at full radius and")
-        A(f"fully opaque; the rest draw grey 148 at the smallest radius and {ALPHA_FLOOR:.2f}")
-        A("opacity. The rule below is the one the convex-NMF figures use, evaluated at")
-        A("those two values, so the brains of the three algorithms read alike.")
+        A(f"fully opaque; every other electrode is below the {LOAD_CUT:.2f} cut and not drawn.")
+        A("The rule below is the one the convex-NMF figures use, evaluated at w = 1, so")
+        A("the brains of the three algorithms read alike.")
         A("")
-    A(f"      at or above {LOAD_CUT:.2f}:  full cluster colour, full radius "
-      f"({BG_RADIUS} * 2.22 mm), fully opaque")
-    A(f"      below {LOAD_CUT:.2f}:        grey 148, the smallest radius ({BG_RADIUS} * 1.02 mm), "
-      f"{ALPHA_FLOOR:.2f} opacity")
-    A("      FIG 3 A draws the same cut as a hollow point below and a filled one above.")
+    A(f"      colour: FULL cluster colour at a loading of {COLOR_FULL:.2f} or above; below")
+    A("              that, mixed toward grey 148 and reaching it exactly at a flat 1/K")
+    A(f"              mixture -   g = clip((w - 1/K) / ({COLOR_FULL:.2f} - 1/K), 0, 1)")
+    A(f"      size:   t = clip((w - 1/K) / ({LOAD_CAP:.2f} - 1/K), 0, 1)")
+    A(f"              radius = {BG_RADIUS} * (1.02 + 1.20 * t) mm")
+    A(f"      opacity: {ALPHA_FLOOR:.2f} at a loading of zero, rising linearly to fully")
+    A(f"              opaque at {LOAD_CAP:.2f} -   a = {ALPHA_FLOOR:.2f} + "
+      f"{1-ALPHA_FLOOR:.2f} * clip(w / {LOAD_CAP:.2f}, 0, 1)")
+    A("              measured from ZERO, not from 1/K, unlike the other two: this")
+    A("              channel exists to sink the uninvolved population into the")
+    A("              background, and a floor at 1/K would leave everything below a flat")
+    A("              mixture invisible and everything just above it nearly solid")
+    A(f"      cut:    an electrode below {LOAD_CUT:.2f} on this cluster is NOT DRAWN at all")
+    A("              (Lora, 2026-10-26); the three ramps apply to everything above it")
     A("")
     if hard:
         A("where w is 1 for the electrodes in this cluster and 0 for every other electrode")
-        A("(a hard partition has no graded loading). ONE CUT:")
+        A("(a hard partition has no graded loading). THREE CHANNELS FOR THREE QUESTIONS:")
     else:
         A("where w is the electrode's convex-NMF loading on this cluster after its loading")
-        A("vector has been normalised to sum to 1. ONE CUT:")
-    A("the cut answers one question, whether this electrode expresses this component.")
-    A("Until 2026-10-26 three ramps (colour to 0.5, size to 0.7, opacity) answered it by")
-    A("degrees; one threshold, the same in every figure, replaces them.")
+        A("vector has been normalised to sum to 1. THREE CHANNELS FOR THREE QUESTIONS:")
+    A("colour says whether the electrode is expressing this component at all, size says")
+    A("how strongly, opacity sinks the rest of the cohort into the background. An")
+    A("earlier version ramped colour across the whole range instead, so a typical")
+    A("loading - the median is around a third - landed a third of the way out of grey")
+    A("and every render came out muddy.")
     A("")
-    A("EVERY ELECTRODE OF THE HEMISPHERE IS DRAWN BY THIS ONE RULE, applied to its own")
+    A("EVERY ELECTRODE AT OR ABOVE THE CUT IS DRAWN BY THIS ONE RULE, applied to its own")
     A("loading on this cluster. There is no separate background layer and no special")
     A("case for the argmax winner: an electrode's appearance says what it expresses,")
     A("not which column happened to be largest. Order-independent transparency (VTK")
     A("depth peeling) is enabled, or a faint sphere in front of a solid one would erase")
     A("it depending only on draw order.")
     A("")
-    A("It is a RENDERING choice. It changes how a loading is drawn, never the")
+    A("All of these are RENDERING choices. They change how a loading is drawn, never the")
     A("loading, the label, or any number reported anywhere.")
     A("")
     if hard:
         A(f"  every one of the {n} electrodes draws at w = 1 in its own cluster and at")
         A(f"  w = 0 in the other {K - 1}: full colour, full radius and opaque there;")
-        A("  grey, smallest and faint everywhere else.")
+        A("  not drawn anywhere else.")
     else:
-        A(f"  electrodes at or above {LOAD_CUT:.2f} at their own cluster (full colour)   "
-          f"{int((w_own >= LOAD_CUT).sum())}  ({100*(w_own >= LOAD_CUT).mean():.1f}%)")
-        A(f"  below the cut (grey and faint on their own cluster's brain)        "
-          f"{int((w_own < LOAD_CUT).sum())}  ({100*(w_own < LOAD_CUT).mean():.1f}%)")
+        A(f"  median t over all {n} electrodes at their own cluster   {np.median(t):.3f}")
+        A(f"  electrodes at or above {COLOR_FULL:.2f} (drawn in full cluster colour)   "
+          f"{int((w_own >= COLOR_FULL).sum())}  ({100*(w_own >= COLOR_FULL).mean():.1f}%)")
+        A(f"  electrodes at or above the {LOAD_CAP:.2f} size cap                     "
+          f"{int((w_own >= LOAD_CAP).sum())}  ({100*(w_own >= LOAD_CAP).mean():.1f}%)")
         A(f"  median normalised loading at an electrode's own cluster {np.median(w_own):.3f}")
+        A(f"  electrodes at or above the {LOAD_CUT:.2f} cut at their own cluster (drawn)   "
+          f"{int((w_own >= LOAD_CUT).sum())}  ({100*(w_own >= LOAD_CUT).mean():.1f}%)")
+        A(f"  below it (not drawn on their own cluster's brain)                 "
+          f"{int((w_own < LOAD_CUT).sum())}  ({100*(w_own < LOAD_CUT).mean():.1f}%)")
     A("")
     A("WHAT THIS FIGURE DOES NOT SHOW")
     A("-" * 100)

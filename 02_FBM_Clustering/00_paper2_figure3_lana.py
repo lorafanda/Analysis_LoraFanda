@@ -90,8 +90,10 @@ N_BOOT = 1000
 # threshold. 0.1 is the partition the atlas runs on disk use (thr0p1); 0.2 is the
 # core of the network. Both are drawn, so the choice is visible rather than hidden.
 THRESHOLDS = (0.10, 0.20)
-# THE 0.3 CUT (Lora, 2026-10-26), the one constant FIG 1's renders use: a point below it
-# is hollow, at or above it filled with the cluster colour. Display only.
+# panel A's electrodes (Lora, 2026-10-26): a point below P2.LOAD_CUT on its cluster is
+# not drawn; above it, FIG 1's own ramps - colour greyer (P2.loading_rgb, full from
+# COLOR_FULL) and size smaller (P2.loading_t, full at LOAD_CAP) for a smaller loading.
+# Display only: the violin and every statistic use all argmax members.
 LOAD_CUT = P2.LOAD_CUT
 
 
@@ -359,11 +361,11 @@ def own_loading(d):
 
 
 def panel_rank(ax, R, d, chars, ext):
-    """A: one violin per cluster of P(LanA) over its electrodes, every electrode a point,
-    clusters ranked by the mean. A point below LOAD_CUT is an outline only, at or above
-    it filled with the cluster colour - the cut every figure applies. The mean, its
-    patient bootstrap, the two nulls and the stars are the same statistics the bars
-    carried until 2026-10-26."""
+    """A: one violin per cluster of P(LanA) over its electrodes, clusters ranked by the
+    mean, every electrode at or above LOAD_CUT a point coloured and sized by FIG 1's
+    loading ramps; below the cut the point is not drawn. The violin, the mean, its
+    patient bootstrap, the two nulls and the stars are over all members, the same
+    statistics the bars carried until 2026-10-26."""
     K = d["k"]
     P, has, lab = d["P_lana"], d["has"], d["lab"]
     own = own_loading(d)
@@ -372,7 +374,7 @@ def panel_rank(ax, R, d, chars, ext):
     top = 0.0
     for i, r in R.iterrows():
         j = int(r.cluster)
-        col = P2.cluster_col(j, K)
+        col = np.asarray(P2.cluster_col(j, K))
         m = has & (lab == j)
         v, w = P[m], own[m]
         if len(v) < 2:
@@ -387,10 +389,11 @@ def panel_rank(ax, R, d, chars, ext):
         # body is drawn from, so a point never lands outside the violin
         dens = gaussian_kde(v)(v)
         xs = i + rng.uniform(-1.0, 1.0, len(v)) * (0.37 * dens / dens.max())
-        hol = w < LOAD_CUT
-        ax.scatter(xs[hol], v[hol], s=9.0, facecolors="none", edgecolors=[col],
-                   linewidths=0.55, zorder=3)
-        ax.scatter(xs[~hol], v[~hol], s=7.5, color=col, lw=0, zorder=3)
+        keep = w >= LOAD_CUT
+        o = np.argsort(w[keep])                     # weak members first, strong on top
+        xs_, v_, w_ = xs[keep][o], v[keep][o], w[keep][o]
+        ax.scatter(xs_, v_, s=4.0 + 8.5 * P2.loading_t(w_, K), c=P2.loading_rgb(w_, K, col),
+                   lw=0, zorder=3)
         # the statistics, as before: the mean with its patient bootstrap, the two nulls
         ax.plot([i - 0.27, i + 0.27], [r.mean_P, r.mean_P], color=INK, lw=1.7, zorder=6)
         ax.plot([i, i], [r.mean_P_lo, r.mean_P_hi], color=INK, lw=1.0, zorder=6)
@@ -409,28 +412,30 @@ def panel_rank(ax, R, d, chars, ext):
     ax.set_ylim(0, top + 0.17)                        # the stars sit above the tallest violin
     ax.tick_params(labelsize=7.4, colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
-    # the key to the points, top right, where no violin reaches
-    ax.scatter([0.70], [0.965], s=14, facecolors="none", edgecolors=[INK],
-               linewidths=0.6, transform=ax.transAxes, clip_on=False)
-    ax.scatter([0.70], [0.915], s=12, color=INK, lw=0, transform=ax.transAxes,
-               clip_on=False)
-    ax.text(0.73, 0.965, f"loading < {LOAD_CUT:.1f}", transform=ax.transAxes,
+    # the key to the points, top right, where no violin reaches: FIG 1's ramp from the
+    # cut to the size cap, in the ink colour
+    ww = np.linspace(LOAD_CUT, P2.LOAD_CAP, 6)
+    ax.scatter(0.60 + 0.055 * np.arange(6), np.full(6, 0.955), s=4.0 + 8.5 * P2.loading_t(ww, K),
+               c=P2.loading_rgb(ww, K, np.asarray(matplotlib.colors.to_rgb(INK))), lw=0,
+               transform=ax.transAxes, clip_on=False)
+    ax.text(0.60, 0.905, f"loading {LOAD_CUT:.2f}", transform=ax.transAxes, ha="left",
             va="center", fontsize=6.4, color=MUTED)
-    ax.text(0.73, 0.915, f"loading \u2265 {LOAD_CUT:.1f}", transform=ax.transAxes,
+    ax.text(0.875, 0.905, f"{P2.LOAD_CAP:.2f}+", transform=ax.transAxes, ha="right",
             va="center", fontsize=6.4, color=MUTED)
     thin = [f"c{int(r.cluster)}" for _, r in R.iterrows() if r.coverage < MIN_COVERAGE]
-    n_h = int((own[has] < LOAD_CUT).sum())
+    n_cut = int((own[has] < LOAD_CUT).sum())
     ax.text(0, -0.20, _wrap(
-        f"One violin per cluster of P(LanA) over its electrodes, ranked by the mean, "
-        f"every electrode a point. Points with a normalised loading below {LOAD_CUT:.1f} "
-        f"on their cluster are hollow, from {LOAD_CUT:.1f} filled: {n_h} of "
-        f"{int(has.sum())} electrodes ({100*n_h/max(int(has.sum()), 1):.0f}%) are hollow. "
-        f"Short dark line = the mean, whiskers a 95% interval from bootstrapping PATIENTS; "
-        f"dotted = the cohort mean ({R.baseline_P.iloc[0]:.3f}). Two nulls on the mean: "
-        f"the dark dash rolls each electrode's cluster along its own SHAFT, keeping the "
-        f"smoothness that makes neighbours alike (*); the pale dash shuffles within "
-        f"patient, which destroys it and is too easy to beat ((*) = passes only that "
-        f"one). Benjamini-Hochberg over {K}; % over each violin = coverage"
+        f"One violin per cluster of P(LanA) over its electrodes, ranked by the mean. Each "
+        f"electrode at or above a loading of {LOAD_CUT:.1f} on its cluster is a point, greyer "
+        f"and smaller the weaker it belongs (FIG 1's ramps); below {LOAD_CUT:.1f} it is not "
+        f"drawn ({n_cut} of {int(has.sum())}, {100*n_cut/max(int(has.sum()), 1):.0f}%) but "
+        f"still counted. Short dark line = the mean, "
+        f"whiskers a 95% interval from bootstrapping PATIENTS; dotted = the cohort mean "
+        f"({R.baseline_P.iloc[0]:.3f}). Two nulls on the mean: the dark dash rolls each "
+        f"electrode's cluster along its own SHAFT, keeping the smoothness that makes "
+        f"neighbours alike (*); the pale dash shuffles within patient, which destroys it "
+        f"and is too easy to beat ((*) = passes only that one). Benjamini-Hochberg over "
+        f"{K}; % over each violin = coverage"
         + (f"; {', '.join(thin)} fall{'' if len(thin) > 1 else 's'} below "
            f"{100*MIN_COVERAGE:.0f}% and {'their means are' if len(thin) > 1 else 'its mean is'} "
            f"not comparable with the rest." if thin else "."),
@@ -926,13 +931,14 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("")
     A("PANEL A - P(LanA) of every electrode, clusters ranked by the mean")
     A("-" * 100)
-    A("One violin per cluster over its electrodes' P_lana, every electrode a point, ranked")
-    A("by the mean (the short dark line, with its patient-bootstrap interval). A point is")
-    A(f"hollow below a normalised loading of {LOAD_CUT:.2f} on its cluster (its share of the K")
-    A(f"loadings) and filled with the cluster colour from {LOAD_CUT:.2f}: {int((own[d['has']] < LOAD_CUT).sum())} "
-      f"of {int(d['has'].sum())} electrodes ({100*float((own[d['has']] < LOAD_CUT).mean()):.0f}%) are hollow -")
-    A("the cut FIG 1's renders apply too (grey below, full colour above). Display only:")
-    A("every count and test uses the argmax membership.")
+    A("One violin per cluster over its electrodes' P_lana, ranked by the mean (the short")
+    A("dark line, with its patient-bootstrap interval). Every electrode at or above a")
+    A(f"normalised loading of {LOAD_CUT:.2f} on its cluster (its share of the K loadings) is a")
+    A("point, coloured and sized by FIG 1's ramps: greyer and smaller the weaker it belongs,")
+    A(f"full colour from {P2.COLOR_FULL:.2f}, full size from {P2.LOAD_CAP:.2f}. Below {LOAD_CUT:.2f} it is not")
+    A(f"drawn: {int((own[d['has']] < LOAD_CUT).sum())} of {int(d['has'].sum())} electrodes "
+      f"({100*float((own[d['has']] < LOAD_CUT).mean()):.0f}%). Display only: the violin and every")
+    A("statistic use all argmax members.")
     A("Dark dash = the shaft-shift null, pale dash = the within-patient null, dotted line =")
     A("the cohort mean, % over each violin = coverage.")
     A(f"  own-cluster loading   min {own.min():.3f}   median {np.median(own):.3f}   "
