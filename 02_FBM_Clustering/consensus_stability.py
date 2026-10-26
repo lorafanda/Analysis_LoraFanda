@@ -591,7 +591,8 @@ def cross_cell(root: Path, a, log):
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        fig, axs = plt.subplots(len(a.fsets), len(a.methods), figsize=(4 * len(a.methods), 3 * len(a.fsets)), squeeze=False, sharex=True)
+        # one y axis for every cell (Lora, 2026-10-26), so a panel's RCSI can be read against the others
+        fig, axs = plt.subplots(len(a.fsets), len(a.methods), figsize=(4 * len(a.methods), 3 * len(a.fsets)), squeeze=False, sharex=True, sharey=True)
         for i, fs in enumerate(a.fsets):
             for j, m in enumerate(a.methods):
                 ax = axs[i, j]
@@ -611,7 +612,7 @@ def cross_cell(root: Path, a, log):
                 ax.set_title(f"{FSET_LABEL[fs]} x {LABEL[m]}", fontsize=9)
                 if i == len(a.fsets) - 1: ax.set_xlabel("K")
                 if j == 0 and "rcsi" in locals().get("c", pd.DataFrame()): ax.set_ylabel("RCSI")
-        fig.suptitle("RCSI by K  (green dashed = chosen K, grey dotted = current K, red x = fails the patient constraint)", fontsize=10)
+        fig.suptitle("RCSI by K, one y axis for all cells  (green dashed = chosen K, grey dotted = current K, red x = fails the patient constraint)", fontsize=10)
         fig.tight_layout(); fig.savefig(root / "rcsi_by_k.png", dpi=110); plt.close(fig)
 
     # SUMMARY.md
