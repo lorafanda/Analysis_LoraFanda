@@ -1,0 +1,48 @@
+{
+ "n_spin": 5000,
+ "seed": 0,
+ "thresholds": [
+  0.1,
+  0.2
+ ],
+ "n_electrodes": 1587,
+ "n_left": 715,
+ "anchor_dist_mm": {
+  "median": 0.0,
+  "max": 9.861128628918543,
+  "over_2mm": 34,
+  "over_2mm_by_patient": {
+   "PAT_3975": 33,
+   "EL051": 1
+  }
+ },
+ "atlas_outside_volume": 0,
+ "surface_vs_contact_P": {
+  "max_abs_diff": 0.4218362122774125,
+  "n_differ_over_0p01": 28
+ },
+ "all": {
+  "n_in": 651,
+  "n_out": 936,
+  "rms_diff_db": 0.11462153096985178,
+  "rms_null_mean": 0.11077155178906757,
+  "rms_null_95": 0.17784101398256044,
+  "p_rms": 0.3715256948610278,
+  "cells_q05": 0,
+  "cells": 1350,
+  "clusters_q05_t10": 0,
+  "clusters_q05_t20": 0
+ },
+ "L": {
+  "n_in": 371,
+  "n_out": 344,
+  "rms_diff_db": 0.17654896846439133,
+  "rms_null_mean": 0.1392809958159388,
+  "rms_null_95": 0.21594527044125753,
+  "p_rms": 0.16516696660667868,
+  "cells_q05": 0,
+  "cells": 1350,
+  "clusters_q05_t10": 0,
+  "clusters_q05_t20": 0
+ }
+}

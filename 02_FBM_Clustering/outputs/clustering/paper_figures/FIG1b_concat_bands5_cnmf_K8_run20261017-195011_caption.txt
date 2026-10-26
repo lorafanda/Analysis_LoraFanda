@@ -18,7 +18,7 @@ PROVENANCE
   render         pyvista/VTK offscreen, material constants read live from
                  functions/lf_recon_shared_config.py (the visualizer's own)
   built by       00_Paper2_Figures.py --figure 1 --feature-set concat_bands5 --k 8 --method cnmf
-  built on       2026-10-21 18:23
+  built on       2026-10-26 20:37
 
 HOW K WAS CHOSEN
 ----------------------------------------------------------------------------------------------------
@@ -233,6 +233,8 @@ renders and the brains on the site read the same way.
               channel exists to sink the uninvolved population into the
               background, and a floor at 1/K would leave everything below a flat
               mixture invisible and everything just above it nearly solid
+      cut:    an electrode below 0.30 on this cluster is NOT DRAWN at all
+              (Lora, 2026-10-26); the three ramps apply to everything above it
 
 where w is the electrode's convex-NMF loading on this cluster after its loading
 vector has been normalised to sum to 1. THREE CHANNELS FOR THREE QUESTIONS:
@@ -242,20 +244,22 @@ earlier version ramped colour across the whole range instead, so a typical
 loading - the median is around a third - landed a third of the way out of grey
 and every render came out muddy.
 
-EVERY ELECTRODE OF THE HEMISPHERE IS DRAWN BY THIS ONE RULE, applied to its own
+EVERY ELECTRODE AT OR ABOVE THE CUT IS DRAWN BY THIS ONE RULE, applied to its own
 loading on this cluster. There is no separate background layer and no special
 case for the argmax winner: an electrode's appearance says what it expresses,
 not which column happened to be largest. Order-independent transparency (VTK
 depth peeling) is enabled, or a faint sphere in front of a solid one would erase
 it depending only on draw order.
 
-Both are RENDERING choices. They change how a loading is drawn, never the
+All of these are RENDERING choices. They change how a loading is drawn, never the
 loading, the label, or any number reported anywhere.
 
   median t over all 1587 electrodes at their own cluster   0.416
   electrodes at or above 0.50 (drawn in full cluster colour)   300  (18.9%)
   electrodes at or above the 0.70 size cap                     26  (1.6%)
   median normalised loading at an electrode's own cluster 0.364
+  electrodes at or above the 0.30 cut at their own cluster (drawn)   1223  (77.1%)
+  below it (not drawn on their own cluster's brain)                 364  (22.9%)
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------

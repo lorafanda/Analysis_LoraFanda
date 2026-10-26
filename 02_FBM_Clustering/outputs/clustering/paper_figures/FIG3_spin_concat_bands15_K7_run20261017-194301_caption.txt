@@ -1,0 +1,168 @@
+FIG 3b   ·   LanA under a spin null, and what the network does   ·   concat_bands15   ·   K = 7
+====================================================================================================
+
+WHY A SPIN NULL
+----------------------------------------------------------------------------------------------------
+FIG 3 tests each cluster against a shaft-shift null that rolls the cluster labels
+along each shaft and leaves the atlas in place. Clusters and shafts live at the
+same spatial scale, so for a type that fills whole shafts the roll changes nothing
+and the null reproduces the observed share almost exactly - it has no power. The
+spin test (Alexander-Bloch et al. 2018, NeuroImage 178:540) turns it round: the
+electrodes, their shafts, patients and labels stay exactly where they are, and the
+MAP is randomised. Each electrode is anchored to its nearest fsaverage pial vertex;
+that vertex's point on the fsaverage sphere is rotated by a random rotation (drawn
+uniformly; on the right hemisphere the mirror of the same rotation, so the two
+sides stay symmetric), the rotated point is read back to the nearest sphere vertex,
+and the LanA volume is sampled at that vertex's pial coordinate with the same
+sampler that gave the contacts their values (nearest 2 mm voxel after the
+MNI305 -> MNI152 affine; lf_atlas_corr.sample_atlas_at_contacts). The spun map
+keeps LanA's smoothness, size and left-right asymmetry; what it breaks is only the
+alignment between the map and the electrodes. Observed values are the atlas at the
+anchor vertices, so observed and spun are on the same footing (a surface point).
+
+  spins                      5000   (seed 0)
+  anchor distance, contact to nearest pial vertex   median 0.00 mm, max 9.9 mm, 34 over 2 mm: PAT_3975 33, EL051 1
+  atlas at the anchor vs at the contact   max |diff| 0.422, 28 electrodes differ by more than 0.01
+  spun points outside the atlas volume   0 (read as 0)
+
+The second thing FIG 3 cannot show is the inverse question: what does the LanA
+network itself DO during the task. Panels A and B are the mean response (the run's
+own features, dB re baseline, band x time x condition) of the electrodes inside the
+network at P >= 0.1 against the electrodes outside it, and their difference;
+the outlined cells are where the difference is beyond what the spun maps give
+(two-sided, Benjamini-Hochberg over every cell). Panel E is the one-number version:
+the RMS of that difference over all cells, observed against spun.
+
+Everything is computed twice: on all electrodes and on the LEFT hemisphere alone,
+because LanA is left-lateralised and the cohort is right-heavy, so a type that
+leans left is 'inside the network' for that reason alone unless the hemisphere is
+held fixed.
+
+PANEL A and E - the network's response, all electrodes
+----------------------------------------------------------------------------------------------------
+  inside n = 651, outside n = 936
+  cells beyond the spin null at q < 0.05   0 of 1350
+  RMS difference 0.1146 dB   spun maps mean 0.1108, 95th percentile 0.1778   p = 0.372
+  mean inside-minus-outside difference (dB) by band and condition, stimulus half | response half:
+    band        audio              picture            reading         
+    1-4Hz       +0.08 | +0.11        +0.08 | +0.03        +0.09 | -0.15     
+    4-8Hz       +0.05 | +0.09        +0.13 | +0.04        +0.09 | -0.15     
+    8-13Hz      -0.01 | +0.09        +0.22 | +0.06        +0.06 | -0.17     
+    13-20Hz     -0.10 | +0.05        +0.20 | +0.05        -0.03 | -0.17     
+    20-30Hz     -0.12 | -0.00        +0.02 | -0.03        -0.09 | -0.13     
+    30-50Hz     +0.06 | +0.07        -0.04 | +0.02        -0.07 | -0.00     
+    50-70Hz     +0.11 | +0.10        -0.03 | +0.12        -0.02 | +0.11     
+    70-100Hz    +0.11 | +0.14        -0.08 | +0.12        -0.01 | +0.13     
+    100-130Hz   +0.08 | +0.14        -0.11 | +0.08        -0.01 | +0.11     
+    130-170Hz   +0.05 | +0.13        -0.10 | +0.06        -0.03 | +0.06     
+    170-220Hz   -0.01 | +0.10        -0.07 | +0.04        -0.04 | +0.06     
+    220-270Hz   -0.02 | +0.12        -0.06 | +0.05        -0.05 | +0.05     
+    270-320Hz   -0.01 | +0.12        -0.05 | +0.05        -0.05 | +0.04     
+    320-360Hz   -0.01 | +0.12        -0.06 | +0.03        -0.04 | +0.05     
+    360-400Hz   -0.01 | +0.09        -0.03 | +0.06        -0.07 | +0.03     
+
+PANEL B and E - the network's response, left hemisphere
+----------------------------------------------------------------------------------------------------
+  inside n = 371, outside n = 344
+  cells beyond the spin null at q < 0.05   0 of 1350
+  RMS difference 0.1765 dB   spun maps mean 0.1393, 95th percentile 0.2159   p = 0.165
+  mean inside-minus-outside difference (dB) by band and condition, stimulus half | response half:
+    band        audio              picture            reading         
+    1-4Hz       +0.17 | +0.15        +0.12 | +0.13        +0.39 | +0.02     
+    4-8Hz       +0.13 | +0.15        +0.19 | +0.14        +0.40 | +0.00     
+    8-13Hz      +0.06 | +0.17        +0.25 | +0.09        +0.35 | -0.04     
+    13-20Hz     -0.07 | +0.13        +0.20 | +0.05        +0.15 | -0.09     
+    20-30Hz     -0.07 | +0.05        +0.03 | +0.01        +0.03 | -0.09     
+    30-50Hz     +0.04 | +0.07        -0.03 | +0.04        -0.07 | -0.01     
+    50-70Hz     +0.09 | +0.09        -0.02 | +0.14        -0.07 | +0.08     
+    70-100Hz    +0.09 | +0.16        -0.14 | +0.12        -0.11 | +0.04     
+    100-130Hz   +0.03 | +0.19        -0.16 | +0.11        -0.08 | +0.13     
+    130-170Hz   +0.05 | +0.22        -0.14 | +0.10        -0.07 | +0.09     
+    170-220Hz   -0.02 | +0.21        -0.11 | +0.08        -0.01 | +0.13     
+    220-270Hz   -0.03 | +0.21        -0.07 | +0.13        -0.01 | +0.14     
+    270-320Hz   -0.02 | +0.24        -0.04 | +0.14        -0.03 | +0.11     
+    320-360Hz   -0.02 | +0.21        -0.05 | +0.11        -0.00 | +0.14     
+    360-400Hz   -0.03 | +0.15        -0.04 | +0.13        -0.06 | +0.08     
+
+PANEL C - inside the network per cluster, all electrodes
+----------------------------------------------------------------------------------------------------
+  P >= 0.10   cohort rate 41.0%   0 of 7 outside the spin null at q < 0.05 (two-sided)
+  cluster   n     inside   x cohort   spin null mean [2.5, 97.5]     p        q
+  c1       143    55.2%    1.35      42.9%  [ 23.8,  63.6]   0.272    0.634  
+  c5       200    54.5%    1.33      44.6%  [ 22.0,  70.5]   0.456    0.657  
+  c4       334    43.7%    1.07      43.7%  [ 24.0,  67.7]   1        1      
+  c2       168    36.3%    0.89      44.2%  [ 25.0,  63.7]   0.47     0.657  
+  c3       200    39.5%    0.96      43.5%  [ 30.0,  59.0]   0.606    0.707  
+  c6       224    32.6%    0.79      45.2%  [ 30.8,  61.6]   0.127    0.444  
+  c0       318    32.7%    0.80      45.3%  [ 32.4,  58.5]   0.0648   0.444  
+
+  P >= 0.20   cohort rate 16.8%   0 of 7 outside the spin null at q < 0.05 (two-sided)
+  cluster   n     inside   x cohort   spin null mean [2.5, 97.5]     p        q
+  c1       143    24.5%    1.46      13.8%  [  3.5,  32.9]   0.125    0.774  
+  c5       200    21.5%    1.28      15.8%  [  3.5,  43.5]   0.589    0.774  
+  c4       334    20.7%    1.23      14.9%  [  4.2,  38.9]   0.501    0.774  
+  c2       168    12.5%    0.75      15.2%  [  4.2,  34.5]   0.763    0.774  
+  c3       200    12.0%    0.72      14.7%  [  6.0,  29.0]   0.642    0.774  
+  c6       224    14.3%    0.85      16.3%  [  7.1,  30.8]   0.774    0.774  
+  c0       318    13.2%    0.79      16.3%  [  7.2,  28.6]   0.614    0.774  
+
+  mean P(LanA) per cluster against the spun maps (the statistic of FIG 3 A, two-sided):
+  c1       0.2076   spun mean 0.1249   p 0.022   q 0.154  
+  c5       0.1724   spun mean 0.1320   p 0.214   q 0.64   
+  c4       0.1590   spun mean 0.1290   p 0.274   q 0.64   
+  c2       0.1293   spun mean 0.1300   p 0.978   q 0.978  
+  c3       0.1254   spun mean 0.1281   p 0.89    q 0.978  
+  c6       0.1183   spun mean 0.1338   p 0.508   q 0.711  
+  c0       0.1150   spun mean 0.1337   p 0.417   q 0.711  
+
+PANEL D - inside the network per cluster, left hemisphere
+----------------------------------------------------------------------------------------------------
+  P >= 0.10   cohort rate 51.9%   0 of 7 outside the spin null at q < 0.05 (two-sided)
+  cluster   n     inside   x cohort   spin null mean [2.5, 97.5]     p        q
+  c1       44     79.5%    1.53      50.8%  [ 25.0,  77.3]   0.032    0.224  
+  c5       97     68.0%    1.31      50.5%  [ 25.8,  77.3]   0.233    0.541  
+  c4       137    61.3%    1.18      50.5%  [ 29.2,  73.0]   0.415    0.541  
+  c2       72     40.3%    0.78      50.8%  [ 25.0,  76.4]   0.453    0.541  
+  c3       77     51.9%    1.00      50.6%  [ 33.8,  68.8]   0.899    0.899  
+  c6       120    35.8%    0.69      50.4%  [ 35.0,  66.7]   0.0814   0.285  
+  c0       168    44.0%    0.85      50.6%  [ 33.9,  66.7]   0.464    0.541  
+
+  P >= 0.20   cohort rate 24.9%   0 of 7 outside the spin null at q < 0.05 (two-sided)
+  cluster   n     inside   x cohort   spin null mean [2.5, 97.5]     p        q
+  c1       44     54.5%    2.19      21.4%  [  4.5,  54.5]   0.0362   0.253  
+  c5       97     28.9%    1.16      21.5%  [  4.1,  54.6]   0.59     0.805  
+  c4       137    33.6%    1.35      21.4%  [  6.6,  50.4]   0.248    0.805  
+  c2       72     12.5%    0.50      21.7%  [  4.2,  50.0]   0.509    0.805  
+  c3       77     18.2%    0.73      21.6%  [  7.8,  41.6]   0.696    0.805  
+  c6       120    14.2%    0.57      21.4%  [  9.2,  37.5]   0.351    0.805  
+  c0       168    23.8%    0.96      21.6%  [  8.9,  38.1]   0.805    0.805  
+
+  mean P(LanA) per cluster against the spun maps (the statistic of FIG 3 A, two-sided):
+  c1       0.3784   spun mean 0.1521   p 0.0038  q 0.0266 
+  c5       0.2079   spun mean 0.1523   p 0.188   q 0.423  
+  c4       0.2255   spun mean 0.1523   p 0.0772  q 0.27   
+  c2       0.1375   spun mean 0.1529   p 0.744   q 0.946  
+  c3       0.1505   spun mean 0.1526   p 0.946   q 0.946  
+  c6       0.1193   spun mean 0.1520   p 0.242   q 0.423  
+  c0       0.1438   spun mean 0.1524   p 0.822   q 0.946  
+
+HOW TO READ IT
+----------------------------------------------------------------------------------------------------
+A cluster whose bar sits inside its grey box is where a random map with LanA's statistics would put
+it: its share of language cortex is what its shafts' positions give any map of that size and
+smoothness. A bar above the box is a type that sits in language cortex more than such a map
+predicts; below, less. The outlined cells of A and B are the parts of the network's response that no
+spun map reproduces: that is the response the LanA network has and the rest of the sampled cortex
+does not, in this task. Read B (left only) before A: on all electrodes a difference can be the two
+hemispheres differing.
+
+WHAT THIS FIGURE DOES NOT SHOW
+----------------------------------------------------------------------------------------------------
+  - Not evidence of language responsiveness per se: LanA is the sentences-versus-
+    nonwords contrast, which subtracts auditory, visual-form and articulatory cortex.
+    Types built on those phases are outside the network by construction.
+  - The spin keeps the map's statistics, not the cohort's: where no patient has a
+    shaft, no spun map can put an electrode either.
+  - Thresholds are a declared choice (0.1, 0.2); the
+    cell test of A and B uses the first.
+Written 2026-10-26 20:41 by 00_paper2_figure3_spin.py.

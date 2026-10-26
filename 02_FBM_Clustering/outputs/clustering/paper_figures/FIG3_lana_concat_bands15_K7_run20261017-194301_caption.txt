@@ -3,10 +3,11 @@ FIG 3   ·   LanA language atlas   ·   concat_bands15   ·   K = 7
 
 AXES SHARED ACROSS FEATURE SETS
 ----------------------------------------------------------------------------------------------------
-A's y axis, B's x axis and C's x and y axes run to the same limits in every FIG 3
-at this K, so the four can be laid side by side and a bar that looks taller is
-taller. The limits are the maximum reached in: concat_bands15.
-  A top 0.3173   B |rho| 0.2176   C loading 0.8835   C P_lana 0.7965   (each drawn with a small margin)
+B's y axis runs to the same limit in every FIG 3 at this K, so the figures can be
+laid side by side and a bar that looks taller is taller; the limit is the maximum
+reached in: concat_bands15. A's y axis spans the full range of P_lana,
+which is the same set of electrodes in every feature set.
+  B top 0.7077   (drawn with a small margin)
   recorded in FIG3_extents_K07.json; --all rebuilds every feature set on one set
 
 WHAT P_lana IS
@@ -33,7 +34,7 @@ coverage difference, not a disagreement about a number.
 
 Every electrode has a LanA value, so coverage is not a caveat on this figure.
 The safeguards stay for a cohort whose atlas run lags its reconstruction:
-per-cluster coverage is printed under every bar in panel A and anything below
+per-cluster coverage is printed over every violin in panel A and anything below
 70% is marked in red.
 
 THE NULLS, AND WHY THERE ARE TWO
@@ -82,11 +83,18 @@ K clusters is 7 tests per panel, and the figure RANKS them - which is exactly
 the arrangement that manufactures an impressive-looking best one. Both panels are
 corrected with Benjamini-Hochberg and a star means q < 0.05, not p < 0.05.
 
-PANEL A - clusters ranked by how much LanA they sit in
+PANEL A - P(LanA) of every electrode, clusters ranked by the mean
 ----------------------------------------------------------------------------------------------------
-Mean P_lana of a cluster's electrodes, most to least. Dark dash = the shaft-shift
-null, pale dash = the within-patient null, dotted line = the cohort mean, % under
-each bar = coverage.
+One violin per cluster over its electrodes' P_lana, ranked by the mean (the short
+dark line, with its patient-bootstrap interval). Every electrode at or above a
+normalised loading of 0.30 on its cluster (its share of the K loadings) is a
+point, coloured and sized by FIG 1's ramps: greyer and smaller the weaker it belongs,
+full colour from 0.50, full size from 0.70. Below 0.30 it is not
+drawn: 246 of 1587 electrodes (16%). Display only: the violin and every
+statistic use all argmax members.
+Dark dash = the shaft-shift null, pale dash = the within-patient null, dotted line =
+the cohort mean, % over each violin = coverage.
+  own-cluster loading   min 0.200   median 0.410   max 0.884   (1/K = 0.143)
 
   cohort mean P_lana             0.1418
   most  c1  0.2070 [0.1334, 0.3173]  shaft null 0.2000 q=0.374  (within-patient null 0.1384 q=0.0014)
@@ -94,48 +102,69 @@ each bar = coverage.
   clusters above the SHAFT-SHIFT null at q<0.05   0 of 7
   above the weaker within-patient null              1 of 7
 
-PANELS C and B - loading against P_lana (C every electrode, B the rhos ranked)
+PANEL B - inside the LanA network, at two thresholds
 ----------------------------------------------------------------------------------------------------
-Spearman rho between an electrode's LOADING on a cluster and its P_lana, across
-EVERY electrode with a LanA value - not only the cluster's own members, because
-the question is whether belonging more strongly to this cluster goes with sitting
-further into language cortex, and that is a statement about all of them.
+The mean of panel A is set by the mass of electrodes below P = 0.1, where nothing
+happens; the relation lives in the tail of the P distribution. Panel B reads it
+directly: of each cluster's electrodes, the share whose P_lana reaches 0.1
+(solid) or 0.2 (pale), against the cohort rate (dotted), with the same two
+nulls and the same patient bootstrap as panel A. The number over a solid bar is
+the enrichment, the share divided by the cohort rate. The thresholds are a
+declared choice: 0.1 is the partition the atlas runs on disk use (thr0p1), 0.2 the
+core of the network; both are drawn so the choice is visible.
 
-Spearman, not Pearson: P_lana is a bounded, heavily right-skewed probability and
-the loadings are not normal either, so a rank correlation is the honest choice.
+  P_lana >= 0.10   cohort rate 40.8%   (1 of 7 above the shaft-shift null at q<0.05, 2 above the within-patient one)
+  cluster   n     inside  [95% CI]           x cohort   shaft null  q        within null  q
+  c1       143    54.5%  [ 40.4,  70.8]    1.34     54.2%  0.81       40.9%  0.0028 
+  c5       200    54.5%  [ 46.5,  63.1]    1.33     49.3%  0.0364     44.2%  0.0014 
+  c4       334    43.7%  [ 37.8,  49.2]    1.07     42.6%  0.81       43.0%  0.929  
+  c2       168    36.3%  [ 29.5,  42.9]    0.89     37.0%  0.81       39.6%  1      
+  c3       200    38.5%  [ 30.2,  46.0]    0.94     39.1%  0.81       41.0%  1      
+  c6       224    32.1%  [ 24.4,  46.0]    0.79     36.9%  0.997      42.4%  1      
+  c0       318    33.0%  [ 25.2,  43.3]    0.81     33.4%  0.81       35.9%  1      
 
-THE K CORRELATIONS ARE NOT INDEPENDENT OF EACH OTHER, and this is the easiest
-number in the figure to over-read. A convex-NMF loading vector is normalised to
-sum to 1, so the K loadings of one electrode live on a simplex: if one cluster's
-loading rises with P_lana, the others MUST fall, whatever they are describing.
-A negative rho is therefore 'not this cluster' and not 'this cluster avoids
-language cortex' - the two are indistinguishable from this panel. Only the
-POSITIVE end is interpretable on its own, and even the ranking among negatives is
-partly an artefact of how strong the leader is. Verified on synthetic data where
-one cluster was planted to track the atlas: every other cluster went negative
-without being planted to do anything at all.
+  P_lana >= 0.20   cohort rate 16.3%   (0 of 7 above the shaft-shift null at q<0.05, 1 above the within-patient one)
+  cluster   n     inside  [95% CI]           x cohort   shaft null  q        within null  q
+  c1       143    24.5%  [  9.4,  46.5]    1.50     25.4%  0.958      15.0%  0.0056 
+  c5       200    21.5%  [ 12.9,  30.4]    1.32     20.0%  0.561      20.9%  0.997  
+  c4       334    20.4%  [ 15.4,  25.9]    1.25     19.7%  0.79       17.4%  0.172  
+  c2       168    12.5%  [  9.5,  19.4]    0.77     12.7%  0.958      14.3%  0.997  
+  c3       200    11.5%  [  7.1,  16.2]    0.70     13.2%  0.958      16.9%  0.997  
+  c6       224    14.3%  [  9.5,  21.3]    0.88     16.0%  0.958      16.6%  0.997  
+  c0       318    11.6%  [  6.6,  17.4]    0.71     10.4%  0.47       13.4%  0.997  
 
-The within-patient null does not remove this. It is computed on the same
-normalised loadings, so it prices in the simplex for EACH cluster separately -
-it says whether that cluster's rho exceeds chance, not whether the K rhos are
-mutually consistent.
+PANEL C - what the network is made of
+----------------------------------------------------------------------------------------------------
+The same electrodes the other way round: the type composition of the electrodes
+inside the network at each threshold, of the whole cohort, and of the electrodes
+outside it, each bar summing to 100%. Descriptive - the per-cluster test is B.
 
-  cluster  rho [95% CI]                 q shaft   q within-pat   meanP   q shaft   coverage
-  c1       +0.140 [+0.053, +0.218]     0.0056       0.0007   0.2070     0.374   100%
-  c5       +0.036 [-0.043, +0.124]     0.0425        0.461   0.1724     0.374   100%
-  c4       +0.029 [-0.062, +0.109]      0.544        0.623   0.1587      0.36   100%
-  c2       -0.014 [-0.087, +0.059]      0.871        0.623   0.1290     0.704   100%
-  c3       -0.086 [-0.151, -0.011]     0.0056       0.0007   0.1198         1   100%
-  c6       +0.013 [-0.072, +0.086]      0.992        0.716   0.1180         1   100%
-  c0       -0.037 [-0.119, +0.058]      0.273         0.71   0.1129     0.599   100%
+  group               n     c1     c5     c4     c2     c3     c6     c0   
+  inside P >= 0.2    259     14%    17%    26%     8%     9%    12%    14%
+  inside P >= 0.1    648     12%    17%    23%     9%    12%    11%    16%
+  whole cohort       1587     9%    13%    21%    11%    13%    14%    20%
+  outside P < 0.1    939      7%    10%    20%    11%    13%    16%    23%
 
-  3 of 7 correlations pass the shaft-shift
-  null; 2 pass the weaker within-patient one.
-  1 of 7 reach |rho| = 0.10 (largest c1 at +0.140); the rest sit inside the band. At 1587 electrodes a q-value is nearly free; the effect size is
-  the result, and even the largest is small by any convention.
-A rho near zero means the cluster is placed independently of the atlas. That is a
-result, not a failure - it says the clustering found structure the atlas does not
-describe.
+  most over-represented inside (P >= 0.1): c5 17% vs 10% outside, c1 12% vs 7% outside
+  most under-represented: c6 11% vs 16%, c0 16% vs 23%
+
+THE CORRELATION OF LOADING WITH P_lana (Spearman rho over every electrode, with
+both nulls and the patient bootstrap) is still computed and written to the table
+- rho, rho_lo, rho_hi, null_rho, p_rho, q_rho and the _sh variants - but it left
+the page on 2026-10-26: the K rhos are compositional (an electrode's loadings sum
+to 1, so one cluster tracking the atlas forces the others negative) and they are
+dominated by the mass of electrodes below P = 0.1. For the record:
+
+  cluster  rho [95% CI]                 q shaft   q within-pat
+  c1       +0.140 [+0.053, +0.218]     0.0056       0.0007
+  c5       +0.036 [-0.043, +0.124]     0.0425        0.461
+  c4       +0.029 [-0.062, +0.109]      0.544        0.623
+  c2       -0.014 [-0.087, +0.059]      0.871        0.623
+  c3       -0.086 [-0.151, -0.011]     0.0056       0.0007
+  c6       +0.013 [-0.072, +0.086]      0.992        0.716
+  c0       -0.037 [-0.119, +0.058]      0.273         0.71
+  largest |rho| 0.140; 3 of 7 pass the shaft-shift null.
+
 
 PANEL D - LanA on this coverage
 ----------------------------------------------------------------------------------------------------
@@ -151,17 +180,19 @@ covers this point. It is not a measurement in this patient. A cluster high in pa
 language cortex usually is; whether it RESPONDED to language is FIG 1, not this.
 
 Against the SHAFT-SHIFT null, which preserves the spatial smoothness of the atlas, 0 of 7 clusters
-sit in more LanA than chance and 3 of 7 correlations pass. Against the weaker within-patient null it
-is 1 and 2. Where those differ, the smoothness was doing the work.
+sit in more LanA than chance (panel A) and 1 of 7 keep more of their electrodes inside the network
+at P >= 0.1 (panel B). Against the weaker within-patient null it is 1 and 2. Where those differ, the
+smoothness was doing the work.
 
-The largest |rho| is 0.14. Significance here is nearly free at this sample size; the effect size is
-the result.
+Inside the network at P >= 0.1: c1 55% and c5 55% of their electrodes against 41% in the cohort, c0
+33% and c6 32%. The network itself is 17% c5 against 10% outside and 12% c1 against 7% outside
+(panel C). The largest |rho| of loading against P_lana, in the table and no longer drawn, is 0.14.
 
 Every electrode has a LanA value, so coverage is not a caveat here. Every cluster is above the
 coverage floor here.
 
-The K correlations are NOT independent: loadings sum to 1, so one cluster tracking the atlas forces
-the others negative by arithmetic. Only the positive end is interpretable alone.
+The shares of panel B are one number per cluster and are not compositional, unlike a correlation of
+normalised loadings; the composition bars of panel C sum to 100% within each group.
 
 LanA is left-lateralised and sEEG coverage is not symmetric, so a left-heavy cluster scores higher
 for that reason alone. Neither null removes it: it is a property of where a cluster is, not of which
