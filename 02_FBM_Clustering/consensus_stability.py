@@ -26,8 +26,8 @@ WHAT IS COMPUTED, per cell (feature set x method) and per K in --ks (default 2..
   2. K SELECTION. PAC(K) = share of off-diagonal pairs with 0.1 < M < 0.9; the consensus CDF and
      Monti's area A(K) and Delta(K), plus the running-max variant Delta^(K) that Senbabaoglu
      recommends when A(K) is not monotone (it is not for k-means and cNMF). NULL: the covariance-
-     matched Gaussian surrogate of measure_cluster_stability.surrogate (one blob, the data's own
-     covariance, the same generator as the separation null), one draw per (feature set, draw),
+     matched Gaussian cloud of measure_cluster_stability.surrogate (one cloud of points with the data's
+     own covariance and no cluster structure, the same generator as the separation null), one draw per (feature set, draw),
      shared by the three methods of that feature set, with the real patient labels attached, run
      through the identical consensus procedure (default 25 draws x 50 iterations; PAC is a global
      statistic and does not need a fine M). RCSI(K) = log(mean PAC_null) - log(PAC_real);
@@ -399,7 +399,7 @@ def run_cell(cell: dict, method: str, out: Path, a, stats_dir: Path | None, k_cu
                 if d == 0 and k_current is not None and K == k_current and not a.skip_figures:
                     lab_n, _ = consensus_labels(Mn, K)
                     heatmap(Mn, lab_n, pats, out / f"null_sanity_k{K:02d}.png",
-                            f"{FSET_LABEL[fset]} x {LABEL[method]}  -  ONE SURROGATE DRAW at K={K}: PAC {rec['pac']:.3f} (no blocks expected)")
+                            f"{FSET_LABEL[fset]} x {LABEL[method]}  -  ONE GAUSSIAN-CLOUD DRAW at K={K}: PAC {rec['pac']:.3f} (no blocks expected)")
                 fJ.write_text(json.dumps(rec), encoding="utf-8")
                 null[K].append(rec)
             log(f"  null draw {d + 1}/{a.null_draws} done")
@@ -498,7 +498,7 @@ def run_cell(cell: dict, method: str, out: Path, a, stats_dir: Path | None, k_cu
         fig, ax = plt.subplots(1, 3, figsize=(15, 4))
         ax[0].plot(curve.K, curve.pac_real, "o-", label="real")
         if "pac_null_mean" in curve:
-            ax[0].errorbar(curve.K, curve.pac_null_mean, yerr=curve.pac_null_sd, fmt="s--", color="0.5", label=f"null (mean ± SD, {a.null_draws} draws)")
+            ax[0].errorbar(curve.K, curve.pac_null_mean, yerr=curve.pac_null_sd, fmt="s--", color="0.5", label=f"Gaussian cloud (mean ± SD, {a.null_draws} draws)")
         ax[0].set_xlabel("K"); ax[0].set_ylabel("PAC (0.1 < M < 0.9)"); ax[0].legend(fontsize=8); ax[0].set_title("PAC")
         if "rcsi" in curve:
             ax[1].plot(curve.K, curve.rcsi, "o-")
@@ -617,7 +617,7 @@ def cross_cell(root: Path, a, log):
     # SUMMARY.md
     L = [f"# Consensus clustering stability  -  {root.name}", "",
          f"written {time.strftime('%Y-%m-%d %H:%M')} by consensus_stability.py; patients resampled (80 % without replacement), "
-         f"H = {a.H}, null = covariance-matched Gaussian surrogate, {a.null_draws} draws x {a.null_H} iterations, Ks {a.ks[0]}..{a.ks[-1]}.", "",
+         f"H = {a.H}, null = covariance-matched Gaussian cloud (one cloud, the data's covariance, no clusters), {a.null_draws} draws x {a.null_H} iterations, Ks {a.ks[0]}..{a.ks[-1]}.", "",
          "## Chosen K per cell", "", "| feature set | method | current K | chosen K (constrained) | unconstrained | constraint binding | PAC real | PAC null | RCSI | p | mean cluster consensus | clusters m(k) < 0.6 | ARI vs published | ARI vs refit (seed 42) | seed-rerun ARI |",
          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     fmt = lambda v, d=3: "-" if v is None or (isinstance(v, float) and np.isnan(v)) else (f"{v:.{d}f}" if isinstance(v, float) else str(v))
@@ -670,7 +670,7 @@ def cross_cell(root: Path, a, log):
     if (root / "existing_outputs_check.json").exists():
         chk = json.loads((root / "existing_outputs_check.json").read_text(encoding="utf-8"))
         L += ["## Existing outputs", "", f"{chk['n_files']} existing files hashed before and after: {'unchanged' if chk['unchanged'] else 'CHANGED - ' + ', '.join(chk['changed'])}.", ""]
-    L += ["## Reading", "", f"Cluster consensus below {UNSTABLE} is flagged unstable (a convention). RCSI compares the real PAC with the surrogate's; the surrogate has the data's covariance but no patient structure, so a K whose clusters follow patients can look stable against it - the dominance constraint and the per-patient tables are the guards. Numbers only; no interpretation beyond them."]
+    L += ["## Reading", "", f"Cluster consensus below {UNSTABLE} is flagged unstable (a convention). RCSI compares the real PAC with the Gaussian cloud's; the cloud has the data's covariance but no patient structure, so a K whose clusters follow patients can look stable against it - the dominance constraint and the per-patient tables are the guards. Numbers only; no interpretation beyond them."]
     (root / "SUMMARY.md").write_text("\n".join(L), encoding="utf-8")
     log(f"\nwrote {root / 'summary_cells.csv'}, {root / 'SUMMARY.md'}")
 
