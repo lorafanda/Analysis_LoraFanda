@@ -186,10 +186,7 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
   beyond one modest effect each way, and with a naming task that is expected — the atlas
   subtracts exactly the perception and articulation systems the task drives. (Decide: a
   results slide or a limitation line.)
-- **Generalisation.** At the chosen K no cluster is one patient; leave-one-patient-out
-  placement tracks electrode count (ρ −0.52) more than shared coverage (ρ +0.36, p 0.055):
-  holding a patient out removes REGIONS, not a random sample. *Sentence:* what fails to
-  generalise may be what only two patients had electrodes near.
+- **Generalisation.** At the chosen K no cluster is one patient. Redrawn on v17 on 2026-10-27 00:45 (`make_coverage_figures.py --recompute`): leave-one-patient-out placement is NOT predicted by shared coverage (Spearman ρ +0.22, p 0.26; +0.23 holding electrode count constant) nor by electrode count (ρ −0.24, p 0.21), unlike the previous cohort (v16: −0.52 and +0.36). 22 % of the gated electrodes have no other patient within 6 mm, 9 % within 10 mm. The three worst-placed patients, EL051 (66 %), PAT_6619 (72 %) and PAT_3975 (75 %), span the coverage range. *Sentence:* holding a patient out removes REGIONS, not a random sample, so coverage COULD drive the generalisation numbers; on v17 it measurably does not, and the limitation is stated as one, not shown as a result.
 
 ### 4.2 · Decisions that make the figures consistent (your call; the current state in the middle column)
 
