@@ -1597,8 +1597,7 @@ EXAMPLES = {
         "number is the enrichment. (C) Composition of the network at both thresholds, of "
         "the cohort and of the outside. (D) P(LanA) on this coverage: left, right, from "
         "above. All 1587 electrodes have an atlas value; 5000 permutations per null, "
-        "2000 bootstraps.",
-        "Figure 3b. The same comparison under a spin null (5000 rotations of the "
+        "2000 bootstraps. Figure 3b. The same comparison under a spin null (5000 rotations of the "
         "fsaverage sphere, mirrored on the right hemisphere): the network's mean response "
         "inside and outside and their difference, on all electrodes (A) and on the left "
         "hemisphere (B), with the cells beyond the spun maps outlined; each cluster's "
