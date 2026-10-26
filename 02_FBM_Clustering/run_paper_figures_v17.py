@@ -80,10 +80,15 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="print the plan and stop")
     ap.add_argument("--only", type=int, nargs="*",
                     help="run only these step numbers (see --dry-run)")
+    ap.add_argument("--paper", action="store_true",
+                    help="draw every figure for the page (PAPER2_PAPER=1 for each script: "
+                         "174 mm, printed font sizes, no prose or stamp, PNGs under "
+                         "paper_figures/paper/); the working renders are untouched")
     a = ap.parse_args()
 
     steps = plan(a.headless)
-    print(f"{len(steps)} steps, K = {K}, MAIN = {MAIN} (K={K_MAIN})\n")
+    print(f"{len(steps)} steps, K = {K}, MAIN = {MAIN} (K={K_MAIN})"
+          + ("   \u00b7   PAPER MODE: paper_figures/paper/" if a.paper else "") + "\n")
     for i, (brains, cmd) in enumerate(steps, 1):
         print(f"  {i:2d}. {'[brains] ' if brains else '          '}{' '.join(cmd)}")
     if a.dry_run:
@@ -101,7 +106,8 @@ def main():
         # the working directory is irrelevant to them - any local one will do.
         r = subprocess.run([sys.executable, str(CLUST / cmd[0]), *cmd[1:]],
                            cwd=tempfile.gettempdir(),
-                           env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+                           env={**os.environ, "PYTHONIOENCODING": "utf-8",
+                                **({"PAPER2_PAPER": "1"} if a.paper else {})})
         if r.returncode:
             fails.append((i, cmd, r.returncode))
             print(f"  !! step {i} exited {r.returncode}", flush=True)

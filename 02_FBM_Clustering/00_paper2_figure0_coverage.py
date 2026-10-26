@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
 import json
 import re
 import sys
@@ -286,7 +287,7 @@ def panel_brains(axes, xyz, hemi, rgba, radius):
         # top-left corner, which the brain's outline leaves free (2026-10-26)
         y_, va_ = (0.98, "top") if side == "T" else (0.02, "bottom")
         ax.text(0.02, y_, f"{tag}  {n[side]}", transform=ax.transAxes, ha="left",
-                va=va_, fontsize=7.0, color=MUTED)
+                va=va_, fontsize=P2.fs(7.0), color=MUTED)
     return n
 
 
@@ -318,13 +319,13 @@ def draw_cube(ax, A, conds, nf):
     ax.pcolormesh(x, f, A, cmap="RdBu_r", vmin=-VLIM, vmax=VLIM, shading="auto",
                   rasterized=True)
     for b in range(len(conds)):
-        ax.axvline(b + 0.5, color=INK, lw=0.8, ls=(0, (4, 3)))
+        ax.axvline(b + 0.5, color=INK, lw=P2.pw(0.8), ls=(0, (4, 3)))
         if b:
-            ax.axvline(b, color=INK, lw=1.2)
+            ax.axvline(b, color=INK, lw=P2.pw(1.2))
     ax.set_xlim(0, len(conds)); ax.set_ylim(0, FMAX)
     ax.set_xticks([])
-    ax.set_ylabel("Hz", fontsize=7.6)
-    ax.tick_params(labelsize=7, colors=MUTED, length=2)
+    ax.set_ylabel("Hz", fontsize=P2.fs(7.6))
+    ax.tick_params(labelsize=P2.fs(7), colors=MUTED, length=2)
     return x
 
 
@@ -358,7 +359,7 @@ def strip_0(ax, conds, labelled, ratio):
         x0 = b / ncond
         for k_, (bx0, bx1) in enumerate(((x0, x0 + half), (x0 + half, x0 + 2 * half))):
             ax.add_patch(Rectangle((bx0 + 0.004, y0), (bx1 - bx0) - 0.008, yh,
-                                   fc="white", ec=GREY, lw=0.9, zorder=1))
+                                   fc="white", ec=GREY, lw=P2.pw(0.9), zorder=1))
             a = P2._icon_axes(ax, bx0, bx1, y0=y0 + 0.03 / 0.78 * yh, h=0.70 / 0.78 * yh)
             if k_ == 0:
                 P2.STIM_ICON[cond](a)
@@ -368,9 +369,9 @@ def strip_0(ax, conds, labelled, ratio):
             top = y0 + yh
             for k_, word in enumerate(("stimulus", "response")):
                 ax.text(x0 + half * (k_ + 0.5), top + 0.02 / ratio, word, ha="center",
-                        va="bottom", fontsize=6.6, color=MUTED, transform=ax.transAxes)
+                        va="bottom", fontsize=P2.fs(6.6), color=MUTED, transform=ax.transAxes)
             ax.text(x0 + half, top + 0.11 / ratio, COND0[cond], ha="center", va="bottom",
-                    fontsize=8.4, color=INK, transform=ax.transAxes)
+                    fontsize=P2.fs(8.4), color=INK, transform=ax.transAxes)
 
 
 def panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys, first):
@@ -391,17 +392,27 @@ def panel_exemplar(axH, axB, axS, axC, t, ex, gp, keys, first):
                         np.array([P2.BG_RADIUS * 3.2]))
     _show(axB, img)
     axB.text(0.02, 0.02, "LH" if side == "L" else "RH",
-             transform=axB.transAxes, ha="left", va="bottom", fontsize=6.8, color=MUTED)
+             transform=axB.transAxes, ha="left", va="bottom", fontsize=P2.fs(6.8), color=MUTED)
     # the header; its text stays in the upper 60% so the strip has air above it
     axH.axis("off")
-    axH.text(0, 0.86, kind.upper(), transform=axH.transAxes, ha="left", va="center",
-             fontsize=10.2, color=col, fontweight="bold")
-    axH.text(0.17, 0.86, f"{patient} · {electrode} · {region}", transform=axH.transAxes,
-             ha="left", va="center", fontsize=9.6, color=INK)
-    axH.text(0.17, 0.56, reading, transform=axH.transAxes, ha="left", va="center",
-             fontsize=8.2, color=MUTED, style="italic")
-    # the strip and the cube
-    strip_0(axS, conds, first, STRIP_H_LABELLED if first else STRIP_H)
+    if P2.paper():
+        # one line: the kind and the contact; the reading is in the legend (2026-10-27)
+        axH.text(0, 0.50, kind.upper(), transform=axH.transAxes, ha="left", va="center",
+                 fontsize=P2.fs(9.2), color=col, fontweight="bold")
+        axH.text(0.17, 0.50, f"{patient} · {electrode} · {region}", transform=axH.transAxes,
+                 ha="left", va="center", fontsize=P2.fs(8.2), color=INK)
+    else:
+        axH.text(0, 0.86, kind.upper(), transform=axH.transAxes, ha="left", va="center",
+                 fontsize=P2.fs(10.2), color=col, fontweight="bold")
+        axH.text(0.17, 0.86, f"{patient} · {electrode} · {region}", transform=axH.transAxes,
+                 ha="left", va="center", fontsize=P2.fs(9.6), color=INK)
+        axH.text(0.17, 0.56, reading, transform=axH.transAxes, ha="left", va="center",
+                 fontsize=P2.fs(8.2), color=MUTED, style="italic")
+    # the strip and the cube; on paper the strip is drawn once, over the first row
+    if P2.paper() and not first:
+        axS.axis("off")
+    else:
+        strip_0(axS, conds, first, STRIP_H_LABELLED if first else STRIP_H)
     draw_cube(axC, A, conds, nf)
     for s_ in axC.spines.values():
         s_.set_color(col); s_.set_linewidth(1.4)
@@ -431,29 +442,35 @@ def figure_0_paper(t, u, d, gp):
     # the four cubes come out the same height. The outer ratio for A includes the gaps
     # between rows, which GridSpec takes out of A's share.
     n_ex = max(len(exs), 1)
-    rows_h = [0.46 + (STRIP_H_LABELLED if i == 0 else STRIP_H) + 1.0 for i in range(n_ex)]
-    gapA = 0.22
+    pap = P2.paper()
+    hH = 0.30 if pap else 0.46                       # the header row
+    def strip_h(i):
+        return STRIP_H_LABELLED if i == 0 else (0.05 if pap else STRIP_H)
+    rows_h = [hH + strip_h(i) + 1.0 for i in range(n_ex)]
+    gapA = 0.16 if pap else 0.22
     A_units = sum(rows_h) + gapA * (n_ex - 1) * (sum(rows_h) / n_ex)
-    fig = plt.figure(figsize=(12.3, 5.4 + 2.95 * n_ex), dpi=190)
+    fig = plt.figure(figsize=(P2.canvas(12.3), (4.6 + 2.45 * n_ex) if pap else (5.4 + 2.95 * n_ex)),
+                     dpi=190)
     gs = GridSpec(2, 1, figure=fig, height_ratios=[A_units, 3.0], hspace=0.08,
-                  left=0.055, right=0.945, top=0.905, bottom=0.04)
-    fig.suptitle(f"FIG 0   ·   the task and the cohort   ·   the gate saw {len(u)} "
-                 f"electrodes in {d['n_patients']} patients and kept {int(kept.sum())}",
-                 x=0.055, y=0.975, ha="left", fontsize=15.5, color=INK)
+                  left=0.055, right=0.945, top=0.955 if pap else 0.905, bottom=0.04)
+    if not pap:
+        fig.suptitle(f"FIG 0   ·   the task and the cohort   ·   the gate saw {len(u)} "
+                     f"electrodes in {d['n_patients']} patients and kept {int(kept.sum())}",
+                     x=0.055, y=0.975, ha="left", fontsize=P2.fs(15.5), color=INK)
     # fig.text(0.055, 0.950,
     #          "Three naming conditions - auditory, picture, written sentence - each with a "
     #          "stimulus and then a response cue (dashed), on the warped time axis every "
     #          "later figure uses.\nFour electrodes show what the recordings look like; the "
     #          "brains below show every electrode the responsiveness gate saw.",
-    #          fontsize=9.8, color=MUTED, va="top")
+    #          fontsize=P2.fs(9.8), color=MUTED, va="top")
 
     gA = GridSpecFromSubplotSpec(n_ex, 1, gs[0], hspace=gapA, height_ratios=rows_h)
     rows_out, firsts = [], []
     for i, ex in enumerate(exs):
         cell = GridSpecFromSubplotSpec(3, 2, gA[i, 0],
-                                       height_ratios=[0.46, STRIP_H_LABELLED if i == 0
-                                                      else STRIP_H, 1.0],
-                                       width_ratios=[1.0, 2.5], hspace=0.06, wspace=0.16)
+                                       height_ratios=[hH, strip_h(i), 1.0],
+                                       width_ratios=[0.6, 2.9] if pap else [1.0, 2.5],
+                                       hspace=0.06, wspace=0.16)
         axH = fig.add_subplot(cell[0, :])
         axB = fig.add_subplot(cell[1:, 0])
         axS, axC = fig.add_subplot(cell[1, 1]), fig.add_subplot(cell[2, 1])
@@ -474,32 +491,41 @@ def figure_0_paper(t, u, d, gp):
         cax = fig.add_axes([0.958, y0, 0.010, y1 - y0])
         cb = fig.colorbar(ScalarMappable(norm=Normalize(-VLIM, VLIM), cmap="RdBu_r"),
                           cax=cax)
-        cb.set_label("dB re baseline", fontsize=7.6, color=MUTED)
-        cb.ax.tick_params(labelsize=6.8, colors=MUTED, length=2)
+        cb.set_label("dB re baseline", fontsize=P2.fs(7.6), color=MUTED)
+        cb.ax.tick_params(labelsize=P2.fs(6.8), colors=MUTED, length=2)
         cb.outline.set_visible(False)
 
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
-    labels = [(axB3[0], "B  ·  every electrode the gate saw",
-               "active, through the gate: green   ·   inactive, rejected: grey")]
+    labels = [(axB3[0], "B   every electrode the gate saw" if pap else "B  ·  every electrode the gate saw",
+               "" if pap else "active, through the gate: green   ·   inactive, rejected: grey")]
     if firsts:
-        labels.insert(0, (firsts[0][0], "A  ·  the task, through four electrodes", ""))
+        labels.insert(0, (firsts[0][0], ("A   the task, through four electrodes" if pap else
+                                         "A  ·  the task, through four electrodes"), ""))
+    if pap:
+        # a two-dot key inside the right view instead of the text line (2026-10-27)
+        axk = axB3[2]
+        axk.scatter([0.70], [0.12], s=P2.pa(14), color=GREEN, transform=axk.transAxes, clip_on=False)
+        axk.text(0.73, 0.12, "kept", transform=axk.transAxes, va="center", fontsize=P2.fs(7.0), color=INK)
+        axk.scatter([0.70], [0.05], s=P2.pa(11), color=P2.BG, transform=axk.transAxes, clip_on=False)
+        axk.text(0.73, 0.05, "rejected", transform=axk.transAxes, va="center", fontsize=P2.fs(7.0), color=INK)
     for ax, label, right in labels:
         top = inv.transform((0, ax.get_tightbbox(r).y1))[1]
-        fig.text(0.055, top + 0.004, label, fontsize=10.4, color=INK, va="bottom")
+        fig.text(0.055, top + 0.004, label, fontsize=P2.fs(10.4), color=INK, va="bottom")
         if right:
-            fig.text(0.945, top + 0.004, right, fontsize=8.8, color=MUTED, va="bottom",
+            fig.text(0.945, top + 0.004, right, fontsize=P2.fs(8.8), color=MUTED, va="bottom",
                      ha="right")
 
-    OUT.mkdir(parents=True, exist_ok=True)
+    od = P2.paper_dir(OUT)
+    od.mkdir(parents=True, exist_ok=True)
     # FIG 0 is the COHORT, not a run: it is drawn from the concat cache and is the
     # same at every K and for every algorithm. So it carries the cache version.
-    p = OUT / f"FIG0_cohort_{cohort_tag()}.png"
+    p = od / f"FIG0_cohort_{cohort_tag()}.png"
     # no run to name: FIG 0 IS the cohort, drawn from the cache and the same at
     # every K and for every algorithm
     P2.stamp(fig, extra=f"{len(d['X'])} electrodes, {d['n_patients']} patients")
-    P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
+    P2.save_png(fig, p, dpi=P2.out_dpi(190), bbox_inches="tight", facecolor="white")
     plt.close(fig)
     ex_df = pd.DataFrame(rows_out)
     P2.save_text(ex_df.to_csv(index=False), p.with_name(p.stem + "_exemplars.csv"))
@@ -519,20 +545,20 @@ def panel_bars(ax, order, total, part, pcol, ylabel):
     for i, p in enumerate(order):
         col = pcol[p]
         ax.bar(i, total[i], width=0.78, facecolor=to_rgba(col, 0.18), edgecolor=col,
-               hatch="///", lw=0.9)
-        ax.bar(i, part[i], width=0.78, color=col, lw=0)
+               hatch="///", lw=P2.pw(0.9))
+        ax.bar(i, part[i], width=0.78, color=col, lw=P2.pw(0))
         if part[i] == 0:
             ax.text(i, total[i] + top * 0.012, f"0/{total[i]}", ha="center", va="bottom",
-                    fontsize=6.6, color=RED, fontweight="bold")
+                    fontsize=P2.fs(5.0) if P2.paper() else P2.fs(6.6), color=RED, fontweight="bold")
         else:
             ax.text(i, total[i] + top * 0.012, f"{part[i]}/{total[i]}", ha="center",
-                    va="bottom", fontsize=6.6, color=col)
-    ax.set_ylabel(ylabel, fontsize=8.6)
+                    va="bottom", fontsize=P2.fs(5.0) if P2.paper() else P2.fs(6.6), color=col)
+    ax.set_ylabel(ylabel, fontsize=P2.fs(8.6))
     ax.set_ylim(0, top)
     ax.set_xlim(-0.6, len(order) - 0.4)
     ax.set_xticks(x)
-    ax.set_xticklabels(order, rotation=45, ha="right", fontsize=7.0)
-    ax.tick_params(labelsize=7.4, colors=MUTED, length=2)
+    ax.set_xticklabels(order, rotation=45, ha="right", fontsize=P2.fs(7.0))
+    ax.tick_params(labelsize=P2.fs(7.4), colors=MUTED, length=2)
     ax.spines[["top", "right"]].set_visible(False)
 
 
@@ -555,18 +581,19 @@ def panel_example(axS, ax, t, row, gp, passed):
         thr_p = float(getattr(r, "thr_pos_used", gp["thr_pos"]))
         thr_n = float(getattr(r, "thr_neg_used", gp["thr_neg"]))
         ax.contour(xs, f, (a > thr_p).astype(float), levels=[0.5],
-                   colors=[INK], linewidths=0.5)
+                   colors=[INK], linewidths=P2.pw(0.5))
         if (a < thr_n).any():
             ax.contour(xs, f, (a < thr_n).astype(float), levels=[0.5],
-                       colors=[INK], linewidths=0.5, linestyles="dotted")
+                       colors=[INK], linewidths=P2.pw(0.5), linestyles="dotted")
         n_pos = round(float(r.prop_above_pos) * nf * nt)
         n_neg = round(float(r.prop_below_neg) * nf * nt)
         ok = bool(r.high_activity)
-        ax.text(b + 0.5, -0.04,
+        txt_ = (f"{n_pos} of {need_p} bins" if P2.paper() else
                 f"above {thr_p:+.1f} dB   {n_pos} of {need_p} bins\n"
-                f"below {thr_n:+.1f} dB   {n_neg} of {need_n}",
+                f"below {thr_n:+.1f} dB   {n_neg} of {need_n}")
+        ax.text(b + 0.5, -0.04, txt_,
                 transform=ax.get_xaxis_transform(), ha="center", va="top",
-                fontsize=6.9, color=GREEN if ok else MUTED, linespacing=1.4,
+                fontsize=P2.fs(6.9), color=GREEN if ok else MUTED, linespacing=1.4,
                 fontweight="bold" if ok else "normal")
         detail.append(dict(condition=c, bins_pos=n_pos, need_pos=need_p,
                            bins_neg=n_neg, need_neg=need_n, passes=ok,
@@ -581,7 +608,9 @@ def panel_example(axS, ax, t, row, gp, passed):
     n, need = (best["bins_pos"], need_p) if by_pos else (best["bins_neg"], need_n)
     thr = f"{best['thr_pos']:+.1f}" if by_pos else f"{best['thr_neg']:+.1f}"
     who = f"{row.patient_id} · {row.electrode}"
-    if passed:
+    if P2.paper():
+        verdict = f"{'KEPT' if passed else 'DISCARDED'}  ·  {who}  ·  {n} of {need} bins"
+    elif passed:
         over = n - need
         verdict = (f"KEPT  ·  {who}  ·  {best['condition']}: {n} bins "
                    f"{'above' if by_pos else 'below'} {thr} dB, "
@@ -624,34 +653,52 @@ def figure_0_supplement(t, g, u, d, gp):
     rgba_c = np.where(has[:, None], rgba_of(ORANGE), grey).astype(np.uint8)
     rad_c = np.where(has, P2.BG_RADIUS * 1.25, P2.BG_RADIUS * 0.95)
 
-    fig = plt.figure(figsize=(17.6, 21.0), dpi=190)
-    gs = GridSpec(6, 1, figure=fig, height_ratios=[1.0, 1.55, 0.95, 1.55, 1.15, 1.15],
-                  hspace=0.60, left=0.055, right=0.945, top=0.940, bottom=0.028)
-    fig.suptitle(f"FIG S0   ·   the cohort, per patient   ·   the gate saw {len(u)} "
-                 f"electrodes in {len(order)} patients and kept {int(u_kept.sum())}   ·   "
-                 f"{int(has.sum())} of those have a LanA value",
-                 x=0.055, y=0.982, ha="left", fontsize=15.5, color=INK)
-    fig.text(0.055, 0.964,
-             "What the responsiveness gate saw and what it kept, where those electrodes "
-             "are, how much of them the language atlas can see, and what the gate is "
-             "actually deciding at the line.  Each patient keeps the colour FIG 1 draws "
-             "it in.", fontsize=9.8, color=MUTED, va="top")
+    pap = P2.paper()
+    if pap:
+        # four rows: the C and D of the screen version repeat A and B now that every
+        # kept electrode has a LanA value (2026-10-27)
+        fig = plt.figure(figsize=(P2.canvas(17.6), 13.2), dpi=190)
+        gs = GridSpec(4, 1, figure=fig, height_ratios=[1.0, 1.55, 1.15, 1.15],
+                      hspace=0.62, left=0.055, right=0.945, top=0.960, bottom=0.035)
+    else:
+        fig = plt.figure(figsize=(17.6, 21.0), dpi=190)
+        gs = GridSpec(6, 1, figure=fig, height_ratios=[1.0, 1.55, 0.95, 1.55, 1.15, 1.15],
+                      hspace=0.60, left=0.055, right=0.945, top=0.940, bottom=0.028)
+        fig.suptitle(f"FIG S0   ·   the cohort, per patient   ·   the gate saw {len(u)} "
+                     f"electrodes in {len(order)} patients and kept {int(u_kept.sum())}   ·   "
+                     f"{int(has.sum())} of those have a LanA value",
+                     x=0.055, y=0.982, ha="left", fontsize=P2.fs(15.5), color=INK)
+        fig.text(0.055, 0.964,
+                 "What the responsiveness gate saw and what it kept, where those electrodes "
+                 "are, how much of them the language atlas can see, and what the gate is "
+                 "actually deciding at the line.  Each patient keeps the colour FIG 1 draws "
+                 "it in.", fontsize=P2.fs(9.8), color=MUTED, va="top")
 
     axA = fig.add_subplot(gs[0])
-    panel_bars(axA, order, tot, kep, pcol, "electrodes: seen (hatched), kept (solid)")
+    panel_bars(axA, order, tot, kep, pcol,
+               "seen (hatched) / kept" if pap else "electrodes: seen (hatched), kept (solid)")
     cB = GridSpecFromSubplotSpec(1, 3, gs[1], wspace=0.03)
     axB = [fig.add_subplot(cB[0, i]) for i in range(3)]
     nB = panel_brains(axB, uxyz, uhemi, rgba_u, rad_u)
-    keyB = "kept: the patient's colour   ·   rejected by the gate: grey"
-    axC = fig.add_subplot(gs[2])
-    panel_bars(axC, order, kep, lan, pcol, "kept electrodes: all (hatched), with LanA")
-    cD = GridSpecFromSubplotSpec(1, 3, gs[3], wspace=0.03)
-    axD = [fig.add_subplot(cD[0, i]) for i in range(3)]
-    nD = panel_brains(axD, d["xyz"], d["hemi"], rgba_c, rad_c)
-    keyD = "kept, with a LanA value: orange   ·   without one: grey"
+    keyB = "" if pap else "kept: the patient's colour   ·   rejected by the gate: grey"
+    if pap:
+        axC = axD = None
+        # what D would have drawn, for the caption's count line
+        nD = dict(L=int((np.asarray(d['hemi']) == 'L').sum()), R=int((np.asarray(d['hemi']) == 'R').sum()),
+                  T=int(np.isfinite(np.asarray(d['xyz'])[:, 0]).sum()))
+        keyD = ""
+        cells_ = (("E", a, True, gs[2]), ("F", b, False, gs[3]))
+    else:
+        axC = fig.add_subplot(gs[2])
+        panel_bars(axC, order, kep, lan, pcol, "kept electrodes: all (hatched), with LanA")
+        cD = GridSpecFromSubplotSpec(1, 3, gs[3], wspace=0.03)
+        axD = [fig.add_subplot(cD[0, i]) for i in range(3)]
+        nD = panel_brains(axD, d["xyz"], d["hemi"], rgba_c, rad_c)
+        keyD = "kept, with a LanA value: orange   ·   without one: grey"
+        cells_ = (("E", a, True, gs[4]), ("F", b, False, gs[5]))
 
     ex = {}
-    for tag, row, ok, cell in (("E", a, True, gs[4]), ("F", b, False, gs[5])):
+    for tag, row, ok, cell in cells_:
         # the strip's 'stimulus' / 'response' words hang below its axis: the gap under it
         # has to hold them, or they land on the ERSP's top edge (2026-10-26)
         c_ = GridSpecFromSubplotSpec(2, 1, cell, height_ratios=[0.26, 1.0], hspace=0.18)
@@ -663,31 +710,40 @@ def figure_0_supplement(t, g, u, d, gp):
     pE, pF = ex["E"][1].get_position(), ex["F"][1].get_position()
     cax = fig.add_axes([0.958, pF.y0, 0.010, pE.y1 - pF.y0])
     cb = fig.colorbar(ScalarMappable(norm=Normalize(-VLIM, VLIM), cmap="RdBu_r"), cax=cax)
-    cb.set_label("dB re baseline", fontsize=7.6, color=MUTED)
-    cb.ax.tick_params(labelsize=6.8, colors=MUTED, length=2)
+    cb.set_label("dB re baseline", fontsize=P2.fs(7.6), color=MUTED)
+    cb.ax.tick_params(labelsize=P2.fs(6.8), colors=MUTED, length=2)
     cb.outline.set_visible(False)
 
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
-    for ax, label, right, col, bold in (
+    if pap:
+        rows_lab = (
+            (axA, "A   electrodes the gate saw, and kept, per patient", "", INK, False),
+            (axB[0], "B   the same electrodes on the brain", keyB, MUTED, False),
+            (ex["E"][0], "C   just through the gate", ex["E"][2]["verdict"], GREEN, True),
+            (ex["F"][0], "D   just not", ex["F"][2]["verdict"], RED, True))
+    else:
+        rows_lab = (
             (axA, "A  ·  electrodes the gate saw, and kept, per patient", "", INK, False),
             (axB[0], "B  ·  the same electrodes on the brain", keyB, MUTED, False),
             (axC, "C  ·  of the kept electrodes, those with a LanA value", "", INK, False),
             (axD[0], "D  ·  the same on the brain", keyD, MUTED, False),
             (ex["E"][0], "E  ·  just through the gate, and why", ex["E"][2]["verdict"],
              GREEN, True),
-            (ex["F"][0], "F  ·  just not, and why", ex["F"][2]["verdict"], RED, True)):
+            (ex["F"][0], "F  ·  just not, and why", ex["F"][2]["verdict"], RED, True))
+    for ax, label, right, col, bold in rows_lab:
         top = inv.transform((0, ax.get_tightbbox(r).y1))[1]
-        fig.text(0.055, top + 0.004, label, fontsize=10.4, color=INK, va="bottom")
+        fig.text(0.055, top + 0.004, label, fontsize=P2.fs(10.4), color=INK, va="bottom")
         if right:
-            fig.text(0.945, top + 0.004, right, fontsize=9.2 if bold else 8.8, color=col,
+            fig.text(0.945, top + 0.004, right, fontsize=P2.fs(9.2) if bold else P2.fs(8.8), color=col,
                      va="bottom", ha="right", fontweight="bold" if bold else "normal")
 
-    OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / f"FIG0_cohort_supplement_{cohort_tag()}.png"
+    od = P2.paper_dir(OUT)
+    od.mkdir(parents=True, exist_ok=True)
+    p = od / f"FIG0_cohort_supplement_{cohort_tag()}.png"
     P2.stamp(fig, extra=f"{len(d['X'])} electrodes, {d['n_patients']} patients")
-    P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
+    P2.save_png(fig, p, dpi=P2.out_dpi(190), bbox_inches="tight", facecolor="white")
     plt.close(fig)
     P2.save_text(tab.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))
     exrows = [dict(side=side, patient=e["patient"], electrode=e["electrode"], **q)
@@ -906,7 +962,12 @@ def main() -> int:
     ap.add_argument("--feature-set", default="concat_hg")
     ap.add_argument("--k", type=int, default=8)
     ap.add_argument("--only", choices=["paper", "supplement"], default=None)
+    ap.add_argument("--paper", action="store_true",
+                    help="draw for the page (174 mm, printed font sizes, no prose or stamp; "
+                         "PNG under paper_figures/paper/)")
     a = ap.parse_args()
+    if a.paper:
+        os.environ["PAPER2_PAPER"] = "1"
     print(f"=== FIGURE 0 ===  cohort of {a.feature_set} at K={a.k}")
     gp, d, t, g, u = prepare(a.feature_set, a.k)
     if a.only in (None, "paper"):

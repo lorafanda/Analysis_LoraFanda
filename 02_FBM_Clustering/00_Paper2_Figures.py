@@ -35,6 +35,7 @@ import argparse
 import colorsys
 import io
 import json
+import os
 import sys
 import time
 import warnings
@@ -108,6 +109,70 @@ LOAD_CAP = 0.70
 # member is still smaller and greyer. Display only: which electrodes a count or a test
 # uses is the argmax membership, never this. FIG 3 A applies the same cut to its points.
 LOAD_CUT = 0.30
+
+# ---- PAPER MODE (Lora, 2026-10-27) ------------------------------------------------------
+# PAPER draws a figure for the page instead of the screen. The canvas keeps its working
+# width; every font, line and marker is scaled (fs, pw, pa) so that it prints at its stated
+# point size once the page is reduced to PRINT_W_IN, the Cell Press two-column width; the
+# notes, subtitles and the provenance stamp stay off the page (the caption files carry
+# them); the PNG lands in paper_figures/paper/ at 300 dpi of the printed width. Turned on
+# by PAPER2_PAPER=1 in the environment or --paper on any figure script. The working
+# renders, the site and the methods document are untouched by it.
+PRINT_W_IN = 174 / 25.4
+PRINT_FONT_FACTOR = 0.85    # a label drawn at 7 pt prints at 6 pt: the page is dense
+
+
+def paper() -> bool:
+    """Read at call time: every figure script loads its own copy of this module, so the
+    switch lives in the environment (PAPER2_PAPER=1), which --paper sets."""
+    return os.environ.get("PAPER2_PAPER", "0") == "1"
+MEAN_VLIM = 2.0             # dB: the one colour range every cluster-mean heatmap uses on paper
+_CANVAS_W = [17.6]          # the width of the figure being drawn (canvas())
+# the provisional type names of the main solution (Lora's readings are owed; these are the
+# ones the outline, the abstract and the talk use), for the block titles on paper
+TYPE_NAMES = {("concat_bands15", 7): {5: "production", 0: "beta decrease",
+                                      2: "broadband decrease", 4: "low-frequency rise",
+                                      1: "audio-stimulus low-frequency",
+                                      3: "reading-stimulus low-frequency",
+                                      6: "response-period low-frequency fall"}}
+
+
+def canvas(w_in: float) -> float:
+    """Declare the width of the figure about to be drawn, so fs() can scale for it."""
+    _CANVAS_W[0] = float(w_in)
+    return float(w_in)
+
+
+def _scale() -> float:
+    return _CANVAS_W[0] / PRINT_W_IN * PRINT_FONT_FACTOR if paper() else 1.0
+
+
+def fs(pt):
+    """A font size that prints at `pt` points on the page (unchanged off paper)."""
+    return pt * _scale()
+
+
+def pw(x):
+    """A line width or marker size in points, scaled like fs()."""
+    return x * _scale()
+
+
+def pa(x):
+    """A scatter marker AREA (points squared), scaled like fs() squared."""
+    return x * _scale() ** 2
+
+
+def paper_dir(out: Path) -> Path:
+    return out / "paper" if paper() else out
+
+
+def out_dpi(default: float) -> float:
+    """The dpi at which the saved PNG is 300 dpi of the printed width."""
+    return 300.0 * PRINT_W_IN / _CANVAS_W[0] if paper() else default
+
+
+def type_name(fset: str, k: int, j: int) -> str:
+    return TYPE_NAMES.get((fset, k), {}).get(j, "")
 RENDER_PX = (1100, 820)         # cropped to the brain afterwards, so this is headroom
 BG_RADIUS = RC.DEPTH_RADIUS     # the electrode that is not in this cluster, in mm
 DANGER = 0.50                   # more than half a cluster from one patient
@@ -351,6 +416,8 @@ def stamp(fig, d=None, *, extra: str = "", note: str = ""):
     drawn from. Bottom left, small and grey: present when it is needed, invisible when
     it is not.
     """
+    if paper():
+        return
     bits = []
     if d is not None:
         bits.append(f"run {d['run'].name}")
@@ -362,7 +429,7 @@ def stamp(fig, d=None, *, extra: str = "", note: str = ""):
     bits.append(f"drawn {datetime.now():%Y-%m-%d %H:%M}")
     if note:
         bits.append(note)
-    fig.text(0.004, 0.002, "   \u00b7   ".join(bits), fontsize=6.0, color=MUTED,
+    fig.text(0.004, 0.002, "   \u00b7   ".join(bits), fontsize=fs(6.0), color=MUTED,
              ha="left", va="bottom")
 
 
@@ -632,24 +699,26 @@ def patient_bar(ax, d, j, pcol):
         ax.set_xticks([]); ax.set_yticks([])
         for s_ in ax.spines.values():
             s_.set_visible(False)
-        ax.text(0.0, 0.0, "no electrode reaches the display threshold", fontsize=6.4,
+        ax.text(0.0, 0.0, "no electrode reaches the display threshold", fontsize=fs(6.4),
                 color=MUTED, va="center")
         return
     vc = pd.Series(d["patient"][sel]).value_counts()        # descending
     x = 0.0
     for p, c in vc.items():
-        ax.barh(0, c / n, left=x, height=1.0, color=pcol[p], lw=0.4, ec="white")
+        ax.barh(0, c / n, left=x, height=1.0, color=pcol[p], lw=pw(0.4), ec="white")
         x += c / n
     top = float(vc.iloc[0]) / n
     ax.set_xlim(0, 1); ax.set_ylim(-0.62, 0.62)
     ax.set_xticks([]); ax.set_yticks([])
     for s_ in ax.spines.values():
         s_.set_visible(False)
+    if paper():                     # the block title carries the patient count on paper
+        return
     ax.text(0.0, -0.95, f"{len(vc)} patient{'s' if len(vc) != 1 else ''}",
-            transform=ax.get_xaxis_transform(), fontsize=6.4, color=MUTED,
+            transform=ax.get_xaxis_transform(), fontsize=fs(6.4), color=MUTED,
             ha="left", va="top")
     ax.text(1.0, -0.95, f"top {100*top:.0f}%", transform=ax.get_xaxis_transform(),
-            fontsize=6.4, color=RED if top > DANGER else MUTED, ha="right", va="top")
+            fontsize=fs(6.4), color=RED if top > DANGER else MUTED, ha="right", va="top")
 
 
 # ---- panel A -----------------------------------------------------------------
@@ -662,31 +731,31 @@ def panel_A(ax, fset, k, method="cnmf"):
         if s.empty:
             continue
         me = fs == fset
-        ax.plot(s.k, s["mean"], "-o", ms=3.6 if me else 2.0, lw=2.1 if me else 1.0,
+        ax.plot(s.k, s["mean"], "-o", ms=pw(3.6) if me else pw(2.0), lw=pw(2.1) if me else pw(1.0),
                 color=INK if me else MUTED, alpha=1.0 if me else 0.50,
                 zorder=4 if me else 2,
                 label=FS_SHORT[fs] + ("   <- this figure" if me else ""))
         pk = s.loc[s["mean"].idxmax()]
         if me:
             ax.fill_between(s.k, s["mean"] - s["std"], s["mean"] + s["std"],
-                            color=INK, alpha=0.12, lw=0, zorder=3)
-            ax.axvline(k, color=RED, ls="--", lw=1.1, zorder=1)
+                            color=INK, alpha=0.12, lw=pw(0), zorder=3)
+            ax.axvline(k, color=RED, ls="--", lw=pw(1.1), zorder=1)
             ax.annotate(f"K = {k}", xy=(k, s["mean"].min()), xytext=(3, 0),
-                        textcoords="offset points", fontsize=8, color=RED,
+                        textcoords="offset points", fontsize=fs(8), color=RED,
                         ha="left", va="bottom")
-        ax.plot([pk.k], [pk["mean"]], marker="v", ms=5.0 if me else 3.4,
+        ax.plot([pk.k], [pk["mean"]], marker="v", ms=pw(5.0) if me else pw(3.4),
                 color=GREEN if me else MUTED, alpha=1.0 if me else 0.55,
-                zorder=5, lw=0)
-    ax.set_xlabel("K (components)", fontsize=9)
-    ax.set_ylabel("held-out variance explained", fontsize=9)
-    ax.legend(fontsize=7.6, frameon=False, loc="lower right", handlelength=1.6)
-    ax.tick_params(labelsize=8, colors=MUTED)
+                zorder=5, lw=pw(0))
+    ax.set_xlabel("K (components)", fontsize=fs(9))
+    ax.set_ylabel("held-out variance explained", fontsize=fs(9))
+    ax.legend(fontsize=fs(7.6), frameon=False, loc="lower right", handlelength=1.6)
+    ax.tick_params(labelsize=fs(8), colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
     ax.set_title(f"A  ·  held-out variance vs K, {METHOD_LABEL[method]}, all four "
                  "feature sets\n"
                  "bi-cross-validated (rows AND columns held out).  "
                  "Marker = each curve's own peak.",
-                 fontsize=10.4, loc="left", color=INK, pad=6)
+                 fontsize=fs(10.4), loc="left", color=INK, pad=pw(6))
 
 
 def agreement(M, sd):
@@ -710,7 +779,7 @@ def agreement(M, sd):
     return np.abs(np.asarray(M, float)) > np.where(sd > 0, sd, np.inf)
 
 
-def outline_cells(ax, mask, nt, lw=0.9, color=INK):
+def outline_cells(ax, mask, nt, lw=pw(0.9), color=INK):
     """A blocky border around the True cells of a (nband, ncond*nt) mask.
 
     Cell (i, j) spans x in [j, j+1] and y in [i-0.5, i+0.5], matching the extent
@@ -752,7 +821,7 @@ def draw_mean(ax, M, d, *, vlim, cmap="RdBu_r", col=None, ylim=None,
     """
     ncond, nband, nt = M.shape
     if nband == 1:
-        ax.axhline(0, color=MUTED, lw=0.5)
+        ax.axhline(0, color=MUTED, lw=pw(0.5))
         # each condition is its OWN line: one plot across all three blocks draws a
         # connecting segment between points that are neither adjacent in time nor the
         # same condition, which showed as a vertical spike at the block boundary
@@ -766,10 +835,10 @@ def draw_mean(ax, M, d, *, vlim, cmap="RdBu_r", col=None, ylim=None,
                 # lf_centroids.render_hg_centroid, so a paper panel and a run-report
                 # chip cannot disagree about what the shading means.
                 m_, s_ = M[b_, 0, :], sd[b_, 0, :]
-                ax.fill_between(x, m_ - s_, m_ + s_, color=col, alpha=0.22, lw=0)
-                ax.plot(x, m_ - s_, color=col, lw=0.45, alpha=0.7)
-                ax.plot(x, m_ + s_, color=col, lw=0.45, alpha=0.7)
-            ax.plot(x, M[b_, 0, :], color=col, lw=1.25)
+                ax.fill_between(x, m_ - s_, m_ + s_, color=col, alpha=0.22, lw=pw(0))
+                ax.plot(x, m_ - s_, color=col, lw=pw(0.45), alpha=0.7)
+                ax.plot(x, m_ + s_, color=col, lw=pw(0.45), alpha=0.7)
+            ax.plot(x, M[b_, 0, :], color=col, lw=pw(1.25))
         ax.set_xlim(0, ncond * nt - 1)
         if ylim is not None:
             ax.set_ylim(*ylim)
@@ -787,13 +856,14 @@ def draw_mean(ax, M, d, *, vlim, cmap="RdBu_r", col=None, ylim=None,
         ax.set_xlim(0, ncond * nt)
     for b in range(ncond):
         if b:
-            ax.axvline(b * nt, color=INK, lw=1.0)
+            ax.axvline(b * nt, color=INK, lw=pw(1.0))
         ax.axvline((b + 0.5) * nt, color="#4a4f55" if nband > 1 else MUTED,
-                   lw=0.9, ls=(0, (4, 3)))
+                   lw=pw(0.9), ls=(0, (4, 3)))
         if cond_names:
-            ax.text((b + 0.5) * nt, 1.015, COND_LABEL[d["conds"][b]],
+            ax.text((b + 0.5) * nt, 1.015,
+                    COND_LABEL[d["conds"][b]].split(" ")[0] if paper() else COND_LABEL[d["conds"][b]],
                     transform=ax.get_xaxis_transform(), ha="center", va="bottom",
-                    fontsize=8.4, color=INK)
+                    fontsize=fs(8.4), color=INK)
     if not show_axes:
         ax.set_xticks([]); ax.set_yticks([])
         for s_ in ax.spines.values():
@@ -801,16 +871,16 @@ def draw_mean(ax, M, d, *, vlim, cmap="RdBu_r", col=None, ylim=None,
         return im
     ax.set_xticks([(b + f) * nt for b in range(ncond) for f in (0.0, 0.5)]
                   + [ncond * nt])
-    ax.set_xticklabels((["0", "50"] * ncond) + ["100"], fontsize=7.4)
-    ax.tick_params(labelsize=7.4, colors=MUTED)
+    ax.set_xticklabels((["0", "50"] * ncond) + ["100"], fontsize=fs(7.4))
+    ax.tick_params(labelsize=fs(7.4), colors=MUTED)
     if nband == 1:
-        ax.set_ylabel(UNITS[d["fset"]], fontsize=8.4)
+        ax.set_ylabel(UNITS[d["fset"]], fontsize=fs(8.4))
     else:
         ax.set_yticks(range(nband))
-        ax.set_yticklabels([b.replace("Hz", "") for b in d["bands"]], fontsize=7.0)
-        ax.set_ylabel("frequency band (Hz)", fontsize=8.4)
+        ax.set_yticklabels([b.replace("Hz", "") for b in d["bands"]], fontsize=fs(7.0))
+        ax.set_ylabel("frequency band (Hz)", fontsize=fs(8.4))
     ax.set_xlabel("% of trial, per condition   ·   dashed = GO cue at 50%",
-                  fontsize=8.4)
+                  fontsize=fs(8.4))
     for s_ in ax.spines.values():
         s_.set_color(GREY)
     return im
@@ -945,7 +1015,7 @@ def block_order(means, d=None, how=None):
 
 
 # ---- the trial strip: what was on the screen -------------------------------
-def _icon_axes(host, x0, x1, y0=0.13, h=0.70, pad=0.16):
+def _icon_axes(host, x0, x1, y0=0.13, h=0.70, pad=pw(0.16)):
     """A square drawing area centred in [x0, x1] of the host, in host axes fraction.
 
     Square by construction: with equal aspect the axes box shrinks to a square inside
@@ -985,15 +1055,15 @@ def _glyph_path(ax, ch, col, frac=0.74, weight="bold"):
 def icon_audio(ax, col=INK):
     ax.add_patch(Polygon([(0.10, 0.36), (0.30, 0.36), (0.52, 0.13), (0.52, 0.87),
                           (0.30, 0.64), (0.10, 0.64)],
-                         closed=True, fc=col, ec=col, lw=0.6, zorder=3))
+                         closed=True, fc=col, ec=col, lw=pw(0.6), zorder=3))
     for r in (0.15, 0.25, 0.35):
         ax.add_patch(Arc((0.55, 0.50), 2 * r, 2 * r, theta1=-52, theta2=52,
-                         ec=col, lw=1.3, zorder=3))
+                         ec=col, lw=pw(1.3), zorder=3))
 
 
 def icon_reading(ax, col=INK):
     for y, x1 in ((0.76, 0.90), (0.60, 0.94), (0.44, 0.82), (0.28, 0.56)):
-        ax.plot([0.10, x1], [y, y], color=col, lw=1.6, solid_capstyle="round",
+        ax.plot([0.10, x1], [y, y], color=col, lw=pw(1.6), solid_capstyle="round",
                 zorder=3)
 
 
@@ -1006,7 +1076,7 @@ def icon_picture(ax, col=INK):
             return
         except Exception:
             pass                                  # fall through to the glyph
-    ax.add_patch(Rectangle((0.08, 0.18), 0.84, 0.64, fill=False, ec=col, lw=1.5,
+    ax.add_patch(Rectangle((0.08, 0.18), 0.84, 0.64, fill=False, ec=col, lw=pw(1.5),
                            zorder=3))
     ax.add_patch(Circle((0.30, 0.66), 0.075, fc=col, ec="none", zorder=3))
     ax.add_patch(Polygon([(0.11, 0.21), (0.40, 0.56), (0.55, 0.41), (0.75, 0.62),
@@ -1039,21 +1109,21 @@ def trial_strip(ax, d):
         half = 1.0 / (2 * ncond)
         for k_, (bx0, bx1) in enumerate(((x0, x0 + half), (x0 + half, x0 + 2 * half))):
             ax.add_patch(Rectangle((bx0 + 0.004, 0.10), (bx1 - bx0) - 0.008, 0.78,
-                                   fc="white", ec=GREY, lw=0.9, zorder=1))
+                                   fc="white", ec=GREY, lw=pw(0.9), zorder=1))
             a = _icon_axes(ax, bx0, bx1)
             if k_ == 0:
                 STIM_ICON[cond](a)
             else:
                 _glyph_path(a, "?", INK, frac=0.66)
         ax.text(x0 + half, 1.03, COND_LABEL[cond], ha="center", va="bottom",
-                fontsize=8.4, color=INK, transform=ax.transAxes)
+                fontsize=fs(8.4), color=INK, transform=ax.transAxes)
     # centred on the FIRST pair of boxes: a box is half a block wide, so their centres
     # are at half/2 and 1.5*half - not at 0.5/ncond and 1.5/ncond, which is half a box
     # to the right and put "response" under the picture stimulus
     half = 1.0 / (2 * ncond)
-    ax.text(half / 2, 0.03, "stimulus", ha="center", va="top", fontsize=6.6,
+    ax.text(half / 2, 0.03, "stimulus", ha="center", va="top", fontsize=fs(6.6),
             color=MUTED, transform=ax.transAxes)
-    ax.text(1.5 * half, 0.03, "response", ha="center", va="top", fontsize=6.6,
+    ax.text(1.5 * half, 0.03, "response", ha="center", va="top", fontsize=fs(6.6),
             color=MUTED, transform=ax.transAxes)
 
 
@@ -1091,13 +1161,17 @@ def panel_C(ax_strip, ax, d, vlim, ylim):
     # printing them twice one above the other reads as two different things
     draw_mean(ax, schematic(d, vlim), d, vlim=vlim, col=INK, ylim=ylim,
               show_axes=True, cond_names=False)
+    if paper() and len(d["bands"]) > 6:
+        ax.set_yticks(range(0, len(d["bands"]), 3))
+        ax.set_yticklabels([b_.replace("Hz", "") for b_ in d["bands"][::3]], fontsize=fs(6.4))
     trial_strip(ax_strip, d)
-    ax_strip.set_title("C  ·  how to read a cluster mean   —   schematic, not data",
-                       fontsize=10.4, loc="left", color=INK, pad=15)
+    ax_strip.set_title("B   how to read a block" if paper() else
+                       "C  ·  how to read a cluster mean   —   schematic, not data",
+                       fontsize=fs(10.4), loc="left", color=INK, pad=pw(15))
     ax.annotate("GO cue", xy=(0.5 * d["nt"], 1.0), xycoords=("data", "axes fraction"),
                 xytext=(0, -13), textcoords="offset points", ha="center",
-                fontsize=7.4, color=INK,
-                bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.4))
+                fontsize=fs(7.4), color=INK,
+                bbox=dict(fc="white", ec="none", alpha=0.85, pad=pw(1.4)))
 
 
 # ---- panel D: is a cluster a response type, or one patient? -------------------
@@ -1199,15 +1273,15 @@ def generalization_by_k(d):
 
 def panel_D(ax, d, gk, fset):
     K = d["k"]
-    ax.plot(gk.k, 100 * gk.frac_clusters, "-o", ms=3.4, lw=1.9, color=RED,
+    ax.plot(gk.k, 100 * gk.frac_clusters, "-o", ms=pw(3.4), lw=pw(1.9), color=RED,
             label=f"clusters that are >{100*DANGER:.0f}% one patient", zorder=4)
-    ax.plot(gk.k, 100 * gk.frac_electrodes, "-o", ms=2.8, lw=1.4, color="#e08214",
+    ax.plot(gk.k, 100 * gk.frac_electrodes, "-o", ms=pw(2.8), lw=pw(1.4), color="#e08214",
             label="electrodes sitting in those clusters", zorder=3)
-    ax.axvline(K, color=INK, ls="--", lw=1.1, zorder=2)
-    ax.set_xlabel("K (components)", fontsize=9)
-    ax.set_ylabel("% of the solution that is\none patient", fontsize=8.6)
+    ax.axvline(K, color=INK, ls="--", lw=pw(1.1), zorder=2)
+    ax.set_xlabel("K (components)", fontsize=fs(9))
+    ax.set_ylabel("% of the solution that is\none patient", fontsize=fs(8.6))
     ax.set_ylim(0, 102)
-    ax.tick_params(labelsize=7.6, colors=MUTED)
+    ax.tick_params(labelsize=fs(7.6), colors=MUTED)
     ax.spines[["top"]].set_visible(False)
 
     # the held-out curve on the same x, faint, because the whole point is that the two
@@ -1218,25 +1292,61 @@ def panel_D(ax, d, gk, fset):
     if not hv.empty:
         sv = hv.groupby("k")["var_explained"].mean().reset_index().sort_values("k")
         ax2 = ax.twinx()
-        ax2.plot(sv.k, sv["var_explained"], "-", lw=1.4, color=MUTED, alpha=0.55,
+        ax2.plot(sv.k, sv["var_explained"], "-", lw=pw(1.4), color=MUTED, alpha=0.55,
                  zorder=1)
-        ax2.set_ylabel("held-out variance", fontsize=8.2, color=MUTED)
-        ax2.tick_params(labelsize=7.2, colors=MUTED)
+        ax2.set_ylabel("held-out variance", fontsize=fs(8.2), color=MUTED)
+        ax2.tick_params(labelsize=fs(7.2), colors=MUTED)
         ax2.spines[["top"]].set_visible(False)
         pk = int(sv.loc[sv.var_explained.idxmax(), "k"])
-        ax2.plot([pk], [sv.var_explained.max()], marker="v", ms=5.0, color=GREEN, lw=0)
+        ax2.plot([pk], [sv.var_explained.max()], marker="v", ms=pw(5.0), color=GREEN, lw=pw(0))
 
     row = gk[gk.k == K]
     nd = int(row.n_dominated.iloc[0]) if len(row) else 0
     fe = float(row.frac_electrodes.iloc[0]) if len(row) else 0.0
     # under the axes, one line: no corner of the plot is free at every K (the held-out
     # curve crosses the upper left, the two shares the lower right at K 10) (2026-10-26)
-    ax.legend(fontsize=7.0, frameon=False, loc="upper center", ncol=2,
+    ax.legend(fontsize=fs(7.0), frameon=False, loc="upper center", ncol=2,
               bbox_to_anchor=(0.5, -0.22), handlelength=1.8, columnspacing=1.6)
     ax.set_title(f"D  ·  does this K generalize?   at K={K}, {nd} of {K} clusters are "
                  f">{100*DANGER:.0f}% one patient",
-                 fontsize=10.0, loc="left", pad=8,
+                 fontsize=fs(10.0), loc="left", pad=pw(8),
                  color=RED if nd else INK)
+
+
+def panel_K(ax, d, gk, fset, method="cnmf"):
+    """PAPER: panels A and D as one - the held-out curve of this feature set and the
+    one-patient-cluster shares on one K axis, the cut K marked (2026-10-27)."""
+    K = d["k"]
+    hv = pd.read_csv(HELDOUT)
+    hv = hv[(hv.method == method) & hv.scheme.isin(HOME_SCHEMES) & (hv.feature_set == fset)]
+    s = (hv.groupby("k")["var_explained"].agg(["mean", "std"]).reset_index()
+         .sort_values("k"))
+    ax.plot(s.k, s["mean"], "-o", ms=pw(3.0), lw=pw(1.8), color=INK, zorder=4,
+            label="held-out variance explained")
+    ax.fill_between(s.k, s["mean"] - s["std"], s["mean"] + s["std"], color=INK,
+                    alpha=0.12, lw=pw(0), zorder=3)
+    pk = s.loc[s["mean"].idxmax()]
+    ax.plot([pk.k], [pk["mean"]], marker="v", ms=pw(5.0), color=GREEN, lw=pw(0), zorder=5)
+    ax.axvline(K, color=RED, ls="--", lw=pw(1.1), zorder=1)
+    ax.set_xlabel("K", fontsize=fs(8.2))
+    ax.set_ylabel("held-out variance", fontsize=fs(8.2))
+    ax.tick_params(labelsize=fs(7.4), colors=MUTED)
+    ax.spines[["top"]].set_visible(False)
+    ax2 = ax.twinx()
+    ax2.plot(gk.k, 100 * gk.frac_clusters, "-o", ms=pw(3.0), lw=pw(1.6), color=RED, zorder=4,
+             label=f"clusters > {100*DANGER:.0f}% one patient")
+    ax2.plot(gk.k, 100 * gk.frac_electrodes, "-o", ms=pw(2.6), lw=pw(1.3), color="#e08214",
+             zorder=3, label="electrodes in them")
+    ax2.set_ylim(0, 102)
+    ax2.set_ylabel("% one patient", fontsize=fs(8.2), color=MUTED)
+    ax2.tick_params(labelsize=fs(7.4), colors=MUTED)
+    ax2.spines[["top"]].set_visible(False)
+    h1, l1 = ax.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax.legend(h1 + h2, l1 + l2, fontsize=fs(6.4), frameon=False, loc="upper left",
+              handlelength=1.4, labelspacing=0.3, borderaxespad=0.3)
+    ax.set_title(f"A   choosing K   (cut at K = {K})",
+                 fontsize=fs(9.5), loc="left", color=INK, pad=pw(5))
 
 
 # ---- FIGURE 1 ----------------------------------------------------------------
@@ -1257,7 +1367,9 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     # the honest value there and it draws as no band, which is a statement about n.
     sds = np.stack([sd for _, sd in ms])
     shown = np.array([int(cluster_weights(d, j)[0].sum()) for j in range(K)])
-    vlim = float(np.percentile(np.abs(means), 99.0))
+    # on paper one declared range for every cluster-mean heatmap (MEAN_VLIM); on screen the
+    # figure's own 99th percentile as before
+    vlim = MEAN_VLIM if paper() else float(np.percentile(np.abs(means), 99.0))
     # the shared y range spans mean +/- SD, or the band clips on the loosest cluster
     ylim = (float((means - sds).min()) * 1.06, float((means + sds).max()) * 1.06)
     # one number per cluster: the share of bins where the mean clears its own SD
@@ -1274,25 +1386,35 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     # hcen is chosen so a render at RENDER_PX's aspect exactly fills its half of the
     # block: any larger and the brains are letterboxed, any smaller and the box crops
     hcen, hbar = 0.86, 0.15
+    if paper():
+        hcen, hbar = 1.05, 0.17            # brains a fifth smaller against the heatmap
     fig_h = 3.72 + nrow * 4.75             # +0.32 in: room under the last row's captions
-    fig = plt.figure(figsize=(17.6, fig_h), dpi=190)
+    fig = plt.figure(figsize=(canvas(17.6), fig_h), dpi=190)
     gs = GridSpec(1 + nrow, UPR * UCOL, figure=fig,
                   height_ratios=[1.72] + [2.62] * nrow,
                   hspace=0.52, wspace=0.30, left=0.045, right=0.985,
                   top=1.0 - 0.95 / fig_h, bottom=0.022 + 0.32 / fig_h)
     R1 = 1                                                  # row 0 is the header
 
-    fig.suptitle(f"FIG 1{TAG[fset]}   ·   {METHOD_LABEL[method]}   ·   {FS_LABEL[fset]}"
-                 "   ·   "
-                 f"K = {K}   ·   {len(d['X'])} electrodes, {d['n_patients']} patients"
-                 + (f"   ·   {variant_note(d)}" if variant_tag() else ""),
-                 x=0.045, y=1.0 - 0.28 / fig_h, ha="left", fontsize=15.5, color=INK)
+    if not paper():
+        fig.suptitle(f"FIG 1{TAG[fset]}   ·   {METHOD_LABEL[method]}   ·   {FS_LABEL[fset]}"
+                     "   ·   "
+                     f"K = {K}   ·   {len(d['X'])} electrodes, {d['n_patients']} patients"
+                     + (f"   ·   {variant_note(d)}" if variant_tag() else ""),
+                     x=0.045, y=1.0 - 0.28 / fig_h, ha="left", fontsize=fs(15.5), color=INK)
 
-    panel_A(fig.add_subplot(gs[0, 0:8]), fset, K, method)
-    cC = GridSpecFromSubplotSpec(2, 1, gs[0, 9:15], height_ratios=[0.44, 1.0],
-                                 hspace=0.06)
-    panel_C(fig.add_subplot(cC[0]), fig.add_subplot(cC[1]), d, vlim, ylim)
-    panel_D(fig.add_subplot(gs[0, 17:24]), d, gk, fset)
+    if paper():
+        # A and D in one panel, C beside it (2026-10-27)
+        panel_K(fig.add_subplot(gs[0, 0:8]), d, gk, fset, method)
+        cC = GridSpecFromSubplotSpec(2, 1, gs[0, 12:24], height_ratios=[0.44, 1.0],
+                                     hspace=0.06)
+        panel_C(fig.add_subplot(cC[0]), fig.add_subplot(cC[1]), d, vlim, ylim)
+    else:
+        panel_A(fig.add_subplot(gs[0, 0:8]), fset, K, method)
+        cC = GridSpecFromSubplotSpec(2, 1, gs[0, 9:15], height_ratios=[0.44, 1.0],
+                                     hspace=0.06)
+        panel_C(fig.add_subplot(cC[0]), fig.add_subplot(cC[1]), d, vlim, ylim)
+        panel_D(fig.add_subplot(gs[0, 17:24]), d, gk, fset)
 
     tops, nrend, first_brain = [], 0, None
     for pos, j in enumerate(order):
@@ -1306,14 +1428,15 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
         if c == 0 and len(d["bands"]) == 1:
             axc.set_yticks([round(ylim[0] + 0.08 * (ylim[1] - ylim[0]), 1), 0.0,
                             round(ylim[1] - 0.08 * (ylim[1] - ylim[0]), 1)])
-            axc.tick_params(labelsize=6.8, colors=MUTED, length=2)
-            axc.set_ylabel(UNITS[d["fset"]], fontsize=7.4)
+            axc.tick_params(labelsize=fs(6.8), colors=MUTED, length=2)
+            axc.set_ylabel(UNITS[d["fset"]], fontsize=fs(7.4))
         elif c == 0:
-            axc.set_yticks(range(len(d["bands"])))
-            axc.set_yticklabels([b_.replace("Hz", "") for b_ in d["bands"]],
-                                fontsize=6.4)
-            axc.tick_params(labelsize=6.4, colors=MUTED, length=2)
-            axc.set_ylabel("Hz", fontsize=7.4)
+            step_ = 3 if paper() and len(d["bands"]) > 6 else 1
+            axc.set_yticks(range(0, len(d["bands"]), step_))
+            axc.set_yticklabels([b_.replace("Hz", "") for b_ in d["bands"][::step_]],
+                                fontsize=fs(6.4))
+            axc.tick_params(labelsize=fs(6.4), colors=MUTED, length=2)
+            axc.set_ylabel("Hz", fontsize=fs(7.4))
         row = pc[pc.cluster == j].iloc[0]
         # n and the dominance warning describe the DRAWN set, so the title cannot say
         # 167 electrodes over a brain showing 60
@@ -1322,10 +1445,21 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
                      if shown[j] else 0.0)
         warn = "  ·  " + f"{100*top_share:.0f}% one patient" \
             if top_share > DANGER else ""
-        axc.set_title(f"c{j}   n={shown[j]}   agree {100*agree_frac[j]:.0f}%{warn}",
-                      fontsize=8.6,
-                      color=RED if top_share > DANGER else cluster_col(j, K),
-                      pad=2.6, loc="left")
+        if paper():
+            # the name, n and the patient count in the title; nothing under the bar
+            nm_ = type_name(fset, K, j)
+            npat_ = int(pd.Series(d["patient"][sel_]).nunique()) if shown[j] else 0
+            ttl_ = (f"c{j}" + (f"  {nm_}" if nm_ else "") + chr(10)
+                    + f"n {shown[j]}  ·  {npat_} patients"
+                    + (f"  ·  {100*top_share:.0f}% one patient" if top_share > DANGER else ""))
+            axc.set_title(ttl_, fontsize=fs(8.6),
+                          color=RED if top_share > DANGER else cluster_col(j, K),
+                          pad=pw(2.6), loc="left")
+        else:
+            axc.set_title(f"c{j}   n={shown[j]}   agree {100*agree_frac[j]:.0f}%{warn}",
+                          fontsize=fs(8.6),
+                          color=RED if top_share > DANGER else cluster_col(j, K),
+                          pad=pw(2.6), loc="left")
         for i_, side in enumerate(("L", "R")):
             axb = fig.add_subplot(blk[1, i_])
             if first_brain is None:
@@ -1337,16 +1471,17 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
             for s_ in axb.spines.values():
                 s_.set_visible(False)
             axb.text(0.03, 0.03, f"{side}  {nsel}", transform=axb.transAxes,
-                     ha="left", va="bottom", fontsize=6.8, color=MUTED)
+                     ha="left", va="bottom", fontsize=fs(6.8), color=MUTED)
         # who this cluster is made of, directly under its own two renders
         patient_bar(fig.add_subplot(blk[2, :]), d, j, pcol)
         tops.append(axc)
 
     bb = tops[0].get_position()
-    fig.text(0.045, bb.y1 + 0.30 / fig_h,
+    fig.text(0.045, bb.y1 + (0.68 if paper() else 0.30) / fig_h,
+             f"C   the {K} types" if paper() else
              "B  ·  one block per cluster, ordered by how ALIKE THE THREE CONDITIONS "
              "LOOK",
-             fontsize=10.4, color=INK)
+             fontsize=fs(10.4), color=INK)
 
     # THE LOADING KEY, in the left margin, vertical, level with the first block's
     # renders and directly under that block's centroid. It reads as a legend for the
@@ -1357,6 +1492,24 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     kx = 0.012
     kh = bb2.height * 0.66
     ky = bb2.y0 + (bb2.height - kh) / 2.0
+    free = [pos for pos in range(K, UPR * nrow)]
+    if paper() and free:
+        # the free block slot carries the two keys: the dB scale of the heatmaps and
+        # the loading ramp of the brains (2026-10-27)
+        r_, c_ = divmod(free[0], UPR)
+        slot = gs[R1 + r_, c_ * UCOL:(c_ + 1) * UCOL]
+        sb = slot.get_position(fig)
+        from matplotlib.cm import ScalarMappable
+        from matplotlib.colors import Normalize
+        cax = fig.add_axes([sb.x0 + sb.width * 0.18, sb.y0 + sb.height * 0.18,
+                            sb.width * 0.05, sb.height * 0.62])
+        cb = fig.colorbar(ScalarMappable(norm=Normalize(-vlim, vlim), cmap="RdBu_r"),
+                          cax=cax)
+        cax.set_title("dB re baseline", fontsize=fs(7.0), color=MUTED, loc="left", pad=fs(4))
+        cb.ax.tick_params(labelsize=fs(6.8), colors=MUTED, length=2)
+        cb.outline.set_visible(False)
+        kw, kh = sb.width * 0.05, sb.height * 0.62
+        kx, ky = sb.x0 + sb.width * 0.58, sb.y0 + sb.height * 0.18
     kax = fig.add_axes([kx, ky, kw, kh])
     base0 = np.array(cluster_col(int(order[0]), K))
     if d["hard"]:
@@ -1367,9 +1520,9 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
                    extent=(0, 1, 0, 2))
         kax.set_xticks([])
         kax.set_yticks([0.5, 1.5])
-        kax.set_yticklabels(["other", "member"], fontsize=5.8, color=MUTED)
-        kax.set_ylabel("membership (hard partition)", fontsize=6.2, color=MUTED,
-                       labelpad=1.5)
+        kax.set_yticklabels(["other", "member"], fontsize=fs(5.8), color=MUTED)
+        kax.set_ylabel("membership (hard partition)", fontsize=fs(6.2), color=MUTED,
+                       labelpad=pw(1.5))
     else:
         # the ramp starts at the cut: nothing below LOAD_CUT is drawn (2026-10-26)
         lo, hi = LOAD_CUT, max(LOAD_CAP, COLOR_FULL) * 1.12
@@ -1380,19 +1533,24 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
         kax.set_xticks([])
         kax.set_yticks([lo, COLOR_FULL, LOAD_CAP])
         kax.set_yticklabels([f"{LOAD_CUT:.2f}", f"{COLOR_FULL:.2f}", f"{LOAD_CAP:.2f}"],
-                            fontsize=5.8, color=MUTED)
+                            fontsize=fs(5.8), color=MUTED)
         kax.set_ylabel(f"loading on this cluster\n(< {LOAD_CUT:.2f} not drawn)",
-                       fontsize=6.2, color=MUTED, labelpad=1.5)
+                       fontsize=fs(6.2), color=MUTED, labelpad=pw(1.5))
+        if paper() and free:
+            kax.set_ylabel("")
+            kax.set_title(f"loading on the type" + chr(10) + f"(below {LOAD_CUT:.1f} not drawn)",
+                          fontsize=fs(7.0), color=MUTED, loc="left", pad=fs(4))
     kax.yaxis.tick_right()
-    kax.tick_params(length=2, colors=MUTED, pad=1.4)
+    kax.tick_params(length=2, colors=MUTED, pad=pw(1.4))
     for s_ in kax.spines.values():
         s_.set_color(GREY)
 
-    OUT.mkdir(parents=True, exist_ok=True)
-    p = OUT / (f"FIG1{TAG[fset]}_{fset}_{method}_K{K}"
-               f"{variant_tag()}{run_tag(d)}.png")
+    od = paper_dir(OUT)
+    od.mkdir(parents=True, exist_ok=True)
+    p = od / (f"FIG1{TAG[fset]}_{fset}_{method}_K{K}"
+              f"{variant_tag()}{run_tag(d)}.png")
     stamp(fig, d, note=variant_note(d) if variant_tag() else "")
-    save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
+    save_png(fig, p, dpi=out_dpi(190), bbox_inches="tight", facecolor="white")
     plt.close(fig)
     save_text(pc.to_csv(index=False), p.with_name(p.stem + "_patients.csv"))
     save_text(gk.to_csv(index=False), p.with_name(p.stem + "_generalization.csv"))
@@ -1893,7 +2051,12 @@ def main() -> int:
     ap.add_argument("--trace", choices=["members", "weighted"], default="members",
                     help="'members' averages the shown electrodes; 'weighted' takes the "
                          "P-weighted mean over every electrode")
+    ap.add_argument("--paper", action="store_true",
+                    help="draw for the page: 174 mm, fonts at their printed size, no notes "
+                         "or stamp, PNG under paper_figures/paper/")
     a = ap.parse_args()
+    if a.paper:
+        os.environ["PAPER2_PAPER"] = "1"
     if not 0.0 <= a.display_min_p < 1.0:
         print("!! --display-min-p must be in [0, 1)", file=sys.stderr)
         return 2

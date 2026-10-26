@@ -50,6 +50,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -339,6 +340,8 @@ def block(v, d):
 
 def wrap(t, chars=100):
     import textwrap
+    if P2.paper():                  # the notes stay off the page
+        return ""
     return textwrap.fill(t, chars)
 
 
@@ -349,9 +352,11 @@ def panel_profiles(fig, cells, d, obs, st, t0):
     vlim = max(0.5, np.ceil(vlim * 4) / 4)
     vdiff = max(0.25, np.ceil(float(np.nanmax(np.abs(o["diff"]))) * 4) / 4)
     axes = [fig.add_subplot(c) for c in cells]
-    titles = (f"inside the network, P(LanA) ≥ {t0:.1f}   n = {o['n_in']}",
-              f"outside, P(LanA) < {t0:.1f}   n = {o['n_out']}",
-              "inside minus outside (dB); outlined = beats the spin null, q < 0.05")
+    titles = ((f"inside the network  (n {o['n_in']})", f"outside  (n {o['n_out']})",
+               "inside minus outside") if P2.paper() else
+              (f"inside the network, P(LanA) ≥ {t0:.1f}   n = {o['n_in']}",
+               f"outside, P(LanA) < {t0:.1f}   n = {o['n_out']}",
+               "inside minus outside (dB); outlined = beats the spin null, q < 0.05"))
     ims = []
     for ax, v, ttl, vl, cm in zip(axes, (o["mean_in"], o["mean_out"], o["diff"]),
                                   titles, (vlim, vlim, vdiff),
@@ -359,12 +364,12 @@ def panel_profiles(fig, cells, d, obs, st, t0):
         im = P2.draw_mean(ax, block(v, d), d, vlim=vl, cmap=cm, show_axes=False,
                           cond_names=True)
         ims.append(im)
-        ax.set_title(ttl, fontsize=8.6, loc="left", color=INK, pad=14)
+        ax.set_title(ttl, fontsize=P2.fs(8.6), loc="left", color=INK, pad=P2.pw(14))
     # the bands once, on the left panel; a second and third copy sat on the colour bars
     axes[0].set_yticks(range(nb_))
-    axes[0].set_yticklabels([b.replace("Hz", "") for b in d["bands"]], fontsize=6.0)
-    axes[0].tick_params(axis="y", labelsize=6.0, colors=MUTED, length=2)
-    axes[0].set_ylabel("Hz", fontsize=7.4)
+    axes[0].set_yticklabels([b.replace("Hz", "") for b in d["bands"]], fontsize=P2.fs(6.0))
+    axes[0].tick_params(axis="y", labelsize=P2.fs(6.0), colors=MUTED, length=2)
+    axes[0].set_ylabel("Hz", fontsize=P2.fs(7.4))
     mask = (o["q_cells"] < 0.05).reshape(nb_, nc, nt).reshape(nb_, nc * nt)
     P2.outline_cells(axes[2], mask, nt)
     for ax, im, lab in ((axes[1], ims[1], "dB re baseline (inside and outside)"),
@@ -372,8 +377,8 @@ def panel_profiles(fig, cells, d, obs, st, t0):
         if im is not None:
             cax = ax.inset_axes([1.018, 0.0, 0.024, 1.0])
             cb = fig.colorbar(im, cax=cax)
-            cb.ax.tick_params(labelsize=6.2, colors=MUTED, length=2)
-            cb.set_label(lab, fontsize=6.8, color=MUTED)
+            cb.ax.tick_params(labelsize=P2.fs(6.2), colors=MUTED, length=2)
+            cb.set_label(lab, fontsize=P2.fs(6.8), color=MUTED)
     return axes
 
 
@@ -393,28 +398,29 @@ def panel_shares(ax, tab, d, st, order, chars):
             ax.add_patch(Rectangle((xi - w * 0.47, r.null_lo), w * 0.94, r.null_hi - r.null_lo,
                                    fc=GREY, ec="none", alpha=0.55, zorder=1))
             ax.bar(xi, r.inside, width=w * 0.62, color=P2.cluster_col(int(j), K),
-                   alpha=alpha, lw=0, zorder=2)
+                   alpha=alpha, lw=P2.pw(0), zorder=2)
             ax.plot([xi - w * 0.47, xi + w * 0.47], [r.null_mean, r.null_mean], color=INK,
-                    lw=1.2, zorder=3)
+                    lw=P2.pw(1.2), zorder=3)
             star = "*" if r.q < 0.05 else ""
             lab = f"{star}\n{r.enrichment:.1f}×" if i_t == 0 else star
             ax.text(xi, max(r.inside, r.null_hi) + 0.012, lab, ha="center", va="bottom",
-                    fontsize=6.3, color=INK if i_t == 0 else MUTED)
+                    fontsize=P2.fs(6.3), color=INK if i_t == 0 else MUTED)
         base = float(sub.cohort.iloc[0])
-        ax.axhline(base, color=MUTED, ls=":" if i_t == 0 else (0, (1, 2.2)), lw=1.1, zorder=0)
+        ax.axhline(base, color=MUTED, ls=":" if i_t == 0 else (0, (1, 2.2)), lw=P2.pw(1.1), zorder=0)
     ax.set_xticks(x)
-    ax.set_xticklabels([f"c{j}" for j in order], fontsize=7.2)
-    ax.set_ylabel("share of its electrodes inside LanA", fontsize=8.2)
+    ax.set_xticklabels([f"c{j}" for j in order], fontsize=P2.fs(7.2))
+    ax.set_ylabel("share of its electrodes inside LanA", fontsize=P2.fs(8.2))
     top = float(T[["inside", "null_hi"]].max().max())
     ax.set_ylim(0, max(0.5, top * 1.35))
-    ax.tick_params(labelsize=7.2, colors=MUTED)
+    ax.tick_params(labelsize=P2.fs(7.2), colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
     base0 = {t: float(T[T.threshold == t].cohort.iloc[0]) for t in THRESHOLDS}
     ax.legend([Patch(color=INK, alpha=1.0), Patch(color=INK, alpha=0.45),
                Patch(color=GREY, alpha=0.55)],
-              [f"P ≥ {t:.1f}   (cohort {100*base0[t]:.0f}%, dotted)" for t in THRESHOLDS]
-              + ["spin null, 2.5 to 97.5%"],
-              fontsize=6.4, frameon=False, loc="upper right", ncol=1, handlelength=1.2)
+              ([f"P ≥ {t:.1f}" for t in THRESHOLDS] + ["spin null 95%"]) if P2.paper() else
+              ([f"P ≥ {t:.1f}   (cohort {100*base0[t]:.0f}%, dotted)" for t in THRESHOLDS]
+               + ["spin null, 2.5 to 97.5%"]),
+              fontsize=P2.fs(6.4), frameon=False, loc="upper right", ncol=1, handlelength=1.2)
     n_sig = {t: int((T[T.threshold == t].q < 0.05).sum()) for t in THRESHOLDS}
     ax.text(0, -0.17, wrap(
         f"{'All electrodes' if st == 'all' else 'Left hemisphere only'}: n = "
@@ -424,7 +430,7 @@ def panel_shares(ax, tab, d, st, order, chars):
         f"the number is the enrichment against the cohort rate. * = outside the spin "
         f"null, two-sided, Benjamini-Hochberg over {K}: "
         + ", ".join(f"{n_sig[t]} of {K} at P ≥ {t:.1f}" for t in THRESHOLDS) + ".", chars),
-        transform=ax.transAxes, va="top", fontsize=7.2, color=MUTED, linespacing=1.5)
+        transform=ax.transAxes, va="top", fontsize=P2.fs(7.2), color=MUTED, linespacing=1.5)
 
 
 def panel_rms(ax, summary, null, obs, chars):
@@ -433,23 +439,26 @@ def panel_rms(ax, summary, null, obs, chars):
     cols = {"all": INK, "L": "#1f5f8b"}
     for st in STRATA:
         nn = null[st]["rms"]
+        who_ = 'all' if st == 'all' else 'left'
         ax.hist(nn, bins=30, color=cols[st], alpha=0.25 if st == "all" else 0.35,
-                lw=0, density=True, label=f"spun maps, {'all' if st == 'all' else 'left'}")
-        ax.axvline(obs[st]["rms"], color=cols[st], lw=1.6,
-                   label=f"observed, {'all' if st == 'all' else 'left'}: "
-                         f"{obs[st]['rms']:.3f} dB, p = {summary[st]['p_rms']:.3g}")
-    ax.set_xlabel("RMS of the inside − outside difference over all features (dB)",
-                  fontsize=7.6)
+                lw=P2.pw(0), density=True,
+                label=f"spun, {who_}" if P2.paper() else f"spun maps, {who_}")
+        ax.axvline(obs[st]["rms"], color=cols[st], lw=P2.pw(1.6),
+                   label=(f"{who_}: p {summary[st]['p_rms']:.2f}" if P2.paper() else
+                          f"observed, {who_}: {obs[st]['rms']:.3f} dB, p = {summary[st]['p_rms']:.3g}"))
+    ax.set_xlabel("RMS difference (dB)" if P2.paper() else
+                  "RMS of the inside − outside difference over all features (dB)",
+                  fontsize=P2.fs(7.6))
     ax.set_yticks([])
-    ax.tick_params(labelsize=7.0, colors=MUTED)
+    ax.tick_params(labelsize=P2.fs(7.0), colors=MUTED)
     ax.spines[["top", "right", "left"]].set_visible(False)
-    ax.legend(fontsize=6.4, frameon=False, loc="upper right")
+    ax.legend(fontsize=P2.fs(6.4), frameon=False, loc="upper right")
     ax.text(0, -0.24, wrap(
         "Does the network have a response of its own? One number per map: the root "
         "mean square of the inside-minus-outside difference over every band, bin and "
         "condition. The histogram is that number for the spun maps, the line the real "
         "one; p is the share of spun maps at or above it.", chars),
-        transform=ax.transAxes, va="top", fontsize=7.2, color=MUTED, linespacing=1.5)
+        transform=ax.transAxes, va="top", fontsize=P2.fs(7.2), color=MUTED, linespacing=1.5)
 
 
 def figure(fset, k, n_spin, seed):
@@ -464,25 +473,38 @@ def figure(fset, k, n_spin, seed):
     all_mask = np.ones(len(d["lab"]), bool)
     order = [int(j) for j in np.argsort(-mean_P(d["P_lana"], d["lab"], k, all_mask))]
 
-    fig = plt.figure(figsize=(17.6, 12.6), dpi=190)
+    fig = plt.figure(figsize=(P2.canvas(17.6), 8.6 if P2.paper() else 12.6), dpi=190)
     # two blocks: the heatmap rows (their own, tighter, row gap) and the bar row, whose
     # notes hang below the axes and need the gap above and the margin below
-    outer = GridSpec(2, 1, figure=fig, height_ratios=[2.0, 1.08], hspace=0.24,
-                     left=0.05, right=0.985, top=0.868, bottom=0.105)
-    gh = GridSpecFromSubplotSpec(2, 3, outer[0], hspace=0.30, wspace=0.17)
+    if P2.paper():
+        # one profile row on the page, the left hemisphere; the all-electrode row is in
+        # the caption and the tables (2026-10-27)
+        outer = GridSpec(2, 1, figure=fig, height_ratios=[1.0, 1.08], hspace=0.30,
+                         left=0.05, right=0.985, top=0.94, bottom=0.08)
+        gh = GridSpecFromSubplotSpec(1, 3, outer[0], wspace=0.17)
+    else:
+        outer = GridSpec(2, 1, figure=fig, height_ratios=[2.0, 1.08], hspace=0.24,
+                         left=0.05, right=0.985, top=0.868, bottom=0.105)
+        gh = GridSpecFromSubplotSpec(2, 3, outer[0], hspace=0.30, wspace=0.17)
     gs = GridSpecFromSubplotSpec(1, 24, outer[1], wspace=1.0)
-    fig.suptitle(f"FIG 3b   ·   LanA under a spin null, and what the network does   ·   "
+    if not P2.paper():
+      fig.suptitle(f"FIG 3b   ·   LanA under a spin null, and what the network does   ·   "
                  f"{fset}   ·   K = {k}   ·   {len(d['lab'])} electrodes, {d['n_patients']} patients",
-                 x=0.05, y=0.975, ha="left", fontsize=15.5, color=INK)
-    fig.text(0.05, 0.957,
+                 x=0.05, y=0.975, ha="left", fontsize=P2.fs(15.5), color=INK)
+    if not P2.paper():
+      fig.text(0.05, 0.957,
              "The map is randomised, the electrodes stay: each contact's fsaverage vertex is spun on "
              "the sphere and the atlas read where it lands, so the null keeps LanA's smoothness and "
              f"asymmetry and the electrodes keep their patients, shafts and clusters ({n_spin} spins).\n"
              "Rows A and B: the network's own response, all electrodes and the left hemisphere; "
              "C and D: each cluster's share inside the network against the spun maps; E: one number.",
-             fontsize=9.4, color=MUTED, va="top", linespacing=1.4)
-    axes_all = panel_profiles(fig, [gh[0, 0], gh[0, 1], gh[0, 2]], d, obs, "all", t0)
-    axes_L = panel_profiles(fig, [gh[1, 0], gh[1, 1], gh[1, 2]], d, obs, "L", t0)
+             fontsize=P2.fs(9.4), color=MUTED, va="top", linespacing=1.4)
+    if P2.paper():
+        axes_all = None
+        axes_L = panel_profiles(fig, [gh[0, 0], gh[0, 1], gh[0, 2]], d, obs, "L", t0)
+    else:
+        axes_all = panel_profiles(fig, [gh[0, 0], gh[0, 1], gh[0, 2]], d, obs, "all", t0)
+        axes_L = panel_profiles(fig, [gh[1, 0], gh[1, 1], gh[1, 2]], d, obs, "L", t0)
     axS1 = fig.add_subplot(gs[0, 0:9])
     panel_shares(axS1, tab, d, "all", order, 92)
     axS2 = fig.add_subplot(gs[0, 9:18])
@@ -493,24 +515,33 @@ def figure(fset, k, n_spin, seed):
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
-    labels = (
-        (axes_all[0], f"A  ·  the network's response, all electrodes "
-                      f"(inside n = {obs['all']['n_in']}, outside n = {obs['all']['n_out']})"),
-        (axes_L[0], f"B  ·  the same, left hemisphere only "
-                    f"(inside n = {obs['L']['n_in']}, outside n = {obs['L']['n_out']})"),
-        (axS1, "C  ·  inside the network per cluster, against the spin null"),
-        (axS2, "D  ·  the same, left hemisphere only"),
-        (axR, "E  ·  one number: the size of the network's own response"))
+    if P2.paper():
+        labels = (
+            (axes_L[0], f"A   the network's response, left hemisphere "
+                        f"(inside n = {obs['L']['n_in']}, outside n = {obs['L']['n_out']})"),
+            (axS1, "B   share inside, all electrodes"),
+            (axS2, "C   left hemisphere"),
+            (axR, "D   network response vs spun"))
+    else:
+        labels = (
+            (axes_all[0], f"A  ·  the network's response, all electrodes "
+                          f"(inside n = {obs['all']['n_in']}, outside n = {obs['all']['n_out']})"),
+            (axes_L[0], f"B  ·  the same, left hemisphere only "
+                        f"(inside n = {obs['L']['n_in']}, outside n = {obs['L']['n_out']})"),
+            (axS1, "C  ·  inside the network per cluster, against the spin null"),
+            (axS2, "D  ·  the same, left hemisphere only"),
+            (axR, "E  ·  one number: the size of the network's own response"))
     for ax, label in labels:
         top = inv.transform((0, ax.get_tightbbox(r).y1))[1]
-        fig.text(ax.get_position().x0, top + 0.008, label, fontsize=10.2, color=INK,
+        fig.text(ax.get_position().x0, top + 0.008, label, fontsize=P2.fs(10.2), color=INK,
                  va="bottom")
 
-    OUT.mkdir(parents=True, exist_ok=True)
+    od = P2.paper_dir(OUT)
+    od.mkdir(parents=True, exist_ok=True)
     rt = "_run" + str(d["run"].name).replace("_", "-")
-    p = OUT / f"FIG3_spin_{fset}_K{k}{rt}.png"
+    p = od / f"FIG3_spin_{fset}_K{k}{rt}.png"
     P2.stamp(fig, d)
-    P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
+    P2.save_png(fig, p, dpi=P2.out_dpi(190), bbox_inches="tight", facecolor="white")
     plt.close(fig)
     P2.save_text(tab.to_csv(index=False), p.with_name(p.stem + "_clusters.csv"))
     P2.save_text(cells.to_csv(index=False), p.with_name(p.stem + "_cells.csv"))
@@ -638,7 +669,12 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=7)
     ap.add_argument("--n-spin", type=int, default=N_SPIN)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--paper", action="store_true",
+                    help="draw for the page (174 mm, printed font sizes, no prose or stamp; "
+                         "PNG under paper_figures/paper/)")
     a = ap.parse_args()
+    if a.paper:
+        os.environ["PAPER2_PAPER"] = "1"
     figure(a.feature_set, a.k, a.n_spin, a.seed)
     return 0
 

@@ -57,6 +57,7 @@ WRITES  outputs/paper_figures/FIG4_K08.png and FIG4_K08_caption.txt
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -76,6 +77,11 @@ import importlib.util
 # whatever it wrote (it moved to concat_bands15 / bands5 / bands2 / hfa on 2026-10-19)
 _spec = importlib.util.spec_from_file_location("f4", ROOT / "00_paper2_figure4_correspondence.py")
 F4 = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(F4)
+
+# the shared module, for paper mode (fs / pw / paper_dir / out_dpi; 2026-10-27)
+_p2spec = importlib.util.spec_from_file_location("p2_shared", ROOT / "00_Paper2_Figures.py")
+P2 = importlib.util.module_from_spec(_p2spec)
+_p2spec.loader.exec_module(P2)
 
 OUT = ROOT / "outputs" / "clustering" / "paper_figures"
 INK, MUTED, GREY, PALE = "#1b1b1b", "#6b6b6b", "#b9b9b9", "#ededed"
@@ -169,34 +175,35 @@ def panel_matrix(ax, M, rows, share1, share2, name, first_col, diag=None):
         i = pos                       # rows are now in match order, so the pair is (pos, pos)
         both = (r.p_plain < 0.05) and (r.p_within < 0.05)
         plain = (r.p_plain < 0.05) and not both
-        st = (dict(lw=1.7, ls="-", edgecolor=INK) if both else
-              dict(lw=1.2, ls=(0, (2.4, 1.4)), edgecolor=INK) if plain else
-              dict(lw=0.8, ls="-", edgecolor=GREY))
+        st = (dict(lw=P2.pw(1.7), ls="-", edgecolor=INK) if both else
+              dict(lw=P2.pw(1.2), ls=(0, (2.4, 1.4)), edgecolor=INK) if plain else
+              dict(lw=P2.pw(0.8), ls="-", edgecolor=GREY))
         ax.add_patch(plt.Rectangle((pos - .5, i - .5), 1, 1, fill=False, **st))
         ax.text(pos, i, f"{r.value:.2f}".lstrip("0") or "0", ha="center", va="center",
-                fontsize=6.0, color="white" if abs(M[pos, pos]) > .55 else INK)
+                fontsize=P2.fs(6.0), color="white" if abs(M[pos, pos]) > .55 else INK)
     if len(cols) > len(c_ord):
-        ax.axvline(len(c_ord) - .5, color=INK, lw=0.9, ls=(0, (3, 2)))
+        ax.axvline(len(c_ord) - .5, color=INK, lw=P2.pw(0.9), ls=(0, (3, 2)))
 
     a, b = TITLE[name]
     ttl = f"{a}  vs  {b}"
     if diag is not None and np.isfinite(diag[0]):
-        ttl += f"\ndiagonal {diag[0]:.2f}   ·   random pairings {diag[1]:.2f}"
-    ax.set_title(ttl, fontsize=9.0, color=INK, pad=4, linespacing=1.4)
-    ax.set_xticks(range(k2)); ax.set_xticklabels([str(c) for c in cols], fontsize=5.8)
-    ax.set_yticks(range(k1)); ax.set_yticklabels([str(i) for i in r_ord], fontsize=5.8)
-    ax.tick_params(length=1.8, colors=MUTED, pad=1.5)
-    ax.set_xlabel(f"{b} cluster", fontsize=7.2, color=MUTED, labelpad=1.5)
+        ttl += (f"\ndiag {diag[0]:.2f}  ·  random {diag[1]:.2f}" if P2.paper() else
+                f"\ndiagonal {diag[0]:.2f}   ·   random pairings {diag[1]:.2f}")
+    ax.set_title(ttl, fontsize=P2.fs(9.0), color=INK, pad=P2.pw(4), linespacing=1.4)
+    ax.set_xticks(range(k2)); ax.set_xticklabels([str(c) for c in cols], fontsize=P2.fs(5.8))
+    ax.set_yticks(range(k1)); ax.set_yticklabels([str(i) for i in r_ord], fontsize=P2.fs(5.8))
+    ax.tick_params(length=1.8, colors=MUTED, pad=P2.pw(1.5))
+    ax.set_xlabel(f"{b} cluster", fontsize=P2.fs(7.2), color=MUTED, labelpad=P2.pw(1.5))
     if first_col:
-        ax.set_ylabel(f"{a} cluster", fontsize=7.2, color=MUTED, labelpad=1.5)
+        ax.set_ylabel(f"{a} cluster", fontsize=P2.fs(7.2), color=MUTED, labelpad=P2.pw(1.5))
     for sp in ax.spines.values():
         sp.set_color(GREY)
     for pos, i in enumerate(r_ord):
         if share1 is not None and share1[i] > 0.5:
-            ax.plot(-0.78, pos, "o", ms=2.5, color=INK, clip_on=False)
+            ax.plot(-0.78, pos, "o", ms=P2.pw(2.5), color=INK, clip_on=False)
     for pos, j in enumerate(cols):
         if share2 is not None and share2[j] > 0.5:
-            ax.plot(pos, -0.78, "o", ms=2.5, color=INK, clip_on=False)
+            ax.plot(pos, -0.78, "o", ms=P2.pw(2.5), color=INK, clip_on=False)
     return im
 
 
@@ -225,23 +232,28 @@ def panel_rank(ax, matched, summary, ylab):
         st = RANK_STYLES[seen[fam] % len(RANK_STYLES)]
         seen[fam] += 1
         a, b = TITLE[name]
-        ax.plot(g["rank"], g.value, ls=st["ls"], marker=st["marker"], ms=3.8, lw=1.45,
+        ax.plot(g["rank"], g.value, ls=st["ls"], marker=st["marker"], ms=P2.pw(3.8), lw=P2.pw(1.45),
                 color=_shade(ALGO_C if fam == "A" else FEAT_C, st["shade"]), alpha=.95,
                 markeredgecolor="white", markeredgewidth=0.5, label=f"{a} vs {b}")
-    ax.axhline(0, color=GREY, lw=1.0, zorder=0)
-    ax.text(1.0, 0.012, "chance", fontsize=6.8, color=MUTED, va="bottom", ha="left")
-    ax.set_xlabel("match rank   (greedy, by centroid correlation)", fontsize=8, color=MUTED)
-    ax.set_ylabel(ylab, fontsize=8, color=MUTED)
+    ax.axhline(0, color=GREY, lw=P2.pw(1.0), zorder=0)
+    ax.text(1.0, 0.012, "chance", fontsize=P2.fs(6.8), color=MUTED, va="bottom", ha="left")
+    ax.set_xlabel("match rank   (greedy, by centroid correlation)", fontsize=P2.fs(8), color=MUTED)
+    ax.set_ylabel(ylab, fontsize=P2.fs(8), color=MUTED)
     ax.set_xticks(range(1, int(matched["rank"].max()) + 1))
-    ax.tick_params(labelsize=7, colors=MUTED, length=2)
+    ax.tick_params(labelsize=P2.fs(7), colors=MUTED, length=2)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
     for s in ("left", "bottom"):
         ax.spines[s].set_color(GREY)
     # above the axes, right half: inside the axes the legend covered the rank-3 peak
-    ax.legend(fontsize=6.3, frameon=False, loc="lower right", ncol=2, labelcolor=INK,
-              handlelength=2.4, columnspacing=1.2, borderaxespad=0.0,
-              bbox_to_anchor=(1.0, 1.0))
+    if P2.paper():
+        # inside, upper right: ranks 5 to 7 sit low, so that corner is free on paper
+        ax.legend(fontsize=P2.fs(5.8), frameon=False, loc="upper right", ncol=1, labelcolor=INK,
+                  handlelength=2.2, labelspacing=0.25, borderaxespad=0.2)
+    else:
+        ax.legend(fontsize=P2.fs(6.3), frameon=False, loc="lower right", ncol=2, labelcolor=INK,
+                  handlelength=2.4, columnspacing=1.2, borderaxespad=0.0,
+                  bbox_to_anchor=(1.0, 1.0))
 
 
 def panel_summary(ax, matched, summary):
@@ -257,18 +269,20 @@ def panel_summary(ax, matched, summary):
         nsig.append(int(((g.p_plain < .05) & (g.p_within < .05)).sum()))
     ax.barh(ys, vals, color=cols, height=.52, alpha=.9)
     for y, v, n, lb in zip(ys, vals, nsig, labs):
-        ax.text(v + .008, y, f"{n}/{len(g)}", va="center", fontsize=6.6, color=MUTED)
-        ax.text(0.004, y + .40, lb, va="bottom", ha="left", fontsize=7, color=INK)
+        ax.text(v + .008, y, f"{n}/{len(g)}", va="center", fontsize=P2.fs(6.6), color=MUTED)
+        ax.text(0.004, y + .40, lb, va="bottom", ha="left",
+                fontsize=P2.fs(6.0) if P2.paper() else P2.fs(7), color=INK)
     ax.set_yticks([]); ax.set_ylim(-0.7, len(ys) - 0.15)
-    ax.set_xlabel("mean adjusted overlap", fontsize=8, color=MUTED)
-    ax.tick_params(labelsize=7, colors=MUTED, length=2)
+    ax.set_xlabel("mean adjusted overlap", fontsize=P2.fs(8), color=MUTED)
+    ax.tick_params(labelsize=P2.fs(7), colors=MUTED, length=2)
     ax.set_xlim(0, max(vals) * 1.22)
     for s in ("top", "right", "left"):
         ax.spines[s].set_visible(False)
     ax.spines["bottom"].set_color(GREY)
-    ax.set_title("agreement, all pairs", fontsize=8.8, color=INK, pad=5)
-    ax.text(0.0, -0.62, "n/K = pairs clearing both nulls", fontsize=6.3,
-            color=MUTED, ha="left", va="center")
+    ax.set_title("agreement, all pairs", fontsize=P2.fs(8.8), color=INK, pad=P2.pw(5))
+    if not P2.paper():
+        ax.text(0.0, -0.62, "n/K = pairs clearing both nulls", fontsize=P2.fs(6.3),
+                color=MUTED, ha="left", va="center")
 
 
 def panel_left_out(ax, matched, summary, k):
@@ -285,18 +299,18 @@ def panel_left_out(ax, matched, summary, k):
         for c in range(len(names)):
             if np.isfinite(G[i, c]):
                 ax.text(c, i, f"{G[i, c]:.2f}".lstrip("0"), ha="center", va="center",
-                        fontsize=6.2,
+                        fontsize=P2.fs(6.2),
                         color="white" if G[i, c] > .55 * np.nanmax(G) else INK)
             if P[i, c]:
-                ax.plot(c + .37, i - .35, "o", ms=2.0, color=INK)
+                ax.plot(c + .37, i - .35, "o", ms=P2.pw(2.0), color=INK)
     ax.set_xticks(range(len(names)))
-    ax.set_xticklabels([TITLE[n][1] for n in names], fontsize=6.6, rotation=32, ha="right")
-    ax.set_yticks(range(k)); ax.set_yticklabels([f"c{i}" for i in range(k)], fontsize=6.6)
-    ax.tick_params(length=1.8, colors=MUTED, pad=1.5)
+    ax.set_xticklabels([TITLE[n][1] for n in names], fontsize=P2.fs(6.6), rotation=32, ha="right")
+    ax.set_yticks(range(k)); ax.set_yticklabels([f"c{i}" for i in range(k)], fontsize=P2.fs(6.6))
+    ax.tick_params(length=1.8, colors=MUTED, pad=P2.pw(1.5))
     for sp in ax.spines.values():
         sp.set_color(GREY)
     ax.set_title(f"every convex-NMF-on-{F4.FS_LABEL.get(REF_FSET[0], REF_FSET[0])} cluster,\nagainst everything else",
-                 fontsize=8.8, color=INK, pad=5)
+                 fontsize=P2.fs(8.8), color=INK, pad=P2.pw(5))
     return im
 
 
@@ -382,7 +396,12 @@ def main() -> int:
     ap.add_argument("--weighting", choices=["hard", "weighted"], default="hard")
     ap.add_argument("--raw-jaccard", action="store_true",
                     help="draw raw Jaccards instead of the chance-corrected ones")
+    ap.add_argument("--paper", action="store_true",
+                    help="draw for the page (174 mm, printed font sizes, no prose or stamp; "
+                         "PNG under paper_figures/paper/)")
     a = ap.parse_args()
+    if a.paper:
+        os.environ["PAPER2_PAPER"] = "1"
 
     matched, summary, mats, tag = load(a.k, a.weighting, a.raw_jaccard)
     ylab = "raw Jaccard" if a.raw_jaccard else "adjusted overlap"
@@ -396,9 +415,10 @@ def main() -> int:
         for c in (np.flatnonzero(sh > 0.5) if sh is not None else []):
             onepat.append(f"{meth} on {fset} c{c} ({sh[c]:.0%})")
 
-    fig = plt.figure(figsize=(11.4, 10.4), facecolor="white")
+    fig = plt.figure(figsize=(P2.canvas(11.4), 10.4), facecolor="white")
     gs = GridSpec(3, 12, figure=fig, height_ratios=[1.0, 1.0, 1.02],
-                  hspace=0.46, wspace=1.05, left=.085, right=.940, top=.885, bottom=.105)
+                  hspace=0.46, wspace=1.05, left=.085, right=.940,
+                  top=.935 if P2.paper() else .885, bottom=.105)
 
     im = None
     for idx, name in enumerate(summary.comparison):
@@ -414,28 +434,35 @@ def main() -> int:
     panel_summary(fig.add_subplot(gs[2, 5:8]), matched, summary)
     imD = panel_left_out(fig.add_subplot(gs[2, 8:12]), matched, summary, a.k)
 
-    # above the third matrix title, not on it (2026-10-26)
-    cax = fig.add_axes([0.730, 0.9635, 0.190, 0.0085])
-    cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[-1, -.5, 0, .5, 1])
-    cb.set_label("centroid correlation  (what pairs the clusters)", fontsize=6.8,
-                 color=MUTED, labelpad=2)
-    cb.ax.tick_params(labelsize=6, colors=MUTED, length=2)
+    if P2.paper():
+        # beside the matrices in the right margin, vertical, where it serves them (2026-10-27)
+        cax = fig.add_axes([0.948, 0.50, 0.0085, 0.30])
+        cb = fig.colorbar(im, cax=cax, orientation="vertical", ticks=[-1, -.5, 0, .5, 1])
+    else:
+        # above the third matrix title, not on it (2026-10-26)
+        cax = fig.add_axes([0.730, 0.9635, 0.190, 0.0085])
+        cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[-1, -.5, 0, .5, 1])
+    cb.set_label("centroid r" if P2.paper() else "centroid correlation  (what pairs the clusters)",
+                 fontsize=P2.fs(6.8), color=MUTED, labelpad=P2.pw(2))
+    cb.ax.tick_params(labelsize=P2.fs(6), colors=MUTED, length=2)
     cb.outline.set_edgecolor(GREY)
 
-    caxD = fig.add_axes([0.955, 0.135, 0.0085, 0.155])
+    caxD = fig.add_axes([0.948 if P2.paper() else 0.955, 0.135, 0.0085, 0.155])
     cbD = fig.colorbar(imD, cax=caxD, orientation="vertical")
-    cbD.set_label(f"{ylab}  (what tests the pair)", fontsize=6.8, color=MUTED, labelpad=3)
-    cbD.ax.tick_params(labelsize=6, colors=MUTED, length=2)
+    cbD.set_label(ylab if P2.paper() else f"{ylab}  (what tests the pair)",
+                  fontsize=P2.fs(6.8), color=MUTED, labelpad=P2.pw(3))
+    cbD.ax.tick_params(labelsize=P2.fs(6), colors=MUTED, length=2)
     cbD.outline.set_edgecolor(GREY)
 
-    fig.text(.085, .955, "A", fontsize=11, color=INK, weight="bold")
-    fig.text(.106, .9565, "clusters paired by response shape, tested on shared "
+    fig.text(.085, .955, "A", fontsize=P2.fs(11), color=INK, weight="bold")
+    if not P2.paper():
+      fig.text(.106, .9565, "clusters paired by response shape, tested on shared "
              "electrodes.  Number in each matched cell: " + ylab + ".",
-             fontsize=8.6, color=INK)
-    fig.text(.106, .9345, "box:  solid = above both nulls     dashed = above the free "
+             fontsize=P2.fs(8.6), color=INK)
+      fig.text(.106, .9345, "box:  solid = above both nulls     dashed = above the free "
              "null only     grey = at chance          dot = one patient holds over half "
-             "the cluster", fontsize=7.0, color=MUTED)
-    if a.weighting == "weighted":
+             "the cluster", fontsize=P2.fs(7.0), color=MUTED)
+    if a.weighting == "weighted" and not P2.paper():
         # A SOFT COLUMN AGAINST A 0/1 COLUMN CANNOT REACH 1. Read the weighted rows
         # down a block, never across the two: the top row pairs a graded solution
         # with a hard one and the bottom row pairs two graded ones.
@@ -443,27 +470,30 @@ def main() -> int:
                  "overlap is the weighted Jaccard.\nk-means and Ward have no P, so the "
                  "top row pairs a graded solution with a hard one - read down a block, "
                  "not across.",
-                 fontsize=7.0, color=FEAT_C, linespacing=1.5, va="top")
-    fig.text(.030, .755, "same features,\ndifferent algorithms", fontsize=8.2,
+                 fontsize=P2.fs(7.0), color=FEAT_C, linespacing=1.5, va="top")
+    fig.text(.030, .755, "same features,\ndifferent algorithms", fontsize=P2.fs(8.2),
              color=ALGO_C, rotation=90, ha="center", va="center", linespacing=1.5)
-    fig.text(.030, .490, "same algorithm,\ndifferent features", fontsize=8.2,
+    fig.text(.030, .490, "same algorithm,\ndifferent features", fontsize=P2.fs(8.2),
              color=FEAT_C, rotation=90, ha="center", va="center", linespacing=1.5)
-    fig.text(.085, .327, "B", fontsize=11, color=INK, weight="bold")
-    fig.text(.455, .327, "C", fontsize=11, color=INK, weight="bold")
-    fig.text(.680, .327, "D", fontsize=11, color=INK, weight="bold")
+    fig.text(.085, .327, "B", fontsize=P2.fs(11), color=INK, weight="bold")
+    fig.text(.455, .327, "C", fontsize=P2.fs(11), color=INK, weight="bold")
+    fig.text(.680, .327, "D", fontsize=P2.fs(11), color=INK, weight="bold")
 
     # THE FILENAME CARRIES THE VARIANT. Without this the weighted render overwrites
     # the hard one at the same path and the figure on disk stops saying which it is.
     sfx = ("" if a.weighting == "hard" else "_weighted") + ("_rawJ" if a.raw_jaccard else "")
     # the six runs are in the caption; the figure carries the one it is anchored to
     s0 = summary.iloc[0]
-    fig.text(0.004, 0.004,
+    if not P2.paper():
+      fig.text(0.004, 0.004,
              f"side 1 run {s0.run_1}   \u00b7   K = {a.k}   \u00b7   "
              f"{a.weighting} weighting   \u00b7   drawn "
              f"{datetime.now():%Y-%m-%d %H:%M}",
-             fontsize=6.0, color=MUTED, ha="left", va="bottom")
-    png = OUT / f"FIG4_{tag}{sfx}.png"
-    fig.savefig(png, dpi=300, facecolor="white")
+             fontsize=P2.fs(6.0), color=MUTED, ha="left", va="bottom")
+    od = P2.paper_dir(OUT)
+    od.mkdir(parents=True, exist_ok=True)
+    png = od / f"FIG4_{tag}{sfx}.png"
+    fig.savefig(png, dpi=P2.out_dpi(300), facecolor="white")
     plt.close(fig)
     txt = OUT / f"FIG4_{tag}{sfx}_caption.txt"
     # the per-pair draw count, as the correspondence step of this run recorded it

@@ -47,6 +47,7 @@ import argparse
 import glob
 import json
 import importlib.util
+import os
 import sys
 import time
 import warnings
@@ -392,36 +393,44 @@ def panel_rank(ax, R, d, chars, ext):
         keep = w >= LOAD_CUT
         o = np.argsort(w[keep])                     # weak members first, strong on top
         xs_, v_, w_ = xs[keep][o], v[keep][o], w[keep][o]
-        ax.scatter(xs_, v_, s=4.0 + 8.5 * P2.loading_t(w_, K), c=P2.loading_rgb(w_, K, col),
-                   lw=0, zorder=3)
+        ax.scatter(xs_, v_, s=P2.pa(4.0) + 8.5 * P2.loading_t(w_, K), c=P2.loading_rgb(w_, K, col),
+                   lw=P2.pw(0), zorder=3)
         # the statistics, as before: the mean with its patient bootstrap, the two nulls
-        ax.plot([i - 0.27, i + 0.27], [r.mean_P, r.mean_P], color=INK, lw=1.7, zorder=6)
-        ax.plot([i, i], [r.mean_P_lo, r.mean_P_hi], color=INK, lw=1.0, zorder=6)
-        ax.plot(i, r.null_mean_P_sh, "_", ms=15, color=INK, mew=2.0, zorder=5)
-        ax.plot(i, r.null_mean_P, "_", ms=11, color=MUTED, mew=1.4, zorder=4)
+        ax.plot([i - 0.27, i + 0.27], [r.mean_P, r.mean_P], color=INK, lw=P2.pw(1.7), zorder=6)
+        ax.plot([i, i], [r.mean_P_lo, r.mean_P_hi], color=INK, lw=P2.pw(1.0), zorder=6)
+        ax.plot(i, r.null_mean_P_sh, "_", ms=P2.pw(15), color=INK, mew=P2.pw(2.0), zorder=5)
+        ax.plot(i, r.null_mean_P, "_", ms=P2.pw(11), color=MUTED, mew=P2.pw(1.4), zorder=4)
         star = "*" if r.q_mean_sh < 0.05 else ("(*)" if r.q_mean < 0.05 else "")
-        ax.text(i, float(v.max()) + 0.025, f"{star}\n{100*r.coverage:.0f}%", ha="center",
-                va="bottom", fontsize=6.6,
+        # on paper the coverage is in the legend when it is 100% everywhere
+        lab_ = star if (P2.paper() and bool((R.coverage >= 0.999).all())) \
+            else f"{star}\n{100*r.coverage:.0f}%"
+        ax.text(i, float(v.max()) + 0.025, lab_, ha="center",
+                va="bottom", fontsize=P2.fs(6.6),
                 color=RED if r.coverage < MIN_COVERAGE else MUTED)
-    ax.axhline(R.baseline_P.iloc[0], color=MUTED, ls=":", lw=1.2, zorder=2)
+    ax.axhline(R.baseline_P.iloc[0], color=MUTED, ls=":", lw=P2.pw(1.2), zorder=2)
     ax.set_xticks(x)
-    ax.set_xticklabels([f"c{int(c)}\nn={int(n)}" for c, n in zip(R.cluster, R.n_lana)],
-                       fontsize=7.2)
-    ax.set_ylabel("P(LanA) of each electrode", fontsize=8.6)
+    ax.set_xticklabels([f"c{int(c)}" if P2.paper() else f"c{int(c)}\nn={int(n)}"
+                        for c, n in zip(R.cluster, R.n_lana)], fontsize=P2.fs(7.2))
+    ax.set_ylabel("P(LanA) per electrode" if P2.paper() else "P(LanA) of each electrode",
+                  fontsize=P2.fs(8.6))
     ax.set_xlim(-0.6, len(R) - 0.4)
     ax.set_ylim(0, top + 0.17)                        # the stars sit above the tallest violin
-    ax.tick_params(labelsize=7.4, colors=MUTED)
+    ax.tick_params(labelsize=P2.fs(7.4), colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
     # the key to the points, top right, where no violin reaches: FIG 1's ramp from the
     # cut to the size cap, in the ink colour
     ww = np.linspace(LOAD_CUT, P2.LOAD_CAP, 6)
-    ax.scatter(0.60 + 0.055 * np.arange(6), np.full(6, 0.955), s=4.0 + 8.5 * P2.loading_t(ww, K),
-               c=P2.loading_rgb(ww, K, np.asarray(matplotlib.colors.to_rgb(INK))), lw=0,
+    ax.scatter(0.60 + 0.055 * np.arange(6), np.full(6, 0.955), s=P2.pa(4.0) + 8.5 * P2.loading_t(ww, K),
+               c=P2.loading_rgb(ww, K, np.asarray(matplotlib.colors.to_rgb(INK))), lw=P2.pw(0),
                transform=ax.transAxes, clip_on=False)
-    ax.text(0.60, 0.905, f"loading {LOAD_CUT:.2f}", transform=ax.transAxes, ha="left",
-            va="center", fontsize=6.4, color=MUTED)
-    ax.text(0.875, 0.905, f"{P2.LOAD_CAP:.2f}+", transform=ax.transAxes, ha="right",
-            va="center", fontsize=6.4, color=MUTED)
+    if P2.paper():
+        ax.text(0.60, 0.905, f"loading {LOAD_CUT:.1f} to {P2.LOAD_CAP:.1f}", transform=ax.transAxes,
+                ha="left", va="center", fontsize=P2.fs(6.4), color=MUTED)
+    else:
+        ax.text(0.60, 0.905, f"loading {LOAD_CUT:.2f}", transform=ax.transAxes, ha="left",
+                va="center", fontsize=P2.fs(6.4), color=MUTED)
+        ax.text(0.875, 0.905, f"{P2.LOAD_CAP:.2f}+", transform=ax.transAxes, ha="right",
+                va="center", fontsize=P2.fs(6.4), color=MUTED)
     thin = [f"c{int(r.cluster)}" for _, r in R.iterrows() if r.coverage < MIN_COVERAGE]
     n_cut = int((own[has] < LOAD_CUT).sum())
     ax.text(0, -0.20, _wrap(
@@ -439,7 +448,7 @@ def panel_rank(ax, R, d, chars, ext):
         + (f"; {', '.join(thin)} fall{'' if len(thin) > 1 else 's'} below "
            f"{100*MIN_COVERAGE:.0f}% and {'their means are' if len(thin) > 1 else 'its mean is'} "
            f"not comparable with the rest." if thin else "."),
-        chars), transform=ax.transAxes, va="top", fontsize=7.4, color=MUTED,
+        chars), transform=ax.transAxes, va="top", fontsize=P2.fs(7.4), color=MUTED,
         linespacing=1.5)
 
 
@@ -480,31 +489,33 @@ def panel_inside(ax, R, d, chars, ext):
         c = f"frac_{tkey(t)}"
         xs = x - 0.40 + w * (i_t + 0.5)
         alpha = 1.0 if i_t == 0 else 0.45
-        ax.bar(xs, R[c], width=w * 0.90, color=cols, alpha=alpha, lw=0, zorder=2)
+        ax.bar(xs, R[c], width=w * 0.90, color=cols, alpha=alpha, lw=P2.pw(0), zorder=2)
         ax.errorbar(xs, R[c], yerr=[R[c] - R[f"{c}_lo"], R[f"{c}_hi"] - R[c]],
-                    fmt="none", ecolor=INK, elinewidth=0.9, capsize=2.0, zorder=3)
-        ax.plot(xs, R[f"null_{c}_sh"], "_", ms=9, color=INK, mew=1.8, zorder=5)
-        ax.plot(xs, R[f"null_{c}"], "_", ms=7, color=MUTED, mew=1.2, zorder=4)
+                    fmt="none", ecolor=INK, elinewidth=P2.pw(0.9), capsize=P2.pw(2.0), zorder=3)
+        ax.plot(xs, R[f"null_{c}_sh"], "_", ms=P2.pw(9), color=INK, mew=P2.pw(1.8), zorder=5)
+        ax.plot(xs, R[f"null_{c}"], "_", ms=P2.pw(7), color=MUTED, mew=P2.pw(1.2), zorder=4)
         base = float(R[f"base_{tkey(t)}"].iloc[0])
-        ax.axhline(base, color=MUTED, ls=":" if i_t == 0 else (0, (1, 2.2)), lw=1.1,
+        ax.axhline(base, color=MUTED, ls=":" if i_t == 0 else (0, (1, 2.2)), lw=P2.pw(1.1),
                    zorder=1)
         for i, (_, r) in enumerate(R.iterrows()):
             star = ("*" if r[f"q_{c}_sh"] < 0.05 else
                     "(*)" if r[f"q_{c}"] < 0.05 else "")
             top = max(r[f"{c}_hi"], r[c])
             lab = (f"{star}\n{r[c] / base:.1f}×" if i_t == 0 else star)
-            ax.text(xs[i], top + 0.012, lab, ha="center", va="bottom", fontsize=6.4,
+            ax.text(xs[i], top + 0.012, lab, ha="center", va="bottom", fontsize=P2.fs(6.4),
                     color=INK if i_t == 0 else MUTED)
     ax.set_xticks(x)
     ax.set_xticklabels([f"c{int(c)}\nn={int(n)}" for c, n in zip(R.cluster, R.n_lana)],
-                       fontsize=7.2)
-    ax.set_ylabel("share of its electrodes inside LanA, P(LanA) ≥ t", fontsize=8.6)
+                       fontsize=P2.fs(7.2))
+    ax.set_ylabel("share inside LanA" if P2.paper() else
+                  "share of its electrodes inside LanA, P(LanA) ≥ t", fontsize=P2.fs(8.6))
     ax.set_ylim(0, max(0.5, ext.get("B_top", 0.0) * 1.32))
-    ax.tick_params(labelsize=7.4, colors=MUTED)
+    ax.tick_params(labelsize=P2.fs(7.4), colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
     ax.legend([Patch(color=INK, alpha=1.0), Patch(color=INK, alpha=0.45)],
-              [f"P ≥ {t:.1f}   (cohort {100*float(R[f'base_{tkey(t)}'].iloc[0]):.0f}%, dotted)"
-               for t in THRESHOLDS], fontsize=6.8,
+              [f"P ≥ {t:.1f}" if P2.paper() else
+               f"P ≥ {t:.1f}   (cohort {100*float(R[f'base_{tkey(t)}'].iloc[0]):.0f}%, dotted)"
+               for t in THRESHOLDS], fontsize=P2.fs(6.8),
               frameon=False, loc="upper right", ncol=2, handlelength=1.2)
     sm = inside_summary(R, d["P_lana"][d["has"]], d["lab"][d["has"]], THRESHOLDS[0])
     ax.text(0, -0.20, _wrap(
@@ -519,7 +530,7 @@ def panel_inside(ax, R, d, chars, ext):
         + " and ".join(f"c{j} {100*f:.0f}%" for j, f in sm["hi"])
         + f" against {100*sm['base']:.0f}% in the cohort; "
         + " and ".join(f"c{j} {100*f:.0f}%" for j, f in sm["lo"]) + ".", chars),
-        transform=ax.transAxes, va="top", fontsize=7.4, color=MUTED, linespacing=1.5)
+        transform=ax.transAxes, va="top", fontsize=P2.fs(7.4), color=MUTED, linespacing=1.5)
 
 
 def panel_mix(ax, R, d, labh, Ph, chars):
@@ -540,17 +551,17 @@ def panel_mix(ax, R, d, labh, Ph, chars):
         left = 0.0
         for j in order:
             f = float((L == j).mean()) if len(L) else 0.0
-            ax.barh(yi, f, left=left, color=P2.cluster_col(j, K), height=0.64, lw=0)
+            ax.barh(yi, f, left=left, color=P2.cluster_col(j, K), height=0.64, lw=P2.pw(0))
             if f >= 0.07:
                 ax.text(left + f / 2, yi, f"c{j}\n{100*f:.0f}%", ha="center",
-                        va="center", fontsize=6.2, color="white")
+                        va="center", fontsize=P2.fs(6.2), color="white")
             left += f
     ax.set_yticks(y)
-    ax.set_yticklabels([g[0] for g in groups], fontsize=7.2)
+    ax.set_yticklabels([g[0] for g in groups], fontsize=P2.fs(7.2))
     ax.set_xlim(0, 1)
     ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
-    ax.set_xticklabels(["0", "25%", "50%", "75%", "100%"], fontsize=7)
-    ax.set_xlabel("share of the electrodes in that group", fontsize=8.6)
+    ax.set_xticklabels(["0", "25%", "50%", "75%", "100%"], fontsize=P2.fs(7))
+    ax.set_xlabel("share of the electrodes in that group", fontsize=P2.fs(8.6))
     ax.tick_params(colors=MUTED, length=2)
     ax.spines[["top", "right"]].set_visible(False)
     sm = inside_summary(R, Ph, labh, THRESHOLDS[0])
@@ -566,10 +577,12 @@ def panel_mix(ax, R, d, labh, Ph, chars):
                        for j, (a, b) in sm["least"])
         + ". A bar that looked like the cohort bar would mean the network has no "
         f"type of its own.", chars),
-        transform=ax.transAxes, va="top", fontsize=7.4, color=MUTED, linespacing=1.5)
+        transform=ax.transAxes, va="top", fontsize=P2.fs(7.4), color=MUTED, linespacing=1.5)
 
 
 def _wrap(t, chars):
+    if P2.paper():                  # the notes stay off the page; the caption has them
+        return ""
     import textwrap
     return textwrap.fill(t, chars)
 
@@ -611,7 +624,7 @@ def panel_brain(axL, axR, axT, axKey, d, chars):
         # top-left corner, which the brain's outline leaves free (2026-10-26)
         y_, va_ = (0.98, "top") if side == "T" else (0.02, "bottom")
         ax.text(0.02, y_, f"{tag}  {int(m.sum())}", transform=ax.transAxes,
-                ha="left", va=va_, fontsize=7.0, color=MUTED)
+                ha="left", va=va_, fontsize=P2.fs(7.0), color=MUTED)
     # the scale and the reading, in the cell the top view leaves free
     from matplotlib.cm import ScalarMappable
     from matplotlib.colors import Normalize
@@ -619,9 +632,9 @@ def panel_brain(axL, axR, axT, axKey, d, chars):
     cax = axKey.inset_axes([0.04, 0.82, 0.62, 0.055])
     cb = axKey.figure.colorbar(ScalarMappable(norm=Normalize(0, vmax), cmap=cm),
                                cax=cax, orientation="horizontal")
-    cb.set_label(f"P(LanA), 0 to the 98th percentile ({vmax:.2f})", fontsize=7.2,
-                 color=MUTED, labelpad=3)
-    cb.ax.tick_params(labelsize=6.4, colors=MUTED, length=2)
+    cb.set_label(f"P(LanA), 0 to the 98th percentile ({vmax:.2f})", fontsize=P2.fs(7.2),
+                 color=MUTED, labelpad=P2.pw(3))
+    cb.ax.tick_params(labelsize=P2.fs(6.4), colors=MUTED, length=2)
     cb.outline.set_visible(False)
     axKey.text(0.04, 0.60, _wrap(
         f"Every electrode with a LanA value, coloured by it - dark is low, bright is "
@@ -629,7 +642,7 @@ def panel_brain(axL, axR, axT, axKey, d, chars):
         f"a bright contact is somewhere language cortex usually is, which is not the "
         f"same as having responded to language. LanA is left-lateralised and this "
         f"coverage is not symmetric; the view from above shows both at once.", chars),
-        transform=axKey.transAxes, va="top", ha="left", fontsize=7.4, color=MUTED,
+        transform=axKey.transAxes, va="top", ha="left", fontsize=P2.fs(7.4), color=MUTED,
         linespacing=1.5)
 
 
@@ -762,18 +775,21 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     # FOUR PANELS, ONE PER CORNER. The left column is the narrow one (A above B) and
     # the right the wide one (C above D); the bottom row is the taller, so that D -
     # three views of the coverage - can actually be read.
-    fig = plt.figure(figsize=(17.6, 15.6), dpi=190)
-    gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 2.3], hspace=0.52,
-                  wspace=1.2, left=0.055, right=0.985, top=0.905, bottom=0.030)
-    fig.suptitle(f"FIG 3   ·   LanA language atlas   ·   {fset}   ·   K = {k}   ·   "
-                 f"{int(d['has'].sum())} of {len(d['X'])} electrodes have a LanA value",
-                 x=0.055, y=0.978, ha="left", fontsize=15.5, color=INK)
-    fig.text(0.055, 0.955,
-             "How far into the LanA probabilistic language atlas each cluster sits, how "
-             "much of each type lies inside the network, and what the network is made "
-             "of.  Two nulls per test: a SHAFT-SHIFT that keeps spatial smoothness (*) "
-             "and a within-patient shuffle ((*)); every interval bootstraps patients.",
-             fontsize=9.8, color=MUTED, va="top")
+    fig = plt.figure(figsize=(P2.canvas(17.6), 15.6), dpi=190)
+    gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 2.3],
+                  hspace=0.30 if P2.paper() else 0.52,
+                  wspace=1.2, left=0.055, right=0.985,
+                  top=0.95 if P2.paper() else 0.905, bottom=0.030)
+    if not P2.paper():
+        fig.suptitle(f"FIG 3   ·   LanA language atlas   ·   {fset}   ·   K = {k}   ·   "
+                     f"{int(d['has'].sum())} of {len(d['X'])} electrodes have a LanA value",
+                     x=0.055, y=0.978, ha="left", fontsize=P2.fs(15.5), color=INK)
+        fig.text(0.055, 0.955,
+                 "How far into the LanA probabilistic language atlas each cluster sits, how "
+                 "much of each type lies inside the network, and what the network is made "
+                 "of.  Two nulls per test: a SHAFT-SHIFT that keeps spatial smoothness (*) "
+                 "and a within-patient shuffle ((*)); every interval bootstraps patients.",
+                 fontsize=P2.fs(9.8), color=MUTED, va="top")
 
     axA = fig.add_subplot(gs[0, 0:7])
     panel_rank(axA, R, d, 66, ext)
@@ -797,21 +813,27 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
     # one line of labels per row, above the taller of its two panels
-    for row_ in (((axA, "A  ·  P(LanA) of every electrode, clusters ranked by the mean"),
+    if P2.paper():
+        rows_ = (((axA, "A   P(LanA) per electrode"), (axB, "B   inside the network")),
+                 ((axC, "C   what the network is made of"), (axDL, "D   LanA on this coverage")))
+    else:
+        rows_ = (((axA, "A  ·  P(LanA) of every electrode, clusters ranked by the mean"),
                   (axB, f"B  ·  inside the LanA network at P ≥ {THRESHOLDS[0]:.1f} "
                         f"and ≥ {THRESHOLDS[1]:.1f}")),
                  ((axC, "C  ·  what the network is made of"),
-                  (axDL, "D  ·  LanA on this coverage: left, right, from above"))):
+                  (axDL, "D  ·  LanA on this coverage: left, right, from above")))
+    for row_ in rows_:
         top = max(inv.transform((0, ax.get_tightbbox(r).y1))[1] for ax, _ in row_)
         for ax, label in row_:
-            fig.text(ax.get_position().x0, top + 0.006, label, fontsize=10.4,
+            fig.text(ax.get_position().x0, top + 0.006, label, fontsize=P2.fs(10.4),
                      color=INK, va="bottom")
 
-    OUT.mkdir(parents=True, exist_ok=True)
+    od = P2.paper_dir(OUT)
+    od.mkdir(parents=True, exist_ok=True)
     _rt = "_run" + str(d["run"].name).replace("_", "-")
-    p = OUT / f"FIG3_lana_{fset}_K{k}{_rt}.png"
+    p = od / f"FIG3_lana_{fset}_K{k}{_rt}.png"
     P2.stamp(fig, d)
-    P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
+    P2.save_png(fig, p, dpi=P2.out_dpi(190), bbox_inches="tight", facecolor="white")
     plt.close(fig)
     P2.save_text(R.to_csv(index=False), p.with_name(p.stem + "_clusters.csv"))
     P2.save_text(pd.DataFrame(dict(
@@ -1057,7 +1079,12 @@ def main() -> int:
     ap.add_argument("--n-boot", type=int, default=N_BOOT)
     ap.add_argument("--all", action="store_true",
                     help="every feature set, on one shared set of axes")
+    ap.add_argument("--paper", action="store_true",
+                    help="draw for the page (174 mm, printed font sizes, no prose or stamp; "
+                         "PNG under paper_figures/paper/)")
     a = ap.parse_args()
+    if a.paper:
+        os.environ["PAPER2_PAPER"] = "1"
     print(f"=== FIGURE 3 ===  {a.feature_set}  K={a.k}")
     (figure_3_all(P2.FSETS, a.k, a.n_perm, a.n_boot) if a.all
      else figure_3(a.feature_set, a.k, a.n_perm, a.n_boot))

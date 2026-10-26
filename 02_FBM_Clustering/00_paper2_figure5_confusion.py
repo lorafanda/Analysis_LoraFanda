@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -55,6 +56,11 @@ OUT = ROOT / "outputs" / "clustering" / "paper_figures"
 # the loader and the labels FIG 4 uses, so the two figures cannot disagree on a run
 _spec = importlib.util.spec_from_file_location("f4", ROOT / "00_paper2_figure4_correspondence.py")
 F4 = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(F4)
+
+# the shared module, for paper mode (fs / pw / paper_dir / out_dpi; 2026-10-27)
+_p2spec = importlib.util.spec_from_file_location("p2_shared", ROOT / "00_Paper2_Figures.py")
+P2 = importlib.util.module_from_spec(_p2spec)
+_p2spec.loader.exec_module(P2)
 
 METHODS = ["kmeans", "hierarchical", "cnmf"]
 # the four current feature sets (2026-10-21; was concat_hg / rawds / bands5z, all retired)
@@ -133,10 +139,29 @@ def matrix_at_k(k, n_perm, seed):
 
 # ---- drawing --------------------------------------------------------------------------------
 def label(nm):
+    if P2.paper():                  # the algorithm is a group label on paper
+        return FL[nm[1]]
     return f"{ML[nm[0]]}\n{FL[nm[1]]}"
 
 
+def group_labels(ax, names):
+    """PAPER: one algorithm name per block, under the x ticks and, on the first panel
+    only, left of the y ticks."""
+    nf = len(FSETS)
+    first = ax.get_subplotspec().colspan.start == 0
+    for b in range(len(names) // nf):
+        c = b * nf + (nf - 1) / 2
+        ax.text(c, len(names) - 0.5 + 4.2, ML[names[b * nf][0]], ha="center", va="top",
+                fontsize=P2.fs(7.4), color=INK, weight="bold")
+        if first:
+            ax.text(-3.9, c, ML[names[b * nf][0]], ha="right", va="center", rotation=90,
+                    fontsize=P2.fs(7.4), color=INK, weight="bold")
+
+
 def heat(ax, M, names, title, vmin, vmax, pv=None, fmt="{:.2f}"):
+    if P2.paper():                  # the diagonal is 1 by construction: masked white
+        M = np.array(M, float).copy()
+        M[np.arange(len(names)), np.arange(len(names))] = np.nan
     im = ax.imshow(M, cmap=CMAP, vmin=vmin, vmax=vmax)
     nn = len(names)
     for i in range(nn):
@@ -148,39 +173,52 @@ def heat(ax, M, names, title, vmin, vmax, pv=None, fmt="{:.2f}"):
             s = fmt.format(v)
             if pv is not None and i != j and pv[i, j] >= 0.05:
                 s += "\nns"
-            ax.text(j, i, s, ha="center", va="center", fontsize=6.6 if nn <= 9 else 5.4,
+            ax.text(j, i, s, ha="center", va="center", fontsize=P2.fs(6.6) if nn <= 9 else P2.fs(5.4),
                     color="white" if dark else INK, fontweight="bold" if i != j else "normal")
     ax.set_xticks(range(nn)); ax.set_yticks(range(nn))
-    ax.set_xticklabels([label(n) for n in names], fontsize=6.4, rotation=40, ha="right")
-    ax.set_yticklabels([label(n) for n in names], fontsize=6.4)
+    ax.set_xticklabels([label(n) for n in names], fontsize=P2.fs(6.4),
+                       rotation=90 if P2.paper() else 40, ha="center" if P2.paper() else "right")
+    ax.set_yticklabels([label(n) for n in names], fontsize=P2.fs(6.4))
+    if P2.paper():
+        group_labels(ax, names)
     ax.tick_params(length=0)
     # block lines between algorithms (names are method-major: len(FSETS) per method)
     for b in np.arange(len(FSETS), nn - 1, len(FSETS)) - 0.5:
-        ax.axhline(b, color="white", lw=2.2); ax.axvline(b, color="white", lw=2.2)
+        ax.axhline(b, color="white", lw=P2.pw(2.2)); ax.axvline(b, color="white", lw=P2.pw(2.2))
     for s in ax.spines.values():
         s.set_visible(False)
-    ax.set_title(title, fontsize=9, loc="left", color=INK)
+    ax.set_title(title, fontsize=P2.fs(9), loc="left", color=INK)
     return im
 
 
 def draw(res, path, n_perm):
     k, names = res["k"], res["names"]
+    if P2.paper():
+        # A and C only, twice the size; the chance matrix is one number in the legend
+        # (2026-10-27)
+        fig, axs = plt.subplots(1, 2, figsize=(P2.canvas(12.4), 6.4))
+        im0 = heat(axs[0], res["S"], names, f"A   diagonal share, K = {k}", 0, 1, pv=res["PV"])
+        im2 = heat(axs[1], res["ADJ"], names, "B   chance-corrected", 0, 1, pv=res["PV"])
+        cb = fig.colorbar(im2, ax=list(axs), fraction=0.02, pad=P2.pw(0.02))
+        cb.ax.tick_params(labelsize=P2.fs(7), colors=MUTED, length=2)
+        plt.savefig(path, dpi=P2.out_dpi(200), bbox_inches="tight"); plt.close(fig)
+        return
     fig, axs = plt.subplots(1, 3, figsize=(15.5, 5.6) if len(names) <= 9 else (18.5, 6.6))
     im0 = heat(axs[0], res["S"], names, f"A   diagonal share, K = {k}   (Hungarian on shared electrodes)", 0, 1, pv=res["PV"])
     heat(axs[1], res["NULL"], names, f"B   chance: mean of {n_perm} label shuffles", 0, 1)
     im2 = heat(axs[2], res["ADJ"], names, "C   chance-corrected  (share - chance) / (1 - chance)", 0, 1, pv=res["PV"])
     for ax in axs:
-        ax.text(-0.02, 1.06, "algorithm x feature set", transform=ax.transAxes, fontsize=6.8, color=MUTED, va="bottom")
-    cb = fig.colorbar(im2, ax=axs, fraction=0.012, pad=0.01)
-    cb.ax.tick_params(labelsize=7, colors=MUTED, length=2)
+        ax.text(-0.02, 1.06, "algorithm x feature set", transform=ax.transAxes, fontsize=P2.fs(6.8), color=MUTED, va="bottom")
+    cb = fig.colorbar(im2, ax=axs, fraction=0.012, pad=P2.pw(0.01))
+    cb.ax.tick_params(labelsize=P2.fs(7), colors=MUTED, length=2)
     R = res["rows"]
     same_a = R[R.same_algorithm & ~R.same_feature]; same_f = R[R.same_feature & ~R.same_algorithm]; nei = R[~R.same_algorithm & ~R.same_feature]
     fig.suptitle(f"FIG 5   {len(names)} solutions against each other at K = {k}   -   {res['n']} electrodes   -   "
                  f"across algorithms (same features) median {same_f.diagonal_share.median():.2f}, "
                  f"across features (same algorithm) {same_a.diagonal_share.median():.2f}, both differ {nei.diagonal_share.median():.2f}   "
-                 f"-   chance {R.null_mean.median():.2f}", fontsize=9.5, color=INK, x=0.02, ha="left")
+                 f"-   chance {R.null_mean.median():.2f}", fontsize=P2.fs(9.5), color=INK, x=0.02, ha="left")
     # just under the rotated tick labels; at 0.005 it left 0.7 in of white under the matrices
-    fig.text(0.02, 0.075, "'ns' = share not above the 95th percentile of the null (p >= 0.05)", fontsize=7, color=MUTED)
+    fig.text(0.02, 0.075, "'ns' = share not above the 95th percentile of the null (p >= 0.05)", fontsize=P2.fs(7), color=MUTED)
     plt.savefig(path, dpi=200, bbox_inches="tight"); plt.close(fig)
 
 
@@ -206,15 +244,15 @@ def kk_panel(ks, n_perm, seed, path):
         im = ax.imshow(M, cmap=CMAP, vmin=0, vmax=1)
         for i in range(len(ks)):
             for j in range(len(ks)):
-                v = M[i, j]; ax.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=7, color="white" if v > 0.55 else INK)
+                v = M[i, j]; ax.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=P2.fs(7), color="white" if v > 0.55 else INK)
         ax.set_xticks(range(len(ks))); ax.set_yticks(range(len(ks)))
-        ax.set_xticklabels([f"K={k}" for k in ks], fontsize=7); ax.set_yticklabels([f"K={k}" for k in ks], fontsize=7)
-        ax.tick_params(length=0); ax.set_title(f"{ML[nm[0]]} · {FL[nm[1]]}", fontsize=9, loc="left")
+        ax.set_xticklabels([f"K={k}" for k in ks], fontsize=P2.fs(7)); ax.set_yticklabels([f"K={k}" for k in ks], fontsize=P2.fs(7))
+        ax.tick_params(length=0); ax.set_title(f"{ML[nm[0]]} · {FL[nm[1]]}", fontsize=P2.fs(9), loc="left")
         for s in ax.spines.values():
             s.set_visible(False)
-    cb = fig.colorbar(im, ax=axs, fraction=0.015, pad=0.01); cb.ax.tick_params(labelsize=7, colors=MUTED, length=2)
+    cb = fig.colorbar(im, ax=axs, fraction=0.015, pad=P2.pw(0.01)); cb.ax.tick_params(labelsize=P2.fs(7), colors=MUTED, length=2)
     fig.suptitle("FIG 5 K-by-K   each solution against itself at another K: diagonal share after Hungarian matching on the "
-                 "rectangular table (min(K_a, K_b) pairs)", fontsize=9.5, x=0.02, ha="left", color=INK)
+                 "rectangular table (min(K_a, K_b) pairs)", fontsize=P2.fs(9.5), x=0.02, ha="left", color=INK)
     plt.savefig(path, dpi=200, bbox_inches="tight"); plt.close(fig)
     return pd.DataFrame(rows)
 
@@ -225,7 +263,13 @@ def main() -> int:
     ap.add_argument("--k", type=int, nargs="+", default=[8])
     ap.add_argument("--n-perm", type=int, default=1000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--paper", action="store_true",
+                    help="draw for the page (174 mm, printed font sizes, no prose or stamp; "
+                         "PNG under paper_figures/paper/)")
     a = ap.parse_args()
+    if a.paper:
+        os.environ["PAPER2_PAPER"] = "1"
+    OUT = P2.paper_dir(globals()["OUT"])
     OUT.mkdir(parents=True, exist_ok=True)
     allrows = []
     for k in a.k:

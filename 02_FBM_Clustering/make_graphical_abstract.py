@@ -135,8 +135,8 @@ def numbers():
 def tile(fig, x, y, w, h):
     ax = fig.add_axes([x, y, w, h])
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    ax.add_patch(FancyBboxPatch((0, 0), 1, 1, boxstyle="round,pad=0,rounding_size=0.035",
-                                fc=TILE_BG, ec=TILE_EC, lw=1.2, transform=ax.transAxes,
+    ax.add_patch(FancyBboxPatch((0, 0), 1, 1, boxstyle="round,pad=P2.pw(0),rounding_size=0.035",
+                                fc=TILE_BG, ec=TILE_EC, lw=P2.pw(1.2), transform=ax.transAxes,
                                 clip_on=False))
     return ax
 
@@ -186,81 +186,81 @@ def main() -> int:
 
     # ---- title ----------------------------------------------------------------
     fig.text(0.5, 0.952, f"{K} response types in human language cortex",
-             ha="center", va="center", fontsize=24, weight="bold", color=INK)
+             ha="center", va="center", fontsize=P2.fs(24), weight="bold", color=INK)
     fig.text(0.5, 0.916, f"sEEG  ·  {d['n_patients']} patients  ·  {len(d['X'])} "
              f"electrodes  ·  one task, three inputs  ·  convex NMF, K = {K}",
-             ha="center", va="center", fontsize=11.5, color=MUTED)
+             ha="center", va="center", fontsize=P2.fs(11.5), color=MUTED)
 
     # ---- the task, exactly as FIG 1 panel C draws it ----------------------------
     P2.trial_strip(fig.add_axes([0.17, 0.828, 0.66, 0.062]), d)
 
     # ---- four of the eight types -------------------------------------------------
-    fig.text(0.05, 0.792, f"{len(SHOW)} of the {K} types", fontsize=13, weight="bold",
+    fig.text(0.05, 0.792, f"{len(SHOW)} of the {K} types", fontsize=P2.fs(13), weight="bold",
              color=INK, va="bottom")
     fig.text(0.95, 0.792, "mean ± 1 SD across electrodes   ·   dashed = GO cue   ·   "
-             "each hemisphere from its own side", fontsize=9, color=MUTED, ha="right",
+             "each hemisphere from its own side", fontsize=P2.fs(9), color=MUTED, ha="right",
              va="bottom")
     gap, x0, x1 = 0.016, 0.05, 0.95
     w = (x1 - x0 - (len(SHOW) - 1) * gap) / len(SHOW)
     for i, (j, name) in enumerate(SHOW):
         bx = x0 + i * (w + gap)
         col = P2.cluster_col(j, K)
-        fig.text(bx, 0.770, name, fontsize=12.2, weight="bold", color=col, va="bottom")
-        fig.text(bx + w, 0.770, f"c{j}", fontsize=9, color=MUTED, ha="right",
+        fig.text(bx, 0.770, name, fontsize=P2.fs(12.2), weight="bold", color=col, va="bottom")
+        fig.text(bx + w, 0.770, f"c{j}", fontsize=P2.fs(9), color=MUTED, ha="right",
                  va="bottom")
         axc = fig.add_axes([bx, 0.640, w, 0.098])
         P2.draw_mean(axc, means[j], d, vlim=vlim, col=col, ylim=ylim, sd=sds[j])
         # the three stimulus icons over their own blocks, as in panel C
         for b, cond in enumerate(d["conds"]):
-            a = P2._icon_axes(axc, b / 3, (b + 1) / 3, y0=1.04, h=0.26, pad=0.40)
+            a = P2._icon_axes(axc, b / 3, (b + 1) / 3, y0=1.04, h=0.26, pad=P2.pw(0.40))
             P2.STIM_ICON[cond](a, col=MUTED)
         for s_, side in enumerate(("L", "R")):
             axb = fig.add_axes([bx + s_ * w / 2, 0.500, w / 2, 0.135])
             img, nsel = P2.render_hemi(side, d, j)
             axb.imshow(img)
             axb.axis("off")
-            axb.text(0.04, 0.02, side, transform=axb.transAxes, fontsize=8,
+            axb.text(0.04, 0.02, side, transform=axb.transAxes, fontsize=P2.fs(8),
                      color=MUTED, ha="left", va="bottom")
         npat = int(pd.Series(d["patient"][d["lab"] == j]).nunique())
         fig.text(bx + w / 2, 0.492, f"n = {sizes[j]}   ·   {npat} patients",
-                 fontsize=9.2, color=MUTED, ha="center", va="top")
+                 fontsize=P2.fs(9.2), color=MUTED, ha="center", va="top")
 
     # ---- three tests -------------------------------------------------------------
-    fig.text(0.05, 0.446, "Three tests", fontsize=13, weight="bold", color=INK,
+    fig.text(0.05, 0.446, "Three tests", fontsize=P2.fs(13), weight="bold", color=INK,
              va="bottom")
     tw, tg, ty, th = (0.90 - 2 * 0.03) / 3, 0.03, 0.205, 0.228
 
     # (a) how many
     t = tile(fig, 0.05, ty, tw, th)
-    t.text(0.07, 0.90, "How many?", fontsize=11, color=MUTED, va="top")
-    t.text(0.07, 0.76, f"K = {K}", fontsize=27, weight="bold", color=INK, va="top")
+    t.text(0.07, 0.90, "How many?", fontsize=P2.fs(11), color=MUTED, va="top")
+    t.text(0.07, 0.76, f"K = {K}", fontsize=P2.fs(27), weight="bold", color=INK, va="top")
     kp, kb = n["k_peak"], n["k_first_onepatient"]
     t.text(0.07, 0.50, f"Held-out fit peaks at K = {kp}.\nFrom K = {kb} the added "
-           f"clusters\nare single patients.", fontsize=9.6, color=INK, va="top",
+           f"clusters\nare single patients.", fontsize=P2.fs(9.6), color=INK, va="top",
            linespacing=1.35)
     m = t.inset_axes([0.24, 0.09, 0.68, 0.22])
-    m.plot(n["gen_k"], n["gen_frac"], color=RED, lw=1.6)
-    m.axvline(K, color=INK, lw=1.0, ls=(0, (3, 2)))
-    m.axvline(kp, color=GREY, lw=1.0)
+    m.plot(n["gen_k"], n["gen_frac"], color=RED, lw=P2.pw(1.6))
+    m.axvline(K, color=INK, lw=P2.pw(1.0), ls=(0, (3, 2)))
+    m.axvline(kp, color=GREY, lw=P2.pw(1.0))
     m.set_xlim(n["gen_k"].min(), n["gen_k"].max())
     m.set_ylim(0, max(70, n["gen_frac"].max() * 1.05))
     m.set_yticks([0, 30, 60]); m.set_xticks([5, K, kp, 20, 30])
-    m.tick_params(labelsize=6.5, colors=MUTED, length=2, pad=1.5)
-    m.set_ylabel("% in one-\npatient\nclusters", fontsize=6.2, color=MUTED,
-                 labelpad=2, rotation=0, ha="right", va="center")
+    m.tick_params(labelsize=P2.fs(6.5), colors=MUTED, length=2, pad=P2.pw(1.5))
+    m.set_ylabel("% in one-\npatient\nclusters", fontsize=P2.fs(6.2), color=MUTED,
+                 labelpad=P2.pw(2), rotation=0, ha="right", va="center")
     for s_ in m.spines.values():
         s_.set_color(GREY)
     m.patch.set_alpha(0)
 
     # (b) other methods
     t = tile(fig, 0.05 + tw + tg, ty, tw, th)
-    t.text(0.07, 0.90, "Other features and algorithms?", fontsize=11, color=MUTED,
+    t.text(0.07, 0.90, "Other features and algorithms?", fontsize=P2.fs(11), color=MUTED,
            va="top")
-    t.text(0.07, 0.72, f"{n['pct_all_agree']:.0f}%", fontsize=27, weight="bold",
+    t.text(0.07, 0.72, f"{n['pct_all_agree']:.0f}%", fontsize=P2.fs(27), weight="bold",
            color=GREEN, va="top")
     ch = f" (chance {n['pct_chance']:g}%)" if n["pct_chance"] is not None else ""
     t.text(0.07, 0.47, f"of electrodes are put in the same type\nby all "
-           f"{n['n_fsets']} feature sets{ch}.", fontsize=9.6, color=INK, va="top",
+           f"{n['n_fsets']} feature sets{ch}.", fontsize=P2.fs(9.6), color=INK, va="top",
            linespacing=1.35)
     jr = n["robust_cluster"]
     jr_name = dict(SHOW).get(jr, f"c{jr}")
@@ -270,42 +270,42 @@ def main() -> int:
                               ec="none"))
     t.text(0.07 + 3 * 0.062 + 0.015, 0.195, f"the {jr_name.lower()} type (c{jr}) is\n"
            f"found by every algorithm\n(Jaccard \u2265 {n['robust_minJ']:.2f} with k-means and Ward)",
-           fontsize=8.6, color=INK, va="center", linespacing=1.3)
+           fontsize=P2.fs(8.6), color=INK, va="center", linespacing=1.3)
 
     # (c) anatomy
     t = tile(fig, 0.05 + 2 * (tw + tg), ty, tw, th)
-    t.text(0.07, 0.90, "Placed by the language atlas?", fontsize=11, color=MUTED,
+    t.text(0.07, 0.90, "Placed by the language atlas?", fontsize=P2.fs(11), color=MUTED,
            va="top")
-    t.text(0.07, 0.76, "No", fontsize=27, weight="bold", color=RED, va="top")
-    share_line = (("by share inside the network: " + ", ".join(f"c{c}" for c in n["lana_share_sig"]))
-                  if n["lana_share_sig"] else "by share inside the network: none")
-    t.text(0.07, 0.50, f"{n['lana_n_sig_sh']} of {n['lana_n_clusters']} types sit "
-           f"above a null that\nkeeps each electrode shaft intact\n(by mean atlas "
-           f"probability; {share_line}).\nLargest |ρ| = {n['lana_max_abs_rho']:.2f}.",
-           fontsize=9.0, color=INK, va="top", linespacing=1.35)
+    t.text(0.07, 0.76, "No", fontsize=P2.fs(27), weight="bold", color=RED, va="top")
+    share_line = (("one share effect, " + ", ".join(f"c{c}" for c in n["lana_share_sig"]))
+                  if n["lana_share_sig"] else "no share effect")
+    t.text(0.07, 0.50, f"{n['lana_n_sig_sh']} of {n['lana_n_clusters']} types above the "
+           f"shaft-shift null\nby mean atlas probability;\n{share_line}.\n"
+           f"Largest |ρ| = {n['lana_max_abs_rho']:.2f}.",
+           fontsize=P2.fs(9.4), color=INK, va="top", linespacing=1.35)
     b = t.inset_axes([0.30, 0.09, 0.60, 0.20])
     jt = n["lana_top_cluster"]
     vals = [n["lana_top_mean"], n["lana_top_null_sh"], n["lana_baseline"]]
     b.barh([2, 1, 0], vals, color=[P2.cluster_col(jt, K), GREY, "#e9edf1"],
            height=0.72)
     for yy, v in zip([2, 1, 0], vals):
-        b.text(v + 0.004, yy, f"{v:.3f}", fontsize=6.6, color=MUTED, va="center")
+        b.text(v + 0.004, yy, f"{v:.3f}", fontsize=P2.fs(6.6), color=MUTED, va="center")
     b.set_yticks([2, 1, 0])
-    b.set_yticklabels([f"c{jt} (highest)", "shaft null", "cohort"], fontsize=6.5,
+    b.set_yticklabels([f"c{jt} (highest)", "shaft null", "cohort"], fontsize=P2.fs(6.5),
                       color=MUTED)
     b.set_xlim(0, max(vals) * 1.35); b.set_xticks([])
     for s_ in b.spines.values():
         s_.set_visible(False)
-    b.tick_params(length=0, pad=2)
+    b.tick_params(length=0, pad=P2.pw(2))
     b.patch.set_alpha(0)
 
     # ---- the sentence ------------------------------------------------------------
     fig.text(0.5, 0.135, "A response type is what an electrode does — not where it sits.",
-             ha="center", va="center", fontsize=18, weight="bold", color=INK)
+             ha="center", va="center", fontsize=P2.fs(18), weight="bold", color=INK)
     fig.text(0.5, 0.082, f"{P2.FS_LABEL[FSET]}, time-warped so the GO "
              "cue falls at 50% of every block  ·  nulls: shaft-shift and within-patient "
              "permutation  ·  FDR across types",
-             ha="center", va="center", fontsize=8.6, color=MUTED)
+             ha="center", va="center", fontsize=P2.fs(8.6), color=MUTED)
 
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / f"GA_graphical_abstract_{FSET}_K{K}.png"

@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
 import textwrap
 import sys
 import time
@@ -504,18 +505,18 @@ def panel_ari(axK, axM, M, Mn, names, groups, k, curve):
     for i in range(n):
         for j in range(n):
             if i == j:
-                axM.text(j, i, "=", ha="center", va="center", fontsize=9.0,
+                axM.text(j, i, "=", ha="center", va="center", fontsize=P2.fs(9.0),
                          color="white", alpha=0.75)
                 continue
             col = "white" if M[i, j] > 0.42 else INK
-            axM.text(j, i, f"{M[i, j]:.2f}", ha="center", va="bottom", fontsize=8.6,
+            axM.text(j, i, f"{M[i, j]:.2f}", ha="center", va="bottom", fontsize=P2.fs(8.6),
                      color=col)
-            axM.text(j, i, f"{Mn[i, j]:.2f}", ha="center", va="top", fontsize=6.8,
+            axM.text(j, i, f"{Mn[i, j]:.2f}", ha="center", va="top", fontsize=P2.fs(6.8),
                      color=col, alpha=0.85)
     axM.set_xticks(range(n)); axM.set_yticks(range(n))
     axM.xaxis.tick_top()
-    axM.set_xticklabels(names, fontsize=7.8, rotation=26, ha="left")
-    axM.set_yticklabels(names, fontsize=7.8)
+    axM.set_xticklabels(names, fontsize=P2.fs(7.8), rotation=26, ha="left")
+    axM.set_yticklabels(names, fontsize=P2.fs(7.8))
     if groups is not None and len(set(groups)) == 2:
         for t, gname in zip(axM.get_xticklabels(), groups):
             t.set_color(GROUP_COL[gname])
@@ -529,23 +530,23 @@ def panel_ari(axK, axM, M, Mn, names, groups, k, curve):
     extra = ""
     if curve is not None:
         ks, vs = curve
-        axK.plot(ks, vs, "-", lw=1.4, color=INK)
-        axK.axvline(k, color=RED, ls="--", lw=1.0)
+        axK.plot(ks, vs, "-", lw=P2.pw(1.4), color=INK)
+        axK.axvline(k, color=RED, ls="--", lw=P2.pw(1.0))
         axK.set_ylim(0, max(0.6, float(vs.max()) * 1.15))
-        axK.set_ylabel("mean pairwise ARI", fontsize=6.8, color=MUTED)
-        axK.set_xlabel("K", fontsize=6.8, color=MUTED, labelpad=1)
-        axK.tick_params(labelsize=6.2, colors=MUTED, length=2)
+        axK.set_ylabel("mean pairwise ARI", fontsize=P2.fs(6.8), color=MUTED)
+        axK.set_xlabel("K", fontsize=P2.fs(6.8), color=MUTED, labelpad=P2.pw(1))
+        axK.tick_params(labelsize=P2.fs(6.2), colors=MUTED, length=2)
         axK.spines[["top", "right"]].set_visible(False)
         best = int(ks[int(np.argmax(vs))])
         here = float(vs[list(ks).index(k)]) if k in list(ks) else float("nan")
-        axK.text(k + 0.4, axK.get_ylim()[1] * 0.97, f"K={k}: {here:.2f}", fontsize=6.4,
+        axK.text(k + 0.4, axK.get_ylim()[1] * 0.97, f"K={k}: {here:.2f}", fontsize=P2.fs(6.4),
                  color=RED, va="top", ha="left")
         extra = (f"  ·  ACROSS K: agreement peaks at K={best} ({vs.max():.2f}); "
                  f"at K={k} it is {here:.2f}")
     else:
         axK.axis("off")
         axK.text(0.5, 0.5, "no labels-by-K table for these runs", ha="center",
-                 va="center", fontsize=7.0, color=MUTED, transform=axK.transAxes)
+                 va="center", fontsize=P2.fs(7.0), color=MUTED, transform=axK.transAxes)
     return ("Upper number ADJUSTED RAND, lower NMI - reported together because ARI is "
             "dominated by the large clusters and NMI is not.  "
             + ari_summary(M, names, groups) + extra)
@@ -576,25 +577,25 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, vmax,
     for p in range(K):
         for c in range(Jk.shape[1]):
             v = Jk[p, c]
-            axM.text(c, p, f"{v:.2f}", ha="center", va="center", fontsize=8.2,
+            axM.text(c, p, f"{v:.2f}", ha="center", va="center", fontsize=P2.fs(8.2),
                      color="white" if v > 0.62 * vmax else (RED if v < thresh else INK))
             # a low cell that is low because the reference cluster SPLIT is a clean
             # correspondence a 1:1 assignment cannot express, not a failure
             if Sk[p, c] > 1:
                 axM.text(c + 0.40, p - 0.34, f"/{Sk[p, c]}", ha="right", va="top",
-                         fontsize=6.4, color=INK, alpha=0.75)
+                         fontsize=P2.fs(6.4), color=INK, alpha=0.75)
             # does not beat a size-matched permutation of the same two clusters
             if np.isfinite(Nk[p, c]) and v <= Nk[p, c]:
                 axM.add_patch(Rectangle((c - 0.5, p - 0.5), 1, 1, fill=False,
-                                        hatch="////", ec="white", lw=0, alpha=0.85,
+                                        hatch="////", ec="white", lw=P2.pw(0), alpha=0.85,
                                         zorder=3))
     axM.set_xticks(range(len(nk))); axM.set_yticks(range(K))
     axM.xaxis.tick_top()
-    axM.set_xticklabels(nk, fontsize=8.0, rotation=26, ha="left")
+    axM.set_xticklabels(nk, fontsize=P2.fs(8.0), rotation=26, ha="left")
     worst = Jk.min(axis=1)
     axM.set_yticklabels(
         [f"p{p}  c{int(order[p])}  n={int(sizes[int(order[p])])}" for p in range(K)],
-        fontsize=7.4)
+        fontsize=P2.fs(7.4))
     for t, w in zip(axM.get_yticklabels(), worst):
         t.set_color(RED if w < thresh else INK)
     axM.tick_params(length=0, colors=MUTED)
@@ -606,19 +607,19 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, vmax,
     axW.imshow(side, cmap="Blues", vmin=0, vmax=vmax, aspect="auto")
     for p in range(K):
         for c, v in enumerate(side[p]):
-            axW.text(c, p, f"{v:.2f}", ha="center", va="center", fontsize=8.2,
+            axW.text(c, p, f"{v:.2f}", ha="center", va="center", fontsize=P2.fs(8.2),
                      color="white" if v > 0.62 * vmax else
                      (RED if (c == 0 and v < thresh) else INK))
         if worst[p] < thresh:
             axW.add_patch(Rectangle((-0.5, p - 0.5), 1, 1, fill=False, ec=RED,
-                                    lw=1.4, zorder=4))
+                                    lw=P2.pw(1.4), zorder=4))
         # the reference is the odd one out: the others agree with each other here
         if worst[p] < thresh and others[p] > 2 * worst[p] and others[p] > thresh:
             axW.add_patch(Rectangle((0.5, p - 0.5), 1, 1, fill=False, ec=GREEN,
-                                    lw=1.4, zorder=4))
+                                    lw=P2.pw(1.4), zorder=4))
     axW.set_xticks([0, 1]); axW.set_yticks([])
     axW.xaxis.tick_top()
-    axW.set_xticklabels([f"worst of {Jk.shape[1]}", "others"], fontsize=7.6,
+    axW.set_xticklabels([f"worst of {Jk.shape[1]}", "others"], fontsize=P2.fs(7.6),
                         rotation=26, ha="left")
     axW.tick_params(length=0, colors=MUTED)
     for s_ in axW.spines.values():
@@ -656,7 +657,10 @@ def panel_clusters(axM, axW, J, others, names, order, sizes, ref_i, vmax,
 
 
 def agreement_colours(n):
-    """Red at 1 (nobody agrees) through to green at n (everybody does)."""
+    """Red at 1 (nobody agrees) through to green at n (everybody does); on paper one
+    sequential ramp, light at 1 and dark at n (2026-10-27)."""
+    if P2.paper():
+        return plt.get_cmap("YlGnBu")(np.linspace(0.25, 0.95, max(n, 2)))[:n]
     return plt.get_cmap("RdYlGn")(np.linspace(0.10, 0.92, max(n, 2)))[:n]
 
 
@@ -672,11 +676,11 @@ def stacked_agreement(ax, cnt, N, cols, null_frac):
             ((obs, 0.16, 0.62, "observed"), (null_frac, -0.62, 0.42, "chance"))):
         x = 0.0
         for i in range(N):
-            ax.barh(y, frac[i], left=x, height=hgt, color=cols[i], lw=0.8, ec="white",
+            ax.barh(y, frac[i], left=x, height=hgt, color=cols[i], lw=P2.pw(0.8), ec="white",
                     alpha=1.0 if row == 0 else 0.45)
             if frac[i] > 0.05:
                 ax.text(x + frac[i] / 2, y, f"{100*frac[i]:.0f}%", ha="center",
-                        va="center", fontsize=7.0 if row == 0 else 6.2,
+                        va="center", fontsize=P2.fs(7.0) if row == 0 else P2.fs(6.2),
                         color="white" if (row == 0 and lum(cols[i]) < 0.62) else INK)
             elif frac[i] > 0.002 and row == 0:
                 # a sliver with no room for a label is exactly the case a reader wants
@@ -684,20 +688,20 @@ def stacked_agreement(ax, cnt, N, cols, null_frac):
                 ax.annotate(f"{100*frac[i]:.0f}%",
                             xy=(x + frac[i] / 2, y + hgt / 2),
                             xytext=(x + frac[i] / 2, y + hgt / 2 + 0.42),
-                            ha="center", va="bottom", fontsize=6.2, color=INK,
-                            arrowprops=dict(arrowstyle="-", lw=0.6, color=MUTED))
+                            ha="center", va="bottom", fontsize=P2.fs(6.2), color=INK,
+                            arrowprops=dict(arrowstyle="-", lw=P2.pw(0.6), color=MUTED))
             x += frac[i]
-        ax.text(-0.006, y, tag, ha="right", va="center", fontsize=6.6, color=MUTED,
+        ax.text(-0.006, y, tag, ha="right", va="center", fontsize=P2.fs(6.6), color=MUTED,
                 transform=ax.get_yaxis_transform())
     # the key
     ax.text(0, 1.34, f"how many of the {N} agree:", ha="left", va="center",
-            fontsize=6.6, color=MUTED)
+            fontsize=P2.fs(6.6), color=MUTED)
     x0 = 0.27
     for i in range(N):
         ax.add_patch(Rectangle((x0 + i * 0.075, 1.20), 0.026, 0.28, color=cols[i],
-                               lw=0))
+                               lw=P2.pw(0)))
         ax.text(x0 + i * 0.075 + 0.032, 1.34, f"{i + 1}", ha="left", va="center",
-                fontsize=6.6, color=INK)
+                fontsize=P2.fs(6.6), color=INK)
     ax.set_xlim(0, 1); ax.set_ylim(-1.05, 1.62)
     ax.set_xticks([]); ax.set_yticks([])
     for s_ in ax.spines.values():
@@ -709,6 +713,8 @@ def panel_electrodes(axL, axT, axR, axBar, cnt, N, d, null_frac, n_onepat, k,
     cols = agreement_colours(N)
     for ax, side, tag in ((axL, "L", "left"), (axT, "T", "from above"),
                           (axR, "R", "right")):
+        if ax is None:                  # no top view on paper
+            continue
         img, nsel = render_counts(side, d, cnt, cols)
         ax.imshow(img)
         ax.set_xticks([]); ax.set_yticks([])
@@ -718,7 +724,7 @@ def panel_electrodes(axL, axT, axR, axBar, cnt, N, d, null_frac, n_onepat, k,
         # top-left corner, which the brain's outline leaves free (2026-10-26)
         y_, va_ = (0.98, "top") if side == "T" else (0.02, "bottom")
         ax.text(0.02, y_, f"{tag}  {nsel}", transform=ax.transAxes, ha="left",
-                va=va_, fontsize=7.0, color=MUTED)
+                va=va_, fontsize=P2.fs(7.0), color=MUTED)
     stacked_agreement(axBar, cnt, N, cols, null_frac)
     obs_all = float((cnt == N).mean())
     return (f"How many of the {N} solutions put each electrode in the same cluster - "
@@ -829,20 +835,21 @@ def figure_2(k: int, algo_fset: str):
     # A column is now two stacked axes and the C column three views. Narrower than it
     # was: the per-cluster column went to FIG 4, and stretching two columns across the
     # width the three used would have made a wide figure out of a smaller claim.
-    fig = plt.figure(figsize=(14.4, 10.8), dpi=190)
+    fig = plt.figure(figsize=(P2.canvas(14.4), 9.6 if P2.paper() else 10.8), dpi=190)
     # 2026-10-26: the halves sat 0.6 row-heights apart, the panels stopped at 80% of
     # the page height and the two-line subtitle set the page width; tightened
-    gs = GridSpec(2, 24, figure=fig, hspace=0.46, wspace=0.9,
-                  left=0.055, right=0.985, top=0.845, bottom=0.045)
-    fig.suptitle(f"FIG 2   ·   agreement   ·   K = {k}   ·   "
+    gs = GridSpec(2, 24, figure=fig, hspace=0.40 if P2.paper() else 0.46, wspace=0.9,
+                  left=0.055, right=0.985, top=0.93 if P2.paper() else 0.845, bottom=0.045)
+    if not P2.paper():
+      fig.suptitle(f"FIG 2   ·   agreement   ·   K = {k}   ·   "
                  f"{len(d['X'])} electrodes, {d['n_patients']} patients",
-                 x=0.055, y=0.982, ha="left", fontsize=15.5, color=INK)
-    fig.text(0.055, 0.958,
+                 x=0.055, y=0.982, ha="left", fontsize=P2.fs(15.5), color=INK)
+      fig.text(0.055, 0.958,
              "Does the answer depend on how the data are represented, or on which "
              "algorithm is used?  Each row asks that two ways: over the whole partition, "
              "and electrode by electrode.\nCluster by cluster is FIG 4, which tests it "
              "against a permutation null.",
-             fontsize=9.8, color=MUTED, va="top")
+             fontsize=P2.fs(9.8), color=MUTED, va="top")
 
     halves = (
         dict(ari=fs_ari, J=fs_J, cnt=fs_cnt, names=fs_names, sols=fs_sols, ref=fs_ref,
@@ -867,10 +874,16 @@ def figure_2(k: int, algo_fset: str):
         groups = ["graded" if x["G"] is not None else "hard" for x in h["sols"]]
         t1, t2, t3 = h["tags"]
 
-        # .1 the K curve above, .2 the full matrix below
-        cA = GridSpecFromSubplotSpec(2, 1, gs[row, 0:8], height_ratios=[0.50, 1.0],
-                                     hspace=1.05)
-        axK, axA = fig.add_subplot(cA[0]), fig.add_subplot(cA[1])
+        if P2.paper():
+            # the matrix with the K curve beside it, not above (2026-10-27)
+            cA = GridSpecFromSubplotSpec(1, 2, gs[row, 0:9], width_ratios=[1.0, 0.62],
+                                         wspace=0.55)
+            axA, axK = fig.add_subplot(cA[0]), fig.add_subplot(cA[1])
+        else:
+            # .1 the K curve above, .2 the full matrix below
+            cA = GridSpecFromSubplotSpec(2, 1, gs[row, 0:8], height_ratios=[0.50, 1.0],
+                                         hspace=1.05)
+            axK, axA = fig.add_subplot(cA[0]), fig.add_subplot(cA[1])
         notes[t1] = panel_ari(axK, axA, h["ari"], h["nmi"], h["names"], groups, k,
                               h["curve"])
 
@@ -880,19 +893,35 @@ def figure_2(k: int, algo_fset: str):
         # match falls back to shared-electrode count and then reports the Jaccard of
         # that overlap. The measurement still runs and still reaches the CSV.
         # left, from above, right; the bar under all three
-        cC = GridSpecFromSubplotSpec(2, 3, gs[row, 9:24], height_ratios=[1.0, 0.34],
-                                     hspace=0.16, wspace=0.03)
-        axL = fig.add_subplot(cC[0, 0])
-        notes[t3] = panel_electrodes(axL, fig.add_subplot(cC[0, 1]),
-                                     fig.add_subplot(cC[0, 2]),
-                                     fig.add_subplot(cC[1, :]), h["cnt"],
-                                     len(h["sols"]), d, h["null"], h["onepat"], k,
-                                     h["refname"])
+        if P2.paper():
+            # the two lateral views and the bar; no top view (2026-10-27)
+            cC = GridSpecFromSubplotSpec(2, 2, gs[row, 10:24], height_ratios=[1.0, 0.30],
+                                         hspace=0.12, wspace=0.03)
+            axL = fig.add_subplot(cC[0, 0])
+            notes[t3] = panel_electrodes(axL, None, fig.add_subplot(cC[0, 1]),
+                                         fig.add_subplot(cC[1, :]), h["cnt"],
+                                         len(h["sols"]), d, h["null"], h["onepat"], k,
+                                         h["refname"])
+            what_ = "feature sets" if row == 0 else "algorithms"
+            lt_ = "AB"[row] + "CD"[0] if False else ("A", "B") if row == 0 else ("C", "D")
+            labelled.append((
+                [(axA, f"{lt_[0]}   {what_}: agreement (ARI)"),
+                 (axL, f"{lt_[1]}   which electrodes are placed alike")],
+                [(axK, "ARI by K")], ""))
+        else:
+            cC = GridSpecFromSubplotSpec(2, 3, gs[row, 9:24], height_ratios=[1.0, 0.34],
+                                         hspace=0.16, wspace=0.03)
+            axL = fig.add_subplot(cC[0, 0])
+            notes[t3] = panel_electrodes(axL, fig.add_subplot(cC[0, 1]),
+                                         fig.add_subplot(cC[0, 2]),
+                                         fig.add_subplot(cC[1, :]), h["cnt"],
+                                         len(h["sols"]), d, h["null"], h["onepat"], k,
+                                         h["refname"])
 
-        labelled.append((
-            [(axK, f"{t1}.1  ·  mean pairwise ARI across K"),
-             (axL, f"{t3}  ·  which electrodes are placed consistently")],
-            [(axA, f"{t1}.2  ·  how much any two agree")], h["head"]))
+            labelled.append((
+                [(axK, f"{t1}.1  ·  mean pairwise ARI across K"),
+                 (axL, f"{t3}  ·  which electrodes are placed consistently")],
+                [(axA, f"{t1}.2  ·  how much any two agree")], h["head"]))
 
     # MEASURE, THEN PLACE. One draw settles every tick label, so the row's labels can
     # share one line above the tallest panel instead of each floating at whatever
@@ -907,27 +936,29 @@ def figure_2(k: int, algo_fset: str):
             # the PLOT area's left edge, not the tight bbox's - the tight bbox
             # includes the y tick labels, which would set each label at a different
             # x depending on how long its row names happen to be
-            fig.text(ax.get_position().x0, top + 0.010, label, fontsize=10.4,
+            fig.text(ax.get_position().x0, top + 0.010, label, fontsize=P2.fs(10.4),
                      color=INK, va="bottom")
-        fig.text(0.055, top + 0.040, head, fontsize=11.0, color=INK, va="bottom")
+        if head:
+            fig.text(0.055, top + 0.040, head, fontsize=P2.fs(11.0), color=INK, va="bottom")
         for ax, label in inner:
             t_ = inv.transform((0, ax.get_tightbbox(r).y1))[1]
-            fig.text(ax.get_position().x0, t_ + 0.006, label, fontsize=9.6,
+            fig.text(ax.get_position().x0, t_ + 0.006, label, fontsize=P2.fs(9.6),
                      color=INK, va="bottom")
 
-    OUT.mkdir(parents=True, exist_ok=True)
+    od = P2.paper_dir(OUT)
+    od.mkdir(parents=True, exist_ok=True)
     # the feature set the ALGORITHM half was run on is in the name, so the four
     # variants can sit side by side instead of overwriting one another
     # the run named is the reference solution of the ALGORITHM half - convex NMF on
     # the feature set the half was drawn on - which is what the panels are matched to
     _ref = LR.newest_run(REF_METHOD, algo_fset)
     _rt = "_run" + str(_ref.name).replace("_", "-")
-    p = OUT / f"FIG2_agreement_{algo_fset}_K{k}{_rt}.png"
+    p = od / f"FIG2_agreement_{algo_fset}_K{k}{_rt}.png"
     # the reference run of the algorithm half; every run this figure used is listed
     # in the caption beside it
     P2.stamp(fig, extra=f"reference run {_ref.name}   \u00b7   K = {k}   \u00b7   "
                         f"algorithms on {algo_fset}")
-    P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
+    P2.save_png(fig, p, dpi=P2.out_dpi(190), bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
     rows = []
@@ -1168,7 +1199,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--k", type=int, default=8)
     ap.add_argument("--algo-feature-set", default=DEFAULT_ALGO_FSET)
+    ap.add_argument("--paper", action="store_true",
+                    help="draw for the page (174 mm, printed font sizes, no prose or stamp; "
+                         "PNG under paper_figures/paper/)")
     a = ap.parse_args()
+    if a.paper:
+        os.environ["PAPER2_PAPER"] = "1"
     print(f"=== FIGURE 2 ===  K={a.k}")
     figure_2(a.k, a.algo_feature_set)
     return 0
