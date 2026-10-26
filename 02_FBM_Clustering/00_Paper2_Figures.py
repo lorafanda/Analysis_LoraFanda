@@ -1222,7 +1222,9 @@ def panel_D(ax, d, gk, fset):
     row = gk[gk.k == K]
     nd = int(row.n_dominated.iloc[0]) if len(row) else 0
     fe = float(row.frac_electrodes.iloc[0]) if len(row) else 0.0
-    ax.legend(fontsize=7.0, frameon=False, loc="upper left")
+    # lower right: the curves start at zero on the left and the held-out curve crosses
+    # the upper left, so that is the one corner no line enters (2026-10-26)
+    ax.legend(fontsize=7.0, frameon=False, loc="lower right")
     ax.set_title(f"D  ·  does this K generalize?   at K={K}, {nd} of {K} clusters are "
                  f">{100*DANGER:.0f}% one patient",
                  fontsize=10.0, loc="left", pad=8,
@@ -1264,12 +1266,12 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     # hcen is chosen so a render at RENDER_PX's aspect exactly fills its half of the
     # block: any larger and the brains are letterboxed, any smaller and the box crops
     hcen, hbar = 0.86, 0.15
-    fig_h = 3.4 + nrow * 4.75
+    fig_h = 3.72 + nrow * 4.75             # +0.32 in: room under the last row's captions
     fig = plt.figure(figsize=(17.6, fig_h), dpi=190)
     gs = GridSpec(1 + nrow, UPR * UCOL, figure=fig,
                   height_ratios=[1.72] + [2.62] * nrow,
                   hspace=0.52, wspace=0.30, left=0.045, right=0.985,
-                  top=1.0 - 0.95 / fig_h, bottom=0.022)
+                  top=1.0 - 0.95 / fig_h, bottom=0.022 + 0.32 / fig_h)
     R1 = 1                                                  # row 0 is the header
 
     fig.suptitle(f"FIG 1{TAG[fset]}   ·   {METHOD_LABEL[method]}   ·   {FS_LABEL[fset]}"

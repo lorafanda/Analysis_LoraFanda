@@ -179,7 +179,8 @@ def draw(res, path, n_perm):
                  f"across algorithms (same features) median {same_f.diagonal_share.median():.2f}, "
                  f"across features (same algorithm) {same_a.diagonal_share.median():.2f}, both differ {nei.diagonal_share.median():.2f}   "
                  f"-   chance {R.null_mean.median():.2f}", fontsize=9.5, color=INK, x=0.02, ha="left")
-    fig.text(0.02, 0.005, "'ns' = share not above the 95th percentile of the null (p >= 0.05)", fontsize=7, color=MUTED)
+    # just under the rotated tick labels; at 0.005 it left 0.7 in of white under the matrices
+    fig.text(0.02, 0.075, "'ns' = share not above the 95th percentile of the null (p >= 0.05)", fontsize=7, color=MUTED)
     plt.savefig(path, dpi=200, bbox_inches="tight"); plt.close(fig)
 
 

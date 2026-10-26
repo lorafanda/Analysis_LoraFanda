@@ -463,8 +463,11 @@ def panel_brain(axL, axR, axT, axKey, d, chars):
         ax.set_xticks([]); ax.set_yticks([])
         for s_ in ax.spines.values():
             s_.set_visible(False)
-        ax.text(0.02, 0.02, f"{tag}  {int(m.sum())}", transform=ax.transAxes,
-                ha="left", va="bottom", fontsize=7.0, color=MUTED)
+        # the top view fills its axes to the bottom edge, so its count goes to the
+        # top-left corner, which the brain's outline leaves free (2026-10-26)
+        y_, va_ = (0.98, "top") if side == "T" else (0.02, "bottom")
+        ax.text(0.02, y_, f"{tag}  {int(m.sum())}", transform=ax.transAxes,
+                ha="left", va=va_, fontsize=7.0, color=MUTED)
     # the scale and the reading, in the cell the top view leaves free
     from matplotlib.cm import ScalarMappable
     from matplotlib.colors import Normalize

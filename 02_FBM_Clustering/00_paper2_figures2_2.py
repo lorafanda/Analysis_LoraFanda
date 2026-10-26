@@ -714,8 +714,11 @@ def panel_electrodes(axL, axT, axR, axBar, cnt, N, d, null_frac, n_onepat, k,
         ax.set_xticks([]); ax.set_yticks([])
         for s_ in ax.spines.values():
             s_.set_visible(False)
-        ax.text(0.02, 0.02, f"{tag}  {nsel}", transform=ax.transAxes, ha="left",
-                va="bottom", fontsize=7.0, color=MUTED)
+        # the top view fills its axes to the bottom edge, so its count goes to the
+        # top-left corner, which the brain's outline leaves free (2026-10-26)
+        y_, va_ = (0.98, "top") if side == "T" else (0.02, "bottom")
+        ax.text(0.02, y_, f"{tag}  {nsel}", transform=ax.transAxes, ha="left",
+                va=va_, fontsize=7.0, color=MUTED)
     stacked_agreement(axBar, cnt, N, cols, null_frac)
     obs_all = float((cnt == N).mean())
     return (f"How many of the {N} solutions put each electrode in the same cluster - "
@@ -827,15 +830,17 @@ def figure_2(k: int, algo_fset: str):
     # was: the per-cluster column went to FIG 4, and stretching two columns across the
     # width the three used would have made a wide figure out of a smaller claim.
     fig = plt.figure(figsize=(14.4, 10.8), dpi=190)
-    gs = GridSpec(2, 24, figure=fig, hspace=0.62, wspace=1.1,
-                  left=0.055, right=0.985, top=0.800, bottom=0.045)
+    # 2026-10-26: the halves sat 0.6 row-heights apart, the panels stopped at 80% of
+    # the page height and the two-line subtitle set the page width; tightened
+    gs = GridSpec(2, 24, figure=fig, hspace=0.46, wspace=0.9,
+                  left=0.055, right=0.985, top=0.845, bottom=0.045)
     fig.suptitle(f"FIG 2   ·   agreement   ·   K = {k}   ·   "
                  f"{len(d['X'])} electrodes, {d['n_patients']} patients",
                  x=0.055, y=0.982, ha="left", fontsize=15.5, color=INK)
     fig.text(0.055, 0.958,
              "Does the answer depend on how the data are represented, or on which "
              "algorithm is used?  Each row asks that two ways: over the whole partition, "
-             "and electrode by electrode.  Cluster by cluster is FIG 4, which tests it "
+             "and electrode by electrode.\nCluster by cluster is FIG 4, which tests it "
              "against a permutation null.",
              fontsize=9.8, color=MUTED, va="top")
 
@@ -863,7 +868,7 @@ def figure_2(k: int, algo_fset: str):
         t1, t2, t3 = h["tags"]
 
         # .1 the K curve above, .2 the full matrix below
-        cA = GridSpecFromSubplotSpec(2, 1, gs[row, 0:9], height_ratios=[0.42, 1.0],
+        cA = GridSpecFromSubplotSpec(2, 1, gs[row, 0:8], height_ratios=[0.50, 1.0],
                                      hspace=1.05)
         axK, axA = fig.add_subplot(cA[0]), fig.add_subplot(cA[1])
         notes[t1] = panel_ari(axK, axA, h["ari"], h["nmi"], h["names"], groups, k,
@@ -875,7 +880,7 @@ def figure_2(k: int, algo_fset: str):
         # match falls back to shared-electrode count and then reports the Jaccard of
         # that overlap. The measurement still runs and still reaches the CSV.
         # left, from above, right; the bar under all three
-        cC = GridSpecFromSubplotSpec(2, 3, gs[row, 10:24], height_ratios=[1.0, 0.34],
+        cC = GridSpecFromSubplotSpec(2, 3, gs[row, 9:24], height_ratios=[1.0, 0.34],
                                      hspace=0.16, wspace=0.03)
         axL = fig.add_subplot(cC[0, 0])
         notes[t3] = panel_electrodes(axL, fig.add_subplot(cC[0, 1]),

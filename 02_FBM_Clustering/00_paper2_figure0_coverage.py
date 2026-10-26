@@ -282,8 +282,11 @@ def panel_brains(axes, xyz, hemi, rgba, radius):
     for ax, side, tag in zip(axes, ("L", "T", "R"), ("left", "from above", "right")):
         img, n[side] = render_set(side, xyz, hemi, rgba, radius)
         _show(ax, img)
-        ax.text(0.02, 0.02, f"{tag}  {n[side]}", transform=ax.transAxes, ha="left",
-                va="bottom", fontsize=7.0, color=MUTED)
+        # the top view fills its axes to the bottom edge, so its count goes to the
+        # top-left corner, which the brain's outline leaves free (2026-10-26)
+        y_, va_ = (0.98, "top") if side == "T" else (0.02, "bottom")
+        ax.text(0.02, y_, f"{tag}  {n[side]}", transform=ax.transAxes, ha="left",
+                va=va_, fontsize=7.0, color=MUTED)
     return n
 
 
@@ -649,7 +652,9 @@ def figure_0_supplement(t, g, u, d, gp):
 
     ex = {}
     for tag, row, ok, cell in (("E", a, True, gs[4]), ("F", b, False, gs[5])):
-        c_ = GridSpecFromSubplotSpec(2, 1, cell, height_ratios=[0.26, 1.0], hspace=0.05)
+        # the strip's 'stimulus' / 'response' words hang below its axis: the gap under it
+        # has to hold them, or they land on the ERSP's top edge (2026-10-26)
+        c_ = GridSpecFromSubplotSpec(2, 1, cell, height_ratios=[0.26, 1.0], hspace=0.18)
         axS, axE = fig.add_subplot(c_[0]), fig.add_subplot(c_[1])
         ex[tag] = (axS, axE, panel_example(axS, axE, t, row, gp, ok))
 

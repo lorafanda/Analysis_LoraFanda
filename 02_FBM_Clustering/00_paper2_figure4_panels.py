@@ -414,7 +414,8 @@ def main() -> int:
     panel_summary(fig.add_subplot(gs[2, 5:8]), matched, summary)
     imD = panel_left_out(fig.add_subplot(gs[2, 8:12]), matched, summary, a.k)
 
-    cax = fig.add_axes([0.700, 0.9385, 0.205, 0.0095])
+    # above the third matrix title, not on it (2026-10-26)
+    cax = fig.add_axes([0.730, 0.9635, 0.190, 0.0085])
     cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[-1, -.5, 0, .5, 1])
     cb.set_label("centroid correlation  (what pairs the clusters)", fontsize=6.8,
                  color=MUTED, labelpad=2)
