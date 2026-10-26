@@ -200,15 +200,36 @@ def panel_matrix(ax, M, rows, share1, share2, name, first_col, diag=None):
     return im
 
 
+# one style per comparison inside each colour family, so the three blue and the three
+# orange lines can be told apart: shade x line style x marker (2026-10-26; until then
+# all six were "-o" in two colours and the legend showed six identical handles)
+RANK_STYLES = [dict(ls="-", marker="o", shade=0.0),
+               dict(ls=(0, (4, 1.6)), marker="s", shade=0.42),
+               dict(ls=(0, (1.3, 1.3)), marker="^", shade=-0.32)]
+
+
+def _shade(colour, f):
+    """f > 0 lightens the colour towards white, f < 0 darkens it towards black."""
+    import matplotlib.colors as mc
+    r, g, b = mc.to_rgb(colour)
+    if f >= 0:
+        return (r + (1 - r) * f, g + (1 - g) * f, b + (1 - b) * f)
+    return (r * (1 + f), g * (1 + f), b * (1 + f))
+
+
 def panel_rank(ax, matched, summary, ylab):
+    seen = {"A": 0, "B": 0}
     for name in summary.comparison:
         g = matched[matched.comparison == name].sort_values("rank")
-        c = ALGO_C if g.axis.iloc[0].startswith("A") else FEAT_C
+        fam = "A" if g.axis.iloc[0].startswith("A") else "B"
+        st = RANK_STYLES[seen[fam] % len(RANK_STYLES)]
+        seen[fam] += 1
         a, b = TITLE[name]
-        ax.plot(g["rank"], g.value, "-o", ms=3.2, lw=1.25, color=c, alpha=.85,
-                label=f"{a} vs {b}")
+        ax.plot(g["rank"], g.value, ls=st["ls"], marker=st["marker"], ms=3.8, lw=1.45,
+                color=_shade(ALGO_C if fam == "A" else FEAT_C, st["shade"]), alpha=.95,
+                markeredgecolor="white", markeredgewidth=0.5, label=f"{a} vs {b}")
     ax.axhline(0, color=GREY, lw=1.0, zorder=0)
-    ax.text(int(matched["rank"].max()) - 0.55, 0.018, "chance", fontsize=6.8, color=MUTED, va="bottom", ha="left")
+    ax.text(1.0, 0.012, "chance", fontsize=6.8, color=MUTED, va="bottom", ha="left")
     ax.set_xlabel("match rank   (greedy, by centroid correlation)", fontsize=8, color=MUTED)
     ax.set_ylabel(ylab, fontsize=8, color=MUTED)
     ax.set_xticks(range(1, int(matched["rank"].max()) + 1))
@@ -217,9 +238,10 @@ def panel_rank(ax, matched, summary, ylab):
         ax.spines[s].set_visible(False)
     for s in ("left", "bottom"):
         ax.spines[s].set_color(GREY)
-    ax.legend(fontsize=6.3, frameon=False, loc="lower left", ncol=2, labelcolor=INK,
-              handlelength=1.3, columnspacing=1.0, borderaxespad=0.1,
-              bbox_to_anchor=(0.0, 0.02))
+    # above the axes, right half: inside the axes the legend covered the rank-3 peak
+    ax.legend(fontsize=6.3, frameon=False, loc="lower right", ncol=2, labelcolor=INK,
+              handlelength=2.4, columnspacing=1.2, borderaxespad=0.0,
+              bbox_to_anchor=(1.0, 1.0))
 
 
 def panel_summary(ax, matched, summary):
