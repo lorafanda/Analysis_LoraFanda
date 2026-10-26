@@ -86,6 +86,15 @@ MIN_COVERAGE = 0.70          # below this a cluster's mean is marked as thinly s
 LANA_TOL = 1e-3
 N_PERM = 1000
 N_BOOT = 1000
+# the LanA network as a set: an electrode is 'inside' when its P_lana reaches the
+# threshold. 0.1 is the partition the atlas runs on disk use (thr0p1); 0.2 is the
+# core of the network. Both are drawn, so the choice is visible rather than hidden.
+THRESHOLDS = (0.10, 0.20)
+
+
+def tkey(t):
+    """column suffix for a threshold: 0.1 -> 't10', 0.2 -> 't20'"""
+    return f"t{int(round(100 * t)):02d}"
 
 
 # ---- the atlas ---------------------------------------------------------------
@@ -272,8 +281,11 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
         mean = float(Ph[sel].mean()) if n_l else np.nan
         med = float(np.median(Ph[sel])) if n_l else np.nan
         r, _ = spearmanr(Gh[:, j], Ph) if n_l else (np.nan, np.nan)
-        rows.append(dict(cluster=j, n=n_all, n_lana=n_l, coverage=cov,
-                         mean_P=mean, median_P=med, rho=float(r)))
+        row = dict(cluster=j, n=n_all, n_lana=n_l, coverage=cov,
+                   mean_P=mean, median_P=med, rho=float(r))
+        for t in THRESHOLDS:
+            row[f"frac_{tkey(t)}"] = float((Ph[sel] >= t).mean()) if n_l else np.nan
+        rows.append(row)
     R = pd.DataFrame(rows)
 
     # TWO NULLS. The shaft-shift one is spatially constrained and leads; the
@@ -282,6 +294,7 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
     for tag, spatial in (("", False), ("_sh", True)):
         nm = np.zeros((n_perm, K))
         nr = np.zeros((n_perm, K))
+        nf = {th: np.zeros((n_perm, K)) for th in THRESHOLDS}
         for t in range(n_perm):
             if spatial:
                 idx = shaft_roll_index(shaft, rng)
@@ -292,6 +305,8 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
                 sel = Lp == j
                 nm[t, j] = Pp[sel].mean() if sel.any() else np.nan
                 nr[t, j] = spearmanr(Gp[:, j], Pp)[0]
+                for th in THRESHOLDS:
+                    nf[th][t, j] = (Pp[sel] >= th).mean() if sel.any() else np.nan
         R[f"null_mean_P{tag}"] = np.nanmean(nm, 0)
         R[f"p_mean{tag}"] = [(np.sum(nm[:, j] >= R.mean_P[j]) + 1) / (n_perm + 1)
                              for j in range(K)]
@@ -300,12 +315,19 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
                             / (n_perm + 1) for j in range(K)]
         R[f"q_mean{tag}"], R[f"q_rho{tag}"] = (bh_fdr(R[f"p_mean{tag}"]),
                                                bh_fdr(R[f"p_rho{tag}"]))
+        for th in THRESHOLDS:
+            c = f"frac_{tkey(th)}"
+            R[f"null_{c}{tag}"] = np.nanmean(nf[th], 0)
+            R[f"p_{c}{tag}"] = [(np.sum(nf[th][:, j] >= R[c][j]) + 1) / (n_perm + 1)
+                                for j in range(K)]
+            R[f"q_{c}{tag}"] = bh_fdr(R[f"p_{c}{tag}"])
 
     # PATIENTS are the resampling unit, not electrodes: contacts on one shaft are not
     # independent draws and an electrode bootstrap would give intervals several times
     # too narrow
     bm = np.full((n_boot, K), np.nan)
     br = np.full((n_boot, K), np.nan)
+    bf = {th: np.full((n_boot, K), np.nan) for th in THRESHOLDS}
     for t in range(n_boot):
         take = rng.choice(pats, len(pats), replace=True)
         idx = np.concatenate([np.where(path_ == p)[0] for p in take])
@@ -314,10 +336,15 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
             if sel.sum() > 2:
                 bm[t, j] = Ph[idx][sel].mean()
                 br[t, j] = spearmanr(Gh[idx][:, j], Ph[idx])[0]
-    for nm_, arr in (("mean_P", bm), ("rho", br)):
+                for th in THRESHOLDS:
+                    bf[th][t, j] = (Ph[idx][sel] >= th).mean()
+    for nm_, arr in (("mean_P", bm), ("rho", br),
+                     *[(f"frac_{tkey(th)}", bf[th]) for th in THRESHOLDS]):
         R[f"{nm_}_lo"] = np.nanpercentile(arr, 2.5, axis=0)
         R[f"{nm_}_hi"] = np.nanpercentile(arr, 97.5, axis=0)
     R["baseline_P"] = float(Ph.mean())
+    for th in THRESHOLDS:
+        R[f"base_{tkey(th)}"] = float((Ph >= th).mean())   # the cohort rate
     return R.sort_values("mean_P", ascending=False).reset_index(drop=True), Ph, Gh, labh
 
 
@@ -362,67 +389,130 @@ def panel_rank(ax, R, d, chars, ext):
         linespacing=1.5)
 
 
-def panel_scatter(axes, R, Gh, Ph, labh, d, ext):
-    K = d["k"]
-    for ax, (_, r) in zip(axes, R.iterrows()):
-        j = int(r.cluster)
-        col = P2.cluster_col(j, K)
-        ax.scatter(Gh[:, j], Ph, s=2.0, color=GREY, lw=0, alpha=0.45)
-        m = labh == j
-        ax.scatter(Gh[m, j], Ph[m], s=4.5, color=col, lw=0, alpha=0.85)
-        if np.isfinite(r.rho):
-            z = np.polyfit(Gh[:, j], Ph, 1)
-            xx = np.linspace(Gh[:, j].min(), Gh[:, j].max(), 20)
-            ax.plot(xx, np.polyval(z, xx), color=INK, lw=1.1)
-        ax.set_title(f"c{j}   rho {r.rho:+.2f}"
-                     + ("*" if r.q_rho_sh < 0.05 else ""), fontsize=7.8,
-                     color=INK if abs(r.rho) >= 0.1 else col, loc="left", pad=2.2)
-        ax.set_xlim(0, ext["C_x"] * 1.04); ax.set_ylim(0, ext["C_y"] * 1.04)
-        ax.tick_params(labelsize=6.2, colors=MUTED)
-        ax.spines[["top", "right"]].set_visible(False)
+def inside_summary(R, Ph, labh, t):
+    """The sentence behind panels B and C at one threshold: the two clusters that keep
+    the most of their electrodes inside the network and the two that keep the least,
+    and the types most enriched and depleted inside it."""
+    c = f"frac_{tkey(t)}"
+    base = float(R[c.replace("frac", "base")].iloc[0])
+    o = R.sort_values(c, ascending=False)
+    hi = [(int(r.cluster), float(r[c])) for _, r in o.head(2).iterrows()]
+    lo = [(int(r.cluster), float(r[c])) for _, r in o.tail(2).iterrows()]
+    m = Ph >= t
+    mix_in = pd.Series(labh[m]).value_counts(normalize=True)
+    mix_out = pd.Series(labh[~m]).value_counts(normalize=True)
+    ratio = {int(j): (float(mix_in.get(j, 0.0)), float(mix_out.get(j, 0.0)))
+             for j in R.cluster}
+    enr = sorted(ratio.items(), key=lambda kv: kv[1][0] - kv[1][1], reverse=True)
+    return dict(base=base, hi=hi, lo=lo, n_in=int(m.sum()), n_out=int((~m).sum()),
+                most=enr[:2], least=enr[-2:])
 
 
-def panel_rho(ax, R, d, chars, ext):
-    """Effect size first. With n in the thousands a q-value is nearly free and says
-    almost nothing; the magnitude is the result, so the magnitude leads."""
+def panel_inside(ax, R, d, chars, ext):
+    """Of each cluster's electrodes, the share inside the LanA network at two thresholds.
+
+    The mean of panel A is set by the mass of electrodes below P = 0.1, where nothing
+    happens; the relation lives in the tail of the P distribution, and a threshold
+    reads it directly - how much of this type sits in language cortex - against the
+    cohort rate, with the same two nulls and the same patient bootstrap as panel A.
+    """
+    from matplotlib.patches import Patch
     K = d["k"]
-    y = np.arange(len(R))[::-1]
+    x = np.arange(len(R))
+    nT = len(THRESHOLDS)
+    w = 0.80 / nT
     cols = [P2.cluster_col(int(c), K) for c in R.cluster]
-    # anything inside this band is a negligible correlation by any convention, however
-    # small its p-value gets with this many electrodes
-    ax.axvspan(-0.1, 0.1, color=GREY, alpha=0.30, lw=0, zorder=0)
-    ax.barh(y, R.rho, color=cols, height=0.7, lw=0, zorder=2)
-    ax.errorbar(R.rho, y, xerr=[R.rho - R.rho_lo, R.rho_hi - R.rho], fmt="none",
-                ecolor=INK, elinewidth=1.0, capsize=2.4, zorder=3)
-    ax.plot(R.null_rho_sh, y, "|", ms=13, color=INK, mew=1.8, zorder=4)
-    ax.axvline(0, color=INK, lw=0.8, zorder=1)
-    lim = max(0.16, ext["B_abs"] * 1.35)          # shared across feature sets
-    ax.set_xlim(-lim, lim)
-    for i, (_, r) in enumerate(R.iterrows()):
-        mark = "*" if r.q_rho_sh < 0.05 else ("(*)" if r.q_rho < 0.05 else "")
-        off = 0.012 * (1 if r.rho >= 0 else -1)
-        ax.text(r.rho + off, y[i], f"{r.rho:+.2f}{mark}",
-                ha="left" if r.rho >= 0 else "right", va="center", fontsize=7.2,
-                color=INK)
-    ax.set_yticks(y)
-    ax.set_yticklabels([f"c{int(c)}" for c in R.cluster], fontsize=7.4)
-    ax.set_xlabel("Spearman rho, loading vs P(LanA)", fontsize=8.6)
+    for i_t, t in enumerate(THRESHOLDS):
+        c = f"frac_{tkey(t)}"
+        xs = x - 0.40 + w * (i_t + 0.5)
+        alpha = 1.0 if i_t == 0 else 0.45
+        ax.bar(xs, R[c], width=w * 0.90, color=cols, alpha=alpha, lw=0, zorder=2)
+        ax.errorbar(xs, R[c], yerr=[R[c] - R[f"{c}_lo"], R[f"{c}_hi"] - R[c]],
+                    fmt="none", ecolor=INK, elinewidth=0.9, capsize=2.0, zorder=3)
+        ax.plot(xs, R[f"null_{c}_sh"], "_", ms=9, color=INK, mew=1.8, zorder=5)
+        ax.plot(xs, R[f"null_{c}"], "_", ms=7, color=MUTED, mew=1.2, zorder=4)
+        base = float(R[f"base_{tkey(t)}"].iloc[0])
+        ax.axhline(base, color=MUTED, ls=":" if i_t == 0 else (0, (1, 2.2)), lw=1.1,
+                   zorder=1)
+        for i, (_, r) in enumerate(R.iterrows()):
+            star = ("*" if r[f"q_{c}_sh"] < 0.05 else
+                    "(*)" if r[f"q_{c}"] < 0.05 else "")
+            top = max(r[f"{c}_hi"], r[c])
+            lab = (f"{star}\n{r[c] / base:.1f}×" if i_t == 0 else star)
+            ax.text(xs[i], top + 0.012, lab, ha="center", va="bottom", fontsize=6.4,
+                    color=INK if i_t == 0 else MUTED)
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"c{int(c)}\nn={int(n)}" for c, n in zip(R.cluster, R.n_lana)],
+                       fontsize=7.2)
+    ax.set_ylabel("share of its electrodes inside LanA, P(LanA) ≥ t", fontsize=8.6)
+    ax.set_ylim(0, max(0.5, ext.get("B_top", 0.0) * 1.32))
     ax.tick_params(labelsize=7.4, colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
-    big = int((R.rho.abs() >= 0.1).sum())
-    sig = int((R.q_rho_sh < 0.05).sum())
-    ax.text(0, -0.30, _wrap(
-        f"EFFECT SIZE FIRST. The shaded band is |rho| < 0.10 - negligible by any "
-        f"convention. {big} of {K} correlations reach even that, and the largest is "
-        f"{R.rho.abs().max():.2f}. With {int(R.n_lana.sum())} electrodes a q-value is "
-        f"nearly free, so a star here is not the finding; the magnitude is, and the "
-        f"magnitude says belonging more strongly to a cluster barely predicts sitting "
-        f"further into language cortex. {sig} pass the shaft-shift null, which is the "
-        f"one that keeps spatial smoothness. THE {K} VALUES ARE NOT INDEPENDENT: "
-        f"loadings sum to 1, so one cluster tracking LanA forces negative rho on the "
-        f"others arithmetically - read a negative bar as 'not this one', never as "
-        f"'avoids language cortex'.", chars), transform=ax.transAxes, va="top",
-        fontsize=7.4, color=MUTED, linespacing=1.5)
+    ax.legend([Patch(color=INK, alpha=1.0), Patch(color=INK, alpha=0.45)],
+              [f"P ≥ {t:.1f}   (cohort {100*float(R[f'base_{tkey(t)}'].iloc[0]):.0f}%, dotted)"
+               for t in THRESHOLDS], fontsize=6.8,
+              frameon=False, loc="upper right", ncol=2, handlelength=1.2)
+    sm = inside_summary(R, d["P_lana"][d["has"]], d["lab"][d["has"]], THRESHOLDS[0])
+    ax.text(0, -0.20, _wrap(
+        f"Of each cluster's electrodes, the share whose atlas probability reaches "
+        f"{THRESHOLDS[0]:.1f} (solid) or {THRESHOLDS[1]:.1f} (pale), in panel A's order; "
+        f"dotted lines are the cohort rate, whiskers a 95% interval from bootstrapping "
+        f"PATIENTS, dashes the two nulls of panel A (dark = shaft shift, the one that "
+        f"counts; pale = within patient); * passes the shaft-shift null after "
+        f"Benjamini-Hochberg over {K}, (*) only the weaker one. The number over a solid "
+        f"bar is its enrichment, the share divided by the cohort rate. At P ≥ "
+        f"{THRESHOLDS[0]:.1f}: "
+        + " and ".join(f"c{j} {100*f:.0f}%" for j, f in sm["hi"])
+        + f" against {100*sm['base']:.0f}% in the cohort; "
+        + " and ".join(f"c{j} {100*f:.0f}%" for j, f in sm["lo"]) + ".", chars),
+        transform=ax.transAxes, va="top", fontsize=7.4, color=MUTED, linespacing=1.5)
+
+
+def panel_mix(ax, R, d, labh, Ph, chars):
+    """What the network is made of: the type composition of the electrodes inside the
+    LanA network at each threshold, of the whole cohort, and of the electrodes outside.
+    Descriptive; the per-cluster test is panel B."""
+    K = d["k"]
+    order = [int(c) for c in R.cluster]          # panel A's order, left to right
+    groups = []
+    for t in THRESHOLDS[::-1]:
+        m = Ph >= t
+        groups.append((f"inside, P ≥ {t:.1f}   n={int(m.sum())}", labh[m]))
+    groups.append((f"whole cohort   n={len(labh)}", labh))
+    m = Ph < THRESHOLDS[0]
+    groups.append((f"outside, P < {THRESHOLDS[0]:.1f}   n={int(m.sum())}", labh[m]))
+    y = np.arange(len(groups))[::-1]
+    for yi, (name, L) in zip(y, groups):
+        left = 0.0
+        for j in order:
+            f = float((L == j).mean()) if len(L) else 0.0
+            ax.barh(yi, f, left=left, color=P2.cluster_col(j, K), height=0.64, lw=0)
+            if f >= 0.07:
+                ax.text(left + f / 2, yi, f"c{j}\n{100*f:.0f}%", ha="center",
+                        va="center", fontsize=6.2, color="white")
+            left += f
+    ax.set_yticks(y)
+    ax.set_yticklabels([g[0] for g in groups], fontsize=7.2)
+    ax.set_xlim(0, 1)
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
+    ax.set_xticklabels(["0", "25%", "50%", "75%", "100%"], fontsize=7)
+    ax.set_xlabel("share of the electrodes in that group", fontsize=8.6)
+    ax.tick_params(colors=MUTED, length=2)
+    ax.spines[["top", "right"]].set_visible(False)
+    sm = inside_summary(R, Ph, labh, THRESHOLDS[0])
+    ax.text(0, -0.26, _wrap(
+        f"The same electrodes the other way round: which types the language network "
+        f"is made of. Each bar is one group of electrodes and its segments are the "
+        f"clusters, in panel A's order, with their share of that group. Inside the "
+        f"network at P ≥ {THRESHOLDS[0]:.1f} the most over-represented types are "
+        + " and ".join(f"c{j} ({100*a:.0f}% against {100*b:.0f}% outside)"
+                       for j, (a, b) in sm["most"])
+        + "; the most under-represented "
+        + " and ".join(f"c{j} ({100*a:.0f}% against {100*b:.0f}%)"
+                       for j, (a, b) in sm["least"])
+        + ". A bar that looked like the cohort bar would mean the network has no "
+        f"type of its own.", chars),
+        transform=ax.transAxes, va="top", fontsize=7.4, color=MUTED, linespacing=1.5)
 
 
 def _wrap(t, chars):
@@ -505,12 +595,22 @@ def reading_notes(R, d):
         "whether it RESPONDED to language is FIG 1, not this.",
         f"Against the SHAFT-SHIFT null, which preserves the spatial smoothness of the "
         f"atlas, {int((R.q_mean_sh < 0.05).sum())} of {K} clusters sit in more LanA "
-        f"than chance and {int((R.q_rho_sh < 0.05).sum())} of {K} correlations pass. "
-        f"Against the weaker within-patient null it is {int((R.q_mean < 0.05).sum())} "
-        f"and {int((R.q_rho < 0.05).sum())}. Where those differ, the smoothness was "
-        f"doing the work.",
-        f"The largest |rho| is {R.rho.abs().max():.2f}. Significance here is nearly "
-        f"free at this sample size; the effect size is the result.",
+        f"than chance (panel A) and {int((R[f'q_frac_{tkey(THRESHOLDS[0])}_sh'] < 0.05).sum())} "
+        f"of {K} keep more of their electrodes inside the network at P >= "
+        f"{THRESHOLDS[0]:.1f} (panel B). Against the weaker within-patient null it is "
+        f"{int((R.q_mean < 0.05).sum())} and "
+        f"{int((R[f'q_frac_{tkey(THRESHOLDS[0])}'] < 0.05).sum())}. Where those "
+        f"differ, the smoothness was doing the work.",
+        (lambda sm: f"Inside the network at P >= {THRESHOLDS[0]:.1f}: "
+         + " and ".join(f"c{j} {100*f:.0f}%" for j, f in sm["hi"])
+         + f" of their electrodes against {100*sm['base']:.0f}% in the cohort, "
+         + " and ".join(f"c{j} {100*f:.0f}%" for j, f in sm["lo"])
+         + ". The network itself is "
+         + " and ".join(f"{100*a:.0f}% c{j} against {100*b:.0f}% outside"
+                        for j, (a, b) in sm["most"])
+         + " (panel C). The largest |rho| of loading against P_lana, in the table "
+         f"and no longer drawn, is {R.rho.abs().max():.2f}.")
+        (inside_summary(R, d["P_lana"][d["has"]], d["lab"][d["has"]], THRESHOLDS[0])),
         (f"Only {100*d['has'].mean():.0f}% of electrodes have a LanA value, and the "
          f"missing ones are WHOLE PATIENTS rather than a random scatter - the atlas run "
          f"predates part of the cohort. " if not bool(d["has"].all()) else
@@ -518,9 +618,9 @@ def reading_notes(R, d):
         + (f"Coverage is below {100*MIN_COVERAGE:.0f}% for {', '.join(thin)}, whose "
            f"{'means are' if len(thin) > 1 else 'mean is'} not comparable with the rest."
            if thin else "Every cluster is above the coverage floor here."),
-        "The K correlations are NOT independent: loadings sum to 1, so one cluster "
-        "tracking the atlas forces the others negative by arithmetic. Only the "
-        "positive end is interpretable alone.",
+        "The shares of panel B are one number per cluster and are not compositional, "
+        "unlike a correlation of normalised loadings; the composition bars of panel C "
+        "sum to 100% within each group.",
         "LanA is left-lateralised and sEEG coverage is not symmetric, so a left-heavy "
         "cluster scores higher for that reason alone. Neither null removes it: it is a "
         "property of where a cluster is, not of which patients it draws on.",
@@ -528,19 +628,21 @@ def reading_notes(R, d):
 
 
 # ---- shared axes ---------------------------------------------------------------
-EXT_KEYS = ("A_top", "B_abs", "C_x", "C_y")
+EXT_KEYS = ("A_top", "B_top", "B_abs", "C_x", "C_y")   # B_abs, C_x, C_y: the panels drawn until 2026-10-26
 
 
 def extents_of(R, Gh, Ph):
     """What this feature set's panels reach: A's top (mean or whisker), B's largest
     |rho| including its interval, C's largest loading and largest P(LanA)."""
+    fr = [f"frac_{tkey(t)}" for t in THRESHOLDS]
     return dict(A_top=float(max(R.mean_P_hi.max(), R.mean_P.max())),
+                B_top=float(max(R[f"{c}_hi"].max() for c in fr)),
                 B_abs=float(np.nanmax(np.abs([R.rho_lo.min(), R.rho_hi.max()]))),
                 C_x=float(np.nanmax(Gh)), C_y=float(np.nanmax(Ph)))
 
 
 def merge_extents(exts):
-    return {key: max(float(e[key]) for e in exts.values()) for key in EXT_KEYS}
+    return {key: max(float(e.get(key, 0.0)) for e in exts.values()) for key in EXT_KEYS}
 
 
 def extents_path(k):
@@ -606,8 +708,6 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     # FOUR PANELS, ONE PER CORNER. The left column is the narrow one (A above B) and
     # the right the wide one (C above D); the bottom row is the taller, so that D -
     # three views of the coverage - can actually be read.
-    nrow = 2
-    ncol = int(np.ceil(len(R) / nrow))
     fig = plt.figure(figsize=(17.6, 15.6), dpi=190)
     gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 2.3], hspace=0.48,
                   wspace=1.2, left=0.055, right=0.985, top=0.905, bottom=0.030)
@@ -615,28 +715,24 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
                  f"{int(d['has'].sum())} of {len(d['X'])} electrodes have a LanA value",
                  x=0.055, y=0.978, ha="left", fontsize=15.5, color=INK)
     fig.text(0.055, 0.955,
-             "How far into the LanA probabilistic language atlas each cluster sits, and "
-             "whether belonging more strongly to a cluster goes with sitting further "
-             "in.  Two nulls per test: a SHAFT-SHIFT that keeps spatial smoothness (*) "
+             "How far into the LanA probabilistic language atlas each cluster sits, how "
+             "much of each type lies inside the network, and what the network is made "
+             "of.  Two nulls per test: a SHAFT-SHIFT that keeps spatial smoothness (*) "
              "and a within-patient shuffle ((*)); every interval bootstraps patients.",
              fontsize=9.8, color=MUTED, va="top")
 
     axA = fig.add_subplot(gs[0, 0:7])
     panel_rank(axA, R, d, 66, ext)
 
-    sub = GridSpecFromSubplotSpec(nrow, ncol, gs[0, 8:24], hspace=0.62, wspace=0.34)
-    axes = [fig.add_subplot(sub[i // ncol, i % ncol]) for i in range(len(R))]
-    panel_scatter(axes, R, Gh, Ph, labh, d, ext)
-    for i, a in enumerate(axes):
-        if i % ncol == 0:
-            a.set_ylabel("P(LanA)", fontsize=7.6)
-        if i + ncol >= len(R):                       # the last row, ragged or not
-            a.set_xlabel("loading", fontsize=7.0)
+    # B beside A, on the same cluster order; the scatter grid of loading against
+    # P_lana that stood here until 2026-10-26 is in the table, not on the page
+    axB = fig.add_subplot(gs[0, 8:24])
+    panel_inside(axB, R, d, 150, ext)
 
-    cB = GridSpecFromSubplotSpec(2, 1, gs[1, 0:7], height_ratios=[1.0, 0.80],
+    cC = GridSpecFromSubplotSpec(2, 1, gs[1, 0:7], height_ratios=[0.90, 1.0],
                                  hspace=0.0)
-    axB = fig.add_subplot(cB[0])
-    panel_rho(axB, R, d, 66, ext)
+    axC = fig.add_subplot(cC[0])
+    panel_mix(axC, R, d, labh, Ph, 66)
 
     cD = GridSpecFromSubplotSpec(2, 2, gs[1, 8:24], hspace=0.08, wspace=0.03)
     axDL, axDR = fig.add_subplot(cD[0, 0]), fig.add_subplot(cD[0, 1])
@@ -648,8 +744,9 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     inv = fig.transFigure.inverted()
     # one line of labels per row, above the taller of its two panels
     for row_ in (((axA, "A  ·  clusters ranked by how much LanA they sit in"),
-                  (axes[0], "C  ·  loading vs P(LanA), every electrode")),
-                 ((axB, "B  ·  those correlations, ranked"),
+                  (axB, f"B  ·  inside the LanA network at P ≥ {THRESHOLDS[0]:.1f} "
+                        f"and ≥ {THRESHOLDS[1]:.1f}")),
+                 ((axC, "C  ·  what the network is made of"),
                   (axDL, "D  ·  LanA on this coverage: left, right, from above"))):
         top = max(inv.transform((0, ax.get_tightbbox(r).y1))[1] for ax, _ in row_)
         for ax, label in row_:
@@ -681,11 +778,10 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("")
     A("AXES SHARED ACROSS FEATURE SETS")
     A("-" * 100)
-    A("A's y axis, B's x axis and C's x and y axes run to the same limits in every FIG 3")
-    A("at this K, so the four can be laid side by side and a bar that looks taller is")
-    A(f"taller. The limits are the maximum reached in: {', '.join(shared_with)}.")
-    A(f"  A top {ext['A_top']:.4f}   B |rho| {ext['B_abs']:.4f}   C loading {ext['C_x']:.4f}"
-      f"   C P_lana {ext['C_y']:.4f}   (each drawn with a small margin)")
+    A("A's and B's y axes run to the same limits in every FIG 3 at this K, so the")
+    A("figures can be laid side by side and a bar that looks taller is taller. The")
+    A(f"limits are the maximum reached in: {', '.join(shared_with)}.")
+    A(f"  A top {ext['A_top']:.4f}   B top {ext['B_top']:.4f}   (each drawn with a small margin)")
     A(f"  recorded in {extents_path(k).name}; --all rebuilds every feature set on one set")
     A("")
     A("WHAT P_lana IS")
@@ -796,52 +892,67 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A(f"  above the weaker within-patient null              "
       f"{int((R.q_mean < 0.05).sum())} of {k}")
     A("")
-    A("PANELS C and B - loading against P_lana (C every electrode, B the rhos ranked)")
+    A("PANEL B - inside the LanA network, at two thresholds")
     A("-" * 100)
-    A("Spearman rho between an electrode's LOADING on a cluster and its P_lana, across")
-    A("EVERY electrode with a LanA value - not only the cluster's own members, because")
-    A("the question is whether belonging more strongly to this cluster goes with sitting")
-    A("further into language cortex, and that is a statement about all of them.")
+    A("The mean of panel A is set by the mass of electrodes below P = 0.1, where nothing")
+    A("happens; the relation lives in the tail of the P distribution. Panel B reads it")
+    A(f"directly: of each cluster's electrodes, the share whose P_lana reaches {THRESHOLDS[0]:.1f}")
+    A(f"(solid) or {THRESHOLDS[1]:.1f} (pale), against the cohort rate (dotted), with the same two")
+    A("nulls and the same patient bootstrap as panel A. The number over a solid bar is")
+    A("the enrichment, the share divided by the cohort rate. The thresholds are a")
+    A("declared choice: 0.1 is the partition the atlas runs on disk use (thr0p1), 0.2 the")
+    A("core of the network; both are drawn so the choice is visible.")
     A("")
-    A("Spearman, not Pearson: P_lana is a bounded, heavily right-skewed probability and")
-    A("the loadings are not normal either, so a rank correlation is the honest choice.")
+    for th in THRESHOLDS:
+        c = f"frac_{tkey(th)}"
+        base = float(R[f"base_{tkey(th)}"].iloc[0])
+        A(f"  P_lana >= {th:.2f}   cohort rate {100*base:.1f}%   "
+          f"({int((R[f'q_{c}_sh'] < 0.05).sum())}"
+          f" of {k} above the shaft-shift null at q<0.05, "
+          f"{int((R[f'q_{c}'] < 0.05).sum())} above the within-patient one)")
+        A("  cluster   n     inside  [95% CI]           x cohort   shaft null  q        within null  q")
+        for _, r in R.iterrows():
+            A(f"  c{int(r.cluster):<7} {int(r.n_lana):<5} {100*r[c]:5.1f}%  "
+              f"[{100*r[f'{c}_lo']:5.1f}, {100*r[f'{c}_hi']:5.1f}]   {r[c]/base:5.2f}   "
+              f"{100*r[f'null_{c}_sh']:6.1f}%  {r[f'q_{c}_sh']:<7.3g}  "
+              f"{100*r[f'null_{c}']:6.1f}%  {r[f'q_{c}']:<7.3g}")
+        A("")
+    A("PANEL C - what the network is made of")
+    A("-" * 100)
+    A("The same electrodes the other way round: the type composition of the electrodes")
+    A("inside the network at each threshold, of the whole cohort, and of the electrodes")
+    A("outside it, each bar summing to 100%. Descriptive - the per-cluster test is B.")
     A("")
-    A("THE K CORRELATIONS ARE NOT INDEPENDENT OF EACH OTHER, and this is the easiest")
-    A("number in the figure to over-read. A convex-NMF loading vector is normalised to")
-    A("sum to 1, so the K loadings of one electrode live on a simplex: if one cluster's")
-    A("loading rises with P_lana, the others MUST fall, whatever they are describing.")
-    A("A negative rho is therefore 'not this cluster' and not 'this cluster avoids")
-    A("language cortex' - the two are indistinguishable from this panel. Only the")
-    A("POSITIVE end is interpretable on its own, and even the ranking among negatives is")
-    A("partly an artefact of how strong the leader is. Verified on synthetic data where")
-    A("one cluster was planted to track the atlas: every other cluster went negative")
-    A("without being planted to do anything at all.")
+    Ph_, labh_ = d["P_lana"][d["has"]], d["lab"][d["has"]]
+    order_ = [int(c_) for c_ in R.cluster]
+    groups_ = [(f"inside P >= {th:.1f}", Ph_ >= th) for th in THRESHOLDS[::-1]]
+    groups_ += [("whole cohort", np.ones(len(Ph_), bool)),
+                (f"outside P < {THRESHOLDS[0]:.1f}", Ph_ < THRESHOLDS[0])]
+    A("  group               n     " + "  ".join(f"c{j:<4}" for j in order_))
+    for name_, m_ in groups_:
+        L_ = labh_[m_]
+        A(f"  {name_:<18} {len(L_):<5} "
+          + "  ".join(f"{100*float((L_ == j).mean()):4.0f}%" for j in order_))
+    sm = inside_summary(R, Ph_, labh_, THRESHOLDS[0])
     A("")
-    A("The within-patient null does not remove this. It is computed on the same")
-    A("normalised loadings, so it prices in the simplex for EACH cluster separately -")
-    A("it says whether that cluster's rho exceeds chance, not whether the K rhos are")
-    A("mutually consistent.")
+    A(f"  most over-represented inside (P >= {THRESHOLDS[0]:.1f}): "
+      + ", ".join(f"c{j} {100*a:.0f}% vs {100*b:.0f}% outside" for j, (a, b) in sm["most"]))
+    A(f"  most under-represented: "
+      + ", ".join(f"c{j} {100*a:.0f}% vs {100*b:.0f}%" for j, (a, b) in sm["least"]))
     A("")
-    A("  cluster  rho [95% CI]                 q shaft   q within-pat   meanP   "
-      "q shaft   coverage")
+    A("THE CORRELATION OF LOADING WITH P_lana (Spearman rho over every electrode, with")
+    A("both nulls and the patient bootstrap) is still computed and written to the table")
+    A("- rho, rho_lo, rho_hi, null_rho, p_rho, q_rho and the _sh variants - but it left")
+    A("the page on 2026-10-26: the K rhos are compositional (an electrode's loadings sum")
+    A("to 1, so one cluster tracking the atlas forces the others negative) and they are")
+    A("dominated by the mass of electrodes below P = 0.1. For the record:")
+    A("")
+    A("  cluster  rho [95% CI]                 q shaft   q within-pat")
     for _, r in R.iterrows():
         A(f"  c{int(r.cluster):<7} {r.rho:+.3f} [{r.rho_lo:+.3f}, {r.rho_hi:+.3f}]"
-          f"   {r.q_rho_sh:>8.3g}   {r.q_rho:>10.3g}   {r.mean_P:.4f}  "
-          f"{r.q_mean_sh:>8.3g}   {100*r.coverage:>3.0f}%")
+          f"   {r.q_rho_sh:>8.3g}   {r.q_rho:>10.3g}")
+    A(f"  largest |rho| {R.rho.abs().max():.3f}; {int((R.q_rho_sh < 0.05).sum())} of {k} pass the shaft-shift null.")
     A("")
-    A(f"  {int((R.q_rho_sh < 0.05).sum())} of {k} correlations pass the shaft-shift")
-    A(f"  null; {int((R.q_rho < 0.05).sum())} pass the weaker within-patient one.")
-    n_big = int((R.rho.abs() >= 0.10).sum())
-    big = R.loc[R.rho.abs().idxmax()]
-    A((f"  NONE reaches |rho| = 0.10 (largest {R.rho.abs().max():.3f}). " if n_big == 0 else
-       f"  {n_big} of {k} reach |rho| = 0.10 (largest c{int(big.cluster)} at {big.rho:+.3f}); "
-       f"the rest sit inside the band. ")
-      + f"At {int(R.n_lana.sum())} electrodes a q-value is nearly free; the effect size is")
-    A("  the result, and " + ("the effect size is negligible." if n_big == 0 else
-                            "even the largest is small by any convention."))
-    A("A rho near zero means the cluster is placed independently of the atlas. That is a")
-    A("result, not a failure - it says the clustering found structure the atlas does not")
-    A("describe.")
     A("")
     A("PANEL D - LanA on this coverage")
     A("-" * 100)

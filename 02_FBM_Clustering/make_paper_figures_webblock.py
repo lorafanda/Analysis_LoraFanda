@@ -194,6 +194,15 @@ def fig3_bullets(png: Path):
          f"pass {'the shaft-shift null after FDR' if sh else 'FDR'}, and none is large "
          f"(|rho| at most {d.rho.abs().max():.2f}) &mdash; belonging more strongly to a "
          f"cluster barely predicts sitting further into language cortex."]
+    if "frac_t10" in d.columns and "base_t10" in d.columns:
+        # the network panels of 2026-10-26: the share of each cluster inside LanA at P >= 0.1
+        base = float(d.base_t10.iloc[0])
+        o = d.sort_values("frac_t10", ascending=False)
+        hi, lo = o.iloc[0], o.iloc[-1]
+        b.append(f"Inside the network at P &ge; 0.1: <b>c{int(hi.cluster)}</b> keeps "
+                 f"{100*hi.frac_t10:.0f}% of its electrodes there and c{int(lo.cluster)} "
+                 f"{100*lo.frac_t10:.0f}%, against {100*base:.0f}% in the cohort; "
+                 f"{int((d.q_frac_t10_sh < 0.05).sum())} of {len(d)} clear the shaft-shift null.")
     thin = d[d.coverage < 0.70]
     cov = d.n_lana.sum() / d.n.sum()
     b.append(f"LanA covers {100*cov:.0f}% of the electrodes"
