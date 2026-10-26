@@ -1114,26 +1114,31 @@ EXAMPLES = {
     "results.f3": [
         "Figure 3 compares the seven types with the LanA language atlas. All 1587 "
         "electrodes carry an atlas value, sampled on the current fsaverage coordinates. "
-        "Ranked by mean LanA probability, c1 sits highest at 0.207 against a cohort "
-        "mean of 0.142, and c0 lowest at 0.113. Against a within-patient permutation, "
-        "c1 is enriched (q = 0.001). Against a null that preserves the spatial "
-        "structure of each electrode shaft, it is not (q = 0.37), and no cluster is. "
-        "The correlation between an electrode's loading on a cluster and its atlas "
-        "probability is at most rho = +0.14 (c1; it passes the shaft null, q = 0.006, "
-        "as do c5 at +0.04 and c3 at -0.09) and below 0.10 for every other type. The "
-        "clusters are not placed by the atlas; what the atlas predicts about a "
-        "cluster's membership is a correlation of 0.14.",
-        "The atlas comparison is negative, and the reason is instructive. Under a "
-        "liberal null that shuffles atlas values within each patient, one cluster, c1, "
-        "appears enriched in language cortex. Under a null that shifts labels along "
-        "each electrode shaft, keeping neighbouring contacts together, the enrichment "
-        "disappears: 0 of 7 clusters pass at q < 0.05. Neighbouring contacts on a shaft "
-        "have nearly identical atlas values, so the liberal null inflates every "
-        "comparison. The largest correlation between loading and atlas probability is "
-        "0.14, and it is significant under both nulls. At 1587 electrodes a q-value is "
-        "almost free; the effect size is what counts, and it is small for every type. "
-        "The response types are defined by what the electrodes do, not by where the "
-        "atlas says language should be.",
+        "Panel A gives P(LanA) of every electrode as one violin per cluster, ranked by "
+        "the mean: c1 sits highest at 0.207 against a cohort mean of 0.142, c0 lowest at "
+        "0.113. Against a within-patient permutation c1 is enriched (q = 0.001); against "
+        "a null that rolls the labels along each electrode shaft it is not (q = 0.37), "
+        "and no cluster is. Panel B counts electrodes inside the network: at P >= 0.1, "
+        "c1 and c5 keep 55% of their electrodes there against 41% in the cohort (1.3x), "
+        "c0 and c6 33% and 32%. c5 is the one cluster that clears the shaft-shift null "
+        "(q = 0.036); c1 clears only the within-patient one (q = 0.003). At P >= 0.2 no "
+        "cluster clears the shaft-shift null. Panel C turns it round: the network at "
+        "P >= 0.1 is 17% c5 and 12% c1 against 10% and 7% outside it, and 11% c6 and 16% "
+        "c0 against 16% and 23%.",
+        "Figure 3b asks the same question with the map randomised instead of the "
+        "electrodes: each contact's fsaverage vertex is spun on the sphere 5000 times "
+        "and the atlas read where it lands, so the null keeps LanA's size, smoothness "
+        "and asymmetry while the electrodes keep their patients, shafts and labels. No "
+        "cluster keeps more of its electrodes inside a rotated map than inside the real "
+        "one, on all electrodes or on the left hemisphere alone; the one effect that "
+        "survives is the mean atlas probability of c1 on the left (0.38 against 0.15 for "
+        "spun maps, q = 0.027). The network's own response, inside against outside, is "
+        "not distinguishable from the rest of the sampled cortex (0 of 1350 cells; RMS "
+        "difference 0.11 dB, p = 0.37; left hemisphere 0.18 dB, p = 0.17). The types are "
+        "defined by what the electrodes do, not by where the atlas says language should "
+        "be, and with a naming task that is expected: the sentences-versus-nonwords "
+        "contrast behind LanA subtracts the perception and articulation systems the task "
+        "drives.",
     ],
     "results.extra": [
         "The same analysis on the other three feature sets gives eight clusters at K = "
@@ -1538,7 +1543,11 @@ EXAMPLES = {
         "1000 label shuffles per pair. Atlas (Figure 3): 5000 within-patient "
         "permutations of P(LanA), 5000 shaft-shift permutations that roll cluster "
         "labels and loadings within each electrode shaft, leaving P(LanA) in place, and "
-        "2000 patient bootstraps for the intervals.",
+        "2000 patient bootstraps for the intervals. Spin null (Figure 3b): 5000 random "
+        "rotations of the fsaverage sphere, the mirror rotation on the right hemisphere, "
+        "the atlas read at each electrode's landing vertex; two-sided against the spun "
+        "maps, Benjamini-Hochberg over K; the same spins give the null for the "
+        "inside-minus-outside response, Benjamini-Hochberg over the 1350 cells.",
         "The shaft-shift null keeps what the within-patient null destroys: the run "
         "structure of labels along a shaft. Neighbouring contacts share an atlas "
         "neighbourhood, so a null that scatters them overstates the evidence. Shafts "
@@ -1577,16 +1586,28 @@ EXAMPLES = {
         "a method reaches against its own refits (50 refits on 80% of the electrodes).",
     ],
     "figs.f3": [
-        "Figure 3. Response types against the LanA language atlas. (A) Clusters ranked "
-        "by mean P(LanA) with 95% patient-bootstrap CI, cohort mean as a line, and both "
-        "nulls (dark, shaft-shift; pale, within-patient); star, q < 0.05. (B) Spearman "
-        "rho between loading and P(LanA) per cluster with CI; shaded, |rho| < 0.10. (C) "
-        "Loading against P(LanA), every electrode. (D) P(LanA) over the electrodes. All "
-        "1587 electrodes have an atlas value; 5000 permutations per null, 2000 "
-        "bootstraps.",
-        "Figure 3. Are the types anatomy? Under the liberal null one cluster is "
-        "enriched; under the spatial null none is. Panel B is the effect size, which is "
-        "what the reader should take away.",
+        "Figure 3. Response types against the LanA language atlas. (A) P(LanA) of every "
+        "electrode, one violin per cluster ranked by the mean (short line; 95% "
+        "patient-bootstrap interval); electrodes below a loading of 0.3 on their cluster "
+        "are not drawn, the rest grey and shrink with a weaker loading; dotted, cohort "
+        "mean; dashes, the two nulls (dark, shaft-shift; pale, within-patient); *, q < "
+        "0.05 against the shaft-shift null, (*) against the within-patient null only. (B) "
+        "Share of each cluster's electrodes inside the network at P >= 0.1 (solid) and "
+        ">= 0.2 (pale) against the cohort rate (dotted), same nulls and bootstrap; the "
+        "number is the enrichment. (C) Composition of the network at both thresholds, of "
+        "the cohort and of the outside. (D) P(LanA) on this coverage: left, right, from "
+        "above. All 1587 electrodes have an atlas value; 5000 permutations per null, "
+        "2000 bootstraps.",
+        "Figure 3b. The same comparison under a spin null (5000 rotations of the "
+        "fsaverage sphere, mirrored on the right hemisphere): the network's mean response "
+        "inside and outside and their difference, on all electrodes (A) and on the left "
+        "hemisphere (B), with the cells beyond the spun maps outlined; each cluster's "
+        "share inside the network against the spun maps (C, D); the size of the "
+        "inside-minus-outside difference against the spun maps (E).",
+        "Figure 3. Are the types anatomy? Under the within-patient null c1 is enriched; "
+        "under the shaft-shift null only c5's share inside the network survives, and "
+        "under the spin null only c1's left-hemisphere mean. Panels B and C are the "
+        "effect sizes, which is what the reader should take away.",
     ],
     "figs.f4": [
         "Figure 4. Cluster correspondence at K = 7. Six panels, three pairs of "

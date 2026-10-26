@@ -174,15 +174,18 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
   set, different algorithm) / 0.38 / 0.36, chance 0.18, no pair at chance; K by K, cNMF on 15
   bands keeps 0.90 of its partition from K 7 to 8. *Sentence:* the partition is stable in K and
   far from chance everywhere.
-- **FIG 3 — where the types sit (LanA).** New panel A: violins of P(LanA) per cluster, every
-  electrode at or above a loading of 0.3 a point, greyer and smaller the weaker it belongs. Cohort mean 0.142;
-  c1 0.207 beats only the within-patient null (q 0.001; shaft-shift q 0.37); c1 and c5 keep 55 %
-  of their electrodes inside the network at P ≥ 0.1 vs 41 % in the cohort, c0 and c6 32–33 %;
-  nothing beats the shaft-shift null. FIG 3b (spin null, dry run): no cluster beyond a rotated
-  map; the network's own response is not distinguishable from the rest of the sampled cortex
-  (p 0.34 all electrodes, 0.12 left). *Sentence:* the types are not the language network, and
-  with a naming task that is expected — the atlas subtracts exactly the perception and
-  articulation systems the task drives. (Decide: a results slide or a limitation line.)
+- **FIG 3 — where the types sit (LanA).** Panel A: violins of P(LanA) per cluster, every
+  electrode at or above a loading of 0.3 a point, greyer and smaller the weaker it belongs.
+  Cohort mean 0.142; c1 0.207 beats only the within-patient null (q 0.001; shaft-shift q 0.37).
+  Panel B: c1 and c5 keep 55 % of their electrodes inside the network at P ≥ 0.1 vs 41 % in
+  the cohort, c0 and c6 32–33 %; c5 is the one cluster that clears the shaft-shift null
+  (q 0.036). FIG 3b (spin null, 5000 spins): no cluster’s share inside a rotated map differs
+  from the real one; c1’s mean P on the left hemisphere does (0.38 vs 0.15, q 0.027); the
+  network’s own response is not distinguishable from the rest of the sampled cortex (p 0.37
+  all electrodes, 0.17 left). *Sentence:* the types are not placed by the language network
+  beyond one modest effect each way, and with a naming task that is expected — the atlas
+  subtracts exactly the perception and articulation systems the task drives. (Decide: a
+  results slide or a limitation line.)
 - **Generalisation.** At the chosen K no cluster is one patient; leave-one-patient-out
   placement tracks electrode count (ρ −0.52) more than shared coverage (ρ +0.36, p 0.055):
   holding a patient out removes REGIONS, not a random sample. *Sentence:* what fails to
@@ -197,15 +200,15 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
 | Loading display rule | **Decided 2026-10-26: the 0.3 cut everywhere, applied.** An electrode below a loading of 0.30 on the cluster shown is not drawn (FIG 1 renders, the graphical abstract, FIG 3 A); above it the ramps stay: greyer and smaller for a smaller loading, full colour from 0.5, full size from 0.7 (one constant, `LOAD_CUT`). The site's visualizer still draws everything; it is not a paper figure. | Done. Redraw FIG 1a–d, the abstract and FIG 3. |
 | Which loading file | the figures read the K-sweep loadings (1000 iterations: own loading median 0.41, range 0.20–0.88, 15.5 % below 0.3); the outline's "median top loading 0.48, 27 % ≥ 0.5" was read from another fit | Quote the sweep numbers and fix the outline line. |
 | LanA thresholds | 0.1 and 0.2 | Show 0.1 in the talk, keep 0.2 in the table. |
-| Null sizes | FIG 2 1000 permutations; FIG 3 5000 + 5000, 2000 bootstraps; FIG 3b 5000 spins (to run); FIG 4 5000 at K 7 / 10, 1000 at K 8; FIG 5 1000 | Rerun FIG 4 K 8 at 5000 so one sentence covers FIG 4. |
+| Null sizes | FIG 2 1000 permutations; FIG 3 5000 + 5000, 2000 bootstraps; FIG 3b 5000 spins (done 20:41); FIG 4 5000 at K 7 / 10, 1000 at K 8; FIG 5 1000 | Rerun FIG 4 K 8 at 5000 so one sentence covers FIG 4. |
 | Stars | `*` shaft-shift, `(*)` within-patient | Keep; say "spatial null" and "within-patient null" aloud. |
 | Type names | provisional readings of the centroids (mine, not yours) | Name them before the talk; the graphical abstract carries them. |
 | Hemisphere | LanA is left-lateralised; 715 left vs 872 right electrodes | One line whenever FIG 3 is shown; FIG 3b has the left-only strip. |
 | Time axis | warped 0 / 0.5 / 0.5, cue at bin 150, baseline −0.4…−0.1 s, ±7 dB cube scale | State once on the first ERSP slide. |
 | What enters from 249 | silhouette vs the Gaussian cloud, LOPO, patient composition | The composition bar (FIG 1 B) and FIG 1 D only. |
 
-Still to run before the slides (screen unlocked for the brains): FIG 1a–d, the graphical
-abstract and FIG 3 under the cut; FIG 3b at 5000 spins; FIG 4 K 8 at 5000 if you take that row.
+Run 2026-10-26 20:37–20:41: FIG 1a–d, the graphical abstract and FIG 3 under the cut, FIG 3b at
+5000 spins. Still open: FIG 4 K 8 at 5000, if you take that row.
 
 ---
 
