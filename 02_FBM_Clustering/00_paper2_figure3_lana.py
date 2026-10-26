@@ -60,7 +60,6 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 from scipy.stats import spearmanr, gaussian_kde
 
@@ -91,12 +90,9 @@ N_BOOT = 1000
 # threshold. 0.1 is the partition the atlas runs on disk use (thr0p1); 0.2 is the
 # core of the network. Both are drawn, so the choice is visible rather than hidden.
 THRESHOLDS = (0.10, 0.20)
-# panel A's electrodes (Lora, 2026-10-26): the point greys as the electrode's
-# normalised loading on its cluster decreases - full colour from LOAD_FULL, grey at
-# LOAD_GREY (the smallest an argmax loading can be is 1/K; 0.2 is the floor of the
-# v17 fits). The second PNG draws the points below LOAD_HOLLOW as outlines instead.
-LOAD_GREY, LOAD_FULL, LOAD_HOLLOW = 0.20, 0.60, 0.30
-PT_GREY = "#aeb4bb"
+# THE 0.3 CUT (Lora, 2026-10-26), the one constant FIG 1's renders use: a point below it
+# is hollow, at or above it filled with the cluster colour. Display only.
+LOAD_CUT = P2.LOAD_CUT
 
 
 def tkey(t):
@@ -362,18 +358,12 @@ def own_loading(d):
     return d["Gn"][np.arange(len(d["lab"])), d["lab"]]
 
 
-def fade(col, f):
-    """`col` blended toward PT_GREY: f = 1 is the colour, f = 0 the grey."""
-    c, g = np.asarray(mcolors.to_rgb(col)), np.asarray(mcolors.to_rgb(PT_GREY))
-    return tuple(g + (c - g) * float(np.clip(f, 0.0, 1.0)))
-
-
-def panel_rank(ax, R, d, chars, ext, style="fade"):
+def panel_rank(ax, R, d, chars, ext):
     """A: one violin per cluster of P(LanA) over its electrodes, every electrode a point,
-    clusters ranked by the mean. style 'fade': the point greys as the electrode's loading
-    on the cluster decreases; style 'hollow': below LOAD_HOLLOW the point is an outline
-    only. The mean, its patient bootstrap, the two nulls and the stars are the same
-    statistics the bars carried until 2026-10-26."""
+    clusters ranked by the mean. A point below LOAD_CUT is an outline only, at or above
+    it filled with the cluster colour - the cut every figure applies. The mean, its
+    patient bootstrap, the two nulls and the stars are the same statistics the bars
+    carried until 2026-10-26."""
     K = d["k"]
     P, has, lab = d["P_lana"], d["has"], d["lab"]
     own = own_loading(d)
@@ -397,16 +387,10 @@ def panel_rank(ax, R, d, chars, ext, style="fade"):
         # body is drawn from, so a point never lands outside the violin
         dens = gaussian_kde(v)(v)
         xs = i + rng.uniform(-1.0, 1.0, len(v)) * (0.37 * dens / dens.max())
-        o = np.argsort(w)                           # weak members first, strong on top
-        xs, v, w = xs[o], v[o], w[o]
-        if style == "hollow":
-            hol = w < LOAD_HOLLOW
-            ax.scatter(xs[hol], v[hol], s=9.0, facecolors="none", edgecolors=[col],
-                       linewidths=0.55, zorder=3)
-            ax.scatter(xs[~hol], v[~hol], s=7.5, color=col, lw=0, zorder=3)
-        else:
-            f = (w - LOAD_GREY) / (LOAD_FULL - LOAD_GREY)
-            ax.scatter(xs, v, s=7.5, c=[fade(col, fi) for fi in f], lw=0, zorder=3)
+        hol = w < LOAD_CUT
+        ax.scatter(xs[hol], v[hol], s=9.0, facecolors="none", edgecolors=[col],
+                   linewidths=0.55, zorder=3)
+        ax.scatter(xs[~hol], v[~hol], s=7.5, color=col, lw=0, zorder=3)
         # the statistics, as before: the mean with its patient bootstrap, the two nulls
         ax.plot([i - 0.27, i + 0.27], [r.mean_P, r.mean_P], color=INK, lw=1.7, zorder=6)
         ax.plot([i, i], [r.mean_P_lo, r.mean_P_hi], color=INK, lw=1.0, zorder=6)
@@ -426,41 +410,27 @@ def panel_rank(ax, R, d, chars, ext, style="fade"):
     ax.tick_params(labelsize=7.4, colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
     # the key to the points, top right, where no violin reaches
-    if style == "hollow":
-        ax.scatter([0.70], [0.965], s=14, facecolors="none", edgecolors=[INK],
-                   linewidths=0.6, transform=ax.transAxes, clip_on=False)
-        ax.scatter([0.70], [0.915], s=12, color=INK, lw=0, transform=ax.transAxes,
-                   clip_on=False)
-        ax.text(0.73, 0.965, f"loading < {LOAD_HOLLOW:.1f}", transform=ax.transAxes,
-                va="center", fontsize=6.4, color=MUTED)
-        ax.text(0.73, 0.915, f"loading \u2265 {LOAD_HOLLOW:.1f}", transform=ax.transAxes,
-                va="center", fontsize=6.4, color=MUTED)
-    else:
-        fs = np.linspace(0.0, 1.0, 6)
-        ax.scatter(0.62 + 0.05 * np.arange(6), np.full(6, 0.955), s=12,
-                   c=[fade(INK, fi) for fi in fs], lw=0, transform=ax.transAxes,
-                   clip_on=False)
-        ax.text(0.62, 0.915, f"loading {LOAD_GREY:.1f}", transform=ax.transAxes,
-                ha="left", va="center", fontsize=6.4, color=MUTED)
-        ax.text(0.87, 0.915, f"{LOAD_FULL:.1f}+", transform=ax.transAxes, ha="right",
-                va="center", fontsize=6.4, color=MUTED)
+    ax.scatter([0.70], [0.965], s=14, facecolors="none", edgecolors=[INK],
+               linewidths=0.6, transform=ax.transAxes, clip_on=False)
+    ax.scatter([0.70], [0.915], s=12, color=INK, lw=0, transform=ax.transAxes,
+               clip_on=False)
+    ax.text(0.73, 0.965, f"loading < {LOAD_CUT:.1f}", transform=ax.transAxes,
+            va="center", fontsize=6.4, color=MUTED)
+    ax.text(0.73, 0.915, f"loading \u2265 {LOAD_CUT:.1f}", transform=ax.transAxes,
+            va="center", fontsize=6.4, color=MUTED)
     thin = [f"c{int(r.cluster)}" for _, r in R.iterrows() if r.coverage < MIN_COVERAGE]
-    n_h = int((own[has] < LOAD_HOLLOW).sum())
-    how = (f"Points with a normalised loading below {LOAD_HOLLOW:.1f} are hollow, from "
-           f"{LOAD_HOLLOW:.1f} filled: {n_h} of {int(has.sum())} electrodes "
-           f"({100*n_h/max(int(has.sum()), 1):.0f}%) are hollow."
-           if style == "hollow" else
-           f"Colour = the electrode's normalised loading on its cluster (its share of "
-           f"the K loadings): full colour from {LOAD_FULL:.1f}, grey at {LOAD_GREY:.1f}.")
+    n_h = int((own[has] < LOAD_CUT).sum())
     ax.text(0, -0.20, _wrap(
         f"One violin per cluster of P(LanA) over its electrodes, ranked by the mean, "
-        f"every electrode a point. {how} Short dark line = the mean, whiskers a 95% "
-        f"interval from bootstrapping PATIENTS; dotted = the cohort mean "
-        f"({R.baseline_P.iloc[0]:.3f}). Two nulls on the mean: the dark dash rolls each "
-        f"electrode's cluster along its own SHAFT, keeping the smoothness that makes "
-        f"neighbours alike (*); the pale dash shuffles within patient, which destroys "
-        f"it and is too easy to beat ((*) = passes only that one). Benjamini-Hochberg "
-        f"over {K}; % over each violin = coverage"
+        f"every electrode a point. Points with a normalised loading below {LOAD_CUT:.1f} "
+        f"on their cluster are hollow, from {LOAD_CUT:.1f} filled: {n_h} of "
+        f"{int(has.sum())} electrodes ({100*n_h/max(int(has.sum()), 1):.0f}%) are hollow. "
+        f"Short dark line = the mean, whiskers a 95% interval from bootstrapping PATIENTS; "
+        f"dotted = the cohort mean ({R.baseline_P.iloc[0]:.3f}). Two nulls on the mean: "
+        f"the dark dash rolls each electrode's cluster along its own SHAFT, keeping the "
+        f"smoothness that makes neighbours alike (*); the pale dash shuffles within "
+        f"patient, which destroys it and is too easy to beat ((*) = passes only that "
+        f"one). Benjamini-Hochberg over {K}; % over each violin = coverage"
         + (f"; {', '.join(thin)} fall{'' if len(thin) > 1 else 's'} below "
            f"{100*MIN_COVERAGE:.0f}% and {'their means are' if len(thin) > 1 else 'its mean is'} "
            f"not comparable with the rest." if thin else "."),
@@ -837,12 +807,6 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     p = OUT / f"FIG3_lana_{fset}_K{k}{_rt}.png"
     P2.stamp(fig, d)
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
-    # the second version of the page (Lora, 2026-10-26): panel A's points hollow below
-    # LOAD_HOLLOW instead of fading; everything else, the brains included, as drawn
-    axA.cla()
-    panel_rank(axA, R, d, 66, ext, style="hollow")
-    P2.save_png(fig, p.with_name(p.stem + "_hollow.png"), dpi=190, bbox_inches="tight",
-                facecolor="white")
     plt.close(fig)
     P2.save_text(R.to_csv(index=False), p.with_name(p.stem + "_clusters.csv"))
     P2.save_text(pd.DataFrame(dict(
@@ -963,11 +927,12 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("PANEL A - P(LanA) of every electrode, clusters ranked by the mean")
     A("-" * 100)
     A("One violin per cluster over its electrodes' P_lana, every electrode a point, ranked")
-    A("by the mean (the short dark line, with its patient-bootstrap interval). Point colour")
-    A("= the electrode's normalised loading on the cluster, its share of the K loadings:")
-    A(f"full colour from {LOAD_FULL:.1f}, grey at {LOAD_GREY:.1f}. The _hollow.png version of the page")
-    A(f"draws the points below {LOAD_HOLLOW:.1f} as outlines instead: {int((own[d['has']] < LOAD_HOLLOW).sum())} "
-      f"of {int(d['has'].sum())} electrodes ({100*float((own[d['has']] < LOAD_HOLLOW).mean()):.0f}%).")
+    A("by the mean (the short dark line, with its patient-bootstrap interval). A point is")
+    A(f"hollow below a normalised loading of {LOAD_CUT:.2f} on its cluster (its share of the K")
+    A(f"loadings) and filled with the cluster colour from {LOAD_CUT:.2f}: {int((own[d['has']] < LOAD_CUT).sum())} "
+      f"of {int(d['has'].sum())} electrodes ({100*float((own[d['has']] < LOAD_CUT).mean()):.0f}%) are hollow -")
+    A("the cut FIG 1's renders apply too (grey below, full colour above). Display only:")
+    A("every count and test uses the argmax membership.")
     A("Dark dash = the shaft-shift null, pale dash = the within-patient null, dotted line =")
     A("the cohort mean, % over each violin = coverage.")
     A(f"  own-cluster loading   min {own.min():.3f}   median {np.median(own):.3f}   "

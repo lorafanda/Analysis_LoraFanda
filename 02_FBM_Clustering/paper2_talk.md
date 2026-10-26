@@ -161,7 +161,7 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
   bands keeps 0.90 of its partition from K 7 to 8. *Sentence:* the partition is stable in K and
   far from chance everywhere.
 - **FIG 3 — where the types sit (LanA).** New panel A: violins of P(LanA) per cluster, every
-  electrode a point greyed by its loading (second file: hollow below 0.3). Cohort mean 0.142;
+  electrode a point, hollow below a loading of 0.3. Cohort mean 0.142;
   c1 0.207 beats only the within-patient null (q 0.001; shaft-shift q 0.37); c1 and c5 keep 55 %
   of their electrodes inside the network at P ≥ 0.1 vs 41 % in the cohort, c0 and c6 32–33 %;
   nothing beats the shaft-shift null. FIG 3b (spin null, dry run): no cluster beyond a rotated
@@ -180,7 +180,7 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
 |---|---|---|
 | K | 7 / 8 / 10 / 6 by the dominance rule; cross-method figures at K 7 | Keep. Show the held-out peaks only as the triangle on FIG 1A. |
 | Membership used in every count and test | argmax of the sum-normalised loadings (FIG 1 sizes, FIG 2–5, FIG 3 tests) | Keep; the loading changes how an electrode is DRAWN, never a number. Say so once. |
-| Loading display rule | FIG 1 and the visualizer: grey at 1/K, full colour at 0.5, size to 0.7, opacity floor 0.1. FIG 3 A (today): grey at 0.2, full at 0.6; the hollow file cuts at 0.3 | One rule everywhere electrodes are drawn: either FIG 1's (full colour at 0.5) or the 0.3 cut. Not both thresholds in one talk. If 0.3 is the rule, FIG 3 A keeps the hollow file and FIG 1's renders need the same cut (one constant, COLOR_FULL). |
+| Loading display rule | **Decided 2026-10-26: the 0.3 cut everywhere, applied.** FIG 1 renders and the graphical abstract: full cluster colour, full radius and opaque at a loading ≥ 0.30 on the cluster shown, grey and faint below (one constant, `LOAD_CUT`). FIG 3 A: filled above, hollow below. The site's visualizer still ramps at 0.5; it is not a paper figure. | Done. Redraw FIG 1a–d, the abstract and FIG 3. |
 | Which loading file | the figures read the K-sweep loadings (1000 iterations: own loading median 0.41, range 0.20–0.88, 15.5 % below 0.3); the outline's "median top loading 0.48, 27 % ≥ 0.5" was read from another fit | Quote the sweep numbers and fix the outline line. |
 | LanA thresholds | 0.1 and 0.2 | Show 0.1 in the talk, keep 0.2 in the table. |
 | Null sizes | FIG 2 1000 permutations; FIG 3 5000 + 5000, 2000 bootstraps; FIG 3b 5000 spins (to run); FIG 4 5000 at K 7 / 10, 1000 at K 8; FIG 5 1000 | Rerun FIG 4 K 8 at 5000 so one sentence covers FIG 4. |
@@ -190,8 +190,8 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
 | Time axis | warped 0 / 0.5 / 0.5, cue at bin 150, baseline −0.4…−0.1 s, ±7 dB cube scale | State once on the first ERSP slide. |
 | What enters from 249 | silhouette vs the Gaussian cloud, LOPO, patient composition | The composition bar (FIG 1 B) and FIG 1 D only. |
 
-Still to run before the slides: your redraw of FIG 3 (`--n-perm 5000 --n-boot 2000`, screen
-unlocked), FIG 3b at 5000 spins, FIG 4 K 8 at 5000 if you take that row.
+Still to run before the slides (screen unlocked for the brains): FIG 1a–d, the graphical
+abstract and FIG 3 under the cut; FIG 3b at 5000 spins; FIG 4 K 8 at 5000 if you take that row.
 
 ---
 
