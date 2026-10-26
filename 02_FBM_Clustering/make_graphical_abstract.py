@@ -135,7 +135,7 @@ def numbers():
 def tile(fig, x, y, w, h):
     ax = fig.add_axes([x, y, w, h])
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    ax.add_patch(FancyBboxPatch((0, 0), 1, 1, boxstyle="round,pad=P2.pw(0),rounding_size=0.035",
+    ax.add_patch(FancyBboxPatch((0, 0), 1, 1, boxstyle="round,pad=0,rounding_size=0.035",
                                 fc=TILE_BG, ec=TILE_EC, lw=P2.pw(1.2), transform=ax.transAxes,
                                 clip_on=False))
     return ax
