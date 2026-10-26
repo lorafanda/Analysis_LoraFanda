@@ -1,0 +1,11 @@
+{
+ "symmetric_in_range": true,
+ "min_cosample": 101,
+ "cosample_ok": true,
+ "x_md5": {
+  "kmeans": "af460de0aefbf42ed7f470a74c98540f",
+  "hierarchical": "af460de0aefbf42ed7f470a74c98540f",
+  "cnmf": "af460de0aefbf42ed7f470a74c98540f"
+ },
+ "x_md5_identical": true
+}

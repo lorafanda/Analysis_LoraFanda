@@ -5,6 +5,9 @@ Written 2026-10-26 from the v17 figures, `paper2_outline.md`, `paper2_figure_met
 patients, runs of 2026-10-17) unless marked. Section 4 ends with the decisions that make the
 figures say one thing consistently; those are yours.
 
+Updated 2026-10-26 evening from the gate/consensus chat: the consensus sweep (methods 8, results 4.3,
+slides 7 / 9 / 11 / 12), two annotated papers in 2.1, the merge state of the two chats in section 6.
+
 ---
 
 ## 1 · Objectives
@@ -42,7 +45,8 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
 | Paper | What it gave this paper |
 |---|---|
 | **Yu, Dugan, Doyle, Devinsky, Friedman & Flinker 2025**, bioRxiv 2024.05.15.594403 — *A left-lateralized dorsolateral prefrontal network for naming* | The closest sibling: 48 patients, NMF on epochs glued end to end (perception, pre-articulation, articulation), five networks. Same move as ours (audio, picture and reading concatenated, so a cluster is a shape ACROSS conditions). Where we differ, and must say why: they use high gamma only (our worst-generalising set), choose K by the elbow of in-sample R², and validate on a second cohort of 23 patients, which we do not have. |
-| **Regev, Casto, … Fedorenko 2024**, Nat Hum Behav 8:1924 — *Neural populations in the language network differ in the size of their temporal receptive windows* | k-medoids on high-gamma time courses of 177 language electrodes (6 ECoG patients), k = 3 by an elbow, validated by split-half permutation, electrode-omission robustness and a replication set. Good practice adopted: every cluster shown per participant; split-half reliability as a possible filter before K. Caution kept: an elbow is a visual heuristic with no null; removing random electrodes never removes a patient. |
+| **Regev, Casto, … Fedorenko 2024**, Nat Hum Behav 8:1924 — *Neural populations in the language network differ in the size of their temporal receptive windows* | k-medoids on high-gamma time courses of 177 language electrodes (6 ECoG patients), k = 3 by an elbow, validated by split-half permutation, electrode-omission robustness and a replication set. Good practice adopted: every cluster shown per participant; split-half reliability as a possible filter before K. Caution kept: an elbow is a visual heuristic with no null; removing random electrodes never removes a patient. Annotated copy `s41562-024-01944-2_annotated.pdf` (33 comments, 2026-10-26): their elbow gives k 2 on the second dataset, their permutation null tests reproducibility of the centres rather than k, electrodes enter at uncorrected p < 0.05; medoids of Clusters 1 and 2 correlate at 0.68, so a continuum is not excluded, the same limitation as ours. |
+| **Ervin, Asano & Crone 2026**, J Clin Neurophysiol 00:1–10 (invited review) — *Passive language mapping with high-gamma modulations* | The field's practice, read as a checklist against our pipeline (annotated copy `passive-language-mapping-with-high-gamma-modulations_annotated.pdf`, 31 comments). It validates method choices, not clusters: nothing in it concerns response types. We follow what it recommends: each trial normalised to its own baseline on log power before averaging (verified in `lf_ersp.compute_ersp`), trials aligned by photodiode / microphone / DC inputs, several tasks, patient-aware statistics, standard-space localisation; 29 patients against the typical 22 of 2025. Bars it sets that we must state: white-matter reference where bipolar is the sEEG norm; evoked and induced power not separated; a 300 ms baseline (−0.4…−0.1 s) against the 400–2500 ms it surveys; seizure-onset-zone and lesion exclusion to verify. Where we go beyond the surveyed field, citably: most studies collapse the time–frequency plane to one high-gamma series or one window, and the high-gamma band has no agreed bounds and is task specific (Gruenwald 2023); we keep the plane and compare feature sets. HGM finds involved sites, ESM critical ones: our gated electrodes are involved sites, never "critical". |
 | **Mercier et al. 2022**, NeuroImage 260:119438 — iEEG guidelines | The field's own statement of our limitation: whether a cortical location can be shown to generalise depends on "whether that particular cortical location is frequently targeted by intracranial surgery" (p. 41). Aggregate on anatomy first (p. 43); grouping electrodes by an INDEPENDENT functional localiser is allowed and not circular (p. 43) — LanA is such a localiser; the smoothing radius is "an empirical question" (p. 41). |
 | **Conrad, Bernabei et al. 2020**, Netw Neurosci 4:484 — sensitivity of network statistics to incomplete sampling | Robustness tracks how much was implanted, not only what the brain does; contiguous removal hurts more than random removal (our shaft-wise null); stratify patients by sampling adequacy rather than weight them. |
 | **Kochi et al. 2026**, NeuroImage 340:122236 — whole-brain effective connectivity of auditory and visual naming | 127 patients, 9526 electrodes, the same two naming conditions. The operational answer to thin coverage is a FLOOR (ROIs sampled in > 20 patients, > 70 electrodes) and a population-level framing; leave-one-patient-out reported with ρ 0.95–0.99 on ROI aggregates. |
@@ -95,7 +99,12 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
 4. **The activity gate.** An electrode-condition passes with ≥ 2 % of bins above +2.2 dB or
    ≥ 4 % below −3.0 dB, thresholds raised to 2 × the noise of the trial average where that is
    larger (noise = sd(half1 − half2)/2; median 0.90 dB; raised on 559 of 8751 rows). An
-   electrode enters if any condition passes: 2935 rows pass, 1587 electrodes.
+   electrode enters if any condition passes: 2935 rows pass, 1587 electrodes. In the language of
+   cluster-based statistics the threshold is a cluster-forming threshold (2 noise SD with a floor);
+   the v18 blob rule under test adds hysteresis thresholding scored by cluster mass (Canny 1986;
+   Vincent 1993; Bullmore 1999; Maris & Oostenveld 2007), TFCE (Smith & Nichols 2009) being the
+   published generalisation if asked why one δ. Adjustable live in the LM visualizer's gate window
+   (key v).
 5. **Feature sets.** Time 300 → 30 bins per block (anti-aliased resize, never across a block
    boundary); bands 15 (1–400 Hz) / 5 / 2 (30–50, 70–150 Hz) / HFA (70–150 Hz) × 30 × 3 =
    1350 / 450 / 180 / 90 features; every electrode's vector scaled to unit length, so distance
@@ -109,8 +118,11 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
    with no such cluster: 7 / 8 / 10 / 6 (15 bands / 5 bands / 2 bands / HFA). Cross-method
    figures at K 7 on 15 bands.
 8. **Stability.** 50 refits on 80 % subsamples per run (Jaccard, PAC) = the ceiling in FIG 2;
-   patient-resampled consensus with a covariance-matched Gaussian null written
-   (`consensus_stability.py`), not yet run.
+   patient-resampled consensus (`consensus_stability.py`, run 2026-10-26, 12 cells, 12 h): 80 % of
+   the patients per draw without replacement, 200 draws per K, K 2–12, consensus matrix M, PAC
+   (share of pairs with 0.1 < M < 0.9), null = the Gaussian cloud with the data's covariance
+   (25 draws × 50 iterations), RCSI = log PAC_null − log PAC_real, a cluster with > 50 % of its
+   electrodes from one patient flagged. Results in 4.3.
 9. **Agreement and correspondence.** ARI / NMI between partitions, per-electrode modal
    agreement after Hungarian matching against 1000 permutations (FIG 2); every cluster
    described in the shared 5-band space, matched by Pearson r, overlap as Jaccard against
@@ -155,7 +167,9 @@ Screened systematically (ASReview, July 2026): `FBM_Paper2_language` 599 records
   algorithms vs 14 % random; 21–60 % between feature sets (HFA lowest); 36 of 42 matched pairs
   clear both nulls; c2 found by every algorithm (Jaccard 0.83 k-means, 0.64 Ward), c1 missed by
   both, c3 and c5 by Ward. *Sentence:* the broadband decrease and the production type are the
-  robust ones; the low-frequency types are the fragile ones.
+  robust ones; the condition-specific low-frequency types (c1 audio, c3 reading) are the fragile
+  ones. Under patient resampling (4.3) the shared low-frequency rise c4 is the MOST stable type,
+  so do not say "low-frequency types are fragile" without the qualifier.
 - **FIG 5 — twelve solutions against each other.** 66 pairs, median diagonal share 0.55 (same
   set, different algorithm) / 0.38 / 0.36, chance 0.18, no pair at chance; K by K, cNMF on 15
   bands keeps 0.90 of its partition from K 7 to 8. *Sentence:* the partition is stable in K and
@@ -195,12 +209,82 @@ abstract and FIG 3 under the cut; FIG 3b at 5000 spins; FIG 4 K 8 at 5000 if you
 
 ---
 
+### 4.3 · Consensus under patient resampling (sweep finished 2026-10-26 13:24)
+
+Files: `outputs/clustering/consensus/concat_source_v17/SUMMARY.md` (every cell), the slide figure
+`consensus_bands15_cnmf_K7_slide.png` beside it (A consensus matrix at K 7 grouped by published
+cluster, B per-type consensus, C PAC vs the Gaussian cloud over K), per-cell `heatmap_k07.png` and
+`pac_rcsi.png`.
+
+- **The main cell, 15 bands × cNMF at K 7.** PAC 0.234 against 0.428 ± 0.031 for the Gaussian
+  cloud (RCSI 0.61), below all 25 surrogate draws (p 0.04 is the floor of 25 draws; say "below
+  every draw", not "p 0.04"); no cluster more than half one patient (worst 39 % PAT_3965 in the
+  broadband decrease, FIG 1 says 36 % for the single fit). K 6 fails the rule (59 % PAT_3975 in
+  one cluster); K 8 and above fail with a cluster that is 100 % PAT_3455. The consensus partition
+  at K 7 reproduces the published one (ARI 0.83, near one-to-one mapping); mean cluster consensus
+  0.73. *Sentence (slide 7):* under patient resampling the K 7 solution is more stable than a
+  Gaussian cloud with the data's covariance, and K 7 sits between a K where one patient owns
+  half a cluster and a K where one patient owns a whole one.
+- **Per type (electrodes keep their published label; mean consensus with the cluster they land
+  in):** c4 low-frequency rise 0.82 > c2 broadband decrease 0.79 > c5 production 0.78 > c6
+  response-period fall 0.75 > c0 beta decrease 0.72 > c1 audio-stimulus 0.64 > c3 reading-stimulus
+  0.59 (27 % of c3's electrodes with a margin below 0.2; 0.6 is the usual "unstable" line).
+  *Sentence (slide 9):* the same side as FIG 4, with one correction: the condition-specific
+  low-frequency types are the fragile ones, the shared low-frequency rise is the most stable.
+- **Per patient at K 7:** PAT_3455 least stable (0.58; 31 % of its electrodes below 0.5), then
+  EL051 0.60, EL038 0.64, PAT_6619 0.65; EL052, PAT_3965 and PAT_5515 most (0.85–0.86). Consensus
+  tracks leave-one-patient-out placement (Spearman ρ 0.41, p 0.026 in the pilot cell). *Sentence
+  (slide 11):* the least stable patient is the one with the broadband burst.
+- **Do NOT show.** (i) The script's "chosen K" column: by its own criterion (largest RCSI among
+  dominance-clean K) it prefers coarse solutions, K 3–4 in nine of twelve cells and K 4 on the main
+  cell (RCSI 0.70, not below the draws, p 0.23). It neither overturns nor singles out K 7; present
+  consensus as support for the K 7 solution, not as a K selector. (ii) Consensus support for the
+  other feature sets: at their published K (8 / 10 / 6) the consensus partitions of 5 bands,
+  2 bands and HFA each isolate PAT_3455 in one cluster (97–100 %), although the single fits passed
+  the dominance rule there; HFA at K 6 is not more stable than the cloud (RCSI −0.42 / −0.04 /
+  −0.01 for k-means / Ward / cNMF). Keep "7 / 8 / 10 / 6" as the single-fit rule and claim
+  resampling support for 15 bands × cNMF only. (iii) The feature-set order by consensus: HFA looks
+  best only because its chosen K is 2–3.
+- **Cross-method agreement of the consensus partitions at K 7 on 15 bands:** k-means vs cNMF 0.49,
+  k-means vs Ward 0.41, Ward vs cNMF 0.27 (single fits 0.51 / 0.33 / 0.26). Same picture as FIG 2;
+  no slide.
+
 ## 5 · A slide order that follows the four sections
 
 1. Title. 2. The clinical hook and the gap (ESM vs passive maps; where, not what). 3. The
 objective in one sentence. 4. Task and cohort (FIG 0). 5. The six design decisions and the
 papers behind them (the table of 2.1, shortened). 6. From raw signal to cube to gate (FIG S0,
-P.2–P.4). 7. Features, convex NMF, choosing K (FIG 1 A + D). 8. The seven types (FIG 1a B).
-9. What survives (FIG 2; one panel of FIG 4 or FIG 5). 10. Where they sit (FIG 3 A + B; FIG 3b
-as backup). 11. Limitations (coverage, leave-one-patient-out, warped time, references).
-12. Next (v18 cache with the blob gate, consensus stability, the names).
+P.2–P.4). 7. Features, convex NMF, choosing K (FIG 1 A + D; one line from 4.3: K 7 is more stable than the
+Gaussian cloud under patient resampling and boxed in by patient-owned clusters at K 6 and K 8;
+backup = `consensus_bands15_cnmf_K7_slide.png`). 8. The seven types (FIG 1a B).
+9. What survives (FIG 2; one panel of FIG 4 or FIG 5; the per-type consensus line from 4.3 with
+the c4 qualifier). 10. Where they sit (FIG 3 A + B; FIG 3b as backup). 11. Limitations (coverage,
+leave-one-patient-out, warped time, references; PAT_3455 the least stable patient; from the Crone
+review: white-matter reference where bipolar is the norm, evoked and induced power not separated,
+300 ms baseline). 12. Next (v18 cache with the blob gate = hysteresis thresholding scored by
+cluster mass, adjustable in the LM visualizer; the names; the consensus numbers into the methods
+docx). Slide 6 may carry one line from the Crone review: per-trial baseline normalisation on log
+power and sensor-based alignment are the recommended practice.
+
+---
+
+## 6 · Merge state of the two chats (2026-10-26 evening)
+
+Both chats write to this same checkout, so this file is the merge point for the talk; nothing has
+to be copied between them. Who owns what:
+
+- **Figure chat.** FIG 0–5 and the graphical abstract on v17, the 0.3 loading cut, FIG 3b at 5000
+  spins, FIG 4 K 8 at 5000, the type names, the slides. Still to run before the slides: the list at
+  the end of 4.2.
+- **Gate/consensus chat (2026-10-19 → 26).** The consensus sweep and its summary
+  (`outputs/clustering/consensus/concat_source_v17/SUMMARY.md`, slide figure
+  `consensus_bands15_cnmf_K7_slide.png`); the LM visualizer's gate window on the site (key v: share
+  rule / blob rule with δ, separate bounds per sign, equation line, per-condition verdicts, border
+  band, score-vs-reliability / shape / extent plots); `paper2_figure_methods.docx` tracked changes
+  by author "Claude": 4.1–4.2 gating (score = cluster mass, α removed, the hysteresis / cluster-mass
+  / TFCE literature) and the new 3.5 consensus section with eqs (3.5)–(3.8); the two annotated PDFs
+  on the Desktop (2.1).
+- **Owed after the talk, not before.** The docx "Reading" subsection with the sweep's numbers
+  (4.3); a consensus bullet in `paper2_outline.md` and the outline tab regen; the LM review bundle
+  on v17 (the gate window shows the dataset's numbers only after the rebuild); the v18 blob gate
+  once min⁺ / min⁻ in dB·% and replace-vs-coexist are decided.

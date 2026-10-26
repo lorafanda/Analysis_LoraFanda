@@ -1,0 +1,35 @@
+{
+ "feature_set": "concat_bands15",
+ "method": "cnmf",
+ "cache": "concat_source_v17",
+ "runs": {
+  "kmeans": "\\\\nasac-m2.unige.ch\\m-HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda\\02_FBM_Clustering\\outputs\\clustering\\kmeans\\concat_bands15\\runs\\20261017_192459",
+  "hierarchical": "\\\\nasac-m2.unige.ch\\m-HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda\\02_FBM_Clustering\\outputs\\clustering\\hierarchical\\concat_bands15\\runs\\20261017_193312",
+  "cnmf": "\\\\nasac-m2.unige.ch\\m-HumanNeuronLab\\ANALYSIS\\FLM\\Analysis_LoraFanda\\02_FBM_Clustering\\outputs\\clustering\\cnmf\\concat_bands15\\runs\\20261017_194301"
+ },
+ "n_electrodes": 1587,
+ "n_patients": 29,
+ "ks": [
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12
+ ],
+ "H": 200,
+ "null_draws": 25,
+ "null_H": 50,
+ "frac": 0.8,
+ "seed": 0,
+ "k_current": 7,
+ "k_chosen": 4,
+ "k_unconstrained": 4,
+ "seconds": 10716.5,
+ "written": "2026-10-26 04:47:02"
+}
