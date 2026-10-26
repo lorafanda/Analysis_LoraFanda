@@ -653,9 +653,10 @@ def cross_cell(root: Path, a, log):
             L.append("clusters by consensus m(k): " + ", ".join(f"c{c['cluster']} n={c['n']} m={c['m']:.2f}" + (" UNSTABLE" if c["m"] < UNSTABLE else "") for c in at["cluster_table"]))
             if at.get("named_patients"):
                 L.append("named patients (rank of mean own-cluster consensus, of all patients; value): " + ", ".join(f"{p} #{v[0]} ({v[1]:.2f})" for p, v in at["named_patients"].items()))
-            if at.get("spearman_patient_consensus_vs_lopo_acc"):
-                s = at["spearman_patient_consensus_vs_lopo_acc"]
-                L.append(f"per-patient consensus vs LOPO placement accuracy at the current K: Spearman rho = {s['rho']:.2f} (p = {s['p']:.3f}, n = {s['n']})")
+            atc = r["at_k"].get(str(mf["k_current"])) or r["at_k"].get(mf["k_current"]) if mf.get("k_current") is not None else None
+            if atc and atc.get("spearman_patient_consensus_vs_lopo_acc"):       # computed at the current K, where the LOPO table exists
+                s = atc["spearman_patient_consensus_vs_lopo_acc"]
+                L.append(f"per-patient consensus vs LOPO placement accuracy at the current K = {mf['k_current']}: Spearman rho = {s['rho']:.2f} (p = {s['p']:.3f}, n = {s['n']})")
             d = at.get("dominance")
             if d:
                 L.append(f"patient dominance at the chosen K: worst cluster c{d['cluster']} has {100 * d['top_share']:.0f} % of its {d['n']} electrodes from {d['top_patient']}")
