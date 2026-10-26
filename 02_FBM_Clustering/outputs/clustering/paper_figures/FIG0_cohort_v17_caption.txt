@@ -65,7 +65,7 @@ PROVENANCE
   gate params     outputs/_dataset/concat_source_v17/params.json
   coordinates     outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
   exemplars       EXEMPLARS in 00_paper2_figure0_coverage.py
-  built on        2026-10-21 22:29
+  built on        2026-10-26 01:58
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------

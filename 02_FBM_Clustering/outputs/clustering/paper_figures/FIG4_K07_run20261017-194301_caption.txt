@@ -16,4 +16,4 @@ k-means vs Ward: matched r +0.81 against -0.13 for unmatched pairs; mean adjuste
 15 bands vs HFA: matched r +0.39 against -0.06 for unmatched pairs; mean adjusted overlap 0.05 (raw Jaccard 0.13); 2 of 7 pairs above the free null, 3 above the within-patient null; diagonal share 0.21 of 1587 electrodes against 0.14 +- 0.04 for random pairings (z 1.6, p = 0.059). Runs 20261017_194301 and 20261017_200121.
 
 Dots mark clusters more than half held by one patient: hierarchical on concat_bands15 c3 (99%); cnmf on concat_hfa c2 (79%). The within-patient null cannot move a cluster confined to a single patient, so its sd is zero and its z undefined; such a pair is reported without a within-patient p rather than with a p of 1.
-Written 2026-10-25 18:32 from FIG4_matched_K07.csv.
+Written 2026-10-26 02:03 from FIG4_matched_K07.csv.

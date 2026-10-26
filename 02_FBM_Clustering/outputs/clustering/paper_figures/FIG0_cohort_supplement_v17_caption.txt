@@ -114,7 +114,7 @@ PROVENANCE
                   is_micro_electrode, lf_concat.DEFAULT_EXCLUDE_PATIENTS
   coordinates     outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
   atlas           lana_all/20261019_pbins
-  built on        2026-10-21 22:29
+  built on        2026-10-26 01:59
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
