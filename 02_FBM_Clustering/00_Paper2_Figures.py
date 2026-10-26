@@ -1222,9 +1222,10 @@ def panel_D(ax, d, gk, fset):
     row = gk[gk.k == K]
     nd = int(row.n_dominated.iloc[0]) if len(row) else 0
     fe = float(row.frac_electrodes.iloc[0]) if len(row) else 0.0
-    # lower right: the curves start at zero on the left and the held-out curve crosses
-    # the upper left, so that is the one corner no line enters (2026-10-26)
-    ax.legend(fontsize=7.0, frameon=False, loc="lower right")
+    # under the axes, one line: no corner of the plot is free at every K (the held-out
+    # curve crosses the upper left, the two shares the lower right at K 10) (2026-10-26)
+    ax.legend(fontsize=7.0, frameon=False, loc="upper center", ncol=2,
+              bbox_to_anchor=(0.5, -0.22), handlelength=1.8, columnspacing=1.6)
     ax.set_title(f"D  ·  does this K generalize?   at K={K}, {nd} of {K} clusters are "
                  f">{100*DANGER:.0f}% one patient",
                  fontsize=10.0, loc="left", pad=8,
