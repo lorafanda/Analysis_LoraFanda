@@ -1799,6 +1799,14 @@ def carousels():
                     f"00_paper2_figure3_lana.py --feature-set {fs} --k {k}", tr)
         if fs == MAIN_SET or s3["state"] in ("ok", "untracked"):
             fig3.append(s3)
+        # FIG 3b (2026-10-26): the spin null and the network's own response. Named like
+        # FIG 4 (run id in the name), so it is found directly; absent until
+        # 00_paper2_figure3_spin.py has run on this set
+        _sp = sorted(FIGDIR.glob(f"FIG3_spin_{fs}_K{k}_run*.png"))
+        if _sp:
+            fig3.append(_slide(f"FIG 3b  ·  LanA under a spin null  ·  {nm}  ·  K = {k}",
+                               _sp[-1].name, r,
+                               f"00_paper2_figure3_spin.py --feature-set {fs} --k {k}", tr))
     # the two hard partitions at the same K, after the cNMF K = 8 set and before the
     # held-out peaks, so everything cut at 8 sits together
     # the hard-method and held-out-peak variants of FIG 1 are listed only where a render

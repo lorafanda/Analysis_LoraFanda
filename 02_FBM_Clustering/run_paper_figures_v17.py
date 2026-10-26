@@ -66,6 +66,10 @@ def plan(headless):
         steps.append((False, ["00_paper2_figure4_panels.py", "--k", str(k)]))
     # --- FIG 5: ONE process, all K
     steps.append((False, ["00_paper2_figure5_confusion.py", "--k", *[str(k) for k in FIG5_KS]]))
+    # --- FIG 3b: the LanA spin null and the network's own response (2026-10-26). Last,
+    #     so the step numbers above do not move; no brains, so it runs headless.
+    steps.append((False, ["00_paper2_figure3_spin.py",
+                          "--feature-set", MAIN, "--k", str(K_MAIN)]))
     return [(brains, cmd) for brains, cmd in steps if not (headless and brains)]
 
 

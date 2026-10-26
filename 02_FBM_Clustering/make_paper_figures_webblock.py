@@ -214,6 +214,33 @@ def fig3_bullets(png: Path):
     return b
 
 
+def fig3spin_bullets(png: Path):
+    """FIG 3b's numbers: the per-cluster spin table and the summary json beside it."""
+    stem = png.with_suffix("").name
+    tab, sm = FIGDIR / f"{stem}_clusters.csv", FIGDIR / f"{stem}_summary.json"
+    if not tab.exists() or not sm.exists():
+        return []
+    d = pd.read_csv(tab)
+    s = json.loads(sm.read_text(encoding="utf-8"))
+    t0 = s["thresholds"][0]
+    b = []
+    for st, name in (("all", "all electrodes"), ("L", "the left hemisphere")):
+        T = d[(d.stratum == st) & (d.threshold == t0)]
+        if T.empty or st not in s:
+            continue
+        hi = T.loc[T.inside.idxmax()]
+        b.append(f"On {name}: <b>{int((T.q < 0.05).sum())} of {len(T)}</b> clusters sit "
+                 f"outside the spin null at P &ge; {t0:.1f} (c{int(hi.cluster)} highest at "
+                 f"{100*hi.inside:.0f}% inside, {hi.enrichment:.1f}&times; the cohort rate; "
+                 f"spun maps give it {100*hi.null_lo:.0f} to {100*hi.null_hi:.0f}%). The "
+                 f"network's own response: {s[st]['cells_q05']} of {s[st]['cells']} cells "
+                 f"beyond the spun maps, RMS difference {s[st]['rms_diff_db']:.2f} dB "
+                 f"(p = {s[st]['p_rms']:.2g}).")
+    b.append(f"{s['n_spin']} spins; the electrodes, shafts and labels stay, the map is "
+             f"rotated on the fsaverage sphere (mirror rotation on the right hemisphere).")
+    return b
+
+
 def _peak_k_text():
     """The convex-NMF held-out peaks as make_heldout_variance measured them (home
     scheme, bsf_comparison/heldout_peaks_cnmf.csv), in FS_ORDER, e.g. "30 / 30 / 29 / 29".
@@ -481,6 +508,16 @@ def build():
                 bullets = fig5_bullets(png)
                 alt = ("three 12 x 12 matrices of algorithm x feature set: the observed diagonal "
                        "share, its chance level, and the chance-corrected value")
+        elif stem.startswith("FIG3_spin"):
+            # FIG 3b (2026-10-26): the LanA comparison under a spin null, and the
+            # network's own response
+            fset = stem.split("_K")[0][len("FIG3_spin_"):]
+            num, title = f"3b &middot; K={k}", f"LanA under a spin null, and what the network does, {fset}, K = {k}"
+            bullets = fig3spin_bullets(png)
+            alt = ("five panels: the mean response inside and outside the LanA network and "
+                   "their difference, on all electrodes and on the left hemisphere; the "
+                   "share of each cluster inside the network against the spin null; the "
+                   "size of the network's own response against the spun maps")
         else:
             fset = stem.split("_K")[0][len("FIG3_lana_"):]
             num, title = f"3 &middot; K={k}", f"LanA language atlas, {fset}, K = {k}"
