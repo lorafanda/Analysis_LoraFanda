@@ -1799,6 +1799,13 @@ def carousels():
                     f"00_paper2_figure3_lana.py --feature-set {fs} --k {k}", tr)
         if fs == MAIN_SET or s3["state"] in ("ok", "untracked"):
             fig3.append(s3)
+        # the second version of FIG 3 (2026-10-26): panel A's electrodes hollow below a
+        # loading of 0.3; the run id sits in its name, so it is found directly
+        _ho = sorted(FIGDIR.glob(f"FIG3_lana_{fs}_K{k}_run*_hollow.png"))
+        if _ho:
+            fig3.append(_slide(f"FIG 3  ·  LanA  ·  hollow below loading 0.3  ·  {nm}  ·  K = {k}",
+                               _ho[-1].name, r,
+                               f"00_paper2_figure3_lana.py --feature-set {fs} --k {k}", tr))
         # FIG 3b (2026-10-26): the spin null and the network's own response. Named like
         # FIG 4 (run id in the name), so it is found directly; absent until
         # 00_paper2_figure3_spin.py has run on this set

@@ -169,7 +169,7 @@ def fig3_bullets(png: Path):
     """What FIG 3 found, from the per-cluster table written beside it. The shaft-shift
     null leads (labels rolled along each shaft: the null the figure stars); the weaker
     within-patient null is named second, as on the figure."""
-    stem = png.with_suffix("").name
+    stem = png.with_suffix("").name.removesuffix("_hollow")
     f = FIGDIR / f"{stem}_clusters.csv"
     if not f.exists():
         return []
@@ -521,6 +521,10 @@ def build():
         else:
             fset = stem.split("_K")[0][len("FIG3_lana_"):]
             num, title = f"3 &middot; K={k}", f"LanA language atlas, {fset}, K = {k}"
+            if stem.endswith("_hollow"):
+                # the second version of the page (2026-10-26): panel A's electrodes
+                # hollow below a loading of 0.3 instead of fading to grey
+                title += ", electrodes hollow below a loading of 0.3"
             bullets = fig3_bullets(png)
             alt = ("four panels: clusters ranked by LanA probability, per-cluster "
                    "loading against LanA, those correlations ranked, and LanA on this "

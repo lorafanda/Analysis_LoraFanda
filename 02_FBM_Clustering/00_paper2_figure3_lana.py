@@ -60,8 +60,9 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
-from scipy.stats import spearmanr
+from scipy.stats import spearmanr, gaussian_kde
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
@@ -90,6 +91,12 @@ N_BOOT = 1000
 # threshold. 0.1 is the partition the atlas runs on disk use (thr0p1); 0.2 is the
 # core of the network. Both are drawn, so the choice is visible rather than hidden.
 THRESHOLDS = (0.10, 0.20)
+# panel A's electrodes (Lora, 2026-10-26): the point greys as the electrode's
+# normalised loading on its cluster decreases - full colour from LOAD_FULL, grey at
+# LOAD_GREY (the smallest an argmax loading can be is 1/K; 0.2 is the floor of the
+# v17 fits). The second PNG draws the points below LOAD_HOLLOW as outlines instead.
+LOAD_GREY, LOAD_FULL, LOAD_HOLLOW = 0.20, 0.60, 0.30
+PT_GREY = "#aeb4bb"
 
 
 def tkey(t):
@@ -349,39 +356,111 @@ def analyse(d, n_perm=N_PERM, n_boot=N_BOOT, seed=0):
 
 
 # ---- panels ------------------------------------------------------------------
-def panel_rank(ax, R, d, chars, ext):
+def own_loading(d):
+    """Each electrode's normalised loading on the cluster it is assigned to: its share
+    of the K loadings (rows of Gn sum to 1), 1/K at the least and 1 at the most."""
+    return d["Gn"][np.arange(len(d["lab"])), d["lab"]]
+
+
+def fade(col, f):
+    """`col` blended toward PT_GREY: f = 1 is the colour, f = 0 the grey."""
+    c, g = np.asarray(mcolors.to_rgb(col)), np.asarray(mcolors.to_rgb(PT_GREY))
+    return tuple(g + (c - g) * float(np.clip(f, 0.0, 1.0)))
+
+
+def panel_rank(ax, R, d, chars, ext, style="fade"):
+    """A: one violin per cluster of P(LanA) over its electrodes, every electrode a point,
+    clusters ranked by the mean. style 'fade': the point greys as the electrode's loading
+    on the cluster decreases; style 'hollow': below LOAD_HOLLOW the point is an outline
+    only. The mean, its patient bootstrap, the two nulls and the stars are the same
+    statistics the bars carried until 2026-10-26."""
     K = d["k"]
+    P, has, lab = d["P_lana"], d["has"], d["lab"]
+    own = own_loading(d)
+    rng = np.random.default_rng(0)                  # the jitter, reproducible
     x = np.arange(len(R))
-    cols = [P2.cluster_col(int(c), K) for c in R.cluster]
-    ax.bar(x, R.mean_P, color=cols, width=0.74, lw=0)
-    ax.errorbar(x, R.mean_P, yerr=[R.mean_P - R.mean_P_lo, R.mean_P_hi - R.mean_P],
-                fmt="none", ecolor=INK, elinewidth=1.0, capsize=2.4)
-    ax.plot(x, R.null_mean_P_sh, "_", ms=15, color=INK, mew=2.0, zorder=5)
-    ax.plot(x, R.null_mean_P, "_", ms=11, color=MUTED, mew=1.4, zorder=4)
-    ax.axhline(R.baseline_P.iloc[0], color=MUTED, ls=":", lw=1.2)
+    top = 0.0
     for i, r in R.iterrows():
+        j = int(r.cluster)
+        col = P2.cluster_col(j, K)
+        m = has & (lab == j)
+        v, w = P[m], own[m]
+        if len(v) < 2:
+            continue
+        top = max(top, float(v.max()))
+        vp = ax.violinplot([v], positions=[i], widths=0.80, showextrema=False,
+                           showmeans=False, showmedians=False)
+        for body in vp["bodies"]:
+            body.set_facecolor(col); body.set_alpha(0.13)
+            body.set_edgecolor(col); body.set_linewidth(0.7); body.set_zorder(1)
+        # the points sit inside the body: the jitter is scaled by the same density the
+        # body is drawn from, so a point never lands outside the violin
+        dens = gaussian_kde(v)(v)
+        xs = i + rng.uniform(-1.0, 1.0, len(v)) * (0.37 * dens / dens.max())
+        o = np.argsort(w)                           # weak members first, strong on top
+        xs, v, w = xs[o], v[o], w[o]
+        if style == "hollow":
+            hol = w < LOAD_HOLLOW
+            ax.scatter(xs[hol], v[hol], s=9.0, facecolors="none", edgecolors=[col],
+                       linewidths=0.55, zorder=3)
+            ax.scatter(xs[~hol], v[~hol], s=7.5, color=col, lw=0, zorder=3)
+        else:
+            f = (w - LOAD_GREY) / (LOAD_FULL - LOAD_GREY)
+            ax.scatter(xs, v, s=7.5, c=[fade(col, fi) for fi in f], lw=0, zorder=3)
+        # the statistics, as before: the mean with its patient bootstrap, the two nulls
+        ax.plot([i - 0.27, i + 0.27], [r.mean_P, r.mean_P], color=INK, lw=1.7, zorder=6)
+        ax.plot([i, i], [r.mean_P_lo, r.mean_P_hi], color=INK, lw=1.0, zorder=6)
+        ax.plot(i, r.null_mean_P_sh, "_", ms=15, color=INK, mew=2.0, zorder=5)
+        ax.plot(i, r.null_mean_P, "_", ms=11, color=MUTED, mew=1.4, zorder=4)
         star = "*" if r.q_mean_sh < 0.05 else ("(*)" if r.q_mean < 0.05 else "")
-        ax.text(i, max(r.mean_P_hi, r.mean_P) + 0.018,
-                f"{star}\n{100*r.coverage:.0f}%", ha="center", va="bottom",
-                fontsize=6.6, color=RED if r.coverage < MIN_COVERAGE else MUTED)
+        ax.text(i, float(v.max()) + 0.025, f"{star}\n{100*r.coverage:.0f}%", ha="center",
+                va="bottom", fontsize=6.6,
+                color=RED if r.coverage < MIN_COVERAGE else MUTED)
+    ax.axhline(R.baseline_P.iloc[0], color=MUTED, ls=":", lw=1.2, zorder=2)
     ax.set_xticks(x)
     ax.set_xticklabels([f"c{int(c)}\nn={int(n)}" for c, n in zip(R.cluster, R.n_lana)],
                        fontsize=7.2)
-    ax.set_ylabel("mean P(LanA) of its electrodes", fontsize=8.6)
-    ax.set_ylim(0, ext["A_top"] * 1.22)           # shared across feature sets
+    ax.set_ylabel("P(LanA) of each electrode", fontsize=8.6)
+    ax.set_xlim(-0.6, len(R) - 0.4)
+    ax.set_ylim(0, top + 0.17)                        # the stars sit above the tallest violin
     ax.tick_params(labelsize=7.4, colors=MUTED)
     ax.spines[["top", "right"]].set_visible(False)
+    # the key to the points, top right, where no violin reaches
+    if style == "hollow":
+        ax.scatter([0.70], [0.965], s=14, facecolors="none", edgecolors=[INK],
+                   linewidths=0.6, transform=ax.transAxes, clip_on=False)
+        ax.scatter([0.70], [0.915], s=12, color=INK, lw=0, transform=ax.transAxes,
+                   clip_on=False)
+        ax.text(0.73, 0.965, f"loading < {LOAD_HOLLOW:.1f}", transform=ax.transAxes,
+                va="center", fontsize=6.4, color=MUTED)
+        ax.text(0.73, 0.915, f"loading \u2265 {LOAD_HOLLOW:.1f}", transform=ax.transAxes,
+                va="center", fontsize=6.4, color=MUTED)
+    else:
+        fs = np.linspace(0.0, 1.0, 6)
+        ax.scatter(0.62 + 0.05 * np.arange(6), np.full(6, 0.955), s=12,
+                   c=[fade(INK, fi) for fi in fs], lw=0, transform=ax.transAxes,
+                   clip_on=False)
+        ax.text(0.62, 0.915, f"loading {LOAD_GREY:.1f}", transform=ax.transAxes,
+                ha="left", va="center", fontsize=6.4, color=MUTED)
+        ax.text(0.87, 0.915, f"{LOAD_FULL:.1f}+", transform=ax.transAxes, ha="right",
+                va="center", fontsize=6.4, color=MUTED)
     thin = [f"c{int(r.cluster)}" for _, r in R.iterrows() if r.coverage < MIN_COVERAGE]
+    n_h = int((own[has] < LOAD_HOLLOW).sum())
+    how = (f"Points with a normalised loading below {LOAD_HOLLOW:.1f} are hollow, from "
+           f"{LOAD_HOLLOW:.1f} filled: {n_h} of {int(has.sum())} electrodes "
+           f"({100*n_h/max(int(has.sum()), 1):.0f}%) are hollow."
+           if style == "hollow" else
+           f"Colour = the electrode's normalised loading on its cluster (its share of "
+           f"the K loadings): full colour from {LOAD_FULL:.1f}, grey at {LOAD_GREY:.1f}.")
     ax.text(0, -0.20, _wrap(
-        f"Ranked most to least. Bars are the mean LanA probability of a cluster's "
-        f"electrodes; whiskers are a 95% interval from bootstrapping PATIENTS. The "
-        f"dotted line is the cohort mean ({R.baseline_P.iloc[0]:.3f}). TWO NULLS: the "
-        f"dark dash rolls each electrode's cluster along its own SHAFT, keeping the "
-        f"spatial smoothness that makes neighbouring contacts alike, and is the one "
-        f"that counts (*); the pale dash only shuffles within patient, which destroys "
-        f"that smoothness and is too easy to beat ((*) = passes only that one). Both "
-        f"Benjamini-Hochberg over {K}. The % under each bar is how much of that "
-        f"cluster HAS a LanA value"
+        f"One violin per cluster of P(LanA) over its electrodes, ranked by the mean, "
+        f"every electrode a point. {how} Short dark line = the mean, whiskers a 95% "
+        f"interval from bootstrapping PATIENTS; dotted = the cohort mean "
+        f"({R.baseline_P.iloc[0]:.3f}). Two nulls on the mean: the dark dash rolls each "
+        f"electrode's cluster along its own SHAFT, keeping the smoothness that makes "
+        f"neighbours alike (*); the pale dash shuffles within patient, which destroys "
+        f"it and is too easy to beat ((*) = passes only that one). Benjamini-Hochberg "
+        f"over {K}; % over each violin = coverage"
         + (f"; {', '.join(thin)} fall{'' if len(thin) > 1 else 's'} below "
            f"{100*MIN_COVERAGE:.0f}% and {'their means are' if len(thin) > 1 else 'its mean is'} "
            f"not comparable with the rest." if thin else "."),
@@ -709,7 +788,7 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     # the right the wide one (C above D); the bottom row is the taller, so that D -
     # three views of the coverage - can actually be read.
     fig = plt.figure(figsize=(17.6, 15.6), dpi=190)
-    gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 2.3], hspace=0.48,
+    gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 2.3], hspace=0.52,
                   wspace=1.2, left=0.055, right=0.985, top=0.905, bottom=0.030)
     fig.suptitle(f"FIG 3   ·   LanA language atlas   ·   {fset}   ·   K = {k}   ·   "
                  f"{int(d['has'].sum())} of {len(d['X'])} electrodes have a LanA value",
@@ -743,7 +822,7 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
     # one line of labels per row, above the taller of its two panels
-    for row_ in (((axA, "A  ·  clusters ranked by how much LanA they sit in"),
+    for row_ in (((axA, "A  ·  P(LanA) of every electrode, clusters ranked by the mean"),
                   (axB, f"B  ·  inside the LanA network at P ≥ {THRESHOLDS[0]:.1f} "
                         f"and ≥ {THRESHOLDS[1]:.1f}")),
                  ((axC, "C  ·  what the network is made of"),
@@ -758,11 +837,17 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     p = OUT / f"FIG3_lana_{fset}_K{k}{_rt}.png"
     P2.stamp(fig, d)
     P2.save_png(fig, p, dpi=190, bbox_inches="tight", facecolor="white")
+    # the second version of the page (Lora, 2026-10-26): panel A's points hollow below
+    # LOAD_HOLLOW instead of fading; everything else, the brains included, as drawn
+    axA.cla()
+    panel_rank(axA, R, d, 66, ext, style="hollow")
+    P2.save_png(fig, p.with_name(p.stem + "_hollow.png"), dpi=190, bbox_inches="tight",
+                facecolor="white")
     plt.close(fig)
     P2.save_text(R.to_csv(index=False), p.with_name(p.stem + "_clusters.csv"))
     P2.save_text(pd.DataFrame(dict(
         patient=d["patient"], electrode=d["meta"]["electrode"], cluster=d["lab"],
-        P_lana=d["P_lana"], has_lana=d["has"])).to_csv(index=False),
+        loading=own_loading(d), P_lana=d["P_lana"], has_lana=d["has"])).to_csv(index=False),
         p.with_name(p.stem + "_electrodes.csv"))
     caption_3(p.with_name(p.stem + "_caption.txt"), d, R, k, fset, n_perm, n_boot,
               ext, shared_with)
@@ -771,6 +856,7 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
 
 
 def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
+    own = own_loading(d)
     L = []
     A = L.append
     A(f"FIG 3   ·   LanA language atlas   ·   {fset}   ·   K = {k}")
@@ -778,10 +864,11 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("")
     A("AXES SHARED ACROSS FEATURE SETS")
     A("-" * 100)
-    A("A's and B's y axes run to the same limits in every FIG 3 at this K, so the")
-    A("figures can be laid side by side and a bar that looks taller is taller. The")
-    A(f"limits are the maximum reached in: {', '.join(shared_with)}.")
-    A(f"  A top {ext['A_top']:.4f}   B top {ext['B_top']:.4f}   (each drawn with a small margin)")
+    A("B's y axis runs to the same limit in every FIG 3 at this K, so the figures can be")
+    A("laid side by side and a bar that looks taller is taller; the limit is the maximum")
+    A(f"reached in: {', '.join(shared_with)}. A's y axis spans the full range of P_lana,")
+    A("which is the same set of electrodes in every feature set.")
+    A(f"  B top {ext['B_top']:.4f}   (drawn with a small margin)")
     A(f"  recorded in {extents_path(k).name}; --all rebuilds every feature set on one set")
     A("")
     A("WHAT P_lana IS")
@@ -811,14 +898,14 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     if bool(d["has"].all()):
         A("Every electrode has a LanA value, so coverage is not a caveat on this figure.")
         A("The safeguards stay for a cohort whose atlas run lags its reconstruction:")
-        A("per-cluster coverage is printed under every bar in panel A and anything below")
+        A("per-cluster coverage is printed over every violin in panel A and anything below")
         A(f"{100*MIN_COVERAGE:.0f}% is marked in red.")
     else:
         A("The missing electrodes are NOT missing at random: the atlas run predates part of")
         A("the cohort, so whole patients have no value at all. A cluster drawn mostly from")
         A("those patients would look like it sits outside language cortex when in truth it")
         A("has not been measured against the atlas. Per-cluster coverage is printed under")
-        A(f"every bar in panel A and anything below {100*MIN_COVERAGE:.0f}% is marked in red.")
+        A(f"every violin in panel A and anything below {100*MIN_COVERAGE:.0f}% is marked in red.")
     if len(d["lana_missing_by_patient"]):
         A("")
         A("  electrodes with no LanA value, by patient:")
@@ -873,11 +960,18 @@ def caption_3(path, d, R, k, fset, n_perm, n_boot, ext, shared_with):
     A("the arrangement that manufactures an impressive-looking best one. Both panels are")
     A("corrected with Benjamini-Hochberg and a star means q < 0.05, not p < 0.05.")
     A("")
-    A("PANEL A - clusters ranked by how much LanA they sit in")
+    A("PANEL A - P(LanA) of every electrode, clusters ranked by the mean")
     A("-" * 100)
-    A("Mean P_lana of a cluster's electrodes, most to least. Dark dash = the shaft-shift")
-    A("null, pale dash = the within-patient null, dotted line = the cohort mean, % under")
-    A("each bar = coverage.")
+    A("One violin per cluster over its electrodes' P_lana, every electrode a point, ranked")
+    A("by the mean (the short dark line, with its patient-bootstrap interval). Point colour")
+    A("= the electrode's normalised loading on the cluster, its share of the K loadings:")
+    A(f"full colour from {LOAD_FULL:.1f}, grey at {LOAD_GREY:.1f}. The _hollow.png version of the page")
+    A(f"draws the points below {LOAD_HOLLOW:.1f} as outlines instead: {int((own[d['has']] < LOAD_HOLLOW).sum())} "
+      f"of {int(d['has'].sum())} electrodes ({100*float((own[d['has']] < LOAD_HOLLOW).mean()):.0f}%).")
+    A("Dark dash = the shaft-shift null, pale dash = the within-patient null, dotted line =")
+    A("the cohort mean, % over each violin = coverage.")
+    A(f"  own-cluster loading   min {own.min():.3f}   median {np.median(own):.3f}   "
+      f"max {own.max():.3f}   (1/K = {1/k:.3f})")
     A("")
     A(f"  cohort mean P_lana             {R.baseline_P.iloc[0]:.4f}")
     A(f"  most  c{int(R.cluster.iloc[0])}  {R.mean_P.iloc[0]:.4f} "
