@@ -12,14 +12,14 @@
 -2 Representation: one time-normalised ERSP cube per electrode × condition (103 freq × 300 warped bins, dB re baseline), concatenated audio | picture | reading.
 -2 Method: convex NMF (graded), k-means and Ward on four feature sets; K by patient generalisation, not by held-out fit alone.
 -3 Finding (v17 wording): a small number of recurring response types - on 15 bands at K 7: production, beta decrease, broadband decrease, low-frequency rise (provisional names) and three condition-specific low-frequency types; most survive a change of algorithm, fewer a change of frequency description.
--4 Anatomy claim: none of the types is placed by the language atlas beyond a spatial null — decide whether this stays in the summary.
+-! Anatomy claim (10-26): no type is placed by the language atlas beyond one modest effect - by mean atlas probability 0 of 7 pass the shaft-shift null; c5's share inside the network at P ≥ 0.1 does (q 0.036) and c1's left-hemisphere mean beats the spin null (q 0.027). Decide whether this stays in the summary.
 -4 Closing line candidate: "a response type is what an electrode does, not where it sits".
 
 # Highlights
 -4 Intracranial language responses cluster into a few recurring types (≤ 85 chars).
 -4 Held-out fit nominates a K at which clusters are single patients.
 -4 Types recur across feature sets and algorithms; the weak ones do not.
--4 No type sits in language-atlas cortex beyond a spatial null.
+-! No type is placed by the language atlas beyond one modest effect (≤ 85 chars).
 
 # Introduction
 ## 1 · Epilepsy surgery and functional mapping

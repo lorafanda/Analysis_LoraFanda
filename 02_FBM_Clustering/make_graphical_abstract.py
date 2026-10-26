@@ -114,6 +114,13 @@ def numbers():
     n["lana_top_q_sh"] = float(top.q_mean_sh)
     n["lana_baseline"] = float(la.baseline_P.iloc[0])
     n["lana_n_sig_sh"] = int((la.q_mean_sh < 0.05).sum())
+    # the share inside the network (FIG 3 B, 2026-10-26): which clusters clear the
+    # shaft-shift null on it, so the tile cannot say "no" where FIG 3 says "one"
+    if "q_frac_t10_sh" in la.columns:
+        sh = la[la.q_frac_t10_sh < 0.05]
+        n["lana_share_sig"] = [int(c) for c in sh.cluster]
+    else:
+        n["lana_share_sig"] = []
     n["lana_n_clusters"] = int(len(la))
     n["lana_max_abs_rho"] = float(la.rho.abs().max())
     # the type every algorithm finds: the reference cluster of FIG 2's algorithm half with
@@ -270,10 +277,12 @@ def main() -> int:
     t.text(0.07, 0.90, "Placed by the language atlas?", fontsize=11, color=MUTED,
            va="top")
     t.text(0.07, 0.76, "No", fontsize=27, weight="bold", color=RED, va="top")
+    share_line = (("by share inside the network: " + ", ".join(f"c{c}" for c in n["lana_share_sig"]))
+                  if n["lana_share_sig"] else "by share inside the network: none")
     t.text(0.07, 0.50, f"{n['lana_n_sig_sh']} of {n['lana_n_clusters']} types sit "
-           f"above a null that\nkeeps each electrode shaft intact.\nLargest |ρ| = "
-           f"{n['lana_max_abs_rho']:.2f}.", fontsize=9.6, color=INK, va="top",
-           linespacing=1.35)
+           f"above a null that\nkeeps each electrode shaft intact\n(by mean atlas "
+           f"probability; {share_line}).\nLargest |ρ| = {n['lana_max_abs_rho']:.2f}.",
+           fontsize=9.0, color=INK, va="top", linespacing=1.35)
     b = t.inset_axes([0.30, 0.09, 0.60, 0.20])
     jt = n["lana_top_cluster"]
     vals = [n["lana_top_mean"], n["lana_top_null_sh"], n["lana_baseline"]]

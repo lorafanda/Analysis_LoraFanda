@@ -165,4 +165,4 @@ WHAT THIS FIGURE DOES NOT SHOW
     shaft, no spun map can put an electrode either.
   - Thresholds are a declared choice (0.1, 0.2); the
     cell test of A and B uses the first.
-Written 2026-10-26 20:41 by 00_paper2_figure3_spin.py.
+Written 2026-10-26 22:02 by 00_paper2_figure3_spin.py.

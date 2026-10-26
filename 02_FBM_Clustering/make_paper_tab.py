@@ -1197,7 +1197,7 @@ EXAMPLES = {
         "A broadband-decrease type is recovered by every algorithm tested",
     ],
     "high.h4": [
-        "No type sits in language-atlas cortex beyond a spatial null",
+        "No type is placed by the language atlas beyond one modest effect",
         "Response types are defined by what electrodes do, not where they sit",
     ],
     "high.etoc": [
@@ -1222,13 +1222,17 @@ EXAMPLES = {
         "the curve showing why the held-out peak at 30 is not the answer. Other "
         "methods: 11% of electrodes are placed identically by all four feature sets "
         "(chance 0.6%), and the broadband-decrease type by every algorithm. Anatomy: no "
-        "- 0 of 7 types sit above a null that keeps each shaft intact, largest |rho| "
-        "0.14. Closing line: a response type is what an electrode does, not where it "
+        "by mean atlas probability - 0 of 7 types sit above a null that keeps each shaft "
+        "intact, largest |rho| 0.14 - with one share effect (c5 keeps more electrodes "
+        "inside the network than that null allows, q = 0.036) and one hemisphere effect "
+        "(c1's left-hemisphere mean beats a rotated map, q = 0.027) noted in Figure 3. "
+        "Closing line: a response type is what an electrode does, not where it "
         "sits.",
         "One panel. The four named types as small traces over the three conditions, "
         "each with its electrodes on both hemispheres. Below them, three one-number "
         "verdicts: K = 7; 11% placed alike by all feature sets; 0 of 7 above the "
-        "spatial atlas null. One sentence: a response type is what an electrode does, "
+        "spatial atlas null by mean probability (one share effect, c5, is Figure 3's). "
+        "One sentence: a response type is what an electrode does, "
         "not where it sits. Nothing else - no panel letters, no axes a reader has to "
         "decode at thumbnail size.",
     ],
@@ -1266,7 +1270,9 @@ EXAMPLES = {
         "Language responses recorded intracranially fall into a small number of types. "
         "Seven were found; four have a shape a reader can name and recur across "
         "algorithms; three are defined by their low-frequency part and are the least "
-        "shared across descriptions. The types are not placed by the language atlas. "
+        "shared across descriptions. The types are not placed by the language atlas "
+        "beyond one modest effect (c5's share inside the network; c1's left-hemisphere "
+        "mean). "
         "That is the finding, and it is narrower than a taxonomy of language cortex: it "
         "is a taxonomy of what an electrode in language cortex does during a task.",
         "Three claims are supported. Responses recur: the same profiles appear in many "
@@ -1561,7 +1567,8 @@ EXAMPLES = {
         "markers at each curve's peak; dashed line at K = 7. (B) One block per type: "
         "mean response (dB vs baseline, ±1 SD across electrodes) over the three "
         "conditions, GO cue dashed at 50%; below, the electrodes carrying the type on "
-        "each hemisphere seen from its own side, colour and size by loading; below "
+        "each hemisphere seen from its own side, colour and size by loading, electrodes "
+        "below a loading of 0.3 on the type not drawn; below "
         "that, patient composition, one segment per patient, widest first. (C) Key to a "
         "block. (D) Share of clusters, and of electrodes, in clusters more than half "
         "one patient, against K, with the held-out curve faint on the right axis. n = "
