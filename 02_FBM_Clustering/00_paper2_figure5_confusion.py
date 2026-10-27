@@ -151,10 +151,10 @@ def group_labels(ax, names):
     first = ax.get_subplotspec().colspan.start == 0
     for b in range(len(names) // nf):
         c = b * nf + (nf - 1) / 2
-        ax.text(c, len(names) - 0.5 + 4.2, ML[names[b * nf][0]], ha="center", va="top",
+        ax.text(c, len(names) - 0.5 + 3.0, ML[names[b * nf][0]], ha="center", va="top",
                 fontsize=P2.fs(7.4), color=INK, weight="bold")
         if first:
-            ax.text(-3.9, c, ML[names[b * nf][0]], ha="right", va="center", rotation=90,
+            ax.text(-2.9, c, ML[names[b * nf][0]], ha="right", va="center", rotation=90,
                     fontsize=P2.fs(7.4), color=INK, weight="bold")
 
 

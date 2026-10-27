@@ -534,7 +534,8 @@ def panel_ari(axK, axM, M, Mn, names, groups, k, curve):
         axK.axvline(k, color=RED, ls="--", lw=P2.pw(1.0))
         axK.set_ylim(0, max(0.6, float(vs.max()) * 1.15))
         axK.set_ylabel("mean pairwise ARI", fontsize=P2.fs(6.8), color=MUTED)
-        axK.set_xlabel("K", fontsize=P2.fs(6.8), color=MUTED, labelpad=P2.pw(1))
+        if not P2.paper():                    # on paper the inset's title says K
+            axK.set_xlabel("K", fontsize=P2.fs(6.8), color=MUTED, labelpad=P2.pw(1))
         axK.tick_params(labelsize=P2.fs(6.2), colors=MUTED, length=2)
         axK.spines[["top", "right"]].set_visible(False)
         best = int(ks[int(np.argmax(vs))])
@@ -906,7 +907,7 @@ def figure_2(k: int, algo_fset: str):
             lt_ = "AB"[row] + "CD"[0] if False else ("A", "B") if row == 0 else ("C", "D")
             labelled.append((
                 [(axA, f"{lt_[0]}   {what_}: agreement (ARI)"),
-                 (axL, f"{lt_[1]}   which electrodes are placed alike")],
+                 (axL, f"{lt_[1]}   electrodes placed alike by the {len(h['sols'])} {what_}")],
                 [(axK, "ARI by K")], ""))
         else:
             cC = GridSpecFromSubplotSpec(2, 3, gs[row, 9:24], height_ratios=[1.0, 0.34],

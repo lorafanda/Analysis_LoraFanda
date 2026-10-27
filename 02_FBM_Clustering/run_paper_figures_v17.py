@@ -73,6 +73,36 @@ def plan(headless):
     return [(brains, cmd) for brains, cmd in steps if not (headless and brains)]
 
 
+def paper_preview_pdf():
+    """Every paper PNG at its printed width, 174 mm, on an A4 page: the renders are
+    judged at the size they will be read at, not at screen size, where the printed
+    font sizes look large (2026-10-27). About 2 MB; not for git."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+    from PIL import Image
+    pdir = CLUST / "outputs" / "clustering" / "paper_figures" / "paper"
+    pngs = sorted(pdir.glob("FIG*.png"))
+    if not pngs:
+        return None
+    out = pdir / "paper_preview_A4.pdf"
+    W, H, w_in = 8.27, 11.69, 174 / 25.4
+    with PdfPages(out) as pdf:
+        for p in pngs:
+            with Image.open(p) as im:
+                h_in = w_in * im.height / im.width
+                fig = plt.figure(figsize=(W, H))
+                ax = fig.add_axes([(W - w_in) / 2 / W, 1 - (0.7 + h_in) / H, w_in / W, h_in / H])
+                ax.imshow(im)
+                ax.axis("off")
+                fig.text(0.5, 0.025, f"{p.name}   ·   174 mm wide   ·   {im.width} x {im.height} px",
+                         ha="center", fontsize=7, color="#777")
+                pdf.savefig(fig, dpi=150)
+                plt.close(fig)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--headless", action="store_true",
@@ -120,6 +150,10 @@ def main():
     else:
         print("all steps OK")
     print("figures -> outputs/clustering/paper_figures/   (nothing pushed)")
+    if a.paper:
+        pdf = paper_preview_pdf()
+        if pdf is not None:
+            print(f"print-size preview -> {pdf}")
     return 1 if fails else 0
 
 

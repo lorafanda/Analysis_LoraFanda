@@ -277,10 +277,13 @@ def main() -> int:
     t.text(0.07, 0.90, "Placed by the language atlas?", fontsize=P2.fs(11), color=MUTED,
            va="top")
     t.text(0.07, 0.76, "No", fontsize=P2.fs(27), weight="bold", color=RED, va="top")
-    share_line = (("one share effect, " + ", ".join(f"c{c}" for c in n["lana_share_sig"]))
-                  if n["lana_share_sig"] else "no share effect")
+    ns_ = len(n["lana_share_sig"])
+    share_line = (("no share effect" if ns_ == 0 else
+                   f"{'one' if ns_ == 1 else ns_} share effect{'s' if ns_ > 1 else ''} ("
+                   + ", ".join(f"c{c}" for c in n["lana_share_sig"]) + ")"))
+    # three lines: a fourth ran into the bars under it (2026-10-27)
     t.text(0.07, 0.50, f"{n['lana_n_sig_sh']} of {n['lana_n_clusters']} types above the "
-           f"shaft-shift null\nby mean atlas probability;\n{share_line}.\n"
+           f"shaft-shift null\nby mean P(LanA); {share_line}.\n"
            f"Largest |ρ| = {n['lana_max_abs_rho']:.2f}.",
            fontsize=P2.fs(9.4), color=INK, va="top", linespacing=1.35)
     b = t.inset_axes([0.30, 0.09, 0.60, 0.20])

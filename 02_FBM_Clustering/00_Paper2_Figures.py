@@ -37,6 +37,7 @@ import io
 import json
 import os
 import sys
+import textwrap
 import time
 import warnings
 from datetime import datetime
@@ -1087,7 +1088,7 @@ def icon_picture(ax, col=INK):
 STIM_ICON = {"audio": icon_audio, "picture": icon_picture, "reading": icon_reading}
 
 
-def trial_strip(ax, d):
+def trial_strip(ax, d, words_inside: bool = False):
     """Two screens per condition: the stimulus, then the response cue.
 
     Positioned to the SAME x as the schematic below it - stimulus over 0-50% of the
@@ -1104,13 +1105,17 @@ def trial_strip(ax, d):
     ax.set_xticks([]); ax.set_yticks([])
     for sp in ax.spines.values():
         sp.set_visible(False)
+    # words_inside (paper): the boxes move up and the stimulus / response words take
+    # the bottom of the strip itself, so a heatmap directly under it cannot cover them
+    # (2026-10-27); otherwise the words hang below the axis as they always did
+    by0, byh = (0.30, 0.66) if words_inside else (0.10, 0.78)
     for b, cond in enumerate(d["conds"]):
         x0 = b / ncond
         half = 1.0 / (2 * ncond)
         for k_, (bx0, bx1) in enumerate(((x0, x0 + half), (x0 + half, x0 + 2 * half))):
-            ax.add_patch(Rectangle((bx0 + 0.004, 0.10), (bx1 - bx0) - 0.008, 0.78,
+            ax.add_patch(Rectangle((bx0 + 0.004, by0), (bx1 - bx0) - 0.008, byh,
                                    fc="white", ec=GREY, lw=pw(0.9), zorder=1))
-            a = _icon_axes(ax, bx0, bx1)
+            a = _icon_axes(ax, bx0, bx1, y0=by0 + 0.03 / 0.78 * byh, h=0.70 / 0.78 * byh)
             if k_ == 0:
                 STIM_ICON[cond](a)
             else:
@@ -1121,9 +1126,10 @@ def trial_strip(ax, d):
     # are at half/2 and 1.5*half - not at 0.5/ncond and 1.5/ncond, which is half a box
     # to the right and put "response" under the picture stimulus
     half = 1.0 / (2 * ncond)
-    ax.text(half / 2, 0.03, "stimulus", ha="center", va="top", fontsize=fs(6.6),
+    wy = 0.25 if words_inside else 0.03
+    ax.text(half / 2, wy, "stimulus", ha="center", va="top", fontsize=fs(6.6),
             color=MUTED, transform=ax.transAxes)
-    ax.text(1.5 * half, 0.03, "response", ha="center", va="top", fontsize=fs(6.6),
+    ax.text(1.5 * half, wy, "response", ha="center", va="top", fontsize=fs(6.6),
             color=MUTED, transform=ax.transAxes)
 
 
@@ -1164,7 +1170,7 @@ def panel_C(ax_strip, ax, d, vlim, ylim):
     if paper() and len(d["bands"]) > 6:
         ax.set_yticks(range(0, len(d["bands"]), 3))
         ax.set_yticklabels([b_.replace("Hz", "") for b_ in d["bands"][::3]], fontsize=fs(6.4))
-    trial_strip(ax_strip, d)
+    trial_strip(ax_strip, d, words_inside=paper())
     ax_strip.set_title("B   how to read a block" if paper() else
                        "C  ·  how to read a cluster mean   —   schematic, not data",
                        fontsize=fs(10.4), loc="left", color=INK, pad=pw(15))
@@ -1341,12 +1347,31 @@ def panel_K(ax, d, gk, fset, method="cnmf"):
     ax2.set_ylabel("% one patient", fontsize=fs(8.2), color=MUTED)
     ax2.tick_params(labelsize=fs(7.4), colors=MUTED)
     ax2.spines[["top"]].set_visible(False)
-    h1, l1 = ax.get_legend_handles_labels()
+    # the left axis names the black curve; a third entry put the legend over it where
+    # it climbs through the upper left (2026-10-27)
     h2, l2 = ax2.get_legend_handles_labels()
-    ax.legend(h1 + h2, l1 + l2, fontsize=fs(6.4), frameon=False, loc="upper left",
+    ax.legend(h2, l2, fontsize=fs(6.4), frameon=False, loc="upper left",
               handlelength=1.4, labelspacing=0.3, borderaxespad=0.3)
     ax.set_title(f"A   choosing K   (cut at K = {K})",
                  fontsize=fs(9.5), loc="left", color=INK, pad=pw(5))
+
+
+def _db_key(fig, cax, vlim, titled: bool):
+    """PAPER: the heatmaps' dB scale - titled in a free block slot, or labelled on the
+    left with its ticks on the right when it stands in the margin like the loading key."""
+    from matplotlib.cm import ScalarMappable
+    from matplotlib.colors import Normalize
+    cb = fig.colorbar(ScalarMappable(norm=Normalize(-vlim, vlim), cmap="RdBu_r"), cax=cax)
+    if titled:
+        # two lines, like the loading key's title beside it, so the two do not meet
+        cax.set_title("dB re" + chr(10) + "baseline", fontsize=fs(7.0), color=MUTED,
+                      loc="left", pad=fs(4))
+    else:
+        cb.set_label("dB re baseline", fontsize=fs(6.2), color=MUTED, labelpad=pw(1.5))
+        cax.yaxis.set_label_position("left")
+        cax.yaxis.set_ticks_position("right")
+    cb.ax.tick_params(labelsize=fs(6.8), colors=MUTED, length=2)
+    cb.outline.set_visible(False)
 
 
 # ---- FIGURE 1 ----------------------------------------------------------------
@@ -1383,16 +1408,21 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     pcol = patient_colours(d)
 
     nrow = int(np.ceil(K / UPR))
+    # PAPER: a long type name wraps onto a second line of its block title; the first
+    # row's tallest title sets the header's height and the gap above it (2026-10-27)
+    name_lines = {j: (textwrap.wrap(type_name(fset, K, j), 24, break_on_hyphens=False)
+                      if paper() else []) for j in range(K)}
+    extra_rows = max([len(name_lines[j]) - 1 for j in order[:UPR]] + [0])
     # hcen is chosen so a render at RENDER_PX's aspect exactly fills its half of the
     # block: any larger and the brains are letterboxed, any smaller and the box crops
     hcen, hbar = 0.86, 0.15
     if paper():
         hcen, hbar = 1.05, 0.17            # brains a fifth smaller against the heatmap
-    fig_h = 3.72 + nrow * 4.75             # +0.32 in: room under the last row's captions
+    fig_h = 3.72 + nrow * 4.75 + 0.88 * extra_rows   # +0.32 in under the last captions
     fig = plt.figure(figsize=(canvas(17.6), fig_h), dpi=190)
     gs = GridSpec(1 + nrow, UPR * UCOL, figure=fig,
                   height_ratios=[1.72] + [2.62] * nrow,
-                  hspace=0.52, wspace=0.30, left=0.045, right=0.985,
+                  hspace=0.52 + 0.15 * extra_rows, wspace=0.30, left=0.045, right=0.985,
                   top=1.0 - 0.95 / fig_h, bottom=0.022 + 0.32 / fig_h)
     R1 = 1                                                  # row 0 is the header
 
@@ -1406,7 +1436,7 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     if paper():
         # A and D in one panel, C beside it (2026-10-27)
         panel_K(fig.add_subplot(gs[0, 0:8]), d, gk, fset, method)
-        cC = GridSpecFromSubplotSpec(2, 1, gs[0, 12:24], height_ratios=[0.44, 1.0],
+        cC = GridSpecFromSubplotSpec(2, 1, gs[0, 12:24], height_ratios=[0.56, 1.0],
                                      hspace=0.06)
         panel_C(fig.add_subplot(cC[0]), fig.add_subplot(cC[1]), d, vlim, ylim)
     else:
@@ -1416,7 +1446,7 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
         panel_C(fig.add_subplot(cC[0]), fig.add_subplot(cC[1]), d, vlim, ylim)
         panel_D(fig.add_subplot(gs[0, 17:24]), d, gk, fset)
 
-    tops, nrend, first_brain = [], 0, None
+    tops, nrend, first_brain, row_brains = [], 0, None, {}
     for pos, j in enumerate(order):
         r, c = divmod(pos, UPR)
         blk = GridSpecFromSubplotSpec(
@@ -1447,11 +1477,12 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
             if top_share > DANGER else ""
         if paper():
             # the name, n and the patient count in the title; nothing under the bar
-            nm_ = type_name(fset, K, j)
+            nl_ = name_lines[j]
             npat_ = int(pd.Series(d["patient"][sel_]).nunique()) if shown[j] else 0
-            ttl_ = (f"c{j}" + (f"  {nm_}" if nm_ else "") + chr(10)
-                    + f"n {shown[j]}  ·  {npat_} patients"
-                    + (f"  ·  {100*top_share:.0f}% one patient" if top_share > DANGER else ""))
+            ttl_ = chr(10).join(
+                [f"c{j}" + (f"  {nl_[0]}" if nl_ else "")] + nl_[1:]
+                + [f"n {shown[j]}  ·  {npat_} patients"
+                   + (f"  ·  {100*top_share:.0f}% one patient" if top_share > DANGER else "")])
             axc.set_title(ttl_, fontsize=fs(8.6),
                           color=RED if top_share > DANGER else cluster_col(j, K),
                           pad=pw(2.6), loc="left")
@@ -1464,6 +1495,8 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
             axb = fig.add_subplot(blk[1, i_])
             if first_brain is None:
                 first_brain = axb
+            if c == 0 and i_ == 0:
+                row_brains[r] = axb
             img, nsel = render_hemi(side, d, j)
             nrend += 1
             axb.imshow(img)
@@ -1477,7 +1510,7 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
         tops.append(axc)
 
     bb = tops[0].get_position()
-    fig.text(0.045, bb.y1 + (0.68 if paper() else 0.30) / fig_h,
+    fig.text(0.045, bb.y1 + ((0.68 + 0.30 * extra_rows) if paper() else 0.30) / fig_h,
              f"C   the {K} types" if paper() else
              "B  ·  one block per cluster, ordered by how ALIKE THE THREE CONDITIONS "
              "LOOK",
@@ -1493,23 +1526,27 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     kh = bb2.height * 0.66
     ky = bb2.y0 + (bb2.height - kh) / 2.0
     free = [pos for pos in range(K, UPR * nrow)]
+    heat = len(d["bands"]) > 1              # line-plot blocks (HFA) carry no dB scale
     if paper() and free:
         # the free block slot carries the two keys: the dB scale of the heatmaps and
         # the loading ramp of the brains (2026-10-27)
         r_, c_ = divmod(free[0], UPR)
         slot = gs[R1 + r_, c_ * UCOL:(c_ + 1) * UCOL]
         sb = slot.get_position(fig)
-        from matplotlib.cm import ScalarMappable
-        from matplotlib.colors import Normalize
-        cax = fig.add_axes([sb.x0 + sb.width * 0.18, sb.y0 + sb.height * 0.18,
-                            sb.width * 0.05, sb.height * 0.62])
-        cb = fig.colorbar(ScalarMappable(norm=Normalize(-vlim, vlim), cmap="RdBu_r"),
-                          cax=cax)
-        cax.set_title("dB re baseline", fontsize=fs(7.0), color=MUTED, loc="left", pad=fs(4))
-        cb.ax.tick_params(labelsize=fs(6.8), colors=MUTED, length=2)
-        cb.outline.set_visible(False)
+        # both keys a little left of where they stood, so the loading key's title ends
+        # inside the canvas instead of widening the page (2026-10-27)
+        if heat:
+            cax = fig.add_axes([sb.x0 + sb.width * 0.12, sb.y0 + sb.height * 0.18,
+                                sb.width * 0.05, sb.height * 0.62])
+            _db_key(fig, cax, vlim, titled=True)
         kw, kh = sb.width * 0.05, sb.height * 0.62
-        kx, ky = sb.x0 + sb.width * 0.58, sb.y0 + sb.height * 0.18
+        kx, ky = sb.x0 + sb.width * 0.50, sb.y0 + sb.height * 0.18
+    elif paper() and heat and nrow > 1:
+        # no free slot (K = 8): the dB scale takes the left margin beside the second
+        # row's brains, level with the loading key beside the first row's (2026-10-27)
+        bb3 = row_brains[1].get_position()
+        _db_key(fig, fig.add_axes([kx, bb3.y0 + (bb3.height - kh) / 2.0, kw, kh]), vlim,
+                titled=False)
     kax = fig.add_axes([kx, ky, kw, kh])
     base0 = np.array(cluster_col(int(order[0]), K))
     if d["hard"]:
@@ -1534,7 +1571,8 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
         kax.set_yticks([lo, COLOR_FULL, LOAD_CAP])
         kax.set_yticklabels([f"{LOAD_CUT:.2f}", f"{COLOR_FULL:.2f}", f"{LOAD_CAP:.2f}"],
                             fontsize=fs(5.8), color=MUTED)
-        kax.set_ylabel(f"loading on this cluster\n(< {LOAD_CUT:.2f} not drawn)",
+        kax.set_ylabel(f"loading on the type\n(below {LOAD_CUT:.1f} not drawn)" if paper()
+                       else f"loading on this cluster\n(< {LOAD_CUT:.2f} not drawn)",
                        fontsize=fs(6.2), color=MUTED, labelpad=pw(1.5))
         if paper() and free:
             kax.set_ylabel("")

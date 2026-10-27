@@ -556,8 +556,18 @@ def panel_mix(ax, R, d, labh, Ph, chars):
                 ax.text(left + f / 2, yi, f"c{j}\n{100*f:.0f}%", ha="center",
                         va="center", fontsize=P2.fs(6.2), color="white")
             left += f
-    ax.set_yticks(y)
-    ax.set_yticklabels([g[0] for g in groups], fontsize=P2.fs(7.2))
+    if P2.paper():
+        # the group's name above its bar, left-aligned: as tick labels the names ran
+        # past the page's left edge and widened the figure (2026-10-27)
+        ax.set_yticks([])
+        for yi, (name, L) in zip(y, groups):
+            ax.text(0.0, yi + 0.36, name.replace("   n=", "  ·  n = "), ha="left",
+                    va="bottom", fontsize=P2.fs(7.0), color=INK)
+        ax.set_ylim(-0.5, len(groups) - 0.5 + 0.40)
+        ax.spines[["left"]].set_visible(False)
+    else:
+        ax.set_yticks(y)
+        ax.set_yticklabels([g[0] for g in groups], fontsize=P2.fs(7.2))
     ax.set_xlim(0, 1)
     ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
     ax.set_xticklabels(["0", "25%", "50%", "75%", "100%"], fontsize=P2.fs(7))
@@ -596,8 +606,9 @@ def panel_brain(axL, axR, axT, axKey, d, chars):
     P, has = d["P_lana"], d["has"]
     vmax = float(np.nanpercentile(P[has], 98)) or 1.0
     cm = plt.get_cmap("magma")
-    for ax, side, tag in ((axL, "L", "left"), (axR, "R", "right"),
-                          (axT, "T", "from above")):
+    views = [v for v in ((axL, "L", "left"), (axR, "R", "right"), (axT, "T", "from above"))
+             if v[0] is not None]                 # the page has no top view
+    for ax, side, tag in views:
         pl, ok = P2._scene(side, d, 1.30)
         m = ok & has
         actor = None
@@ -629,7 +640,8 @@ def panel_brain(axL, axR, axT, axKey, d, chars):
     from matplotlib.cm import ScalarMappable
     from matplotlib.colors import Normalize
     axKey.axis("off")
-    cax = axKey.inset_axes([0.04, 0.82, 0.62, 0.055])
+    cax = axKey.inset_axes([0.30, 0.62, 0.40, 0.16] if P2.paper() else
+                           [0.04, 0.82, 0.62, 0.055])
     cb = axKey.figure.colorbar(ScalarMappable(norm=Normalize(0, vmax), cmap=cm),
                                cax=cax, orientation="horizontal")
     cb.set_label(f"P(LanA), 0 to the 98th percentile ({vmax:.2f})", fontsize=P2.fs(7.2),
@@ -775,8 +787,8 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     # FOUR PANELS, ONE PER CORNER. The left column is the narrow one (A above B) and
     # the right the wide one (C above D); the bottom row is the taller, so that D -
     # three views of the coverage - can actually be read.
-    fig = plt.figure(figsize=(P2.canvas(17.6), 15.6), dpi=190)
-    gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 2.3],
+    fig = plt.figure(figsize=(P2.canvas(17.6), 11.4 if P2.paper() else 15.6), dpi=190)
+    gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 1.35] if P2.paper() else [1.0, 2.3],
                   hspace=0.30 if P2.paper() else 0.52,
                   wspace=1.2, left=0.055, right=0.985,
                   top=0.95 if P2.paper() else 0.905, bottom=0.030)
@@ -799,14 +811,23 @@ def figure_3(fset, k, n_perm, n_boot, ext=None, pre=None, shared_with=None):
     axB = fig.add_subplot(gs[0, 8:24])
     panel_inside(axB, R, d, 150, ext)
 
-    cC = GridSpecFromSubplotSpec(2, 1, gs[1, 0:7], height_ratios=[0.90, 1.0],
+    cC = GridSpecFromSubplotSpec(2, 1, gs[1, 0:7],
+                                 height_ratios=[1.0, 0.5] if P2.paper() else [0.90, 1.0],
                                  hspace=0.0)
     axC = fig.add_subplot(cC[0])
     panel_mix(axC, R, d, labh, Ph, 66)
 
-    cD = GridSpecFromSubplotSpec(2, 2, gs[1, 8:24], hspace=0.08, wspace=0.03)
-    axDL, axDR = fig.add_subplot(cD[0, 0]), fig.add_subplot(cD[0, 1])
-    axDT, axDK = fig.add_subplot(cD[1, 0]), fig.add_subplot(cD[1, 1])
+    if P2.paper():
+        # the two lateral views over the scale; the top view, which left the quarter
+        # under C empty, is not on the page (2026-10-27)
+        cD = GridSpecFromSubplotSpec(2, 2, gs[1, 8:24], height_ratios=[1.0, 0.26],
+                                     hspace=0.05, wspace=0.03)
+        axDL, axDR = fig.add_subplot(cD[0, 0]), fig.add_subplot(cD[0, 1])
+        axDT, axDK = None, fig.add_subplot(cD[1, :])
+    else:
+        cD = GridSpecFromSubplotSpec(2, 2, gs[1, 8:24], hspace=0.08, wspace=0.03)
+        axDL, axDR = fig.add_subplot(cD[0, 0]), fig.add_subplot(cD[0, 1])
+        axDT, axDK = fig.add_subplot(cD[1, 0]), fig.add_subplot(cD[1, 1])
     panel_brain(axDL, axDR, axDT, axDK, d, 70)
 
     fig.canvas.draw()

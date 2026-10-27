@@ -285,7 +285,9 @@ def panel_brains(axes, xyz, hemi, rgba, radius):
         _show(ax, img)
         # the top view fills its axes to the bottom edge, so its count goes to the
         # top-left corner, which the brain's outline leaves free (2026-10-26)
-        y_, va_ = (0.98, "top") if side == "T" else (0.02, "bottom")
+        # on paper the larger label met the frontal poles up there; the bottom-left
+        # corner, beside the letterboxed image, is free in every view (2026-10-27)
+        y_, va_ = (0.98, "top") if side == "T" and not P2.paper() else (0.02, "bottom")
         ax.text(0.02, y_, f"{tag}  {n[side]}", transform=ax.transAxes, ha="left",
                 va=va_, fontsize=P2.fs(7.0), color=MUTED)
     return n
@@ -498,7 +500,7 @@ def figure_0_paper(t, u, d, gp):
     fig.canvas.draw()
     r = fig.canvas.get_renderer()
     inv = fig.transFigure.inverted()
-    labels = [(axB3[0], "B   every electrode the gate saw" if pap else "B  ·  every electrode the gate saw",
+    labels = [(axB3, "B   every electrode the gate saw" if pap else "B  ·  every electrode the gate saw",
                "" if pap else "active, through the gate: green   ·   inactive, rejected: grey")]
     if firsts:
         labels.insert(0, (firsts[0][0], ("A   the task, through four electrodes" if pap else
@@ -511,7 +513,10 @@ def figure_0_paper(t, u, d, gp):
         axk.scatter([0.70], [0.05], s=P2.pa(11), color=P2.BG, transform=axk.transAxes, clip_on=False)
         axk.text(0.73, 0.05, "rejected", transform=axk.transAxes, va="center", fontsize=P2.fs(7.0), color=INK)
     for ax, label, right in labels:
-        top = inv.transform((0, ax.get_tightbbox(r).y1))[1]
+        # the label of a row of views goes above the tallest of them: the top view
+        # stands taller than the letterboxed lateral ones (2026-10-27)
+        axs_ = list(ax) if isinstance(ax, (list, tuple)) else [ax]
+        top = max(inv.transform((0, a_.get_tightbbox(r).y1))[1] for a_ in axs_)
         fig.text(0.055, top + 0.004, label, fontsize=P2.fs(10.4), color=INK, va="bottom")
         if right:
             fig.text(0.945, top + 0.004, right, fontsize=P2.fs(8.8), color=MUTED, va="bottom",
@@ -588,7 +593,7 @@ def panel_example(axS, ax, t, row, gp, passed):
         n_pos = round(float(r.prop_above_pos) * nf * nt)
         n_neg = round(float(r.prop_below_neg) * nf * nt)
         ok = bool(r.high_activity)
-        txt_ = (f"{n_pos} of {need_p} bins" if P2.paper() else
+        txt_ = (f"{n_pos} above, {n_neg} below" if P2.paper() else
                 f"above {thr_p:+.1f} dB   {n_pos} of {need_p} bins\n"
                 f"below {thr_n:+.1f} dB   {n_neg} of {need_n}")
         ax.text(b + 0.5, -0.04, txt_,
@@ -609,7 +614,8 @@ def panel_example(axS, ax, t, row, gp, passed):
     thr = f"{best['thr_pos']:+.1f}" if by_pos else f"{best['thr_neg']:+.1f}"
     who = f"{row.patient_id} · {row.electrode}"
     if P2.paper():
-        verdict = f"{'KEPT' if passed else 'DISCARDED'}  ·  {who}  ·  {n} of {need} bins"
+        verdict = (f"{'KEPT' if passed else 'DISCARDED'}  ·  {who}  ·  {n} bins "
+                   f"{'above' if by_pos else 'below'} {thr} dB, {need} needed")
     elif passed:
         over = n - need
         verdict = (f"KEPT  ·  {who}  ·  {best['condition']}: {n} bins "
@@ -676,7 +682,7 @@ def figure_0_supplement(t, g, u, d, gp):
 
     axA = fig.add_subplot(gs[0])
     panel_bars(axA, order, tot, kep, pcol,
-               "seen (hatched) / kept" if pap else "electrodes: seen (hatched), kept (solid)")
+               "electrodes" if pap else "electrodes: seen (hatched), kept (solid)")
     cB = GridSpecFromSubplotSpec(1, 3, gs[1], wspace=0.03)
     axB = [fig.add_subplot(cB[0, i]) for i in range(3)]
     nB = panel_brains(axB, uxyz, uhemi, rgba_u, rad_u)
@@ -719,7 +725,7 @@ def figure_0_supplement(t, g, u, d, gp):
     inv = fig.transFigure.inverted()
     if pap:
         rows_lab = (
-            (axA, "A   electrodes the gate saw, and kept, per patient", "", INK, False),
+            (axA, "A   per patient: seen by the gate (hatched), kept (solid)", "", INK, False),
             (axB[0], "B   the same electrodes on the brain", keyB, MUTED, False),
             (ex["E"][0], "C   just through the gate", ex["E"][2]["verdict"], GREEN, True),
             (ex["F"][0], "D   just not", ex["F"][2]["verdict"], RED, True))

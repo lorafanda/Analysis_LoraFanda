@@ -237,7 +237,8 @@ def panel_rank(ax, matched, summary, ylab):
                 markeredgecolor="white", markeredgewidth=0.5, label=f"{a} vs {b}")
     ax.axhline(0, color=GREY, lw=P2.pw(1.0), zorder=0)
     ax.text(1.0, 0.012, "chance", fontsize=P2.fs(6.8), color=MUTED, va="bottom", ha="left")
-    ax.set_xlabel("match rank   (greedy, by centroid correlation)", fontsize=P2.fs(8), color=MUTED)
+    ax.set_xlabel("match rank" if P2.paper() else
+                  "match rank   (greedy, by centroid correlation)", fontsize=P2.fs(8), color=MUTED)
     ax.set_ylabel(ylab, fontsize=P2.fs(8), color=MUTED)
     ax.set_xticks(range(1, int(matched["rank"].max()) + 1))
     ax.tick_params(labelsize=P2.fs(7), colors=MUTED, length=2)
@@ -247,9 +248,11 @@ def panel_rank(ax, matched, summary, ylab):
         ax.spines[s].set_color(GREY)
     # above the axes, right half: inside the axes the legend covered the rank-3 peak
     if P2.paper():
-        # inside, upper right: ranks 5 to 7 sit low, so that corner is free on paper
-        ax.legend(fontsize=P2.fs(5.8), frameon=False, loc="upper right", ncol=1, labelcolor=INK,
-                  handlelength=2.2, labelspacing=0.25, borderaxespad=0.2)
+        # under the axes in two columns: inside, the entries crossed the curves
+        # at ranks 4 and 5 (2026-10-27)
+        ax.legend(fontsize=P2.fs(6.0), frameon=False, loc="upper left", ncol=2, labelcolor=INK,
+                  handlelength=2.2, labelspacing=0.3, columnspacing=1.6, borderaxespad=0.0,
+                  bbox_to_anchor=(0.0, -0.21))
     else:
         ax.legend(fontsize=P2.fs(6.3), frameon=False, loc="lower right", ncol=2, labelcolor=INK,
                   handlelength=2.4, columnspacing=1.2, borderaxespad=0.0,

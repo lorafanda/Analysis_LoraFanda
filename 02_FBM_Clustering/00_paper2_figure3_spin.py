@@ -378,7 +378,12 @@ def panel_profiles(fig, cells, d, obs, st, t0):
             cax = ax.inset_axes([1.018, 0.0, 0.024, 1.0])
             cb = fig.colorbar(im, cax=cax)
             cb.ax.tick_params(labelsize=P2.fs(6.2), colors=MUTED, length=2)
-            cb.set_label(lab, fontsize=P2.fs(6.8), color=MUTED)
+            if P2.paper() and ax is axes[1]:
+                # the side label sat under the third heatmap on paper; a word above
+                # the bar instead (2026-10-27)
+                cax.set_title("dB", fontsize=P2.fs(6.8), color=MUTED, pad=P2.pw(3))
+            else:
+                cb.set_label(lab, fontsize=P2.fs(6.8), color=MUTED)
     return axes
 
 
@@ -409,7 +414,9 @@ def panel_shares(ax, tab, d, st, order, chars):
         ax.axhline(base, color=MUTED, ls=":" if i_t == 0 else (0, (1, 2.2)), lw=P2.pw(1.1), zorder=0)
     ax.set_xticks(x)
     ax.set_xticklabels([f"c{j}" for j in order], fontsize=P2.fs(7.2))
-    ax.set_ylabel("share of its electrodes inside LanA", fontsize=P2.fs(8.2))
+    # on paper the second panel's label ran into the first panel's legend
+    ax.set_ylabel(("share inside LanA" if st == "all" else "") if P2.paper() else
+                  "share of its electrodes inside LanA", fontsize=P2.fs(8.2))
     top = float(T[["inside", "null_hi"]].max().max())
     ax.set_ylim(0, max(0.5, top * 1.35))
     ax.tick_params(labelsize=P2.fs(7.2), colors=MUTED)
