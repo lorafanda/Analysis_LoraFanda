@@ -50,6 +50,8 @@ outputs/
 !02_FBM_Clustering/outputs/
 !02_FBM_Clustering/outputs/clustering/
 !02_FBM_Clustering/outputs/clustering/**
+# the print-size preview the paper run writes: 6 MB, over the hook's cap
+02_FBM_Clustering/outputs/clustering/paper_figures/paper/*.pdf
 !02_FBM_Clustering/outputs/colors_config.json
 !02_FBM_Clustering/outputs/ReadME.txt
 

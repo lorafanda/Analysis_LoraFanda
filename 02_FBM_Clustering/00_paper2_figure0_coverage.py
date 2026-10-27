@@ -285,9 +285,12 @@ def panel_brains(axes, xyz, hemi, rgba, radius):
         _show(ax, img)
         # the top view fills its axes to the bottom edge, so its count goes to the
         # top-left corner, which the brain's outline leaves free (2026-10-26)
-        # on paper the larger label met the frontal poles up there; the bottom-left
-        # corner, beside the letterboxed image, is free in every view (2026-10-27)
-        y_, va_ = (0.98, "top") if side == "T" and not P2.paper() else (0.02, "bottom")
+        # on paper the top view's count hangs under its axes: the view fills the axes
+        # top to bottom, and the larger label met the poles in either corner (2026-10-27)
+        if side == "T" and P2.paper():
+            y_, va_ = -0.015, "top"
+        else:
+            y_, va_ = (0.98, "top") if side == "T" else (0.02, "bottom")
         ax.text(0.02, y_, f"{tag}  {n[side]}", transform=ax.transAxes, ha="left",
                 va=va_, fontsize=P2.fs(7.0), color=MUTED)
     return n
