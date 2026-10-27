@@ -52,6 +52,8 @@ outputs/
 !02_FBM_Clustering/outputs/clustering/**
 # the print-size preview the paper run writes: 6 MB, over the hook's cap
 02_FBM_Clustering/outputs/clustering/paper_figures/paper/*.pdf
+# the story document with its images embedded: 16 MB, over the hook's cap (the .md and the figures are tracked)
+02_FBM_Clustering/outputs/clustering/paper2_validation/*.html
 !02_FBM_Clustering/outputs/colors_config.json
 !02_FBM_Clustering/outputs/ReadME.txt
 
