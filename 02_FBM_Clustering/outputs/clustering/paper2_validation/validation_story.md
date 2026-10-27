@@ -1,6 +1,6 @@
 # Paper 2 · how the seven response types were validated
 
-*Built 2026-10-27 12:55 from the output files of cohort concat_source_v17, run 20261017_194301; every number below is read from a file named in `numbers.json`.*
+*Built 2026-10-27 12:56 from the output files of cohort concat_source_v17, run 20261017_194301; every number below is read from a file named in `numbers.json`.*
 
 Three questions decide whether a clustering is a result or an artefact. **Agreement**: do other descriptions and other algorithms find the same shapes? **Stability**: do the shapes come back when the patients change? **Separation**: are the shapes distinct from one another, and in which features? The sections below put the existing figures in that order, add the two that were missing (separation, scorecard), and end with anatomy as context.
 

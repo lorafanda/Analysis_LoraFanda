@@ -499,7 +499,7 @@ def build_figures(N):
     F = {}
     F["fig0"] = copy_png(PAPER / "FIG0_cohort_v17.png", "fig0_task_and_cohort.png")
     F["fig0b"] = copy_png(PAPER / "FIG0_cohort_supplement_v17.png", "fig0b_cohort_supplement.png")
-    F["fig1"] = crop(PAPER / f"FIG1a_{FSET}_cnmf_K{K}{tag}.png", (0.0, 0.278, 1.0, 1.0), "fig1_types.png")
+    F["fig1"] = crop(PAPER / f"FIG1a_{FSET}_cnmf_K{K}{tag}.png", (0.0, 0.271, 1.0, 1.0), "fig1_types.png")
     F["fig2a"] = copy_png(PAPER / f"FIG2_agreement_{FSET}_K{K}{tag}.png", "fig2a_ari_nmi_modal.png")
     F["fig2b"] = copy_png(PAPER / f"FIG4_K{K:02d}{tag}.png", "fig2b_matched_clusters.png")
     F["fig2c"] = copy_png(PAPER / f"FIG5_K{K:02d}{tag}.png", "fig2c_diagonal_share.png")
