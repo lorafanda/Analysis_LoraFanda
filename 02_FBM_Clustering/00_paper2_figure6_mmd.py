@@ -409,7 +409,7 @@ def compute_cell(d, a, log=print):
     per_type = pd.DataFrame(per_type)
     # the per-type silhouette in the same space, and its z against the cloud's per-cluster
     # silhouettes (10 draws, the method refitted on each): the scorecard's column
-    sil, sil_m, sil_sd = per_type_silhouette(d, seed=a.seed)
+    sil, sil_m, sil_sd = per_type_silhouette(d, n_cloud=a.n_cloud_sil, seed=a.seed)
     per_type["silhouette"] = [sil[int(c)] for c in per_type.cluster]
     per_type["sil_cloud_mean"], per_type["sil_cloud_sd"] = sil_m, sil_sd
     per_type["sil_z"] = (per_type.silhouette - sil_m) / max(sil_sd, 1e-12)
@@ -1026,6 +1026,7 @@ def selftest(out: Path, a):
     MMD_ROOT = out / "mmd"
     P2.OUT = out
     a.n_perm, a.n_perm_heldout, a.n_splits, a.n_cloud, a.cache = 40, 20, 3, 2, "selftest"
+    a.n_cloud_sil = 2
     d = synthetic()
     res = compute_cell(d, a)
     cd = cell_dir(a.cache, d["fset"], d["method"])
@@ -1058,6 +1059,14 @@ def selftest(out: Path, a):
 
 # ---------------------------------------------------------------- main
 def main() -> int:
+    # the server's console is not UTF-8; no print carries essential non-ASCII, so
+    # replace rather than crash
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(errors="replace")
+            except Exception:
+                pass
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--feature-set", default=MAIN)
     ap.add_argument("--method", default="cnmf", choices=METHODS)
@@ -1069,6 +1078,8 @@ def main() -> int:
     ap.add_argument("--n-perm-heldout", type=int, default=200, help="within-patient shuffles per held-out split")
     ap.add_argument("--n-splits", type=int, default=50, help="random patient halves")
     ap.add_argument("--n-cloud", type=int, default=50, help="Gaussian cloud draws")
+    ap.add_argument("--n-cloud-sil", type=int, default=10,
+                    help="cloud draws behind the per-type silhouette z")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--paper", action="store_true", help="the page versions (PAPER2_PAPER=1)")
     ap.add_argument("--selftest", metavar="DIR", help="synthetic data into DIR; nothing of the repo touched")
