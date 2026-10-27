@@ -73,10 +73,15 @@ def plan(headless):
     return [(brains, cmd) for brains, cmd in steps if not (headless and brains)]
 
 
-def paper_preview_pdf():
-    """Every paper PNG at its printed width, 174 mm, on an A4 page: the renders are
-    judged at the size they will be read at, not at screen size, where the printed
-    font sizes look large (2026-10-27). About 2 MB; not for git."""
+def paper_preview_pdf(png_dir=None, out=None):
+    """Every paper PNG at its printed width, 174 mm, on an A4 page, with its caption
+    file under it in a small monospace; a caption longer than the room left flows
+    onto continuation pages. The renders are judged at the size they will be read
+    at, not at screen size, where the printed font sizes look large (2026-10-27).
+    About 7 MB; ignored by git. png_dir: also write every page as a PNG; out: another
+    path for the PDF (both for checks)."""
+    import pathlib
+    import textwrap
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -86,20 +91,82 @@ def paper_preview_pdf():
     pngs = sorted(pdir.glob("FIG*.png"))
     if not pngs:
         return None
-    out = pdir / "paper_preview_A4.pdf"
+    out = pathlib.Path(out) if out else pdir / "paper_preview_A4.pdf"
     W, H, w_in = 8.27, 11.69, 174 / 25.4
+    TOP, BOTTOM, SIDE = 0.55, 0.45, 0.60             # margins, inches
+    FS, COLS = 6.3, 128                              # caption font (pt), chars per line
+    LH = FS * 1.42 / 72                              # line pitch, inches
+    mono = dict(family="DejaVu Sans Mono", fontsize=FS, color="#333", va="top", ha="left")
+
+    def script_doc(p):
+        """The module docstring of the script that drew this figure, minus its usage
+        lines: FIG 5 writes no caption file (2026-10-27)."""
+        import ast
+        tag = p.name.split("_")[0].lower()              # FIG5 -> figure5
+        hits = sorted(CLUST.glob(f"00_paper2_{tag.replace('fig', 'figure')}_*.py"))
+        if not hits:
+            return None
+        doc = ast.get_docstring(ast.parse(hits[0].read_text(encoding="utf-8"))) or ""
+        lines = [ln for ln in doc.split(chr(10)) if not ln.lstrip().startswith("python ")]
+        return [f"(no caption file: the description below is {hits[0].name}'s own)", ""] + lines
+
+    def caption_lines(p):
+        # FIG 4 writes its caption beside the working render, one folder up
+        for cand in (pdir / f"{p.stem}_caption.txt", pdir.parent / f"{p.stem}_caption.txt"):
+            if cand.exists():
+                raw = cand.read_text(encoding="utf-8").rstrip().split(chr(10))
+                break
+        else:
+            raw = script_doc(p) or ["(no caption file for this figure)"]
+        lines = []
+        for ln in raw:
+            ln = ln.rstrip()
+            if len(ln) <= COLS:
+                lines.append(ln)
+            else:
+                ind = len(ln) - len(ln.lstrip(" "))
+                lines.extend(textwrap.wrap(ln, COLS, subsequent_indent=" " * (ind + 2),
+                                           break_on_hyphens=False))
+        return lines
+
+    def page(pdf, name, note, lines, im, h_in, png_path):
+        fig = plt.figure(figsize=(W, H))
+        fig.text(SIDE / W, 1 - 0.28 / H, f"{name}   ·   {note}", fontsize=7, color="#777",
+                 va="top")
+        y = TOP
+        if im is not None:
+            ax = fig.add_axes([(W - w_in) / 2 / W, 1 - (y + h_in) / H, w_in / W, h_in / H])
+            ax.imshow(im)
+            ax.axis("off")
+            y += h_in + 0.22
+        for ln in lines:
+            fig.text(SIDE / W, 1 - y / H, ln, **mono)
+            y += LH
+        pdf.savefig(fig, dpi=150)
+        if png_path is not None:
+            fig.savefig(png_path, dpi=110)
+        plt.close(fig)
+
     with PdfPages(out) as pdf:
         for p in pngs:
+            lines = caption_lines(p)
             with Image.open(p) as im:
                 h_in = w_in * im.height / im.width
-                fig = plt.figure(figsize=(W, H))
-                ax = fig.add_axes([(W - w_in) / 2 / W, 1 - (0.7 + h_in) / H, w_in / W, h_in / H])
-                ax.imshow(im)
-                ax.axis("off")
-                fig.text(0.5, 0.025, f"{p.name}   ·   174 mm wide   ·   {im.width} x {im.height} px",
-                         ha="center", fontsize=7, color="#777")
-                pdf.savefig(fig, dpi=150)
-                plt.close(fig)
+                n_first = max(0, int((H - TOP - h_in - 0.22 - BOTTOM) / LH))
+                n_page = int((H - TOP - BOTTOM) / LH)
+                chunks, rest = [lines[:n_first]], lines[n_first:]
+                while rest:
+                    chunks.append(rest[:n_page])
+                    rest = rest[n_page:]
+                npg = len(chunks)
+                for i, chunk in enumerate(chunks):
+                    note = ((f"174 mm wide   ·   {im.width} x {im.height} px" if i == 0
+                             else "caption, continued")
+                            + (f"   ·   page {i + 1} of {npg}" if npg > 1 else ""))
+                    png_path = (None if png_dir is None
+                                else pathlib.Path(png_dir) / f"{p.stem}_p{i + 1}.png")
+                    page(pdf, p.name, note, chunk, im if i == 0 else None,
+                         h_in if i == 0 else 0.0, png_path)
     return out
 
 
@@ -114,7 +181,14 @@ def main():
                     help="draw every figure for the page (PAPER2_PAPER=1 for each script: "
                          "174 mm, printed font sizes, no prose or stamp, PNGs under "
                          "paper_figures/paper/); the working renders are untouched")
+    ap.add_argument("--pdf-only", action="store_true",
+                    help="with --paper: only rebuild paper/paper_preview_A4.pdf (every paper "
+                         "PNG at 174 mm with its caption) from the PNGs already drawn")
     a = ap.parse_args()
+    if a.pdf_only:
+        pdf = paper_preview_pdf()
+        print(f"print-size preview -> {pdf}" if pdf else "no paper PNGs to preview")
+        return 0 if pdf else 1
 
     steps = plan(a.headless)
     print(f"{len(steps)} steps, K = {K}, MAIN = {MAIN} (K={K_MAIN})"

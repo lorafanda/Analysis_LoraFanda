@@ -360,7 +360,7 @@ def panel_profiles(fig, cells, d, obs, st, t0):
     ims = []
     for ax, v, ttl, vl, cm in zip(axes, (o["mean_in"], o["mean_out"], o["diff"]),
                                   titles, (vlim, vlim, vdiff),
-                                  ("RdBu_r", "RdBu_r", "PuOr_r")):
+                                  (P2.ERSP_CMAP, P2.ERSP_CMAP, "PuOr_r")):
         im = P2.draw_mean(ax, block(v, d), d, vlim=vl, cmap=cm, show_axes=False,
                           cond_names=True)
         ims.append(im)

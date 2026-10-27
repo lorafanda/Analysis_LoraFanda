@@ -321,7 +321,7 @@ def draw_cube(ax, A, conds, nf):
     """The concatenated ERSP with the block boundaries and the GO cue dashed."""
     x = np.linspace(0, len(conds), A.shape[1])
     f = np.linspace(0, FMAX, nf)
-    ax.pcolormesh(x, f, A, cmap="RdBu_r", vmin=-VLIM, vmax=VLIM, shading="auto",
+    ax.pcolormesh(x, f, A, cmap=P2.ERSP_CMAP, vmin=-VLIM, vmax=VLIM, shading="auto",
                   rasterized=True)
     for b in range(len(conds)):
         ax.axvline(b + 0.5, color=INK, lw=P2.pw(0.8), ls=(0, (4, 3)))
@@ -494,7 +494,7 @@ def figure_0_paper(t, u, d, gp):
         tops = [axc.get_position() for _, axc in firsts]
         y0, y1 = min(p.y0 for p in tops), max(p.y1 for p in tops)
         cax = fig.add_axes([0.958, y0, 0.010, y1 - y0])
-        cb = fig.colorbar(ScalarMappable(norm=Normalize(-VLIM, VLIM), cmap="RdBu_r"),
+        cb = fig.colorbar(ScalarMappable(norm=Normalize(-VLIM, VLIM), cmap=P2.ERSP_CMAP),
                           cax=cax)
         cb.set_label("dB re baseline", fontsize=P2.fs(7.6), color=MUTED)
         cb.ax.tick_params(labelsize=P2.fs(6.8), colors=MUTED, length=2)
@@ -718,7 +718,7 @@ def figure_0_supplement(t, g, u, d, gp):
     from matplotlib.colors import Normalize
     pE, pF = ex["E"][1].get_position(), ex["F"][1].get_position()
     cax = fig.add_axes([0.958, pF.y0, 0.010, pE.y1 - pF.y0])
-    cb = fig.colorbar(ScalarMappable(norm=Normalize(-VLIM, VLIM), cmap="RdBu_r"), cax=cax)
+    cb = fig.colorbar(ScalarMappable(norm=Normalize(-VLIM, VLIM), cmap=P2.ERSP_CMAP), cax=cax)
     cb.set_label("dB re baseline", fontsize=P2.fs(7.6), color=MUTED)
     cb.ax.tick_params(labelsize=P2.fs(6.8), colors=MUTED, length=2)
     cb.outline.set_visible(False)

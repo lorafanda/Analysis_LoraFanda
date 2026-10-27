@@ -128,6 +128,11 @@ def paper() -> bool:
     switch lives in the environment (PAPER2_PAPER=1), which --paper sets."""
     return os.environ.get("PAPER2_PAPER", "0") == "1"
 MEAN_VLIM = 2.0             # dB: the one colour range every cluster-mean heatmap uses on paper
+# THE ERSP COLOUR MAP, the one every other ERSP image in the project is drawn with
+# (lf_centroids, lf_clustering, lf_blob_metrics, the gate examples): pure blue - white
+# - red. RdBu_r, used here until 2026-10-27, has pastel mid-tones that read as
+# blue-grey-red beside them. Every heatmap of a dB value and its colour bar use this.
+ERSP_CMAP = "bwr"
 _CANVAS_W = [17.6]          # the width of the figure being drawn (canvas())
 # the provisional type names of the main solution (Lora's readings are owed; these are the
 # ones the outline, the abstract and the talk use), for the block titles on paper
@@ -813,7 +818,7 @@ def outline_cells(ax, mask, nt, lw=pw(0.9), color=INK):
 
 
 # ---- the cluster mean, drawn once and reused by B and C ----------------------
-def draw_mean(ax, M, d, *, vlim, cmap="RdBu_r", col=None, ylim=None,
+def draw_mean(ax, M, d, *, vlim, cmap=ERSP_CMAP, col=None, ylim=None,
               show_axes=False, cond_names=False, sd=None):
     """M is (ncond, nband, nt). One panel, three conditions concatenated.
 
@@ -1361,7 +1366,7 @@ def _db_key(fig, cax, vlim, titled: bool):
     left with its ticks on the right when it stands in the margin like the loading key."""
     from matplotlib.cm import ScalarMappable
     from matplotlib.colors import Normalize
-    cb = fig.colorbar(ScalarMappable(norm=Normalize(-vlim, vlim), cmap="RdBu_r"), cax=cax)
+    cb = fig.colorbar(ScalarMappable(norm=Normalize(-vlim, vlim), cmap=ERSP_CMAP), cax=cax)
     if titled:
         # two lines, like the loading key's title beside it, so the two do not meet
         cax.set_title("dB re" + chr(10) + "baseline", fontsize=fs(7.0), color=MUTED,
