@@ -487,7 +487,7 @@ def save_cell(cd: Path, d, res, a, hashes):
     man = dict(feature_set=d["fset"], method=d["method"], k=int(d["k"]), run=str(d["run"].name),
                n=int(len(d["X"])), n_patients=int(d["n_patients"]), bandwidth=res["sigma"],
                cut=CUT, frac_below_cut=res["frac_cut"], versions=res["versions"], n_perm=a.n_perm,
-               n_perm_heldout=a.n_perm_heldout,
+               n_perm_heldout=a.n_perm_heldout, n_cloud_sil=a.n_cloud_sil,
                n_splits=a.n_splits, n_cloud=a.n_cloud, seed=a.seed, seconds=round(res["seconds"], 1),
                written=time.strftime("%Y-%m-%d %H:%M"), inputs_md5=hashes)
     P2.save_text(json.dumps(man, indent=1), cd / "manifest.json")

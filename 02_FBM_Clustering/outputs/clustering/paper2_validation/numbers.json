@@ -248,6 +248,7 @@
    "5": 0.31381636645753214,
    "6": 0.10057943003170079
   },
+  "fig5_n_perm": 1000,
   "fig5": {
    "across_algorithms": 0.54820415879017,
    "across_features": 0.3846880907372401,
@@ -289,7 +290,41 @@
    "5": 0.7802185725734196,
    "6": 0.7489281799779614
   },
+  "consensus_other": {
+   "0": 0.17465563860197308,
+   "1": 0.19786582474158074,
+   "2": 0.06615861962918271,
+   "3": 0.22556924637091064,
+   "4": 0.11308883214880383,
+   "5": 0.14429728345119044,
+   "6": 0.13403718857905675
+  },
+  "consensus_margin": {
+   "0": 0.5432524065924276,
+   "1": 0.44633131713630375,
+   "2": 0.7282683229057421,
+   "3": 0.36232208538824173,
+   "4": 0.7102795357884872,
+   "5": 0.6359212891222292,
+   "6": 0.6148909913989045
+  },
+  "consensus_low_margin": {
+   "0": 0.14150943396226415,
+   "1": 0.16083916083916083,
+   "2": 0.041666666666666664,
+   "3": 0.275,
+   "4": 0.059880239520958084,
+   "5": 0.045,
+   "6": 0.12946428571428573
+  },
   "consensus_matched": 1587,
+  "consensus_settings": {
+   "H": 200,
+   "frac": 0.8,
+   "null_draws": 25,
+   "null_H": 50,
+   "min_cosample": 108
+  },
   "consensus_slide_values": [
    0.8202004273277071,
    0.816260656510821,
@@ -350,6 +385,26 @@
     "null_kind": "shaft-permuted"
    }
   },
+  "lopo_rows": {
+   "example": {
+    "patient": "EL030",
+    "n": 71,
+    "ari": 0.8659956329492063,
+    "acc": 0.971830985915493,
+    "chance": 0.5774647887323944
+   },
+   "lowest": {
+    "patient": "PAT_3965",
+    "n": 72,
+    "ari": 0.7567565528819787
+   },
+   "worst_place": {
+    "patient": "EL051",
+    "n": 33,
+    "acc": 0.6363636363636364,
+    "chance": 0.8181818181818182
+   }
+  },
   "kbyk": {
    "8": {
     "share": 0.9004410838059231,
@@ -382,7 +437,8 @@
    "n_splits": 100,
    "n_cloud": 100,
    "bandwidth": 1.3327157944068617,
-   "frac_below_cut": 0.15500945179584122
+   "frac_below_cut": 0.15500945179584122,
+   "n_cloud_sil": null
   },
   "mmd_argmax": [
    {
@@ -1129,12 +1185,15 @@
   "fig5_pairs": "outputs\\clustering\\paper_figures\\FIG5_pairs_K07_run20261017-194301.csv",
   "consensus_results": "outputs\\clustering\\consensus\\concat_source_v17\\concat_bands15\\cnmf\\results.json",
   "consensus_items": "outputs\\clustering\\consensus\\concat_source_v17\\concat_bands15\\cnmf\\items_k07.csv",
+  "consensus_manifest": "outputs\\clustering\\consensus\\concat_source_v17\\concat_bands15\\cnmf\\manifest.json",
   "consensus_clusters": "outputs\\clustering\\consensus\\concat_source_v17\\concat_bands15\\cnmf\\clusters_k07.csv",
   "lopo": "outputs\\clustering\\statistics\\concat_bands15_K7\\stats_summary.json",
+  "lopo_per_patient": "outputs\\clustering\\statistics\\concat_bands15_K7\\stats_lopo.csv",
   "kbyk": "outputs\\clustering\\paper_figures\\FIG5_KbyK_run20261017-194301.csv",
   "silhouette": "outputs\\clustering\\statistics\\concat_bands15_K7\\stats_separation.csv",
   "mmd": "outputs\\clustering\\mmd\\concat_source_v17\\concat_bands15\\cnmf\\pairs_summary.csv",
   "lana": "outputs\\clustering\\paper_figures\\FIG3_lana_concat_bands15_K7_run20261017-194301_clusters.csv",
-  "spin": "outputs\\clustering\\paper_figures\\FIG3_spin_concat_bands15_K7_run20261017-194301_summary.json"
+  "spin": "outputs\\clustering\\paper_figures\\FIG3_spin_concat_bands15_K7_run20261017-194301_summary.json",
+  "worked_contingency": "outputs\\clustering\\paper_figures\\FIG4_contingency_cnmf_vs_kmeans_concat_bands15_K07_run20261017-194301.csv"
  }
 }
