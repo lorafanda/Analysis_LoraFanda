@@ -557,135 +557,106 @@ def build_figures(N):
 
 
 # ---------------------------------------------------------------- green: worked examples
+def _names(N):
+    return {j: ("c" + str(j) + (" " + N["names"][j] if N["names"][j] else "")) for j in range(K)}
+
+
 def worked_agreement(N):
-    """Fig 2C and 2D on convex NMF against k-means (15 bands, K 7), step by step, from
-    the contingency table, the matched-pair table and the 66-pair table."""
+    """Fig 2C and 2D on convex NMF against k-means (15 bands, K 7), as steps, from the
+    contingency table, the matched-pair table and the 66-pair table."""
     tag = N["tag"]
     comp = "cnmf_vs_kmeans_concat_bands15"
     fC = PF / f"FIG4_contingency_{comp}_K{K:02d}{tag}.csv"
     C = pd.read_csv(fC, index_col=0)
     A = C.to_numpy()
     src("worked_contingency", fC)
-    fM = PF / f"FIG4_matched_K{K:02d}{tag}.csv"
-    m = pd.read_csv(fM)
+    m = pd.read_csv(PF / f"FIG4_matched_K{K:02d}{tag}.csv")
     m = m[(m.comparison == comp) & (m.weighting == "hard")].sort_values("rank")
     n_perm = int(round(1.0 / float(m.p_plain.min()) - 1))
-    fS = PF / f"FIG4_summary_K{K:02d}{tag}.csv"
-    sm = pd.read_csv(fS)
+    sm = pd.read_csv(PF / f"FIG4_summary_K{K:02d}{tag}.csv")
     sm = sm[sm.comparison == comp].iloc[0]
-    f5 = PF / f"FIG5_pairs_K{K:02d}{tag}.csv"
-    p5 = pd.read_csv(f5)
+    p5 = pd.read_csv(PF / f"FIG5_pairs_K{K:02d}{tag}.csv")
     r5 = p5[(p5.method_1 == "kmeans") & (p5.feature_1 == FSET) & (p5.method_2 == "cnmf") & (p5.feature_2 == FSET)]
     if r5.empty:
         r5 = p5[(p5.method_2 == "kmeans") & (p5.feature_2 == FSET) & (p5.method_1 == "cnmf") & (p5.feature_1 == FSET)]
     r5 = r5.iloc[0]
     N_ = int(A.sum())
-    nm = {j: ("c" + str(j) + (" " + N["names"][j] if N["names"][j] else "")) for j in range(K)}
+    nm = _names(N)
+    pairs = [(int(r.cluster_1), int(r.cluster_2), float(r.r_centred)) for _, r in m.iterrows()]
+    top = m.iloc[m.overlap.to_numpy().argmax()]
+    low = m.iloc[m.overlap.to_numpy().argmin()]
+    i_t, j_t, i_l, j_l = int(top.cluster_1), int(top.cluster_2), int(low.cluster_1), int(low.cluster_2)
+    n_t, n_l = int(A[i_t, j_t]), int(A[i_l, j_l])
+    exp_int = top.n_1 * top.n_2 / N_
+    exp_j = exp_int / (top.n_1 + top.n_2 - exp_int)
+    diag_cells = " + ".join(str(int(A[i, j])) for i, j, _ in pairs)
+    diag_sum = int(sum(A[i, j] for i, j, _ in pairs))
     L = []
     W = L.append
-    W("##! Worked example, to follow for the other statistics: how Fig 2C and 2D were computed")
+    W("##! Worked example, to follow for the other statistics: Fig 2C and 2D, step by step")
     W("")
-    W(f"!! Take one comparison of Fig 2C: convex NMF against k-means, both on 15 bands at K = {K}. Every "
-      f"number below is read from the FIG 4 and FIG 5 tables of that comparison.")
+    W(f"!! One comparison of Fig 2C: convex NMF against k-means, both on 15 bands, K = {K}. Numbers from the FIG 4 and FIG 5 tables.")
     W("")
-    W("!! **Step 1, the table.** Cross-tabulate the electrodes: rows are the convex NMF types, columns the "
-      f"k-means clusters, a cell counts the electrodes that are in both. N = {N_}.")
+    W("!! **Step 1: the table**")
+    W(f"-! cross-tabulate the {N_} electrodes: rows = convex NMF types, columns = k-means clusters, a cell = electrodes in both")
     W("")
-    hdr = "|! | " + " | ".join(f"k{j}" for j in range(A.shape[1])) + " | row total |"
-    W(hdr)
+    W("|! | " + " | ".join(f"k{j}" for j in range(A.shape[1])) + " | row total |")
     W("|" + "---|" * (A.shape[1] + 2))
     for i in range(A.shape[0]):
         W("|! " + nm[i] + " | " + " | ".join(f"{int(v)}" for v in A[i]) + f" | {int(A[i].sum())} |")
     W("|! column total | " + " | ".join(f"{int(v)}" for v in A.sum(0)) + f" | {N_} |")
     W("")
-    pairs = [(int(r.cluster_1), int(r.cluster_2), float(r.r_centred)) for _, r in m.iterrows()]
-    W("!! **Step 2, which cluster goes with which (the matching).** Each cluster's centroid is the mean of its "
-      "electrodes after each electrode was scaled to zero mean and unit SD across its features (shape, not "
-      "loudness). Each solution's mean centroid is subtracted from its own centroids, then Pearson r is taken "
-      "between every convex NMF centroid and every k-means centroid. Pairs are taken greedily from the highest "
-      "r down, each cluster used once: "
-      + ", ".join(f"{nm[i]} with k{j} (r {r:.2f})" for i, j, r in pairs)
-      + ". The matching looks only at shapes; the test below looks only at electrodes, so a matched pair is "
-      "not forced to share electrodes.")
+    W("!! **Step 2: pair the clusters (which goes with which)**")
+    W("-! centroid of each cluster = mean of its electrodes, each electrode first scaled to zero mean and unit SD across its features (shape, not loudness)")
+    W("-! subtract each solution's mean centroid from its own centroids, then Pearson r between every convex NMF centroid and every k-means centroid")
+    W("-! take pairs greedily from the highest r down, each cluster used once: " + ", ".join(f"{nm[i]}–k{j} ({r:.2f})" for i, j, r in pairs))
+    W("-! the shapes choose the pair; only the electrodes score it, so a pair is not forced to share electrodes")
     W("")
-    top = m.iloc[m.overlap.to_numpy().argmax()]
-    low = m.iloc[m.overlap.to_numpy().argmin()]
-    i_t, j_t, i_l, j_l = int(top.cluster_1), int(top.cluster_2), int(low.cluster_1), int(low.cluster_2)
-    n_t, n_l = int(A[i_t, j_t]), int(A[i_l, j_l])
-    W("!! **Step 3, the overlap of a matched pair (Jaccard).** J = |A ∩ B| / |A ∪ B| = shared / (in A + in B − shared). "
-      f"For {nm[i_t]} with k{j_t}: {n_t} shared, {int(top.n_1)} in the type, {int(top.n_2)} in the k-means cluster, "
-      f"so J = {n_t} / ({int(top.n_1)} + {int(top.n_2)} − {n_t}) = {top.overlap:.2f}. For the weakest pair, "
-      f"{nm[i_l]} with k{j_l}: {n_l} / ({int(low.n_1)} + {int(low.n_2)} − {n_l}) = {low.overlap:.2f}.")
+    W("!! **Step 3: the overlap of a matched pair (Jaccard)**")
+    W("-! J = shared ÷ (in A + in B − shared)")
+    W(f"-! best pair, {nm[i_t]}–k{j_t}: {n_t} ÷ ({int(top.n_1)} + {int(top.n_2)} − {n_t}) = {top.overlap:.2f}")
+    W(f"-! weakest pair, {nm[i_l]}–k{j_l}: {n_l} ÷ ({int(low.n_1)} + {int(low.n_2)} − {n_l}) = {low.overlap:.2f}")
     W("")
-    exp_int = top.n_1 * top.n_2 / N_
-    exp_j = exp_int / (top.n_1 + top.n_2 - exp_int)
-    W("!! **Step 4, why a permutation, and what \"chance\" is here.** A Jaccard has no fixed chance level: two "
-      "large clusters share many electrodes by accident, two small ones almost none, and the greedy matching "
-      "picks the best partner, which adds optimism. So the chance level is measured by the same procedure on "
-      "labels that cannot agree: the convex NMF labels stay as they are; the k-means labels are shuffled across "
-      f"the {N_} electrodes (every k-means cluster keeps its size, which electrodes carry which label is random); "
-      "k-means' centroids are recomputed from the shuffled membership, the greedy matching is redone, and the "
-      f"Jaccard of the pair that each type now gets is recorded. Repeated {n_perm} times, this is the \"plain\" "
-      f"null. For {nm[i_t]}: by pure arithmetic two unrelated sets of {int(top.n_1)} and {int(top.n_2)} among "
-      f"{N_} share about {exp_int:.0f} electrodes, J ≈ {exp_j:.3f}; the null's mean is {top.null_plain_mean:.3f} "
-      f"± {top.null_plain_sd:.3f}, a little higher because the matching picks the best of {K} partners. The "
-      f"observed {top.overlap:.2f} is z = ({top.overlap:.3f} − {top.null_plain_mean:.3f}) / {top.null_plain_sd:.3f} = "
-      f"{top.z_plain:.0f} null SDs above it; p = (1 + number of draws ≥ observed) / (1 + {n_perm}) = "
-      f"{top.p_plain:.4f}, the floor, because none of the {n_perm} draws came close. Meaning: an overlap this "
-      "large does not arise by accident between unrelated labels of these sizes.")
+    W("!! **Step 4: chance, by shuffling the electrodes (the plain null)**")
+    W("-! why: a Jaccard has no fixed chance level; big clusters overlap by accident, small ones hardly, and the greedy matching picks the best partner")
+    W(f"-! keep the convex NMF labels; shuffle the k-means labels across the {N_} electrodes (every k-means cluster keeps its size, which electrodes carry which label is random)")
+    W("-! recompute k-means' centroids, redo the matching, record the Jaccard each type now gets")
+    W(f"-! repeat {n_perm} times: that distribution is chance for this pair")
+    W(f"-! {nm[i_t]}: pure arithmetic says two unrelated sets of {int(top.n_1)} and {int(top.n_2)} share about {exp_int:.0f} electrodes, J ≈ {exp_j:.3f}; the null's mean is {top.null_plain_mean:.3f} ± {top.null_plain_sd:.3f} (a little higher: best of {K} partners)")
+    W(f"-! z = ({top.overlap:.3f} − {top.null_plain_mean:.3f}) ÷ {top.null_plain_sd:.3f} = {top.z_plain:.0f}; p = (1 + draws ≥ observed) ÷ (1 + {n_perm}) = {top.p_plain:.4f}, the floor")
+    W("-! meaning: an overlap this large does not happen by accident between unrelated labels of these sizes")
     W("")
-    W("!! **Step 5, the within-patient permutation, and why it is the harder bar.** Electrodes come in "
-      "patients. Both solutions could put one patient's electrodes together for a reason that has nothing to "
-      "do with the shape (they share a reference and a region), and then the overlap would reflect \"both "
-      "follow the patient\". The within-patient null shuffles the k-means labels only among each patient's own "
-      "electrodes: every patient keeps exactly its counts of every k-means cluster, only which of its "
-      f"electrodes carry which label moves. For {nm[i_t]} ({100*N['top_share'][i_t]:.0f} % of it from one "
-      f"patient) this null is {top.null_within_mean:.3f} ± {top.null_within_sd:.3f}, "
-      f"{top.null_within_mean/top.null_plain_mean:.0f}× the plain null, because grouping by patient alone "
-      f"already reproduces much of it; the observed {top.overlap:.2f} is still z = {top.z_within:.0f} above it, so "
-      f"{nm[i_t]} agrees beyond what the patient structure gives. For {nm[i_l]}: {low.overlap:.2f} against "
-      f"{low.null_within_mean:.3f} ± {low.null_within_sd:.3f} (z {low.z_within:.0f}). In Fig 2C a solid box is a "
-      "pair above both nulls, a dashed box above the plain null only (agreement that patient grouping "
-      f"explains), grey not above chance; here {int(sm.n_sig_within_hard)} of {K} pairs are above both.")
+    W("!! **Step 5: chance within patients (the harder null)**")
+    W("-! why: both solutions could group a patient's electrodes together for a reason that is not the shape (shared reference, shared region)")
+    W("-! shuffle the k-means labels only among each patient's own electrodes: every patient keeps its counts of every k-means cluster")
+    W(f"-! {nm[i_t]} ({100*N['top_share'][i_t]:.0f} % from one patient): null {top.null_within_mean:.3f} ± {top.null_within_sd:.3f}, {top.null_within_mean/top.null_plain_mean:.0f}× the plain null; observed {top.overlap:.2f}, z = {top.z_within:.0f}")
+    W(f"-! {nm[i_l]}: {low.overlap:.2f} against {low.null_within_mean:.3f} ± {low.null_within_sd:.3f}, z = {low.z_within:.0f}")
+    W(f"-! in Fig 2C: solid box = above both nulls, dashed = above the plain null only (patient grouping explains it), grey = chance; here {int(sm.n_sig_within_hard)} of {K} above both")
     W("")
-    diag_cells = " + ".join(str(int(A[i, j])) for i, j, _ in pairs)
-    diag_sum = int(sum(A[i, j] for i, j, _ in pairs))
-    W("!! **Step 6, the diagonal share in Fig 2C's title.** Add the matched cells of the table: "
-      f"{diag_cells} = {diag_sum} of {N_} electrodes = {sm.diag_share:.2f}: {100*sm.diag_share:.0f} % of the "
-      f"electrodes sit in matched pairs. Its null re-pairs the same table at random ({int(sm.diag_n_draw)} "
-      f"random one-to-one pairings): {sm.diag_null_mean:.2f} ± {sm.diag_null_sd:.2f}; adjusted share "
-      f"(S − S₀) / (1 − S₀) = ({sm.diag_share:.2f} − {sm.diag_null_mean:.2f}) / (1 − {sm.diag_null_mean:.2f}) = "
-      f"{sm.diag_share_adj:.2f}. This null only asks how much of the diagonal the pairing earned; it does not "
-      "re-cluster.")
+    W("!! **Step 6: the diagonal share in Fig 2C's title**")
+    W(f"-! add the matched cells: {diag_cells} = {diag_sum} of {N_} = {sm.diag_share:.2f}")
+    W(f"-! chance: re-pair the same table at random, {int(sm.diag_n_draw)} times: {sm.diag_null_mean:.2f} ± {sm.diag_null_sd:.2f}")
+    W(f"-! adjusted share = (S − S₀) ÷ (1 − S₀) = ({sm.diag_share:.2f} − {sm.diag_null_mean:.2f}) ÷ (1 − {sm.diag_null_mean:.2f}) = {sm.diag_share_adj:.2f}")
+    W("-! this null only asks how much of the diagonal the pairing earned; it does not re-cluster")
     W("")
-    W("!! **Step 7, Fig 2D, the same pair in the 66-pair matrix.** The same table, but the pairing is the "
-      "Hungarian assignment: the one-to-one pairing that maximises the diagonal, found on the electrodes "
-      f"themselves. Here it picks the same {K} pairs, so the share is again {r5.diagonal_share:.2f}. Because this "
-      "pairing was chosen to be large, its chance level must come from the same procedure: shuffle the k-means "
-      f"labels across the electrodes (sizes kept), rebuild the table, redo the Hungarian pairing, take the "
-      f"share; {int(r5.n_perm)} times. Chance is {r5.null_mean:.3f} (95th percentile {r5.null_p95:.3f}), "
-      f"p = {r5.p_value:.4f}, and the chance-corrected share is ({r5.diagonal_share:.3f} − {r5.null_mean:.3f}) / "
-      f"(1 − {r5.null_mean:.3f}) = {r5.chance_corrected:.2f}. The two chance levels differ "
-      f"({sm.diag_null_mean:.2f} in 2C, {r5.null_mean:.2f} in 2D) because 2C re-pairs the real table at random "
-      "(what an arbitrary alignment would keep) and 2D re-matches optimally on unrelated labels (what the best "
-      "alignment finds by accident), the higher and fairer bar for a share that was itself maximised.")
+    W("!! **Step 7: the same pair in Fig 2D (the 66-pair matrix)**")
+    W("-! same table; the pairing is the Hungarian assignment, the one-to-one pairing that maximises the diagonal, found on the electrodes")
+    W(f"-! here it picks the same {K} pairs: share {r5.diagonal_share:.2f}")
+    W(f"-! chance must come from the same procedure: shuffle the k-means labels (sizes kept), rebuild the table, redo the pairing, {int(r5.n_perm)} times: {r5.null_mean:.3f} (95th percentile {r5.null_p95:.3f}), p = {r5.p_value:.4f}")
+    W(f"-! chance-corrected = ({r5.diagonal_share:.3f} − {r5.null_mean:.3f}) ÷ (1 − {r5.null_mean:.3f}) = {r5.chance_corrected:.2f}")
+    W(f"-! why 2C and 2D have different chance levels ({sm.diag_null_mean:.2f} vs {r5.null_mean:.2f}): 2C re-pairs the real table at random, 2D re-matches optimally on unrelated labels; the second is the higher, fairer bar for a share that was itself maximised")
     W("")
-    W(f"!! **What it means, in one sentence.** k-means puts {100*r5.diagonal_share:.0f} % of the electrodes into "
-      f"the same {K} groups as convex NMF, where unrelated labels with these cluster sizes would give "
-      f"{100*r5.null_mean:.0f} %; every one of the {K} matched pairs overlaps far beyond both accident and patient "
-      f"structure, {nm[i_t]} the most ({top.overlap:.2f}), {nm[i_l]} the least ({low.overlap:.2f}).")
-    W("")
-    W("-! The same recipe reads every other cell of Fig 2C and 2D: a table, a pairing (shape-based and "
-      "greedy in 2C, electrode-based and optimal in 2D), a share or a Jaccard, and a chance level measured by "
-      "redoing the whole procedure on shuffled labels, across electrodes or within patient.")
+    W("!! **What it means**")
+    W(f"-! k-means puts {100*r5.diagonal_share:.0f} % of the electrodes into the same {K} groups as convex NMF; unrelated labels of these sizes would give {100*r5.null_mean:.0f} %")
+    W(f"-! every matched pair overlaps far beyond accident and beyond patient structure; {nm[i_t]} the most ({top.overlap:.2f}), {nm[i_l]} the least ({low.overlap:.2f})")
+    W("-! every other cell of Fig 2C and 2D is the same recipe: a table, a pairing, a share or a Jaccard, and chance from redoing the whole procedure on shuffled labels")
     W("")
     return L
 
 
 def worked_stability(N, which):
-    """Green reading blocks for Fig 3B-D, 3E and 3F."""
-    o = N["order"]
-    nm = {j: ("c" + str(j) + (" " + N["names"][j] if N["names"][j] else "")) for j in range(K)}
+    """Green reading of Fig 3B-D, 3E and 3F, as steps."""
+    nm = _names(N)
     cs = N["consensus_settings"]
     pac = N["pac"]
     L = []
@@ -696,96 +667,81 @@ def worked_stability(N, which):
         cons = N["consensus_type"]
         lowest = min(cons, key=cons.get)
         highest = max(cons, key=cons.get)
-        W("##! What you are looking at in Fig 3B to 3D, and how it was computed")
+        W("##! Fig 3B to 3D, step by step")
         W("")
-        W(f"!! The three panels come from one experiment. {cs['H']} times, {100*cs['frac']:.0f} % of the "
-          f"{N['n_patients']} patients ({n_draw} of them, with all their electrodes) are drawn without replacement, "
-          f"convex NMF is refitted at K = {K} on them, and for every pair of electrodes that were both drawn it is "
-          "noted whether they landed in the same cluster. M(i, j) = times together ÷ times both drawn. A pair is "
-          f"drawn together in about {cs['frac']:.1f}² × {cs['H']} = {exp_co:.0f} of the refits (the rarest pair "
-          f"{cs['min_cosample']} times). M = 1: always together; M = 0: never; M = 0.5: a coin toss.")
+        W("!! **Step 1: resample the patients and refit**")
+        W(f"-! draw {100*cs['frac']:.0f} % of the {N['n_patients']} patients ({n_draw}, with all their electrodes) without replacement; refit convex NMF at K = {K}")
+        W(f"-! repeat {cs['H']} times")
         W("")
-        W("!! **Fig 3C, the matrix.** Every electrode is a row and a column, ordered by its published type. A "
-          "bright square on the diagonal is a type whose electrodes stay together whichever patients are "
-          "dropped; the haze between two squares is the electrodes that switch between those two types from one "
-          "refit to the next.")
+        W("!! **Step 2: the consensus matrix M (Fig 3C)**")
+        W("-! for every pair of electrodes: M = times in the same cluster ÷ times both drawn")
+        W(f"-! a pair is drawn together in about {cs['frac']:.1f}² × {cs['H']} = {exp_co:.0f} refits (the rarest {cs['min_cosample']})")
+        W("-! M = 1 always together, 0 never, 0.5 a coin toss")
+        W("-! rows and columns ordered by the published type: a bright square = a type that stays together; the haze between two squares = the electrodes that switch between them")
         W("")
-        W("!! **Fig 3D, per-type consensus.** m(k) = the mean of M over every pair of electrodes inside the type, "
-          "the brightness of its square: "
-          + ", ".join(f"{nm[j]} {cons[j]:.2f}" for j in sorted(cons, key=cons.get, reverse=True))
-          + ". Each electrode also has an own-cluster consensus (its mean M with its own type) and a best-other "
-          "(its mean M with the type it most often joins instead); the margin is the difference. For "
-          f"{nm[lowest]}: own {N['consensus_type'][lowest]:.2f}, best-other {N['consensus_other'][lowest]:.2f}, "
-          f"margin {N['consensus_margin'][lowest]:.2f}, and {100*N['consensus_low_margin'][lowest]:.0f} % of its "
-          f"electrodes have a margin under 0.2, which is to say they go with another type nearly as often. For "
-          f"{nm[highest]}: own {N['consensus_type'][highest]:.2f}, best-other {N['consensus_other'][highest]:.2f}, "
-          f"{100*N['consensus_low_margin'][highest]:.0f} % under 0.2.")
+        W("!! **Step 3: per-type consensus (Fig 3D)**")
+        W("-! m(k) = mean M over every pair inside the type (the brightness of its square): "
+          + ", ".join(f"{nm[j]} {cons[j]:.2f}" for j in sorted(cons, key=cons.get, reverse=True)))
+        W("-! per electrode: own consensus = mean M with its own type; best-other = mean M with the type it most often joins instead; margin = the difference")
+        W(f"-! {nm[lowest]}: own {N['consensus_type'][lowest]:.2f}, best-other {N['consensus_other'][lowest]:.2f}, margin {N['consensus_margin'][lowest]:.2f}; {100*N['consensus_low_margin'][lowest]:.0f} % of its electrodes have a margin under 0.2 (they go with another type nearly as often)")
+        W(f"-! {nm[highest]}: own {N['consensus_type'][highest]:.2f}, best-other {N['consensus_other'][highest]:.2f}; {100*N['consensus_low_margin'][highest]:.0f} % under 0.2")
         W("")
-        W("!! **Fig 3B, PAC against the cloud.** PAC = the share of all electrode pairs with 0.1 < M < 0.9, the "
-          f"ambiguous pairs; lower is more stable. The data at K = {K}: {pac['real']:.3f}. The Gaussian cloud is "
-          f"{cs['null_draws']} draws of one Gaussian with the data's own mean and covariance and no clusters, the "
-          f"real patient labels attached, the same resampling ({cs['null_H']} refits each) and the same method: "
-          f"PAC {pac['null']:.3f} ± {pac['null_sd']:.3f}. RCSI = log({pac['null']:.3f}) − log({pac['real']:.3f}) = "
-          f"{pac['rcsi']:.2f}; p = (1 + clouds with PAC ≤ {pac['real']:.3f}) ÷ (1 + {cs['null_draws']}) = "
-          f"{pac['p']:.3f}, the floor, because no cloud was as stable. Reading: a featureless cloud carved into "
-          f"{K} leaves {100*pac['null']:.0f} % of the pairs ambiguous, the data leave {100*pac['real']:.0f} %. The "
-          f"red crosses mark the K where a consensus cluster is more than half one patient; at K = {K} the worst "
-          f"is {100*pac['worst_share']:.0f} % ({pac['worst_patient']}). The green line is the K the sweep's own "
-          f"criterion prefers, K = {N['rcsi_chosen']['K']} (RCSI {N['rcsi_chosen']['rcsi']:.2f}, p "
-          f"{N['rcsi_chosen']['p']:.2f}), so this panel supports K = {K} without having chosen it.")
+        W("!! **Step 4: PAC against the cloud (Fig 3B)**")
+        W(f"-! PAC = share of all electrode pairs with 0.1 < M < 0.9, the ambiguous pairs (lower = more stable): {pac['real']:.3f} at K = {K}")
+        W(f"-! the cloud: {cs['null_draws']} draws of one Gaussian with the data's mean and covariance and no clusters, the real patient labels attached, the same resampling ({cs['null_H']} refits each), the same method: PAC {pac['null']:.3f} ± {pac['null_sd']:.3f}")
+        W(f"-! RCSI = log({pac['null']:.3f}) − log({pac['real']:.3f}) = {pac['rcsi']:.2f}; p = (1 + clouds with PAC ≤ {pac['real']:.3f}) ÷ (1 + {cs['null_draws']}) = {pac['p']:.3f}, the floor")
+        W(f"-! reading: a featureless cloud carved into {K} leaves {100*pac['null']:.0f} % of the pairs ambiguous, the data leave {100*pac['real']:.0f} %")
+        W(f"-! red cross = a consensus cluster more than half one patient at that K; at K = {K} the worst is {100*pac['worst_share']:.0f} % ({pac['worst_patient']})")
+        W(f"-! green line = the K the sweep's own criterion prefers, K = {N['rcsi_chosen']['K']} (RCSI {N['rcsi_chosen']['rcsi']:.2f}, p {N['rcsi_chosen']['p']:.2f}): the panel supports K = {K}, it did not choose it")
         W("")
     elif which == "e":
         L_ = N["lopo"]
         P_ = N["lopo_predict"]
         R = N["lopo_rows"]
-        W("##! What you are looking at in Fig 3E")
+        W("##! Fig 3E, step by step")
         W("")
-        W(f"!! **Left.** For each of the {N['n_patients']} patients: remove it, refit convex NMF on the other "
-          f"{N['n_patients'] - 1}, and compare the refit's labels of the remaining electrodes with the full-cohort "
-          "labels by ARI (for every pair of electrodes, together in both or apart in both, corrected for chance). "
-          f"{R['example']['patient']} ({R['example']['n']} electrodes): {R['example']['ari']:.2f}; the lowest, "
-          f"{R['lowest']['patient']} ({R['lowest']['n']} electrodes): {R['lowest']['ari']:.2f}; median "
-          f"{L_['real_median']:.2f}. The grey band is the same test with fake patients: groups of the same sizes "
-          "built from whole shafts of other patients (a coherent block, like a real patient, so that removing that "
-          f"many electrodes costs the same by itself), 10 repetitions: {L_['null_mean']:.2f} ± {L_['null_sd']:.2f}. "
-          f"z = ({L_['real_mean']:.2f} − {L_['null_mean']:.2f}) ÷ {L_['null_sd']:.2f} = {L_['z']:+.1f}: a real patient "
-          "costs no more than a fake one of its size, which means no patient holds a type up on its own.")
+        W("!! **Left: drop a patient, refit**")
+        W(f"-! for each of the {N['n_patients']} patients: remove it, refit convex NMF on the other {N['n_patients'] - 1}")
+        W("-! ARI between the refit's labels of the remaining electrodes and the full-cohort labels (pairs of electrodes together in both or apart in both, corrected for chance)")
+        W(f"-! {R['example']['patient']} ({R['example']['n']} electrodes) {R['example']['ari']:.2f}; lowest {R['lowest']['patient']} ({R['lowest']['n']}) {R['lowest']['ari']:.2f}; median {L_['real_median']:.2f}")
+        W(f"-! grey band = the same test with fake patients: groups of the same sizes built from whole shafts of other patients (a coherent block, like a real patient), 10 repetitions: {L_['null_mean']:.2f} ± {L_['null_sd']:.2f}")
+        W(f"-! z = ({L_['real_mean']:.2f} − {L_['null_mean']:.2f}) ÷ {L_['null_sd']:.2f} = {L_['z']:+.1f}: a real patient costs no more than a fake one of its size, so no patient holds a type up on its own")
         W("")
-        W("!! **Right.** The dropped patient's electrodes are then placed with the refit's components (each "
-          "electrode's loadings by non-negative least squares, the largest wins; the refit's clusters are aligned "
-          "to the full-cohort ones by Hungarian matching on the kept electrodes), and the share that lands in its "
-          f"full-cohort type is the accuracy: {R['example']['patient']} {R['example']['acc']:.2f}; median "
-          f"{P_['acc_median']:.2f}; worst {R['worst_place']['patient']} {R['worst_place']['acc']:.2f}. The hollow "
-          "circle is that patient's chance: what giving every one of its electrodes its commonest type would "
-          f"score ({R['example']['patient']} {R['example']['chance']:.2f}; mean {P_['chance_mean']:.2f}). The lift, "
-          f"accuracy minus chance, averages {P_['lift_mean']:.2f}.")
+        W("!! **Right: place the dropped patient's electrodes**")
+        W("-! each electrode gets loadings on the refit's components by non-negative least squares; the largest wins")
+        W("-! the refit's clusters are aligned to the full-cohort ones by Hungarian matching on the kept electrodes")
+        W(f"-! accuracy = share landing in its full-cohort type: {R['example']['patient']} {R['example']['acc']:.2f}; median {P_['acc_median']:.2f}; worst {R['worst_place']['patient']} {R['worst_place']['acc']:.2f}")
+        W(f"-! hollow circle = that patient's chance: giving every electrode its commonest type ({R['example']['patient']} {R['example']['chance']:.2f}; mean {P_['chance_mean']:.2f}); lift = accuracy − chance, mean {P_['lift_mean']:.2f}")
         W("")
     elif which == "f":
         kb = N["kbyk"]
         g8 = N["gen"].get(8, {})
         n_sh = max(100, N["fig5_n_perm"] // 10)
-        W("##! What you are looking at in Fig 3F")
+        W("##! Fig 3F, step by step")
         W("")
-        W(f"!! The K = {K} and K = 8 partitions of the same run are cross-tabulated ({K} × 8), paired one-to-one by "
-          f"the Hungarian assignment ({K} pairs; the eighth cluster stays unpaired), and the share of electrodes on "
-          f"the paired diagonal is the kept share: {kb[8]['share']:.3f}. Chance is the same after shuffling the K 8 "
-          f"labels across electrodes ({n_sh} shuffles): {kb[8]['null']:.3f}; corrected, ({kb[8]['share']:.3f} − "
-          f"{kb[8]['null']:.3f}) ÷ (1 − {kb[8]['null']:.3f}) = {kb[8]['adj']:.2f}. Reading: {100*kb[8]['share']:.0f} % "
-          "of the electrodes keep their group when an eighth cluster is added; the rest go to the eighth, and the "
-          f"generalisation table says that at K = 8 one cluster is {100*g8.get('worst', float('nan')):.0f} % one "
-          f"patient. At K = 9 and K = 10 the kept share is {kb[9]['share']:.2f} and {kb[10]['share']:.2f}.")
+        W("!! **Step 1: cross-tabulate K 7 against K 8 of the same run**")
+        W(f"-! {K} × 8 table; pair one-to-one by the Hungarian assignment ({K} pairs, the eighth cluster unpaired)")
+        W(f"-! kept share = electrodes on the paired diagonal ÷ all: {kb[8]['share']:.3f}")
+        W("")
+        W("!! **Step 2: chance and the corrected share**")
+        W(f"-! shuffle the K 8 labels across electrodes, {n_sh} times: {kb[8]['null']:.3f}")
+        W(f"-! corrected = ({kb[8]['share']:.3f} − {kb[8]['null']:.3f}) ÷ (1 − {kb[8]['null']:.3f}) = {kb[8]['adj']:.2f}")
+        W("")
+        W("!! **What it means**")
+        W(f"-! {100*kb[8]['share']:.0f} % of the electrodes keep their group when an eighth cluster is added; the rest go to the eighth")
+        W(f"-! at K = 8 the generalisation table says one cluster is {100*g8.get('worst', float('nan')):.0f} % one patient")
+        W(f"-! K 7 → K 9 keeps {kb[9]['share']:.2f}, K 7 → K 10 {kb[10]['share']:.2f}")
         W("")
     return L
 
 
 def worked_separation(N):
-    """Green panel-by-panel reading of Fig 4."""
-    o = N["order"]
-    nm = {j: ("c" + str(j) + (" " + N["names"][j] if N["names"][j] else "")) for j in range(K)}
+    """Green panel-by-panel reading of Fig 4, as steps."""
+    nm = _names(N)
     sil = N["sil"]
     L = []
     W = L.append
-    W("##! What you are looking at in Fig 4, panel by panel")
+    W("##! Fig 4, panel by panel")
     W("")
     if "sil_type" in N:
         st = N["sil_type"]
@@ -793,41 +749,28 @@ def worked_separation(N):
         lo = min(st, key=lambda j: st[j]["z"])
         sc = N["sil_cloud"]
         n_sil = N["mmd_params"].get("n_cloud_sil") if N["mmd_present"] else None
-        cloud_txt = (f"{n_sil} Gaussian clouds, each clustered with convex NMF at K = {K}, give {n_sil*K} cloud clusters"
-                     if n_sil else f"Gaussian clouds, each clustered with convex NMF at K = {K} (the script's --n-cloud-sil "
-                                   "draws; the count is not in this run's manifest), give cloud clusters")
-        W("!! **A, silhouette per type.** For every electrode, a = its mean distance to the other electrodes of its "
-          "own type and b = its mean distance to the electrodes of the nearest other type (Euclidean, on the "
-          "unit-norm rows the fit was made in); s = (b − a) ÷ max(a, b): +1 is far from everything else, 0 is on "
-          "the border, negative is closer to another type than to its own. The bar is the mean s of the type: "
-          f"{nm[hi]} {st[hi]['sil']:.3f}, {nm[lo]} {st[lo]['sil']:.3f}. The cloud: {cloud_txt} with s = "
-          f"{sc['mean']:.3f} ± {sc['sd']:.3f}; "
-          f"z = (s − {sc['mean']:.3f}) ÷ {sc['sd']:.3f}: {nm[hi]} {st[hi]['z']:+.1f}, {nm[lo]} {st[lo]['z']:+.1f}. "
-          f"Why the overall z of section 4's first line is {sil['z']:.0f} while these are small: the overall number "
-          f"compares the whole-cohort silhouette ({sil['value']:.3f}) with the cloud's whole-cohort silhouette, whose "
-          f"spread across {sil['n_null']} clouds is tiny ({sil['null_sd']:.4f}); per type the bar is the spread of "
-          f"the cloud's individual clusters ({sc['sd']:.3f}), a much harder one.")
+        W("!! **A: silhouette per type**")
+        W("-! per electrode: a = mean distance to the other electrodes of its own type, b = mean distance to the electrodes of the nearest other type (Euclidean, unit-norm rows)")
+        W("-! s = (b − a) ÷ max(a, b): +1 far from everything else, 0 on the border, negative closer to another type than to its own")
+        W(f"-! the bar = mean s of the type: {nm[hi]} {st[hi]['sil']:.3f}, {nm[lo]} {st[lo]['sil']:.3f}")
+        W(("-! the cloud: " + (f"{n_sil} Gaussian clouds" if n_sil else "Gaussian clouds (the script's --n-cloud-sil draws; the count is not in this run's manifest)")
+           + f", each clustered with convex NMF at K = {K}; their clusters have s = {sc['mean']:.3f} ± {sc['sd']:.3f}"))
+        W(f"-! z = (s − {sc['mean']:.3f}) ÷ {sc['sd']:.3f}: {nm[hi]} {st[hi]['z']:+.1f}, {nm[lo]} {st[lo]['z']:+.1f}")
+        W(f"-! why the overall z is {sil['z']:.0f} but these are small: the overall one compares whole-cohort silhouettes ({sil['value']:.3f} vs {sil['null']:.3f}) whose spread across {sil['n_null']} clouds is tiny ({sil['null_sd']:.4f}); per type the bar is the spread of the cloud's individual clusters ({sc['sd']:.3f}), much harder")
         W("")
     if N["mmd_present"]:
         pa = N["mmd_argmax"]
         mp = N["mmd_params"]
         least, most = pa[0], pa[-1]
         below = [p for p in pa if p["ratio"] < 1]
-        W("!! **B, the MMD² matrix.** Each cell is one pair of types on held-out patients. The patients are split "
-          f"in two halves ({mp['n_splits']} random splits); convex NMF is refitted on half A, its clusters aligned to "
-          "the published ones, and half B's electrodes are placed with the refit's components; then MMD² is taken "
-          "between the two placed groups on half B. MMD² = mean similarity within the first group + mean "
-          "similarity within the second − 2 × mean similarity between them, with similarity k(x, y) = "
-          f"exp(−‖x − y‖² ÷ 2σ²), σ = {mp['bandwidth']:.2f} (the median distance between electrodes), self-pairs "
-          "left out so that two samples of one distribution give 0 on average. The number is the median over the "
-          f"splits: {most['mmd2_ho']:.3f} for c{most['i']} vs c{most['j']}, {least['mmd2_ho']:.3f} for c{least['i']} "
-          f"vs c{least['j']}. The dot: on half B the two labels are shuffled within patient {mp['n_perm_heldout']} "
-          "times and the share of splits with p < 0.05 is at least 90 % (here every pair, at least "
-          f"{100*min(p['share_p'] for p in pa):.0f} %). The red frame: the Gaussian cloud, put through the identical "
-          f"procedure {mp['n_cloud']} times, gives {least['cloud']:.3f} between two of its sectors; a framed pair is "
-          f"below that ({len(below)} pairs; c{least['i']}–c{least['j']} at {least['ratio']:.2f}×). A frame does not "
-          "say the two types are one distribution, the dot says they are not; it says they overlap more than two "
-          "convex sectors of a featureless cloud, which clustering keeps well apart by construction.")
+        W("!! **B: the MMD² matrix**")
+        W(f"-! split the patients in two halves ({mp['n_splits']} random splits); refit convex NMF on half A, align its clusters to the published ones, place half B's electrodes with the refit's components")
+        W("-! MMD² on half B = mean similarity within the first group + within the second − 2 × between, similarity k(x, y) = exp(−‖x − y‖² ÷ 2σ²), σ = "
+          f"{mp['bandwidth']:.2f} (the median distance between electrodes); self-pairs left out, so one distribution gives 0 on average")
+        W(f"-! the cell = median over the splits: c{most['i']}–c{most['j']} {most['mmd2_ho']:.3f}, c{least['i']}–c{least['j']} {least['mmd2_ho']:.3f}")
+        W(f"-! dot = the within-patient shuffle on half B ({mp['n_perm_heldout']} shuffles) gives p < 0.05 in at least 90 % of the splits (every pair here, at least {100*min(p['share_p'] for p in pa):.0f} %)")
+        W(f"-! red frame = below the Gaussian cloud put through the identical procedure {mp['n_cloud']} times, {least['cloud']:.3f} between two of its sectors ({len(below)} pairs; c{least['i']}–c{least['j']} {least['ratio']:.2f}×)")
+        W("-! a frame does not say the two types are one distribution (the dot says they are not); it says they overlap more than two convex sectors of a featureless cloud, which clustering keeps well apart by construction")
         W("")
         resm = N["mmd_res"]
         bands, conds = N["d"]["bands"], N["d"]["conds"]
@@ -837,20 +780,18 @@ def worked_separation(N):
             top = np.argsort(-bs)[:3]
             return (", ".join(f"{bands[b].replace('Hz', ' Hz')} {100*bs[b]:.0f} %" for b in top)
                     + "; by condition " + ", ".join(f"{c} {100*v:.0f} %" for c, v in zip(conds, m["cond_share"])))
-        W("!! **C, where two types differ.** Per condition × band × time bin, d = (mean of the first type − mean of "
-          "the second) ÷ pooled SD, in dB: red where the first type is higher, blue where the second is. Outlined "
-          f"where the within-patient shuffle ({mp['n_perm']} shuffles, Benjamini-Hochberg over the 1350 bins) gives "
-          "q < 0.05 and |d| ≥ 0.3. The bars on the right are each band's share of the linear-kernel MMD² (the "
-          "squared mean difference, bin by bin, in the kernel space), the small line above them the share per "
-          f"condition. Most separated, c{most['i']} vs c{most['j']}: {drv(most)}. Least separated, c{least['i']} vs "
-          f"c{least['j']}: {drv(least)}.")
+        W("!! **C: where two types differ**")
+        W("-! per condition × band × time bin: d = (mean of the first type − mean of the second) ÷ pooled SD, in dB; red = first type higher, blue = second higher")
+        W(f"-! outline = within-patient shuffle ({mp['n_perm']} shuffles, Benjamini-Hochberg over the 1350 bins) q < 0.05 and |d| ≥ 0.3")
+        W("-! bars = each band's share of the linear-kernel MMD² (the squared mean difference, bin by bin, in the kernel space); the small line above = share per condition")
+        W(f"-! most separated, c{most['i']}–c{most['j']}: {drv(most)}")
+        W(f"-! least separated, c{least['i']}–c{least['j']}: {drv(least)}")
         W("")
-    W("!! **D, how committed each electrode is.** Every electrode's loadings on the seven types sum to 1; the "
-      f"largest is its own-type loading and decides its membership. The median is {N['own_median']:.2f}: the type "
-      "explains less than half of a typical electrode's mixture, and the rest is spread over the others. "
-      f"{100*N['own_below_cut']:.1f} % sit below {N['cut']:.1f}; those are not drawn in Fig 1 and Fig 6 but are "
-      "counted in every test. Read with B: the mixed loadings are the reason neighbouring types overlap, and the "
-      "reason a continuum reading is consistent with the numbers.")
+    W("!! **D: how committed each electrode is**")
+    W("-! every electrode's loadings on the seven types sum to 1; the largest = its own-type loading, which decides its membership")
+    W(f"-! median {N['own_median']:.2f}: the type explains less than half of a typical electrode's mixture")
+    W(f"-! {100*N['own_below_cut']:.1f} % sit below {N['cut']:.1f}: not drawn in Fig 1 and Fig 6, counted in every test")
+    W("-! read with B: mixed loadings are why neighbouring types overlap, and why a continuum reading fits the numbers")
     W("")
     return L
 
