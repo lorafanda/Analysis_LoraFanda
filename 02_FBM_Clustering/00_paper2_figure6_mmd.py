@@ -54,6 +54,19 @@ THREE ANSWERS per pair.
      band and per condition. The Gaussian-kernel MMD itself has no per-bin decomposition;
      the map is the linear one, and the caption says so.
 
+HELD-OUT CONFUSION (2026-10-30). Where do a type's electrodes land when a model that never
+saw their patient places them? Two versions, both recorded per cell as a K x K confusion
+(published type in rows, placed type in columns), per-type recall and precision, the type
+most confused with, and per electrode a hit rate and the type it goes to when it misses:
+  LOPO     leave one patient out, refit on the other 28, place the held-out patient (the
+           statistics' own rule, n_lopo_seeds refits per fold): the model is nearly the
+           published one and only the patient is new. The headline.
+  halves   the same patient halves as the MMD: refit on 14-15 patients, place the other
+           half. Stricter, because it mixes refit instability on half a cohort with the
+           placement; about n_splits / 2 placements per electrode.
+This is separation in plain units - "a c1 electrode from an unseen patient lands in c1 X %
+of the time" - out of sample by construction, no kernel, no cloud.
+
 THE FIGURES (paper_figures/, FIG6_mmd_*; the paper versions under paper/ with --paper).
   main      the main cell: the two matrices (argmax | cut), per type its separation from
             the nearest other type against the per-type consensus of the patient-resampling
@@ -63,6 +76,7 @@ THE FIGURES (paper_figures/, FIG6_mmd_*; the paper versions under paper/ with --
   pairs     every pair's map, one grid per version (the main cell by default; --grids for
             every cell drawn).
   overview  the twelve cells' matrices on one page (after --all).
+  heldout_confusion   per cell, the two K x K confusions, LOPO and halves (recall on the diagonal).
 
 OUTPUTS  outputs/clustering/mmd/<cache>/<feature_set>/<method>/ (tables, maps, manifest with
 the md5 of every input before and after). Nothing published is rewritten.
@@ -318,6 +332,10 @@ def compute_cell(d, a, log=print):
     # ---- 2. held-out patients, and the Gaussian cloud through the same procedure -----
     pats, counts = np.unique(pat, return_counts=True)
     ho, cloud = [], []
+    conf = np.zeros((K, K))                     # published type (rows) x placed type (cols), all splits
+    place_count = np.zeros((len(X), K))         # per electrode, how often it was placed in each type
+    n_heldout = np.zeros(len(X))
+    recall_split = []
     for sidx in range(a.n_splits):
         hA, hB = split_patients(pats, counts, rng)
         inA, inB = np.isin(pat, hA), np.isin(pat, hB)
@@ -325,6 +343,12 @@ def compute_cell(d, a, log=print):
         mp = align(lab_fit, lab[inA], K)
         placed = np.array([mp[int(c)] for c in lab_new])
         idxB = np.where(inB)[0]
+        pub_B = lab[inB]
+        np.add.at(conf, (pub_B, placed), 1.0)
+        np.add.at(place_count, (idxB, placed), 1.0)
+        n_heldout[idxB] += 1
+        recall_split.append([float((placed[pub_B == r_] == r_).mean()) if (pub_B == r_).any() else np.nan
+                             for r_ in range(K)])
         for v in vers:
             for (i, j) in PAIRS:
                 mi, mj = members(placed, own_new, i, v), members(placed, own_new, j, v)
@@ -389,6 +413,55 @@ def compute_cell(d, a, log=print):
                 share_p_ho_lt05=float((h.p[ok] < 0.05).mean()) if ok.any() else np.nan))
     summ = pd.DataFrame(summ)
 
+    # leave one patient out: refit on the rest, align, place the held-out patient
+    conf_l = np.zeros((K, K))
+    place_l = np.zeros((len(X), K))
+    n_l = np.zeros(len(X))
+    recall_l = []
+    for sd in range(a.n_lopo_seeds):
+        rec = np.full(K, np.nan)
+        pl_all = np.full(len(X), -1)
+        for g in pats:
+            held = pat == g
+            lab_fit, _, lab_new, _ = fit_and_place(A[~held], A[held], K, d["method"], a.seed + 900 + sd)
+            mp = align(lab_fit, lab[~held], K)
+            pl_all[held] = [mp[int(c)] for c in lab_new]
+        np.add.at(conf_l, (lab, pl_all), 1.0)
+        np.add.at(place_l, (np.arange(len(X)), pl_all), 1.0)
+        n_l += 1
+        recall_l.append([float((pl_all[lab == r_] == r_).mean()) for r_ in range(K)])
+    log(f"  LOPO placement: {a.n_lopo_seeds} seed(s) x {len(pats)} folds  ({time.time()-t0:.0f} s)")
+
+    def confusion_tables(conf_, place_, n_, rec_list):
+        row_tot = np.maximum(conf_.sum(1, keepdims=True), 1e-12)
+        col_tot = np.maximum(conf_.sum(0, keepdims=True), 1e-12)
+        R_ = conf_ / row_tot
+        rs = np.array(rec_list)
+        rows_ = []
+        for r_ in range(K):
+            off = R_[r_].copy()
+            off[r_] = -1
+            rows_.append(dict(cluster=r_, n_placements=int(conf_[r_].sum()), recall=float(R_[r_, r_]),
+                              recall_median=float(np.nanmedian(rs[:, r_])), recall_q25=float(np.nanpercentile(rs[:, r_], 25)),
+                              recall_q75=float(np.nanpercentile(rs[:, r_], 75)),
+                              precision=float(conf_[r_, r_] / col_tot[0, r_]),
+                              confused_with=int(off.argmax()), confused_share=float(off.max())))
+        hit = np.where(n_ > 0, place_[np.arange(len(X)), lab] / np.maximum(n_, 1), np.nan)
+        other = place_.copy()
+        other[np.arange(len(X)), lab] = -1
+        meta = d["meta"]
+        el = pd.DataFrame(dict(patient=meta.patient_id.to_numpy(), electrode=meta.electrode.to_numpy(), type=lab,
+                               n_heldout=n_.astype(int), hit_rate=hit, goes_to=other.argmax(1),
+                               goes_to_share=np.where(n_ > 0, other.max(1) / np.maximum(n_, 1), np.nan)))
+        return pd.DataFrame(rows_), el, R_
+
+    conf_type, conf_el, recall_mat = confusion_tables(conf, place_count, n_heldout, recall_split)
+    conf_type_l, conf_el_l, recall_mat_l = confusion_tables(conf_l, place_l, n_l, recall_l)
+    log(f"  confusion, LOPO:   overall {np.trace(conf_l) / max(conf_l.sum(), 1):.3f}, recall "
+        + " ".join(f"c{r_} {recall_mat_l[r_, r_]:.2f}" for r_ in range(K)))
+    log(f"  confusion, halves: overall {np.trace(conf) / max(conf.sum(), 1):.3f}, recall "
+        + " ".join(f"c{r_} {recall_mat[r_, r_]:.2f}" for r_ in range(K)))
+
     # per type: separation from the nearest other type (held-out ratio), per version
     per_type = []
     for v in vers:
@@ -407,6 +480,11 @@ def compute_cell(d, a, log=print):
                 per_type.append(dict(version=v, cluster=i, n=int((members(lab, own, i, v)).sum()),
                                      nn_cluster=-1, nn_ratio=np.nan, mean_ratio=np.nan, nn_mmd2_in=np.nan))
     per_type = pd.DataFrame(per_type)
+    for tag_, ct_ in (("lopo", conf_type_l.set_index("cluster")), ("halves", conf_type.set_index("cluster"))):
+        per_type[f"{tag_}_recall"] = [float(ct_.loc[int(c), "recall"]) for c in per_type.cluster]
+        per_type[f"{tag_}_precision"] = [float(ct_.loc[int(c), "precision"]) for c in per_type.cluster]
+        per_type[f"{tag_}_confused_with"] = [int(ct_.loc[int(c), "confused_with"]) for c in per_type.cluster]
+        per_type[f"{tag_}_confused_share"] = [float(ct_.loc[int(c), "confused_share"]) for c in per_type.cluster]
     # the per-type silhouette in the same space, and its z against the cloud's per-cluster
     # silhouettes (10 draws, the method refitted on each): the scorecard's column
     sil, sil_m, sil_sd = per_type_silhouette(d, n_cloud=a.n_cloud_sil, seed=a.seed)
@@ -416,6 +494,8 @@ def compute_cell(d, a, log=print):
     log(f"  done in {time.time()-t0:.0f} s")
     return dict(sigma=sigma, insample=ins, heldout=ho, cloud=cloud, summary=summ,
                 per_type=per_type, maps=maps, versions=vers, pairs=PAIRS, frac_cut=frac_cut,
+                confusion=conf, confusion_type=conf_type, confusion_electrodes=conf_el,
+                confusion_lopo=conf_l, confusion_type_lopo=conf_type_l, confusion_electrodes_lopo=conf_el_l,
                 seconds=time.time() - t0)
 
 
@@ -479,6 +559,14 @@ def save_cell(cd: Path, d, res, a, hashes):
     P2.save_text(res["cloud"].to_csv(index=False), cd / "cloud_pairs.csv")
     P2.save_text(res["summary"].to_csv(index=False), cd / "pairs_summary.csv")
     P2.save_text(res["per_type"].to_csv(index=False), cd / "per_type.csv")
+    for tag_, key in (("halves", ""), ("lopo", "_lopo")):
+        if res.get(f"confusion{key}") is not None:
+            Kc = res[f"confusion{key}"].shape[0]
+            cm = pd.DataFrame(res[f"confusion{key}"], index=[f"published_c{i}" for i in range(Kc)],
+                              columns=[f"placed_c{j}" for j in range(Kc)])
+            P2.save_text(cm.to_csv(), cd / f"confusion_{tag_}_counts.csv")
+            P2.save_text(res[f"confusion_type{key}"].to_csv(index=False), cd / f"confusion_{tag_}_per_type.csv")
+            P2.save_text(res[f"confusion_electrodes{key}"].to_csv(index=False), cd / f"confusion_{tag_}_electrodes.csv")
     arrs = {}
     for (v, i, j), m in res["maps"].items():
         for key in ("d", "q", "share", "band_share", "cond_share"):
@@ -487,7 +575,7 @@ def save_cell(cd: Path, d, res, a, hashes):
     man = dict(feature_set=d["fset"], method=d["method"], k=int(d["k"]), run=str(d["run"].name),
                n=int(len(d["X"])), n_patients=int(d["n_patients"]), bandwidth=res["sigma"],
                cut=CUT, frac_below_cut=res["frac_cut"], versions=res["versions"], n_perm=a.n_perm,
-               n_perm_heldout=a.n_perm_heldout, n_cloud_sil=a.n_cloud_sil,
+               n_perm_heldout=a.n_perm_heldout, n_cloud_sil=a.n_cloud_sil, n_lopo_seeds=a.n_lopo_seeds,
                n_splits=a.n_splits, n_cloud=a.n_cloud, seed=a.seed, seconds=round(res["seconds"], 1),
                written=time.strftime("%Y-%m-%d %H:%M"), inputs_md5=hashes)
     P2.save_text(json.dumps(man, indent=1), cd / "manifest.json")
@@ -500,7 +588,16 @@ def load_cell(cd: Path):
     for key in z.files:
         v, i, j, what = key.split("_", 3)
         maps.setdefault((v, int(i), int(j)), {})[what] = z[key]
-    return dict(manifest=man, insample=pd.read_csv(cd / "pairs_insample.csv"),
+    cf = {}
+    for tag_, key in (("halves", ""), ("lopo", "_lopo")):
+        if (cd / f"confusion_{tag_}_counts.csv").exists():
+            cf[f"confusion{key}"] = pd.read_csv(cd / f"confusion_{tag_}_counts.csv", index_col=0).to_numpy(float)
+            cf[f"confusion_type{key}"] = pd.read_csv(cd / f"confusion_{tag_}_per_type.csv")
+            cf[f"confusion_electrodes{key}"] = pd.read_csv(cd / f"confusion_{tag_}_electrodes.csv")
+        else:
+            cf[f"confusion{key}"] = cf[f"confusion_type{key}"] = cf[f"confusion_electrodes{key}"] = None
+    return dict(manifest=man, **cf,
+                insample=pd.read_csv(cd / "pairs_insample.csv"),
                 heldout=pd.read_csv(cd / "pairs_heldout_splits.csv"),
                 cloud=pd.read_csv(cd / "cloud_pairs.csv"), summary=pd.read_csv(cd / "pairs_summary.csv"),
                 per_type=pd.read_csv(cd / "per_type.csv"), maps=maps, versions=man["versions"],
@@ -883,6 +980,57 @@ def fig_main(d, res, comp, a):
     return p, weakest
 
 
+def fig_confusion(d, res, a):
+    """Two K x K confusions: rows the published type, columns where its electrodes were
+    placed by a model that never saw their patient; recall on the diagonal. Left: leave one
+    patient out (the model is nearly the published one). Right: the patient halves."""
+    if res.get("confusion_lopo") is None and res.get("confusion") is None:
+        return None
+    K = d["k"]
+    order = display_order(d)
+    panels = [(res.get("confusion_lopo"), "A   leave one patient out: refit on the other patients, place the held-out one"),
+              (res.get("confusion"), f"B   patient halves: refit on half, place the other half ({a.n_splits} splits)")]
+    fig, axes = plt.subplots(1, 2, figsize=(P2.canvas(15.0), 7.4), dpi=190)
+    for ax, (conf, ttl) in zip(axes, panels):
+        if conf is None:
+            ax.axis("off")
+            continue
+        R = conf / np.maximum(conf.sum(1, keepdims=True), 1e-12)
+        Ro = R[np.ix_(order, order)]
+        acc = float(np.trace(conf) / max(conf.sum(), 1))
+        ax.imshow(Ro, cmap="Greys", vmin=0, vmax=1, aspect="equal")
+        for a_ in range(K):
+            for b_ in range(K):
+                v = Ro[a_, b_]
+                ax.text(b_, a_, f"{100*v:.0f}", ha="center", va="center", fontsize=P2.fs(8.0),
+                        color="white" if v > 0.55 else INK, fontweight="bold" if a_ == b_ else "normal")
+        ax.set_xticks(range(K)); ax.set_yticks(range(K))
+        ax.set_xticklabels([f"c{j}" for j in order], fontsize=P2.fs(8))
+        ax.set_yticklabels([f"c{j}" for j in order], fontsize=P2.fs(8))
+        for t, j in zip(ax.get_xticklabels(), order):
+            t.set_color(P2.cluster_col(j, K))
+        for t, j in zip(ax.get_yticklabels(), order):
+            t.set_color(P2.cluster_col(j, K))
+        ax.set_xlabel("placed in", fontsize=P2.fs(8.6))
+        ax.set_ylabel("published type", fontsize=P2.fs(8.6))
+        ax.tick_params(length=0)
+        for s_ in ax.spines.values():
+            s_.set_visible(False)
+        ax.set_title(ttl + chr(10) + f"% of each type's held-out electrodes   ·   overall {100*acc:.0f} %",
+                     fontsize=P2.fs(8.8), loc="left", color=INK, pad=P2.pw(8))
+    fig.suptitle(f"where a type's electrodes land when the model never saw their patient   ·   "
+                 f"{P2.METHOD_LABEL[d['method']]}   ·   {P2.FS_LABEL[d['fset']]}   ·   K = {K}",
+                 x=0.05, y=0.995, ha="left", fontsize=P2.fs(10.5), color=INK)
+    fig.tight_layout(rect=(0, 0.02, 1, 0.95))
+    od = P2.paper_dir(OUT)
+    od.mkdir(parents=True, exist_ok=True)
+    p = od / f"FIG6_mmd_heldout_confusion_{d['fset']}_{d['method']}_K{K}{P2.run_tag(d)}.png"
+    P2.stamp(fig, d)
+    P2.save_png(fig, p, dpi=P2.out_dpi(190), bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    return p
+
+
 def fig_overview(cache, cells, a):
     """The twelve cells' matrices (argmax, held-out ratio) on one page."""
     fsets = [f for f in P2.FSETS if any(c[0] == f for c in cells)]
@@ -974,6 +1122,20 @@ def caption_cell(d, res, a, comp=None, weakest=None):
         for _, r in pv.sort_values("nn_ratio").iterrows():
             A(f"    c{int(r.cluster):<3} n {int(r.n):<5} nearest c{int(r.nn_cluster)}  ratio {r.nn_ratio:.2f}  mean over pairs {r.mean_ratio:.2f}")
         A("")
+    for tag_, key, what in (("LOPO", "_lopo", f"leave one patient out, {a.n_lopo_seeds} refit seed(s) per fold: the model is nearly the published one"),
+                            ("HALVES", "", f"the MMD's patient halves, {a.n_splits} splits: refit on half a cohort, so refit instability is in it too")):
+        if res.get(f"confusion_type{key}") is None:
+            continue
+        ct = res[f"confusion_type{key}"]
+        conf = res[f"confusion{key}"]
+        A(f"HELD-OUT PLACEMENT, {tag_}   ({what})")
+        A("-" * 100)
+        A(f"  overall: {100*np.trace(conf)/max(conf.sum(), 1):.1f} % of held-out electrodes land in their published type")
+        A(f"  {'type':<6}{'placements':>12}{'recall':>9}{'median':>9}{'IQR':>16}{'precision':>11}   most confused with")
+        for _, r in ct.sort_values("recall", ascending=False).iterrows():
+            A(f"  c{int(r.cluster):<5}{int(r.n_placements):>12}{r.recall:>9.2f}{r.recall_median:>9.2f}"
+              f"{r.recall_q25:>8.2f}-{r.recall_q75:<7.2f}{r.precision:>11.2f}   c{int(r.confused_with)} ({100*r.confused_share:.0f} %)")
+        A("")
     if comp:
         A("COMPANIONS (main figure, per type)")
         A("-" * 100)
@@ -1027,6 +1189,7 @@ def selftest(out: Path, a):
     P2.OUT = out
     a.n_perm, a.n_perm_heldout, a.n_splits, a.n_cloud, a.cache = 40, 20, 3, 2, "selftest"
     a.n_cloud_sil = 2
+    a.n_lopo_seeds = 1
     d = synthetic()
     res = compute_cell(d, a)
     cd = cell_dir(a.cache, d["fset"], d["method"])
@@ -1036,6 +1199,10 @@ def selftest(out: Path, a):
     sv = res["summary"][res["summary"].version == "argmax"]
     assert (sv.q_in < 0.05).all(), "three well separated synthetic clusters must all pass"
     assert (sv.ratio > 1.0).all(), "and be more separated than the cloud"
+    assert back["confusion"] is not None and back["confusion"].shape == (3, 3)
+    assert back["confusion_lopo"] is not None and back["confusion_lopo"].shape == (3, 3)
+    assert (np.diag(back["confusion_lopo"]) / back["confusion_lopo"].sum(1)).min() > 0.5, "synthetic clusters must place well"
+    assert fig_confusion(d, back, a) is not None
     p1 = fig_cell(d, back, a)
     p2 = fig_pairs(d, back, "argmax", a)
     pt0 = back["per_type"][back["per_type"].version == "argmax"].set_index("cluster")
@@ -1080,6 +1247,8 @@ def main() -> int:
     ap.add_argument("--n-cloud", type=int, default=50, help="Gaussian cloud draws")
     ap.add_argument("--n-cloud-sil", type=int, default=10,
                     help="cloud draws behind the per-type silhouette z")
+    ap.add_argument("--n-lopo-seeds", type=int, default=3,
+                    help="refit seeds per leave-one-patient-out fold (the LOPO confusion)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--paper", action="store_true", help="the page versions (PAPER2_PAPER=1)")
     ap.add_argument("--selftest", metavar="DIR", help="synthetic data into DIR; nothing of the repo touched")
@@ -1113,6 +1282,9 @@ def main() -> int:
         res["manifest"] = json.loads((cd / "manifest.json").read_text(encoding="utf-8"))
         p = fig_cell(d, res, a)
         print(f"  {p.name}")
+        pc = fig_confusion(d, res, a)
+        if pc is not None:
+            print(f"  {pc.name}")
         is_main = (fset == MAIN and method == "cnmf")
         comp, weakest = None, None
         if is_main:
