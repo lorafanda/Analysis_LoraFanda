@@ -191,6 +191,20 @@ def collect():
     N["consensus_settings"] = dict(H=int(cm["H"]), frac=float(cm["frac"]), null_draws=int(cm["null_draws"]),
                                    null_H=int(cm["null_H"]), min_cosample=int(c7["min_cosample"]))
     src("consensus_manifest", f)
+    # her definition of the per-type consensus: the mean of M over every pair of
+    # electrodes inside a published type (the consensus slide's panel B since 10-30)
+    f = CO / FSET / "cnmf" / f"M_k{K:02d}.npy"
+    if f.exists():
+        Mc = np.load(f).astype(float)
+        cp_ = {}
+        for j in range(K):
+            m = d["lab"] == j
+            sub = Mc[np.ix_(m, m)]
+            n_ = int(m.sum())
+            cp_[j] = float((sub.sum() - np.trace(sub)) / (n_ * (n_ - 1)))
+        N["consensus_type_items"] = dict(N["consensus_type"])
+        N["consensus_type"] = cp_
+        src("consensus_matrix", f)
     f = CO / FSET / "cnmf" / f"clusters_k{K:02d}.csv"
     cl = pd.read_csv(f)
     N["consensus_slide_values"] = sorted((float(v) for v in cl.m), reverse=True)
@@ -250,6 +264,25 @@ def collect():
         p_ = pty[pty.version == "argmax"].set_index("cluster")
         N["sil_type"] = {int(j): dict(sil=float(p_.loc[j, "silhouette"]), z=float(p_.loc[j, "sil_z"])) for j in range(K)}
         N["sil_cloud"] = dict(mean=float(p_.sil_cloud_mean.iloc[0]), sd=float(p_.sil_cloud_sd.iloc[0]))
+        # the held-out placement (2026-10-30): LOPO and halves confusions
+        N["conf"] = {}
+        for tag_ in ("lopo", "halves"):
+            fc = MM / f"confusion_{tag_}_counts.csv"
+            if fc.exists():
+                Cm = pd.read_csv(fc, index_col=0).to_numpy(float)
+                ct = pd.read_csv(MM / f"confusion_{tag_}_per_type.csv").set_index("cluster")
+                el = pd.read_csv(MM / f"confusion_{tag_}_electrodes.csv")
+                N["conf"][tag_] = dict(
+                    matrix=Cm.tolist(), overall=float(np.trace(Cm) / Cm.sum()),
+                    recall={int(j): float(ct.loc[j, "recall"]) for j in range(K)},
+                    recall_q25={int(j): float(ct.loc[j, "recall_q25"]) for j in range(K)},
+                    recall_q75={int(j): float(ct.loc[j, "recall_q75"]) for j in range(K)},
+                    precision={int(j): float(ct.loc[j, "precision"]) for j in range(K)},
+                    confused_with={int(j): int(ct.loc[j, "confused_with"]) for j in range(K)},
+                    confused_share={int(j): float(ct.loc[j, "confused_share"]) for j in range(K)},
+                    hit_hist={str(k): int(v) for k, v in el.hit_rate.round(3).value_counts().sort_index().items()})
+                src(f"confusion_{tag_}", fc)
+        N["mmd_params"]["n_lopo_seeds"] = man.get("n_lopo_seeds")
         N["mmd_res"] = res
         src("mmd", MM / "pairs_summary.csv")
 
@@ -368,14 +401,43 @@ def fig_kbyk(N):
     return out
 
 
+def conf_panel(ax, conf, order, title, K):
+    """A K x K confusion in greys: rows the published type, columns where its held-out
+    electrodes were placed, % of the row; recall bold on the diagonal."""
+    conf = np.asarray(conf, float)
+    R = conf / np.maximum(conf.sum(1, keepdims=True), 1e-12)
+    Ro = R[np.ix_(order, order)]
+    ax.imshow(Ro, cmap="Greys", vmin=0, vmax=1, aspect="equal")
+    for a_ in range(K):
+        for b_ in range(K):
+            v = Ro[a_, b_]
+            ax.text(b_, a_, f"{100*v:.0f}", ha="center", va="center", fontsize=7.6,
+                    color="white" if v > 0.55 else INK, fontweight="bold" if a_ == b_ else "normal")
+    ax.set_xticks(range(K)); ax.set_yticks(range(K))
+    ax.set_xticklabels([f"c{j}" for j in order], fontsize=8)
+    ax.set_yticklabels([f"c{j}" for j in order], fontsize=8)
+    for t, j in zip(ax.get_xticklabels(), order):
+        t.set_color(P2.cluster_col(j, K))
+    for t, j in zip(ax.get_yticklabels(), order):
+        t.set_color(P2.cluster_col(j, K))
+    ax.set_xlabel("placed in", fontsize=8, color=MUTED)
+    ax.set_ylabel("published type", fontsize=8, color=MUTED)
+    ax.tick_params(length=0)
+    for s_ in ax.spines.values():
+        s_.set_visible(False)
+    ax.set_title(title, fontsize=10, loc="left", color=INK)
+
+
 def fig_separation(N):
-    """A silhouette z per type; B the 7 x 7 held-out MMD^2 with the held-out test marked;
-    C the most and the least separated pair's maps; D the top-loading distribution."""
+    """A silhouette z per type; B the leave-one-patient-out confusion (the headline);
+    C the held-out MMD^2 matrix; D the most and least separated pair's maps; E the
+    top-loading distribution; F the halves confusion; G the per-electrode held-out hit rate."""
     d, order = N["d"], N["order"]
     res = N.get("mmd_res")
-    fig = plt.figure(figsize=(17.6, 10.6), dpi=170)
-    gs = GridSpec(2, 24, figure=fig, height_ratios=[1.0, 0.95], hspace=0.55, wspace=1.0,
-                  left=0.05, right=0.985, top=0.93, bottom=0.07)
+    conf = N.get("conf", {})
+    fig = plt.figure(figsize=(17.6, 15.4), dpi=170)
+    gs = GridSpec(3, 24, figure=fig, height_ratios=[1.0, 0.9, 0.85], hspace=0.6, wspace=1.0,
+                  left=0.05, right=0.985, top=0.95, bottom=0.05)
     # A
     axA = fig.add_subplot(gs[0, 0:7])
     if "sil_type" in N:
@@ -390,74 +452,63 @@ def fig_separation(N):
         for t, j in zip(axA.get_xticklabels(), order):
             t.set_color(P2.cluster_col(j, K))
         axA.set_ylabel("per-type silhouette, z against the Gaussian cloud")
-        axA.set_title(f"A   silhouette per type   (cloud: {N['sil_cloud']['mean']:.3f} ± {N['sil_cloud']['sd']:.3f}, grey = ±2 SD)",
+        axA.set_title(f"A   silhouette per type   (cloud {N['sil_cloud']['mean']:.3f} ± {N['sil_cloud']['sd']:.3f}, grey ±2 SD)",
                       fontsize=10, loc="left", color=INK)
     else:
         axA.axis("off")
-        axA.text(0.5, 0.5, "PLACEHOLDER: run 00_paper2_figure6_mmd.py", ha="center", va="center", fontsize=11, color=RED, transform=axA.transAxes)
     axA.tick_params(labelsize=8, colors=MUTED)
     axA.spines[["top", "right"]].set_visible(False)
-    # B
-    axB = fig.add_subplot(gs[0, 8:16])
+    # B: LOPO confusion
+    axB = fig.add_subplot(gs[0, 8:15])
+    if "lopo" in conf:
+        n_seed = N["mmd_params"].get("n_lopo_seeds") or ""
+        conf_panel(axB, conf["lopo"]["matrix"], order,
+                   f"B   leave one patient out: where a type's electrodes land\n% of the row   ·   overall {100*conf['lopo']['overall']:.0f} %"
+                   + (f"   ·   {n_seed} refit seeds × {N['n_patients']} folds" if n_seed else ""), K)
+    else:
+        axB.axis("off")
+        axB.text(0.5, 0.5, "PLACEHOLDER: rerun 00_paper2_figure6_mmd.py", ha="center", va="center", fontsize=10, color=RED, transform=axB.transAxes)
+    # C: MMD matrix
+    axC = fig.add_subplot(gs[0, 16:24])
     if res is not None:
         sv = res["summary"][res["summary"].version == "argmax"]
-        M = np.full((K, K), np.nan)
-        Pm = np.full((K, K), np.nan)
-        Rt = np.full((K, K), np.nan)
+        M = np.full((K, K), np.nan); Pm = np.full((K, K), np.nan); Rt = np.full((K, K), np.nan)
         for _, r in sv.iterrows():
             M[int(r.i), int(r.j)] = M[int(r.j), int(r.i)] = r.mmd2_ho
             Pm[int(r.i), int(r.j)] = Pm[int(r.j), int(r.i)] = r.share_p_ho_lt05
             Rt[int(r.i), int(r.j)] = Rt[int(r.j), int(r.i)] = r.ratio
         Mo, Po, Ro = M[np.ix_(order, order)], Pm[np.ix_(order, order)], Rt[np.ix_(order, order)]
-        im = axB.imshow(Mo, cmap="PuBuGn", vmin=0, vmax=max(0.3, float(np.nanmax(Mo))), aspect="equal")
+        vmax = max(0.3, float(np.nanmax(Mo)))
+        im = axC.imshow(Mo, cmap="PuBuGn", vmin=0, vmax=vmax, aspect="equal")
         for a_ in range(K):
             for b_ in range(K):
                 if a_ == b_:
-                    axB.add_patch(plt.Rectangle((b_ - 0.5, a_ - 0.5), 1, 1, fc="#f2f3f5", ec="none"))
-                    continue
-                v = Mo[a_, b_]
-                dark = v > 0.6 * max(0.3, float(np.nanmax(Mo)))
-                axB.text(b_, a_, f"{v:.2f}", ha="center", va="center", fontsize=8, color="white" if dark else INK)
+                    axC.add_patch(plt.Rectangle((b_ - 0.5, a_ - 0.5), 1, 1, fc="#f2f3f5", ec="none")); continue
+                v = Mo[a_, b_]; dark = v > 0.6 * vmax
+                axC.text(b_, a_, f"{v:.2f}", ha="center", va="center", fontsize=7.6, color="white" if dark else INK)
                 if Po[a_, b_] >= 0.9:
-                    axB.plot(b_ + 0.36, a_ - 0.36, "o", ms=2.6, color="white" if dark else INK)
+                    axC.plot(b_ + 0.36, a_ - 0.36, "o", ms=2.4, color="white" if dark else INK)
                 if Ro[a_, b_] < 1.0:
-                    axB.add_patch(plt.Rectangle((b_ - 0.5, a_ - 0.5), 1, 1, fc="none", ec=RED, lw=1.2))
-        axB.set_xticks(range(K)); axB.set_yticks(range(K))
-        axB.set_xticklabels([f"c{j}" for j in order], fontsize=9)
-        axB.set_yticklabels([f"c{j}" for j in order], fontsize=9)
-        for t, j in zip(axB.get_xticklabels(), order):
+                    axC.add_patch(plt.Rectangle((b_ - 0.5, a_ - 0.5), 1, 1, fc="none", ec=RED, lw=1.1))
+        axC.set_xticks(range(K)); axC.set_yticks(range(K))
+        axC.set_xticklabels([f"c{j}" for j in order], fontsize=9); axC.set_yticklabels([f"c{j}" for j in order], fontsize=9)
+        for t, j in zip(axC.get_xticklabels(), order):
             t.set_color(P2.cluster_col(j, K))
-        for t, j in zip(axB.get_yticklabels(), order):
+        for t, j in zip(axC.get_yticklabels(), order):
             t.set_color(P2.cluster_col(j, K))
-        axB.tick_params(length=0)
-        for s_ in axB.spines.values():
+        axC.tick_params(length=0)
+        for s_ in axC.spines.values():
             s_.set_visible(False)
-        cb = fig.colorbar(im, ax=axB, fraction=0.045, pad=0.03)
+        cb = fig.colorbar(im, ax=axC, fraction=0.045, pad=0.03)
         cb.set_label(f"held-out MMD² (median over {N['mmd_params']['n_splits']} patient halves)", fontsize=8, color=MUTED)
-        cb.ax.tick_params(labelsize=7, colors=MUTED)
-        cb.outline.set_visible(False)
+        cb.ax.tick_params(labelsize=7, colors=MUTED); cb.outline.set_visible(False)
         cl = N["mmd_argmax"][0]["cloud"]
-        axB.set_title("B   MMD² between every pair on held-out patients" + chr(10)
-                      + "dot: within-patient shuffle p < 0.05 in ≥ 90 % of the splits" + chr(10)
-                      + f"red frame: below the Gaussian cloud's sectors ({cl:.3f})",
-                      fontsize=9, loc="left", color=INK)
+        axC.set_title("C   MMD² between every pair on held-out patients\n"
+                      f"dot: within-patient shuffle p < 0.05 in ≥ 90 % of the splits; red frame: below the cloud's sectors ({cl:.3f})",
+                      fontsize=9.5, loc="left", color=INK)
     else:
-        axB.axis("off")
-        axB.text(0.5, 0.5, "PLACEHOLDER: MMD not run", ha="center", va="center", fontsize=11, color=RED, transform=axB.transAxes)
-    # D
-    axD = fig.add_subplot(gs[0, 17:24])
-    own = d["Gn"].max(1)
-    axD.hist(own, bins=np.linspace(0.14, 1.0, 44), color=MUTED, alpha=0.85)
-    axD.axvline(P2.LOAD_CUT, color=RED, ls="--", lw=1.2)
-    axD.axvline(np.median(own), color=INK, ls=":", lw=1.0)
-    axD.text(P2.LOAD_CUT + 0.01, axD.get_ylim()[1] * 0.92, f"{100*N['own_below_cut']:.1f} % below {P2.LOAD_CUT:.1f}", fontsize=8, color=RED)
-    axD.text(np.median(own) + 0.01, axD.get_ylim()[1] * 0.80, f"median {np.median(own):.2f}", fontsize=8, color=INK)
-    axD.set_xlabel("own-cluster loading (row-normalised, argmax)")
-    axD.set_ylabel("electrodes")
-    axD.set_title("D   how committed each electrode is to its type", fontsize=10, loc="left", color=INK, pad=14)
-    axD.tick_params(labelsize=8, colors=MUTED)
-    axD.spines[["top", "right"]].set_visible(False)
-    # C
+        axC.axis("off")
+    # D: maps
     if res is not None:
         pairs = N["mmd_argmax"]
         least, most = pairs[0], pairs[-1]
@@ -465,23 +516,60 @@ def fig_separation(N):
             sub = GridSpecFromSubplotSpec(1, 2, gs[1, col_ * 12:(col_ + 1) * 12], width_ratios=[4.2, 1.0], wspace=0.06)
             ax, axb = fig.add_subplot(sub[0]), fig.add_subplot(sub[1])
             m = res["maps"][("argmax", pr["i"], pr["j"])]
-            # outline where the difference is both significant and at least 0.3 SD, so the
-            # outline shows where the pair differs by more than a hair
             mm = dict(m, q=np.where(np.abs(m["d"]) >= 0.3, m["q"], 1.0).astype(np.float32))
-            MMDM.map_panel(ax, axb, d, mm, f"C   {lab_}: c{pr['i']} minus c{pr['j']}   ·   held-out MMD² {pr['mmd2_ho']:.3f}, {pr['ratio']:.1f}× the cloud")
+            MMDM.map_panel(ax, axb, d, mm, f"D   {lab_}: c{pr['i']} minus c{pr['j']}   ·   held-out MMD² {pr['mmd2_ho']:.3f}, {pr['ratio']:.1f}× the cloud")
+    # E: loading histogram
+    axE = fig.add_subplot(gs[2, 0:8])
+    own = d["Gn"].max(1)
+    axE.hist(own, bins=np.linspace(0.14, 1.0, 44), color=MUTED, alpha=0.85)
+    axE.axvline(P2.LOAD_CUT, color=RED, ls="--", lw=1.2)
+    axE.axvline(np.median(own), color=INK, ls=":", lw=1.0)
+    axE.text(P2.LOAD_CUT + 0.01, axE.get_ylim()[1] * 0.92, f"{100*N['own_below_cut']:.1f} % below {P2.LOAD_CUT:.1f}", fontsize=8, color=RED)
+    axE.text(np.median(own) + 0.01, axE.get_ylim()[1] * 0.80, f"median {np.median(own):.2f}", fontsize=8, color=INK)
+    axE.set_xlabel("own-cluster loading (row-normalised, argmax)"); axE.set_ylabel("electrodes")
+    axE.set_title("E   how committed each electrode is to its type", fontsize=10, loc="left", color=INK, pad=12)
+    axE.tick_params(labelsize=8, colors=MUTED); axE.spines[["top", "right"]].set_visible(False)
+    # F: halves confusion
+    axF = fig.add_subplot(gs[2, 9:16])
+    if "halves" in conf:
+        conf_panel(axF, conf["halves"]["matrix"], order,
+                   f"F   patient halves: refit on half, place the other half\n% of the row   ·   overall {100*conf['halves']['overall']:.0f} %   ·   the stricter test", K)
+    else:
+        axF.axis("off")
+    # G: per-electrode LOPO hit rate
+    axG = fig.add_subplot(gs[2, 17:24])
+    if "lopo" in conf:
+        hh = conf["lopo"]["hit_hist"]
+        xs = [float(k) for k in hh]; ys = [hh[k] for k in hh]
+        axG.bar(range(len(xs)), ys, color=[grey_hex(x) for x in xs], edgecolor=INK, lw=0.6, width=0.7)
+        axG.set_xticks(range(len(xs))); axG.set_xticklabels([f"{100*x:.0f} %" for x in xs], fontsize=8)
+        for i_, y_ in enumerate(ys):
+            axG.text(i_, y_ + max(ys) * 0.01, str(y_), ha="center", va="bottom", fontsize=8, color=INK)
+        axG.set_xlabel("share of its held-out placements in its own type"); axG.set_ylabel("electrodes")
+        axG.set_title("G   per electrode: how often it lands in its type\nwhen its patient is left out   (the brain view's greyscale)", fontsize=10, loc="left", color=INK)
+        axG.tick_params(labelsize=8, colors=MUTED); axG.spines[["top", "right"]].set_visible(False)
+    else:
+        axG.axis("off")
     out = FIGD / "fig4_separation.png"
     fig.savefig(out, facecolor="white", bbox_inches="tight")
     plt.close(fig)
     return out
 
 
+def grey_hex(v):
+    g = int(round(235 - 235 * v))
+    return f"#{g:02x}{g:02x}{g:02x}"
+
+
 def fig_scorecard(N):
     order = N["order"]
+    conf = N.get("conf", {})
     cols = [("cross-algorithm\noverlap (adj.)", lambda j: N["type_algo_adj"][j], True),
             ("cross-feature-set\noverlap (adj.)", lambda j: N["type_feat_adj"][j], True),
             ("consensus\n(patients resampled)", lambda j: N["consensus_type"][j], True),
+            ("held-out recall\nleave one patient out", lambda j: conf["lopo"]["recall"][j] if "lopo" in conf else np.nan, True),
+            ("held-out recall\npatient halves", lambda j: conf["halves"]["recall"][j] if "halves" in conf else np.nan, True),
             ("silhouette z\nvs the cloud", lambda j: N["sil_type"][j]["z"] if "sil_type" in N else np.nan, True),
-            ("nearest type\nheld-out MMD²", lambda j: (N["mmd_type_argmax"][j]["nn_ratio"] * N["mmd_argmax"][0]["cloud"]) if "mmd_type_argmax" in N else np.nan, True),
             ("patients", lambda j: N["patients_per_type"][j], True),
             ("largest patient\nshare", lambda j: N["top_share"][j], False)]
     V = np.array([[c[1](j) for c in cols] for j in order], float)
@@ -491,9 +579,9 @@ def fig_scorecard(N):
         if np.isfinite(v).any():
             rk = pd.Series(v).rank(ascending=not higher, pct=True).to_numpy()
             R[:, c_] = 1.0 - rk + 1.0 / K          # best = 1
-    fig, ax = plt.subplots(figsize=(13.5, 5.2), dpi=170)
+    fig, ax = plt.subplots(figsize=(14.8, 5.2), dpi=170)
     ax.imshow(R, cmap="YlGn", vmin=0, vmax=1.15, aspect="auto")
-    fmt = ["{:.2f}", "{:.2f}", "{:.2f}", "{:+.1f}", "{:.3f}", "{:d}", "{:.0%}"]
+    fmt = ["{:.2f}", "{:.2f}", "{:.2f}", "{:.2f}", "{:.2f}", "{:+.1f}", "{:d}", "{:.0%}"]
     for r_ in range(K):
         for c_ in range(len(cols)):
             v = V[r_, c_]
@@ -763,7 +851,19 @@ def worked_separation(N):
         mp = N["mmd_params"]
         least, most = pa[0], pa[-1]
         below = [p for p in pa if p["ratio"] < 1]
-        W("!! **B: the MMD² matrix**")
+        if N.get("conf", {}).get("lopo"):
+            cl_ = N["conf"]["lopo"]
+            rec = cl_["recall"]
+            low_ = min(rec, key=rec.get)
+            W("!! **B: the held-out confusion (leave one patient out)**")
+            W(f"-! for each of the {N['n_patients']} patients: refit convex NMF on the other {N['n_patients']-1}, align the refit's clusters to the published ones (Hungarian, on the kept electrodes), place the held-out patient's electrodes (loadings by non-negative least squares, the largest wins); {N['mmd_params'].get('n_lopo_seeds') or 'several'} refit seeds per fold")
+            W("-! the row is the published type, the column where its held-out electrodes landed, the number the % of the row; the diagonal is the type's recall")
+            W(f"-! overall {100*cl_['overall']:.0f} %; chance (every electrode given its patient's commonest type) is about half")
+            W(f"-! {nm[low_]} is the leakiest: {100*rec[low_]:.0f} % stay, {100*cl_['confused_share'][low_]:.0f} % go to c{cl_['confused_with'][low_]}; "
+              + ", ".join(f"{nm[j]} {100*rec[j]:.0f} %" for j in sorted(rec, key=rec.get, reverse=True) if j != low_))
+            W("-! F is the same with half the patients left out: a harder test, because the model itself is refitted on half a cohort; G counts, per electrode, how often it landed in its type over the folds (the brain view colours by it)")
+            W("")
+        W("!! **C: the MMD² matrix**")
         W(f"-! split the patients in two halves ({mp['n_splits']} random splits); refit convex NMF on half A, align its clusters to the published ones, place half B's electrodes with the refit's components")
         W("-! MMD² on half B = mean similarity within the first group + within the second − 2 × between, similarity k(x, y) = exp(−‖x − y‖² ÷ 2σ²), σ = "
           f"{mp['bandwidth']:.2f} (the median distance between electrodes); self-pairs left out, so one distribution gives 0 on average")
@@ -780,14 +880,14 @@ def worked_separation(N):
             top = np.argsort(-bs)[:3]
             return (", ".join(f"{bands[b].replace('Hz', ' Hz')} {100*bs[b]:.0f} %" for b in top)
                     + "; by condition " + ", ".join(f"{c} {100*v:.0f} %" for c, v in zip(conds, m["cond_share"])))
-        W("!! **C: where two types differ**")
+        W("!! **D: where two types differ**")
         W("-! per condition × band × time bin: d = (mean of the first type − mean of the second) ÷ pooled SD, in dB; red = first type higher, blue = second higher")
         W(f"-! outline = within-patient shuffle ({mp['n_perm']} shuffles, Benjamini-Hochberg over the 1350 bins) q < 0.05 and |d| ≥ 0.3")
         W("-! bars = each band's share of the linear-kernel MMD² (the squared mean difference, bin by bin, in the kernel space); the small line above = share per condition")
         W(f"-! most separated, c{most['i']}–c{most['j']}: {drv(most)}")
         W(f"-! least separated, c{least['i']}–c{least['j']}: {drv(least)}")
         W("")
-    W("!! **D: how committed each electrode is**")
+    W("!! **E: how committed each electrode is**")
     W("-! every electrode's loadings on the seven types sum to 1; the largest = its own-type loading, which decides its membership")
     W(f"-! median {N['own_median']:.2f}: the type explains less than half of a typical electrode's mixture")
     W(f"-! {100*N['own_below_cut']:.1f} % sit below {N['cut']:.1f}: not drawn in Fig 1 and Fig 6, counted in every test")
@@ -974,7 +1074,11 @@ def write_text(N, F):
       f"{L_['null_mean']:.2f} ± {L_['null_sd']:.2f} for the pseudo-patients (z {L_['z']:+.1f}); placement accuracy "
       f"median {P_['acc_median']:.2f} against a chance of {P_['chance_mean']:.2f} (worst patient {P_['worst_patient']}, "
       f"{P_['acc_min']:.2f}). K 7 → K 8 keeps {kb[8]['share']:.2f} of the electrodes in matched pairs "
-      f"(chance-corrected {kb[8]['adj']:.2f}), K 7 → K 10 {kb[10]['share']:.2f}.")
+      f"(chance-corrected {kb[8]['adj']:.2f}), K 7 → K 10 {kb[10]['share']:.2f}."
+      + ((f" Refit on half the patients and place the other half (the stricter held-out placement, Fig 4F): "
+          f"{100*N['conf']['halves']['overall']:.0f} % of held-out electrodes keep their type; per type "
+          + ", ".join(f"{nm[j]} {N['conf']['halves']['recall'][j]:.2f}" for j in sorted(N['conf']['halves']['recall'], key=N['conf']['halves']['recall'].get, reverse=True))
+          + ", the same order as the consensus.") if N.get("conf", {}).get("halves") else ""))
     A("")
     img("fig3a", "Fig 3A: one-patient clusters over K (current FIG 1 D)")
     img("fig3bcd", "Fig 3B-D: consensus matrix at K 7, per-type consensus, PAC against the Gaussian cloud over K")
@@ -1008,11 +1112,18 @@ def write_text(N, F):
       "held-out patients: refit on half the patients, place the other half, MMD² between the placed groups, shuffled "
       "within patient; its scale is the Gaussian cloud through the same procedure, whose sectors are convex pieces of "
       "one featureless distribution and therefore well apart by construction.")
+    A("- **Held-out placement (prediction strength, Tibshirani & Walther 2005, blocked by patient).** Leave one "
+      "patient out, refit on the other 28, place the held-out patient's electrodes with the refit's components "
+      "(loadings by non-negative least squares, the largest wins), and count where they land against the "
+      "full-cohort labels: a K × K confusion, with the recall of each type on its diagonal. No kernel, no cloud, "
+      "out of sample by construction. The patient-halves version refits on half the cohort and is stricter, "
+      "because refit instability is in it too (Lange et al. 2004).")
     A("- **Where.** Per bin, the standardised mean difference between the two types with the same within-patient "
       "shuffle; the bars are each band's share of the linear-kernel MMD².")
     A("")
-    A("**What a good result looks like.** Silhouette z well above 0 overall and per type; every pair different on "
-      "held-out patients; MMD² above the cloud's sectors for the pairs that are claimed to be distinct.")
+    A("**What a good result looks like.** Held-out recall far above chance (the commonest type, about half) for "
+      "every type; silhouette z well above 0 overall and per type; every pair different on held-out patients; "
+      "MMD² above the cloud's sectors for the pairs that are claimed to be distinct.")
     A("")
     sil = N["sil"]
     if N["mmd_present"]:
@@ -1033,7 +1144,20 @@ def write_text(N, F):
             conds = N["d"]["conds"]
             return (", ".join(f"{bands[b].replace('Hz', ' Hz')} {100*bs[b]:.0f} %" for b in top)
                     + "; by condition " + ", ".join(f"{c} {100*v:.0f} %" for c, v in zip(conds, cs)))
-        A(f"**Found.** Overall silhouette {sil['value']:.3f} against {sil['null']:.3f} ± {sil['null_sd']:.4f} for "
+        if N.get("conf", {}).get("lopo"):
+            cl_ = N["conf"]["lopo"]
+            rec = cl_["recall"]
+            top_, low_ = max(rec, key=rec.get), min(rec, key=rec.get)
+            A(f"**Found, held-out placement.** Leave one patient out: {100*cl_['overall']:.0f} % of held-out electrodes land "
+              f"in their published type. Per type, recall "
+              + ", ".join(f"{nm[j]} {rec[j]:.2f}" for j in sorted(rec, key=rec.get, reverse=True))
+              + f"; {nm[low_]} is the leakiest and goes mostly to c{cl_['confused_with'][low_]} "
+              f"({100*cl_['confused_share'][low_]:.0f} %), {nm[top_]} the tightest. Per electrode, "
+              f"{cl_['hit_hist'].get('1.0', 0)} of {N['n']} land in their type in every fold, "
+              f"{cl_['hit_hist'].get('0.0', 0)} never. The patient-halves test keeps {100*N['conf']['halves']['overall']:.0f} % "
+              f"overall and {N['conf']['halves']['recall'][low_]:.2f} for {nm[low_]} (section 3).")
+            A("")
+        A(f"**Found, distances.** Overall silhouette {sil['value']:.3f} against {sil['null']:.3f} ± {sil['null_sd']:.4f} for "
           f"{sil['n_null']} clouds (z {sil['z']:.0f}). Per type, z against the cloud: "
           + ", ".join(f"{nm[j]} {v['z']:+.1f}" for j, v in st_sorted)
           + f". MMD ({mp['n_perm']} in-sample shuffles, {mp['n_splits']} patient halves with {mp['n_perm_heldout']} "
@@ -1053,13 +1177,15 @@ def write_text(N, F):
         A(f"**Found.** Overall silhouette {sil['value']:.3f} against {sil['null']:.3f} ± {sil['null_sd']:.4f} "
           f"(z {sil['z']:.0f}). **MMD NOT RUN YET: the panels below are placeholders** (run 00_paper2_figure6_mmd.py).")
     A("")
-    img("fig4", "Fig 4: separation - silhouette z per type, the held-out MMD matrix, the most and least separated pairs (outlined: q < 0.05 and |d| >= 0.3), the loading distribution")
+    img("fig4", "Fig 4: separation - A silhouette z per type; B where a type's electrodes land when their patient is left out; C the held-out MMD matrix; D the most and least separated pairs (outlined: q < 0.05 and |d| >= 0.3); E the loading distribution; F the patient-halves confusion; G the per-electrode held-out hit rate")
     L.extend(worked_separation(N))
-    A("**Takeaway.** The types are distinct: every pair differs on patients the model never saw, and the strongest "
-      "types sit further apart than sectors of a featureless cloud. They are distinct only partly: the weakest pairs are "
-      "closer than such sectors, the loadings are mixed (median 0.41), and a reading of the types as regions on a "
-      "continuum of responses is consistent with these numbers. **Caveat.** In-sample p-values are circular and are not "
-      "the test; the cloud is a harsh yardstick because clustering carves it into maximally separated pieces.")
+    A("**Takeaway.** The types are distinct in the sense that matters: an electrode from a patient the model never saw "
+      "lands in its type nine times in ten, and every pair differs on held-out patients. They are distinct only partly: "
+      "the leaky types lose a fifth of their electrodes to their neighbours, the weakest pairs sit closer than sectors of "
+      "a featureless cloud, the loadings are mixed (median 0.41), and a reading of the types as regions on a continuum of "
+      "responses is consistent with these numbers. **Caveat.** In-sample p-values are circular and are not the test; the "
+      "cloud is a reference, not a null, and a harsh one because clustering carves it into maximally separated pieces; "
+      "the halves test mixes refit instability with placement and is read beside the leave-one-out, not instead of it.")
     A("")
 
     # ---- 5
@@ -1069,9 +1195,9 @@ def write_text(N, F):
     A("")
     A("**How.** One row per type; the columns are the per-type numbers of sections 2 to 4: the chance-adjusted overlap "
       "of its matched cluster across the two other algorithms and across the three other feature sets (FIG 4), its "
-      "consensus under patient resampling, its silhouette z against the cloud, the held-out MMD² to its nearest other "
-      "type, and the number of patients and the largest patient's share. Colour is the rank within a column, not a "
-      "composite score.")
+      "consensus under patient resampling (mean M over the pairs inside the type), its held-out recall when its "
+      "patient is left out and when half the patients are, its silhouette z against the cloud, and the number of "
+      "patients and the largest patient's share. Colour is the rank within a column, not a composite score.")
     A("")
     A("**What a good result looks like.** Dark across the row.")
     A("")
@@ -1081,20 +1207,23 @@ def write_text(N, F):
     A("**Found.** " + " ".join(
         f"{nm[j]}: overlap {N['type_algo_adj'][j]:.2f} across algorithms and {N['type_feat_adj'][j]:.2f} across feature "
         f"sets, consensus {N['consensus_type'][j]:.2f}"
-        + (f", silhouette z {N['sil_type'][j]['z']:+.1f}, nearest type {N['mmd_type_argmax'][j]['nn_ratio']:.2f}× the cloud"
-           if N["mmd_present"] else "")
+        + (f", held-out recall {N['conf']['lopo']['recall'][j]:.2f} / {N['conf']['halves']['recall'][j]:.2f}"
+           if N.get("conf", {}).get("lopo") else "")
+        + (f", silhouette z {N['sil_type'][j]['z']:+.1f}" if N["mmd_present"] else "")
         + f", {N['patients_per_type'][j]} patients, largest {100*N['top_share'][j]:.0f} %." for j in o))
     A("")
     img("fig5", "Fig 5: the scorecard")
     if N["mmd_present"]:
-        solid = [j for j in o if N["type_algo_adj"][j] >= 0.5 and N["consensus_type"][j] >= 0.75 and N["sil_type"][j]["z"] >= 2]
-        fragile = [j for j in o if N["type_algo_adj"][j] < 0.35 and N["consensus_type"][j] < 0.7]
+        rl = N.get("conf", {}).get("lopo", {}).get("recall", {})
+        solid = [j for j in o if N["type_algo_adj"][j] >= 0.5 and N["consensus_type"][j] >= 0.75 and rl.get(j, 1) >= 0.9]
+        fragile = [j for j in o if N["type_algo_adj"][j] < 0.35 and N["consensus_type"][j] < 0.7 and rl.get(j, 0) < 0.85]
         A(f"**Takeaway.** Solid on all three: {', '.join(nm[j] for j in solid) or 'none'}. Fragile on agreement and "
           f"stability alike: {', '.join(nm[j] for j in fragile) or 'none'}. The rest split by question: "
           + "; ".join(f"{nm[j]} is "
                       + ("stable" if N["consensus_type"][j] >= 0.75 else "middling")
                       + f" under resampling ({N['consensus_type'][j]:.2f}) with agreement "
                       + f"{N['type_algo_adj'][j]:.2f} across algorithms and {N['type_feat_adj'][j]:.2f} across feature sets"
+                      + (f", held-out recall {rl[j]:.2f}" if j in rl else "")
                       + (f", silhouette z {N['sil_type'][j]['z']:+.1f}" if N["mmd_present"] else "")
                       for j in o if j not in solid and j not in fragile)
           + ". **Caveat.** The columns are on different scales and different nulls; the card ranks, it does not sum.")
@@ -1179,8 +1308,17 @@ def write_text(N, F):
     A("- \"Per-type consensus (from the consensus slide)\": the slide's values are by consensus cluster id "
       f"({', '.join(f'{v:.2f}' for v in N['consensus_slide_values'])}); the document uses the mean own-cluster consensus "
       f"of each published type's electrodes (items_k07), which differs in the second decimal.")
-    A("- The silhouette z per type and the MMD numbers did not exist before today; they come from "
-      "00_paper2_figure6_mmd.py's tables (outputs/clustering/mmd/).")
+    if N.get("consensus_type_items"):
+        A("- Per-type consensus: the document now uses the mean of M over the pairs inside each published type "
+          f"({', '.join(f'c{j} {v:.2f}' for j, v in sorted(N['consensus_type'].items(), key=lambda kv: -kv[1]))}), the "
+          "definition the consensus slide carries since 2026-10-30; the per-electrode own-consensus mean used before "
+          f"({', '.join(f'c{j} {v:.2f}' for j, v in sorted(N['consensus_type_items'].items(), key=lambda kv: -kv[1]))}) "
+          "is a few hundredths higher for every type and is kept in numbers.json.")
+    if N.get("conf", {}).get("lopo"):
+        A("- Scorecard: \"nearest-neighbour MMD\" became held-out recall (leave one patient out, and patient halves), "
+          "the separation measure in plain units; the MMD² pair distances stay in Fig 4C and numbers.json.")
+    A("- The silhouette z per type, the MMD numbers and the held-out confusions did not exist before 2026-10-27; "
+      "they come from 00_paper2_figure6_mmd.py's tables (outputs/clustering/mmd/).")
     A("")
     A("## Sources")
     A("")

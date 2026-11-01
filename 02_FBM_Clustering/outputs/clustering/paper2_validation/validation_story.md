@@ -1,6 +1,6 @@
 # Paper 2 · how the seven response types were validated
 
-*Built 2026-10-27 13:38 from the output files of cohort concat_source_v17, run 20261017_194301; every number below is read from a file named in `numbers.json`.*
+*Built 2026-11-01 13:24 from the output files of cohort concat_source_v17, run 20261017_194301; every number below is read from a file named in `numbers.json`.*
 
 Green writing is new since the first version (the site's convention): under Agreement a worked example shows, step by step, how Fig 2C and 2D were computed and what their chance levels mean; under Stability and Separation, between the figures, what each panel shows and how its numbers were made.
 
@@ -30,7 +30,7 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 
 **What a good result looks like.** Every type drawn from many patients, none more than half from one patient.
 
-**Found.** c5 production n 200 (17 patients, largest 17 %), c0 beta decrease n 318 (22 patients, largest 25 %), c2 broadband decrease n 168 (11 patients, largest 36 %), c6 response-period low-frequency fall n 224 (24 patients, largest 25 %), c4 low-frequency rise n 334 (28 patients, largest 12 %), c1 audio-stimulus low-frequency n 143 (22 patients, largest 20 %), c3 reading-stimulus low-frequency n 200 (25 patients, largest 18 %). The median own-type loading is 0.41; 15.5 % of the electrodes sit below the 0.3 draw cut.
+**Found.** c5 production n 200 (17 patients, largest 17 %), c0 beta decrease n 318 (22 patients, largest 25 %), c2 broadband decrease n 168 (11 patients, largest 36 %), c6 response-period low-frequency fall n 224 (24 patients, largest 25 %), c4 low-frequency rise n 334 (28 patients, largest 12 %), c1 audio-stimulus low-frequency n 143 (22 patients, largest 20 %), c3 sentence-stimulus low-frequency n 200 (25 patients, largest 18 %). The median own-type loading is 0.41; 15.5 % of the electrodes sit below the 0.3 draw cut.
 
 ![Fig 1: the seven types - mean ERSP, hemisphere renders, patient composition](figures/fig1_types.png)
 
@@ -70,7 +70,7 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 |! c0 beta decrease | 0 | 241 | 12 | 53 | 5 | 2 | 5 | 318 |
 |! c1 audio-stimulus low-frequency | 2 | 32 | 4 | 74 | 0 | 9 | 22 | 143 |
 |! c2 broadband decrease | 4 | 4 | 159 | 0 | 1 | 0 | 0 | 168 |
-|! c3 reading-stimulus low-frequency | 9 | 25 | 2 | 13 | 138 | 1 | 12 | 200 |
+|! c3 sentence-stimulus low-frequency | 9 | 25 | 2 | 13 | 138 | 1 | 12 | 200 |
 |! c4 low-frequency rise | 222 | 0 | 2 | 68 | 12 | 7 | 23 | 334 |
 |! c5 production | 27 | 1 | 0 | 1 | 0 | 7 | 164 | 200 |
 |! c6 response-period low-frequency fall | 0 | 14 | 3 | 5 | 6 | 168 | 28 | 224 |
@@ -79,7 +79,7 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 !! **Step 2: pair the clusters (which goes with which)**
 -! centroid of each cluster = mean of its electrodes, each electrode first scaled to zero mean and unit SD across its features (shape, not loudness)
 -! subtract each solution's mean centroid from its own centroids, then Pearson r between every convex NMF centroid and every k-means centroid
--! take pairs greedily from the highest r down, each cluster used once: c0 beta decrease–k1 (0.98), c6 response-period low-frequency fall–k5 (0.97), c2 broadband decrease–k2 (0.97), c4 low-frequency rise–k0 (0.96), c3 reading-stimulus low-frequency–k4 (0.95), c5 production–k6 (0.92), c1 audio-stimulus low-frequency–k3 (0.86)
+-! take pairs greedily from the highest r down, each cluster used once: c0 beta decrease–k1 (0.98), c6 response-period low-frequency fall–k5 (0.97), c2 broadband decrease–k2 (0.97), c4 low-frequency rise–k0 (0.96), c3 sentence-stimulus low-frequency–k4 (0.95), c5 production–k6 (0.92), c1 audio-stimulus low-frequency–k3 (0.86)
 -! the shapes choose the pair; only the electrodes score it, so a pair is not forced to share electrodes
 
 !! **Step 3: the overlap of a matched pair (Jaccard)**
@@ -137,7 +137,7 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 
 **What a good result looks like.** PAC below the cloud; no cluster owned by one patient; per-type consensus above 0.6; leave-one-patient-out ARI high and no worse than for a pseudo-patient; most of the partition kept at K + 1.
 
-**Found.** At K = 7 no cluster is more than half one patient (worst 39 %, PAT_3965 in c0); at K = 8 one cluster is 100 % one patient, and the consensus partition fails the same rule at K = 6 and at every K from 8 up. PAC 0.234 against 0.428 ± 0.031 for the cloud (p 0.04, the floor of 25 draws; RCSI 0.61). Per-type consensus c4 low-frequency rise 0.82, c2 broadband decrease 0.79, c5 production 0.78, c6 response-period low-frequency fall 0.75, c0 beta decrease 0.72, c1 audio-stimulus low-frequency 0.64, c3 reading-stimulus low-frequency 0.59. Leave one patient out: median ARI 0.87 (minimum 0.76) against 0.88 ± 0.02 for the pseudo-patients (z -0.7); placement accuracy median 0.93 against a chance of 0.52 (worst patient EL051, 0.64). K 7 → K 8 keeps 0.90 of the electrodes in matched pairs (chance-corrected 0.88), K 7 → K 10 0.68.
+**Found.** At K = 7 no cluster is more than half one patient (worst 39 %, PAT_3965 in c0); at K = 8 one cluster is 100 % one patient, and the consensus partition fails the same rule at K = 6 and at every K from 8 up. PAC 0.234 against 0.428 ± 0.031 for the cloud (p 0.04, the floor of 25 draws; RCSI 0.61). Per-type consensus c4 low-frequency rise 0.81, c5 production 0.78, c2 broadband decrease 0.78, c6 response-period low-frequency fall 0.71, c0 beta decrease 0.69, c1 audio-stimulus low-frequency 0.62, c3 sentence-stimulus low-frequency 0.53. Leave one patient out: median ARI 0.87 (minimum 0.76) against 0.88 ± 0.02 for the pseudo-patients (z -0.7); placement accuracy median 0.93 against a chance of 0.52 (worst patient EL051, 0.64). K 7 → K 8 keeps 0.90 of the electrodes in matched pairs (chance-corrected 0.88), K 7 → K 10 0.68. Refit on half the patients and place the other half (the stricter held-out placement, Fig 4F): 62 % of held-out electrodes keep their type; per type c4 low-frequency rise 0.80, c2 broadband decrease 0.72, c0 beta decrease 0.70, c5 production 0.61, c6 response-period low-frequency fall 0.59, c1 audio-stimulus low-frequency 0.44, c3 sentence-stimulus low-frequency 0.30, the same order as the consensus.
 
 ![Fig 3A: one-patient clusters over K (current FIG 1 D)](figures/fig3a_one_patient_clusters_by_k.png)
 
@@ -156,10 +156,10 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 -! rows and columns ordered by the published type: a bright square = a type that stays together; the haze between two squares = the electrodes that switch between them
 
 !! **Step 3: per-type consensus (Fig 3D)**
--! m(k) = mean M over every pair inside the type (the brightness of its square): c4 low-frequency rise 0.82, c2 broadband decrease 0.79, c5 production 0.78, c6 response-period low-frequency fall 0.75, c0 beta decrease 0.72, c1 audio-stimulus low-frequency 0.64, c3 reading-stimulus low-frequency 0.59
+-! m(k) = mean M over every pair inside the type (the brightness of its square): c4 low-frequency rise 0.81, c5 production 0.78, c2 broadband decrease 0.78, c6 response-period low-frequency fall 0.71, c0 beta decrease 0.69, c1 audio-stimulus low-frequency 0.62, c3 sentence-stimulus low-frequency 0.53
 -! per electrode: own consensus = mean M with its own type; best-other = mean M with the type it most often joins instead; margin = the difference
--! c3 reading-stimulus low-frequency: own 0.59, best-other 0.23, margin 0.36; 28 % of its electrodes have a margin under 0.2 (they go with another type nearly as often)
--! c4 low-frequency rise: own 0.82, best-other 0.11; 6 % under 0.2
+-! c3 sentence-stimulus low-frequency: own 0.53, best-other 0.23, margin 0.36; 28 % of its electrodes have a margin under 0.2 (they go with another type nearly as often)
+-! c4 low-frequency rise: own 0.81, best-other 0.11; 6 % under 0.2
 
 !! **Step 4: PAC against the cloud (Fig 3B)**
 -! PAC = share of all electrode pairs with 0.1 < M < 0.9, the ambiguous pairs (lower = more stable): 0.234 at K = 7
@@ -213,25 +213,35 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 
 - **Silhouette.** (b − a) / max(a, b), a = mean distance to the own cluster, b = to the nearest other cluster, on the unit-norm rows; z-scored against the Gaussian cloud clustered the same way. Per type, the mean of its electrodes' silhouettes against the cloud's per-cluster values.
 - **MMD².** Mean kernel similarity within A + within B − 2 × between (Gaussian kernel, one median bandwidth), the unbiased estimate; 0 means the same distribution. In-sample it is tested against labels shuffled within patient, which is circular because the labels were fitted on these electrodes. The test that counts is on held-out patients: refit on half the patients, place the other half, MMD² between the placed groups, shuffled within patient; its scale is the Gaussian cloud through the same procedure, whose sectors are convex pieces of one featureless distribution and therefore well apart by construction.
+- **Held-out placement (prediction strength, Tibshirani & Walther 2005, blocked by patient).** Leave one patient out, refit on the other 28, place the held-out patient's electrodes with the refit's components (loadings by non-negative least squares, the largest wins), and count where they land against the full-cohort labels: a K × K confusion, with the recall of each type on its diagonal. No kernel, no cloud, out of sample by construction. The patient-halves version refits on half the cohort and is stricter, because refit instability is in it too (Lange et al. 2004).
 - **Where.** Per bin, the standardised mean difference between the two types with the same within-patient shuffle; the bars are each band's share of the linear-kernel MMD².
 
-**What a good result looks like.** Silhouette z well above 0 overall and per type; every pair different on held-out patients; MMD² above the cloud's sectors for the pairs that are claimed to be distinct.
+**What a good result looks like.** Held-out recall far above chance (the commonest type, about half) for every type; silhouette z well above 0 overall and per type; every pair different on held-out patients; MMD² above the cloud's sectors for the pairs that are claimed to be distinct.
 
-**Found.** Overall silhouette 0.065 against 0.028 ± 0.0019 for 50 clouds (z 19). Per type, z against the cloud: c2 broadband decrease +4.9, c0 beta decrease +2.6, c5 production +2.1, c4 low-frequency rise +1.2, c6 response-period low-frequency fall +0.4, c1 audio-stimulus low-frequency +0.3, c3 reading-stimulus low-frequency -1.3. MMD (5000 in-sample shuffles, 100 patient halves with 500 shuffles each, 100 cloud draws, bandwidth 1.33): every one of the 21 pairs differs on held-out patients (shuffle p < 0.05 in at least 95 % of the splits). Held-out MMD² runs from 0.097 (c0 vs c1) to 0.244 (c0 vs c4); the cloud's sectors sit at 0.123, so 14 pairs are further apart than two sectors of a featureless cloud and 7 are closer: c0–c1 0.79×, c4–c5 0.84×, c1–c6 0.87×, c0–c6 0.88×, c0–c3 0.96×, c1–c3 0.98×, c3–c5 0.99×. Nearest neighbours: c5 production → c4 (0.84×), c0 beta decrease → c1 (0.79×), c2 broadband decrease → c3 (1.51×), c6 response-period low-frequency fall → c1 (0.87×), c4 low-frequency rise → c5 (0.84×), c1 audio-stimulus low-frequency → c0 (0.79×), c3 reading-stimulus low-frequency → c0 (0.96×). With the 0.3 loading cut (15.5 % of the electrodes removed, the cloud cut by the same fraction) the ordering is the same and the ratios run 0.80 to 1.92. What drives the most separated pair (c0 vs c4): 8-13 Hz 27 %, 13-20 Hz 24 %, 4-8 Hz 20 %; by condition audio 17 %, picture 47 %, reading 37 %. The least separated (c0 vs c1): 13-20 Hz 28 %, 8-13 Hz 19 %, 1-4 Hz 15 %; by condition audio 43 %, picture 27 %, reading 30 %.
+**Found, held-out placement.** Leave one patient out: 90 % of held-out electrodes land in their published type. Per type, recall c4 low-frequency rise 0.97, c0 beta decrease 0.94, c5 production 0.92, c2 broadband decrease 0.91, c6 response-period low-frequency fall 0.89, c1 audio-stimulus low-frequency 0.80, c3 sentence-stimulus low-frequency 0.78; c3 sentence-stimulus low-frequency is the leakiest and goes mostly to c4 (7 %), c4 low-frequency rise the tightest. Per electrode, 1354 of 1587 land in their type in every fold, 104 never. The patient-halves test keeps 62 % overall and 0.30 for c3 sentence-stimulus low-frequency (section 3).
 
-![Fig 4: separation - silhouette z per type, the held-out MMD matrix, the most and least separated pairs (outlined: q < 0.05 and |d| >= 0.3), the loading distribution](figures/fig4_separation.png)
+**Found, distances.** Overall silhouette 0.065 against 0.028 ± 0.0019 for 50 clouds (z 19). Per type, z against the cloud: c2 broadband decrease +4.9, c0 beta decrease +2.6, c5 production +2.1, c4 low-frequency rise +1.2, c6 response-period low-frequency fall +0.4, c1 audio-stimulus low-frequency +0.3, c3 sentence-stimulus low-frequency -1.3. MMD (5000 in-sample shuffles, 100 patient halves with 500 shuffles each, 100 cloud draws, bandwidth 1.33): every one of the 21 pairs differs on held-out patients (shuffle p < 0.05 in at least 95 % of the splits). Held-out MMD² runs from 0.097 (c0 vs c1) to 0.244 (c0 vs c4); the cloud's sectors sit at 0.123, so 14 pairs are further apart than two sectors of a featureless cloud and 7 are closer: c0–c1 0.79×, c4–c5 0.84×, c1–c6 0.87×, c0–c6 0.88×, c0–c3 0.96×, c1–c3 0.98×, c3–c5 0.99×. Nearest neighbours: c5 production → c4 (0.84×), c0 beta decrease → c1 (0.79×), c2 broadband decrease → c3 (1.51×), c6 response-period low-frequency fall → c1 (0.87×), c4 low-frequency rise → c5 (0.84×), c1 audio-stimulus low-frequency → c0 (0.79×), c3 sentence-stimulus low-frequency → c0 (0.96×). With the 0.3 loading cut (15.5 % of the electrodes removed, the cloud cut by the same fraction) the ordering is the same and the ratios run 0.80 to 1.92. What drives the most separated pair (c0 vs c4): 8-13 Hz 27 %, 13-20 Hz 24 %, 4-8 Hz 20 %; by condition audio 17 %, picture 47 %, reading 37 %. The least separated (c0 vs c1): 13-20 Hz 28 %, 8-13 Hz 19 %, 1-4 Hz 15 %; by condition audio 43 %, picture 27 %, reading 30 %.
+
+![Fig 4: separation - A silhouette z per type; B where a type's electrodes land when their patient is left out; C the held-out MMD matrix; D the most and least separated pairs (outlined: q < 0.05 and |d| >= 0.3); E the loading distribution; F the patient-halves confusion; G the per-electrode held-out hit rate](figures/fig4_separation.png)
 
 ##! Fig 4, panel by panel
 
 !! **A: silhouette per type**
 -! per electrode: a = mean distance to the other electrodes of its own type, b = mean distance to the electrodes of the nearest other type (Euclidean, unit-norm rows)
 -! s = (b − a) ÷ max(a, b): +1 far from everything else, 0 on the border, negative closer to another type than to its own
--! the bar = mean s of the type: c2 broadband decrease 0.155, c3 reading-stimulus low-frequency -0.007
--! the cloud: Gaussian clouds (the script's --n-cloud-sil draws; the count is not in this run's manifest), each clustered with convex NMF at K = 7; their clusters have s = 0.026 ± 0.026
--! z = (s − 0.026) ÷ 0.026: c2 broadband decrease +4.9, c3 reading-stimulus low-frequency -1.3
+-! the bar = mean s of the type: c2 broadband decrease 0.155, c3 sentence-stimulus low-frequency -0.007
+-! the cloud: 50 Gaussian clouds, each clustered with convex NMF at K = 7; their clusters have s = 0.026 ± 0.026
+-! z = (s − 0.026) ÷ 0.026: c2 broadband decrease +4.9, c3 sentence-stimulus low-frequency -1.3
 -! why the overall z is 19 but these are small: the overall one compares whole-cohort silhouettes (0.065 vs 0.028) whose spread across 50 clouds is tiny (0.0019); per type the bar is the spread of the cloud's individual clusters (0.026), much harder
 
-!! **B: the MMD² matrix**
+!! **B: the held-out confusion (leave one patient out)**
+-! for each of the 29 patients: refit convex NMF on the other 28, align the refit's clusters to the published ones (Hungarian, on the kept electrodes), place the held-out patient's electrodes (loadings by non-negative least squares, the largest wins); 3 refit seeds per fold
+-! the row is the published type, the column where its held-out electrodes landed, the number the % of the row; the diagonal is the type's recall
+-! overall 90 %; chance (every electrode given its patient's commonest type) is about half
+-! c3 sentence-stimulus low-frequency is the leakiest: 78 % stay, 7 % go to c4; c4 low-frequency rise 97 %, c0 beta decrease 94 %, c5 production 92 %, c2 broadband decrease 91 %, c6 response-period low-frequency fall 89 %, c1 audio-stimulus low-frequency 80 %
+-! F is the same with half the patients left out: a harder test, because the model itself is refitted on half a cohort; G counts, per electrode, how often it landed in its type over the folds (the brain view colours by it)
+
+!! **C: the MMD² matrix**
 -! split the patients in two halves (100 random splits); refit convex NMF on half A, align its clusters to the published ones, place half B's electrodes with the refit's components
 -! MMD² on half B = mean similarity within the first group + within the second − 2 × between, similarity k(x, y) = exp(−‖x − y‖² ÷ 2σ²), σ = 1.33 (the median distance between electrodes); self-pairs left out, so one distribution gives 0 on average
 -! the cell = median over the splits: c0–c4 0.244, c0–c1 0.097
@@ -239,34 +249,34 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 -! red frame = below the Gaussian cloud put through the identical procedure 100 times, 0.123 between two of its sectors (7 pairs; c0–c1 0.79×)
 -! a frame does not say the two types are one distribution (the dot says they are not); it says they overlap more than two convex sectors of a featureless cloud, which clustering keeps well apart by construction
 
-!! **C: where two types differ**
+!! **D: where two types differ**
 -! per condition × band × time bin: d = (mean of the first type − mean of the second) ÷ pooled SD, in dB; red = first type higher, blue = second higher
 -! outline = within-patient shuffle (5000 shuffles, Benjamini-Hochberg over the 1350 bins) q < 0.05 and |d| ≥ 0.3
 -! bars = each band's share of the linear-kernel MMD² (the squared mean difference, bin by bin, in the kernel space); the small line above = share per condition
 -! most separated, c0–c4: 8-13 Hz 27 %, 13-20 Hz 24 %, 4-8 Hz 20 %; by condition audio 17 %, picture 47 %, reading 37 %
 -! least separated, c0–c1: 13-20 Hz 28 %, 8-13 Hz 19 %, 1-4 Hz 15 %; by condition audio 43 %, picture 27 %, reading 30 %
 
-!! **D: how committed each electrode is**
+!! **E: how committed each electrode is**
 -! every electrode's loadings on the seven types sum to 1; the largest = its own-type loading, which decides its membership
 -! median 0.41: the type explains less than half of a typical electrode's mixture
 -! 15.5 % sit below 0.3: not drawn in Fig 1 and Fig 6, counted in every test
 -! read with B: mixed loadings are why neighbouring types overlap, and why a continuum reading fits the numbers
 
-**Takeaway.** The types are distinct: every pair differs on patients the model never saw, and the strongest types sit further apart than sectors of a featureless cloud. They are distinct only partly: the weakest pairs are closer than such sectors, the loadings are mixed (median 0.41), and a reading of the types as regions on a continuum of responses is consistent with these numbers. **Caveat.** In-sample p-values are circular and are not the test; the cloud is a harsh yardstick because clustering carves it into maximally separated pieces.
+**Takeaway.** The types are distinct in the sense that matters: an electrode from a patient the model never saw lands in its type nine times in ten, and every pair differs on held-out patients. They are distinct only partly: the leaky types lose a fifth of their electrodes to their neighbours, the weakest pairs sit closer than sectors of a featureless cloud, the loadings are mixed (median 0.41), and a reading of the types as regions on a continuum of responses is consistent with these numbers. **Caveat.** In-sample p-values are circular and are not the test; the cloud is a reference, not a null, and a harsh one because clustering carves it into maximally separated pieces; the halves test mixes refit instability with placement and is read beside the leave-one-out, not instead of it.
 
 ## 5 · Scorecard: each type on all three
 
 **Question.** Which types are solid on agreement, stability and separation, and which are fragile?
 
-**How.** One row per type; the columns are the per-type numbers of sections 2 to 4: the chance-adjusted overlap of its matched cluster across the two other algorithms and across the three other feature sets (FIG 4), its consensus under patient resampling, its silhouette z against the cloud, the held-out MMD² to its nearest other type, and the number of patients and the largest patient's share. Colour is the rank within a column, not a composite score.
+**How.** One row per type; the columns are the per-type numbers of sections 2 to 4: the chance-adjusted overlap of its matched cluster across the two other algorithms and across the three other feature sets (FIG 4), its consensus under patient resampling (mean M over the pairs inside the type), its held-out recall when its patient is left out and when half the patients are, its silhouette z against the cloud, and the number of patients and the largest patient's share. Colour is the rank within a column, not a composite score.
 
 **What a good result looks like.** Dark across the row.
 
-**Found.** c5 production: overlap 0.34 across algorithms and 0.26 across feature sets, consensus 0.78, silhouette z +2.1, nearest type 0.84× the cloud, 17 patients, largest 17 %. c0 beta decrease: overlap 0.52 across algorithms and 0.24 across feature sets, consensus 0.72, silhouette z +2.6, nearest type 0.79× the cloud, 22 patients, largest 25 %. c2 broadband decrease: overlap 0.71 across algorithms and 0.45 across feature sets, consensus 0.79, silhouette z +4.9, nearest type 1.51× the cloud, 11 patients, largest 36 %. c6 response-period low-frequency fall: overlap 0.49 across algorithms and 0.02 across feature sets, consensus 0.75, silhouette z +0.4, nearest type 0.87× the cloud, 24 patients, largest 25 %. c4 low-frequency rise: overlap 0.47 across algorithms and 0.21 across feature sets, consensus 0.82, silhouette z +1.2, nearest type 0.84× the cloud, 28 patients, largest 12 %. c1 audio-stimulus low-frequency: overlap 0.18 across algorithms and 0.18 across feature sets, consensus 0.64, silhouette z +0.3, nearest type 0.79× the cloud, 22 patients, largest 20 %. c3 reading-stimulus low-frequency: overlap 0.33 across algorithms and 0.16 across feature sets, consensus 0.59, silhouette z -1.3, nearest type 0.96× the cloud, 25 patients, largest 18 %.
+**Found.** c5 production: overlap 0.34 across algorithms and 0.26 across feature sets, consensus 0.78, held-out recall 0.92 / 0.61, silhouette z +2.1, 17 patients, largest 17 %. c0 beta decrease: overlap 0.52 across algorithms and 0.24 across feature sets, consensus 0.69, held-out recall 0.94 / 0.70, silhouette z +2.6, 22 patients, largest 25 %. c2 broadband decrease: overlap 0.71 across algorithms and 0.45 across feature sets, consensus 0.78, held-out recall 0.91 / 0.72, silhouette z +4.9, 11 patients, largest 36 %. c6 response-period low-frequency fall: overlap 0.49 across algorithms and 0.02 across feature sets, consensus 0.71, held-out recall 0.89 / 0.59, silhouette z +0.4, 24 patients, largest 25 %. c4 low-frequency rise: overlap 0.47 across algorithms and 0.21 across feature sets, consensus 0.81, held-out recall 0.97 / 0.80, silhouette z +1.2, 28 patients, largest 12 %. c1 audio-stimulus low-frequency: overlap 0.18 across algorithms and 0.18 across feature sets, consensus 0.62, held-out recall 0.80 / 0.44, silhouette z +0.3, 22 patients, largest 20 %. c3 sentence-stimulus low-frequency: overlap 0.33 across algorithms and 0.16 across feature sets, consensus 0.53, held-out recall 0.78 / 0.30, silhouette z -1.3, 25 patients, largest 18 %.
 
 ![Fig 5: the scorecard](figures/fig5_scorecard.png)
 
-**Takeaway.** Solid on all three: c2 broadband decrease. Fragile on agreement and stability alike: c1 audio-stimulus low-frequency, c3 reading-stimulus low-frequency. The rest split by question: c5 production is stable under resampling (0.78) with agreement 0.34 across algorithms and 0.26 across feature sets, silhouette z +2.1; c0 beta decrease is middling under resampling (0.72) with agreement 0.52 across algorithms and 0.24 across feature sets, silhouette z +2.6; c6 response-period low-frequency fall is middling under resampling (0.75) with agreement 0.49 across algorithms and 0.02 across feature sets, silhouette z +0.4; c4 low-frequency rise is stable under resampling (0.82) with agreement 0.47 across algorithms and 0.21 across feature sets, silhouette z +1.2. **Caveat.** The columns are on different scales and different nulls; the card ranks, it does not sum.
+**Takeaway.** Solid on all three: c2 broadband decrease. Fragile on agreement and stability alike: c1 audio-stimulus low-frequency, c3 sentence-stimulus low-frequency. The rest split by question: c5 production is stable under resampling (0.78) with agreement 0.34 across algorithms and 0.26 across feature sets, held-out recall 0.92, silhouette z +2.1; c0 beta decrease is middling under resampling (0.69) with agreement 0.52 across algorithms and 0.24 across feature sets, held-out recall 0.94, silhouette z +2.6; c6 response-period low-frequency fall is middling under resampling (0.71) with agreement 0.49 across algorithms and 0.02 across feature sets, held-out recall 0.89, silhouette z +0.4; c4 low-frequency rise is stable under resampling (0.81) with agreement 0.47 across algorithms and 0.21 across feature sets, held-out recall 0.97, silhouette z +1.2. **Caveat.** The columns are on different scales and different nulls; the card ranks, it does not sum.
 
 ## 6 · Anatomy: where the types sit relative to the language atlas (context, not validation)
 
@@ -276,7 +286,7 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 
 **What a good result looks like.** For validation, nothing in particular: anatomy is where the types are, not whether they are real.
 
-**Found.** Mean P(LanA) per type c5 production 0.17, c0 beta decrease 0.11, c2 broadband decrease 0.13, c6 response-period low-frequency fall 0.12, c4 low-frequency rise 0.16, c1 audio-stimulus low-frequency 0.21, c3 reading-stimulus low-frequency 0.12 against a cohort baseline of 0.14. Against the shaft-shift null, the share inside the network clears it for c5 (q 0.036); the mean P clears it for no type, and for c1 only against the within-patient shuffle. Spin null (5000 spins): the network's own response is not beyond spun maps (p 0.37 all electrodes, 0.17 left hemisphere); 0 of 7 inside shares beat the spun maps on all electrodes, 0 on the left; the mean P beats them for c1 on the left.
+**Found.** Mean P(LanA) per type c5 production 0.17, c0 beta decrease 0.11, c2 broadband decrease 0.13, c6 response-period low-frequency fall 0.12, c4 low-frequency rise 0.16, c1 audio-stimulus low-frequency 0.21, c3 sentence-stimulus low-frequency 0.12 against a cohort baseline of 0.14. Against the shaft-shift null, the share inside the network clears it for c5 (q 0.036); the mean P clears it for no type, and for c1 only against the within-patient shuffle. Spin null (5000 spins): the network's own response is not beyond spun maps (p 0.37 all electrodes, 0.17 left hemisphere); 0 of 7 inside shares beat the spun maps on all electrodes, 0 on the left; the mean P beats them for c1 on the left.
 
 ![Fig 6A: P(LanA) per type, the share inside the network, what the network is made of, LanA on this coverage](figures/fig6a_lana.png)
 
@@ -306,15 +316,17 @@ Three questions decide whether a clustering is a result or an artefact. **Agreem
 
 The files win; each point names the file.
 
-- "c2 and c5 solid": c2 yes (overlap 0.71 across algorithms, 0.45 across feature sets, consensus 0.79, silhouette z +4.9). c5 is solid under resampling (0.78) and on silhouette (z +2.1) but not across methods: 0.34 across algorithms (0.16 against Ward) and 0.26 across feature sets (FIG4_matched).
-- "c4 fragile across methods, most stable under resampling": across algorithms c4 is middling (0.47); it is fragile across feature sets (0.21; 0.06 on 2 bands, 0.03 on HFA). Most stable holds by a hair: 0.823 against c2's 0.794 (items_k07).
-- "c1 and c3 fragile": confirmed on all three (overlap 0.18/0.33 across algorithms, 0.18/0.16 across feature sets, consensus 0.64/0.59, silhouette z +0.3/-1.3).
+- "c2 and c5 solid": c2 yes (overlap 0.71 across algorithms, 0.45 across feature sets, consensus 0.78, silhouette z +4.9). c5 is solid under resampling (0.78) and on silhouette (z +2.1) but not across methods: 0.34 across algorithms (0.16 against Ward) and 0.26 across feature sets (FIG4_matched).
+- "c4 fragile across methods, most stable under resampling": across algorithms c4 is middling (0.47); it is fragile across feature sets (0.21; 0.06 on 2 bands, 0.03 on HFA). Most stable holds by a hair: 0.813 against c2's 0.776 (items_k07).
+- "c1 and c3 fragile": confirmed on all three (overlap 0.18/0.33 across algorithms, 0.18/0.16 across feature sets, consensus 0.62/0.53, silhouette z +0.3/-1.3).
 - "K 7 → K 8 kept 0.90": the file says 0.900 (chance-corrected 0.88) - confirmed.
 - "K 7 is the most clusters before one patient owns a cluster": confirmed - at K = 8 one cluster is 100 % one patient (FIG1a generalization), and the consensus partition fails the rule at K = 6 and at every K from 8 up (results.json).
 - Scorecard "Jaccard": FIG 4's per-type numbers are the chance-adjusted overlap; the card shows that and names it, the raw Jaccard is in numbers.json.
 - "Leave-one-patient-out vs size-matched pseudo-patients": the file's null is shaft-permuted pseudo-patients, and for convex NMF the real ARI is not above it (z -0.7); the panel is per patient, not per cluster, because the tables are per patient.
 - "Per-type consensus (from the consensus slide)": the slide's values are by consensus cluster id (0.82, 0.82, 0.76, 0.76, 0.72, 0.62, 0.58); the document uses the mean own-cluster consensus of each published type's electrodes (items_k07), which differs in the second decimal.
-- The silhouette z per type and the MMD numbers did not exist before today; they come from 00_paper2_figure6_mmd.py's tables (outputs/clustering/mmd/).
+- Per-type consensus: the document now uses the mean of M over the pairs inside each published type (c4 0.81, c5 0.78, c2 0.78, c6 0.71, c0 0.69, c1 0.62, c3 0.53), the definition the consensus slide carries since 2026-10-30; the per-electrode own-consensus mean used before (c4 0.82, c2 0.79, c5 0.78, c6 0.75, c0 0.72, c1 0.64, c3 0.59) is a few hundredths higher for every type and is kept in numbers.json.
+- Scorecard: "nearest-neighbour MMD" became held-out recall (leave one patient out, and patient halves), the separation measure in plain units; the MMD² pair distances stay in Fig 4C and numbers.json.
+- The silhouette z per type, the MMD numbers and the held-out confusions did not exist before 2026-10-27; they come from 00_paper2_figure6_mmd.py's tables (outputs/clustering/mmd/).
 
 ## Sources
 
@@ -330,11 +342,14 @@ The files win; each point names the file.
 - consensus_results: `outputs\clustering\consensus\concat_source_v17\concat_bands15\cnmf\results.json`
 - consensus_items: `outputs\clustering\consensus\concat_source_v17\concat_bands15\cnmf\items_k07.csv`
 - consensus_manifest: `outputs\clustering\consensus\concat_source_v17\concat_bands15\cnmf\manifest.json`
+- consensus_matrix: `outputs\clustering\consensus\concat_source_v17\concat_bands15\cnmf\M_k07.npy`
 - consensus_clusters: `outputs\clustering\consensus\concat_source_v17\concat_bands15\cnmf\clusters_k07.csv`
 - lopo: `outputs\clustering\statistics\concat_bands15_K7\stats_summary.json`
 - lopo_per_patient: `outputs\clustering\statistics\concat_bands15_K7\stats_lopo.csv`
 - kbyk: `outputs\clustering\paper_figures\FIG5_KbyK_run20261017-194301.csv`
 - silhouette: `outputs\clustering\statistics\concat_bands15_K7\stats_separation.csv`
+- confusion_lopo: `outputs\clustering\mmd\concat_source_v17\concat_bands15\cnmf\confusion_lopo_counts.csv`
+- confusion_halves: `outputs\clustering\mmd\concat_source_v17\concat_bands15\cnmf\confusion_halves_counts.csv`
 - mmd: `outputs\clustering\mmd\concat_source_v17\concat_bands15\cnmf\pairs_summary.csv`
 - lana: `outputs\clustering\paper_figures\FIG3_lana_concat_bands15_K7_run20261017-194301_clusters.csv`
 - spin: `outputs\clustering\paper_figures\FIG3_spin_concat_bands15_K7_run20261017-194301_summary.json`
