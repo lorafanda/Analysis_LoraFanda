@@ -1270,7 +1270,10 @@ def main() -> int:
         cd = cell_dir(a.cache, fset, method)
         print(f"\n===== {FS_SHORT[fset]} x {P2.METHOD_LABEL[method]}  K {K}  run {d['run'].name} =====", flush=True)
         before = input_hashes(d)
-        if a.figures_only or ((cd / "manifest.json").exists() and not a.force):
+        # a cell is complete when it also has the held-out confusions (added 2026-10-30);
+        # an older cell without them is recomputed even without --force
+        complete = (cd / "manifest.json").exists() and (cd / "confusion_lopo_counts.csv").exists()
+        if a.figures_only or (complete and not a.force):
             if not (cd / "manifest.json").exists():
                 raise SystemExit(f"{cd} has no tables yet; run without --figures-only")
             res = load_cell(cd)

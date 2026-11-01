@@ -1,0 +1,15 @@
+{
+ "generated": "2026-11-01 13:40",
+ "cache": "concat_source_v17",
+ "runs": {
+  "cnmf__concat_bands15__20261017_194301": {
+   "file": "runs/cnmf__concat_bands15__20261017_194301/heldout.json",
+   "k": 7,
+   "feature_set": "concat_bands15",
+   "method": "cnmf",
+   "lopo_overall": 0.8994,
+   "halves_overall": 0.6221,
+   "written": "2026-11-01 13:40"
+  }
+ }
+}
