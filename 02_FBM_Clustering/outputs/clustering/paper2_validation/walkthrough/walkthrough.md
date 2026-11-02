@@ -1,14 +1,33 @@
 # The cluster visualizer, claim by claim
 
-*Built 2026-11-01 16:06 from the files the page reads (cohort concat_source_v17, run 20261017_194301). Page: https://lorafanda.github.io/cluster_visualizer.html. The brain images are rendered from the same data with the page's own encodings on FIG 1's glass scenes; the click path under each one reproduces it live.*
+*Built 2026-11-02 15:29 from the files the page reads (cohort concat_source_v17, run 20261017_194301). Page: https://lorafanda.github.io/cluster_visualizer.html. The brain images are rendered from the same data with the page's own encodings, on the glass brains of the types figure (Fig 1); the click path above each one reproduces it live.*
 
-## The request, restated
+## What this report is
 
-For each claim the paper makes about the clustering (the types, their agreement across descriptions and algorithms, their stability across patients, their separability) state the claim, say which view of the cluster visualizer shows it and which clicks get there, show the brain and the statistics that appear, and read the numbers off them with the paper each measure rests on. In short: claim → where to click → what you see → what it means.
+One claim per section, five claims: the types, their agreement across descriptions and algorithms, their stability across patients, their separability, and the scorecard that puts the three together. Each section names the paper figure the claim belongs to, gives the clicks that show it on the cluster visualizer, shows the brain and the statistics those clicks produce, reads the numbers off the files, and says what they mean, with the paper each measure rests on.
 
-## How to read a click path
+## Figure numbers
 
-`Run` is the feature set × algorithm matrix at the top of the control panel; `K` the row of numbers under Clusters; the chips `#1 … #7` are the clusters in figure order (#1 = the leftmost block of FIG 1); `View` has one / overlay / grid / held-out. In the held-out view, the panel on the right is clickable: a type bar, a matrix cell, a patient.
+Numbers follow the validation story, which the manuscript's captions already use (Fig 2C, 2D, 3A). The paper's new opening figure, the task with one exemplar electrode per type, has no number in the story; if it becomes Figure 1, every number below moves up by one.
+
+| claim | question | figure | panels |
+|---|---|---|---|
+| 1 | what the seven types are | Fig 1, the types | mean ERSP per type, the brains, the patient composition; the blocks' order is the chips' order |
+| 2 | agreement | Fig 2 | A, B the ARI and NMI matrices with the modal-agreement map; C the matched clusters against the two nulls (was FIG 4); D the 66-pair diagonal share (was FIG 5) |
+| 3 | stability | Fig 3 | A one-patient clusters over K (was FIG 1 D); B–D the consensus matrix, the per-type consensus, PAC against the Gaussian cloud; E leave one patient out; F how much of K 7 survives K 8, 9, 10. The composite draft letters them differently: B = K 7 → 8, C–E consensus, F = leave one out |
+| 4 | separation | Fig 4 | A silhouette z per type; B where held-out electrodes land; C the held-out MMD matrix; D the most and least separated pairs; E the loadings; F the patient-halves confusion; G the per-electrode hit rate |
+| 5 | all three at once | Fig 5 | the scorecard |
+
+## The page's controls, in its own words
+
+| control | where | what it does |
+|---|---|---|
+| `Run` | the feature set × algorithm matrix at the top of the control panel | picks the run; switching keeps the chip position, and the run note prints the ARI against the run you came from |
+| `Clusters (K)` | the row of numbers under Run | picks K; the page opens at K 8 |
+| chips `#1 … #7` | under Cluster | the clusters in figure order: #1 is the first block of the types figure (Fig 1). A chip shows n, the biggest patient and its share, and a red `*` when one patient holds more than half |
+| `View` | one · overlay · grid · held-out | one cluster; several at once; the same position across runs (`algorithms` or `feature sets`); or the held-out panel |
+| held-out panel | right of the brain | six numbered sections: 1 the answer in one number; 2 per type (click a bar); 3 where the misses go (click a cell); 4 on the brain (colour by, source, patient); 5 is it patients? (click a patient); 6 what it means |
+| `Minimum loading` | bottom of the control panel | hides electrodes below a loading; the counts and the red `*` are recomputed |
 
 ### The page itself, as it appears live
 
@@ -27,7 +46,14 @@ Screenshots of the live page at the time of building (800 px wide, the browser p
 
 ## Claim 1 · The clustering gives seven recurring response types, each carried by many patients
 
-**Where to click.** Run `15 bands × cNMF` → K `7` → View `one` → chip `#1` (c5 production), then `#7` (c3). For all at once: View `overlay` and click every chip.
+**Paper figure.** Fig 1, the types. Its seven blocks are the chips `#1 … #7`, in that order.
+
+**Where to click.**
+
+- **1.** `Run`: 15 bands × cNMF.
+- **2.** `Clusters (K)`: 7.
+- **3.** `View` one, chip `#1` (c5 production); then chip `#7` (c3 sentence-stimulus low-frequency).
+- **4.** All seven at once: `View` overlay, then click every chip.
 
 ![c5](renders/01_type_c5.png)
 
@@ -35,15 +61,33 @@ Screenshots of the live page at the time of building (800 px wide, the browser p
 
 ![all types](renders/03_all_types.png)
 
-**What you see.** Every dot is one electrode of the type; its size and its fade carry its loading on the type (small and grey below 0.5), the chip carries n and the biggest patient's share, and the red * that marks a patient holding more than half of a cluster is absent at K 7.
+**What you see.** Every dot is one electrode of the type. Its size and its fade carry its loading on the type: small and grey below 0.5. The chip carries n and the biggest patient's share; the red `*` that marks a patient holding more than half of a cluster is absent at K 7.
 
-**The numbers.** c5 production n 200 (17 patients, largest 17 %), c0 beta decrease n 318 (22 patients, largest 25 %), c2 broadband decrease n 168 (11 patients, largest 36 %), c6 response-period low-frequency fall n 224 (24 patients, largest 25 %), c4 low-frequency rise n 334 (28 patients, largest 12 %), c1 audio-stimulus low-frequency n 143 (22 patients, largest 20 %), c3 sentence-stimulus low-frequency n 200 (25 patients, largest 18 %); median own-type loading 0.41, 16 % below the 0.3 draw cut (Ding et al. 2010).
+**The numbers.**
 
-**What it means.** Seven shapes, each spread over 11 to 28 patients; the mixed loadings are the first sign that the types are regions of a continuum rather than islands, which Claim 4 measures (Ding et al. 2010).
+| type | n | patients | largest patient's share |
+|---|---|---|---|
+| c5 production | 200 | 17 | 17 % |
+| c0 beta decrease | 318 | 22 | 25 % |
+| c2 broadband decrease | 168 | 11 | 36 % |
+| c6 response-period low-frequency fall | 224 | 24 | 25 % |
+| c4 low-frequency rise | 334 | 28 | 12 % |
+| c1 audio-stimulus low-frequency | 143 | 22 | 20 % |
+| c3 sentence-stimulus low-frequency | 200 | 25 | 18 % |
+
+Median own-type loading 0.41; 16 % of the electrodes sit below the 0.3 draw cut (Ding et al. 2010).
+
+**What it means.** Seven shapes, each spread over 11 to 28 patients. The mixed loadings are the first sign that the types are regions of a continuum rather than islands, which Claim 4 measures (Ding et al. 2010).
 
 ## Claim 2 · Other algorithms find the same shapes; the frequency description matters more than the algorithm
 
-**Where to click.** View `grid` → `algorithms`: position #1 under convex NMF, k-means and Ward at the same K. Then `feature sets`: position #1 on 15, 5, 2 bands and HFA. Switching a run in the matrix keeps the position and the run note prints the ARI against the run you came from.
+**Paper figure.** Fig 2, agreement: A and B the ARI and NMI matrices with the modal-agreement map, C the matched clusters against the two nulls, D the diagonal share.
+
+**Where to click.**
+
+- **1.** `View` grid, `algorithms`: chip `#1` under convex NMF, k-means and Ward at K 7. In k-means and Ward, position #1 is the cluster paired one-to-one with convex NMF's production cluster, by Hungarian assignment on the electrodes two clusters share (Kuhn 1955).
+- **2.** `feature sets`: chip `#1` on 15, 5, 2 bands and HFA. Here every run's chips follow its own types figure (Fig 1, and S3 for the other three sets), so position #1 is each feature set's first block.
+- **3.** Switch a run in `Run`: the position is kept and the run note prints the ARI against the run you came from.
 
 ![position 1 across algorithms](renders/04_pos1_cnmf.png)
 
@@ -61,15 +105,35 @@ Screenshots of the live page at the time of building (800 px wide, the browser p
 
 ![ARI](panels/p0_ari.png)
 
-**What you see.** The three algorithms put the production type on the same contacts; across feature sets the same position is a different set of contacts once the bands are coarse.
+**What you see.** k-means puts the production type on much the same contacts as convex NMF; Ward's partner is a different set of contacts, and the Ward cluster that overlaps production most sits at another position. Across feature sets the first block is production-like each time, on about a third of the same contacts.
 
-**The numbers.** ARI 0.51 (k-means vs convex NMF), 0.33, 0.26 across algorithms; 0.38 to 0.07 across feature sets; all three algorithms agree on 47 % of the electrodes, all four feature sets on 11 % (Hubert & Arabie 1985).
+**The numbers.**
+
+| comparison | ARI | contacts shared by position #1 (Jaccard with c5) |
+|---|---|---|
+| k-means vs convex NMF | 0.51 | 0.57 |
+| k-means vs Ward | 0.33 | – |
+| Ward vs convex NMF | 0.26 | 0.07 (c5's best-overlapping Ward cluster: 0.22, at position #4) |
+| 15 bands vs 5 bands | 0.38 | 0.33 |
+| 15 bands vs 2 bands | 0.15 | 0.36 |
+| 15 bands vs HFA | 0.07 | 0.26 |
+| 5 bands vs 2 bands | 0.16 | – |
+| 5 bands vs HFA | 0.07 | – |
+| 2 bands vs HFA | 0.12 | – |
+
+All three algorithms agree on 47 % of the electrodes, all four feature sets on 11 % (Hubert & Arabie 1985).
 
 **What it means.** Changing the algorithm moves the electrodes less than changing the frequency description (Hubert & Arabie 1985). Agreement is not correctness: four descriptions can agree on an artefact of the gate.
 
 ## Claim 3 · The shapes come back when patients are resampled, and K 7 is the last K before one patient owns a cluster
 
-**Where to click.** K `8`: one chip now carries the red * (a patient holds more than half of it); back to K `7` it is gone. Then View `held-out` → colour `consensus margin`, and source `patient halves` with the patient list at the bottom of the panel.
+**Paper figure.** Fig 3, stability: A the one-patient clusters over K, B–D the consensus panels, E leave one patient out, F K 7 → 8.
+
+**Where to click.**
+
+- **1.** `Clusters (K)`: 8. One chip now carries the red `*` (a patient holds more than half of it); back at 7 it is gone.
+- **2.** `View` held-out → section 4 · On the brain → colour by `consensus margin`.
+- **3.** Source `patient halves`; section 5 · Is it patients? lists the patients, worst first.
 
 ![K 8 one-patient cluster](renders/06_k8_one_patient.png)
 
@@ -79,15 +143,37 @@ Screenshots of the live page at the time of building (800 px wide, the browser p
 
 ![patients](panels/p4_patients.png)
 
-**What you see.** At K 8 the extra cluster is a single patient's strip; at K 7 none is. Under consensus margin the dark electrodes stay with their type when 20 % of the patients are dropped and the light ones switch; under the halves test the misses concentrate in a few patients.
+**What you see.** At K 8 the extra cluster is one patient's strip of contacts; at K 7 no cluster is more than half one patient. Under consensus margin the dark electrodes stay with their type when 20 % of the patients are dropped and the light ones switch. Under the halves test the misses concentrate in a few patients.
 
-**The numbers.** At K 8 one cluster is 100 % one patient; at K 7 the worst is 39 % (PAT_3965). PAC 0.234 against 0.428 ± 0.031 for the Gaussian cloud (Monti et al. 2003; Şenbabaoğlu et al. 2014). Per-type consensus c4 low-frequency rise 0.81, c5 production 0.78, c2 broadband decrease 0.78, c6 response-period low-frequency fall 0.71, c0 beta decrease 0.69, c1 audio-stimulus low-frequency 0.62, c3 sentence-stimulus low-frequency 0.53 (Monti et al. 2003). The halves placement keeps 62 % overall; EL051 2.0×, PAT_6619 1.5×, EL038 1.3× carry more than their share of the misses, 1 of 29 patients keep at least 80 % (Lange et al. 2004; Varoquaux et al. 2017).
+**The numbers.**
 
-**What it means.** The partition is stable against patients, and K 7 is where that stops; the cloud has no patient structure, so the dominance rule is the guard (Şenbabaoğlu et al. 2014).
+- K 8: cluster 7 is 100 % one patient (PAT_3455, 62 of 62). K 7: the largest share is 36 % (PAT_3965 in c2 broadband decrease).
+- PAC 0.234 against 0.428 ± 0.031 for the Gaussian cloud (Monti et al. 2003; Şenbabaoğlu et al. 2014).
+- The halves placement keeps 62 % overall; EL051 2.0×, PAT_6619 1.5×, EL038 1.3× carry more than their share of the misses; 1 of 29 patients keeps at least 80 % (Lange et al. 2004; Varoquaux et al. 2017).
+
+| type | consensus (mean M within the type) |
+|---|---|
+| c4 low-frequency rise | 0.81 |
+| c5 production | 0.78 |
+| c2 broadband decrease | 0.78 |
+| c6 response-period low-frequency fall | 0.71 |
+| c0 beta decrease | 0.69 |
+| c1 audio-stimulus low-frequency | 0.62 |
+| c3 sentence-stimulus low-frequency | 0.53 |
+
+Consensus is the share of resampling runs in which two electrodes land together (Monti et al. 2003).
+
+**What it means.** The partition is stable against patients, and K 7 is where that stops. The cloud has no patient structure, so the dominance rule is the guard (Şenbabaoğlu et al. 2014).
 
 ## Claim 4 · The types are separable: an electrode from an unseen patient lands in its type nine times in ten, and the leaks run between neighbours
 
-**Where to click.** View `held-out` (source `leave one patient out`, colour `where misses go`). Read the three numbers at the top of the panel and the per-type bars; then click the cell `c3 → c4` in matrix B (patient halves), and switch colour to `hit rate`.
+**Paper figure.** Fig 4, separation: B is this test (where held-out electrodes land), F its patient-halves version, G the per-electrode hit rate; A, C and D are the silhouette and MMD readings of the same question.
+
+**Where to click.**
+
+- **1.** `View` held-out, source `leave one patient out`, colour by `where misses go`. Section 1 gives the three numbers, section 2 the per-type bars.
+- **2.** Section 3: click the cell `c3 → c4` in matrix B (patient halves). The brain lights the electrodes of that cell and steps the rest back.
+- **3.** Section 4: colour by `hit rate`.
 
 ![one number](panels/p1_one_number.png)
 
@@ -101,15 +187,34 @@ Screenshots of the live page at the time of building (800 px wide, the browser p
 
 ![hit rate](renders/10_hit_rate_lopo.png)
 
-**What you see.** Most electrodes are small grey hits; the coloured misses sit between the territories of the two types they move between, and the clicked cell shows exactly which c3 electrodes the halves test places in c4.
+**What you see.** Most electrodes are small grey hits. The coloured dots are misses, painted in the colour of the type they were placed in; for c3 they are spread over both hemispheres and many patients, so the leak is neither one patient nor one place. The clicked cell shows exactly which c3 electrodes the halves test puts in c4.
 
-**The numbers.** 90 % of held-out electrodes land in their published type with one patient out, 62 % with half the patients out, chance about 52 % (Tibshirani & Walther 2005; Lange et al. 2004). Recall per type c4 low-frequency rise 0.97, c0 beta decrease 0.94, c5 production 0.92, c2 broadband decrease 0.91, c6 response-period low-frequency fall 0.89, c1 audio-stimulus low-frequency 0.80, c3 sentence-stimulus low-frequency 0.78; c3 sentence-stimulus low-frequency loses most, to c4 (7 %) and under the halves test to c4 (23 %) (Tibshirani & Walther 2005; Kuhn 1955). Per electrode, 1354 of 1587 land in their type in every fold.
+**The numbers.**
+
+90 % of held-out electrodes land in their published type with one patient out, 62 % with half the patients out, chance about 52 % (Tibshirani & Walther 2005; Lange et al. 2004).
+
+| type | leave one patient out | patient halves | loses most to (one out) | loses most to (halves) |
+|---|---|---|---|---|
+| c4 low-frequency rise | 97 % | 80 % | c1 (1 %) | c5 (9 %) |
+| c0 beta decrease | 94 % | 70 % | c4 (2 %) | c1 (8 %) |
+| c5 production | 92 % | 61 % | c4 (7 %) | c4 (25 %) |
+| c2 broadband decrease | 91 % | 72 % | c0 (5 %) | c4 (8 %) |
+| c6 response-period low-frequency fall | 89 % | 59 % | c0 (3 %) | c5 (13 %) |
+| c1 audio-stimulus low-frequency | 80 % | 44 % | c0 (9 %) | c0 (23 %) |
+| c3 sentence-stimulus low-frequency | 78 % | 30 % | c4 (7 %) | c4 (23 %) |
+
+Per electrode, 1354 of 1587 land in their type in every fold and 104 never do; the refit clusters are aligned to the published ones by Hungarian assignment before counting (Tibshirani & Walther 2005; Kuhn 1955).
 
 **What it means.** Separable in the sense that matters, an unseen electrode can be told apart, and only partly: the leaky types lose a fifth of their electrodes to their neighbours, which is what a continuum of responses looks like under a partition (Tibshirani & Walther 2005).
 
 ## Claim 5 · The scorecard: c2 and c4 solid, c1 and c3 fragile, c5 solid under patients but weak across methods
 
-**Where to click.** In the held-out view click the type bar `c3` and then `c2` (or their chips): the brain keeps that type's electrodes only. Then the worst patient in the list at the bottom.
+**Paper figure.** Fig 5, the scorecard.
+
+**Where to click.**
+
+- **1.** In the held-out view click the type bar `c3` in section 2, then `c2`: the brain keeps that type's electrodes only.
+- **2.** Section 5: click the worst patient.
 
 ![c3 only](renders/12_row_c3_lopo.png)
 
@@ -119,16 +224,28 @@ Screenshots of the live page at the time of building (800 px wide, the browser p
 
 ![scorecard](panels/p5_scorecard.png)
 
-**What you see.** c3's electrodes are scattered and a fifth of them are coloured as misses; c2's are a tight temporal set with almost none.
+**What you see.** c3's electrodes are spread over both hemispheres (77 left, 123 right; 57 % in temporal cortex against 65 % for the whole cohort) and a fifth of them are coloured as misses. c2's are 75 % temporal (72 left, 96 right) with almost none coloured.
 
-**The numbers.** Across algorithms / feature sets (chance-adjusted overlap): c5 0.34 / 0.26, c0 0.52 / 0.24, c2 0.71 / 0.45, c6 0.49 / 0.02, c4 0.47 / 0.21, c1 0.18 / 0.18, c3 0.33 / 0.16 (Hubert & Arabie 1985; Kuhn 1955); consensus and held-out recall as above (Monti et al. 2003; Tibshirani & Walther 2005).
+**The numbers.** The scorecard's columns, one row per type:
+
+| type | overlap across algorithms | overlap across feature sets | consensus | one patient out | patient halves | silhouette z | patients | largest share |
+|---|---|---|---|---|---|---|---|---|
+| c5 production | 0.34 | 0.26 | 0.78 | 92 % | 61 % | +2.1 | 17 | 17 % |
+| c0 beta decrease | 0.52 | 0.24 | 0.69 | 94 % | 70 % | +2.6 | 22 | 25 % |
+| c2 broadband decrease | 0.71 | 0.45 | 0.78 | 91 % | 72 % | +4.9 | 11 | 36 % |
+| c6 response-period low-frequency fall | 0.49 | 0.02 | 0.71 | 89 % | 59 % | +0.4 | 24 | 25 % |
+| c4 low-frequency rise | 0.47 | 0.21 | 0.81 | 97 % | 80 % | +1.2 | 28 | 12 % |
+| c1 audio-stimulus low-frequency | 0.18 | 0.18 | 0.62 | 80 % | 44 % | +0.3 | 22 | 20 % |
+| c3 sentence-stimulus low-frequency | 0.33 | 0.16 | 0.53 | 78 % | 30 % | -1.3 | 25 | 18 % |
+
+Overlaps are chance-adjusted Jaccards of matched clusters (Hubert & Arabie 1985; Kuhn 1955); consensus as in Claim 3 (Monti et al. 2003); the held-out columns as in Claim 4 (Tibshirani & Walther 2005); silhouette z is the type's silhouette against the Gaussian cloud (Rousseeuw 1987).
 
 **What it means.** Each type is rated on all three questions; the colour of a scorecard cell is its rank in the column, not a composite score.
 
 ## Two things to know when reading the page
 
 - The page opens at K 8 (its default); every claim above is read at K 7, the paper's cut. The held-out view switches to K 7 by itself.
-- At K 7 the page's chips count the published fit's labels (c5 206, c2 164 …) while the paper's figures and the held-out view use the sweep fit's partition (c5 200, c2 168 …); the two agree on 95.7 % of the electrodes.
+- At K 7 the page's chips count the published fit's labels (c5 206, c2 164, c4 349 …) while the paper's figures and the held-out view use the sweep fit's partition (c5 200, c2 168, c4 334 …); the two agree on 95.7 % of the electrodes.
 
 ## References
 

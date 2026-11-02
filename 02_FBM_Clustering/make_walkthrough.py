@@ -1,35 +1,37 @@
 #!/usr/bin/env python3
 """The cluster visualizer, claim by claim: a report that states each claim of Paper 2's
-validation story (the types, agreement, stability, separability, the scorecard), gives the
-click path that shows it on cluster_visualizer.html, shows the brain and the statistics
-that path produces, quotes the numbers from the files, and ends every statement with the
-paper it rests on.
+validation story (the types, agreement, stability, separability, the scorecard), names the
+paper figure it belongs to, gives the click path that shows it on cluster_visualizer.html,
+shows the brain and the statistics that path produces, quotes the numbers from the files,
+and ends every statement with the paper it rests on.
 
-    python make_walkthrough.py            # outputs/clustering/paper2_validation/walkthrough/
+    python make_walkthrough.py                  # outputs/clustering/paper2_validation/walkthrough/
+    python make_walkthrough.py --reuse-renders  # keep the brain PNGs already there (no VTK)
+
+Figure numbers follow the validation story (Fig 1 types, Fig 2 agreement, Fig 3 stability,
+Fig 4 separation, Fig 5 scorecard, Fig 6 LanA), which the manuscript's captions use.
 
 The brain images are rendered here, headless, from the SAME files the page reads
 (contacts.json, labels_by_k.json, heldout.json, the figure order) with the page's own
 encodings (its type hues by figure position, its patient hues, its loading size and fade,
-the held-out view's greyscale and destination colours), on the fsaverage glass scenes FIG 1
-uses - so each one is what the page shows after the clicks, at print resolution. Pane
-screenshots of the live page, when the builder is given some, are added beside them.
+the held-out view's greyscale and destination colours), on the fsaverage glass brains of
+the types figure - so each one is what the page shows after the clicks, at print
+resolution. Pane screenshots of the live page, when the builder is given some, are added
+beside them.
 """
 from __future__ import annotations
 
-import base64
-import colorsys
 import importlib.util
 import json
 import sys
 import time
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent
@@ -52,6 +54,8 @@ SHOTS = OUTD / "shots"
 PAGE = "https://lorafanda.github.io/cluster_visualizer.html"
 INK, MUTED, GREY = P2.INK, P2.MUTED, P2.GREY
 GREY148 = np.array([148, 148, 148], float)
+REUSE = "--reuse-renders" in sys.argv
+NL = chr(10)
 
 REFS = {
     "TW05": ("Tibshirani & Walther 2005", "Tibshirani R, Walther G (2005). Cluster validation by prediction strength. Journal of Computational and Graphical Statistics 14(3): 511–528."),
@@ -66,6 +70,8 @@ REFS = {
     "R87": ("Rousseeuw 1987", "Rousseeuw PJ (1987). Silhouettes: a graphical aid to the interpretation and validation of cluster analysis. Journal of Computational and Applied Mathematics 20: 53–65."),
     "OP09": ("Owen & Perry 2009", "Owen AB, Perry PO (2009). Bi-cross-validation of the SVD and the nonnegative matrix factorization. Annals of Applied Statistics 3(2): 564–594."),
 }
+TEMPORAL = ("temporal", "sts", "heschl", "transverse", "fusiform", "parahippocampal", "hippocampus",
+            "amygdala", "insula", "entorhinal")
 
 
 def cite(*ks):
@@ -118,8 +124,11 @@ def load_all():
     hemi = np.array(["L" if h == "lh" else "R" for h in contacts["hemi"]])
     pats_all = sorted(set(p for p in contacts["patient"] if p))
     pat_index = {p: i for i, p in enumerate(pats_all)}
+    names = contacts.get("regions") or []
+    ridx = [int(r) for r in contacts.get("region", [])]
+    region = np.array([names[i] if 0 <= i < len(names) else "" for i in ridx]) if ridx else None
     return dict(cache=cache, man=man, contacts=contacts, order=order, runs=runs, main_id=main_id, ho=ho,
-                nums=nums, d=d, xyz=xyz, hemi=hemi, pat_index=pat_index)
+                nums=nums, d=d, xyz=xyz, hemi=hemi, pat_index=pat_index, region=region)
 
 
 def sweep_labels(D, run_id, k):
@@ -145,12 +154,58 @@ def patient_rgb(D, pid):
     return np.array([190, 190, 196], float) if i is None else hsl2rgb(((i * 137.508) % 360) / 360, 0.66, 0.56)
 
 
+def dominated(D, run_id, k):
+    """(cluster, patient, n, total) of every cluster more than half one patient, and the largest share overall."""
+    st = sweep_stats(D, run_id, k)
+    doms, worst = [], (0.0, None, None)
+    for c, cnt in st.get("cluster_patient_counts", {}).items():
+        tot = sum(cnt.values()); top = max(cnt.items(), key=lambda kv: kv[1])
+        if not tot:
+            continue
+        share = top[1] / tot
+        if share > 0.5:
+            doms.append((int(c), top[0], top[1], tot))
+        if share > worst[0]:
+            worst = (share, top[0], int(c))
+    return doms, worst
+
+
+def jaccard_pos1(D, ref_lab, ref_cluster):
+    """How many of position #1's contacts each other run shares with the main run's cluster at
+    that position: Jaccard of the two hard sets, plus the best-overlapping cluster of that run."""
+    ref = set(i for i, L in enumerate(ref_lab) if L == ref_cluster)
+    out = {}
+    for rid in D["runs"]:
+        if rid == D["main_id"] or str(K) not in D["order"].get(rid, {}):
+            continue
+        lab = sweep_labels(D, rid, K)
+        if lab is None:
+            continue
+        sets = {c: set(i for i, L in enumerate(lab) if L == c) for c in range(K)}
+        jac = {c: len(ref & s) / len(ref | s) for c, s in sets.items() if s}
+        p1 = D["order"][rid][str(K)][0]
+        best = max(jac, key=jac.get)
+        out[rid] = dict(pos1=p1, jac=jac.get(p1, 0.0), best=best, best_jac=jac[best], n=len(sets[p1]))
+    return out
+
+
+def anatomy(D, lab, c):
+    """Hemisphere split and temporal share of a type, from the page's region field."""
+    m = np.array([L == c for L in lab])
+    nL = int((D["hemi"][m] == "L").sum()); nR = int((D["hemi"][m] == "R").sum())
+    if D["region"] is None:
+        return nL, nR, None
+    regs = D["region"][m]
+    temp = float(np.mean([any(t in r.lower() for t in TEMPORAL) for r in regs])) if len(regs) else None
+    return nL, nR, temp
+
+
 # ---------------------------------------------------------------- rendering
 _SCENE_D = None
 
 
 def render_state(D, side, cols, rads, alphas, zoom=1.30):
-    """One view of the contacts whose radius is > 0, on FIG 1's glass scene of this side."""
+    """One view of the contacts whose radius is > 0, on the types figure's glass scene of this side."""
     global _SCENE_D
     if _SCENE_D is None:
         _SCENE_D = dict(xyz=D["xyz"], hemi=D["hemi"])
@@ -173,6 +228,9 @@ def render_state(D, side, cols, rads, alphas, zoom=1.30):
 
 
 def two_views(D, name, cols, rads, alphas, caption, sides=("L", "R")):
+    p = REND / f"{name}.png"
+    if REUSE and p.exists():
+        return p
     imgs = [Image.fromarray(render_state(D, s, cols, rads, alphas)) for s in sides]
     h = max(im.height for im in imgs)
     W = sum(int(im.width * h / im.height) for im in imgs) + 40 * (len(imgs) - 1)
@@ -186,12 +244,11 @@ def two_views(D, name, cols, rads, alphas, caption, sides=("L", "R")):
     fig = plt.figure(figsize=(W / 150, 70 / 150), dpi=150)
     fig.text(0.0, 0.62, caption, fontsize=9, color=INK, ha="left", va="center")
     fig.text(0.0, 0.18, "   ·   ".join({"L": "left hemisphere, lateral", "R": "right hemisphere, lateral", "T": "from above"}[s] for s in sides)
-             + "   ·   rendered from the page's data on FIG 1's glass scenes", fontsize=7.5, color=MUTED, ha="left", va="center")
+             + "   ·   rendered from the page's data on the glass brains of the types figure (Fig 1)", fontsize=7.5, color=MUTED, ha="left", va="center")
     fig.canvas.draw()
     strip = Image.fromarray(np.asarray(fig.canvas.buffer_rgba())).convert("RGBA")
     plt.close(fig)
     out.alpha_composite(strip.resize((W, 70), Image.LANCZOS), (0, h))
-    p = REND / f"{name}.png"
     out.convert("RGB").save(p)
     return p
 
@@ -274,12 +331,12 @@ def state_heldout(D, name, caption, colour="miss", src="lopo", row=None, cell=No
 
 # ---------------------------------------------------------------- the statistics panels
 def panel_numbers(D, name):
-    ho, T = D["ho"], {t["cluster"]: t for t in D["ho"]["types"]}
+    ho = D["ho"]
     chance = D["nums"].get("lopo_predict", {}).get("chance_mean", 0.52)
     fig = plt.figure(figsize=(9.2, 2.1), dpi=170)
-    for x, (v, lab) in zip((0.02, 0.36, 0.70), ((ho["lopo"]["overall"], f"leave one patient out: refit on the other {ho['n_patients'] - 1},\nplace the held-out patient"),
-                                                 (ho["halves"]["overall"], "patient halves: refit on half the patients,\nplace the other half (harsher)"),
-                                                 (chance, "chance: every electrode given its\npatient's commonest type"))):
+    for x, (v, lab) in zip((0.02, 0.36, 0.70), ((ho["lopo"]["overall"], f"leave one patient out: refit on the other {ho['n_patients'] - 1}," + NL + "place the held-out patient"),
+                                                 (ho["halves"]["overall"], "patient halves: refit on half the patients," + NL + "place the other half (harsher)"),
+                                                 (chance, "chance: every electrode given its" + NL + "patient's commonest type"))):
         fig.text(x, 0.72, f"{100 * v:.0f} %", fontsize=30, fontweight="bold", color=INK if x < 0.7 else MUTED, va="center")
         fig.text(x, 0.22, lab, fontsize=8.5, color=MUTED, va="center")
     p = OUTD / "panels" / f"{name}.png"
@@ -333,7 +390,7 @@ def panel_confusions(D, name):
         ax.set_xlabel("placed in", fontsize=8.5, color=MUTED); ax.set_ylabel("published type", fontsize=8.5, color=MUTED)
         ax.tick_params(length=0)
         for s_ in ax.spines.values(): s_.set_visible(False)
-        ax.set_title(ttl + "\n% of each type's held-out electrodes", fontsize=9, loc="left", color=INK)
+        ax.set_title(ttl + NL + "% of each type's held-out electrodes", fontsize=9, loc="left", color=INK)
     fig.tight_layout()
     p = OUTD / "panels" / f"{name}.png"
     fig.savefig(p, facecolor="white"); plt.close(fig)
@@ -397,7 +454,11 @@ def panel_grid_ari(D, name):
 
 # ---------------------------------------------------------------- the report
 def img_md(p, alt):
-    return f"![{alt}](" + str(Path(p).relative_to(OUTD)).replace("\\", "/") + ")\n"
+    return f"![{alt}](" + str(Path(p).relative_to(OUTD)).replace(chr(92), "/") + ")" + NL
+
+
+def pct(v):
+    return f"{100 * float(v):.0f} %"
 
 
 def main() -> int:
@@ -415,6 +476,7 @@ def main() -> int:
     order7 = D["order"][mid]["7"]
     nm = {c: f"c{c}" + (f" {T[c]['name']}" if T[c]["name"] else "") for c in T}
     pos_of = {c: i for i, c in enumerate(order7)}
+    lab7 = sweep_labels(D, mid, 7)
     print(f"main run {mid}   order {order7}")
 
     # ---- renders
@@ -426,21 +488,18 @@ def main() -> int:
     pos1 = {}
     for m_ in ("cnmf", "kmeans", "hierarchical"):
         rid = next(i for i in D["runs"] if i.startswith(f"{m_}__{FSET}__"))
-        c1 = D["order"][rid]["7"][0]
-        pos1[m_] = (rid, c1)
+        pos1[m_] = (rid, D["order"][rid]["7"][0])
     R["algo"] = [state_type(D, rid, 7, c1, 0, 7, f"04_pos1_{m_}", f"position #1 under {P2.METHOD_LABEL[m_]} on 15 bands at K 7 = cluster {c1}") for m_, (rid, c1) in pos1.items()]
     fs1 = {}
     for f_ in P2.FSETS:
         rid = next(i for i in D["runs"] if i.startswith(f"cnmf__{f_}__"))
         fs1[f_] = (rid, D["order"][rid]["7"][0])
     R["fset"] = [state_type(D, rid, 7, c1, 0, 7, f"05_pos1_{f_}", f"position #1 for convex NMF on {P2.FS_LABEL[f_]} at K 7 = cluster {c1}") for f_, (rid, c1) in fs1.items()]
-    # stability: the K 8 cluster one patient owns
-    st8 = sweep_stats(D, mid, 8)
-    dom = None
-    for c, cnt in st8.get("cluster_patient_counts", {}).items():
-        tot = sum(cnt.values()); top = max(cnt.items(), key=lambda kv: kv[1])
-        if tot and top[1] / tot > 0.5:
-            dom = (int(c), top[0], top[1], tot)
+    J = jaccard_pos1(D, lab7, order7[0])
+    # stability: the K 8 cluster one patient owns, and the largest share at K 7
+    doms8, _ = dominated(D, mid, 8)
+    _, worst7 = dominated(D, mid, 7)
+    dom = doms8[0] if doms8 else None
     if dom:
         R["k8"] = state_type(D, mid, 8, dom[0], D["order"][mid]["8"].index(dom[0]), 8, "06_k8_one_patient", f"K 8: cluster {dom[0]} is {100 * dom[2] / dom[3]:.0f} % one patient ({dom[1]}, {dom[2]} of {dom[3]}); coloured by patient", by_patient=True, others_grey=True)
     R["cons"] = state_heldout(D, "07_consensus_margin", "consensus margin under patient resampling: black = always with its type, light = switches", colour="cons")
@@ -461,6 +520,11 @@ def main() -> int:
     keep80 = sum(1 for r in pats if r["hitH"] is not None and r["hitH"] >= 0.8)
     worst3 = sorted(pats, key=lambda r: -r["excess"])[:3]
     shots = sorted(SHOTS.glob("*.jpg")) + sorted(SHOTS.glob("*.png"))
+    pub = Counter(int(v[0]) for v in D["contacts"]["runs"][mid] if v is not None)
+    swp = Counter(L for L in lab7 if L is not None)
+    chance = nums.get("lopo_predict", {}).get("chance_mean", 0.52)
+    always = sum(1 for v in ho["contacts"]["lopo_hit"] if v is not None and v >= 1)
+    never = sum(1 for v in ho["contacts"]["lopo_hit"] if v is not None and v <= 0)
 
     # ---- the text
     L = []
@@ -468,21 +532,40 @@ def main() -> int:
     A("# The cluster visualizer, claim by claim")
     A("")
     A(f"*Built {time.strftime('%Y-%m-%d %H:%M')} from the files the page reads (cohort {D['cache']}, run {D['runs'][mid]['run']}). "
-      f"Page: {PAGE}. The brain images are rendered from the same data with the page's own encodings on FIG 1's glass scenes; "
-      f"the click path under each one reproduces it live.*")
+      f"Page: {PAGE}. The brain images are rendered from the same data with the page's own encodings, on the glass brains of the "
+      f"types figure (Fig 1); the click path above each one reproduces it live.*")
     A("")
-    A("## The request, restated")
+    A("## What this report is")
     A("")
-    A("For each claim the paper makes about the clustering (the types, their agreement across descriptions and algorithms, their "
-      "stability across patients, their separability) state the claim, say which view of the cluster visualizer shows it and which "
-      "clicks get there, show the brain and the statistics that appear, and read the numbers off them with the paper each measure "
-      "rests on. In short: claim → where to click → what you see → what it means.")
+    A("One claim per section, five claims: the types, their agreement across descriptions and algorithms, their stability across "
+      "patients, their separability, and the scorecard that puts the three together. Each section names the paper figure the claim "
+      "belongs to, gives the clicks that show it on the cluster visualizer, shows the brain and the statistics those clicks produce, "
+      "reads the numbers off the files, and says what they mean, with the paper each measure rests on.")
     A("")
-    A("## How to read a click path")
+    A("## Figure numbers")
     A("")
-    A("`Run` is the feature set × algorithm matrix at the top of the control panel; `K` the row of numbers under Clusters; the chips "
-      "`#1 … #7` are the clusters in figure order (#1 = the leftmost block of FIG 1); `View` has one / overlay / grid / held-out. "
-      "In the held-out view, the panel on the right is clickable: a type bar, a matrix cell, a patient.")
+    A("Numbers follow the validation story, which the manuscript's captions already use (Fig 2C, 2D, 3A). The paper's new opening "
+      "figure, the task with one exemplar electrode per type, has no number in the story; if it becomes Figure 1, every number below "
+      "moves up by one.")
+    A("")
+    A("| claim | question | figure | panels |")
+    A("|---|---|---|---|")
+    A("| 1 | what the seven types are | Fig 1, the types | mean ERSP per type, the brains, the patient composition; the blocks' order is the chips' order |")
+    A("| 2 | agreement | Fig 2 | A, B the ARI and NMI matrices with the modal-agreement map; C the matched clusters against the two nulls (was FIG 4); D the 66-pair diagonal share (was FIG 5) |")
+    A("| 3 | stability | Fig 3 | A one-patient clusters over K (was FIG 1 D); B–D the consensus matrix, the per-type consensus, PAC against the Gaussian cloud; E leave one patient out; F how much of K 7 survives K 8, 9, 10. The composite draft letters them differently: B = K 7 → 8, C–E consensus, F = leave one out |")
+    A("| 4 | separation | Fig 4 | A silhouette z per type; B where held-out electrodes land; C the held-out MMD matrix; D the most and least separated pairs; E the loadings; F the patient-halves confusion; G the per-electrode hit rate |")
+    A("| 5 | all three at once | Fig 5 | the scorecard |")
+    A("")
+    A("## The page's controls, in its own words")
+    A("")
+    A("| control | where | what it does |")
+    A("|---|---|---|")
+    A("| `Run` | the feature set × algorithm matrix at the top of the control panel | picks the run; switching keeps the chip position, and the run note prints the ARI against the run you came from |")
+    A("| `Clusters (K)` | the row of numbers under Run | picks K; the page opens at K 8 |")
+    A("| chips `#1 … #7` | under Cluster | the clusters in figure order: #1 is the first block of the types figure (Fig 1). A chip shows n, the biggest patient and its share, and a red `*` when one patient holds more than half |")
+    A("| `View` | one · overlay · grid · held-out | one cluster; several at once; the same position across runs (`algorithms` or `feature sets`); or the held-out panel |")
+    A("| held-out panel | right of the brain | six numbered sections: 1 the answer in one number; 2 per type (click a bar); 3 where the misses go (click a cell); 4 on the brain (colour by, source, patient); 5 is it patients? (click a patient); 6 what it means |")
+    A("| `Minimum loading` | bottom of the control panel | hides electrodes below a loading; the counts and the red `*` are recomputed |")
     A("")
     if shots:
         A("### The page itself, as it appears live")
@@ -495,77 +578,158 @@ def main() -> int:
         A("")
 
     # claim 1
-    sizes = ", ".join(f"{nm[c]} n {T[c]['n']} ({T[c]['n_patients']} patients, largest {100 * nums['top_share'][str(c)]:.0f} %)" for c in order7)
     A("## Claim 1 · The clustering gives seven recurring response types, each carried by many patients")
     A("")
-    A(f"**Where to click.** Run `15 bands × cNMF` → K `7` → View `one` → chip `#1` (c5 production), then `#7` (c3). For all at once: View `overlay` and click every chip.")
+    A("**Paper figure.** Fig 1, the types. Its seven blocks are the chips `#1 … #7`, in that order.")
+    A("")
+    A("**Where to click.**")
+    A("")
+    A("- **1.** `Run`: 15 bands × cNMF.")
+    A("- **2.** `Clusters (K)`: 7.")
+    A("- **3.** `View` one, chip `#1` (c5 production); then chip `#7` (c3 sentence-stimulus low-frequency).")
+    A("- **4.** All seven at once: `View` overlay, then click every chip.")
     A("")
     A(img_md(R["c5"], "c5")); A(img_md(R["c3"], "c3")); A(img_md(R["all"], "all types"))
-    A(f"**What you see.** Every dot is one electrode of the type; its size and its fade carry its loading on the type (small and grey below 0.5), "
-      f"the chip carries n and the biggest patient's share, and the red * that marks a patient holding more than half of a cluster is absent at K 7.")
+    A("**What you see.** Every dot is one electrode of the type. Its size and its fade carry its loading on the type: small and grey "
+      "below 0.5. The chip carries n and the biggest patient's share; the red `*` that marks a patient holding more than half of a "
+      "cluster is absent at K 7.")
     A("")
-    A(f"**The numbers.** {sizes}; median own-type loading {nums['own_median']:.2f}, {100 * nums['own_below_cut']:.0f} % below the 0.3 draw cut{cite('D10')}.")
+    A("**The numbers.**")
     A("")
-    A("**What it means.** Seven shapes, each spread over 11 to 28 patients; the mixed loadings are the first sign that the types are regions of a continuum rather than islands, which Claim 4 measures" + cite("D10") + ".")
+    A("| type | n | patients | largest patient's share |")
+    A("|---|---|---|---|")
+    for c in order7:
+        A(f"| {nm[c]} | {T[c]['n']} | {T[c]['n_patients']} | {pct(nums['top_share'][str(c)])} |")
+    A("")
+    A(f"Median own-type loading {nums['own_median']:.2f}; {pct(nums['own_below_cut'])} of the electrodes sit below the {P2.LOAD_CUT:.1f} draw cut{cite('D10')}.")
+    A("")
+    A(f"**What it means.** Seven shapes, each spread over {min(t['n_patients'] for t in T.values())} to {max(t['n_patients'] for t in T.values())} patients. "
+      "The mixed loadings are the first sign that the types are regions of a continuum rather than islands, which Claim 4 measures" + cite("D10") + ".")
     A("")
 
     # claim 2
     aa, af = nums["ari_algo"], nums["ari_feat"]
+    rk = next(i for i in D["runs"] if i.startswith(f"kmeans__{FSET}__")); rw = next(i for i in D["runs"] if i.startswith(f"hierarchical__{FSET}__"))
+    jk, jw = J[rk], J[rw]
+    jf = {f_: J[next(i for i in D["runs"] if i.startswith(f"cnmf__{f_}__"))] for f_ in P2.FSETS if f_ != FSET}
     A("## Claim 2 · Other algorithms find the same shapes; the frequency description matters more than the algorithm")
     A("")
-    A("**Where to click.** View `grid` → `algorithms`: position #1 under convex NMF, k-means and Ward at the same K. Then `feature sets`: position #1 on 15, 5, 2 bands and HFA. Switching a run in the matrix keeps the position and the run note prints the ARI against the run you came from.")
+    A("**Paper figure.** Fig 2, agreement: A and B the ARI and NMI matrices with the modal-agreement map, C the matched clusters against the two nulls, D the diagonal share.")
+    A("")
+    A("**Where to click.**")
+    A("")
+    A("- **1.** `View` grid, `algorithms`: chip `#1` under convex NMF, k-means and Ward at K 7. In k-means and Ward, position #1 is the cluster paired "
+      "one-to-one with convex NMF's production cluster, by Hungarian assignment on the electrodes two clusters share" + cite("K55") + ".")
+    A("- **2.** `feature sets`: chip `#1` on 15, 5, 2 bands and HFA. Here every run's chips follow its own types figure (Fig 1, and S3 for the other three sets), so position #1 is each feature set's first block.")
+    A("- **3.** Switch a run in `Run`: the position is kept and the run note prints the ARI against the run you came from.")
     A("")
     for p in R["algo"]: A(img_md(p, "position 1 across algorithms"))
     for p in R["fset"]: A(img_md(p, "position 1 across feature sets"))
     A(img_md(Pn["ari"], "ARI"))
-    A(f"**What you see.** The three algorithms put the production type on the same contacts; across feature sets the same position is a different set of contacts once the bands are coarse.")
+    A("**What you see.** k-means puts the production type on much the same contacts as convex NMF; Ward's partner is a different set of contacts, "
+      "and the Ward cluster that overlaps production most sits at another position. Across feature sets the first block is production-like "
+      "each time, on about a third of the same contacts.")
     A("")
-    A(f"**The numbers.** ARI {aa['k-means vs convex NMF']['ari']:.2f} (k-means vs convex NMF), {aa['k-means vs Ward']['ari']:.2f}, {aa['Ward vs convex NMF']['ari']:.2f} across algorithms; "
-      f"{max(v['ari'] for v in af.values()):.2f} to {min(v['ari'] for v in af.values()):.2f} across feature sets; all three algorithms agree on {100 * nums['modal_algo']['3']:.0f} % of the electrodes, all four feature sets on {100 * nums['modal_feat']['4']:.0f} %{cite('HA85')}.")
+    A("**The numbers.**")
     A("")
-    A("**What it means.** Changing the algorithm moves the electrodes less than changing the frequency description" + cite("HA85") + ". Agreement is not correctness: four descriptions can agree on an artefact of the gate.")
+    A("| comparison | ARI | contacts shared by position #1 (Jaccard with c5) |")
+    A("|---|---|---|")
+    A(f"| k-means vs convex NMF | {aa['k-means vs convex NMF']['ari']:.2f} | {jk['jac']:.2f} |")
+    A(f"| k-means vs Ward | {aa['k-means vs Ward']['ari']:.2f} | – |")
+    A(f"| Ward vs convex NMF | {aa['Ward vs convex NMF']['ari']:.2f} | {jw['jac']:.2f} (c5's best-overlapping Ward cluster: {jw['best_jac']:.2f}, at position #{D['order'][rw]['7'].index(jw['best']) + 1}) |")
+    for f_, lbl in (("concat_bands5", "15 bands vs 5 bands"), ("concat_bands2", "15 bands vs 2 bands"), ("concat_hfa", "15 bands vs HFA")):
+        A(f"| {lbl} | {af[lbl]['ari']:.2f} | {jf[f_]['jac']:.2f} |")
+    for lbl in ("5 bands vs 2 bands", "5 bands vs HFA", "2 bands vs HFA"):
+        A(f"| {lbl} | {af[lbl]['ari']:.2f} | – |")
+    A("")
+    A(f"All three algorithms agree on {pct(nums['modal_algo']['3'])} of the electrodes, all four feature sets on {pct(nums['modal_feat']['4'])}{cite('HA85')}.")
+    A("")
+    A("**What it means.** Changing the algorithm moves the electrodes less than changing the frequency description" + cite("HA85") + ". "
+      "Agreement is not correctness: four descriptions can agree on an artefact of the gate.")
     A("")
 
     # claim 3
-    pac = nums["pac"]; g8 = nums["gen"]["8"]
+    pac = nums["pac"]
     cons_rank = sorted(T, key=lambda c: -(T[c]["consensus"] or 0))
     A("## Claim 3 · The shapes come back when patients are resampled, and K 7 is the last K before one patient owns a cluster")
     A("")
-    A("**Where to click.** K `8`: one chip now carries the red * (a patient holds more than half of it); back to K `7` it is gone. Then View `held-out` → colour `consensus margin`, and source `patient halves` with the patient list at the bottom of the panel.")
+    A("**Paper figure.** Fig 3, stability: A the one-patient clusters over K, B–D the consensus panels, E leave one patient out, F K 7 → 8.")
+    A("")
+    A("**Where to click.**")
+    A("")
+    A("- **1.** `Clusters (K)`: 8. One chip now carries the red `*` (a patient holds more than half of it); back at 7 it is gone.")
+    A("- **2.** `View` held-out → section 4 · On the brain → colour by `consensus margin`.")
+    A("- **3.** Source `patient halves`; section 5 · Is it patients? lists the patients, worst first.")
     A("")
     if dom:
         A(img_md(R["k8"], "K 8 one-patient cluster"))
     A(img_md(R["cons"], "consensus margin")); A(img_md(R["miss_h"], "misses under the halves test")); A(img_md(Pn["pats"], "patients"))
-    A(f"**What you see.** At K 8 the extra cluster is a single patient's strip; at K 7 none is. Under consensus margin the dark electrodes stay with their type when 20 % of the patients are dropped and the light ones switch; under the halves test the misses concentrate in a few patients.")
+    A("**What you see.** At K 8 the extra cluster is one patient's strip of contacts; at K 7 no cluster is more than half one patient. "
+      "Under consensus margin the dark electrodes stay with their type when 20 % of the patients are dropped and the light ones switch. "
+      "Under the halves test the misses concentrate in a few patients.")
     A("")
-    A(f"**The numbers.** At K 8 one cluster is {100 * g8['worst']:.0f} % one patient; at K 7 the worst is {100 * pac['worst_share']:.0f} % ({pac['worst_patient']}). PAC {pac['real']:.3f} against {pac['null']:.3f} ± {pac['null_sd']:.3f} for the Gaussian cloud{cite('M03', 'S14')}. "
-      f"Per-type consensus " + ", ".join(f"{nm[c]} {T[c]['consensus']:.2f}" for c in cons_rank) + f"{cite('M03')}. The halves placement keeps {100 * ho['halves']['overall']:.0f} % overall; "
-      + ", ".join(f"{r['p']} {r['excess']:.1f}×" for r in worst3) + f" carry more than their share of the misses, {keep80} of {len(pats)} patients keep at least 80 %{cite('L04', 'V17')}.")
+    A("**The numbers.**")
     A("")
-    A("**What it means.** The partition is stable against patients, and K 7 is where that stops; the cloud has no patient structure, so the dominance rule is the guard" + cite("S14") + ".")
+    if dom:
+        A(f"- K 8: cluster {dom[0]} is {pct(dom[2] / dom[3])} one patient ({dom[1]}, {dom[2]} of {dom[3]}). K 7: the largest share is {pct(worst7[0])} ({worst7[1]} in {nm[worst7[2]]}).")
+    A(f"- PAC {pac['real']:.3f} against {pac['null']:.3f} ± {pac['null_sd']:.3f} for the Gaussian cloud{cite('M03', 'S14')}.")
+    A(f"- The halves placement keeps {pct(ho['halves']['overall'])} overall; " + ", ".join(f"{r['p']} {r['excess']:.1f}×" for r in worst3)
+      + f" carry more than their share of the misses; {keep80} of {len(pats)} patients {'keeps' if keep80 == 1 else 'keep'} at least 80 %{cite('L04', 'V17')}.")
+    A("")
+    A("| type | consensus (mean M within the type) |")
+    A("|---|---|")
+    for c in cons_rank:
+        A(f"| {nm[c]} | {T[c]['consensus']:.2f} |")
+    A("")
+    A(f"Consensus is the share of resampling runs in which two electrodes land together{cite('M03')}.")
+    A("")
+    A("**What it means.** The partition is stable against patients, and K 7 is where that stops. The cloud has no patient structure, so the dominance rule is the guard" + cite("S14") + ".")
     A("")
 
     # claim 4
     rec = {c: T[c]["lopo_recall"] for c in T}
-    low = min(rec, key=rec.get)
     A("## Claim 4 · The types are separable: an electrode from an unseen patient lands in its type nine times in ten, and the leaks run between neighbours")
     A("")
-    A("**Where to click.** View `held-out` (source `leave one patient out`, colour `where misses go`). Read the three numbers at the top of the panel and the per-type bars; then click the cell `c3 → c4` in matrix B (patient halves), and switch colour to `hit rate`.")
+    A("**Paper figure.** Fig 4, separation: B is this test (where held-out electrodes land), F its patient-halves version, G the per-electrode hit rate; A, C and D are the silhouette and MMD readings of the same question.")
+    A("")
+    A("**Where to click.**")
+    A("")
+    A("- **1.** `View` held-out, source `leave one patient out`, colour by `where misses go`. Section 1 gives the three numbers, section 2 the per-type bars.")
+    A("- **2.** Section 3: click the cell `c3 → c4` in matrix B (patient halves). The brain lights the electrodes of that cell and steps the rest back.")
+    A("- **3.** Section 4: colour by `hit rate`.")
     A("")
     A(img_md(Pn["numbers"], "one number")); A(img_md(Pn["types"], "per type")); A(img_md(R["miss_l"], "misses LOPO")); A(img_md(Pn["conf"], "confusions")); A(img_md(R["cell"], "cell c3 to c4")); A(img_md(R["hit"], "hit rate"))
-    A(f"**What you see.** Most electrodes are small grey hits; the coloured misses sit between the territories of the two types they move between, and the clicked cell shows exactly which c3 electrodes the halves test places in c4.")
+    A("**What you see.** Most electrodes are small grey hits. The coloured dots are misses, painted in the colour of the type they were placed in; "
+      "for c3 they are spread over both hemispheres and many patients, so the leak is neither one patient nor one place. The clicked cell shows "
+      "exactly which c3 electrodes the halves test puts in c4.")
     A("")
-    A(f"**The numbers.** {100 * ho['lopo']['overall']:.0f} % of held-out electrodes land in their published type with one patient out, {100 * ho['halves']['overall']:.0f} % with half the patients out, chance about {100 * nums.get('lopo_predict', {}).get('chance_mean', 0.52):.0f} %{cite('TW05', 'L04')}. "
-      f"Recall per type " + ", ".join(f"{nm[c]} {rec[c]:.2f}" for c in sorted(rec, key=rec.get, reverse=True)) + f"; {nm[low]} loses most, to c{T[low]['lopo_confused_with']} ({100 * T[low]['lopo_confused_share']:.0f} %) and under the halves test to c{T[low]['halves_confused_with']} ({100 * T[low]['halves_confused_share']:.0f} %){cite('TW05', 'K55')}. "
-      f"Per electrode, {ho['n'] - sum(1 for v in ho['contacts']['lopo_hit'] if v is not None and v < 1)} of {ho['n']} land in their type in every fold.")
+    A("**The numbers.**")
+    A("")
+    A(f"{pct(ho['lopo']['overall'])} of held-out electrodes land in their published type with one patient out, {pct(ho['halves']['overall'])} with half the patients out, "
+      f"chance about {pct(chance)}{cite('TW05', 'L04')}.")
+    A("")
+    A("| type | leave one patient out | patient halves | loses most to (one out) | loses most to (halves) |")
+    A("|---|---|---|---|---|")
+    for c in sorted(rec, key=rec.get, reverse=True):
+        t = T[c]
+        A(f"| {nm[c]} | {pct(t['lopo_recall'])} | {pct(t['halves_recall'])} | c{t['lopo_confused_with']} ({pct(t['lopo_confused_share'])}) | c{t['halves_confused_with']} ({pct(t['halves_confused_share'])}) |")
+    A("")
+    A(f"Per electrode, {always} of {ho['n']} land in their type in every fold and {never} never do; the refit clusters are aligned to the published ones by Hungarian assignment before counting{cite('TW05', 'K55')}.")
     A("")
     A("**What it means.** Separable in the sense that matters, an unseen electrode can be told apart, and only partly: the leaky types lose a fifth of their electrodes to their neighbours, which is what a continuum of responses looks like under a partition" + cite("TW05") + ".")
     A("")
 
     # claim 5
+    an = {c: anatomy(D, lab7, c) for c in (2, 3)}
+    cohort_temp = float(np.mean([any(t in r.lower() for t in TEMPORAL) for r, Lc in zip(D["region"], lab7) if Lc is not None])) if D["region"] is not None else None
     A("## Claim 5 · The scorecard: c2 and c4 solid, c1 and c3 fragile, c5 solid under patients but weak across methods")
     A("")
-    A("**Where to click.** In the held-out view click the type bar `c3` and then `c2` (or their chips): the brain keeps that type's electrodes only. Then the worst patient in the list at the bottom.")
+    A("**Paper figure.** Fig 5, the scorecard.")
+    A("")
+    A("**Where to click.**")
+    A("")
+    A("- **1.** In the held-out view click the type bar `c3` in section 2, then `c2`: the brain keeps that type's electrodes only.")
+    A("- **2.** Section 5: click the worst patient.")
     A("")
     A(img_md(R["row3"], "c3 only")); A(img_md(R["row2"], "c2 only")); A(img_md(R["pat"], "worst patient"))
     sc = VAL / "figures" / "fig5_scorecard.png"
@@ -573,10 +737,21 @@ def main() -> int:
         sc2 = OUTD / "panels" / "p5_scorecard.png"
         sc2.write_bytes(sc.read_bytes())
         A(img_md(sc2, "scorecard"))
-    A(f"**What you see.** c3's electrodes are scattered and a fifth of them are coloured as misses; c2's are a tight temporal set with almost none.")
+    tp3 = f"{pct(an[3][2])} in temporal cortex against {pct(cohort_temp)} for the whole cohort" if an[3][2] is not None else "over both hemispheres"
+    tp2 = f"{pct(an[2][2])} temporal" if an[2][2] is not None else "mostly temporal"
+    A(f"**What you see.** c3's electrodes are spread over both hemispheres ({an[3][0]} left, {an[3][1]} right; {tp3}) and a fifth of them are coloured as misses. "
+      f"c2's are {tp2} ({an[2][0]} left, {an[2][1]} right) with almost none coloured.")
     A("")
-    A(f"**The numbers.** Across algorithms / feature sets (chance-adjusted overlap): " + ", ".join(f"c{c} {nums['type_algo_adj'][str(c)]:.2f} / {nums['type_feat_adj'][str(c)]:.2f}" for c in order7)
-      + f"{cite('HA85', 'K55')}; consensus and held-out recall as above{cite('M03', 'TW05')}.")
+    A("**The numbers.** The scorecard's columns, one row per type:")
+    A("")
+    A("| type | overlap across algorithms | overlap across feature sets | consensus | one patient out | patient halves | silhouette z | patients | largest share |")
+    A("|---|---|---|---|---|---|---|---|---|")
+    for c in order7:
+        t = T[c]
+        A(f"| {nm[c]} | {nums['type_algo_adj'][str(c)]:.2f} | {nums['type_feat_adj'][str(c)]:.2f} | {t['consensus']:.2f} | {pct(t['lopo_recall'])} | {pct(t['halves_recall'])} | {t['sil_z']:+.1f} | {t['n_patients']} | {pct(nums['top_share'][str(c)])} |")
+    A("")
+    A(f"Overlaps are chance-adjusted Jaccards of matched clusters{cite('HA85', 'K55')}; consensus as in Claim 3{cite('M03')}; the held-out columns as in Claim 4{cite('TW05')}; "
+      f"silhouette z is the type's silhouette against the Gaussian cloud{cite('R87')}.")
     A("")
     A("**What it means.** Each type is rated on all three questions; the colour of a scorecard cell is its rank in the column, not a composite score.")
     A("")
@@ -584,15 +759,16 @@ def main() -> int:
     # notes + refs
     A("## Two things to know when reading the page")
     A("")
-    A(f"- The page opens at K 8 (its default); every claim above is read at K 7, the paper's cut. The held-out view switches to K 7 by itself.")
-    A(f"- At K 7 the page's chips count the published fit's labels (c5 206, c2 164 …) while the paper's figures and the held-out view use the sweep fit's partition (c5 200, c2 168 …); the two agree on {100 * ho['label_agreement']['published']:.1f} % of the electrodes.")
+    A("- The page opens at K 8 (its default); every claim above is read at K 7, the paper's cut. The held-out view switches to K 7 by itself.")
+    A(f"- At K 7 the page's chips count the published fit's labels (c5 {pub[5]}, c2 {pub[2]}, c4 {pub[4]} …) while the paper's figures and the held-out view use the "
+      f"sweep fit's partition (c5 {swp[5]}, c2 {swp[2]}, c4 {swp[4]} …); the two agree on {100 * ho['label_agreement']['published']:.1f} % of the electrodes.")
     A("")
     A("## References")
     A("")
     for k, (short, full) in REFS.items():
         A(f"- {full}")
     A("")
-    md = "\n".join(L)
+    md = NL.join(L)
     (OUTD / "walkthrough.md").write_text(md, encoding="utf-8")
     body = STORY.md_to_html(md, OUTD)
     page = ("<!doctype html><html><head><meta charset='utf-8'><title>Cluster visualizer walkthrough</title>"
