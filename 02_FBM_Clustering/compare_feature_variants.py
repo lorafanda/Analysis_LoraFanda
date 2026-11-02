@@ -5,6 +5,7 @@ published concat_bands15 partition at K 7, on the same electrodes (2026-11-02).
 
     concat_bands15z   the 15 bands, each z-scored across the cohort
     concat_bands15s   the 15 bands as per-band shape within each electrode
+    concat_bands15t   the 15 bands as a ternary map (+1 / 0 / -1) on the z-scored values
 
     python compare_feature_variants.py                          # both variants
     python compare_feature_variants.py --variants concat_bands15z --k 8
@@ -44,7 +45,8 @@ import lf_runs as LR                                      # noqa: E402
 
 REF, REF_K = "concat_bands15", 7
 VARIANTS = {"concat_bands15z": "15 bands, each z-scored across the cohort",
-            "concat_bands15s": "15 bands, per-band shape within each electrode"}
+            "concat_bands15s": "15 bands, per-band shape within each electrode",
+            "concat_bands15t": "15 bands, ternary map (+1 / 0 / -1) on the z-scored values"}
 GROUPS = {"1-13 Hz": [0, 1, 2], "13-30 Hz": [3, 4], "30-70 Hz": [5, 6],
           "70-170 Hz": [7, 8, 9], "170-400 Hz": [10, 11, 12, 13, 14]}
 EXEMPLARS = [("EL033", "PHG_R12", "Figure 1 production row"),
@@ -130,6 +132,8 @@ def analyse(v, ref, Cref, ref_order, pats, k_force, out):
         G = np.load(gf).astype(float)
         Gn = G / np.maximum(G.sum(1, keepdims=True), 1e-12)
         lab = Gn.argmax(1)
+        if k == REF_K:
+            res["lab7"] = [int(x) for x in lab]
         M, J, mp = match(lab, k, ref["lab"], REF_K)
         pairs = []
         for a, b in sorted(mp.items(), key=lambda ab: ref_order.index(ab[1])):
@@ -242,7 +246,7 @@ def fig_shares(shares, out):
     fig.savefig(out / "band_shares.png", facecolor="white", bbox_inches="tight"); plt.close(fig)
 
 
-def write_summary(results, ref_rule, ref_share, out, cache):
+def write_summary(results, ref_rule, ref_share, out, cache, pair=None):
     L = []; A = L.append
     A(f"# Band-equalised variants of {REF} against the published K {REF_K} partition")
     A("")
@@ -270,6 +274,15 @@ def write_summary(results, ref_rule, ref_share, out, cache):
     for g in GROUPS:
         A(f"| {g} | " + " | ".join(f"{100 * s[g]:.0f} %" for s in [ref_share] + [r["band_share"] for r in results]) + " |")
     A("")
+    if pair:
+        names_p = list(pair)
+        A(f"## Agreement between the partitions at K {REF_K} (ARI, all against all)")
+        A("")
+        A("| | " + " | ".join(names_p) + " |")
+        A("|---|" + "---|" * len(names_p))
+        for a_ in names_p:
+            A(f"| {a_} | " + " | ".join(f"{pair[a_][b_]:.2f}" for b_ in names_p) + " |")
+        A("")
     for r in results:
         A(f"## {r['variant']} · {r['label']} · run {r['run']}")
         A("")
@@ -300,7 +313,7 @@ def write_summary(results, ref_rule, ref_share, out, cache):
     A("")
     (out / "summary.md").write_text(NL.join(L), encoding="utf-8")
     (out / "summary.json").write_text(json.dumps(dict(cache=cache, ref=REF, ref_k=REF_K, ref_rule=ref_rule.to_dict("records"),
-                                                      ref_band_share=ref_share, variants=results), indent=1, default=str), encoding="utf-8")
+                                                      ref_band_share=ref_share, pairwise_ari=pair, variants=results), indent=1, default=str), encoding="utf-8")
 
 
 def main() -> int:
@@ -337,7 +350,14 @@ def main() -> int:
     if not results:
         return 1
     fig_rule(rules, out); fig_shares(shares, out)
-    write_summary(results, ref_rule, ref_share, out, cache)
+    labs = {REF: np.asarray(ref["lab"])}
+    for r in results:
+        if r.get("lab7") is not None:
+            labs[r["variant"]] = np.asarray(r["lab7"])
+    pair = {a_: {b_: float(adjusted_rand_score(labs[a_], labs[b_])) for b_ in labs} for a_ in labs}
+    for a_ in labs:
+        print("ARI at K 7:", a_, {b_: round(pair[a_][b_], 2) for b_ in labs if b_ != a_})
+    write_summary(results, ref_rule, ref_share, out, cache, pair)
     print(f"written {out}  ({time.time() - t0:.0f} s)")
     return 0
 

@@ -205,6 +205,8 @@ def main() -> int:
                                                                    fmax_hz=398.4375),
             "concat_bands15s": lambda: CC.concat_bands15s_features(Xc, n_blocks=3,
                                                                    fmax_hz=398.4375),
+            "concat_bands15t": lambda: CC.concat_bands15t_features(Xc, n_blocks=3,
+                                                                   fmax_hz=398.4375),
             "concat_bands2": lambda: CC.concat_bands2_features(Xc, n_blocks=3,
                                                                fmax_hz=398.4375),
             "concat_hfa": lambda: CC.concat_hfa_features(Xc, n_blocks=3,

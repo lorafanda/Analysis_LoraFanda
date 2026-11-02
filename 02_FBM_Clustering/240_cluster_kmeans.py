@@ -61,8 +61,8 @@ ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
 ap.add_argument('--ks', type=int, nargs='+', default=K_RANGE, help='K values to fit (default: the notebook\'s 5..30)')
 # ---- the band-equalised variants of concat_bands15 (2026-11-02) ------------------------
 # Not in FEATURE_SETS either: fitted only when named, e.g.
-#     python 240_cluster_kmeans.py --feature-set concat_bands15z concat_bands15s --ks 5 6 7 8 9 10 11 12 --no-heldout
-VARIANT_SETS = ['concat_bands15z', 'concat_bands15s']
+#     python 240_cluster_kmeans.py --feature-set concat_bands15z concat_bands15s concat_bands15t --ks 5 6 7 8 9 10 11 12 --no-heldout
+VARIANT_SETS = ['concat_bands15z', 'concat_bands15s', 'concat_bands15t']
 ap.add_argument('--feature-set', nargs='+', default=FEATURE_SETS, choices=FEATURE_SETS + list(TIMEBIN_SETS) + VARIANT_SETS, help='feature sets to fit (default: all four)')
 ap.add_argument('--no-heldout', action='store_true', help='skip section 3, the bi-cross-validated held-out curve (make_heldout_variance.py)')
 args = ap.parse_args()
@@ -123,6 +123,8 @@ for _fs in FEATURE_SETS:
         X[_fs] = CC.concat_bands15z_features(X_concat, n_blocks=3, fmax_hz=398.4375)
     elif _fs == 'concat_bands15s':      # the 15 bands as per-band shape within each electrode
         X[_fs] = CC.concat_bands15s_features(X_concat, n_blocks=3, fmax_hz=398.4375)
+    elif _fs == 'concat_bands15t':      # ternary map (+1 / 0 / -1) on the z-scored 15 bands
+        X[_fs] = CC.concat_bands15t_features(X_concat, n_blocks=3, fmax_hz=398.4375)
 
 
 print(f'\ncohort: {len(df_contacts)} electrodes · '

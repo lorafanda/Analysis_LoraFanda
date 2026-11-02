@@ -36,6 +36,8 @@ Three feature sets, mirroring the per-condition tracks:
     concat_bands15s 15 x 90 concat_bands15 as per-band shape within each electrode: each
                             band's course divided by sqrt(rms^2 + m_b^2), m_b the cohort
                             median rms of that band (2026-11-02)
+    concat_bands15t 15 x 90 concat_bands15 as a ternary map on the z-scored bands: +1 / -1
+                            where |z| >= 1 and two neighbours agree, else 0 (2026-11-02)
     concat_raw    103 x 900 full-resolution ERSP, stitched (baseline; very high-dim; 129 before 2026-09-18)
 
 Feed the flattened matrix to lf_cluster_run.fit_and_save(feature_set='concat_*').
@@ -490,6 +492,46 @@ def concat_bands15s_features(X_concat: np.ndarray, *, n_blocks: int = 3,
     return X.astype(np.float32)
 
 
+def concat_bands15t_features(X_concat: np.ndarray, *, n_blocks: int = 3,
+                             fmax_hz: float = DEFAULT_FMAX,
+                             time_bins_out: int = DEFAULT_DS_TIME_BINS,
+                             thr: float = 1.0, min_neighbours: int = 2) -> np.ndarray:
+    """concat_bands15 as a TERNARY map, +1 / 0 / -1 per cell, on the z-scored bands (2026-11-02).
+
+    Each cell of the 15 x 30 x 3 grid is +1 (rise) or -1 (fall) when its concat_bands15z
+    value lies at least `thr` cohort standard deviations of that band from the band's mean,
+    else 0; a cell then keeps its sign only if at least `min_neighbours` of its eight
+    neighbours in the band x time plane of the same condition carry the same sign, which
+    removes isolated flicker. Thresholding the z-scored values rather than dB is what makes
+    the map comparable across frequencies: at thr 1 the active cells spread over the band
+    groups in proportion to their number of bands (1-13 Hz 24 %, 70-170 Hz 20 %,
+    170-400 Hz 30 %), where a 1 dB cut is nearly all low frequency. Measured on v17 at
+    thr 1, min_neighbours 2: median 247 active cells per electrode, 5th percentile 95, no
+    empty row. Amplitude is gone entirely; AREA is not - a broad sustained block still
+    outweighs a small blob by its cell count. A feature is -1, 0 or 1: read a centroid as
+    an agreement map (share of members with +1 minus share with -1), never on a dB bar.
+    """
+    Z = concat_bands15z_features(X_concat, n_blocks=n_blocks, fmax_hz=fmax_hz,
+                                 time_bins_out=time_bins_out).astype(np.float64)
+    n = len(Z)
+    nb = Z.shape[1] // (n_blocks * time_bins_out)
+    Z4 = Z.reshape(n, nb, n_blocks, time_bins_out)          # band-major: band, cond, time
+    T = np.sign(Z4) * (np.abs(Z4) >= thr)
+    if min_neighbours > 0:
+        cnt = np.zeros(T.shape, int)
+        for db in (-1, 0, 1):
+            for dt in (-1, 0, 1):
+                if db == 0 and dt == 0:
+                    continue
+                sh = np.zeros_like(T)
+                bs, be = max(db, 0), nb + min(db, 0)
+                ts, te = max(dt, 0), time_bins_out + min(dt, 0)
+                sh[:, bs:be, :, ts:te] = T[:, bs - db:be - db, :, ts - dt:te - dt]
+                cnt += (sh == T) & (T != 0)
+        T = T * (cnt >= min_neighbours)
+    return T.reshape(n, -1).astype(np.float32)
+
+
 def concat_raw_features(X_concat: np.ndarray) -> np.ndarray:
     """(n, n_freq * 3*n_time): full-resolution flatten. Very high-dimensional —
     the per-condition `raw` track already scores worst on silhouette; kept as the
@@ -515,7 +557,8 @@ def concat_feature_names(kind: str, *, n_blocks: int = 3,
     if _m:
         kind, n_time_ds = "concat_hfa", int(_m.group(1))
     if kind in ("concat_rawds", "concat_bands5", "concat_bands5z", "concat_bands15",
-                "concat_bands2", "concat_hfa", "concat_bands15z", "concat_bands15s"):
+                "concat_bands2", "concat_hfa", "concat_bands15z", "concat_bands15s",
+                "concat_bands15t"):
         # bands5z is bands5 rescaled, bands15 is rawds renamed and bands15z / bands15s are
         # bands15 rescaled, so in every case the columns are identical to what they stand
         # in for and every reshape, grid and centroid renderer downstream keeps working

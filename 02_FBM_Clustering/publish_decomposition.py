@@ -43,6 +43,7 @@ FSET_LABELS = {
     "concat_bands15": "Concatenated 15 bands x 30 bins [a|p|r]",
     "concat_bands15z": "Concatenated 15 bands x 30 bins, each band z-scored [a|p|r]",
     "concat_bands15s": "Concatenated 15 bands x 30 bins, per-band shape [a|p|r]",
+    "concat_bands15t": "Concatenated 15 bands x 30 bins, ternary map on z-scored bands [a|p|r]",
     "concat_bands2": "Concatenated 2 bands, 30-50 + 70-150 Hz [a|p|r]",
     "concat_hfa": "Concatenated HFA 70-150 Hz x 30 bins [a|p|r]",
     "concat_hfa300": "Concatenated HFA 70-150 Hz x 300 bins [a|p|r]",
