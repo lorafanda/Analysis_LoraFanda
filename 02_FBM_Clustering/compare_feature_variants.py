@@ -25,6 +25,7 @@ import argparse
 import importlib.util
 import json
 import sys
+import textwrap
 import time
 from pathlib import Path
 
@@ -175,7 +176,7 @@ def _cube_img(ax, cu, title, nt):
         ax.axvline(x - 0.5, color="k", lw=0.6)
     for x in (nt / 2, 1.5 * nt, 2.5 * nt):
         ax.axvline(x - 0.5, color="k", lw=0.3, ls=":")
-    ax.set_title(title, fontsize=7.5, loc="left")
+    ax.set_title(NL.join(textwrap.fill(line, 26) for line in title.split(NL)), fontsize=6.5, loc="left")
     ax.set_xticks([nt / 2, 1.5 * nt, 2.5 * nt]); ax.set_xticklabels(["audio", "picture", "sentences"], fontsize=6.5)
     ax.tick_params(length=0)
     return im
@@ -190,11 +191,11 @@ def fig_centroids(v, k, lab, mp, J, ref, Cref, ref_order, out):
     cols = sorted(mp.items(), key=lambda ab: ref_order.index(ab[1]))
     cols = cols + [(a, None) for a in range(k) if a not in mp]
     n = len(cols)
-    fig, axes = plt.subplots(2, n, figsize=(2.2 * n + 1.2, 4.6), dpi=150, squeeze=False)
+    fig, axes = plt.subplots(2, n, figsize=(2.2 * n + 1.2, 5.4), dpi=150, squeeze=False)
     for j, (a, b) in enumerate(cols):
         if b is not None:
             _cube_img(axes[0, j], rm[b], f"published c{b} {names.get(b, '')}" + NL + f"n {int((ref['lab'] == b).sum())}", ref["nt"])
-            ttl = f"variant cluster {a}   n {int((lab == a).sum())}" + NL + f"Jaccard {J[a, b]:.2f} · keeps {100 * J[a, b] * 0 + 100 * (np.sum((lab == a) & (ref['lab'] == b)) / max((ref['lab'] == b).sum(), 1)):.0f} % of the type"
+            ttl = f"variant cluster {a}, n {int((lab == a).sum())}" + NL + f"Jaccard {J[a, b]:.2f}, keeps {100 * (np.sum((lab == a) & (ref['lab'] == b)) / max((ref['lab'] == b).sum(), 1)):.0f} % of the type"
         else:
             axes[0, j].axis("off"); axes[0, j].set_title("no published partner", fontsize=7.5, loc="left")
             ttl = f"variant cluster {a}   n {int((lab == a).sum())}" + NL + f"closest c{int(J[a].argmax())} (Jaccard {J[a].max():.2f})"
@@ -256,7 +257,7 @@ def write_summary(results, ref_rule, ref_share, out, cache, pair=None):
     A("")
     A("| K | " + " | ".join([REF] + [r["variant"] for r in results]) + " |")
     A("|---|" + "---|" * (1 + len(results)))
-    ks = sorted(set(ref_rule.k) | set(k for r in results for k in r["ks_swept"]))
+    ks = sorted(set(k for r in results for k in r["ks_swept"]))       # the K range the variants swept
     for k in ks:
         cells = []
         for r in [dict(rule=ref_rule.to_dict("records"))] + results:
