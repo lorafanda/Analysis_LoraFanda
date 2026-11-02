@@ -191,7 +191,8 @@ def fig_centroids(v, k, lab, mp, J, ref, Cref, ref_order, out):
     cols = sorted(mp.items(), key=lambda ab: ref_order.index(ab[1]))
     cols = cols + [(a, None) for a in range(k) if a not in mp]
     n = len(cols)
-    fig, axes = plt.subplots(2, n, figsize=(2.2 * n + 1.2, 5.4), dpi=150, squeeze=False)
+    fig, axes = plt.subplots(2, n, figsize=(2.2 * n + 1.2, 5.6), dpi=150, squeeze=False)
+    fig.subplots_adjust(hspace=0.62, wspace=0.18)
     for j, (a, b) in enumerate(cols):
         if b is not None:
             _cube_img(axes[0, j], rm[b], f"published c{b} {names.get(b, '')}" + NL + f"n {int((ref['lab'] == b).sum())}", ref["nt"])
