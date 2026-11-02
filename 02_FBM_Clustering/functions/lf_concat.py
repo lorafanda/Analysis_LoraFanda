@@ -31,6 +31,11 @@ Three feature sets, mirroring the per-condition tracks:
                             single biggest lever in the feature definition: raw against
                             z-scored changes the partition more (ARI 0.37) than changing
                             the algorithm does.
+    concat_bands15z 15 x 90 concat_bands15 with each band z-scored across the cohort:
+                            the bands5z recipe on the fifteen bands (2026-11-02)
+    concat_bands15s 15 x 90 concat_bands15 as per-band shape within each electrode: each
+                            band's course divided by sqrt(rms^2 + m_b^2), m_b the cohort
+                            median rms of that band (2026-11-02)
     concat_raw    103 x 900 full-resolution ERSP, stitched (baseline; very high-dim; 129 before 2026-09-18)
 
 Feed the flattened matrix to lf_cluster_run.fit_and_save(feature_set='concat_*').
@@ -435,6 +440,56 @@ def concat_bands5z_features(X_concat: np.ndarray, *, n_blocks: int = 3,
     return X.astype(np.float32)
 
 
+def concat_bands15z_features(X_concat: np.ndarray, *, n_blocks: int = 3,
+                             fmax_hz: float = DEFAULT_FMAX,
+                             time_bins_out: int = DEFAULT_DS_TIME_BINS) -> np.ndarray:
+    """concat_bands15 with each band z-scored to equal weight across the cohort (2026-11-02).
+
+    The concat_bands5z recipe on the fifteen bands, built because the paper's 15-band
+    partition is owned by the low frequencies: 1-13 Hz carries 42 % of a typical
+    electrode's squared norm and 70-170 Hz 12 %, so an auditory high-gamma response is a
+    few per cent of the vector the fit sees. ONE mean and ONE sd per band, over every
+    electrode, condition and time bin - a cohort-level transform, identical for every
+    electrode, so how strongly a contact responds within a band is kept and only the
+    bands' dB scales are equalised. Units are standard deviations within a band, not dB:
+    read a centroid of this set through the dB means of its members, never a dB bar.
+    """
+    X = concat_bands15_features(X_concat, n_blocks=n_blocks, fmax_hz=fmax_hz,
+                                time_bins_out=time_bins_out).astype(np.float64)
+    n_cols = n_blocks * time_bins_out
+    for b in range(X.shape[1] // n_cols):
+        sl = slice(b * n_cols, (b + 1) * n_cols)
+        blk = X[:, sl]
+        X[:, sl] = (blk - blk.mean()) / max(blk.std(), 1e-12)
+    return X.astype(np.float32)
+
+
+def concat_bands15s_features(X_concat: np.ndarray, *, n_blocks: int = 3,
+                             fmax_hz: float = DEFAULT_FMAX,
+                             time_bins_out: int = DEFAULT_DS_TIME_BINS) -> np.ndarray:
+    """concat_bands15 as per-band SHAPE within each electrode (2026-11-02).
+
+    For every electrode e and band b the 3 x 30 course v is divided by
+    sqrt(rms(v)^2 + m_b^2), m_b being the cohort median of rms(v) over electrodes in that
+    band. A band that responds (rms well above m_b) ends near unit size whatever its dB
+    scale, so high gamma and low frequencies get the same vote; a flat band (rms well
+    below m_b) stays small instead of being blown up to noise, which a plain division
+    would do. The floor is the one choice in the recipe: m_b is the band's typical
+    modulation in this cohort, so "responds" means "more than the typical electrode does
+    in this band". Erased, by design: how strongly a contact responds in one band
+    RELATIVE to its other bands. The fit's unit norm per electrode then follows.
+    """
+    X = concat_bands15_features(X_concat, n_blocks=n_blocks, fmax_hz=fmax_hz,
+                                time_bins_out=time_bins_out).astype(np.float64)
+    n_cols = n_blocks * time_bins_out
+    for b in range(X.shape[1] // n_cols):
+        sl = slice(b * n_cols, (b + 1) * n_cols)
+        rms = np.sqrt((X[:, sl] ** 2).mean(1, keepdims=True))
+        m_b = max(float(np.median(rms)), 1e-12)
+        X[:, sl] = X[:, sl] / np.sqrt(rms ** 2 + m_b ** 2)
+    return X.astype(np.float32)
+
+
 def concat_raw_features(X_concat: np.ndarray) -> np.ndarray:
     """(n, n_freq * 3*n_time): full-resolution flatten. Very high-dimensional —
     the per-condition `raw` track already scores worst on silhouette; kept as the
@@ -460,10 +515,10 @@ def concat_feature_names(kind: str, *, n_blocks: int = 3,
     if _m:
         kind, n_time_ds = "concat_hfa", int(_m.group(1))
     if kind in ("concat_rawds", "concat_bands5", "concat_bands5z", "concat_bands15",
-                "concat_bands2", "concat_hfa"):
-        # bands5z is bands5 rescaled and bands15 is rawds renamed, so in both cases the
-        # columns are identical to what they stand in for and every reshape, grid and
-        # centroid renderer downstream keeps working unchanged
+                "concat_bands2", "concat_hfa", "concat_bands15z", "concat_bands15s"):
+        # bands5z is bands5 rescaled, bands15 is rawds renamed and bands15z / bands15s are
+        # bands15 rescaled, so in every case the columns are identical to what they stand
+        # in for and every reshape, grid and centroid renderer downstream keeps working
         edges = {"concat_bands5": FREQ_BANDS_5_TO_400HZ,
                  "concat_bands5z": FREQ_BANDS_5_TO_400HZ,
                  "concat_bands2": FREQ_BANDS_2,

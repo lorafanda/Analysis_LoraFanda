@@ -72,7 +72,8 @@ KS_DEFAULT = {"concat_hg": 7, "concat_rawds": 7, "concat_hg_all": 7,
               # 2026-10-13. 7 is carried over as the default for every new set; the K
               # each one is actually clean at is what 249 now picks (the largest K with
               # no cluster over half one patient), and it differs between sets.
-              **{f: 7 for f in ("concat_bands15", "concat_bands2", "concat_hfa")},
+              **{f: 7 for f in ("concat_bands15", "concat_bands2", "concat_hfa",
+                                "concat_bands15z", "concat_bands15s")},
               **{f"concat_hfa{b}": 7 for b in (300, 200, 150, 100, 30, 10)}}
 
 # concat_hg_all has no run id until 237 has been run, so pinning it here would mean
@@ -80,6 +81,7 @@ KS_DEFAULT = {"concat_hg": 7, "concat_rawds": 7, "concat_hg_all": 7,
 FEATURE_SETS = ["concat_hg", "concat_hg_all", "concat_rawds", "concat_bands5",
                 "concat_bands5z",
                 "concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa",
+                "concat_bands15z", "concat_bands15s",      # band-equalised variants, 2026-11-02
                 "concat_hfa300", "concat_hfa200", "concat_hfa150", "concat_hfa100", "concat_hfa30", "concat_hfa10"]
 DEFAULT_SETS = ["concat_bands15", "concat_bands5", "concat_bands2", "concat_hfa"]
 

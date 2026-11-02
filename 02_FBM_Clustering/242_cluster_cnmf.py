@@ -53,11 +53,15 @@ RANDOM_STATE= cfg.RANDOM_STATE
 # ---- terminal flags (the notebook has none; defaults reproduce it) ----------------------
 ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
 ap.add_argument('--ks', type=int, nargs='+', default=K_RANGE, help='K values to fit (default: the notebook\'s 5..30)')
-ap.add_argument('--feature-set', nargs='+', default=FEATURE_SETS, choices=FEATURE_SETS + list(TIMEBIN_SETS), help='feature sets to fit (default: all four)')
+# ---- the band-equalised variants of concat_bands15 (2026-11-02) ------------------------
+# Not in FEATURE_SETS either: fitted only when named, AFTER 240 has fitted them, e.g.
+#     python 242_cluster_cnmf.py --feature-set concat_bands15z concat_bands15s --ks 5 6 7 8 9 10 11 12 --no-heldout
+VARIANT_SETS = ['concat_bands15z', 'concat_bands15s']
+ap.add_argument('--feature-set', nargs='+', default=FEATURE_SETS, choices=FEATURE_SETS + list(TIMEBIN_SETS) + VARIANT_SETS, help='feature sets to fit (default: all four)')
 ap.add_argument('--no-heldout', action='store_true', help='skip section 3, the bi-cross-validated held-out curve (make_heldout_variance.py)')
 args = ap.parse_args()
 K_RANGE = sorted(set(args.ks))
-FEATURE_SETS = [f for f in list(FEATURE_SETS) + list(TIMEBIN_SETS)
+FEATURE_SETS = [f for f in list(FEATURE_SETS) + list(TIMEBIN_SETS) + VARIANT_SETS
                 if f in args.feature_set]
 
 
@@ -109,6 +113,10 @@ for _fs in FEATURE_SETS:
     if _fs in TIMEBIN_SETS:
         X[_fs] = CC.concat_hfa_features(X_concat, n_blocks=3, fmax_hz=398.4375,
                                         time_bins_out=TIMEBIN_SETS[_fs])
+    elif _fs == 'concat_bands15z':      # the 15 bands, each z-scored across the cohort
+        X[_fs] = CC.concat_bands15z_features(X_concat, n_blocks=3, fmax_hz=398.4375)
+    elif _fs == 'concat_bands15s':      # the 15 bands as per-band shape within each electrode
+        X[_fs] = CC.concat_bands15s_features(X_concat, n_blocks=3, fmax_hz=398.4375)
 
 
 print(f'\ncohort: {len(df_contacts)} electrodes · '
