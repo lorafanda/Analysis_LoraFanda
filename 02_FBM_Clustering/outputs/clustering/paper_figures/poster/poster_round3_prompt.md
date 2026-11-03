@@ -27,5 +27,5 @@ Caption under the table: "Diagonal share: the fraction of electrodes on the matc
 - assets\figure1_column.png (2220 x 3060 px)
 - assets\agreement_bars.png (bars only)
 - assets\stability_row.png (consensus matrix and the K panel)
-- assets\neurosynth_15band.png (2107 x 1332 px, the eight-map NeuroSynth label matrix, 15 bands)
-- assets\neurosynth_15zband.png (2356 x 1332 px, the same for the z-scored companion)
+- assets\neurosynth_15band.png (2107 x 1452 px, the eight-map NeuroSynth label matrix, 15 bands, each map on the pial surface under its name)
+- assets\neurosynth_15zband.png (2356 x 1452 px, the same for the z-scored companion)

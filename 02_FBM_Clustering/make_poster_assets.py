@@ -18,7 +18,8 @@ Writes outputs/clustering/paper_figures/poster/assets/:
   neurosynth_15band.png / neurosynth_15zband.png
                          the eight-map NeuroSynth label matrix of member_measures/10_neurosynth_labels.py
                          (out_k7/neurosynth_labels/labels.csv, nothing recomputed) at print size, for
-                         15 bands and for the z-scored companion
+                         15 bands and for the z-scored companion; under each map name the map on the
+                         fsaverage pial surface (ns_brain_<term>_<side>.png, reused with --no-render)
   separation_row.png     the two held-out confusions (one patient out, patient halves) and the
                          silhouette of every electrode per type against the Gaussian cloud;
                          separation_violin_loading.png is the loading alternative
@@ -416,6 +417,74 @@ def wrap_name(name, width=18):
     return NL.join(lines + [cur])
 
 
+NS_VOL = ROOT.parent / "04_FBM_Pooling" / "neurosynth"    # the association-test z maps (MNI152, 2 mm) the pooling samples
+MNI305_TO_152 = np.array([[0.9975, -0.0073, 0.0176, -0.0429], [0.0146, 1.0009, -0.0024, 1.5496],
+                          [-0.0130, -0.0093, 0.9971, 1.1840], [0.0, 0.0, 0.0, 1.0]])   # lf_pool's, as member_measures/4_neurosynth.py applies it
+NS_ZMAX = 8.0
+NS_CMAP = matplotlib.colors.LinearSegmentedColormap.from_list("ns", ["#f7b267", "#d7301f", "#7f0000"])
+_NS_Z: dict = {}
+
+
+def ns_vertex_z(term):
+    """The map's z at every pial vertex of both hemispheres: the vertex (MNI305) goes to MNI152 with
+    lf_pool's affine and reads the nearest voxel, as the contacts do in member_measures/4_neurosynth.py.
+    The thresholded map lives in the grey matter under the pial surface, so the maximum over 0, 1.5 and
+    3 mm along the vertex normal, both ways, is kept."""
+    if term in _NS_Z:
+        return _NS_Z[term]
+    import nibabel as nb
+    folder = next(p for p in (NS_VOL / term.replace(" ", "_"), NS_VOL / term) if p.is_dir())
+    f = sorted(folder.glob("*association-test_z_FDR*.nii.gz"))[0]
+    img = nb.load(str(f)); vol = np.asarray(img.dataobj, float); inv = np.linalg.inv(img.affine)
+    out = {}
+    for side in ("L", "R"):
+        m = P2.hemi_mesh(side)
+        v = np.asarray(m.points, float); nrm = np.asarray(m.point_normals, float)
+        best = np.zeros(len(v))
+        for off in (0.0, 1.5, -1.5, 3.0, -3.0):
+            xyz = v + off * nrm
+            mni = (np.c_[xyz, np.ones(len(xyz))] @ MNI305_TO_152.T)[:, :3]
+            ijk = np.round((np.c_[mni, np.ones(len(mni))] @ inv.T)[:, :3]).astype(int)
+            ok = (ijk >= 0).all(1) & (ijk < np.array(vol.shape[:3])).all(1)
+            z = np.zeros(len(v)); z[ok] = vol[ijk[ok, 0], ijk[ok, 1], ijk[ok, 2]]
+            best = np.maximum(best, z)
+        out[side] = best
+    _NS_Z[term] = out
+    print(f"    {term}: {int((out['L'] > 0).sum())} left and {int((out['R'] > 0).sum())} right vertices inside")
+    return out
+
+
+def ns_brain_image(term, side):
+    """One hemisphere's pial surface from the outside, opaque, with the map's z > 0 painted on it
+    (NS_CMAP from 0 to NS_ZMAX); the paper's camera and lighting. Saved as assets/ns_brain_<term>_<side>.png
+    and reused with --no-render."""
+    p = OUT / f"ns_brain_{term.replace(' ', '_')}_{side}.png"
+    if p.exists() and NO_RENDER:
+        return np.asarray(Image.open(p).convert("RGBA"))
+    z = ns_vertex_z(term)[side]
+    m = P2.hemi_mesh(side).copy()
+    rgb = np.tile(np.array(matplotlib.colors.to_rgb(P2.RC.BRAIN_COLOR)) * 255, (len(z), 1))
+    ins = z > 0
+    rgb[ins] = NS_CMAP(np.clip(z[ins] / NS_ZMAX, 0, 1))[:, :3] * 255
+    m["rgb"] = rgb.astype(np.uint8)
+    pl = P2.pv.Plotter(off_screen=True, window_size=P2.RENDER_PX)
+    pl.add_mesh(m, scalars="rgb", rgb=True, smooth_shading=True, specular=P2.RC.BRAIN_SPECULAR,
+                specular_power=P2.RC.BRAIN_SPECULAR_POWER, ambient=P2.RC.BRAIN_AMBIENT, diffuse=P2.RC.BRAIN_DIFFUSE)
+    b = m.bounds
+    cx, cy, cz = (b[0] + b[1]) / 2, (b[2] + b[3]) / 2, (b[4] + b[5]) / 2
+    dist = 2.4 * max(b[1] - b[0], b[3] - b[2], b[5] - b[4])
+    pl.camera_position = ((cx - dist if side == "L" else cx + dist, cy, cz), (cx, cy, cz), (0, 0, 1))
+    pl.enable_parallel_projection()
+    W, H = P2.RENDER_PX
+    vis = 2.0 * pl.camera.parallel_scale
+    fit = min(vis / (1.06 * (b[5] - b[4])), vis * (W / H) / (1.06 * (b[3] - b[2])))
+    pl.camera.zoom(min(1.30, fit))
+    img = P2._crop_alpha(np.asarray(pl.screenshot(return_img=True, transparent_background=True)))
+    pl.close()
+    Image.fromarray(img).save(p)
+    return img
+
+
 def neurosynth(d):
     """The eight-map label matrix of member_measures/10_neurosynth_labels.py redrawn at print size,
     for 15 bands and for the z-scored companion: bubble and number = % of the type's electrodes
@@ -423,7 +492,8 @@ def neurosynth(d):
     outlined = the share is above the cohort's in 97.5 % of patient resamples. Everything is read
     from out_k7/neurosynth_labels/labels.csv, nothing is recomputed. The z-scored clusters sit in
     the row of the published type they are matched to (out_k7/matching.csv) and carry its name and
-    colour; a cluster that is more than half one patient is greyed with a cross."""
+    colour; a cluster that is more than half one patient is greyed with a cross. Under each map name the
+    map itself on the fsaverage pial surface, from the left and from the right (ns_brain_image)."""
     from matplotlib.colors import TwoSlopeNorm
     lab = pd.read_csv(MM / "neurosynth_labels" / "labels.csv")
     match = pd.read_csv(MM / "matching.csv")
@@ -443,8 +513,9 @@ def neurosynth(d):
                 if not m.empty:
                     c = int(m.cluster.iloc[0]); rows.append((c, d["names"].get(j, f"c{j}"), d["col"][j], f"z{c} · "))
         n_rows = len(rows)
-        fig, ax = plt.subplots(figsize=(7.4, 1.4 + 0.46 * n_rows), dpi=DPI)
-        fig.subplots_adjust(left=0.20, right=0.955, top=0.86, bottom=0.17)
+        fig_h = 1.4 + 0.46 * n_rows + 1.15                 # 1.15 in for the brains under the names
+        fig, ax = plt.subplots(figsize=(7.4, fig_h), dpi=DPI)
+        fig.subplots_adjust(left=0.20, right=0.955, top=1 - 0.65 / fig_h, bottom=1.95 / fig_h)
         print(f"  neurosynth {tag}:")
         for r_, (c, name, col, pre) in enumerate(rows):
             y = n_rows - 1 - r_
@@ -487,6 +558,23 @@ def neurosynth(d):
             s_.set_visible(False)
         ax.tick_params(length=0)
         ax.text(len(names) - 0.45, n_rows - 0.38, "where the type sits more often" + NL + "than electrodes in general", ha="left", va="bottom", fontsize=6.2, color=INK, linespacing=1.15)
+        # the maps themselves under the names: the pial surface from the left and from the right, z > 0 painted on it
+        aw, ah = 7.4 * (0.955 - 0.20), fig_h - 0.65 - 1.95
+        x0_, x1_ = ax.get_xlim(); u = 1.0 / (x1_ - x0_)
+        y_top = -0.34 / ah
+        for x, mname in enumerate(names):
+            for k_, side in enumerate(("L", "R")):
+                im = ns_brain_image(mname, side)
+                w_f = 0.92 * u; h_f = w_f * aw / ah * im.shape[0] / im.shape[1]
+                y_f = y_top - (k_ + 1) * h_f - k_ * 0.03 / ah
+                ia = ax.inset_axes([(x - x0_) * u - w_f / 2, y_f, w_f, h_f])
+                ia.imshow(im); ia.axis("off")
+                if x == 0:
+                    ia.text(-0.1, 0.5, "left" if side == "L" else "right", transform=ia.transAxes, ha="right", va="center", fontsize=6.0, color=MUTED)
+        cax2 = ax.inset_axes([0.78, y_top - 0.62 / ah, 0.20, 0.035])
+        cb2 = fig.colorbar(plt.cm.ScalarMappable(norm=matplotlib.colors.Normalize(0, NS_ZMAX), cmap=NS_CMAP), cax=cax2, orientation="horizontal", ticks=[0, 4, 8])
+        cb2.ax.set_xticklabels(["0", "4", "8+"], fontsize=5.8); cb2.ax.tick_params(length=2, pad=1.5)
+        cax2.set_title("the map's z on the pial surface", fontsize=6.0, color=MUTED, pad=2)
         cax = ax.inset_axes([0.78, -0.17, 0.20, 0.035])
         cb = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax, orientation="horizontal", ticks=[-2, -1, 0, 1, 2])
         cb.ax.set_xticklabels(["¼×", "½×", "1×", "2×", "4×"], fontsize=5.8); cb.ax.tick_params(length=2, pad=1.5)
