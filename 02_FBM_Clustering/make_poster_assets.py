@@ -208,7 +208,8 @@ def row1_column(d):
             ax.set_title("the same electrode as the pipeline sees it: 15 bands × 30 time bins per condition", fontsize=7.5, color=MUTED, loc="left")
         else:
             ax.set_yticks([])
-    cax = fig.add_axes([0.945, 0.40, 0.012, 0.30]); cb = fig.colorbar(im, cax=cax); cb.ax.tick_params(labelsize=6.5); cb.set_label("dB", fontsize=7)
+    cax = fig.add_axes([0.94, 0.40, 0.012, 0.30]); cb = fig.colorbar(im, cax=cax); cb.ax.tick_params(labelsize=6.5)
+    cax.set_title("dB", fontsize=7, color=MUTED, pad=3)
     for c_, (s_, ttl) in enumerate((("L", f"left, {int((d['hemi'] == 'L').sum())} electrodes"), ("T", f"from above, {n}"), ("R", f"right, {int((d['hemi'] == 'R').sum())}"))):
         ax = image_axes(fig, gs[3, c_]); ax.imshow(brains[s_]); ax.set_title(ttl, fontsize=7.5, color=MUTED, loc="left")
     fig.text(0.09, 0.005, "the 1587 electrodes that passed the response gate, each patient its colour", fontsize=7.5, color=MUTED, va="bottom")
