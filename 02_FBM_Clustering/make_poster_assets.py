@@ -2,7 +2,7 @@
 """make_poster_assets.py - the poster's panels redrawn at print resolution (2026-11-03).
 
     python make_poster_assets.py              # everything below
-    python make_poster_assets.py --only row1 agreement stability separation
+    python make_poster_assets.py --only row1 agreement stability separation neurosynth
 
 Writes outputs/clustering/paper_figures/poster/assets/:
   row1_task_cohort.png   five equal tiles: the kept electrodes on the glass brain from the left,
@@ -15,6 +15,10 @@ Writes outputs/clustering/paper_figures/poster/assets/:
   stability_consensus.png / stability_K.png / stability_row.png
                          the consensus matrix at K 7 redrawn from the sweep's M, and the held-out
                          variance against K with the share of a cluster held by one patient
+  neurosynth_15band.png / neurosynth_15zband.png
+                         the eight-map NeuroSynth label matrix of member_measures/10_neurosynth_labels.py
+                         (out_k7/neurosynth_labels/labels.csv, nothing recomputed) at print size, for
+                         15 bands and for the z-scored companion
   separation_row.png     the two held-out confusions (one patient out, patient halves) and the
                          silhouette of every electrode per type against the Gaussian cloud;
                          separation_violin_loading.png is the loading alternative
@@ -394,20 +398,124 @@ def separation(d):
     return p
 
 
+# ---------------------------------------------------------------- where they sit: the NeuroSynth label matrix
+MM = ROOT / "member_measures" / "out_k7"                   # every feature set at K 7 (member_measures/10_neurosynth_labels.py)
+NS_MAPS = [("Perception", "speech perception"), ("Perception", "visual"), ("Reading", "reading"),
+           ("Comprehension", "language comprehension"), ("Comprehension", "semantic"),
+           ("Retrieval", "retrieval"), ("Production", "speech production"), ("Production", "premotor")]
+NS_GREY = "#9aa0a6"
+
+
+def wrap_name(name, width=18):
+    lines, cur = [], ""
+    for w in name.split():
+        if cur and len(cur) + 1 + len(w) > width:
+            lines.append(cur); cur = w
+        else:
+            cur = (cur + " " + w).strip()
+    return NL.join(lines + [cur])
+
+
+def neurosynth(d):
+    """The eight-map label matrix of member_measures/10_neurosynth_labels.py redrawn at print size,
+    for 15 bands and for the z-scored companion: bubble and number = % of the type's electrodes
+    inside the NeuroSynth map (z > 0), colour = that share against the cohort's (log scale),
+    outlined = the share is above the cohort's in 97.5 % of patient resamples. Everything is read
+    from out_k7/neurosynth_labels/labels.csv, nothing is recomputed. The z-scored clusters sit in
+    the row of the published type they are matched to (out_k7/matching.csv) and carry its name and
+    colour; a cluster that is more than half one patient is greyed with a cross."""
+    from matplotlib.colors import TwoSlopeNorm
+    lab = pd.read_csv(MM / "neurosynth_labels" / "labels.csv")
+    match = pd.read_csv(MM / "matching.csv")
+    norm = TwoSlopeNorm(vmin=-2, vcenter=0, vmax=2); cmap = plt.get_cmap("RdBu_r")
+    names = [m for _, m in NS_MAPS]
+    out = {}
+    for tag in ("15band", "15zband"):
+        t = lab[(lab.fset == tag) & (lab.k == K)]
+        meas = pd.read_csv(MM / tag / "measures.csv")
+        npat = meas.assign(p=meas.key.str.split("|").str[0]).groupby("type").p.nunique()
+        rows = []                                          # (cluster, type name, colour, prefix of the count line)
+        for j in d["order"]:
+            if tag == "15band":
+                rows.append((j, d["names"].get(j, f"c{j}"), d["col"][j], ""))
+            else:
+                m = match[(match.fset == tag) & (match.type_15band == j)]
+                if not m.empty:
+                    c = int(m.cluster.iloc[0]); rows.append((c, d["names"].get(j, f"c{j}"), d["col"][j], f"z{c} · "))
+        n_rows = len(rows)
+        fig, ax = plt.subplots(figsize=(7.4, 1.4 + 0.46 * n_rows), dpi=DPI)
+        fig.subplots_adjust(left=0.20, right=0.955, top=0.86, bottom=0.17)
+        print(f"  neurosynth {tag}:")
+        for r_, (c, name, col, pre) in enumerate(rows):
+            y = n_rows - 1 - r_
+            tc = t[t.cluster == c].set_index("map")
+            top_share = float(tc.top_patient_share.iloc[0]); bad = top_share > 0.5
+            for x, mname in enumerate(names):
+                q = tc.loc[mname]
+                pct = float(q.pct_inside); le = float(np.log2(max(float(q.enrichment), 1e-3)))
+                face = NS_GREY if bad else cmap(norm(float(np.clip(le, -2, 2))))
+                sure = bool(q.outlined) and not bad
+                ax.scatter(x, y, s=70 + 360 * min(pct, 60) / 60, c=[face], alpha=0.5 if bad else 1.0,
+                           edgecolors=INK if sure else "none", linewidths=1.3 if sure else 0, zorder=3)
+                ax.text(x, y, f"{pct:.0f}", ha="center", va="center", fontsize=6.0, zorder=4,
+                        color="white" if (not bad and abs(le) > 1.1) else INK)
+            n_ = int(tc.n.iloc[0]); p_ = int(npat.get(c, 0))
+            ax.text(-0.7, y + 0.04, ("✗  " if bad else "") + wrap_name(name), ha="right", va="bottom", fontsize=7.4,
+                    color="#b2182b" if bad else col, fontweight="bold", linespacing=1.05)
+            ax.text(-0.7, y - 0.08, pre + f"{n_} electrodes, {p_} patients" + (f", {100 * top_share:.0f} % {tc.top_patient.iloc[0]}" if bad else ""),
+                    ha="right", va="top", fontsize=6.0, color=MUTED)
+            sure_maps = tc[tc.outlined.astype(bool)].sort_values("enrichment", ascending=False).index.tolist()
+            if bad:
+                label = "one patient: the profile is" + NL + "that patient's coverage"
+            elif sure_maps:
+                label = NL.join(sure_maps[:3])
+            else:
+                label = "no map"
+            ax.text(len(names) - 0.45, y, label, ha="left", va="center", fontsize=6.8, linespacing=1.15,
+                    color=MUTED if (bad or not sure_maps) else INK, style="italic" if (bad or not sure_maps) else "normal")
+            print(f"    {pre}{name:36s} {label.replace(NL, ' / ')}")
+        stages = [s for s, _ in NS_MAPS]
+        for s in dict.fromkeys(stages):
+            cs = [i for i, x in enumerate(stages) if x == s]
+            ax.text(float(np.mean(cs)), n_rows - 0.38, s, ha="center", va="bottom", fontsize=6.4, color=INK)
+            ax.plot([min(cs) - 0.42, max(cs) + 0.42], [n_rows - 0.44] * 2, color=INK, lw=0.6)
+        coh = t[t.cluster == rows[0][0]].set_index("map").cohort_pct
+        ax.set_xticks(range(len(names)))
+        ax.set_xticklabels([f"{m.replace(' ', NL)}{NL}{float(coh[m]):.0f} %" for m in names], fontsize=6.0, color=INK, linespacing=1.15)
+        ax.set_yticks([]); ax.set_xlim(-0.6, len(names) + 2.1); ax.set_ylim(-0.7, n_rows + 0.25)
+        for s_ in ax.spines.values():
+            s_.set_visible(False)
+        ax.tick_params(length=0)
+        ax.text(len(names) - 0.45, n_rows - 0.38, "where the type sits more often" + NL + "than electrodes in general", ha="left", va="bottom", fontsize=6.2, color=INK, linespacing=1.15)
+        cax = ax.inset_axes([0.78, -0.17, 0.20, 0.035])
+        cb = fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax, orientation="horizontal", ticks=[-2, -1, 0, 1, 2])
+        cb.ax.set_xticklabels(["¼×", "½×", "1×", "2×", "4×"], fontsize=5.8); cb.ax.tick_params(length=2, pad=1.5)
+        cax.set_title("the share against all electrodes", fontsize=6.0, color=MUTED, pad=2)
+        ax.set_title("15 bands, K 7" if tag == "15band" else "15 bands z-scored, K 7  ·  each cluster in the row of the published type it matches",
+                     fontsize=7.2, loc="left", color=INK, pad=22)
+        ax.annotate("bubble and number: % of the type's electrodes inside the map  ·  under each map: % of all electrodes inside" + NL
+                    + "outlined: above the cohort in 97.5 % of patient resamples  ·  no spatial null",
+                    xy=(0, 1), xycoords="axes fraction", xytext=(0, 3), textcoords="offset points", fontsize=5.9, color=MUTED, va="bottom", linespacing=1.25)
+        p = OUT / f"neurosynth_{tag}.png"; fig.savefig(p, facecolor="white", bbox_inches="tight"); plt.close(fig)
+        out[tag] = p
+        im = Image.open(p); print(f"    -> {p.name}  {im.size[0]} x {im.size[1]} px")
+    return out["15band"]
+
+
 def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             try: stream.reconfigure(errors="replace")
             except Exception: pass
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    ap.add_argument("--only", nargs="+", default=["figure1", "agreement", "stability", "separation"], choices=["row1", "figure1", "agreement", "stability", "separation"])
+    ap.add_argument("--only", nargs="+", default=["figure1", "agreement", "stability", "separation", "neurosynth"], choices=["row1", "figure1", "agreement", "stability", "separation", "neurosynth"])
     ap.add_argument("--no-render", action="store_true", help="figure 1 reuses the saved brain tiles instead of rendering (no VTK)")
     a = ap.parse_args()
     global NO_RENDER
     NO_RENDER = a.no_render
     OUT.mkdir(parents=True, exist_ok=True)
     d = load_ref()
-    steps = dict(row1=row1, figure1=row1_column, agreement=agreement, stability=stability, separation=separation)
+    steps = dict(row1=row1, figure1=row1_column, agreement=agreement, stability=stability, separation=separation, neurosynth=neurosynth)
     for name in a.only:
         p = steps[name](d)
         im = Image.open(p); print(f"  {name:11s} -> {p.name}  {im.size[0]} x {im.size[1]} px")
