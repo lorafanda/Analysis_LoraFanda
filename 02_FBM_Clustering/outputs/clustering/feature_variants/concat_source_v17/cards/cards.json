@@ -1,0 +1,534 @@
+[
+ {
+  "set": "concat_bands15",
+  "k": 7,
+  "cluster": 5,
+  "pos": 1,
+  "matched": "c5 production",
+  "jaccard": 1.0,
+  "keeps": 1.0,
+  "n": 200,
+  "n_patients": 17,
+  "top_patient": "EL033",
+  "top_share": 0.17,
+  "median_own_loading": 0.3858324267679568,
+  "representatives": [
+   "EL033 PHG_R12",
+   "EL033 A_R12",
+   "EL033 aH_R12"
+  ]
+ },
+ {
+  "set": "concat_bands15",
+  "k": 7,
+  "cluster": 0,
+  "pos": 2,
+  "matched": "c0 beta decrease",
+  "jaccard": 1.0,
+  "keeps": 1.0,
+  "n": 318,
+  "n_patients": 22,
+  "top_patient": "PAT_6854",
+  "top_share": 0.24528301886792453,
+  "median_own_loading": 0.42240498370239193,
+  "representatives": [
+   "EL038 pH_L13",
+   "PAT_1327 IMG18",
+   "PAT_1327 IMG6"
+  ]
+ },
+ {
+  "set": "concat_bands15",
+  "k": 7,
+  "cluster": 2,
+  "pos": 3,
+  "matched": "c2 broadband decrease",
+  "jaccard": 1.0,
+  "keeps": 1.0,
+  "n": 168,
+  "n_patients": 11,
+  "top_patient": "PAT_3965",
+  "top_share": 0.3630952380952381,
+  "median_own_loading": 0.44346622397144275,
+  "representatives": [
+   "PAT_3965 had6",
+   "PAT_3965 hag5",
+   "PAT_3965 ad8"
+  ]
+ },
+ {
+  "set": "concat_bands15",
+  "k": 7,
+  "cluster": 6,
+  "pos": 4,
+  "matched": "c6 response-period low-frequency fall",
+  "jaccard": 1.0,
+  "keeps": 1.0,
+  "n": 224,
+  "n_patients": 24,
+  "top_patient": "PAT_6953",
+  "top_share": 0.24553571428571427,
+  "median_own_loading": 0.4184086185960162,
+  "representatives": [
+   "PAT_6953 HPD10",
+   "PAT_6953 HPD8",
+   "PAT_6953 HPD9"
+  ]
+ },
+ {
+  "set": "concat_bands15",
+  "k": 7,
+  "cluster": 4,
+  "pos": 5,
+  "matched": "c4 low-frequency rise",
+  "jaccard": 1.0,
+  "keeps": 1.0,
+  "n": 334,
+  "n_patients": 28,
+  "top_patient": "EL042",
+  "top_share": 0.11676646706586827,
+  "median_own_loading": 0.425694069351619,
+  "representatives": [
+   "EL042 A_R8",
+   "EL042 A_R7",
+   "EL042 A_R9"
+  ]
+ },
+ {
+  "set": "concat_bands15",
+  "k": 7,
+  "cluster": 1,
+  "pos": 6,
+  "matched": "c1 audio-stimulus low-frequency",
+  "jaccard": 1.0,
+  "keeps": 1.0,
+  "n": 143,
+  "n_patients": 22,
+  "top_patient": "PAT_6619",
+  "top_share": 0.1958041958041958,
+  "median_own_loading": 0.3696166311354455,
+  "representatives": [
+   "EL042 STG_R5",
+   "EL042 STG_R6",
+   "EL042 aI_R8"
+  ]
+ },
+ {
+  "set": "concat_bands15",
+  "k": 7,
+  "cluster": 3,
+  "pos": 7,
+  "matched": "c3 sentence-stimulus low-frequency",
+  "jaccard": 1.0,
+  "keeps": 1.0,
+  "n": 200,
+  "n_patients": 25,
+  "top_patient": "PAT_3975",
+  "top_share": 0.18,
+  "median_own_loading": 0.37952181766480164,
+  "representatives": [
+   "PAT_6704 AD4",
+   "PAT_3975 FOD3",
+   "PAT_3975 IAD7"
+  ]
+ },
+ {
+  "set": "concat_bands15z",
+  "k": 7,
+  "cluster": 5,
+  "pos": 1,
+  "matched": "c5 production",
+  "jaccard": 0.5104477611940299,
+  "keeps": 0.855,
+  "n": 306,
+  "n_patients": 20,
+  "top_patient": "PAT_6953",
+  "top_share": 0.21568627450980393,
+  "median_own_loading": 0.39913850986720617,
+  "representatives": [
+   "PAT_3780 TPG6",
+   "PAT_3780 FLP9",
+   "EL040 pH_R14"
+  ]
+ },
+ {
+  "set": "concat_bands15z",
+  "k": 7,
+  "cluster": 6,
+  "pos": 2,
+  "matched": "c0 beta decrease",
+  "jaccard": 0.5425,
+  "keeps": 0.6823899371069182,
+  "n": 299,
+  "n_patients": 19,
+  "top_patient": "PAT_6854",
+  "top_share": 0.30434782608695654,
+  "median_own_loading": 0.4106568346372444,
+  "representatives": [
+   "PAT_3066 IMG11",
+   "PAT_1327 IMG18",
+   "PAT_1327 IMG6"
+  ]
+ },
+ {
+  "set": "concat_bands15z",
+  "k": 7,
+  "cluster": 3,
+  "pos": 3,
+  "matched": "c2 broadband decrease",
+  "jaccard": 0.6772727272727272,
+  "keeps": 0.8869047619047619,
+  "n": 201,
+  "n_patients": 15,
+  "top_patient": "PAT_3965",
+  "top_share": 0.34328358208955223,
+  "median_own_loading": 0.4757312518087788,
+  "representatives": [
+   "PAT_3965 had6",
+   "PAT_3965 hag5",
+   "PAT_3965 ad8"
+  ]
+ },
+ {
+  "set": "concat_bands15z",
+  "k": 7,
+  "cluster": 1,
+  "pos": 4,
+  "matched": "c6 response-period low-frequency fall",
+  "jaccard": 0.4119601328903654,
+  "keeps": 0.5535714285714286,
+  "n": 201,
+  "n_patients": 23,
+  "top_patient": "PAT_6953",
+  "top_share": 0.19402985074626866,
+  "median_own_loading": 0.394330260199828,
+  "representatives": [
+   "PAT_3780 IAG4",
+   "PAT_6953 PHD5",
+   "EL037 aH_L11"
+  ]
+ },
+ {
+  "set": "concat_bands15z",
+  "k": 7,
+  "cluster": 4,
+  "pos": 5,
+  "matched": "c4 low-frequency rise",
+  "jaccard": 0.5574162679425837,
+  "keeps": 0.6976047904191617,
+  "n": 317,
+  "n_patients": 28,
+  "top_patient": "EL030",
+  "top_share": 0.11041009463722397,
+  "median_own_loading": 0.41776394844055176,
+  "representatives": [
+   "EL042 A_R8",
+   "EL042 A_R9",
+   "EL042 A_R7"
+  ]
+ },
+ {
+  "set": "concat_bands15z",
+  "k": 7,
+  "cluster": 0,
+  "pos": 6,
+  "matched": "c1 audio-stimulus low-frequency",
+  "jaccard": 0.22897196261682243,
+  "keeps": 0.34265734265734266,
+  "n": 120,
+  "n_patients": 20,
+  "top_patient": "EL042",
+  "top_share": 0.16666666666666666,
+  "median_own_loading": 0.4594486549707756,
+  "representatives": [
+   "EL042 STG_R5",
+   "EL042 STG_R4",
+   "EL042 STG_R6"
+  ]
+ },
+ {
+  "set": "concat_bands15z",
+  "k": 7,
+  "cluster": 2,
+  "pos": 7,
+  "matched": "c3 sentence-stimulus low-frequency",
+  "jaccard": 0.225,
+  "keeps": 0.315,
+  "n": 143,
+  "n_patients": 16,
+  "top_patient": "PAT_3975",
+  "top_share": 0.6363636363636364,
+  "median_own_loading": 0.43516408764910086,
+  "representatives": [
+   "PAT_3975 PHG5",
+   "PAT_3975 FOD8",
+   "PAT_3975 FOG6"
+  ]
+ },
+ {
+  "set": "concat_bands15s",
+  "k": 7,
+  "cluster": 1,
+  "pos": 1,
+  "matched": "c5 production",
+  "jaccard": 0.31909547738693467,
+  "keeps": 0.635,
+  "n": 325,
+  "n_patients": 24,
+  "top_patient": "EL033",
+  "top_share": 0.16307692307692306,
+  "median_own_loading": 0.44625434196320485,
+  "representatives": [
+   "EL033 aH_R12",
+   "EL033 A_R12",
+   "EL033 PHG_R11"
+  ]
+ },
+ {
+  "set": "concat_bands15s",
+  "k": 7,
+  "cluster": 5,
+  "pos": 2,
+  "matched": "c0 beta decrease",
+  "jaccard": 0.572463768115942,
+  "keeps": 0.7452830188679245,
+  "n": 333,
+  "n_patients": 21,
+  "top_patient": "PAT_6854",
+  "top_share": 0.27927927927927926,
+  "median_own_loading": 0.4335843650698583,
+  "representatives": [
+   "PAT_1327 IMG6",
+   "PAT_1327 IMG18",
+   "PAT_3066 IMG11"
+  ]
+ },
+ {
+  "set": "concat_bands15s",
+  "k": 7,
+  "cluster": 2,
+  "pos": 3,
+  "matched": "c2 broadband decrease",
+  "jaccard": 0.5587044534412956,
+  "keeps": 0.8214285714285714,
+  "n": 217,
+  "n_patients": 20,
+  "top_patient": "PAT_3965",
+  "top_share": 0.30414746543778803,
+  "median_own_loading": 0.4312778147405223,
+  "representatives": [
+   "PAT_3965 had6",
+   "PAT_3965 ad8",
+   "PAT_3965 hag5"
+  ]
+ },
+ {
+  "set": "concat_bands15s",
+  "k": 7,
+  "cluster": 6,
+  "pos": 4,
+  "matched": "c6 response-period low-frequency fall",
+  "jaccard": 0.40350877192982454,
+  "keeps": 0.6160714285714286,
+  "n": 256,
+  "n_patients": 18,
+  "top_patient": "PAT_3780",
+  "top_share": 0.3125,
+  "median_own_loading": 0.43647383397694883,
+  "representatives": [
+   "PAT_3780 FLA6",
+   "PAT_3780 FLA8",
+   "PAT_3780 FLA9"
+  ]
+ },
+ {
+  "set": "concat_bands15s",
+  "k": 7,
+  "cluster": 0,
+  "pos": 5,
+  "matched": "c4 low-frequency rise",
+  "jaccard": 0.25961538461538464,
+  "keeps": 0.32335329341317365,
+  "n": 190,
+  "n_patients": 25,
+  "top_patient": "EL042",
+  "top_share": 0.15789473684210525,
+  "median_own_loading": 0.412425621575803,
+  "representatives": [
+   "EL035 pH_R1",
+   "EL035 aH_R9",
+   "EL042 aH_R9"
+  ]
+ },
+ {
+  "set": "concat_bands15s",
+  "k": 7,
+  "cluster": 3,
+  "pos": 6,
+  "matched": "c1 audio-stimulus low-frequency",
+  "jaccard": 0.22077922077922077,
+  "keeps": 0.35664335664335667,
+  "n": 139,
+  "n_patients": 22,
+  "top_patient": "EL042",
+  "top_share": 0.16546762589928057,
+  "median_own_loading": 0.41784649309056826,
+  "representatives": [
+   "EL042 STG_R5",
+   "EL042 STG_R6",
+   "EL042 STG_R9"
+  ]
+ },
+ {
+  "set": "concat_bands15s",
+  "k": 7,
+  "cluster": 4,
+  "pos": 7,
+  "matched": "c3 sentence-stimulus low-frequency",
+  "jaccard": 0.18050541516245489,
+  "keeps": 0.25,
+  "n": 127,
+  "n_patients": 12,
+  "top_patient": "PAT_3975",
+  "top_share": 0.7480314960629921,
+  "median_own_loading": 0.47385101673645363,
+  "representatives": [
+   "PAT_3975 PHG6",
+   "PAT_3975 HAG6",
+   "PAT_3975 FOD8"
+  ]
+ },
+ {
+  "set": "concat_bands15t",
+  "k": 7,
+  "cluster": 6,
+  "pos": 1,
+  "matched": "c5 production",
+  "jaccard": 0.47606382978723405,
+  "keeps": 0.895,
+  "n": 355,
+  "n_patients": 22,
+  "top_patient": "PAT_6953",
+  "top_share": 0.15492957746478872,
+  "median_own_loading": 0.41249089818461393,
+  "representatives": [
+   "PAT_3780 TPG6",
+   "PAT_3780 FLP9",
+   "EL040 pH_R14"
+  ]
+ },
+ {
+  "set": "concat_bands15t",
+  "k": 7,
+  "cluster": 1,
+  "pos": 2,
+  "matched": "c0 beta decrease",
+  "jaccard": 0.2962962962962963,
+  "keeps": 0.4025157232704403,
+  "n": 242,
+  "n_patients": 24,
+  "top_patient": "PAT_6854",
+  "top_share": 0.2975206611570248,
+  "median_own_loading": 0.44084662363734545,
+  "representatives": [
+   "PAT_6854 OFG6",
+   "PAT_6854 OFG5",
+   "PAT_6854 OFG3"
+  ]
+ },
+ {
+  "set": "concat_bands15t",
+  "k": 7,
+  "cluster": 4,
+  "pos": 3,
+  "matched": "c2 broadband decrease",
+  "jaccard": 0.5960591133004927,
+  "keeps": 0.7202380952380952,
+  "n": 156,
+  "n_patients": 14,
+  "top_patient": "PAT_3965",
+  "top_share": 0.4166666666666667,
+  "median_own_loading": 0.527984172375356,
+  "representatives": [
+   "PAT_3965 ad8",
+   "PAT_3965 had6",
+   "PAT_3965 ad6"
+  ]
+ },
+ {
+  "set": "concat_bands15t",
+  "k": 7,
+  "cluster": 5,
+  "pos": 4,
+  "matched": "c6 response-period low-frequency fall",
+  "jaccard": 0.40298507462686567,
+  "keeps": 0.6026785714285714,
+  "n": 246,
+  "n_patients": 23,
+  "top_patient": "PAT_6953",
+  "top_share": 0.21544715447154472,
+  "median_own_loading": 0.40080326646495523,
+  "representatives": [
+   "PAT_6953 PHD5",
+   "PAT_3780 IAG6",
+   "PAT_6953 HAD6"
+  ]
+ },
+ {
+  "set": "concat_bands15t",
+  "k": 7,
+  "cluster": 0,
+  "pos": 5,
+  "matched": "c4 low-frequency rise",
+  "jaccard": 0.5550239234449761,
+  "keeps": 0.6946107784431138,
+  "n": 316,
+  "n_patients": 27,
+  "top_patient": "EL042",
+  "top_share": 0.11392405063291139,
+  "median_own_loading": 0.43027865510016877,
+  "representatives": [
+   "EL042 A_R8",
+   "EL042 A_R7",
+   "EL042 A_R9"
+  ]
+ },
+ {
+  "set": "concat_bands15t",
+  "k": 7,
+  "cluster": 2,
+  "pos": 6,
+  "matched": "c1 audio-stimulus low-frequency",
+  "jaccard": 0.013888888888888888,
+  "keeps": 0.02097902097902098,
+  "n": 76,
+  "n_patients": 4,
+  "top_patient": "PAT_3455",
+  "top_share": 0.8552631578947368,
+  "median_own_loading": 0.4845858193780014,
+  "representatives": [
+   "PAT_3455 PHD7",
+   "PAT_3455 AD4",
+   "PAT_3455 CPD3"
+  ]
+ },
+ {
+  "set": "concat_bands15t",
+  "k": 7,
+  "cluster": 3,
+  "pos": 7,
+  "matched": "c3 sentence-stimulus low-frequency",
+  "jaccard": 0.2073170731707317,
+  "keeps": 0.34,
+  "n": 196,
+  "n_patients": 18,
+  "top_patient": "PAT_1327",
+  "top_share": 0.21428571428571427,
+  "median_own_loading": 0.39835657439922356,
+  "representatives": [
+   "PAT_5533 OFD2",
+   "PAT_5533 OFD3",
+   "PAT_1327 IPD17"
+  ]
+ }
+]

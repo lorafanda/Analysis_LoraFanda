@@ -932,6 +932,75 @@ def main() -> int:
     A("**What it means.** Each type is rated on all three questions; the colour of a scorecard cell is its rank in the column, not a composite score.")
     A("")
 
+    # claim 5, electrode by electrode: the membership measures on every feature set
+    mm_f = VAL / "member_measures" / "summary.json"
+    if mm_f.exists():
+        MM = json.loads(mm_f.read_text(encoding="utf-8"))
+        A("## Claim 5, electrode by electrode · membership measures on every feature set")
+        A("")
+        A("**Paper figure.** Fig 4 E (the loading distribution) and Fig 3 C and D (consensus), read per electrode; Fig 4 B, F and G for the hit rates.")
+        A("")
+        A("**Where to click.** `Minimum loading` at the bottom of the control panel is the loading column of these tables made live: raising it hides the electrodes "
+          "below the line and recounts the chips. In the held-out view, colour by `hit rate` or `consensus margin` paints the two other columns on the brain. "
+          "The tables themselves are `outputs/clustering/paper2_validation/member_measures/member_measures_<set>.csv`, one row per electrode.")
+        A("")
+        for s_ in MM["sets"]:
+            src_ = VAL / "member_measures" / MM["figures"][s_["fset"]]
+            dst_ = OUTD / "panels" / f"p7_members_{s_['fset']}.png"
+            dst_.write_bytes(src_.read_bytes())            # img_md needs the file under the report folder
+            A(img_md(dst_, f"{FS_SHORT.get(s_['fset'], s_['fset'])} member measures"))
+        A("**What you see.** One figure per feature set, convex NMF at the paper's K, every electrode a dot. The published run keeps the page's order and colours; "
+          "every other set's clusters (v = that run's own id) are ordered and coloured by the published type they are matched to, so the same colour means the same type across the figures. "
+          "Per electrode: its loading on its own type (dashed line the 0.3 draw cut, dotted 0.5), "
+          "its silhouette in the fit's unit-norm space, its correlation with its type's mean, its consensus with its own type under patient resampling, and how often it "
+          "landed in its type when its patient was held out (full: always, pale: sometimes, grey: never). A measure not yet computed for a set says so.")
+        A("")
+        A("**The numbers.** Per set, the median electrode and the shares:")
+        A("")
+        A("| feature set | K | loading, median | below 0.3 | at least 0.5 | silhouette, median | negative | r with type mean, median | consensus, median | switches type | one patient out: always · never | halves: always · never |")
+        A("|---|---|---|---|---|---|---|---|---|---|---|---|")
+        for s_ in MM["sets"]:
+            o = s_["overall"]
+            A(f"| {FS_SHORT.get(s_['fset'], s_['fset'])} | {s_['k']} | {o['loading_median']:.2f} | {pct(o['loading_below_cut'])} | {pct(o['loading_at_least_half'])} | {o['silhouette_median']:+.3f} | {pct(o['silhouette_negative'])} | {o['r_mean_median']:.2f} | "
+              + (f"{o['cons_own_median']:.2f} | {pct(o['cons_switch'])} | " if 'cons_own_median' in o else "– | – | ")
+              + (f"{pct(o['lopo_always'])} · {pct(o['lopo_never'])} | " if 'lopo_always' in o else "– | ")
+              + (f"{pct(o['halves_always'])} · {pct(o['halves_never'])} |" if 'halves_always' in o else "– |"))
+        for f_ in MM.get("not_run", []):
+            A(f"| {FS_SHORT.get(f_, f_)} | 7 | no run yet | | | | | | | | | |")
+        A("")
+        A("Per type, the main cell (median loading · median silhouette · mean consensus · share always placed right with one patient out):")
+        A("")
+        mains = [s_ for s_ in MM["sets"] if s_["fset"] == FSET]
+        if mains:
+            s_ = mains[0]
+            A("| type | n | loading | silhouette | consensus | always right | never right |")
+            A("|---|---|---|---|---|---|---|")
+            for c_ in s_["order"]:
+                t_ = s_["per_type"][str(c_)]
+                A(f"| {nm.get(c_, f'c{c_}')} | {t_['n']} | {t_['loading_median']:.2f} | {t_['silhouette_median']:+.3f} | {t_.get('cons_own_mean', float('nan')):.2f} | {pct(t_.get('lopo_always', 0))} | {pct(t_.get('lopo_never', 0))} |")
+            A("")
+        xs = MM.get("cross_set", {})
+        for col, label in (("loading", "own-type loading"), ("silhouette", "silhouette")):
+            if col in xs and len(xs[col]) > 1:
+                names_ = list(xs[col])
+                A(f"Rank agreement of the per-electrode {label} between sets (Spearman ρ; the same 1587 electrodes):")
+                A("")
+                A("| | " + " | ".join(FS_SHORT.get(a_, a_) for a_ in names_) + " |")
+                A("|---|" + "---|" * len(names_))
+                for a_ in names_:
+                    A(f"| {FS_SHORT.get(a_, a_)} | " + " | ".join("–" if xs[col][a_][b_] is None else f"{xs[col][a_][b_]:.2f}" for b_ in names_) + " |")
+                A("")
+        ck = MM.get("checks", [])
+        if ck:
+            bad = [c_ for c_ in ck if not c_["ok"]]
+            A(f"Checked against the published numbers, main cell: {len(ck) - len(bad)} of {len(ck)} agree" + ("" if not bad else " · disagreements: " + "; ".join(f"{c_['check']} ({c_['got']} vs {c_['want']})" for c_ in bad)) + ".")
+            A("")
+        A("**What it means.** The loading says how much of an electrode's mixture its type explains, the silhouette whether it sits nearer its own type than the next, "
+          "the consensus whether it stays with its type when patients are resampled, and the hit rate whether a model that never saw its patient still puts it there"
+          + cite("D10", "R87", "M03", "TW05") + ". An electrode can be a weak member on every count and still be counted in the type: the median loading is below 0.5 in every set, which is the continuum again.")
+        A("")
+
+
     # notes + refs
     A("## Two things to know when reading the page")
     A("")

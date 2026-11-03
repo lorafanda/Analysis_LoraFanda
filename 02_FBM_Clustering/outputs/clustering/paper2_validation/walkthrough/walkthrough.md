@@ -1,6 +1,6 @@
 # The cluster visualizer, claim by claim
 
-*Built 2026-11-03 00:48 from the files the page reads (cohort concat_source_v17, run 20261017_194301). Page: https://lorafanda.github.io/cluster_visualizer.html. The brain images are rendered from the same data with the page's own encodings, on the glass brains of the types figure (Fig 1); the click path above each one reproduces it live.*
+*Built 2026-11-03 01:31 from the files the page reads (cohort concat_source_v17, run 20261017_194301). Page: https://lorafanda.github.io/cluster_visualizer.html. The brain images are rendered from the same data with the page's own encodings, on the glass brains of the types figure (Fig 1); the click path above each one reproduces it live.*
 
 ## What this report is
 
@@ -221,6 +221,8 @@ Per electrode, 1354 of 1587 land in their type in every fold and 104 never do; t
 
 ![HFA x convex NMF](panels/p6_cell_concat_hfa_cnmf.png)
 
+![15 bands z x convex NMF](panels/p6_cell_concat_bands15z_cnmf.png)
+
 **What you see.** One figure per feature set, convex NMF, clusters in the page's order and colours: A the leave-one-patient-out confusion, B every pair's held-out MMD² as a ratio to the cloud (red and bold below 1: the pair is closer than two sectors of a featureless Gaussian), C each type's held-out recall under both tests, D its silhouette z against the cloud (the grey band is the cloud's own spread). k-means and Ward have the same tables; the summary below carries every cell.
 
 **The numbers.**
@@ -239,14 +241,14 @@ Per electrode, 1354 of 1587 land in their type in every fold and 104 never do; t
 | HFA | convex NMF | 6 | 60 % | 49 % | c0 (41 %) | c0–c1 · 0.144 · 0.60 | 6 of 15 | c4 -2.9 … c0 +2.0 |
 | HFA | k-means | 6 | 74 % | 64 % | c0 (42 %) | c2–c5 · 0.127 · 0.41 | 8 of 15 | c1 -2.1 … c5 +1.9 |
 | HFA | Ward | 6 | 62 % | 57 % | c1 (17 %) | c4–c5 · 0.128 · 0.41 | 10 of 15 | c2 -1.5 … c0 +1.6 |
-| 15 bands z | convex NMF | 7 | not run yet | | | | | |
+| 15 bands z | convex NMF | 7 | 74 % | 60 % | c2 (11 %) | c0–c5 · 0.095 · 0.81 | 6 of 21 | c1 -1.0 … c3 +7.3 |
 | 15 bands z | k-means | 7 | not run yet | | | | | |
 | 15 bands shape | convex NMF | 7 | not run yet | | | | | |
 | 15 bands shape | k-means | 7 | not run yet | | | | | |
 | 15 bands ternary | convex NMF | 7 | not run yet | | | | | |
 | 15 bands ternary | k-means | 7 | not run yet | | | | | |
 
-Leave-one-patient-out placement runs from 50 % (15 bands × Ward) to 90 % (15 bands × convex NMF); the patient-halves test is harsher everywhere (Tibshirani & Walther 2005; Lange et al. 2004). Pairs below the cloud, convex NMF: 15 bands 7 of 21, 5 bands 8 of 28, 2 bands 4 of 45, HFA 6 of 15 (Gretton et al. 2012). The bandwidth, the cloud and the shuffles are those of the MMD run (n_perm 5000, splits 100) (Gretton et al. 2012; Rousseeuw 1987).
+Leave-one-patient-out placement runs from 50 % (15 bands × Ward) to 90 % (15 bands × convex NMF); the patient-halves test is harsher everywhere (Tibshirani & Walther 2005; Lange et al. 2004). Pairs below the cloud, convex NMF: 15 bands 7 of 21, 5 bands 8 of 28, 2 bands 4 of 45, HFA 6 of 15, 15 bands z 6 of 21 (Gretton et al. 2012). The bandwidth, the cloud and the shuffles are those of the MMD run (n_perm 5000, splits 100) (Gretton et al. 2012; Rousseeuw 1987).
 
 The variant cells are listed as not run yet: on the server, `python 00_paper2_figure6_mmd.py --sets concat_bands15z concat_bands15s --methods cnmf kmeans` (the main cell's settings: `--n-perm 5000 --n-perm-heldout 500 --n-splits 100 --n-cloud 100`), then `python make_heldout_bundle.py --write` and this report again.
 
@@ -286,6 +288,80 @@ The variant cells are listed as not run yet: on the server, `python 00_paper2_fi
 Overlaps are chance-adjusted Jaccards of matched clusters (Hubert & Arabie 1985; Kuhn 1955); consensus as in Claim 3 (Monti et al. 2003); the held-out columns as in Claim 4 (Tibshirani & Walther 2005); silhouette z is the type's silhouette against the Gaussian cloud (Rousseeuw 1987).
 
 **What it means.** Each type is rated on all three questions; the colour of a scorecard cell is its rank in the column, not a composite score.
+
+## Claim 5, electrode by electrode · membership measures on every feature set
+
+**Paper figure.** Fig 4 E (the loading distribution) and Fig 3 C and D (consensus), read per electrode; Fig 4 B, F and G for the hit rates.
+
+**Where to click.** `Minimum loading` at the bottom of the control panel is the loading column of these tables made live: raising it hides the electrodes below the line and recounts the chips. In the held-out view, colour by `hit rate` or `consensus margin` paints the two other columns on the brain. The tables themselves are `outputs/clustering/paper2_validation/member_measures/member_measures_<set>.csv`, one row per electrode.
+
+![15 bands member measures](panels/p7_members_concat_bands15.png)
+
+![5 bands member measures](panels/p7_members_concat_bands5.png)
+
+![2 bands member measures](panels/p7_members_concat_bands2.png)
+
+![HFA member measures](panels/p7_members_concat_hfa.png)
+
+![15 bands z member measures](panels/p7_members_concat_bands15z.png)
+
+![15 bands shape member measures](panels/p7_members_concat_bands15s.png)
+
+![15 bands ternary member measures](panels/p7_members_concat_bands15t.png)
+
+**What you see.** One figure per feature set, convex NMF at the paper's K, every electrode a dot. The published run keeps the page's order and colours; every other set's clusters (v = that run's own id) are ordered and coloured by the published type they are matched to, so the same colour means the same type across the figures. Per electrode: its loading on its own type (dashed line the 0.3 draw cut, dotted 0.5), its silhouette in the fit's unit-norm space, its correlation with its type's mean, its consensus with its own type under patient resampling, and how often it landed in its type when its patient was held out (full: always, pale: sometimes, grey: never). A measure not yet computed for a set says so.
+
+**The numbers.** Per set, the median electrode and the shares:
+
+| feature set | K | loading, median | below 0.3 | at least 0.5 | silhouette, median | negative | r with type mean, median | consensus, median | switches type | one patient out: always · never | halves: always · never |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 15 bands | 7 | 0.41 | 16 % | 27 % | +0.060 | 20 % | 0.56 | 0.78 | 8 % | 85 % · 7 % | 0 % · 0 % |
+| 5 bands | 8 | 0.36 | 23 % | 19 % | +0.054 | 32 % | 0.61 | 0.54 | 17 % | 44 % · 17 % | 0 % · 0 % |
+| 2 bands | 10 | 0.28 | 62 % | 3 % | +0.049 | 28 % | 0.62 | 0.42 | 26 % | 39 % · 18 % | 0 % · 0 % |
+| HFA | 6 | 0.33 | 39 % | 10 % | +0.053 | 36 % | 0.66 | 0.45 | 24 % | 44 % · 24 % | 0 % · 1 % |
+| 15 bands z | 7 | 0.42 | 10 % | 31 % | +0.061 | 20 % | 0.53 | – | – | 63 % · 17 % | 1 % · 1 % |
+| 15 bands shape | 7 | 0.43 | 9 % | 34 % | +0.052 | 18 % | 0.54 | – | – | – | – |
+| 15 bands ternary | 7 | 0.43 | 10 % | 33 % | +0.040 | 22 % | 0.45 | – | – | – | – |
+
+Per type, the main cell (median loading · median silhouette · mean consensus · share always placed right with one patient out):
+
+| type | n | loading | silhouette | consensus | always right | never right |
+|---|---|---|---|---|---|---|
+| c5 production | 200 | 0.39 | +0.076 | 0.78 | 90 % | 6 % |
+| c0 beta decrease | 318 | 0.42 | +0.096 | 0.69 | 92 % | 5 % |
+| c2 broadband decrease | 168 | 0.44 | +0.153 | 0.78 | 89 % | 8 % |
+| c6 response-period low-frequency fall | 224 | 0.42 | +0.034 | 0.71 | 83 % | 8 % |
+| c4 low-frequency rise | 334 | 0.43 | +0.061 | 0.81 | 96 % | 1 % |
+| c1 audio-stimulus low-frequency | 143 | 0.37 | +0.034 | 0.62 | 66 % | 10 % |
+| c3 sentence-stimulus low-frequency | 200 | 0.38 | -0.009 | 0.53 | 64 % | 14 % |
+
+Rank agreement of the per-electrode own-type loading between sets (Spearman ρ; the same 1587 electrodes):
+
+| | 15 bands | 5 bands | 2 bands | HFA | 15 bands z | 15 bands shape | 15 bands ternary |
+|---|---|---|---|---|---|---|---|
+| 15 bands | 1.00 | 0.63 | 0.27 | 0.23 | 0.51 | 0.52 | 0.49 |
+| 5 bands | 0.63 | 1.00 | 0.30 | 0.18 | 0.58 | 0.50 | 0.54 |
+| 2 bands | 0.27 | 0.30 | 1.00 | 0.33 | 0.29 | 0.28 | 0.24 |
+| HFA | 0.23 | 0.18 | 0.33 | 1.00 | 0.17 | 0.24 | 0.13 |
+| 15 bands z | 0.51 | 0.58 | 0.29 | 0.17 | 1.00 | 0.63 | 0.57 |
+| 15 bands shape | 0.52 | 0.50 | 0.28 | 0.24 | 0.63 | 1.00 | 0.31 |
+| 15 bands ternary | 0.49 | 0.54 | 0.24 | 0.13 | 0.57 | 0.31 | 1.00 |
+
+Rank agreement of the per-electrode silhouette between sets (Spearman ρ; the same 1587 electrodes):
+
+| | 15 bands | 5 bands | 2 bands | HFA | 15 bands z | 15 bands shape | 15 bands ternary |
+|---|---|---|---|---|---|---|---|
+| 15 bands | 1.00 | 0.53 | 0.20 | 0.12 | 0.49 | 0.35 | 0.34 |
+| 5 bands | 0.53 | 1.00 | 0.23 | 0.08 | 0.59 | 0.40 | 0.44 |
+| 2 bands | 0.20 | 0.23 | 1.00 | 0.15 | 0.33 | 0.17 | 0.27 |
+| HFA | 0.12 | 0.08 | 0.15 | 1.00 | 0.16 | 0.06 | 0.07 |
+| 15 bands z | 0.49 | 0.59 | 0.33 | 0.16 | 1.00 | 0.46 | 0.58 |
+| 15 bands shape | 0.35 | 0.40 | 0.17 | 0.06 | 0.46 | 1.00 | 0.22 |
+| 15 bands ternary | 0.34 | 0.44 | 0.27 | 0.07 | 0.58 | 0.22 | 1.00 |
+
+Checked against the published numbers, main cell: 18 of 18 agree.
+
+**What it means.** The loading says how much of an electrode's mixture its type explains, the silhouette whether it sits nearer its own type than the next, the consensus whether it stays with its type when patients are resampled, and the hit rate whether a model that never saw its patient still puts it there (Ding et al. 2010; Rousseeuw 1987; Monti et al. 2003; Tibshirani & Walther 2005). An electrode can be a weak member on every count and still be counted in the type: the median loading is below 0.5 in every set, which is the continuum again.
 
 ## Two things to know when reading the page
 
