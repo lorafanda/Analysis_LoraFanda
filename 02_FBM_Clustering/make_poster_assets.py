@@ -2,7 +2,8 @@
 """make_poster_assets.py - the poster's panels redrawn at print resolution (2026-11-03).
 
     python make_poster_assets.py              # everything below
-    python make_poster_assets.py --only row1 agreement stability separation neurosynth
+    python make_poster_assets.py --only row1 agreement stability separation neurosynth neurosynthT
+    python make_poster_assets.py --only neurosynthT --no-render --maps speech_perception language_comprehension speech_production visual
 
 Writes outputs/clustering/paper_figures/poster/assets/:
   row1_task_cohort.png   five equal tiles: the kept electrodes on the glass brain from the left,
@@ -23,6 +24,9 @@ Writes outputs/clustering/paper_figures/poster/assets/:
   neurosynth_<tag>_brains.png
                          the same with the cluster ids only and each cluster's glass brains before its
                          row (render_hemi, ns_cluster_<tag>_c<id>_<side>.png, reused with --no-render)
+  neurosynth_T_<tag>.png  the matrix transposed for a wide box (3:1): the maps as rows with their pial
+                         surfaces, the clusters as columns with their glass brains, ids only;
+                         --maps <names> keeps only those rows (file suffix _<n>maps)
   separation_row.png     the two held-out confusions (one patient out, patient halves) and the
                          silhouette of every electrode per type against the Gaussian cloud;
                          separation_violin_loading.png is the loading alternative
@@ -654,20 +658,144 @@ def neurosynth(d):
     return out[("15band", False)]
 
 
+# ---------------------------------------------------------------- the same matrix transposed: maps as rows, clusters as columns
+_ZRUN: dict = {}
+
+
+def z_run(d, match):
+    """The z-scored run (its newest cNMF run, K 7) and its clusters' colours = their matched published types'."""
+    if "d" not in _ZRUN:
+        dz = P2.load_run("concat_bands15z", K, "cnmf"); dz["fset"] = "concat_bands15z"
+        assert len(dz["xyz"]) == len(d["xyz"]) and np.allclose(np.nan_to_num(dz["xyz"]), np.nan_to_num(d["xyz"])), "the z run's electrodes are not in the published run's order"
+        mz = match[match.fset == "15zband"]
+        _ZRUN["d"] = dz; _ZRUN["col"] = {int(r.cluster): d["col"][int(r.type_15band)] for r in mz.itertuples()}
+    return _ZRUN["d"], _ZRUN["col"]
+
+
+def neurosynth_T(d, keep=None):
+    """neurosynth()'s label matrix transposed for a wide box, three times as wide as high: the maps as
+    rows, each with its pial surfaces beside the name, the clusters as columns, each with its glass
+    brains under the id (ids only, no type names). keep: the maps to draw, in NS_MAPS' order; default
+    all eight. Written as assets/neurosynth_T_<tag>.png, or neurosynth_T_<tag>_<n>maps.png with keep."""
+    from matplotlib.colors import TwoSlopeNorm
+    lab = pd.read_csv(MM / "neurosynth_labels" / "labels.csv")
+    match = pd.read_csv(MM / "matching.csv")
+    norm = TwoSlopeNorm(vmin=-2, vcenter=0, vmax=2); cmap = plt.get_cmap("RdBu_r")
+    maps = [(s, m) for s, m in NS_MAPS if keep is None or m in keep]
+    names = [m for _, m in maps]; nm = len(names)
+    if keep is not None and nm != len(keep):
+        raise SystemExit(f"--maps: unknown map(s) in {keep}; the maps are {[m for _, m in NS_MAPS]}")
+    out = {}
+    for tag in ("15band", "15zband"):
+        t = lab[(lab.fset == tag) & (lab.k == K)]
+        meas = pd.read_csv(MM / tag / "measures.csv")
+        npat = meas.assign(p=meas.key.str.split("|").str[0]).groupby("type").p.nunique()
+        cols = []                                          # (cluster, colour, published type)
+        for j in d["order"]:
+            if tag == "15band":
+                cols.append((j, d["col"][j], j))
+            else:
+                m = match[(match.fset == tag) & (match.type_15band == j)]
+                if not m.empty:
+                    cols.append((int(m.cluster.iloc[0]), d["col"][j], j))
+        nc = len(cols)
+        RH, TOP, LB, RB, CAP = 0.42, 0.55, 2.2, 1.15, 0.55     # inches: row pitch, the blocks around the matrix, a glass brain's largest width
+        anybad = any(float(t[t.cluster == c].top_patient_share.iloc[0]) > 0.5 for c, _, _ in cols)
+        max_lines = (1 if tag == '15band' else 2) + (1 if anybad else 0)      # count lines under the ids
+        cw = CAP
+        for _ in range(2):                                     # the brains' width follows the column pitch, which follows the height
+            BOT = 0.19 + 0.1 * max_lines + 0.10 + 0.73 * cw + 0.12
+            mh = RH * nm; H = TOP + mh + BOT; W = 3.0 * H; mw = W - LB - RB - 0.15; pitch = mw / nc
+            cw = min(CAP, (0.90 * pitch - 0.04) / 2)
+        brain_top = BOT - 0.19 - 0.1 * max_lines - 0.10
+        fig = plt.figure(figsize=(W, H), dpi=DPI)
+
+        def ax_in(x0, y0, w, h):                               # an axes placed in inches from the bottom left
+            a = fig.add_axes([x0 / W, y0 / H, w / W, h / H]); a.axis("off"); return a
+
+        def txt(x, y, s, **kw):
+            return fig.text(x / W, y / H, s, **kw)
+
+        ax = fig.add_axes([LB / W, BOT / H, mw / W, mh / H])
+        ax.set_xlim(-0.5, nc - 0.5); ax.set_ylim(-0.5, nm - 0.5)
+        ax.set_xticks([]); ax.set_yticks([])
+        for s_ in ax.spines.values():
+            s_.set_visible(False)
+        print(f"  neurosynth_T {tag}: {nm} maps x {nc} clusters, {W:.1f} x {H:.1f} in")
+        for xi, (c, col, j) in enumerate(cols):
+            tc = t[t.cluster == c].set_index("map")
+            top_share = float(tc.top_patient_share.iloc[0]); bad = top_share > 0.5
+            for yi, mname in enumerate(names):
+                q = tc.loc[mname]; y = nm - 1 - yi
+                pct = float(q.pct_inside); le = float(np.log2(max(float(q.enrichment), 1e-3)))
+                face = NS_GREY if bad else cmap(norm(float(np.clip(le, -2, 2))))
+                sure = bool(q.outlined) and not bad
+                ax.scatter(xi, y, s=70 + 360 * min(pct, 60) / 60, c=[face], alpha=0.5 if bad else 1.0,
+                           edgecolors=INK if sure else "none", linewidths=1.3 if sure else 0, zorder=3)
+                ax.text(xi, y, f"{pct:.0f}", ha="center", va="center", fontsize=6.0, zorder=4,
+                        color="white" if (not bad and abs(le) > 1.1) else INK)
+            # the column's foot: the id, the counts, the cluster's glass brains left and right
+            xc = LB + (xi + 0.5) * pitch
+            n_ = int(tc.n.iloc[0]); p_ = int(npat.get(c, 0))
+            head = ("✗ " if bad else "") + (f"c{c}" if tag == "15band" else f"z{c}")
+            lines = ([] if tag == "15band" else [f"≈ c{j}"]) + [f"n {n_} · {p_} patients"] + ([f"{100 * top_share:.0f} % {tc.top_patient.iloc[0]}"] if bad else [])
+            txt(xc, BOT - 0.05, head, ha="center", va="top", fontsize=7.4, fontweight="bold", color="#b2182b" if bad else col)
+            txt(xc, BOT - 0.19, NL.join(lines), ha="center", va="top", fontsize=5.6, color=MUTED, linespacing=1.2)
+            for k_, side in enumerate(("L", "R")):
+                im = cluster_brain(tag, c, side, d, lambda: z_run(d, match))
+                ch = cw * im.shape[0] / im.shape[1]
+                ax_in(xc - cw - 0.02 + k_ * (cw + 0.04), brain_top - ch, cw, ch).imshow(im)
+            print(f"    {head:6s} {' / '.join(lines)}")
+        # the rows' heads: the stage, the map's name and cohort share, the map on the pial surface left and right
+        coh = t[t.cluster == cols[0][0]].set_index("map").cohort_pct
+        bw = 0.46; bh = None
+        for yi, (stage, mname) in enumerate(maps):
+            yc = BOT + (nm - 1 - yi + 0.5) * RH
+            txt(1.03, yc - 0.05, mname.replace(" ", NL), ha="right", va="bottom", fontsize=7.0, color=INK, linespacing=1.05)
+            txt(1.03, yc - 0.07, f"{float(coh[mname]):.0f} % of all electrodes", ha="right", va="top", fontsize=5.4, color=MUTED)
+            for k_, side in enumerate(("L", "R")):
+                im = ns_brain_image(mname, side)
+                bh = bw * im.shape[0] / im.shape[1]
+                ax_in(1.12 + k_ * (bw + 0.04), yc - bh / 2, bw, bh).imshow(im)
+        for k_, side in enumerate(("left", "right")):
+            txt(1.12 + bw / 2 + k_ * (bw + 0.04), BOT + mh + 0.03, side, ha="center", va="bottom", fontsize=6.0, color=MUTED)
+        # the two colour bars, right of the matrix
+        for i_, (nrm, cm_, ticks, labels_, title_) in enumerate((
+                (norm, cmap, [-2, -1, 0, 1, 2], ["¼×", "½×", "1×", "2×", "4×"], "the share against all electrodes"),
+                (matplotlib.colors.Normalize(0, NS_ZMAX), NS_CMAP, [0, 4, 8], ["0", "4", "8+"], "the map's z on the pial surface"))):
+            cax = fig.add_axes([(W - RB + 0.12) / W, (BOT + mh - 0.32 - 0.6 * i_) / H, 0.9 / W, 0.08 / H])
+            cb = fig.colorbar(plt.cm.ScalarMappable(norm=nrm, cmap=cm_), cax=cax, orientation="horizontal", ticks=ticks)
+            cb.ax.set_xticklabels(labels_, fontsize=5.8); cb.ax.tick_params(length=2, pad=1.5)
+            cax.set_title(title_, fontsize=6.0, color=MUTED, pad=2)
+        txt(LB, H - 0.10, "15 bands, K 7  ·  the NeuroSynth maps as rows, the clusters as columns" if tag == "15band"
+            else "15 bands z-scored, K 7  ·  each column in the place of the published type it matches", ha="left", va="top", fontsize=7.2, color=INK)
+        txt(LB, H - 0.26, "bubble and number: % of the cluster's electrodes inside the map  ·  outlined: above the cohort in 97.5 % of patient resamples  ·  no spatial null",
+            ha="left", va="top", fontsize=5.9, color=MUTED)
+        txt(LB, H - 0.37, "beside each map: its z > 0 on the pial surface, left and right  ·  under each cluster: its electrodes on the glass brain at loading ≥ 0.3, left and right, colour and size by loading",
+            ha="left", va="top", fontsize=5.9, color=MUTED)
+        p = OUT / f"neurosynth_T_{tag}{'' if keep is None else f'_{nm}maps'}.png"
+        fig.savefig(p, facecolor="white", bbox_inches="tight", pad_inches=0.04); plt.close(fig)
+        out[tag] = p
+        im = Image.open(p); print(f"    -> {p.name}  {im.size[0]} x {im.size[1]} px")
+    return out["15band"]
+
+
 def main() -> int:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             try: stream.reconfigure(errors="replace")
             except Exception: pass
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    ap.add_argument("--only", nargs="+", default=["figure1", "agreement", "stability", "separation", "neurosynth"], choices=["row1", "figure1", "agreement", "stability", "separation", "neurosynth"])
+    ap.add_argument("--only", nargs="+", default=["figure1", "agreement", "stability", "separation", "neurosynth", "neurosynthT"], choices=["row1", "figure1", "agreement", "stability", "separation", "neurosynth", "neurosynthT"])
+    ap.add_argument("--maps", nargs="+", default=None, help="neurosynthT: only these NeuroSynth maps as rows, e.g. speech_perception visual")
     ap.add_argument("--no-render", action="store_true", help="figure 1 reuses the saved brain tiles instead of rendering (no VTK)")
     a = ap.parse_args()
     global NO_RENDER
     NO_RENDER = a.no_render
     OUT.mkdir(parents=True, exist_ok=True)
     d = load_ref()
-    steps = dict(row1=row1, figure1=row1_column, agreement=agreement, stability=stability, separation=separation, neurosynth=neurosynth)
+    steps = dict(row1=row1, figure1=row1_column, agreement=agreement, stability=stability, separation=separation, neurosynth=neurosynth,
+                 neurosynthT=lambda d_: neurosynth_T(d_, keep=[m.replace('_', ' ') for m in a.maps] if a.maps else None))
     for name in a.only:
         p = steps[name](d)
         im = Image.open(p); print(f"  {name:11s} -> {p.name}  {im.size[0]} x {im.size[1]} px")
