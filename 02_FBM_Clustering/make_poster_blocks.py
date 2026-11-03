@@ -82,13 +82,14 @@ def load(fset, ref):
     return d, order, {a: (mp.get(a), float(J[a, mp[a]]) if a in mp else float(J[a].max())) for a in range(REF_K)}, names
 
 
-def block(d, a, b, jac, names, Cref, col, out, pos, fset):
-    """One type as a poster block: framed mean ERSP, two brains, a caption line."""
+def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=2.0):
+    """One type as a poster block: framed mean ERSP (width:height = aspect), two brains, a caption line."""
     members = d["lab"] == a
     n = int(members.sum()); npat = int(pd.Series(d["patient"][members]).nunique())
     M = Cref[members].mean(0)
-    fig = plt.figure(figsize=(3.6, 4.3), dpi=300)
-    gs = GridSpec(2, 2, figure=fig, height_ratios=[1.0, 0.78], left=0.06, right=0.94, top=0.86, bottom=0.02, hspace=0.16, wspace=0.03)
+    w = 3.6; h_ersp = 0.88 * w / aspect; h_brain = 0.42 * w
+    fig = plt.figure(figsize=(w, h_ersp + h_brain + 0.75), dpi=300)
+    gs = GridSpec(2, 2, figure=fig, height_ratios=[h_ersp, h_brain], left=0.06, right=0.94, top=1 - 0.55 / (h_ersp + h_brain + 0.75), bottom=0.02, hspace=0.16, wspace=0.03)
     ax = fig.add_subplot(gs[0, :])
     P2.draw_mean(ax, M, d, vlim=P2.MEAN_VLIM, col=col)
     nt = d["nt"]
@@ -115,12 +116,14 @@ def block(d, a, b, jac, names, Cref, col, out, pos, fset):
     return p
 
 
-def strip(paths, out_png):
+def strip(paths, out_png, rows=1):
+    """The blocks side by side, or in `rows` rows (4 + 3 for seven), each row left-aligned."""
     ims = [Image.open(p).convert("RGB") for p in paths]
-    h = max(im.height for im in ims); W = sum(im.width for im in ims)
-    sheet = Image.new("RGB", (W, h), "white"); x = 0
-    for im in ims:
-        sheet.paste(im, (x, 0)); x += im.width
+    per = int(np.ceil(len(ims) / rows))
+    h = max(im.height for im in ims); w = max(im.width for im in ims)
+    sheet = Image.new("RGB", (w * per, h * rows), "white")
+    for i, im in enumerate(ims):
+        sheet.paste(im, ((i % per) * w, (i // per) * h))
     sheet.save(out_png, optimize=True)
     return out_png
 
@@ -132,6 +135,8 @@ def main() -> int:
             except Exception: pass
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--sets", nargs="+", default=[REF, "concat_bands15z"])
+    ap.add_argument("--aspect", type=float, default=2.0, help="ERSP panel width : height (the poster asks 3)")
+    ap.add_argument("--rows", type=int, default=1, help="rows of blocks in the sheet (2 = 4 + 3)")
     a = ap.parse_args()
     ref = P2.load_run(REF, REF_K, "cnmf"); ref["fset"] = REF
     Cref = P2.cube(ref["X"], ref)
@@ -146,11 +151,11 @@ def main() -> int:
         try:
             for pos, a_ in enumerate(order, 1):
                 b, jac = match[a_]
-                paths.append(block(d, a_, b, jac, names, Cref, colmap[a_], out, pos, fset))
+                paths.append(block(d, a_, b, jac, names, Cref, colmap[a_], out, pos, fset, aspect=a.aspect))
                 print(f"  {fset} block {pos}: cluster {a_} -> {names.get(b, '-') if b is not None else '-'}")
         finally:
             P2.cluster_col = orig
-        s = strip(paths, OUT / f"{fset}_strip.png")
+        s = strip(paths, OUT / (f"{fset}_grid.png" if a.rows > 1 else f"{fset}_strip.png"), rows=a.rows)
         print(f"  {s.name}: {Image.open(s).size[0]} x {Image.open(s).size[1]} px")
     return 0
 
