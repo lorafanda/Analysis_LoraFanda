@@ -9,7 +9,8 @@ best other type from the patient-resampling sweep (mean M over the type's member
 definition), and its leave-one-patient-out and patient-halves hit rates from the MMD run. A
 measure whose source has not been run for a set is left empty and the figure says so.
 
-    python make_member_measures.py        # outputs/clustering/paper2_validation/member_measures/
+    python make_member_measures.py                # outputs/clustering/paper2_validation/member_measures/
+    python make_member_measures.py --no-brains    # without the glass-brain row (no VTK needed)
 
 Writes member_measures_<set>.csv (one row per electrode), summary.json (per type and per set,
 the cross-set rank correlations, the checks) and one figure per set (every electrode a dot,
@@ -193,7 +194,8 @@ def measures_for_set(fset):
                            lopo_hit=lopo if lopo is not None else np.nan, halves_hit=halves if halves is not None else np.nan))
     names = P2.TYPE_NAMES.get((fset, K), {})
     return dict(fset=fset, k=K, run=d["run"].name, order=order, names={int(k_): v for k_, v in names.items()}, df=df,
-                match={int(a): [None if b is None else int(b), float(j)] for a, (b, j) in match.items()})
+                match={int(a): [None if b is None else int(b), float(j)] for a, (b, j) in match.items()},
+                xyz=d["xyz"], hemi=d["hemi"])
 
 
 def summarise(S):
@@ -216,9 +218,57 @@ def summarise(S):
                 has=dict(consensus=bool(df.cons_own.notna().any()), heldout=bool(df.lopo_hit.notna().any())))
 
 
-def fig_set(S, out):
-    """Six panels, one per measure: every electrode a dot, a violin per type, the median as a bar;
-    hit rates as stacked bars (always / sometimes / never placed in its type)."""
+# ---------------------------------------------------------------- the brains
+_SCENE = {}
+
+
+def render_view(side, xyz, hemi, cols, rads, alphas, zoom=1.30):
+    """One lateral glass view (the types figure's scene) with the contacts whose radius is > 0:
+    colours 0-1 RGB, radii in mm, alphas 0-255. Copied from make_walkthrough so the brains here
+    are the page's brains."""
+    if "d" not in _SCENE:
+        _SCENE["d"] = dict(xyz=np.asarray(xyz, float), hemi=np.asarray(hemi))
+    pl, ok = P2._scene(side, _SCENE["d"], zoom)
+    m = ok & (rads > 0) & np.isfinite(_SCENE["d"]["xyz"][:, 0])
+    actor = None
+    if m.sum():
+        rgba = np.zeros((int(m.sum()), 4), np.uint8)
+        rgba[:, :3] = np.clip(255 * np.asarray(cols)[m], 0, 255).astype(np.uint8)
+        rgba[:, 3] = np.clip(np.asarray(alphas)[m], 0, 255).astype(np.uint8)
+        cloud = P2.pv.PolyData(_SCENE["d"]["xyz"][m])
+        cloud["rgba"] = rgba; cloud["r"] = np.asarray(rads)[m].astype(float)
+        g = cloud.glyph(orient=False, scale="r", geom=P2.pv.Sphere(radius=1.0, theta_resolution=12, phi_resolution=12))
+        actor = pl.add_mesh(g, scalars="rgba", rgba=True)
+    img = pl.screenshot(return_img=True, transparent_background=True)
+    if actor is not None:
+        pl.remove_actor(actor)
+    return P2._crop_alpha(np.asarray(img))
+
+
+def loading_radius(lv):
+    """The page's size rule: 1.05 mm at a loading of 0.14, 3.2 mm at 0.85."""
+    w = np.clip((np.asarray(lv, float) - 0.14) / (0.85 - 0.14), 0, 1)
+    return 1.05 + 2.18 * w
+
+
+def brain_rows(S, hues, d, weak):
+    """Two pairs of views: every electrode in its (matched) type's colour, sized by its loading;
+    then the weak members alone, black, over the faint rest."""
+    n = len(S["df"]); df = S["df"]
+    cols = np.array([hues[int(c)] for c in df.cluster]); rads = loading_radius(df.loading.to_numpy()); al = np.full(n, 230.0)
+    pair1 = [render_view(s_, d["xyz"], d["hemi"], cols, rads, al) for s_ in ("L", "R")]
+    cols2 = np.where(weak[:, None], np.array([[0.12, 0.12, 0.12]]), np.array([[0.80, 0.81, 0.84]]))
+    rads2 = np.where(weak, 2.1, 1.0); al2 = np.where(weak, 255.0, 80.0)
+    pair2 = [render_view(s_, d["xyz"], d["hemi"], cols2, rads2, al2) for s_ in ("L", "R")]
+    return pair1, pair2
+
+
+def fig_set(S, out, d=None, brains=True):
+    """Top row, one panel per measure: every electrode a dot, a violin per type, the median as a
+    bar; hit rates as stacked bars (always / sometimes / never placed in its type). Bottom row,
+    when brains are drawn: the electrodes on the glass brains in their type's colour sized by
+    loading, and the weak members (loading below the draw cut, or a negative silhouette) alone."""
+    import textwrap
     df, K, order, names = S["df"], S["k"], S["order"], S["names"]
     R = ref_run(); rp = {b: p for p, b in enumerate(R["order"])}
     main = S["fset"] == REF
@@ -226,11 +276,15 @@ def fig_set(S, out):
             for p, j in enumerate(order)}
     tick = (lambda j: f"c{j}") if main else (lambda j: f"v{j}" + NL + (f"→c{S['match'][j][0]}" if S["match"][j][0] is not None else "→ –"))
     rng = np.random.default_rng(0)
-    fig, axes = plt.subplots(1, len(MEASURES), figsize=(3.2 * len(MEASURES), 4.1), dpi=150, gridspec_kw=dict(wspace=0.36))
-    for ax, (col, title) in zip(axes, MEASURES):
-        ax.set_title(title, fontsize=8, loc="left")
+    weak = (df.loading.to_numpy() < P2.LOAD_CUT) | (df.silhouette.to_numpy() < 0)
+    nrow = 2 if (brains and d is not None) else 1
+    fig = plt.figure(figsize=(3.3 * len(MEASURES), 4.6 * nrow + 0.6), dpi=150)
+    gs = fig.add_gridspec(nrow, len(MEASURES), height_ratios=[1, 0.95][:nrow], hspace=0.55, wspace=0.38, top=0.86 if nrow == 2 else 0.80, bottom=0.08)
+    for i_, (col, title) in enumerate(MEASURES):
+        ax = fig.add_subplot(gs[0, i_])
+        ax.set_title(title, fontsize=9, loc="left")
         if df[col].isna().all():
-            ax.text(0.5, 0.5, "not run yet" + NL + "for this set", ha="center", va="center", fontsize=8, color=MUTED, transform=ax.transAxes)
+            ax.text(0.5, 0.5, "not run yet" + NL + "for this set", ha="center", va="center", fontsize=9, color=MUTED, transform=ax.transAxes)
             ax.set_xticks([]); ax.set_yticks([])
             for s_ in ax.spines.values():
                 s_.set_visible(False)
@@ -244,39 +298,51 @@ def fig_set(S, out):
                 ax.bar(p, always, color=hues[j], width=0.72)
                 ax.bar(p, mid, bottom=always, color=hues[j], alpha=0.4, width=0.72)
                 ax.bar(p, never, bottom=always + mid, color="#d9d9d9", width=0.72)
-                ax.plot(p, float(v.mean()), "o", color=INK, ms=3.5, zorder=3)
-            ax.set_ylim(0, 1); ax.set_yticks([0, 0.5, 1]); ax.set_yticklabels(["0", "50", "100 %"], fontsize=7)
-            ax.set_xlabel("full: always · pale: sometimes · grey: never · dot: mean", fontsize=6.4, color=MUTED, labelpad=2)
+                ax.plot(p, float(v.mean()), "o", color=INK, ms=5, zorder=3)
+            ax.set_ylim(0, 1); ax.set_yticks([0, 0.5, 1]); ax.set_yticklabels(["0", "50", "100 %"], fontsize=8)
+            ax.set_xlabel("full always · pale sometimes · grey never · dot mean", fontsize=6.8, color=MUTED, labelpad=3)
         else:
             data = [df.loc[df.cluster == j, col].dropna().to_numpy() for j in order]
-            parts = ax.violinplot([v if len(v) > 1 else np.r_[v, v] for v in data], positions=range(K), showmedians=False, showextrema=False, widths=0.85)
+            parts = ax.violinplot([v if len(v) > 1 else np.r_[v, v] for v in data], positions=range(K), showmedians=False, showextrema=False, widths=0.9)
             for body, j in zip(parts["bodies"], order):
-                body.set_facecolor(hues[j]); body.set_alpha(0.45); body.set_edgecolor("none")
+                body.set_facecolor(hues[j]); body.set_alpha(0.25); body.set_edgecolor("none")
             for p, (j, v) in enumerate(zip(order, data)):
-                ax.scatter(p + rng.uniform(-0.2, 0.2, len(v)), v, s=2.5, color=hues[j], alpha=0.4, lw=0)
-                ax.plot([p - 0.32, p + 0.32], [np.median(v)] * 2, color=INK, lw=1.5, zorder=3)
+                ax.scatter(p + rng.uniform(-0.26, 0.26, len(v)), v, s=11, color=hues[j], alpha=0.6, lw=0.3, edgecolor="white")
+                ax.plot([p - 0.36, p + 0.36], [np.median(v)] * 2, color=INK, lw=2.2, zorder=3)
             if col == "loading":
-                ax.axhline(P2.LOAD_CUT, ls="--", lw=0.8, color=MUTED); ax.axhline(0.5, ls=":", lw=0.8, color=MUTED); ax.set_ylim(0, 1.02)
+                ax.axhline(P2.LOAD_CUT, ls="--", lw=0.9, color=MUTED); ax.axhline(0.5, ls=":", lw=0.9, color=MUTED); ax.set_ylim(0, 1.02)
             elif col == "cons_own":
                 ax.set_ylim(0, 1.02)
             elif col == "silhouette":
-                ax.axhline(0, lw=0.8, color=MUTED)
+                ax.axhline(0, lw=0.9, color=MUTED)
             elif col == "r_mean":
-                ax.axhline(0, lw=0.8, color=MUTED); ax.set_ylim(-1.02, 1.02)
-            ax.tick_params(axis="y", labelsize=7)
-        ax.set_xticks(range(K)); ax.set_xticklabels([tick(j) for j in order], fontsize=6.5)
+                ax.axhline(0, lw=0.9, color=MUTED); ax.set_ylim(-1.02, 1.02)
+            ax.tick_params(axis="y", labelsize=8)
+        ax.set_xticks(range(K)); ax.set_xticklabels([tick(j) for j in order], fontsize=7.5)
         for tl, j in zip(ax.get_xticklabels(), order):
             tl.set_color(hues[j])
         ax.tick_params(length=2); ax.spines[["top", "right"]].set_visible(False)
+    if nrow == 2:
+        pair1, pair2 = brain_rows(S, hues, d, weak)
+        sub = gs[1, :].subgridspec(1, 4, wspace=0.06)
+        titles = {0: "every electrode in its type's colour, sized by its loading (the page's rule)",
+                  2: f"the weak members alone: {int(weak.sum())} electrodes with loading < {P2.LOAD_CUT:.1f} or silhouette < 0"}
+        for k_, (img, side) in enumerate([(pair1[0], "L"), (pair1[1], "R"), (pair2[0], "L"), (pair2[1], "R")]):
+            ax = fig.add_subplot(sub[0, k_])
+            ax.imshow(img); ax.set_xticks([]); ax.set_yticks([])
+            for s_ in ax.spines.values():
+                s_.set_visible(False)
+            ax.text(0.02, 0.02, side, transform=ax.transAxes, fontsize=8, color=MUTED, ha="left", va="bottom")
+            if k_ in titles:
+                ax.set_title(titles[k_], fontsize=8.5, loc="left", color=INK)
     if main:
         legend = "   ".join(f"c{j} {names[j]}" for j in order if j in names)
     else:
         legend = "   ".join((f"v{j} → c{S['match'][j][0]} {R['names'].get(S['match'][j][0], '')} (J {S['match'][j][1]:.2f})" if S["match"][j][0] is not None
                              else f"v{j} → no partner") for j in order)
         legend = "v = this run's own cluster id, ordered and coloured by the published type it is matched to (Hungarian on shared electrodes):   " + legend
-    import textwrap
     fig.suptitle(f"{FS_SHORT.get(S['fset'], S['fset'])} × convex NMF   ·   K {K}   ·   run {S['run']}   ·   every electrode a dot, the bar its cluster's median"
-                 + (NL + textwrap.fill(legend, 230) if legend else ""), fontsize=8.5, x=0.01, ha="left", y=1.04)
+                 + (NL + textwrap.fill(legend, 210) if legend else ""), fontsize=9.5, x=0.01, ha="left", y=0.995)
     p = out / f"member_measures_{S['fset']}.png"
     fig.savefig(p, facecolor="white", bbox_inches="tight"); plt.close(fig)
     return p
@@ -335,6 +401,10 @@ def main() -> int:
         if hasattr(stream, "reconfigure"):
             try: stream.reconfigure(errors="replace")
             except Exception: pass
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
+    ap.add_argument("--no-brains", action="store_true", help="skip the glass-brain row (no VTK; a locked screen cannot render)")
+    a = ap.parse_args()
     t0 = time.time()
     OUT.mkdir(parents=True, exist_ok=True)
     sets, summaries, figs = [], [], {}
@@ -350,7 +420,7 @@ def main() -> int:
         sets.append(S)
         S["df"].to_csv(OUT / f"member_measures_{fset}.csv", index=False)
         summaries.append(summarise(S))
-        figs[fset] = fig_set(S, out=OUT).name
+        figs[fset] = fig_set(S, out=OUT, d=S, brains=not a.no_brains).name
         o = summaries[-1]["overall"]
         print(f"  {fset:16s} K {S['k']}  run {S['run']}  loading median {o['loading_median']:.2f}  < cut {100 * o['loading_below_cut']:.0f} %  "
               f"silhouette median {o['silhouette_median']:+.3f}  negative {100 * o['silhouette_negative']:.0f} %"

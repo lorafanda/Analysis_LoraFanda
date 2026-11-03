@@ -1,6 +1,6 @@
 # The cluster visualizer, claim by claim
 
-*Built 2026-11-03 01:31 from the files the page reads (cohort concat_source_v17, run 20261017_194301). Page: https://lorafanda.github.io/cluster_visualizer.html. The brain images are rendered from the same data with the page's own encodings, on the glass brains of the types figure (Fig 1); the click path above each one reproduces it live.*
+*Built 2026-11-03 01:51 from the files the page reads (cohort concat_source_v17, run 20261017_194301). Page: https://lorafanda.github.io/cluster_visualizer.html. The brain images are rendered from the same data with the page's own encodings, on the glass brains of the types figure (Fig 1); the click path above each one reproduces it live.*
 
 ## What this report is
 
@@ -242,7 +242,7 @@ Per electrode, 1354 of 1587 land in their type in every fold and 104 never do; t
 | HFA | k-means | 6 | 74 % | 64 % | c0 (42 %) | c2–c5 · 0.127 · 0.41 | 8 of 15 | c1 -2.1 … c5 +1.9 |
 | HFA | Ward | 6 | 62 % | 57 % | c1 (17 %) | c4–c5 · 0.128 · 0.41 | 10 of 15 | c2 -1.5 … c0 +1.6 |
 | 15 bands z | convex NMF | 7 | 74 % | 60 % | c2 (11 %) | c0–c5 · 0.095 · 0.81 | 6 of 21 | c1 -1.0 … c3 +7.3 |
-| 15 bands z | k-means | 7 | not run yet | | | | | |
+| 15 bands z | k-means | 7 | 65 % | 60 % | c6 (3 %) | c0–c5 · 0.082 · 0.56 | 8 of 21 | c3 -2.7 … c6 +6.5 |
 | 15 bands shape | convex NMF | 7 | not run yet | | | | | |
 | 15 bands shape | k-means | 7 | not run yet | | | | | |
 | 15 bands ternary | convex NMF | 7 | not run yet | | | | | |
