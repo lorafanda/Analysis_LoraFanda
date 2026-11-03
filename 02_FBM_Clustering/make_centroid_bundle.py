@@ -50,7 +50,8 @@ OUT = CLUST / "paper_web" / "centroids"
 # the sets that came before it. A feature set missing here has no x_<fset>.bin, so the
 # page cannot draw a centroid on it even when the run is in the coverage manifest.
 # the four the page shows; keep in step with FSETS in make_cluster_visualizer.py
-FSETS = ["concat_bands2", "concat_bands5", "concat_bands15", "concat_hfa"]
+FSETS = ["concat_bands2", "concat_bands5", "concat_bands15", "concat_hfa",
+         "concat_bands15z", "concat_bands15s"]          # the two band-equalised variants, 2026-11-03
 METHODS = ["cnmf", "kmeans", "hierarchical"]          # archetypal analysis dropped 2026-09-06
 COHORT_FALLBACK = "cohort1_n29"   # only used if a manifest carries several cohorts
 
@@ -74,9 +75,11 @@ W_SCALE = 1.0 / 65535    # uint16 -> loading
 # what a value IS, per feature set - the page labels its colour bar and y axis with it.
 # bands5z is a per-band z-score, so its values are standard deviations, not decibels.
 UNIT = {"concat_hg": "dB", "concat_rawds": "dB", "concat_bands5": "dB",
-        "concat_bands5z": "z"}
+        "concat_bands5z": "z", "concat_bands15z": "z", "concat_bands15s": "rel"}
 UNIT_LONG = {"concat_hg": "dB vs baseline", "concat_rawds": "dB vs baseline",
-             "concat_bands5": "dB vs baseline", "concat_bands5z": "SD (per-band z-score)"}
+             "concat_bands5": "dB vs baseline", "concat_bands5z": "SD (per-band z-score)",
+             "concat_bands15z": "SD (per-band z-score across the cohort)",
+             "concat_bands15s": "band-relative amplitude (each band scaled within the electrode)"}
 
 
 def verified_write(path: Path, data: bytes, tries: int = 6):

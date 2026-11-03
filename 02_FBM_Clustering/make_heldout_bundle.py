@@ -55,6 +55,8 @@ MANIFEST = COV / "manifest.json"
 SITE_ORDER = Path.home() / "lorafanda.github.io" / "cluster_visualizer_order.json"
 STORY_NUMBERS = ROOT / "outputs" / "clustering" / "paper2_validation" / "numbers.json"
 K_BY_FSET = {"concat_bands15": 7, "concat_bands5": 8, "concat_bands2": 10, "concat_hfa": 6}
+# the band-equalised variants of the 15-band set, read at the paper's K 7 (2026-11-03)
+K_BY_FSET = {**dict(K_BY_FSET), "concat_bands15z": 7, "concat_bands15s": 7, "concat_bands15t": 7}
 
 
 def norm(s) -> str:

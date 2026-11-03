@@ -91,7 +91,8 @@ REPORT_3D = "stills"
 # make_coverage_bundle.py, and it caught concat_bands15 / bands2 / hfa for three days.
 # The pre-10-13 sets (concat_bands5z, concat_hg, concat_rawds) are deliberately out:
 # they duplicated these four under near-identical names and only confused the matrix.
-FSETS = ["concat_bands2", "concat_bands5", "concat_bands15", "concat_hfa"]
+FSETS = ["concat_bands2", "concat_bands5", "concat_bands15", "concat_hfa",
+         "concat_bands15z", "concat_bands15s"]          # + the two band-equalised variants, 2026-11-03
 METHODS = ["cnmf", "kmeans", "hierarchical"]          # archetypal analysis dropped 2026-09-06
 COHORT_FALLBACK = "cohort1_n29"   # only used if a manifest carries several cohorts
 
@@ -501,7 +502,8 @@ const UI2 = { on:false, mode:"single", sel:new Set(), gridBy:"clusters",
 const U2_METHODS = [["cnmf", "cNMF"], ["kmeans", "k-means"], ["hierarchical", "Ward"]];
 const U2_MLABEL  = { cnmf:"cNMF", kmeans:"k-means", hierarchical:"Ward" };
 const U2_FSETS   = [["concat_bands2", "2 bands"], ["concat_bands5", "5 bands"],
-                    ["concat_bands15", "15 bands"], ["concat_hfa", "HFA"]];
+                    ["concat_bands15", "15 bands"], ["concat_hfa", "HFA"],
+                    ["concat_bands15z", "15 bands z"], ["concat_bands15s", "15 bands shape"]];
 const u2esc = t => String(t == null ? "" : t)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const u2Split = id => { const p = String(id).split("__"); return { method:p[0], fset:p[1] }; };
@@ -2344,7 +2346,9 @@ const CEN_YLIM = 4;
 const REP_LABEL = { concat_bands2: "2 bands (30-50, 70-150 Hz)",
                     concat_bands5: "5 bands (1-170 Hz in 5 bands)",
                     concat_bands15: "15 bands (1-170 Hz in 15 bands)",
-                    concat_hfa: "HFA only (70-150 Hz)" };
+                    concat_hfa: "HFA only (70-150 Hz)",
+                    concat_bands15z: "15 bands, each band z-scored across the cohort",
+                    concat_bands15s: "15 bands, per-band shape within each electrode" };
 let CEN = null;                 // {meta, W: Uint16Array|null} for RUN0
 let CEN_INDEX = null;           // index.json: geometry per feature set, the alignment proof
 let CEN_REP = null;             // the feature set the centroid is drawn ON
@@ -2403,7 +2407,7 @@ async function loadCentroids(runId) {
 // grid widths and its axis spacers are derived from this length, so adding one here is
 // enough - it used to be three while the page showed four sets, and 2 bands was simply
 // missing from every exported report.
-const KROW_REPS = ["concat_bands2", "concat_bands5", "concat_bands15", "concat_hfa"];
+const KROW_REPS = ["concat_bands2", "concat_bands5", "concat_bands15", "concat_hfa", "concat_bands15z", "concat_bands15s"];
 function cenGeom(rep) {
   const r = rep || CEN_REP, g = CEN_INDEX.feature_sets[r];
   if (!g) return null;

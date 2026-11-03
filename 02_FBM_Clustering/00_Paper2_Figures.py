@@ -11,7 +11,8 @@ FIGURE 1 - one per feature set, convex NMF, each cut at ITS OWN held-out peak K.
 
     A   held-out variance vs K, all four feature sets, this one emphasised. The panel
         is identical in 1a-1d, so the four can be laid side by side.
-    C   how to read a cluster mean - an idealised schematic, not data
+    C   one real electrode as each feature set sees it: EL035 TTG_R1's full ERSP over its
+        15-, 5-, 2-band and HFA versions (2026-10-30; until then an idealised schematic)
     D   is each cluster a response type, or one patient? The largest single patient's
         share of every cluster, against a size-matched random draw from the same
         cohort. THIS PANEL IS DIAGNOSTIC, NOT DECORATIVE - it is drawn from the data
@@ -139,7 +140,7 @@ _CANVAS_W = [17.6]          # the width of the figure being drawn (canvas())
 TYPE_NAMES = {("concat_bands15", 7): {5: "production", 0: "beta decrease",
                                       2: "broadband decrease", 4: "low-frequency rise",
                                       1: "audio-stimulus low-frequency",
-                                      3: "reading-stimulus low-frequency",
+                                      3: "sentence-stimulus low-frequency",   # "reading" -> "sentence", Lora 2026-10-30
                                       6: "response-period low-frequency fall"}}
 
 
@@ -197,18 +198,25 @@ FS_LABEL = {"concat_bands15": "15 frequency bands x 30 time bins",
             "concat_hfa": "HFA (70-150 Hz) x 30 time bins",
             "concat_hg": "high gamma (70-150 Hz) x 300 time bins",
             "concat_rawds": "15 frequency bands x time",
-            "concat_bands5z": "5 frequency bands x time, z-scored per band"}
+            "concat_bands5z": "5 frequency bands x time, z-scored per band",
+            # the band-equalised variants of the 15-band set (2026-11-02)
+            "concat_bands15z": "15 frequency bands x 30 time bins, each band z-scored across the cohort",
+            "concat_bands15s": "15 frequency bands x 30 time bins, per-band shape within each electrode",
+            "concat_bands15t": "15 frequency bands x 30 time bins, ternary map on the z-scored values"}
 FS_SHORT = {"concat_bands15": "15 bands", "concat_bands5": "5 bands",
             "concat_bands2": "2 bands", "concat_hfa": "HFA",
             "concat_hg": "HG, 300 bins", "concat_rawds": "15 bands",
-            "concat_bands5z": "5 bands, z"}
+            "concat_bands5z": "5 bands, z",
+            "concat_bands15z": "15 bands, z", "concat_bands15s": "15 bands, shape",
+            "concat_bands15t": "15 bands, ternary"}
 # bands5z is a per-band z-score, so its values are STANDARD DEVIATIONS, not decibels.
 # Labelling that axis "dB" would be a units error on the face of a paper figure.
 UNITS = {"concat_bands15": "dB vs baseline", "concat_bands5": "dB vs baseline",
          "concat_bands2": "dB vs baseline", "concat_hfa": "dB vs baseline",
          "concat_hg": "dB vs baseline", "concat_rawds": "dB vs baseline",
          "concat_bands5z": "SD (per-band z-score)"}
-COND_LABEL = {"audio": "audio", "picture": "picture", "reading": "reading (sentences)"}
+# the third condition is written "sentences" everywhere (Lora, 2026-10-30; was "reading (sentences)")
+COND_LABEL = {"audio": "audio", "picture": "picture", "reading": "sentences"}
 # The picture stimulus is a real line drawing and cannot be reproduced as a glyph. Crop
 # it out of Figure1_FBM_v1.png to this path and it is used automatically; without it a
 # framed-image glyph stands in, so the figure builds either way.
@@ -731,16 +739,18 @@ def patient_bar(ax, d, j, pcol):
 def panel_A(ax, fset, k, method="cnmf"):
     hv = pd.read_csv(HELDOUT)
     hv = hv[(hv.method == method) & hv.scheme.isin(HOME_SCHEMES)]
-    for fs in FSETS:
-        s = (hv[hv.feature_set == fs].groupby("k")["var_explained"]
+    # the loop variable is NOT called fs: that name is the font-size function, and a local
+    # fs made every fs(...) below a call on a string (broke the working FIG 1, 2026-10-30)
+    for fset_ in FSETS:
+        s = (hv[hv.feature_set == fset_].groupby("k")["var_explained"]
              .agg(["mean", "std"]).reset_index().sort_values("k"))
         if s.empty:
             continue
-        me = fs == fset
+        me = fset_ == fset
         ax.plot(s.k, s["mean"], "-o", ms=pw(3.6) if me else pw(2.0), lw=pw(2.1) if me else pw(1.0),
                 color=INK if me else MUTED, alpha=1.0 if me else 0.50,
                 zorder=4 if me else 2,
-                label=FS_SHORT[fs] + ("   <- this figure" if me else ""))
+                label=FS_SHORT[fset_] + ("   <- this figure" if me else ""))
         pk = s.loc[s["mean"].idxmax()]
         if me:
             ax.fill_between(s.k, s["mean"] - s["std"], s["mean"] + s["std"],
@@ -1093,7 +1103,7 @@ def icon_picture(ax, col=INK):
 STIM_ICON = {"audio": icon_audio, "picture": icon_picture, "reading": icon_reading}
 
 
-def trial_strip(ax, d, words_inside: bool = False):
+def trial_strip(ax, d, words_inside: bool = False, icons: bool = True):
     """Two screens per condition: the stimulus, then the response cue.
 
     Positioned to the SAME x as the schematic below it - stimulus over 0-50% of the
@@ -1110,6 +1120,19 @@ def trial_strip(ax, d, words_inside: bool = False):
     ax.set_xticks([]); ax.set_yticks([])
     for sp in ax.spines.values():
         sp.set_visible(False)
+    if not icons:
+        # WORDS ONLY (FIG 1, Lora 2026-10-30): the condition, and under it "stimulus" over the
+        # first half of its block and "response" over the second, for every condition
+        half = 1.0 / (2 * ncond)
+        for b, cond in enumerate(d["conds"]):
+            x0 = b / ncond
+            ax.text(x0 + half, 0.58, COND_LABEL[cond], ha="center", va="bottom",
+                    fontsize=fs(8.4), color=INK, transform=ax.transAxes)
+            ax.text(x0 + half / 2, 0.02, "stimulus", ha="center", va="bottom",
+                    fontsize=fs(6.6), color=MUTED, transform=ax.transAxes)
+            ax.text(x0 + 1.5 * half, 0.02, "response", ha="center", va="bottom",
+                    fontsize=fs(6.6), color=MUTED, transform=ax.transAxes)
+        return
     # words_inside (paper): the boxes move up and the stimulus / response words take
     # the bottom of the strip itself, so a heatmap directly under it cannot cover them
     # (2026-10-27); otherwise the words hang below the axis as they always did
@@ -1138,51 +1161,115 @@ def trial_strip(ax, d, words_inside: bool = False):
             color=MUTED, transform=ax.transAxes)
 
 
-# ---- panel C: the key --------------------------------------------------------
-def schematic(d, vlim):
-    """An idealised response with this feature set's exact geometry.
-
-    Deliberately not any real cluster, so nobody reads the key as a result: a
-    low-frequency decrease and a high-frequency increase, both locked to the GO cue,
-    with the response growing across audio -> picture -> reading purely so the three
-    blocks are distinguishable.
-    """
-    ncond, nband, nt = len(d["conds"]), len(d["bands"]), d["nt"]
-    tt = np.linspace(0, 1, nt)
-    M = np.zeros((ncond, nband, nt))
-    for c in range(ncond):
-        amp = 0.6 + 0.2 * c
-        rise = np.exp(-((tt - 0.62) ** 2) / (2 * 0.11 ** 2))
-        early = np.exp(-((tt - 0.30) ** 2) / (2 * 0.09 ** 2))
-        for b, name in enumerate(d["bands"]):
-            f = band_centre(name)
-            if nband == 1:
-                M[c, b] = amp * vlim * (0.85 * rise + 0.25 * early)
-            elif f < 30:
-                M[c, b] = -amp * vlim * 0.75 * rise
-            elif f < 70:
-                M[c, b] = -amp * vlim * 0.25 * rise
-            else:
-                M[c, b] = amp * vlim * (0.55 + 0.35 * (f > 150)) * rise
-    return M
+# ---- panel C (paper: B): one electrode, as each feature set sees it ------------
+# REAL DATA IN PLACE OF THE SCHEMATIC (Lora, 2026-10-30). Until then this panel was an
+# idealised response ("how to read a block"); it now shows one strong auditory electrode in
+# the full ERSP and in every feature set, so a reader sees what each reduction keeps and
+# what it throws away before reading any cluster mean.
+# EL035 TTG_R1: right superior temporal gyrus, mostly grey matter, the strongest
+# auditory-selective response of the v17 cohort (70-170 Hz about 3 dB during the spoken
+# stimulus, about 0 for the picture and the sentence). Chosen over PAT_5533 IPD3 because it
+# correlates more with its own cluster's mean (r 0.50 against 0.29).
+EXAMPLE_ELECTRODE = ("EL035", "TTG_R1")
+EXAMPLE_PLACE = "right superior temporal gyrus"
+EXAMPLE_VLIM = 7.0          # dB: FIG 0's single-electrode scale
+EXAMPLE_GAP = "#e4e4e4"     # frequencies a feature set does not keep
+EXAMPLE_ROWS = ("full ERSP", "15 bands", "5 bands", "2 bands", "HFA")
+EXAMPLE_ROW_OF = {"concat_bands15": "15 bands", "concat_bands5": "5 bands",
+                  "concat_bands2": "2 bands", "concat_hfa": "HFA"}
 
 
-def panel_C(ax_strip, ax, d, vlim, ylim):
-    # the condition names live on the strip now - they belong to the screens, and
-    # printing them twice one above the other reads as two different things
-    draw_mean(ax, schematic(d, vlim), d, vlim=vlim, col=INK, ylim=ylim,
-              show_axes=True, cond_names=False)
-    if paper() and len(d["bands"]) > 6:
-        ax.set_yticks(range(0, len(d["bands"]), 3))
-        ax.set_yticklabels([b_.replace("Hz", "") for b_ in d["bands"][::3]], fontsize=fs(6.4))
-    trial_strip(ax_strip, d, words_inside=paper())
-    ax_strip.set_title("B   how to read a block" if paper() else
-                       "C  ·  how to read a cluster mean   —   schematic, not data",
-                       fontsize=fs(10.4), loc="left", color=INK, pad=pw(15))
-    ax.annotate("GO cue", xy=(0.5 * d["nt"], 1.0), xycoords=("data", "axes fraction"),
-                xytext=(0, -13), textcoords="offset points", ha="center",
-                fontsize=fs(7.4), color=INK,
-                bbox=dict(fc="white", ec="none", alpha=0.85, pad=pw(1.4)))
+def example_electrode(d):
+    """{row name: (matrix, band edges or None)} for the example electrode: its cube
+    (103 x 300 per condition, conditions side by side) and the four reduced versions,
+    each (n bands x 30 per condition), built by lf_concat's own feature functions - so
+    the 15-band row is byte for byte the run's X_train row. None if the electrode is
+    not in this run."""
+    import lf_concat as LC
+    from lf_features import FREQ_BANDS_15_TO_400HZ, FREQ_BANDS_5_TO_400HZ
+    pid, el = EXAMPLE_ELECTRODE
+    meta = d["meta"]
+    hit = meta[(meta.patient_id == pid) & (meta.electrode == el)]
+    if hit.empty:
+        return None
+    row = hit.iloc[0]
+    full = np.concatenate([np.load(row[f"file_path_{c}"]) for c in d["conds"]], axis=1)
+    Xc = full[None].astype(np.float32)
+    out = {"full ERSP": (full, None)}
+    for name, fn, edges in (("15 bands", LC.concat_bands15_features, FREQ_BANDS_15_TO_400HZ),
+                            ("5 bands", LC.concat_bands5_features, FREQ_BANDS_5_TO_400HZ),
+                            ("2 bands", LC.concat_bands2_features, LC.FREQ_BANDS_2),
+                            ("HFA", LC.concat_hfa_features, LC.FREQ_BAND_HFA)):
+        out[name] = (fn(Xc)[0].reshape(len(edges), -1), list(edges))
+    return out
+
+
+def panel_C(fig, spec, d):
+    """The trial strip, and under it the example electrode in the full ERSP and in every
+    feature set, one colour scale for all rows. The row of this figure's own feature set
+    is outlined and its name set in ink."""
+    from matplotlib.cm import ScalarMappable
+    from matplotlib.colors import Normalize
+    ex = example_electrode(d)
+    nC = len(d["conds"])
+    # row 0 the trial strip (words only, 2026-10-30), row 1 a small gap, then one row per
+    # representation
+    # every row the same height: they share one 0-400 Hz axis, so a band sits at the same
+    # height as the same frequencies in the full ERSP above it
+    sub = GridSpecFromSubplotSpec(2 + len(EXAMPLE_ROWS), 2, spec,
+                                  height_ratios=[0.80, 0.08] + [1.0] * len(EXAMPLE_ROWS),
+                                  width_ratios=[1.0, 0.022], hspace=0.14, wspace=0.03)
+    ax_strip = fig.add_subplot(sub[0, 0])
+    trial_strip(ax_strip, d, icons=False)
+    # on paper the letter alone (Lora, 2026-10-30)
+    ax_strip.set_title("B" if paper() else
+                       "C  ·  one auditory electrode, as each feature set sees it",
+                       fontsize=fs(10.4), loc="left", color=INK, pad=pw(6))
+    if ex is None:
+        ax_strip.text(0.5, -1.5, f"{' '.join(EXAMPLE_ELECTRODE)} is not in this run",
+                      transform=ax_strip.transAxes, ha="center", fontsize=fs(8), color=MUTED)
+        return
+    mine = EXAMPLE_ROW_OF.get(d.get("fset"))
+    ax = None
+    for i, name in enumerate(EXAMPLE_ROWS):
+        ax = fig.add_subplot(sub[2 + i, 0])
+        M, edges = ex[name]
+        if edges is None:
+            # the full ERSP, as it was: 103 frequency bins over 0-400 Hz
+            ax.imshow(M, origin="lower", aspect="auto", cmap=ERSP_CMAP, vmin=-EXAMPLE_VLIM,
+                      vmax=EXAMPLE_VLIM, extent=[0, nC, 0, 400.0], interpolation="nearest")
+        else:
+            # EVERY BAND AT ITS TRUE HEIGHT (Lora, 2026-10-30): the y axis is 0-400 Hz as in
+            # the full ERSP, each band spans its own frequency range, and what the set does not
+            # keep is left grey (2 bands: all but 30-50 and 70-150 Hz; HFA: all but 70-150 Hz)
+            ax.set_facecolor(EXAMPLE_GAP)
+            X = np.linspace(0, nC, M.shape[1] + 1)
+            for bi, (lo, hi) in enumerate(edges):
+                ax.pcolormesh(X, [lo, hi], M[bi:bi + 1, :], cmap=ERSP_CMAP, shading="flat",
+                              vmin=-EXAMPLE_VLIM, vmax=EXAMPLE_VLIM, edgecolors="none")
+            ax.set_xlim(0, nC); ax.set_ylim(0, 400.0)
+        for b in range(1, nC):
+            ax.axvline(b, color=INK, lw=pw(0.9))
+        for b in range(nC):
+            ax.axvline(b + 0.5, color=INK, lw=pw(0.6), ls=(0, (3, 2)))
+        ax.set_xticks([]); ax.set_yticks([])
+        own = name == mine
+        for sp in ax.spines.values():
+            sp.set_color(INK if own else GREY)
+            sp.set_linewidth(pw(1.3) if own else pw(0.6))
+        ax.text(-0.012, 0.5, name, transform=ax.transAxes, ha="right", va="center",
+                fontsize=fs(6.8), color=INK if own else MUTED,
+                weight="bold" if own else "normal")
+    ax.text(0.0, -0.16, f"{EXAMPLE_ELECTRODE[0]} {EXAMPLE_ELECTRODE[1]}  ·  {EXAMPLE_PLACE}"
+            "  ·  grey = frequencies not in the set",
+            transform=ax.transAxes, ha="left", va="top", fontsize=fs(6.4), color=MUTED)
+    cax = fig.add_subplot(sub[2:, 1])
+    cb = fig.colorbar(ScalarMappable(norm=Normalize(-EXAMPLE_VLIM, EXAMPLE_VLIM),
+                                     cmap=ERSP_CMAP), cax=cax)
+    cb.set_ticks([-EXAMPLE_VLIM, 0, EXAMPLE_VLIM])
+    cb.ax.tick_params(labelsize=fs(6), colors=MUTED, length=2)
+    cb.set_label("dB", fontsize=fs(6.4), color=MUTED, labelpad=pw(1))
+    cb.outline.set_edgecolor(GREY)
 
 
 # ---- panel D: is a cluster a response type, or one patient? -------------------
@@ -1336,18 +1423,23 @@ def panel_K(ax, d, gk, fset, method="cnmf"):
             label="held-out variance explained")
     ax.fill_between(s.k, s["mean"] - s["std"], s["mean"] + s["std"], color=INK,
                     alpha=0.12, lw=pw(0), zorder=3)
-    pk = s.loc[s["mean"].idxmax()]
-    ax.plot([pk.k], [pk["mean"]], marker="v", ms=pw(5.0), color=GREEN, lw=pw(0), zorder=5)
+    # THE GREEN TRIANGLE MARKS THE CHOSEN K, with its own tick (Lora, 2026-10-30); the one at
+    # the held-out maximum (K 30, the edge of the range) is gone
+    at = s[s.k == K]
+    if not at.empty:
+        ax.plot([K], [float(at["mean"].iloc[0])], marker="v", ms=pw(5.0), color=GREEN,
+                lw=pw(0), zorder=5)
     ax.axvline(K, color=RED, ls="--", lw=pw(1.1), zorder=1)
+    ax.set_xticks(sorted(set([5, 10, 15, 20, 25, 30]) | {int(K)}))
     ax.set_xlabel("K", fontsize=fs(8.2))
     ax.set_ylabel("held-out variance", fontsize=fs(8.2))
     ax.tick_params(labelsize=fs(7.4), colors=MUTED)
     ax.spines[["top"]].set_visible(False)
     ax2 = ax.twinx()
+    # the share of CLUSTERS over the line only; the share of electrodes in them is no
+    # longer drawn on paper (Lora, 2026-10-30)
     ax2.plot(gk.k, 100 * gk.frac_clusters, "-o", ms=pw(3.0), lw=pw(1.6), color=RED, zorder=4,
              label=f"clusters > {100*DANGER:.0f}% one patient")
-    ax2.plot(gk.k, 100 * gk.frac_electrodes, "-o", ms=pw(2.6), lw=pw(1.3), color="#e08214",
-             zorder=3, label="electrodes in them")
     ax2.set_ylim(0, 102)
     ax2.set_ylabel("% one patient", fontsize=fs(8.2), color=MUTED)
     ax2.tick_params(labelsize=fs(7.4), colors=MUTED)
@@ -1355,10 +1447,10 @@ def panel_K(ax, d, gk, fset, method="cnmf"):
     # the left axis names the black curve; a third entry put the legend over it where
     # it climbs through the upper left (2026-10-27)
     h2, l2 = ax2.get_legend_handles_labels()
-    ax.legend(h2, l2, fontsize=fs(6.4), frameon=False, loc="upper left",
-              handlelength=1.4, labelspacing=0.3, borderaxespad=0.3)
-    ax.set_title(f"A   choosing K   (cut at K = {K})",
-                 fontsize=fs(9.5), loc="left", color=INK, pad=pw(5))
+    # above the axes on the right: inside, the entry sat on the K line (2026-10-30)
+    ax.legend(h2, l2, fontsize=fs(6.4), frameon=False, loc="lower right",
+              bbox_to_anchor=(1.0, 1.0), handlelength=1.4, labelspacing=0.3, borderaxespad=0.1)
+    ax.set_title("A", fontsize=fs(10.4), loc="left", color=INK, pad=pw(5))   # letter only, 2026-10-30
 
 
 def _db_key(fig, cax, vlim, titled: bool):
@@ -1424,9 +1516,13 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     if paper():
         hcen, hbar = 1.05, 0.17            # brains a fifth smaller against the heatmap
     fig_h = 3.72 + nrow * 4.75 + 0.88 * extra_rows   # +0.32 in under the last captions
+    # PAPER: the header row is taller since panel B holds five rows of one electrode
+    # (2026-10-30); on screen it keeps its height
+    head = 2.9 if paper() else 2.0
+    fig_h += 1.5 if paper() else 0.5
     fig = plt.figure(figsize=(canvas(17.6), fig_h), dpi=190)
     gs = GridSpec(1 + nrow, UPR * UCOL, figure=fig,
-                  height_ratios=[1.72] + [2.62] * nrow,
+                  height_ratios=[head] + [2.62] * nrow,
                   hspace=0.52 + 0.15 * extra_rows, wspace=0.30, left=0.045, right=0.985,
                   top=1.0 - 0.95 / fig_h, bottom=0.022 + 0.32 / fig_h)
     R1 = 1                                                  # row 0 is the header
@@ -1441,14 +1537,11 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
     if paper():
         # A and D in one panel, C beside it (2026-10-27)
         panel_K(fig.add_subplot(gs[0, 0:8]), d, gk, fset, method)
-        cC = GridSpecFromSubplotSpec(2, 1, gs[0, 12:24], height_ratios=[0.56, 1.0],
-                                     hspace=0.06)
-        panel_C(fig.add_subplot(cC[0]), fig.add_subplot(cC[1]), d, vlim, ylim)
+        # one column short of the edge: the colour bar's ticks need it inside the page
+        panel_C(fig, gs[0, 12:23], d)
     else:
         panel_A(fig.add_subplot(gs[0, 0:8]), fset, K, method)
-        cC = GridSpecFromSubplotSpec(2, 1, gs[0, 9:15], height_ratios=[0.44, 1.0],
-                                     hspace=0.06)
-        panel_C(fig.add_subplot(cC[0]), fig.add_subplot(cC[1]), d, vlim, ylim)
+        panel_C(fig, gs[0, 9:15], d)
         panel_D(fig.add_subplot(gs[0, 17:24]), d, gk, fset)
 
     tops, nrend, first_brain, row_brains = [], 0, None, {}
@@ -1516,7 +1609,7 @@ def figure_1(fset: str, k: int | None, method: str = "cnmf"):
 
     bb = tops[0].get_position()
     fig.text(0.045, bb.y1 + ((0.68 + 0.30 * extra_rows) if paper() else 0.30) / fig_h,
-             f"C   the {K} types" if paper() else
+             "C" if paper() else                    # letter only on paper (2026-10-30)
              "B  ·  one block per cluster, ordered by how ALIKE THE THREE CONDITIONS "
              "LOOK",
              fontsize=fs(10.4), color=INK)
@@ -1732,13 +1825,12 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("The panel is IDENTICAL in FIG 1a, 1b, 1c and 1d except for which curve is")
     A("emphasised, so the four figures can be laid side by side.")
     A("")
-    A("PANEL C - how to read a cluster mean")
+    A("PANEL C - one electrode, as each feature set sees it")
     A("-" * 100)
-    A("ABOVE IT, A TRIAL STRIP: what was on the screen, over the time it was there.")
-    A("Read off the paradigm figure (Figure1_FBM_v1.png). Each condition runs")
-    A("fixation -> stimulus -> \"?\", the \"?\" being the response cue. The stimulus box")
-    A("spans 0-50% of the block and the \"?\" box spans 50-100%, so the boundary between")
-    A("them falls exactly on the dashed GO-cue line.")
+    A("ABOVE IT, A TRIAL STRIP, in words since 2026-10-30: each condition's name, and under")
+    A("it \"stimulus\" over 0-50% of its block and \"response\" over 50-100%, so the boundary")
+    A("between them falls exactly on the dashed GO-cue line. Each condition runs fixation ->")
+    A("stimulus -> \"?\", the \"?\" being the response cue (the paradigm figure, Figure1_FBM_v1.png).")
     A("")
     A("THE FIXATION SCREEN IS DELIBERATELY ABSENT from the strip. The paradigm has")
     A("three screens per trial; these panels show two, because the warp is proportions")
@@ -1746,17 +1838,17 @@ def caption_1(path: Path, d, vlim, means, pc, gk, sds, agree_frac, order, cond_s
     A("dropped for tidiness - it occupies no part of the x axis. The baseline every dB")
     A("value is expressed against (-0.6 to -0.1 s) does come from it.")
     A("")
-    A("The audio, reading and \"?\" icons are drawn as vectors and stay sharp at any")
-    A("print size. The picture stimulus is a real line drawing: if a crop of it exists")
-    A(f"at {STIM_PICTURE_PNG.name} in the paper_figures/assets/ folder it is used, and")
-    A("otherwise a framed-image glyph stands in, so the figure builds either way.")
-    A("")
-    A("BELOW THE STRIP, A SCHEMATIC. It is not any real cluster and contains no data - a low-frequency")
-    A("decrease and a high-frequency increase locked to the GO cue, with amplitude")
-    A("growing across the three conditions purely so the blocks are distinguishable.")
-    A("It exists to name the parts: the condition over each block, the GO cue at 50%,")
-    A("the percent-of-trial axis, and " +
-      ("the dB axis." if len(d["bands"]) == 1 else "the frequency band edges on y."))
+    A("BELOW THE STRIP, ONE REAL ELECTRODE (2026-10-30; until then an idealised schematic):")
+    A(f"{EXAMPLE_ELECTRODE[0]} {EXAMPLE_ELECTRODE[1]}, {EXAMPLE_PLACE}, the strongest auditory-selective response")
+    A("of the cohort (70-170 Hz about 3 dB during the spoken stimulus, about 0 for the picture")
+    A("and the sentence). Top row: its full ERSP, 103 frequencies x 300 time-normalised bins")
+    A("per condition, 0-400 Hz. Below it, the same electrode as each feature set sees it, built")
+    A("by the pipeline's own feature functions (lf_concat): 15 bands, 5 bands, 2 bands (30-50")
+    A("and 70-150 Hz) and HFA (70-150 Hz), each x 30 bins per condition. The row of this")
+    A(f"figure's own feature set is outlined{' (' + EXAMPLE_ROW_OF[d['fset']] + ')' if d.get('fset') in EXAMPLE_ROW_OF else ''}. One colour scale for every row,")
+    A(f"+/-{EXAMPLE_VLIM:g} dB, FIG 0's single-electrode scale. The clustering saw each row after")
+    A("unit-norming, i.e. its shape and not its amplitude; the dashed line in every block is")
+    A("the response cue at 50%.")
     A("")
     A("PANEL D - does this K generalize?")
     A("-" * 100)

@@ -111,7 +111,11 @@ import lf_decompose as LD                                 # noqa: E402
 _dspec = importlib.util.spec_from_file_location("p2driver", ROOT / "run_paper_figures_v17.py")
 DRV = importlib.util.module_from_spec(_dspec)
 _dspec.loader.exec_module(DRV)
-K_BY_FSET, MAIN, K_MAIN = DRV.K, DRV.MAIN, DRV.K_MAIN
+K_BY_FSET, MAIN, K_MAIN = dict(DRV.K), DRV.MAIN, DRV.K_MAIN
+# the band-equalised variants of the 15-band set (2026-11-02) are read at the paper's K 7 so
+# their matrices compare with the main cell's; they are run with --sets, never by --all
+VARIANT_SETS = ["concat_bands15z", "concat_bands15s", "concat_bands15t"]
+K_BY_FSET.update({f: 7 for f in VARIANT_SETS})
 
 OUT = P2.OUT
 MMD_ROOT = ROOT / "outputs" / "clustering" / "mmd"
@@ -120,7 +124,9 @@ INK, MUTED, GREY, RED, GREEN = P2.INK, P2.MUTED, P2.GREY, P2.RED, P2.GREEN
 CUT = P2.LOAD_CUT
 METHODS = ["cnmf", "kmeans", "hierarchical"]
 FS_SHORT = {"concat_bands15": "15 bands", "concat_bands5": "5 bands",
-            "concat_bands2": "2 bands", "concat_hfa": "HFA"}
+            "concat_bands2": "2 bands", "concat_hfa": "HFA",
+            "concat_bands15z": "15 bands z", "concat_bands15s": "15 bands shape",
+            "concat_bands15t": "15 bands ternary"}
 MIN_GROUP = 5                 # a pair needs at least this many electrodes on each side
 D_VLIM = 1.5                  # the maps' colour range, in standardised-difference units
 
@@ -1238,6 +1244,10 @@ def main() -> int:
     ap.add_argument("--feature-set", default=MAIN)
     ap.add_argument("--method", default="cnmf", choices=METHODS)
     ap.add_argument("--all", action="store_true", help="every feature set x method, then the overview")
+    ap.add_argument("--sets", nargs="+", default=None, choices=list(DRV.K) + VARIANT_SETS,
+                    help="these feature sets instead of --all's four (e.g. the variants); with --methods")
+    ap.add_argument("--methods", nargs="+", default=None, choices=METHODS,
+                    help="with --sets: these methods only (the variants have no Ward run)")
     ap.add_argument("--grids", action="store_true", help="the pair grids for every cell drawn (default: the main cell)")
     ap.add_argument("--figures-only", action="store_true", help="redraw from the saved tables")
     ap.add_argument("--force", action="store_true", help="recompute a cell whose tables exist")
@@ -1259,7 +1269,10 @@ def main() -> int:
         return selftest(Path(a.selftest), a)
     import lf_runs as LR
     a.cache = LR.current_cache()
-    cells = ([(f, m) for f in P2.FSETS for m in METHODS] if a.all else [(a.feature_set, a.method)])
+    if a.sets:
+        cells = [(f, m) for f in a.sets for m in (a.methods or METHODS)]
+    else:
+        cells = ([(f, m) for f in P2.FSETS for m in METHODS] if a.all else [(a.feature_set, a.method)])
     print(f"cache {a.cache}   cells {len(cells)}   perms {a.n_perm} / {a.n_perm_heldout}   "
           f"splits {a.n_splits}   cloud {a.n_cloud}" + ("   PAPER" if a.paper else ""))
     for fset, method in cells:

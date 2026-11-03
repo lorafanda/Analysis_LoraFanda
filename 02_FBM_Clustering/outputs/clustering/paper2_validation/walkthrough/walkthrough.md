@@ -1,6 +1,6 @@
 # The cluster visualizer, claim by claim
 
-*Built 2026-11-02 15:29 from the files the page reads (cohort concat_source_v17, run 20261017_194301). Page: https://lorafanda.github.io/cluster_visualizer.html. The brain images are rendered from the same data with the page's own encodings, on the glass brains of the types figure (Fig 1); the click path above each one reproduces it live.*
+*Built 2026-11-03 00:48 from the files the page reads (cohort concat_source_v17, run 20261017_194301). Page: https://lorafanda.github.io/cluster_visualizer.html. The brain images are rendered from the same data with the page's own encodings, on the glass brains of the types figure (Fig 1); the click path above each one reproduces it live.*
 
 ## What this report is
 
@@ -206,6 +206,51 @@ Consensus is the share of resampling runs in which two electrodes land together 
 Per electrode, 1354 of 1587 land in their type in every fold and 104 never do; the refit clusters are aligned to the published ones by Hungarian assignment before counting (Tibshirani & Walther 2005; Kuhn 1955).
 
 **What it means.** Separable in the sense that matters, an unseen electrode can be told apart, and only partly: the leaky types lose a fifth of their electrodes to their neighbours, which is what a continuum of responses looks like under a partition (Tibshirani & Walther 2005).
+
+## Claim 4 on every feature set and algorithm · the separation tables of the MMD run
+
+**Paper figure.** Fig 4 C and D (the held-out MMD against the Gaussian cloud) and S5; the placement test of Claim 4 (Fig 4 B) is run on every cell the same way.
+
+**Where to click.** `Run`: pick the cell in the matrix, then `View` held-out. A run whose tables are published shows the panel; the others say that none are published yet. The cells below are the MMD run's own tables on disk, which is where the page's numbers come from.
+
+![15 bands x convex NMF](panels/p6_cell_concat_bands15_cnmf.png)
+
+![5 bands x convex NMF](panels/p6_cell_concat_bands5_cnmf.png)
+
+![2 bands x convex NMF](panels/p6_cell_concat_bands2_cnmf.png)
+
+![HFA x convex NMF](panels/p6_cell_concat_hfa_cnmf.png)
+
+**What you see.** One figure per feature set, convex NMF, clusters in the page's order and colours: A the leave-one-patient-out confusion, B every pair's held-out MMD² as a ratio to the cloud (red and bold below 1: the pair is closer than two sectors of a featureless Gaussian), C each type's held-out recall under both tests, D its silhouette z against the cloud (the grey band is the cloud's own spread). k-means and Ward have the same tables; the summary below carries every cell.
+
+**The numbers.**
+
+| feature set | algorithm | K | one patient out | patient halves | weakest type | closest pair · MMD² · ratio to cloud | pairs below the cloud | silhouette z, lowest … highest |
+|---|---|---|---|---|---|---|---|---|
+| 15 bands | convex NMF | 7 | 90 % | 62 % | c3 (78 %) | c0–c1 · 0.097 · 0.79 | 7 of 21 | c3 -1.3 … c2 +4.9 |
+| 15 bands | k-means | 7 | 83 % | 63 % | c4 (50 %) | c3–c4 · 0.091 · 0.62 | 10 of 21 | c4 -0.9 … c2 +2.6 |
+| 15 bands | Ward | 7 | 50 % | 45 % | c3 (0 %) | c1–c2 · 0.082 · 0.57 | 8 of 21 | c6 -1.6 … c1 +2.5 |
+| 5 bands | convex NMF | 8 | 64 % | 54 % | c2 (26 %) | c1–c2 · 0.117 · 0.82 | 8 of 28 | c7 -2.3 … c3 +5.6 |
+| 5 bands | k-means | 8 | 76 % | 57 % | c2 (0 %) | c0–c7 · 0.092 · 0.46 | 15 of 28 | c6 -2.4 … c2 +5.8 |
+| 5 bands | Ward | 8 | 57 % | 47 % | c1 (1 %) | c6–c7 · 0.102 · 0.52 | 11 of 28 | c7 -1.5 … c2 +4.6 |
+| 2 bands | convex NMF | 10 | 60 % | 48 % | c4 (35 %) | c1–c3 · 0.100 · 0.76 | 4 of 45 | c7 -1.2 … c5 +3.2 |
+| 2 bands | k-means | 10 | 76 % | 59 % | c8 (51 %) | c1–c3 · 0.093 · 0.45 | 26 of 45 | c0 -2.6 … c5 +3.0 |
+| 2 bands | Ward | 10 | 52 % | 45 % | c2 (0 %) | c0–c5 · 0.098 · 0.48 | 23 of 45 | c7 -2.1 … c1 +3.3 |
+| HFA | convex NMF | 6 | 60 % | 49 % | c0 (41 %) | c0–c1 · 0.144 · 0.60 | 6 of 15 | c4 -2.9 … c0 +2.0 |
+| HFA | k-means | 6 | 74 % | 64 % | c0 (42 %) | c2–c5 · 0.127 · 0.41 | 8 of 15 | c1 -2.1 … c5 +1.9 |
+| HFA | Ward | 6 | 62 % | 57 % | c1 (17 %) | c4–c5 · 0.128 · 0.41 | 10 of 15 | c2 -1.5 … c0 +1.6 |
+| 15 bands z | convex NMF | 7 | not run yet | | | | | |
+| 15 bands z | k-means | 7 | not run yet | | | | | |
+| 15 bands shape | convex NMF | 7 | not run yet | | | | | |
+| 15 bands shape | k-means | 7 | not run yet | | | | | |
+| 15 bands ternary | convex NMF | 7 | not run yet | | | | | |
+| 15 bands ternary | k-means | 7 | not run yet | | | | | |
+
+Leave-one-patient-out placement runs from 50 % (15 bands × Ward) to 90 % (15 bands × convex NMF); the patient-halves test is harsher everywhere (Tibshirani & Walther 2005; Lange et al. 2004). Pairs below the cloud, convex NMF: 15 bands 7 of 21, 5 bands 8 of 28, 2 bands 4 of 45, HFA 6 of 15 (Gretton et al. 2012). The bandwidth, the cloud and the shuffles are those of the MMD run (n_perm 5000, splits 100) (Gretton et al. 2012; Rousseeuw 1987).
+
+The variant cells are listed as not run yet: on the server, `python 00_paper2_figure6_mmd.py --sets concat_bands15z concat_bands15s --methods cnmf kmeans` (the main cell's settings: `--n-perm 5000 --n-perm-heldout 500 --n-splits 100 --n-cloud 100`), then `python make_heldout_bundle.py --write` and this report again.
+
+**What it means.** The separation reading is the same in every description: most held-out electrodes land in their type, and the pairs that sit below the cloud are the neighbours of a continuum, not distinct islands (Tibshirani & Walther 2005; Gretton et al. 2012). K differs between sets (the one-patient rule picks it per set), so the pair counts are read within a set, not across.
 
 ## Claim 5 · The scorecard: c2 and c4 solid, c1 and c3 fragile, c5 solid under patients but weak across methods
 

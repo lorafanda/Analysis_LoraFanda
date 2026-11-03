@@ -29,6 +29,7 @@ from collections import Counter
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -452,6 +453,133 @@ def panel_grid_ari(D, name):
     return p
 
 
+# ---------------------------------------------------------------- the MMD cells: every feature set x algorithm
+MMD_ROOT = ROOT / "outputs" / "clustering" / "mmd"
+VARIANT_SETS = {"concat_bands15z": "15 bands z", "concat_bands15s": "15 bands shape", "concat_bands15t": "15 bands ternary"}
+FS_SHORT = {"concat_bands15": "15 bands", "concat_bands5": "5 bands", "concat_bands2": "2 bands", "concat_hfa": "HFA", **VARIANT_SETS}
+METHOD_SHORT = {"cnmf": "convex NMF", "kmeans": "k-means", "hierarchical": "Ward"}
+
+
+def mmd_cells(D):
+    """Every MMD cell on disk for this cache: the paper's four sets x three methods, then the
+    variants (listed as missing until their cells are run)."""
+    cells = []
+    root = MMD_ROOT / D["cache"]
+    for fset in list(P2.FSETS) + list(VARIANT_SETS):
+        for method in ("cnmf", "kmeans", "hierarchical"):
+            cd = root / fset / method
+            if not (cd / "manifest.json").exists() or not (cd / "confusion_lopo_counts.csv").exists():
+                if fset in VARIANT_SETS and method != "hierarchical":
+                    cells.append(dict(fset=fset, method=method, missing=True))
+                continue
+            man = json.loads((cd / "manifest.json").read_text(encoding="utf-8"))
+            K_ = int(man["k"])
+            pt = pd.read_csv(cd / "per_type.csv"); pt = pt[pt.version == "argmax"].set_index("cluster").sort_index()
+            ps = pd.read_csv(cd / "pairs_summary.csv"); ps = ps[ps.version == "argmax"].reset_index(drop=True)
+            cl = pd.read_csv(cd / "confusion_lopo_counts.csv", index_col=0).to_numpy(float)
+            ch = pd.read_csv(cd / "confusion_halves_counts.csv", index_col=0).to_numpy(float)
+            rid = f"{method}__{fset}__{man['run']}"
+            order = D["order"].get(rid, {}).get(str(K_)) or list(range(K_))
+            imin = int(ps.mmd2_ho.idxmin())
+            cells.append(dict(fset=fset, method=method, k=K_, run=man["run"], rid=rid, order=[int(x) for x in order],
+                              lopo=float(np.trace(cl) / cl.sum()), halves=float(np.trace(ch) / ch.sum()),
+                              cl=cl, ch=ch, pt=pt, ps=ps, cloud=float(ps.cloud_median.iloc[0]),
+                              below=int((ps.ratio < 1).sum()), n_pairs=int(len(ps)),
+                              weakest=int(pt.lopo_recall.idxmin()), weakest_recall=float(pt.lopo_recall.min()),
+                              closest=(int(ps.loc[imin, "i"]), int(ps.loc[imin, "j"]), float(ps.loc[imin, "mmd2_ho"]), float(ps.loc[imin, "ratio"])),
+                              sil_lo=(int(pt.sil_z.idxmin()), float(pt.sil_z.min())), sil_hi=(int(pt.sil_z.idxmax()), float(pt.sil_z.max())),
+                              n_perm=man.get("n_perm"), n_splits=man.get("n_splits")))
+    return cells
+
+
+def panel_cell(c, name, names=None, chance=None):
+    """One cell, four panels in the page's colours: A the leave-one-patient-out confusion, B the
+    held-out MMD² against the Gaussian cloud, C held-out recall per type under both tests, D the
+    silhouette z per type against the cloud's own band."""
+    from matplotlib.colors import TwoSlopeNorm
+    names = names or {}
+    K_, order = c["k"], c["order"]
+    hue = {j: u2hue(p, K_) / 255 for p, j in enumerate(order)}
+    lab = lambda j: f"c{j}" + (f" {names[j]}" if j in names else "")
+    fig, axes = plt.subplots(2, 2, figsize=(11.2, 8.4), dpi=150,
+                             gridspec_kw=dict(width_ratios=[1, 1.08], height_ratios=[1.15, 1], wspace=0.62, hspace=0.45))
+    # A - the confusion
+    ax = axes[0, 0]
+    R = c["cl"] / np.maximum(c["cl"].sum(1, keepdims=True), 1e-12); Ro = R[np.ix_(order, order)]
+    ax.imshow(Ro, cmap="Greys", vmin=0, vmax=1)
+    for i in range(K_):
+        for j in range(K_):
+            ax.text(j, i, f"{100 * Ro[i, j]:.0f}", ha="center", va="center", fontsize=7,
+                    color="white" if Ro[i, j] > 0.55 else INK, fontweight="bold" if i == j else "normal")
+    ax.set_title(f"A · leave one patient out: {100 * c['lopo']:.0f} % land in their type" + NL
+                 + "% of each published type's held-out electrodes, by where they were placed", fontsize=8, loc="left")
+    ax.set_xlabel("placed in", fontsize=7.5, color=MUTED); ax.set_ylabel("published type", fontsize=7.5, color=MUTED)
+    # B - held-out MMD² as a ratio to the cloud, diverging around 1
+    ax = axes[0, 1]
+    M = np.full((K_, K_), np.nan)
+    for _, r in c["ps"].iterrows():
+        M[int(r.i), int(r.j)] = M[int(r.j), int(r.i)] = r.ratio
+    Mo = M[np.ix_(order, order)]
+    vmax = max(2.0, float(np.nanmax(Mo)))
+    im = ax.imshow(np.where(np.isfinite(Mo), Mo, 1.0), cmap="RdBu", norm=TwoSlopeNorm(vcenter=1.0, vmin=0.0, vmax=vmax))
+    for i in range(K_):
+        for j in range(K_):
+            if i != j and np.isfinite(Mo[i, j]):
+                dark = Mo[i, j] > 1 + 0.72 * (vmax - 1) or Mo[i, j] < 0.4
+                ax.text(j, i, f"{Mo[i, j]:.1f}", ha="center", va="center", fontsize=7,
+                        color="white" if dark else INK, fontweight="bold" if Mo[i, j] < 1 else "normal")
+    cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
+    cb.ax.tick_params(labelsize=6.5); cb.set_label("held-out MMD² / Gaussian cloud", fontsize=7)
+    ax.set_title(f"B · held-out MMD² against the Gaussian cloud: {c['below']} of {c['n_pairs']} pairs below 1" + NL
+                 + "red, bold: closer than two sectors of a featureless cloud · blue: farther", fontsize=8, loc="left")
+    for ax in axes[0]:
+        ax.set_xticks(range(K_)); ax.set_yticks(range(K_))
+        ax.set_xticklabels([f"c{j}" for j in order], fontsize=7); ax.set_yticklabels([lab(j) for j in order], fontsize=7)
+        for tl, j in zip(ax.get_xticklabels(), order):
+            tl.set_color(hue[j])
+        for tl, j in zip(ax.get_yticklabels(), order):
+            tl.set_color(hue[j])
+        ax.tick_params(length=0)
+        for s_ in ax.spines.values():
+            s_.set_visible(False)
+    # C - recall per type, filled = one patient out, open = halves
+    ax = axes[1, 0]; y = np.arange(K_)[::-1]; pt = c["pt"]
+    for yi, j in zip(y, order):
+        lo, ha = float(pt.loc[j, "lopo_recall"]), float(pt.loc[j, "halves_recall"])
+        ax.plot([ha, lo], [yi, yi], color=hue[j], lw=2.4, alpha=0.55, solid_capstyle="round")
+        ax.plot(lo, yi, "o", color=hue[j], ms=7.5, mec="white", mew=0.8, zorder=3)
+        ax.plot(ha, yi, "o", mfc="white", mec=hue[j], ms=7.5, mew=1.6, zorder=3)
+        ax.text(max(lo, ha) + 0.025, yi, f"{100 * lo:.0f} % · {100 * ha:.0f} %", va="center", fontsize=7, color=INK)
+    if chance is not None:
+        ax.axvline(chance, color=MUTED, lw=0.8, ls="--")
+        ax.text(chance, K_ - 0.35, f"chance {100 * chance:.0f} %", fontsize=6.5, color=MUTED, ha="center", va="bottom")
+    ax.set_yticks(y); ax.set_yticklabels([lab(j) for j in order], fontsize=7)
+    for tl, j in zip(ax.get_yticklabels(), order):
+        tl.set_color(hue[j])
+    ax.set_xlim(0, 1.32); ax.set_xticks([0, 0.25, 0.5, 0.75, 1]); ax.set_xticklabels(["0", "25", "50", "75", "100 %"], fontsize=7)
+    ax.set_ylim(-0.7, K_ - 0.3 + 0.6)
+    ax.set_title("C · held-out recall per type" + NL + "filled: one patient out · open: patient halves", fontsize=8, loc="left")
+    ax.spines[["top", "right"]].set_visible(False); ax.tick_params(length=2)
+    # D - silhouette z against the cloud
+    ax = axes[1, 1]
+    z = [float(pt.loc[j, "sil_z"]) for j in order]
+    ax.axvspan(-2, 2, color="#ececec", zorder=0); ax.axvline(0, color=MUTED, lw=0.8)
+    ax.barh(y, z, color=[hue[j] for j in order], height=0.62, zorder=2)
+    for yi, v in zip(y, z):
+        ax.text(v + (0.12 if v >= 0 else -0.12), yi, f"{v:+.1f}", va="center", ha="left" if v >= 0 else "right", fontsize=7, color=INK)
+    ax.set_yticks(y); ax.set_yticklabels([f"c{j}" for j in order], fontsize=7)
+    for tl, j in zip(ax.get_yticklabels(), order):
+        tl.set_color(hue[j])
+    zmax = max(3.5, float(np.nanmax(np.abs(z))) + 1.2); ax.set_xlim(-zmax, zmax)
+    ax.tick_params(labelsize=7, length=2); ax.spines[["top", "right"]].set_visible(False)
+    ax.set_title("D · silhouette against the Gaussian cloud, as z" + NL + "grey band: within two SD of the cloud's own silhouette", fontsize=8, loc="left")
+    fig.suptitle(f"{FS_SHORT.get(c['fset'], c['fset'])} × {METHOD_SHORT[c['method']]}   ·   K {K_}   ·   run {c['run']}   ·   clusters in the page's figure order and colours",
+                 fontsize=9.5, x=0.02, ha="left", y=0.995)
+    p = OUTD / "panels" / f"{name}.png"
+    fig.savefig(p, facecolor="white", bbox_inches="tight"); plt.close(fig)
+    return p
+
+
 # ---------------------------------------------------------------- the report
 def img_md(p, alt):
     return f"![{alt}](" + str(Path(p).relative_to(OUTD)).replace(chr(92), "/") + ")" + NL
@@ -718,6 +846,54 @@ def main() -> int:
     A("")
     A("**What it means.** Separable in the sense that matters, an unseen electrode can be told apart, and only partly: the leaky types lose a fifth of their electrodes to their neighbours, which is what a continuum of responses looks like under a partition" + cite("TW05") + ".")
     A("")
+
+    # claim 4 on every cell: the MMD run's tables
+    cells = mmd_cells(D)
+    have = [c for c in cells if not c.get("missing")]
+    miss = [c for c in cells if c.get("missing")]
+    A("## Claim 4 on every feature set and algorithm · the separation tables of the MMD run")
+    A("")
+    A("**Paper figure.** Fig 4 C and D (the held-out MMD against the Gaussian cloud) and S5; the placement test of Claim 4 (Fig 4 B) is run on every cell the same way.")
+    A("")
+    A("**Where to click.** `Run`: pick the cell in the matrix, then `View` held-out. A run whose tables are published shows the panel; the others say that none are published yet. "
+      "The cells below are the MMD run's own tables on disk, which is where the page's numbers come from.")
+    A("")
+    for c in have:
+        if c["method"] == "cnmf":
+            main_cell = (c["fset"] == FSET and c["method"] == METHOD)
+            A(img_md(panel_cell(c, f"p6_cell_{c['fset']}_{c['method']}", names=({k_: T[k_]["name"] for k_ in T} if main_cell else None),
+                                chance=(chance if main_cell else None)), f"{FS_SHORT.get(c['fset'], c['fset'])} x convex NMF"))
+    A("**What you see.** One figure per feature set, convex NMF, clusters in the page's order and colours: A the leave-one-patient-out confusion, "
+      "B every pair's held-out MMD² as a ratio to the cloud (red and bold below 1: the pair is closer than two sectors of a featureless Gaussian), "
+      "C each type's held-out recall under both tests, D its silhouette z against the cloud (the grey band is the cloud's own spread). "
+      "k-means and Ward have the same tables; the summary below carries every cell.")
+    A("")
+    A("**The numbers.**")
+    A("")
+    A("| feature set | algorithm | K | one patient out | patient halves | weakest type | closest pair · MMD² · ratio to cloud | pairs below the cloud | silhouette z, lowest … highest |")
+    A("|---|---|---|---|---|---|---|---|---|")
+    for c in have:
+        A(f"| {FS_SHORT.get(c['fset'], c['fset'])} | {METHOD_SHORT[c['method']]} | {c['k']} | {pct(c['lopo'])} | {pct(c['halves'])} | c{c['weakest']} ({pct(c['weakest_recall'])}) | "
+          f"c{c['closest'][0]}–c{c['closest'][1]} · {c['closest'][2]:.3f} · {c['closest'][3]:.2f} | {c['below']} of {c['n_pairs']} | c{c['sil_lo'][0]} {c['sil_lo'][1]:+.1f} … c{c['sil_hi'][0]} {c['sil_hi'][1]:+.1f} |")
+    for c in miss:
+        A(f"| {FS_SHORT.get(c['fset'], c['fset'])} | {METHOD_SHORT[c['method']]} | 7 | not run yet | | | | | |")
+    A("")
+    if have:
+        lo = min(have, key=lambda c: c["lopo"]); hi = max(have, key=lambda c: c["lopo"])
+        by_cn = [c for c in have if c["method"] == "cnmf"]
+        A(f"Leave-one-patient-out placement runs from {pct(lo['lopo'])} ({FS_SHORT.get(lo['fset'], lo['fset'])} × {METHOD_SHORT[lo['method']]}) to {pct(hi['lopo'])} "
+          f"({FS_SHORT.get(hi['fset'], hi['fset'])} × {METHOD_SHORT[hi['method']]}); the patient-halves test is harsher everywhere{cite('TW05', 'L04')}. "
+          f"Pairs below the cloud, convex NMF: " + ", ".join(f"{FS_SHORT.get(c['fset'], c['fset'])} {c['below']} of {c['n_pairs']}" for c in by_cn) + f"{cite('G12')}. "
+          f"The bandwidth, the cloud and the shuffles are those of the MMD run (n_perm {have[0]['n_perm']}, splits {have[0]['n_splits']}){cite('G12', 'R87')}.")
+        A("")
+    if miss:
+        A("The variant cells are listed as not run yet: on the server, `python 00_paper2_figure6_mmd.py --sets concat_bands15z concat_bands15s --methods cnmf kmeans` "
+          "(the main cell's settings: `--n-perm 5000 --n-perm-heldout 500 --n-splits 100 --n-cloud 100`), then `python make_heldout_bundle.py --write` and this report again.")
+        A("")
+    A("**What it means.** The separation reading is the same in every description: most held-out electrodes land in their type, and the pairs that sit below the cloud are the neighbours of a continuum, not distinct islands"
+      + cite("TW05", "G12") + ". K differs between sets (the one-patient rule picks it per set), so the pair counts are read within a set, not across.")
+    A("")
+
 
     # claim 5
     an = {c: anatomy(D, lab7, c) for c in (2, 3)}

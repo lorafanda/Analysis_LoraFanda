@@ -97,6 +97,10 @@ _FSET_LABEL = [
     ("concat_bands5",  "5 bands (v16)"),
     ("concat_bands15", "15 bands (v16)"),
     ("concat_hfa",     "HFA only (v16)"),
+    # the band-equalised variants of the 15-band set (2026-11-02): fitted with convex NMF and
+    # k-means only, so their Ward cells read "not published" on the page
+    ("concat_bands15z", "15 bands, each z-scored (v17)"),
+    ("concat_bands15s", "15 bands, per-band shape (v17)"),
 ]
 _METHOD_LABEL = [
     ("cnmf", "Convex NMF"), ("kmeans", "K-means"), ("hierarchical", "Ward"),
