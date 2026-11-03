@@ -29,3 +29,4 @@ Caption under the table: "Diagonal share: the fraction of electrodes on the matc
 - assets\stability_row.png (consensus matrix and the K panel)
 - assets\neurosynth_15band.png (2107 x 1452 px, the eight-map NeuroSynth label matrix, 15 bands, each map on the pial surface under its name)
 - assets\neurosynth_15zband.png (2356 x 1452 px, the same for the z-scored companion)
+- assets\neurosynth_15band_brains.png and neurosynth_15zband_brains.png (2406 and 2697 x 1452 px): the same two panels with the cluster ids only and each cluster on the glass brains before its row, the version to use if the box has the width
