@@ -56,6 +56,7 @@ DARK, LIGHT = "#3a3a3a", "#9a9a9a"                        # FIG 2C's greys: algo
 NL = chr(10)
 DPI = 300
 EXAMPLE = ("EL035", "TTG_R1")                              # the paper's example electrode (FIG 1 B)
+NO_RENDER = False                                           # --no-render: reuse the saved brain tiles (a locked screen crashes VTK)
 
 
 def cache_input_dir():
@@ -157,6 +158,64 @@ def row1(d):
     return p
 
 
+# ---------------------------------------------------------------- figure 1 as a column
+def row1_column(d):
+    """The task screens; under them one electrode's full ERSP and its 15-band summary, condition
+    by condition in the same columns; the three cohort brains at the bottom."""
+    fig0 = CL / "paper_figures" / "paper" / "FIG0_cohort_v17.png"
+    task0 = Image.open(fig0).convert("RGB"); w0, h0 = task0.size
+    bands = [(0.170, 0.405), (0.415, 0.650), (0.660, 0.895)]
+    screens = [task0.crop((int(x0 * w0), int(0.005 * h0), int(x1 * w0), int(0.125 * h0))) for x0, x1 in bands]
+    inp = cache_input_dir()
+    df, Xc = CC.build_concat_dataset(inp, conditions=("audio", "picture", "reading"), require_high_activity=True, cache_dir=CC.DEFAULT_CONCAT_CACHE, verbose=False)
+    i_raw = int(np.where((df.patient_id.values == EXAMPLE[0]) & (df.electrode.astype(str).values == EXAMPLE[1]))[0][0])
+    raw = Xc[i_raw]
+    m = d["meta"]; i15 = [k_ for k_, (p, e) in enumerate(zip(m.patient_id, m.electrode)) if p == EXAMPLE[0] and P2.norm(e) == P2.norm(EXAMPLE[1])][0]
+    cube = d["C"][i15]
+    pcol = P2.patient_colours(d); n = len(d["xyz"])
+    xt = lambda ax, c_: (ax.set_xticks([0, 50, 100] if c_ == 2 else [0, 50]), ax.set_xticklabels(["0", "50", "100 %"] if c_ == 2 else ["0", "50"], fontsize=6.5))
+    cols = np.array([pcol[p][:3] for p in d["patient"]]); rads = np.full(n, 1.35); al = np.full(n, 235.0)
+    brains = {}
+    for s_ in ("L", "T", "R"):
+        tile = OUT / f"tile_brain_{s_}.png"
+        if NO_RENDER:                               # a locked screen crashes VTK outright: reuse the saved tile
+            if not tile.exists():
+                raise SystemExit(f"--no-render but no saved tile {tile.name}: run once with the screen unlocked")
+            brains[s_] = np.asarray(Image.open(tile).convert("RGBA"))
+        else:
+            brains[s_] = render_all(s_, d, cols, rads, al, zoom=1.25)
+            Image.fromarray(brains[s_]).save(tile)
+    nt_raw = raw.shape[1] // 3; nt = d["nt"]
+    fig = plt.figure(figsize=(7.4, 10.2), dpi=DPI)
+    gs = GridSpec(4, 3, figure=fig, height_ratios=[1.0, 1.25, 0.9, 1.7], left=0.09, right=0.93, top=0.985, bottom=0.03, hspace=0.28, wspace=0.05)
+    for c_ in range(3):
+        ax = image_axes(fig, gs[0, c_]); ax.imshow(screens[c_])
+    for c_ in range(3):
+        ax = fig.add_subplot(gs[1, c_])
+        im = ax.imshow(raw[:, c_ * nt_raw:(c_ + 1) * nt_raw], aspect="auto", origin="lower", cmap="bwr", vmin=-7, vmax=7, extent=(0, 100, 0, 400))
+        ax.axvline(50, color=INK, lw=0.7, ls="--"); xt(ax, c_); ax.tick_params(labelsize=6.5, length=2)
+        if c_ == 0:
+            ax.set_yticks([0, 100, 200, 300, 400]); ax.set_ylabel("Hz", fontsize=7.5)
+            ax.set_title(f"the full ERSP of one electrode ({EXAMPLE[0]} {EXAMPLE[1]}), ±7 dB", fontsize=7.5, color=MUTED, loc="left")
+        else:
+            ax.set_yticks([])
+    for c_ in range(3):
+        ax = fig.add_subplot(gs[2, c_])
+        ax.imshow(cube[c_], aspect="auto", origin="lower", cmap="bwr", vmin=-7, vmax=7, extent=(0, 100, -0.5, 14.5))
+        ax.axvline(50, color=INK, lw=0.7, ls="--"); xt(ax, c_); ax.tick_params(length=2)
+        if c_ == 0:
+            ax.set_yticks([0, 4, 7, 9, 14]); ax.set_yticklabels([d["bands"][i].replace("Hz", "") for i in (0, 4, 7, 9, 14)], fontsize=6.5); ax.set_ylabel("Hz", fontsize=7.5)
+            ax.set_title("the same electrode as the pipeline sees it: 15 bands × 30 time bins per condition", fontsize=7.5, color=MUTED, loc="left")
+        else:
+            ax.set_yticks([])
+    cax = fig.add_axes([0.945, 0.40, 0.012, 0.30]); cb = fig.colorbar(im, cax=cax); cb.ax.tick_params(labelsize=6.5); cb.set_label("dB", fontsize=7)
+    for c_, (s_, ttl) in enumerate((("L", f"left, {int((d['hemi'] == 'L').sum())} electrodes"), ("T", f"from above, {n}"), ("R", f"right, {int((d['hemi'] == 'R').sum())}"))):
+        ax = image_axes(fig, gs[3, c_]); ax.imshow(brains[s_]); ax.set_title(ttl, fontsize=7.5, color=MUTED, loc="left")
+    fig.text(0.09, 0.005, "the 1587 electrodes that passed the response gate, each patient its colour", fontsize=7.5, color=MUTED, va="bottom")
+    p = OUT / "figure1_column.png"; fig.savefig(p, facecolor="white"); plt.close(fig)
+    return p
+
+
 # ---------------------------------------------------------------- agreement: grey bars and the table
 def agreement(d):
     cap = sorted(glob.glob(str(CL / "paper_figures" / "FIG4_K07_run*_caption.txt")))[-1]
@@ -198,6 +257,19 @@ def agreement(d):
             cell.set_text_props(ha="left"); cell.set_width(0.34)
     axt.set_title("the share of electrodes on the matched diagonal, against random pairings of the same two solutions", fontsize=8, loc="left", color=INK)
     p = OUT / "agreement_bars_table.png"; fig.savefig(p, facecolor="white", bbox_inches="tight"); plt.close(fig)
+    # the bars alone (the poster's table is built natively from the values printed here)
+    fig, ax = plt.subplots(figsize=(7.4, 3.0), dpi=DPI)
+    for yi, r in zip(y, items):
+        ax.barh(yi, r["adj"], color=DARK if r in algo else LIGHT, height=0.66)
+        ax.text(r["adj"] + 0.012, yi, f"{r['adj']:.2f}   ·   {min(r['n_free'], r['n_within'])} of {r['n_pairs']} pairs clear both nulls", va="center", fontsize=7.5, color=INK)
+    ax.set_yticks(y); ax.set_yticklabels([r["name"] for r in items], fontsize=8)
+    ax.set_xlim(0, 1.0); ax.set_xticks([0, 0.25, 0.5, 0.75, 1]); ax.tick_params(labelsize=7, length=2)
+    ax.set_xlabel("mean adjusted overlap of the matched clusters (0 chance, 1 identical)", fontsize=7.5, color=MUTED)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.set_title("dark: another algorithm on the same 15 bands  ·  light: convex NMF on another description", fontsize=8, loc="left", color=INK)
+    fig.savefig(OUT / "agreement_bars.png", facecolor="white", bbox_inches="tight"); plt.close(fig)
+    (OUT / "agreement_table.md").write_text(NL.join(["| comparison | diagonal share | random pairings | ARI | matched r |", "|---|---|---|---|---|"]
+        + [f"| {c[0]} | {c[1]} | {c[2]} | {c[3]} | {c[4]} |" for c in cells]) + NL, encoding="utf-8")
     return p
 
 
@@ -236,27 +308,28 @@ def stability(d):
     hv = hv[(hv.feature_set == REF) & (hv.method == "cnmf") & hv.scheme.isin(P2.HOME_SCHEMES) & (hv.cache == cache)]
     curve = hv.groupby("k").var_explained.agg(["mean", "std"]).reset_index()
     lbk = pd.read_csv(d["run"] / "cluster_labels_by_k.csv"); pats = np.asarray(d["patient"]).astype(str)
-    ks, worst = [], []
+    ks, ndom = [], []
     for c_ in lbk.columns:
         if not c_.startswith("k_"):
             continue
-        k_ = int(c_[2:]); l_ = lbk[c_].to_numpy(int); w = 0.0
+        k_ = int(c_[2:]); l_ = lbk[c_].to_numpy(int); cnt = 0
         for c in range(k_):
             m_ = l_ == c
-            if m_.any():
-                w = max(w, float(pd.Series(pats[m_]).value_counts(normalize=True).iloc[0]))
-        ks.append(k_); worst.append(w)
+            if m_.any() and float(pd.Series(pats[m_]).value_counts(normalize=True).iloc[0]) > 0.5:
+                cnt += 1
+        ks.append(k_); ndom.append(cnt)
     fig, ax = plt.subplots(figsize=(5.2, 3.6), dpi=DPI)
     ax.fill_between(curve.k, curve["mean"] - curve["std"], curve["mean"] + curve["std"], color=GREY, alpha=0.5, lw=0)
     ax.plot(curve.k, curve["mean"], "-o", color=INK, ms=3.5, lw=1.6, label="held-out variance explained (bi-cross-validation)")
     ax.set_xlabel("K", fontsize=8); ax.set_ylabel("held-out variance", fontsize=8); ax.tick_params(labelsize=7, length=2)
     ax2 = ax.twinx()
-    ax2.plot(ks, [100 * w for w in worst], "-o", color=RED, ms=3.2, lw=1.4, label="largest share of a cluster held by one patient")
-    ax2.axhline(50, color=RED, lw=0.8, ls=":"); ax2.set_ylim(0, 102); ax2.set_ylabel("% one patient", fontsize=8, color=RED); ax2.tick_params(labelsize=7, length=2, colors=RED)
-    ax.axvline(K, color=GREEN, lw=1.2, ls="--"); ax.text(K + 0.3, ax.get_ylim()[1] - 0.03 * np.ptp(ax.get_ylim()), "K 7: the last K before a cluster" + NL + "is over half one patient", fontsize=7, color=GREEN, va="top")
+    ax2.plot(ks, ndom, "-o", color=RED, ms=3.2, lw=1.4, label="clusters more than half one patient")
+    ax2.set_ylim(-0.3, max(ndom) + 1); ax2.set_yticks(range(0, max(ndom) + 1, max(1, (max(ndom) + 1) // 6)))
+    ax2.set_ylabel("clusters owned by one patient", fontsize=8, color=RED); ax2.tick_params(labelsize=7, length=2, colors=RED)
+    ax.axvline(K, color=GREEN, lw=1.2, ls="--"); ax.text(K + 0.3, ax.get_ylim()[1] - 0.03 * np.ptp(ax.get_ylim()), "K 7: the last K with no cluster" + NL + "owned by one patient", fontsize=7, color=GREEN, va="top")
     ax.set_xlim(min(curve.k) - 0.5, max(curve.k) + 0.5)
     h1, l1 = ax.get_legend_handles_labels(); h2, l2 = ax2.get_legend_handles_labels()
-    ax.legend(h1 + h2, l1 + l2, fontsize=6.6, frameon=False, loc="center right")
+    ax.legend(h1 + h2, l1 + l2, fontsize=6.6, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.17), ncol=2)
     ax.spines[["top"]].set_visible(False); ax2.spines[["top"]].set_visible(False)
     ax.set_title("the held-out curve never peaks inside the range; the patient rule chooses K", fontsize=8.5, loc="left", color=INK)
     pk = OUT / "stability_K.png"; fig.savefig(pk, facecolor="white", bbox_inches="tight"); plt.close(fig)
@@ -326,11 +399,14 @@ def main() -> int:
             try: stream.reconfigure(errors="replace")
             except Exception: pass
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
-    ap.add_argument("--only", nargs="+", default=["row1", "agreement", "stability", "separation"], choices=["row1", "agreement", "stability", "separation"])
+    ap.add_argument("--only", nargs="+", default=["figure1", "agreement", "stability", "separation"], choices=["row1", "figure1", "agreement", "stability", "separation"])
+    ap.add_argument("--no-render", action="store_true", help="figure 1 reuses the saved brain tiles instead of rendering (no VTK)")
     a = ap.parse_args()
+    global NO_RENDER
+    NO_RENDER = a.no_render
     OUT.mkdir(parents=True, exist_ok=True)
     d = load_ref()
-    steps = dict(row1=row1, agreement=agreement, stability=stability, separation=separation)
+    steps = dict(row1=row1, figure1=row1_column, agreement=agreement, stability=stability, separation=separation)
     for name in a.only:
         p = steps[name](d)
         im = Image.open(p); print(f"  {name:11s} -> {p.name}  {im.size[0]} x {im.size[1]} px")
