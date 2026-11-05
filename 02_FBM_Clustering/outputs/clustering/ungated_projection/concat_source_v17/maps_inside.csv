@@ -1,0 +1,484 @@
+type,name,group,n,patients,map,stage,kind,pct_inside,baseline_pct,enrichment,lo,hi,outlined
+5,production,gated,172,17,pictures,Picture naming,term,10.465,10.593,0.988,0.242,1.549,False
+5,production,ungated,12,7,pictures,Picture naming,term,16.667,10.593,1.573,0.0,4.74,False
+5,production,wellfit,0,0,pictures,Picture naming,term,,10.593,,,,False
+5,production,gated,172,17,objects,Picture naming,term,4.07,8.468,0.481,0.083,1.035,False
+5,production,ungated,12,7,objects,Picture naming,term,8.333,8.468,0.984,0.0,3.871,False
+5,production,wellfit,0,0,objects,Picture naming,term,,8.468,,,,False
+5,production,gated,172,17,naming_vs_objects,Picture naming,contrast,2.907,4.662,0.624,0.0,1.43,False
+5,production,ungated,12,7,naming_vs_objects,Picture naming,contrast,0.0,4.662,0.0,0.0,0.0,False
+5,production,wellfit,0,0,naming_vs_objects,Picture naming,contrast,,4.662,,,,False
+5,production,gated,172,17,pictures_vs_resting_state,Picture naming,contrast,8.721,10.799,0.808,0.342,1.228,False
+5,production,ungated,12,7,pictures_vs_resting_state,Picture naming,contrast,0.0,10.799,0.0,0.0,0.0,False
+5,production,wellfit,0,0,pictures_vs_resting_state,Picture naming,contrast,,10.799,,,,False
+5,production,gated,172,17,listening,Auditory definition,term,22.093,12.959,1.705,1.073,2.596,True
+5,production,ungated,12,7,listening,Auditory definition,term,16.667,12.959,1.286,0.0,3.305,False
+5,production,wellfit,0,0,listening,Auditory definition,term,,12.959,,,,False
+5,production,gated,172,17,auditory,Auditory definition,term,12.791,12.581,1.017,0.519,1.918,False
+5,production,ungated,12,7,auditory,Auditory definition,term,16.667,12.581,1.325,0.0,3.362,False
+5,production,wellfit,0,0,auditory,Auditory definition,term,,12.581,,,,False
+5,production,gated,172,17,listening_vs_auditory,Auditory definition,contrast,13.953,9.873,1.413,0.566,2.52,False
+5,production,ungated,12,7,listening_vs_auditory,Auditory definition,contrast,8.333,9.873,0.844,0.0,3.844,False
+5,production,wellfit,0,0,listening_vs_auditory,Auditory definition,contrast,,9.873,,,,False
+5,production,gated,172,17,listening_vs_resting_state,Auditory definition,contrast,15.698,12.753,1.231,0.697,1.919,False
+5,production,ungated,12,7,listening_vs_resting_state,Auditory definition,contrast,8.333,12.753,0.653,0.0,2.902,False
+5,production,wellfit,0,0,listening_vs_resting_state,Auditory definition,contrast,,12.753,,,,False
+5,production,gated,172,17,sentences,Sentence completion,term,29.651,12.547,2.363,1.585,3.239,True
+5,production,ungated,12,7,sentences,Sentence completion,term,33.333,12.547,2.657,0.0,5.976,False
+5,production,wellfit,0,0,sentences,Sentence completion,term,,12.547,,,,False
+5,production,gated,172,17,reading,Sentence completion,term,8.14,7.679,1.06,0.228,2.014,False
+5,production,ungated,12,7,reading,Sentence completion,term,0.0,7.679,0.0,0.0,0.0,False
+5,production,wellfit,0,0,reading,Sentence completion,term,,7.679,,,,False
+5,production,gated,172,17,sentences_vs_words,Sentence completion,contrast,21.512,9.05,2.377,1.592,3.566,True
+5,production,ungated,12,7,sentences_vs_words,Sentence completion,contrast,25.0,9.05,2.762,0.0,6.634,False
+5,production,wellfit,0,0,sentences_vs_words,Sentence completion,contrast,,9.05,,,,False
+5,production,gated,172,17,sentences_vs_resting_state,Sentence completion,contrast,20.349,12.067,1.686,1.013,2.517,True
+5,production,ungated,12,7,sentences_vs_resting_state,Sentence completion,contrast,33.333,12.067,2.762,0.0,6.209,False
+5,production,wellfit,0,0,sentences_vs_resting_state,Sentence completion,contrast,,12.067,,,,False
+5,production,gated,172,17,naming,Shared core,term,2.907,5.314,0.547,0.0,1.187,False
+5,production,ungated,12,7,naming,Shared core,term,0.0,5.314,0.0,0.0,0.0,False
+5,production,wellfit,0,0,naming,Shared core,term,,5.314,,,,False
+5,production,gated,172,17,semantic,Shared core,term,31.395,16.421,1.912,1.31,2.696,True
+5,production,ungated,12,7,semantic,Shared core,term,8.333,16.421,0.507,0.0,2.318,False
+5,production,wellfit,0,0,semantic,Shared core,term,,16.421,,,,False
+5,production,gated,172,17,phonological,Shared core,term,10.465,11.073,0.945,0.28,1.705,False
+5,production,ungated,12,7,phonological,Shared core,term,8.333,11.073,0.753,0.0,3.548,False
+5,production,wellfit,0,0,phonological,Shared core,term,,11.073,,,,False
+5,production,gated,172,17,production,Shared core,term,5.814,5.656,1.028,0.167,2.273,False
+5,production,ungated,12,7,production,Shared core,term,0.0,5.656,0.0,0.0,0.0,False
+5,production,wellfit,0,0,production,Shared core,term,,5.656,,,,False
+5,production,gated,172,17,naming_vs_production,Shared core,contrast,1.744,3.531,0.494,0.0,1.276,False
+5,production,ungated,12,7,naming_vs_production,Shared core,contrast,0.0,3.531,0.0,0.0,0.0,False
+5,production,wellfit,0,0,naming_vs_production,Shared core,contrast,,3.531,,,,False
+5,production,gated,172,17,semantic_vs_memory_retrieval,Shared core,contrast,8.721,6.582,1.325,0.578,2.449,False
+5,production,ungated,12,7,semantic_vs_memory_retrieval,Shared core,contrast,0.0,6.582,0.0,0.0,0.0,False
+5,production,wellfit,0,0,semantic_vs_memory_retrieval,Shared core,contrast,,6.582,,,,False
+5,production,gated,172,17,production_vs_motor,Shared core,contrast,6.977,8.022,0.87,0.249,1.661,False
+5,production,ungated,12,7,production_vs_motor,Shared core,contrast,8.333,8.022,1.039,0.0,4.877,False
+5,production,wellfit,0,0,production_vs_motor,Shared core,contrast,,8.022,,,,False
+5,production,gated,172,17,naming_vs_resting_state,Shared core,contrast,4.651,7.679,0.606,0.183,1.152,False
+5,production,ungated,12,7,naming_vs_resting_state,Shared core,contrast,0.0,7.679,0.0,0.0,0.0,False
+5,production,wellfit,0,0,naming_vs_resting_state,Shared core,contrast,,7.679,,,,False
+5,production,gated,172,17,semantic_vs_resting_state,Shared core,contrast,12.209,12.479,0.978,0.455,1.549,False
+5,production,ungated,12,7,semantic_vs_resting_state,Shared core,contrast,0.0,12.479,0.0,0.0,0.0,False
+5,production,wellfit,0,0,semantic_vs_resting_state,Shared core,contrast,,12.479,,,,False
+5,production,gated,172,17,production_vs_resting_state,Shared core,contrast,5.233,8.605,0.608,0.1,1.332,False
+5,production,ungated,12,7,production_vs_resting_state,Shared core,contrast,0.0,8.605,0.0,0.0,0.0,False
+5,production,wellfit,0,0,production_vs_resting_state,Shared core,contrast,,8.605,,,,False
+5,production,gated,172,17,language_vs_resting_state,Language network,contrast,13.953,12.067,1.156,0.547,1.824,False
+5,production,ungated,12,7,language_vs_resting_state,Language network,contrast,0.0,12.067,0.0,0.0,0.0,False
+5,production,wellfit,0,0,language_vs_resting_state,Language network,contrast,,12.067,,,,False
+0,beta decrease,gated,266,19,pictures,Picture naming,term,9.398,10.593,0.887,0.49,1.24,False
+0,beta decrease,ungated,245,20,pictures,Picture naming,term,12.653,10.593,1.194,0.743,2.019,False
+0,beta decrease,wellfit,136,11,pictures,Picture naming,term,11.765,10.593,1.111,0.278,2.273,False
+0,beta decrease,gated,266,19,objects,Picture naming,term,12.782,8.468,1.51,0.883,2.715,False
+0,beta decrease,ungated,245,20,objects,Picture naming,term,11.429,8.468,1.35,0.912,2.169,False
+0,beta decrease,wellfit,136,11,objects,Picture naming,term,10.294,8.468,1.216,0.756,2.674,False
+0,beta decrease,gated,266,19,naming_vs_objects,Picture naming,contrast,9.023,4.662,1.935,0.664,3.279,False
+0,beta decrease,ungated,245,20,naming_vs_objects,Picture naming,contrast,4.082,4.662,0.875,0.234,2.076,False
+0,beta decrease,wellfit,136,11,naming_vs_objects,Picture naming,contrast,2.941,4.662,0.631,0.0,2.972,False
+0,beta decrease,gated,266,19,pictures_vs_resting_state,Picture naming,contrast,19.549,10.799,1.81,1.087,2.66,True
+0,beta decrease,ungated,245,20,pictures_vs_resting_state,Picture naming,contrast,12.653,10.799,1.172,0.682,2.074,False
+0,beta decrease,wellfit,136,11,pictures_vs_resting_state,Picture naming,contrast,12.5,10.799,1.158,0.547,2.979,False
+0,beta decrease,gated,266,19,listening,Auditory definition,term,8.647,12.959,0.667,0.156,1.087,False
+0,beta decrease,ungated,245,20,listening,Auditory definition,term,5.714,12.959,0.441,0.192,0.889,False
+0,beta decrease,wellfit,136,11,listening,Auditory definition,term,4.412,12.959,0.34,0.119,0.876,False
+0,beta decrease,gated,266,19,auditory,Auditory definition,term,10.15,12.581,0.807,0.422,1.162,False
+0,beta decrease,ungated,245,20,auditory,Auditory definition,term,4.898,12.581,0.389,0.099,0.564,False
+0,beta decrease,wellfit,136,11,auditory,Auditory definition,term,6.618,12.581,0.526,0.0,0.748,False
+0,beta decrease,gated,266,19,listening_vs_auditory,Auditory definition,contrast,7.143,9.873,0.723,0.32,1.104,False
+0,beta decrease,ungated,245,20,listening_vs_auditory,Auditory definition,contrast,8.163,9.873,0.827,0.487,1.504,False
+0,beta decrease,wellfit,136,11,listening_vs_auditory,Auditory definition,contrast,8.088,9.873,0.819,0.249,1.814,False
+0,beta decrease,gated,266,19,listening_vs_resting_state,Auditory definition,contrast,14.662,12.753,1.15,0.451,1.891,False
+0,beta decrease,ungated,245,20,listening_vs_resting_state,Auditory definition,contrast,10.612,12.753,0.832,0.494,1.091,False
+0,beta decrease,wellfit,136,11,listening_vs_resting_state,Auditory definition,contrast,14.706,12.753,1.153,0.689,1.712,False
+0,beta decrease,gated,266,19,sentences,Sentence completion,term,9.023,12.547,0.719,0.309,1.086,False
+0,beta decrease,ungated,245,20,sentences,Sentence completion,term,5.714,12.547,0.455,0.164,1.028,False
+0,beta decrease,wellfit,136,11,sentences,Sentence completion,term,4.412,12.547,0.352,0.082,1.126,False
+0,beta decrease,gated,266,19,reading,Sentence completion,term,11.278,7.679,1.469,0.71,2.327,False
+0,beta decrease,ungated,245,20,reading,Sentence completion,term,8.571,7.679,1.116,0.467,2.144,False
+0,beta decrease,wellfit,136,11,reading,Sentence completion,term,8.824,7.679,1.149,0.0,3.139,False
+0,beta decrease,gated,266,19,sentences_vs_words,Sentence completion,contrast,3.383,9.05,0.374,0.063,0.611,False
+0,beta decrease,ungated,245,20,sentences_vs_words,Sentence completion,contrast,4.49,9.05,0.496,0.18,1.139,False
+0,beta decrease,wellfit,136,11,sentences_vs_words,Sentence completion,contrast,3.676,9.05,0.406,0.0,1.045,False
+0,beta decrease,gated,266,19,sentences_vs_resting_state,Sentence completion,contrast,15.789,12.067,1.308,0.662,1.982,False
+0,beta decrease,ungated,245,20,sentences_vs_resting_state,Sentence completion,contrast,11.02,12.067,0.913,0.493,1.643,False
+0,beta decrease,wellfit,136,11,sentences_vs_resting_state,Sentence completion,contrast,11.765,12.067,0.975,0.539,2.384,False
+0,beta decrease,gated,266,19,naming,Shared core,term,11.278,5.314,2.122,0.985,3.934,False
+0,beta decrease,ungated,245,20,naming,Shared core,term,3.673,5.314,0.691,0.149,1.763,False
+0,beta decrease,wellfit,136,11,naming,Shared core,term,4.412,5.314,0.83,0.0,3.201,False
+0,beta decrease,gated,266,19,semantic,Shared core,term,19.549,16.421,1.19,0.645,1.655,False
+0,beta decrease,ungated,245,20,semantic,Shared core,term,14.286,16.421,0.87,0.426,1.598,False
+0,beta decrease,wellfit,136,11,semantic,Shared core,term,13.235,16.421,0.806,0.397,1.708,False
+0,beta decrease,gated,266,19,phonological,Shared core,term,20.301,11.073,1.833,0.738,2.915,False
+0,beta decrease,ungated,245,20,phonological,Shared core,term,10.612,11.073,0.958,0.419,1.749,False
+0,beta decrease,wellfit,136,11,phonological,Shared core,term,11.765,11.073,1.062,0.376,2.377,False
+0,beta decrease,gated,266,19,production,Shared core,term,7.519,5.656,1.329,0.819,2.132,False
+0,beta decrease,ungated,245,20,production,Shared core,term,2.041,5.656,0.361,0.088,0.88,False
+0,beta decrease,wellfit,136,11,production,Shared core,term,2.206,5.656,0.39,0.0,1.057,False
+0,beta decrease,gated,266,19,naming_vs_production,Shared core,contrast,8.271,3.531,2.342,1.509,4.421,True
+0,beta decrease,ungated,245,20,naming_vs_production,Shared core,contrast,6.939,3.531,1.965,0.982,3.509,False
+0,beta decrease,wellfit,136,11,naming_vs_production,Shared core,contrast,9.559,3.531,2.707,1.007,7.013,True
+0,beta decrease,gated,266,19,semantic_vs_memory_retrieval,Shared core,contrast,6.767,6.582,1.028,0.257,1.828,False
+0,beta decrease,ungated,245,20,semantic_vs_memory_retrieval,Shared core,contrast,4.082,6.582,0.62,0.244,1.279,False
+0,beta decrease,wellfit,136,11,semantic_vs_memory_retrieval,Shared core,contrast,3.676,6.582,0.559,0.0,1.834,False
+0,beta decrease,gated,266,19,production_vs_motor,Shared core,contrast,10.15,8.022,1.265,0.423,2.161,False
+0,beta decrease,ungated,245,20,production_vs_motor,Shared core,contrast,7.755,8.022,0.967,0.464,1.746,False
+0,beta decrease,wellfit,136,11,production_vs_motor,Shared core,contrast,10.294,8.022,1.283,0.541,3.239,False
+0,beta decrease,gated,266,19,naming_vs_resting_state,Shared core,contrast,16.917,7.679,2.203,1.067,3.676,True
+0,beta decrease,ungated,245,20,naming_vs_resting_state,Shared core,contrast,7.347,7.679,0.957,0.483,1.806,False
+0,beta decrease,wellfit,136,11,naming_vs_resting_state,Shared core,contrast,8.824,7.679,1.149,0.393,3.363,False
+0,beta decrease,gated,266,19,semantic_vs_resting_state,Shared core,contrast,21.053,12.479,1.687,0.815,2.713,False
+0,beta decrease,ungated,245,20,semantic_vs_resting_state,Shared core,contrast,16.327,12.479,1.308,0.853,1.993,False
+0,beta decrease,wellfit,136,11,semantic_vs_resting_state,Shared core,contrast,19.853,12.479,1.591,1.073,2.862,True
+0,beta decrease,gated,266,19,production_vs_resting_state,Shared core,contrast,15.414,8.605,1.791,0.729,2.956,False
+0,beta decrease,ungated,245,20,production_vs_resting_state,Shared core,contrast,6.531,8.605,0.759,0.487,1.182,False
+0,beta decrease,wellfit,136,11,production_vs_resting_state,Shared core,contrast,8.824,8.605,1.025,0.685,2.56,False
+0,beta decrease,gated,266,19,language_vs_resting_state,Language network,contrast,18.797,12.067,1.558,0.644,2.593,False
+0,beta decrease,ungated,245,20,language_vs_resting_state,Language network,contrast,14.286,12.067,1.184,0.665,1.575,False
+0,beta decrease,wellfit,136,11,language_vs_resting_state,Language network,contrast,19.853,12.067,1.645,1.081,2.552,True
+2,broadband decrease,gated,142,10,pictures,Picture naming,term,13.38,10.593,1.263,0.407,1.718,False
+2,broadband decrease,ungated,122,11,pictures,Picture naming,term,13.115,10.593,1.238,0.618,1.887,False
+2,broadband decrease,wellfit,45,4,pictures,Picture naming,term,11.111,10.593,1.049,0.0,1.753,False
+2,broadband decrease,gated,142,10,objects,Picture naming,term,7.042,8.468,0.832,0.076,1.774,False
+2,broadband decrease,ungated,122,11,objects,Picture naming,term,3.279,8.468,0.387,0.0,0.673,False
+2,broadband decrease,wellfit,45,4,objects,Picture naming,term,4.444,8.468,0.525,0.0,0.944,False
+2,broadband decrease,gated,142,10,naming_vs_objects,Picture naming,contrast,1.408,4.662,0.302,0.0,1.012,False
+2,broadband decrease,ungated,122,11,naming_vs_objects,Picture naming,contrast,3.279,4.662,0.703,0.0,2.222,False
+2,broadband decrease,wellfit,45,4,naming_vs_objects,Picture naming,contrast,2.222,4.662,0.477,0.0,0.913,False
+2,broadband decrease,gated,142,10,pictures_vs_resting_state,Picture naming,contrast,7.746,10.799,0.717,0.0,1.191,False
+2,broadband decrease,ungated,122,11,pictures_vs_resting_state,Picture naming,contrast,11.475,10.799,1.063,0.448,1.935,False
+2,broadband decrease,wellfit,45,4,pictures_vs_resting_state,Picture naming,contrast,8.889,10.799,0.823,0.0,1.395,False
+2,broadband decrease,gated,142,10,listening,Auditory definition,term,8.451,12.959,0.652,0.157,1.749,False
+2,broadband decrease,ungated,122,11,listening,Auditory definition,term,8.197,12.959,0.633,0.314,1.232,False
+2,broadband decrease,wellfit,45,4,listening,Auditory definition,term,11.111,12.959,0.857,0.227,2.939,False
+2,broadband decrease,gated,142,10,auditory,Auditory definition,term,10.563,12.581,0.84,0.248,1.852,False
+2,broadband decrease,ungated,122,11,auditory,Auditory definition,term,7.377,12.581,0.586,0.0,1.048,False
+2,broadband decrease,wellfit,45,4,auditory,Auditory definition,term,8.889,12.581,0.707,0.0,2.048,False
+2,broadband decrease,gated,142,10,listening_vs_auditory,Auditory definition,contrast,9.859,9.873,0.999,0.0,1.746,False
+2,broadband decrease,ungated,122,11,listening_vs_auditory,Auditory definition,contrast,7.377,9.873,0.747,0.299,1.802,False
+2,broadband decrease,wellfit,45,4,listening_vs_auditory,Auditory definition,contrast,8.889,9.873,0.9,0.293,2.277,False
+2,broadband decrease,gated,142,10,listening_vs_resting_state,Auditory definition,contrast,6.338,12.753,0.497,0.072,1.361,False
+2,broadband decrease,ungated,122,11,listening_vs_resting_state,Auditory definition,contrast,11.475,12.753,0.9,0.378,1.472,False
+2,broadband decrease,wellfit,45,4,listening_vs_resting_state,Auditory definition,contrast,13.333,12.753,1.046,0.511,2.054,False
+2,broadband decrease,gated,142,10,sentences,Sentence completion,term,10.563,12.547,0.842,0.25,2.368,False
+2,broadband decrease,ungated,122,11,sentences,Sentence completion,term,10.656,12.547,0.849,0.367,1.955,False
+2,broadband decrease,wellfit,45,4,sentences,Sentence completion,term,13.333,12.547,1.063,0.0,3.25,False
+2,broadband decrease,gated,142,10,reading,Sentence completion,term,2.113,7.679,0.275,0.0,0.809,False
+2,broadband decrease,ungated,122,11,reading,Sentence completion,term,3.279,7.679,0.427,0.164,0.992,False
+2,broadband decrease,wellfit,45,4,reading,Sentence completion,term,4.444,7.679,0.579,0.0,1.384,False
+2,broadband decrease,gated,142,10,sentences_vs_words,Sentence completion,contrast,7.042,9.05,0.778,0.285,2.008,False
+2,broadband decrease,ungated,122,11,sentences_vs_words,Sentence completion,contrast,7.377,9.05,0.815,0.36,1.789,False
+2,broadband decrease,wellfit,45,4,sentences_vs_words,Sentence completion,contrast,6.667,9.05,0.737,0.0,4.311,False
+2,broadband decrease,gated,142,10,sentences_vs_resting_state,Sentence completion,contrast,4.93,12.067,0.409,0.1,0.955,False
+2,broadband decrease,ungated,122,11,sentences_vs_resting_state,Sentence completion,contrast,9.016,12.067,0.747,0.355,1.385,False
+2,broadband decrease,wellfit,45,4,sentences_vs_resting_state,Sentence completion,contrast,11.111,12.067,0.921,0.53,1.207,False
+2,broadband decrease,gated,142,10,naming,Shared core,term,2.113,5.314,0.398,0.0,1.23,False
+2,broadband decrease,ungated,122,11,naming,Shared core,term,1.639,5.314,0.309,0.0,1.703,False
+2,broadband decrease,wellfit,45,4,naming,Shared core,term,0.0,5.314,0.0,0.0,0.0,False
+2,broadband decrease,gated,142,10,semantic,Shared core,term,18.31,16.421,1.115,0.506,1.903,False
+2,broadband decrease,ungated,122,11,semantic,Shared core,term,16.393,16.421,0.998,0.55,2.236,False
+2,broadband decrease,wellfit,45,4,semantic,Shared core,term,17.778,16.421,1.083,0.181,3.839,False
+2,broadband decrease,gated,142,10,phonological,Shared core,term,4.225,11.073,0.382,0.071,0.919,False
+2,broadband decrease,ungated,122,11,phonological,Shared core,term,6.557,11.073,0.592,0.279,1.527,False
+2,broadband decrease,wellfit,45,4,phonological,Shared core,term,6.667,11.073,0.602,0.0,1.965,False
+2,broadband decrease,gated,142,10,production,Shared core,term,2.817,5.656,0.498,0.0,1.717,False
+2,broadband decrease,ungated,122,11,production,Shared core,term,1.639,5.656,0.29,0.0,1.392,False
+2,broadband decrease,wellfit,45,4,production,Shared core,term,0.0,5.656,0.0,0.0,0.0,False
+2,broadband decrease,gated,142,10,naming_vs_production,Shared core,contrast,2.113,3.531,0.598,0.0,1.399,False
+2,broadband decrease,ungated,122,11,naming_vs_production,Shared core,contrast,3.279,3.531,0.929,0.0,1.773,False
+2,broadband decrease,wellfit,45,4,naming_vs_production,Shared core,contrast,4.444,3.531,1.259,0.0,2.239,False
+2,broadband decrease,gated,142,10,semantic_vs_memory_retrieval,Shared core,contrast,1.408,6.582,0.214,0.0,0.446,False
+2,broadband decrease,ungated,122,11,semantic_vs_memory_retrieval,Shared core,contrast,4.098,6.582,0.623,0.142,2.238,False
+2,broadband decrease,wellfit,45,4,semantic_vs_memory_retrieval,Shared core,contrast,2.222,6.582,0.338,0.0,1.584,False
+2,broadband decrease,gated,142,10,production_vs_motor,Shared core,contrast,2.817,8.022,0.351,0.0,0.762,False
+2,broadband decrease,ungated,122,11,production_vs_motor,Shared core,contrast,6.557,8.022,0.817,0.231,1.736,False
+2,broadband decrease,wellfit,45,4,production_vs_motor,Shared core,contrast,4.444,8.022,0.554,0.0,0.947,False
+2,broadband decrease,gated,142,10,naming_vs_resting_state,Shared core,contrast,1.408,7.679,0.183,0.0,0.446,False
+2,broadband decrease,ungated,122,11,naming_vs_resting_state,Shared core,contrast,5.738,7.679,0.747,0.0,1.826,False
+2,broadband decrease,wellfit,45,4,naming_vs_resting_state,Shared core,contrast,2.222,7.679,0.289,0.0,0.521,False
+2,broadband decrease,gated,142,10,semantic_vs_resting_state,Shared core,contrast,2.817,12.479,0.226,0.0,0.416,False
+2,broadband decrease,ungated,122,11,semantic_vs_resting_state,Shared core,contrast,8.197,12.479,0.657,0.32,1.28,False
+2,broadband decrease,wellfit,45,4,semantic_vs_resting_state,Shared core,contrast,8.889,12.479,0.712,0.0,1.034,False
+2,broadband decrease,gated,142,10,production_vs_resting_state,Shared core,contrast,3.521,8.605,0.409,0.0,1.247,False
+2,broadband decrease,ungated,122,11,production_vs_resting_state,Shared core,contrast,7.377,8.605,0.857,0.0,1.628,False
+2,broadband decrease,wellfit,45,4,production_vs_resting_state,Shared core,contrast,6.667,8.605,0.775,0.0,1.322,False
+2,broadband decrease,gated,142,10,language_vs_resting_state,Language network,contrast,4.93,12.067,0.409,0.1,0.758,False
+2,broadband decrease,ungated,122,11,language_vs_resting_state,Language network,contrast,9.836,12.067,0.815,0.372,1.423,False
+2,broadband decrease,wellfit,45,4,language_vs_resting_state,Language network,contrast,11.111,12.067,0.921,0.0,1.344,False
+6,response-period low-frequency fall,gated,195,22,pictures,Picture naming,term,9.231,10.593,0.871,0.24,1.397,False
+6,response-period low-frequency fall,ungated,163,25,pictures,Picture naming,term,10.429,10.593,0.985,0.462,1.569,False
+6,response-period low-frequency fall,wellfit,26,7,pictures,Picture naming,term,3.846,10.593,0.363,0.0,1.835,False
+6,response-period low-frequency fall,gated,195,22,objects,Picture naming,term,10.769,8.468,1.272,0.733,2.052,False
+6,response-period low-frequency fall,ungated,163,25,objects,Picture naming,term,6.135,8.468,0.725,0.263,1.313,False
+6,response-period low-frequency fall,wellfit,26,7,objects,Picture naming,term,7.692,8.468,0.908,0.0,3.706,False
+6,response-period low-frequency fall,gated,195,22,naming_vs_objects,Picture naming,contrast,4.615,4.662,0.99,0.354,1.829,False
+6,response-period low-frequency fall,ungated,163,25,naming_vs_objects,Picture naming,contrast,3.067,4.662,0.658,0.241,1.491,False
+6,response-period low-frequency fall,wellfit,26,7,naming_vs_objects,Picture naming,contrast,3.846,4.662,0.825,0.0,1.488,False
+6,response-period low-frequency fall,gated,195,22,pictures_vs_resting_state,Picture naming,contrast,11.795,10.799,1.092,0.136,1.886,False
+6,response-period low-frequency fall,ungated,163,25,pictures_vs_resting_state,Picture naming,contrast,9.202,10.799,0.852,0.411,1.444,False
+6,response-period low-frequency fall,wellfit,26,7,pictures_vs_resting_state,Picture naming,contrast,7.692,10.799,0.712,0.0,3.173,False
+6,response-period low-frequency fall,gated,195,22,listening,Auditory definition,term,11.795,12.959,0.91,0.582,1.518,False
+6,response-period low-frequency fall,ungated,163,25,listening,Auditory definition,term,8.589,12.959,0.663,0.339,1.002,False
+6,response-period low-frequency fall,wellfit,26,7,listening,Auditory definition,term,15.385,12.959,1.187,0.0,2.986,False
+6,response-period low-frequency fall,gated,195,22,auditory,Auditory definition,term,10.769,12.581,0.856,0.504,1.493,False
+6,response-period low-frequency fall,ungated,163,25,auditory,Auditory definition,term,12.27,12.581,0.975,0.197,1.629,False
+6,response-period low-frequency fall,wellfit,26,7,auditory,Auditory definition,term,23.077,12.581,1.834,0.0,3.322,False
+6,response-period low-frequency fall,gated,195,22,listening_vs_auditory,Auditory definition,contrast,6.667,9.873,0.675,0.397,1.266,False
+6,response-period low-frequency fall,ungated,163,25,listening_vs_auditory,Auditory definition,contrast,6.748,9.873,0.684,0.3,1.281,False
+6,response-period low-frequency fall,wellfit,26,7,listening_vs_auditory,Auditory definition,contrast,7.692,9.873,0.779,0.0,2.683,False
+6,response-period low-frequency fall,gated,195,22,listening_vs_resting_state,Auditory definition,contrast,15.385,12.753,1.206,0.691,1.782,False
+6,response-period low-frequency fall,ungated,163,25,listening_vs_resting_state,Auditory definition,contrast,9.202,12.753,0.722,0.302,1.161,False
+6,response-period low-frequency fall,wellfit,26,7,listening_vs_resting_state,Auditory definition,contrast,15.385,12.753,1.206,0.0,3.151,False
+6,response-period low-frequency fall,gated,195,22,sentences,Sentence completion,term,9.744,12.547,0.777,0.458,1.469,False
+6,response-period low-frequency fall,ungated,163,25,sentences,Sentence completion,term,9.202,12.547,0.733,0.332,1.309,False
+6,response-period low-frequency fall,wellfit,26,7,sentences,Sentence completion,term,3.846,12.547,0.307,0.0,0.559,False
+6,response-period low-frequency fall,gated,195,22,reading,Sentence completion,term,11.282,7.679,1.469,0.672,2.583,False
+6,response-period low-frequency fall,ungated,163,25,reading,Sentence completion,term,6.135,7.679,0.799,0.353,1.454,False
+6,response-period low-frequency fall,wellfit,26,7,reading,Sentence completion,term,7.692,7.679,1.002,0.0,3.343,False
+6,response-period low-frequency fall,gated,195,22,sentences_vs_words,Sentence completion,contrast,4.103,9.05,0.453,0.084,1.231,False
+6,response-period low-frequency fall,ungated,163,25,sentences_vs_words,Sentence completion,contrast,6.135,9.05,0.678,0.26,1.09,False
+6,response-period low-frequency fall,wellfit,26,7,sentences_vs_words,Sentence completion,contrast,11.538,9.05,1.275,0.0,2.387,False
+6,response-period low-frequency fall,gated,195,22,sentences_vs_resting_state,Sentence completion,contrast,12.308,12.067,1.02,0.431,1.775,False
+6,response-period low-frequency fall,ungated,163,25,sentences_vs_resting_state,Sentence completion,contrast,9.202,12.067,0.763,0.231,1.573,False
+6,response-period low-frequency fall,wellfit,26,7,sentences_vs_resting_state,Sentence completion,contrast,3.846,12.067,0.319,0.0,0.567,False
+6,response-period low-frequency fall,gated,195,22,naming,Shared core,term,10.769,5.314,2.027,0.825,3.46,False
+6,response-period low-frequency fall,ungated,163,25,naming,Shared core,term,4.908,5.314,0.924,0.462,1.713,False
+6,response-period low-frequency fall,wellfit,26,7,naming,Shared core,term,7.692,5.314,1.448,0.0,3.929,False
+6,response-period low-frequency fall,gated,195,22,semantic,Shared core,term,16.41,16.421,0.999,0.581,1.582,False
+6,response-period low-frequency fall,ungated,163,25,semantic,Shared core,term,6.135,16.421,0.374,0.143,0.669,False
+6,response-period low-frequency fall,wellfit,26,7,semantic,Shared core,term,0.0,16.421,0.0,0.0,0.0,False
+6,response-period low-frequency fall,gated,195,22,phonological,Shared core,term,19.487,11.073,1.76,0.919,2.528,False
+6,response-period low-frequency fall,ungated,163,25,phonological,Shared core,term,3.067,11.073,0.277,0.036,0.64,False
+6,response-period low-frequency fall,wellfit,26,7,phonological,Shared core,term,0.0,11.073,0.0,0.0,0.0,False
+6,response-period low-frequency fall,gated,195,22,production,Shared core,term,5.641,5.656,0.997,0.168,2.38,False
+6,response-period low-frequency fall,ungated,163,25,production,Shared core,term,3.067,5.656,0.542,0.0,1.356,False
+6,response-period low-frequency fall,wellfit,26,7,production,Shared core,term,7.692,5.656,1.36,0.0,6.441,False
+6,response-period low-frequency fall,gated,195,22,naming_vs_production,Shared core,contrast,4.103,3.531,1.162,0.216,2.217,False
+6,response-period low-frequency fall,ungated,163,25,naming_vs_production,Shared core,contrast,3.067,3.531,0.869,0.0,1.675,False
+6,response-period low-frequency fall,wellfit,26,7,naming_vs_production,Shared core,contrast,3.846,3.531,1.089,0.0,5.661,False
+6,response-period low-frequency fall,gated,195,22,semantic_vs_memory_retrieval,Shared core,contrast,8.205,6.582,1.247,0.668,2.577,False
+6,response-period low-frequency fall,ungated,163,25,semantic_vs_memory_retrieval,Shared core,contrast,4.294,6.582,0.652,0.264,1.211,False
+6,response-period low-frequency fall,wellfit,26,7,semantic_vs_memory_retrieval,Shared core,contrast,7.692,6.582,1.169,0.0,5.587,False
+6,response-period low-frequency fall,gated,195,22,production_vs_motor,Shared core,contrast,10.256,8.022,1.279,0.672,2.394,False
+6,response-period low-frequency fall,ungated,163,25,production_vs_motor,Shared core,contrast,4.294,8.022,0.535,0.195,1.025,False
+6,response-period low-frequency fall,wellfit,26,7,production_vs_motor,Shared core,contrast,0.0,8.022,0.0,0.0,0.0,False
+6,response-period low-frequency fall,gated,195,22,naming_vs_resting_state,Shared core,contrast,12.308,7.679,1.603,0.567,2.694,False
+6,response-period low-frequency fall,ungated,163,25,naming_vs_resting_state,Shared core,contrast,7.362,7.679,0.959,0.503,1.827,False
+6,response-period low-frequency fall,wellfit,26,7,naming_vs_resting_state,Shared core,contrast,11.538,7.679,1.503,0.0,4.625,False
+6,response-period low-frequency fall,gated,195,22,semantic_vs_resting_state,Shared core,contrast,17.436,12.479,1.397,0.536,2.087,False
+6,response-period low-frequency fall,ungated,163,25,semantic_vs_resting_state,Shared core,contrast,11.043,12.479,0.885,0.248,1.763,False
+6,response-period low-frequency fall,wellfit,26,7,semantic_vs_resting_state,Shared core,contrast,3.846,12.479,0.308,0.0,2.016,False
+6,response-period low-frequency fall,gated,195,22,production_vs_resting_state,Shared core,contrast,10.256,8.605,1.192,0.395,1.884,False
+6,response-period low-frequency fall,ungated,163,25,production_vs_resting_state,Shared core,contrast,3.681,8.605,0.428,0.188,0.792,False
+6,response-period low-frequency fall,wellfit,26,7,production_vs_resting_state,Shared core,contrast,0.0,8.605,0.0,0.0,0.0,False
+6,response-period low-frequency fall,gated,195,22,language_vs_resting_state,Language network,contrast,16.923,12.067,1.402,0.585,2.055,False
+6,response-period low-frequency fall,ungated,163,25,language_vs_resting_state,Language network,contrast,7.975,12.067,0.661,0.239,1.206,False
+6,response-period low-frequency fall,wellfit,26,7,language_vs_resting_state,Language network,contrast,3.846,12.067,0.319,0.0,0.571,False
+4,low-frequency rise,gated,291,28,pictures,Picture naming,term,10.653,10.593,1.006,0.723,1.407,False
+4,low-frequency rise,ungated,248,24,pictures,Picture naming,term,14.516,10.593,1.37,0.789,1.906,False
+4,low-frequency rise,wellfit,23,11,pictures,Picture naming,term,13.043,10.593,1.231,0.0,2.909,False
+4,low-frequency rise,gated,291,28,objects,Picture naming,term,6.186,8.468,0.73,0.359,1.178,False
+4,low-frequency rise,ungated,248,24,objects,Picture naming,term,8.871,8.468,1.048,0.492,1.793,False
+4,low-frequency rise,wellfit,23,11,objects,Picture naming,term,4.348,8.468,0.513,0.0,1.47,False
+4,low-frequency rise,gated,291,28,naming_vs_objects,Picture naming,contrast,2.062,4.662,0.442,0.159,1.041,False
+4,low-frequency rise,ungated,248,24,naming_vs_objects,Picture naming,contrast,2.016,4.662,0.432,0.0,0.952,False
+4,low-frequency rise,wellfit,23,11,naming_vs_objects,Picture naming,contrast,0.0,4.662,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,pictures_vs_resting_state,Picture naming,contrast,7.216,10.799,0.668,0.364,1.111,False
+4,low-frequency rise,ungated,248,24,pictures_vs_resting_state,Picture naming,contrast,8.871,10.799,0.821,0.417,1.182,False
+4,low-frequency rise,wellfit,23,11,pictures_vs_resting_state,Picture naming,contrast,4.348,10.799,0.403,0.0,1.759,False
+4,low-frequency rise,gated,291,28,listening,Auditory definition,term,14.433,12.959,1.114,0.688,1.617,False
+4,low-frequency rise,ungated,248,24,listening,Auditory definition,term,6.855,12.959,0.529,0.251,0.872,False
+4,low-frequency rise,wellfit,23,11,listening,Auditory definition,term,4.348,12.959,0.336,0.0,0.886,False
+4,low-frequency rise,gated,291,28,auditory,Auditory definition,term,11.34,12.581,0.901,0.554,1.348,False
+4,low-frequency rise,ungated,248,24,auditory,Auditory definition,term,6.452,12.581,0.513,0.25,0.841,False
+4,low-frequency rise,wellfit,23,11,auditory,Auditory definition,term,4.348,12.581,0.346,0.0,0.949,False
+4,low-frequency rise,gated,291,28,listening_vs_auditory,Auditory definition,contrast,9.622,9.873,0.975,0.557,1.515,False
+4,low-frequency rise,ungated,248,24,listening_vs_auditory,Auditory definition,contrast,6.048,9.873,0.613,0.254,1.046,False
+4,low-frequency rise,wellfit,23,11,listening_vs_auditory,Auditory definition,contrast,4.348,9.873,0.44,0.0,1.788,False
+4,low-frequency rise,gated,291,28,listening_vs_resting_state,Auditory definition,contrast,9.278,12.753,0.728,0.41,1.15,False
+4,low-frequency rise,ungated,248,24,listening_vs_resting_state,Auditory definition,contrast,6.048,12.753,0.474,0.222,0.78,False
+4,low-frequency rise,wellfit,23,11,listening_vs_resting_state,Auditory definition,contrast,0.0,12.753,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,sentences,Sentence completion,term,17.869,12.547,1.424,1.037,1.882,True
+4,low-frequency rise,ungated,248,24,sentences,Sentence completion,term,5.645,12.547,0.45,0.144,0.852,False
+4,low-frequency rise,wellfit,23,11,sentences,Sentence completion,term,0.0,12.547,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,reading,Sentence completion,term,5.842,7.679,0.761,0.349,1.283,False
+4,low-frequency rise,ungated,248,24,reading,Sentence completion,term,3.226,7.679,0.42,0.078,0.98,False
+4,low-frequency rise,wellfit,23,11,reading,Sentence completion,term,0.0,7.679,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,sentences_vs_words,Sentence completion,contrast,12.715,9.05,1.405,0.883,2.036,False
+4,low-frequency rise,ungated,248,24,sentences_vs_words,Sentence completion,contrast,3.226,9.05,0.356,0.145,0.666,False
+4,low-frequency rise,wellfit,23,11,sentences_vs_words,Sentence completion,contrast,0.0,9.05,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,sentences_vs_resting_state,Sentence completion,contrast,10.997,12.067,0.911,0.566,1.356,False
+4,low-frequency rise,ungated,248,24,sentences_vs_resting_state,Sentence completion,contrast,4.032,12.067,0.334,0.109,0.626,False
+4,low-frequency rise,wellfit,23,11,sentences_vs_resting_state,Sentence completion,contrast,0.0,12.067,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,naming,Shared core,term,3.093,5.314,0.582,0.226,1.161,False
+4,low-frequency rise,ungated,248,24,naming,Shared core,term,0.403,5.314,0.076,0.0,0.238,False
+4,low-frequency rise,wellfit,23,11,naming,Shared core,term,0.0,5.314,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,semantic,Shared core,term,20.619,16.421,1.256,0.819,1.772,False
+4,low-frequency rise,ungated,248,24,semantic,Shared core,term,8.065,16.421,0.491,0.226,0.775,False
+4,low-frequency rise,wellfit,23,11,semantic,Shared core,term,0.0,16.421,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,phonological,Shared core,term,7.904,11.073,0.714,0.433,1.119,False
+4,low-frequency rise,ungated,248,24,phonological,Shared core,term,4.032,11.073,0.364,0.159,0.737,False
+4,low-frequency rise,wellfit,23,11,phonological,Shared core,term,0.0,11.073,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,production,Shared core,term,5.155,5.656,0.911,0.485,1.367,False
+4,low-frequency rise,ungated,248,24,production,Shared core,term,0.403,5.656,0.071,0.0,0.227,False
+4,low-frequency rise,wellfit,23,11,production,Shared core,term,0.0,5.656,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,naming_vs_production,Shared core,contrast,2.405,3.531,0.681,0.21,1.235,False
+4,low-frequency rise,ungated,248,24,naming_vs_production,Shared core,contrast,2.419,3.531,0.685,0.241,1.101,False
+4,low-frequency rise,wellfit,23,11,naming_vs_production,Shared core,contrast,8.696,3.531,2.463,0.0,7.962,False
+4,low-frequency rise,gated,291,28,semantic_vs_memory_retrieval,Shared core,contrast,8.247,6.582,1.253,0.588,1.998,False
+4,low-frequency rise,ungated,248,24,semantic_vs_memory_retrieval,Shared core,contrast,2.419,6.582,0.368,0.058,0.831,False
+4,low-frequency rise,wellfit,23,11,semantic_vs_memory_retrieval,Shared core,contrast,0.0,6.582,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,production_vs_motor,Shared core,contrast,7.56,8.022,0.942,0.516,1.515,False
+4,low-frequency rise,ungated,248,24,production_vs_motor,Shared core,contrast,5.242,8.022,0.653,0.091,1.325,False
+4,low-frequency rise,wellfit,23,11,production_vs_motor,Shared core,contrast,0.0,8.022,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,naming_vs_resting_state,Shared core,contrast,4.124,7.679,0.537,0.249,1.007,False
+4,low-frequency rise,ungated,248,24,naming_vs_resting_state,Shared core,contrast,3.629,7.679,0.473,0.161,0.879,False
+4,low-frequency rise,wellfit,23,11,naming_vs_resting_state,Shared core,contrast,0.0,7.679,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,semantic_vs_resting_state,Shared core,contrast,8.591,12.479,0.688,0.444,1.05,False
+4,low-frequency rise,ungated,248,24,semantic_vs_resting_state,Shared core,contrast,5.242,12.479,0.42,0.189,0.706,False
+4,low-frequency rise,wellfit,23,11,semantic_vs_resting_state,Shared core,contrast,0.0,12.479,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,production_vs_resting_state,Shared core,contrast,5.155,8.605,0.599,0.268,1.063,False
+4,low-frequency rise,ungated,248,24,production_vs_resting_state,Shared core,contrast,2.419,8.605,0.281,0.051,0.568,False
+4,low-frequency rise,wellfit,23,11,production_vs_resting_state,Shared core,contrast,0.0,8.605,0.0,0.0,0.0,False
+4,low-frequency rise,gated,291,28,language_vs_resting_state,Language network,contrast,6.873,12.067,0.57,0.322,0.913,False
+4,low-frequency rise,ungated,248,24,language_vs_resting_state,Language network,contrast,4.032,12.067,0.334,0.158,0.524,False
+4,low-frequency rise,wellfit,23,11,language_vs_resting_state,Language network,contrast,0.0,12.067,0.0,0.0,0.0,False
+1,audio-stimulus low-frequency,gated,114,21,pictures,Picture naming,term,4.386,10.593,0.414,0.0,0.866,False
+1,audio-stimulus low-frequency,ungated,218,23,pictures,Picture naming,term,11.468,10.593,1.083,0.363,2.115,False
+1,audio-stimulus low-frequency,wellfit,26,7,pictures,Picture naming,term,26.923,10.593,2.542,0.0,3.752,False
+1,audio-stimulus low-frequency,gated,114,21,objects,Picture naming,term,4.386,8.468,0.518,0.115,1.103,False
+1,audio-stimulus low-frequency,ungated,218,23,objects,Picture naming,term,9.633,8.468,1.138,0.576,2.095,False
+1,audio-stimulus low-frequency,wellfit,26,7,objects,Picture naming,term,19.231,8.468,2.271,0.0,5.241,False
+1,audio-stimulus low-frequency,gated,114,21,naming_vs_objects,Picture naming,contrast,10.526,4.662,2.258,0.0,4.544,False
+1,audio-stimulus low-frequency,ungated,218,23,naming_vs_objects,Picture naming,contrast,3.67,4.662,0.787,0.251,1.432,False
+1,audio-stimulus low-frequency,wellfit,26,7,naming_vs_objects,Picture naming,contrast,3.846,4.662,0.825,0.0,6.961,False
+1,audio-stimulus low-frequency,gated,114,21,pictures_vs_resting_state,Picture naming,contrast,2.632,10.799,0.244,0.0,0.517,False
+1,audio-stimulus low-frequency,ungated,218,23,pictures_vs_resting_state,Picture naming,contrast,13.761,10.799,1.274,0.596,2.327,False
+1,audio-stimulus low-frequency,wellfit,26,7,pictures_vs_resting_state,Picture naming,contrast,30.769,10.799,2.849,0.0,4.844,False
+1,audio-stimulus low-frequency,gated,114,21,listening,Auditory definition,term,40.351,12.959,3.114,1.941,4.831,True
+1,audio-stimulus low-frequency,ungated,218,23,listening,Auditory definition,term,8.257,12.959,0.637,0.325,1.084,False
+1,audio-stimulus low-frequency,wellfit,26,7,listening,Auditory definition,term,3.846,12.959,0.297,0.0,2.788,False
+1,audio-stimulus low-frequency,gated,114,21,auditory,Auditory definition,term,40.351,12.581,3.207,1.996,4.951,True
+1,audio-stimulus low-frequency,ungated,218,23,auditory,Auditory definition,term,9.633,12.581,0.766,0.418,1.26,False
+1,audio-stimulus low-frequency,wellfit,26,7,auditory,Auditory definition,term,11.538,12.581,0.917,0.0,3.478,False
+1,audio-stimulus low-frequency,gated,114,21,listening_vs_auditory,Auditory definition,contrast,21.053,9.873,2.132,0.712,4.245,False
+1,audio-stimulus low-frequency,ungated,218,23,listening_vs_auditory,Auditory definition,contrast,9.174,9.873,0.929,0.5,1.332,False
+1,audio-stimulus low-frequency,wellfit,26,7,listening_vs_auditory,Auditory definition,contrast,11.538,9.873,1.169,0.0,3.523,False
+1,audio-stimulus low-frequency,gated,114,21,listening_vs_resting_state,Auditory definition,contrast,36.842,12.753,2.889,1.555,4.822,True
+1,audio-stimulus low-frequency,ungated,218,23,listening_vs_resting_state,Auditory definition,contrast,10.092,12.753,0.791,0.501,1.254,False
+1,audio-stimulus low-frequency,wellfit,26,7,listening_vs_resting_state,Auditory definition,contrast,7.692,12.753,0.603,0.0,2.709,False
+1,audio-stimulus low-frequency,gated,114,21,sentences,Sentence completion,term,26.316,12.547,2.097,0.862,3.873,False
+1,audio-stimulus low-frequency,ungated,218,23,sentences,Sentence completion,term,7.798,12.547,0.622,0.204,1.31,False
+1,audio-stimulus low-frequency,wellfit,26,7,sentences,Sentence completion,term,7.692,12.547,0.613,0.0,4.364,False
+1,audio-stimulus low-frequency,gated,114,21,reading,Sentence completion,term,18.421,7.679,2.399,0.642,4.689,False
+1,audio-stimulus low-frequency,ungated,218,23,reading,Sentence completion,term,3.67,7.679,0.478,0.0,1.103,False
+1,audio-stimulus low-frequency,wellfit,26,7,reading,Sentence completion,term,3.846,7.679,0.501,0.0,3.829,False
+1,audio-stimulus low-frequency,gated,114,21,sentences_vs_words,Sentence completion,contrast,22.807,9.05,2.52,1.077,4.519,True
+1,audio-stimulus low-frequency,ungated,218,23,sentences_vs_words,Sentence completion,contrast,5.046,9.05,0.558,0.179,1.184,False
+1,audio-stimulus low-frequency,wellfit,26,7,sentences_vs_words,Sentence completion,contrast,3.846,9.05,0.425,0.0,3.802,False
+1,audio-stimulus low-frequency,gated,114,21,sentences_vs_resting_state,Sentence completion,contrast,28.947,12.067,2.399,1.136,4.204,True
+1,audio-stimulus low-frequency,ungated,218,23,sentences_vs_resting_state,Sentence completion,contrast,9.633,12.067,0.798,0.406,1.19,False
+1,audio-stimulus low-frequency,wellfit,26,7,sentences_vs_resting_state,Sentence completion,contrast,3.846,12.067,0.319,0.0,2.884,False
+1,audio-stimulus low-frequency,gated,114,21,naming,Shared core,term,12.281,5.314,2.311,0.911,4.838,False
+1,audio-stimulus low-frequency,ungated,218,23,naming,Shared core,term,2.752,5.314,0.518,0.097,1.171,False
+1,audio-stimulus low-frequency,wellfit,26,7,naming,Shared core,term,7.692,5.314,1.448,0.0,9.736,False
+1,audio-stimulus low-frequency,gated,114,21,semantic,Shared core,term,22.807,16.421,1.389,0.502,2.816,False
+1,audio-stimulus low-frequency,ungated,218,23,semantic,Shared core,term,10.55,16.421,0.642,0.19,1.318,False
+1,audio-stimulus low-frequency,wellfit,26,7,semantic,Shared core,term,19.231,16.421,1.171,0.0,3.168,False
+1,audio-stimulus low-frequency,gated,114,21,phonological,Shared core,term,22.807,11.073,2.06,0.987,3.72,False
+1,audio-stimulus low-frequency,ungated,218,23,phonological,Shared core,term,8.257,11.073,0.746,0.421,1.251,False
+1,audio-stimulus low-frequency,wellfit,26,7,phonological,Shared core,term,11.538,11.073,1.042,0.0,4.494,False
+1,audio-stimulus low-frequency,gated,114,21,production,Shared core,term,20.175,5.656,3.567,1.721,6.489,True
+1,audio-stimulus low-frequency,ungated,218,23,production,Shared core,term,1.835,5.656,0.324,0.0,0.929,False
+1,audio-stimulus low-frequency,wellfit,26,7,production,Shared core,term,3.846,5.656,0.68,0.0,5.996,False
+1,audio-stimulus low-frequency,gated,114,21,naming_vs_production,Shared core,contrast,2.632,3.531,0.745,0.0,1.678,False
+1,audio-stimulus low-frequency,ungated,218,23,naming_vs_production,Shared core,contrast,2.294,3.531,0.65,0.162,1.268,False
+1,audio-stimulus low-frequency,wellfit,26,7,naming_vs_production,Shared core,contrast,3.846,3.531,1.089,0.0,7.422,False
+1,audio-stimulus low-frequency,gated,114,21,semantic_vs_memory_retrieval,Shared core,contrast,19.298,6.582,2.932,0.816,6.476,False
+1,audio-stimulus low-frequency,ungated,218,23,semantic_vs_memory_retrieval,Shared core,contrast,5.505,6.582,0.836,0.344,1.606,False
+1,audio-stimulus low-frequency,wellfit,26,7,semantic_vs_memory_retrieval,Shared core,contrast,15.385,6.582,2.337,0.0,7.249,False
+1,audio-stimulus low-frequency,gated,114,21,production_vs_motor,Shared core,contrast,27.193,8.022,3.39,1.803,5.793,True
+1,audio-stimulus low-frequency,ungated,218,23,production_vs_motor,Shared core,contrast,5.046,8.022,0.629,0.382,1.115,False
+1,audio-stimulus low-frequency,wellfit,26,7,production_vs_motor,Shared core,contrast,7.692,8.022,0.959,0.0,6.565,False
+1,audio-stimulus low-frequency,gated,114,21,naming_vs_resting_state,Shared core,contrast,14.035,7.679,1.828,0.796,3.496,False
+1,audio-stimulus low-frequency,ungated,218,23,naming_vs_resting_state,Shared core,contrast,5.963,7.679,0.777,0.41,1.335,False
+1,audio-stimulus low-frequency,wellfit,26,7,naming_vs_resting_state,Shared core,contrast,7.692,7.679,1.002,0.0,6.463,False
+1,audio-stimulus low-frequency,gated,114,21,semantic_vs_resting_state,Shared core,contrast,24.561,12.479,1.968,0.827,3.601,False
+1,audio-stimulus low-frequency,ungated,218,23,semantic_vs_resting_state,Shared core,contrast,12.844,12.479,1.029,0.598,1.589,False
+1,audio-stimulus low-frequency,wellfit,26,7,semantic_vs_resting_state,Shared core,contrast,11.538,12.479,0.925,0.0,4.008,False
+1,audio-stimulus low-frequency,gated,114,21,production_vs_resting_state,Shared core,contrast,25.439,8.605,2.956,1.767,4.471,True
+1,audio-stimulus low-frequency,ungated,218,23,production_vs_resting_state,Shared core,contrast,6.422,8.605,0.746,0.445,1.193,False
+1,audio-stimulus low-frequency,wellfit,26,7,production_vs_resting_state,Shared core,contrast,11.538,8.605,1.341,0.0,4.173,False
+1,audio-stimulus low-frequency,gated,114,21,language_vs_resting_state,Language network,contrast,28.07,12.067,2.326,1.053,3.929,True
+1,audio-stimulus low-frequency,ungated,218,23,language_vs_resting_state,Language network,contrast,12.385,12.067,1.026,0.573,1.466,False
+1,audio-stimulus low-frequency,wellfit,26,7,language_vs_resting_state,Language network,contrast,11.538,12.067,0.956,0.0,2.935,False
+3,sentence-stimulus low-frequency,gated,161,24,pictures,Picture naming,term,7.453,10.593,0.704,0.204,1.289,False
+3,sentence-stimulus low-frequency,ungated,152,21,pictures,Picture naming,term,15.132,10.593,1.428,0.418,2.376,False
+3,sentence-stimulus low-frequency,wellfit,5,5,pictures,Picture naming,term,0.0,10.593,0.0,0.0,0.0,False
+3,sentence-stimulus low-frequency,gated,161,24,objects,Picture naming,term,9.317,8.468,1.1,0.538,1.798,False
+3,sentence-stimulus low-frequency,ungated,152,21,objects,Picture naming,term,9.868,8.468,1.165,0.382,1.757,False
+3,sentence-stimulus low-frequency,wellfit,5,5,objects,Picture naming,term,0.0,8.468,0.0,0.0,0.0,False
+3,sentence-stimulus low-frequency,gated,161,24,naming_vs_objects,Picture naming,contrast,4.969,4.662,1.066,0.0,2.05,False
+3,sentence-stimulus low-frequency,ungated,152,21,naming_vs_objects,Picture naming,contrast,2.632,4.662,0.564,0.0,1.549,False
+3,sentence-stimulus low-frequency,wellfit,5,5,naming_vs_objects,Picture naming,contrast,0.0,4.662,0.0,0.0,0.0,False
+3,sentence-stimulus low-frequency,gated,161,24,pictures_vs_resting_state,Picture naming,contrast,8.075,10.799,0.748,0.281,1.367,False
+3,sentence-stimulus low-frequency,ungated,152,21,pictures_vs_resting_state,Picture naming,contrast,14.474,10.799,1.34,0.513,1.947,False
+3,sentence-stimulus low-frequency,wellfit,5,5,pictures_vs_resting_state,Picture naming,contrast,0.0,10.799,0.0,0.0,0.0,False
+3,sentence-stimulus low-frequency,gated,161,24,listening,Auditory definition,term,14.286,12.959,1.102,0.664,1.503,False
+3,sentence-stimulus low-frequency,ungated,152,21,listening,Auditory definition,term,9.868,12.959,0.762,0.374,1.273,False
+3,sentence-stimulus low-frequency,wellfit,5,5,listening,Auditory definition,term,20.0,12.959,1.543,0.0,5.113,False
+3,sentence-stimulus low-frequency,gated,161,24,auditory,Auditory definition,term,13.665,12.581,1.086,0.597,1.518,False
+3,sentence-stimulus low-frequency,ungated,152,21,auditory,Auditory definition,term,14.474,12.581,1.15,0.679,1.739,False
+3,sentence-stimulus low-frequency,wellfit,5,5,auditory,Auditory definition,term,20.0,12.581,1.59,0.0,5.395,False
+3,sentence-stimulus low-frequency,gated,161,24,listening_vs_auditory,Auditory definition,contrast,6.832,9.873,0.692,0.315,1.11,False
+3,sentence-stimulus low-frequency,ungated,152,21,listening_vs_auditory,Auditory definition,contrast,6.579,9.873,0.666,0.088,1.093,False
+3,sentence-stimulus low-frequency,wellfit,5,5,listening_vs_auditory,Auditory definition,contrast,0.0,9.873,0.0,0.0,0.0,False
+3,sentence-stimulus low-frequency,gated,161,24,listening_vs_resting_state,Auditory definition,contrast,11.18,12.753,0.877,0.435,1.256,False
+3,sentence-stimulus low-frequency,ungated,152,21,listening_vs_resting_state,Auditory definition,contrast,7.895,12.753,0.619,0.263,1.136,False
+3,sentence-stimulus low-frequency,wellfit,5,5,listening_vs_resting_state,Auditory definition,contrast,20.0,12.753,1.568,0.0,5.346,False
+3,sentence-stimulus low-frequency,gated,161,24,sentences,Sentence completion,term,9.317,12.547,0.743,0.39,1.075,False
+3,sentence-stimulus low-frequency,ungated,152,21,sentences,Sentence completion,term,6.579,12.547,0.524,0.238,0.964,False
+3,sentence-stimulus low-frequency,wellfit,5,5,sentences,Sentence completion,term,40.0,12.547,3.188,0.0,7.611,False
+3,sentence-stimulus low-frequency,gated,161,24,reading,Sentence completion,term,4.969,7.679,0.647,0.0,1.405,False
+3,sentence-stimulus low-frequency,ungated,152,21,reading,Sentence completion,term,4.605,7.679,0.6,0.101,1.176,False
+3,sentence-stimulus low-frequency,wellfit,5,5,reading,Sentence completion,term,20.0,7.679,2.604,0.0,8.576,False
+3,sentence-stimulus low-frequency,gated,161,24,sentences_vs_words,Sentence completion,contrast,9.317,9.05,1.029,0.415,1.659,False
+3,sentence-stimulus low-frequency,ungated,152,21,sentences_vs_words,Sentence completion,contrast,7.895,9.05,0.872,0.382,1.731,False
+3,sentence-stimulus low-frequency,wellfit,5,5,sentences_vs_words,Sentence completion,contrast,20.0,9.05,2.21,0.0,7.605,False
+3,sentence-stimulus low-frequency,gated,161,24,sentences_vs_resting_state,Sentence completion,contrast,8.696,12.067,0.721,0.161,1.191,False
+3,sentence-stimulus low-frequency,ungated,152,21,sentences_vs_resting_state,Sentence completion,contrast,7.237,12.067,0.6,0.299,1.095,False
+3,sentence-stimulus low-frequency,wellfit,5,5,sentences_vs_resting_state,Sentence completion,contrast,40.0,12.067,3.315,0.0,8.083,False
+3,sentence-stimulus low-frequency,gated,161,24,naming,Shared core,term,4.969,5.314,0.935,0.0,1.916,False
+3,sentence-stimulus low-frequency,ungated,152,21,naming,Shared core,term,1.316,5.314,0.248,0.0,0.74,False
+3,sentence-stimulus low-frequency,wellfit,5,5,naming,Shared core,term,0.0,5.314,0.0,0.0,0.0,False
+3,sentence-stimulus low-frequency,gated,161,24,semantic,Shared core,term,11.18,16.421,0.681,0.301,1.048,False
+3,sentence-stimulus low-frequency,ungated,152,21,semantic,Shared core,term,7.895,16.421,0.481,0.113,0.99,False
+3,sentence-stimulus low-frequency,wellfit,5,5,semantic,Shared core,term,20.0,16.421,1.218,0.0,4.408,False
+3,sentence-stimulus low-frequency,gated,161,24,phonological,Shared core,term,5.59,11.073,0.505,0.114,0.921,False
+3,sentence-stimulus low-frequency,ungated,152,21,phonological,Shared core,term,5.263,11.073,0.475,0.153,1.029,False
+3,sentence-stimulus low-frequency,wellfit,5,5,phonological,Shared core,term,20.0,11.073,1.806,0.0,6.304,False
+3,sentence-stimulus low-frequency,gated,161,24,production,Shared core,term,6.211,5.656,1.098,0.309,1.726,False
+3,sentence-stimulus low-frequency,ungated,152,21,production,Shared core,term,6.579,5.656,1.163,0.6,2.05,False
+3,sentence-stimulus low-frequency,wellfit,5,5,production,Shared core,term,60.0,5.656,10.607,0.0,21.527,False
+3,sentence-stimulus low-frequency,gated,161,24,naming_vs_production,Shared core,contrast,3.727,3.531,1.055,0.238,2.336,False
+3,sentence-stimulus low-frequency,ungated,152,21,naming_vs_production,Shared core,contrast,2.632,3.531,0.745,0.194,1.644,False
+3,sentence-stimulus low-frequency,wellfit,5,5,naming_vs_production,Shared core,contrast,0.0,3.531,0.0,0.0,0.0,False
+3,sentence-stimulus low-frequency,gated,161,24,semantic_vs_memory_retrieval,Shared core,contrast,2.484,6.582,0.377,0.11,0.668,False
+3,sentence-stimulus low-frequency,ungated,152,21,semantic_vs_memory_retrieval,Shared core,contrast,4.605,6.582,0.7,0.341,1.316,False
+3,sentence-stimulus low-frequency,wellfit,5,5,semantic_vs_memory_retrieval,Shared core,contrast,20.0,6.582,3.039,0.0,10.85,False
+3,sentence-stimulus low-frequency,gated,161,24,production_vs_motor,Shared core,contrast,1.242,8.022,0.155,0.0,0.395,False
+3,sentence-stimulus low-frequency,ungated,152,21,production_vs_motor,Shared core,contrast,6.579,8.022,0.82,0.412,1.502,False
+3,sentence-stimulus low-frequency,wellfit,5,5,production_vs_motor,Shared core,contrast,20.0,8.022,2.493,0.0,8.81,False
+3,sentence-stimulus low-frequency,gated,161,24,naming_vs_resting_state,Shared core,contrast,5.59,7.679,0.728,0.073,1.288,False
+3,sentence-stimulus low-frequency,ungated,152,21,naming_vs_resting_state,Shared core,contrast,4.605,7.679,0.6,0.241,1.16,False
+3,sentence-stimulus low-frequency,wellfit,5,5,naming_vs_resting_state,Shared core,contrast,0.0,7.679,0.0,0.0,0.0,False
+3,sentence-stimulus low-frequency,gated,161,24,semantic_vs_resting_state,Shared core,contrast,6.211,12.479,0.498,0.072,0.917,False
+3,sentence-stimulus low-frequency,ungated,152,21,semantic_vs_resting_state,Shared core,contrast,9.868,12.479,0.791,0.386,1.277,False
+3,sentence-stimulus low-frequency,wellfit,5,5,semantic_vs_resting_state,Shared core,contrast,20.0,12.479,1.603,0.0,5.591,False
+3,sentence-stimulus low-frequency,gated,161,24,production_vs_resting_state,Shared core,contrast,5.59,8.605,0.65,0.121,1.075,False
+3,sentence-stimulus low-frequency,ungated,152,21,production_vs_resting_state,Shared core,contrast,9.211,8.605,1.07,0.523,1.986,False
+3,sentence-stimulus low-frequency,wellfit,5,5,production_vs_resting_state,Shared core,contrast,40.0,8.605,4.649,0.0,11.466,False
+3,sentence-stimulus low-frequency,gated,161,24,language_vs_resting_state,Language network,contrast,5.59,12.067,0.463,0.107,0.914,False
+3,sentence-stimulus low-frequency,ungated,152,21,language_vs_resting_state,Language network,contrast,9.868,12.067,0.818,0.429,1.268,False
+3,sentence-stimulus low-frequency,wellfit,5,5,language_vs_resting_state,Language network,contrast,40.0,12.067,3.315,0.0,8.036,False
