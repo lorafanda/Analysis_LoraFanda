@@ -76,7 +76,13 @@ CONTRASTS = [
 REST = ["resting state", "resting"]
 CONTRASTS += [(f"{n}_vs_resting_state", st, "contrast", (terms, REST))
               for n, st, _, terms in SINGLE
-              if n in ("pictures", "listening", "sentences", "naming", "semantic", "production")]
+              if n in ("pictures", "listening", "sentences", "naming", "semantic", "production", "reading")]
+# added 2026-11-06 (the professor's four vs baseline = resting state): heard sentences = studies carrying a
+# sentence term AND a listening term (an intersection, so check its count with --counts first: the 200 rule applies)
+CONTRASTS += [("heard_sentences_vs_resting_state", "Auditory definition", "contrast",
+               (("AND", ["sentence", "sentences"], ["listening", "listened", "spoken", "auditory"]), REST))]
+# per-map exceptions to the 200 rule (Lora, 2026-11-06): heard sentences has 154 studies, kept at 150
+MIN_OVERRIDE = {"heard_sentences_vs_resting_state": 150}
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--counts", action="store_true", help="only count studies per term")
@@ -105,7 +111,11 @@ labels = {c.split("__", 1)[1]: c for c in dset.annotations.columns if "__" in c}
 
 
 def studies(terms):
-    """The union of the studies labelled with any of `terms`, and the terms not in the vocabulary."""
+    """The union of the studies labelled with any of `terms`, and the terms not in the vocabulary;
+    ("AND", list1, list2, ...) = the studies in every list's union."""
+    if isinstance(terms, tuple) and terms[0] == "AND":
+        parts = [studies(g) for g in terms[1:]]
+        return set.intersection(*(p[0] for p in parts)), [t for p in parts for t in p[1]]
     ids, absent = set(), []
     for term in terms:
         if term in labels:
@@ -125,8 +135,11 @@ for name, stage, kind, (tx, ty) in CONTRASTS:
     iy, ay = studies(ty)
     both = ix & iy
     nx, ny = len(ix - both), len(iy - both)
-    rows.append(dict(name=name, stage=stage, kind=kind, terms=" + ".join(tx) + "  VS  " + " + ".join(ty),
-                     n_studies=nx, n_other=ny, absent=", ".join(ax_ + ay), used=min(nx, ny) >= MIN_STUDIES))
+    fmt = lambda t: (" AND ".join("(" + " + ".join(g) + ")" for g in t[1:]) if isinstance(t, tuple) else " + ".join(t))
+    rows.append(dict(name=name, stage=stage, kind=kind, terms=fmt(tx) + "  VS  " + fmt(ty),
+                     n_studies=nx, n_other=ny, absent=", ".join(ax_ + ay),
+                     min_studies=MIN_OVERRIDE.get(name, MIN_STUDIES),
+                     used=min(nx, ny) >= MIN_OVERRIDE.get(name, MIN_STUDIES)))
 counts = pd.DataFrame(rows)
 counts.to_csv(OUT / "study_counts.csv", index=False)
 pd.set_option("display.width", 220)

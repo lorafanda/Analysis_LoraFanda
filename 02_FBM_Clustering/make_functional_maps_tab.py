@@ -39,6 +39,8 @@ SOURCES = {
     "functional_information": MM / "out" / "functional_information" / "functional_information.png",
     "15band_k7_all_maps_load035": MM / "out_k7" / "nimare" / "cluster_loadings" / "15band_cluster_loadings_load035_shaft.png",
     **{f"cross_feature_K{k}": MM / "out" / "cross_feature_maps" / f"K{k}_load035.png" for k in (6, 7, 8, 9, 10)},
+    "highlight2_15band_K7_all25": MM / "out" / "highlight_maps" / "15band_K7_load035_all_v4.png",
+    "highlight2_15band_K7_seven": MM / "out" / "highlight_maps" / "15band_K7_load035_sel_v4.png",
     "highlight_15band_K7": MM / "out" / "highlight_maps" / "15band_K7_load035.png",
     "highlight_15zband_K7": MM / "out" / "highlight_maps" / "15zband_K7_load035.png",
     "highlight_5band_K6": MM / "out" / "highlight_maps" / "5band_K6_load035.png",
@@ -100,7 +102,8 @@ def build() -> str:
           "    <h2>Which feature set and K carry functional information?</h2>",
           '    <p class="lead">NiMARE functional maps against the convex-NMF response types, cohort v17 (1587 electrodes, '
           '29 patients). Analyses of 4&ndash;6 November 2026; every number was read back from the output tables. The same '
-          f'text as the Word document: <a href="{DOCX_URL}">functional_map_analysis_2026-11-05.docx</a>.</p>']
+          f'text as the Word document: <a href="{DOCX_URL}">functional_map_analysis_2026-11-05.docx</a>. Updated 7 November: '
+          'two more maps (25), the two-sided test of section 7 and the conclusion.</p>']
 
     P += ['    <h3 id="fm-answer">1 &middot; Question and short answer</h3>',
           "    <p><b>Question.</b> Across feature sets, numbers of clusters K 6&ndash;10 and minimum loading cuts, which "
@@ -125,7 +128,12 @@ def build() -> str:
                   "semantic vs memory retrieval, production vs motor, language vs resting state",
                   "studies with term X vs studies with term Y (shared studies dropped)"],
                  ["6 task vs rest", "pictures, listening, sentences, naming, semantic, production vs resting state",
-                  "task studies vs about 1,500 resting-state studies"]]),
+                  "task studies vs about 1,500 resting-state studies"],
+                 ["2 task vs rest (added 7 Nov)", "reading vs resting state (592 studies); heard sentences vs resting "
+                  "state (154 studies carrying a sentence term AND a listening term: the one map under the 200 rule, kept "
+                  "at 150)", "as the row above"]]),
+          "    <p>Sections 3&ndash;6 use the first 23 maps and the counting test below; section 7 uses all 25 maps and "
+          "the two-sided test.</p>",
           "    <ul>"
           "<li><b>Inside a map:</b> the mean z over a 5-mm sphere around the contact is in the map's top 10% of in-mask "
           "voxels. The share of all electrodes inside a map runs from 3.5% (naming vs production) to 21% (semantic).</li>"
@@ -136,7 +144,11 @@ def build() -> str:
           "the weighted version keeps every electrode in every cluster in proportion to its loading.</li>"
           "<li><b>Fit (shaft-shift null):</b> within each patient, electrodes in shaft order, cluster labels rotated by a "
           "random offset against the map values (1,000&ndash;2,000 rotations); p = share of rotations at least as high as "
-          "observed; Benjamini&ndash;Hochberg over all clusters &times; 23 maps; fit = q &lt; 0.05.</li>"
+          "observed; Benjamini&ndash;Hochberg over all clusters &times; 23 maps; fit = q &lt; 0.05 (sections 3&ndash;6).</li>"
+          "<li><b>Two-sided test (section 7):</b> the same 2,000 rotations; z = (cluster % &minus; mean of the rotations) "
+          "/ SD of the rotations; p = 2 &times; the normal tail beyond |z| (no floor at 1/2,001); Benjamini&ndash;Hochberg "
+          "over 7 clusters &times; 25 maps = 175 bars; above chance = z &gt; 0 and q &lt; 0.05, below chance = z &lt; 0 "
+          "and q &lt; 0.05. The cut-off works out at |z| &ge; 2.58.</li>"
           "<li><b>Functional information:</b> mutual information between cluster membership and inside / outside, summed "
           "over the 23 maps, as a z against the same null; compared within one K (it grows with the number of electrodes "
           "and with K).</li></ul>"]
@@ -197,7 +209,41 @@ def build() -> str:
                      "23 maps one bar per feature set, the pattern telling the feature set (legend top right). " + LEG_BARS +
                      " Correction over every bar of the figure. Bottom: " + LEG_PIAL))
 
-    P += ['    <h3 id="fm-highlight">7 &middot; The highlight figures: every cluster, the 10 most telling maps</h3>',
+    P += ['    <h3 id="fm-twosided">7 &middot; 15 bands K 7, loading 0.35: above and below chance, all 25 maps</h3>',
+          "    <p>Each bar asks one thing: does this cluster sit in the map more, or less, often than chance? Chance = the "
+          "cluster labels shifted along the shafts within each patient, 2,000 times. The grey box is drawn at the "
+          "corrected cut-off (mean &plusmn; 2.58 SD of the shifts), so a bar outside the box is exactly a significant "
+          "one (checked: 0 exceptions of 175).</p>"]
+    LEG2 = ("x = the clusters in the order of the cluster cards; in each group one bar per map, numbered under the bars. "
+            "Bar = % of the cluster's members (own loading &ge; 0.35) inside the map. Full colour = above chance; pale "
+            "= neither; white with a coloured edge and &#9660; = below chance (the cluster avoids the map). Dark line = "
+            "chance level (mean of the 2,000 shifts); grey box = the corrected chance range. Under each cluster: its "
+            "centroid (mean ERSP of the same members, &plusmn;2 dB, audio | picture | sentences) and its members on the "
+            "glass brain, left above right. Bottom: " + LEG_PIAL)
+    P.append(fig("highlight2_15band_K7_all25", "All 25 maps", LEG2))
+    P.append(fig("highlight2_15band_K7_seven", "The seven chosen maps",
+                 "The professor's four maps vs resting state (heard sentences, pictures, reading, production), then the "
+                 "three maps where a cluster sits significantly below chance (sentences vs words, semantic vs rest, "
+                 "production vs motor). Same test and correction as above (over all 25 maps, not only the seven). " + LEG2))
+    P.append(table(["Cluster (n)", "Above chance (z)", "Below chance (z)"],
+                   [["c5 (132)", "sentences vs words +4.2, sentences +3.7, semantic +3.4, sentences vs rest +3.0, listening "
+                     "vs auditory +2.7, listening +2.7, heard sentences vs rest +2.6", "none"],
+                    ["c0 (219)", "objects +4.0, naming vs production +3.6, naming vs rest +3.4, pictures vs rest +3.1",
+                     "sentences vs words &minus;3.0"],
+                    ["c2 (121)", "none", "semantic vs rest &minus;2.7"],
+                    ["c6 (146)", "none", "sentences vs words &minus;3.6, sentences &minus;2.6"],
+                    ["c4 (242)", "none", "language vs rest &minus;4.2, listening vs rest &minus;3.5, naming vs rest &minus;3.4, "
+                     "production vs rest &minus;3.2, reading vs rest &minus;3.0, phonological &minus;2.9, naming &minus;2.7, "
+                     "semantic vs rest &minus;2.7, sentences vs rest &minus;2.6"],
+                    ["c1 (84)", "18 of 25: auditory +6.5, production +6.4, listening vs rest +6.2, production vs motor "
+                     "+6.1, listening +5.8, language vs rest +5.5, sentences vs rest +5.1, heard sentences vs rest +5.0, "
+                     "sentences vs words +4.9, semantic vs memory retrieval +4.8, production vs rest +4.7, naming vs objects "
+                     "+4.5, reading +4.3, semantic vs rest +4.1, sentences +4.0, listening vs auditory +3.5, reading vs rest "
+                     "+3.5, phonological +3.4", "none"],
+                    ["c3 (114)", "none", "production vs motor &minus;3.1, naming &minus;2.7"]]))
+    P.append("    <p>No cluster is above chance in two maps: naming and pictures (the single terms).</p>")
+
+    P += ['    <h3 id="fm-highlight">7b &middot; First version: the 10 most telling maps (counting test, 23 maps)</h3>',
           "    <p>A map can be shown when at least one clean cluster fits it; at most 10 are shown, shared out in turns: the "
           "clusters with the fewest fits choose first, each takes one map per round, its own maps first (fitted by no other "
           "clean cluster), then shared ones, largest difference first (% of the cluster inside minus % of all "
@@ -219,23 +265,36 @@ def build() -> str:
           "    <p>Language is not one module but a network of interacting sub-functions (perception, comprehension, sentence "
           "integration, semantic retrieval, naming, production), and the analysis was designed around that view: a "
           "cluster may sit in several language maps, and several clusters may share one map. Read this way, the response "
-          "types map onto the language network in a consistent and limited way.</p>",
-          "    <ul><li><b>One language-network cluster.</b> At every feature set and every K, one cluster sits in nearly every "
-          "language map at two to five times the cohort rate: the perisylvian cluster (15 bands c1), the shared core of the "
-          "network rather than one stage.</li>"
-          "<li><b>Two more specific functions.</b> Sentence-level / semantic processing (15 bands c5, in its high-loading "
-          "members) and picture naming / objects (15 bands c0), moderate and fitting fewer, more specific maps.</li>"
-          "<li><b>More clusters do not mean more functions.</b> Raising K splits the language region or adds single, "
-          "borderline fits; the extra clusters are mostly one-patient or carry no map.</li>"
-          "<li><b>15 bands K 7 holds.</b> At loading &ge; 0.35 it recovers the three functions with every cluster "
-          "multi-patient; function does not separate it from 5 bands K 6 or 15 bands z K 7, stability and agreement do.</li>"
-          "<li><b>Most types are task phases, not atlas regions.</b> Four of seven 15-band types match no map.</li></ul>"]
+          "types map onto the language network in a consistent and limited way. Numbers from section 7 (15 bands K 7, "
+          "loading &ge; 0.35, 25 maps, two-sided test).</p>",
+          "    <ul><li><b>One language-network cluster.</b> 15 bands c1 (84 electrodes) is above chance in 18 of the 25 maps, "
+          "at 1.8&ndash;3.1 times the share of all electrodes (perception, comprehension, sentences, reading, production, "
+          "language vs rest), and below chance in none. The best configuration of every feature set in section 5 also "
+          "has one such cluster.</li>"
+          "<li><b>Two more specific functions.</b> c5 is above chance in 7 maps, all sentence, semantic or listening maps "
+          "(sentences vs words, sentences, semantic, sentences vs rest, listening vs auditory, listening, heard sentences "
+          "vs rest), and below in none. c0 is above chance in 4 picture-naming / object maps (objects, naming vs production, "
+          "naming vs rest, pictures vs rest) and below chance in sentences vs words.</li>"
+          "<li><b>The other four types avoid language maps.</b> c2, c6, c4 and c3 are above chance in no map, and each "
+          "is below chance in at least one: c4 in 9 of 25 (language vs rest z &minus;4.2, and listening, naming, production, "
+          "reading, semantic and sentences vs rest, phonological, naming), c6 in sentences vs words and sentences, c3 in "
+          "production vs motor and naming, c2 in semantic vs rest.</li>"
+          "<li><b>The professor's four maps vs resting state.</b> Heard sentences: c1 and c5 above. Pictures: c0 above. "
+          "Reading: c1 above, c4 below. Production: c1 above, c4 below.</li>"
+          "<li><b>More clusters do not mean more functions</b> (sections 5&ndash;6, 23 maps, counting test). Raising K "
+          "splits the language region or adds single, borderline fits; the extra clusters are mostly one-patient or carry "
+          "no map.</li>"
+          "<li><b>15 bands K 7 holds</b> (sections 3&ndash;5). At loading &ge; 0.35 it recovers the three functions with "
+          "every cluster multi-patient; function does not separate it from 5 bands K 6 or 15 bands z K 7, stability and "
+          "agreement do.</li></ul>"]
 
     P += ['    <h3 id="fm-limits">9 &middot; Limitations</h3>',
           "    <ul><li><b>The maps are not this task:</b> words in abstracts across thousands of fMRI studies; BOLD tracks high "
           "gamma better than low-frequency responses, favouring feature sets built on high gamma.</li>"
           "<li><b>Rest maps</b> compare task studies with resting-state connectivity studies (mostly the default network): "
           "they mark task-responsive cortex rather than a function.</li>"
+          "<li><b>Heard sentences vs rest</b> rests on 154 studies, the one map under the 200-study rule (kept at "
+          "150).</li>"
           "<li><b>Coverage:</b> contacts are placed for epilepsy, often deep or mesial temporal, 54% centred in white "
           "matter; only 3.5&ndash;21% of electrodes fall in any map.</li>"
           "<li><b>Spatial dependence:</b> the null keeps neighbours together within a shaft, not across nearby shafts.</li>"
@@ -245,7 +304,8 @@ def build() -> str:
           "clusters. Bootstrap intervals on z are approximate.</li></ul>",
           "    <p style=\"color:var(--muted);font-size:13px\">Scripts in 02_FBM_Clustering/member_measures: 0_nimare_maps.py "
           "(maps), 4 (sampling), 13 (per-cluster figure, --outline shaft), 14 (functional information), 15 (cross-feature "
-          "figures), 16 (highlight figures). This tab: make_functional_maps_tab.py.</p>",
+          "figures), 16 (highlight figures; section 7: --ns nimare --configs 15band:7 --v4 --all-maps, and --maps for the "
+          "seven). This tab: make_functional_maps_tab.py.</p>",
           "  </section>", E_SEC]
     return "\n".join(P)
 
