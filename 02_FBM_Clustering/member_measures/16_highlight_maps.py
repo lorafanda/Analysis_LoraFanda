@@ -5,7 +5,8 @@ with VTK (desktop unlocked) or reuses step 15's tiles with --no-render.
     python 16_highlight_maps.py --ns nimare
     python 16_highlight_maps.py --ns nimare --configs 15band:7 15zband:7 5band:6 --loading 0.35 --perm 2000
 
-    out/highlight_maps/<tag>_K<k>_load035.png     transparent background
+    out/highlight_maps/<tag>_K<k>_load035.png          transparent background, with the glass brains
+    out/highlight_maps/<tag>_K<k>_load035_noglass.png  the same without the glass brains
     out/highlight_maps/<tag>_K<k>_load035.csv     every cluster x every map (all 23), with q and the selection
 
 THE SELECTION: for the solution, every cluster x all 23 maps is tested against the shaft-shift null (memberships
@@ -16,7 +17,9 @@ one map per round, its own maps first (fitted by no other clean cluster), then s
 (% of the cluster inside - % of all electrodes). A cluster with few fits keeps all of them; the language cluster, which
 fits almost every map, fills the remaining places. The maps left out are
 printed and marked in the CSV. The outlines use the same q, so the selection adds no test of its own.
-LAYOUT: x = the clusters (order of mean P(LanA), the violins' order, ids in the cluster's colour); in each cluster's
+LAYOUT: x = the clusters in the order of the cluster cards (the published 15-band types in P2.block_order: c5, c0,
+c2, c6, c4, c1, c3); another solution's clusters take the place and the colour of the 15-band type they match (FIG 4's
+rule, as the poster's z-scored companion; unmatched clusters last, in grey), ids are their own; in each cluster's
 group one bar per selected map, always in the same order, numbered under the bars; under each group the cluster's
 members on the glass brain, left hemisphere above right; at the bottom the selected maps on the pial surface in the
 same order and with the same numbers, left above right, coloured where the map is in its top 10% (key on the left).
@@ -149,6 +152,30 @@ def show(fig, img, x0, y0, w, h, W, H):
     ax.axis("off")
 
 
+# the cluster cards' order: the published 15-band types at K 7 in P2.block_order, and FIG 4's matching to them
+F4 = MC.load_module(MC.SHARE / "00_paper2_figure4_correspondence.py", "mm_f4")
+REF = P2.load_run("concat_bands15", 7)
+_C = P2.cube(REF["X"], REF)
+CARD = [int(j) for j in P2.block_order(np.stack([_C[REF["lab"] == j].mean(0) for j in range(7)]), REF)[0]]
+SPACE = F4.description_space()
+ZZ = F4.electrode_z(SPACE["Z"])
+_sref = F4.solution("cnmf", "concat_bands15", 7)
+F4.align(SPACE, _sref)
+C_REF = F4.centroids(ZZ, _sref["W"])
+GREY = (0.60, 0.60, 0.60)
+
+
+def card_types(tag, K):
+    """{cluster: the 15-band K 7 type it stands for, or None}: itself for 15 bands K 7, else FIG 4's greedy match."""
+    if tag == "15band" and K == 7:
+        return {j: j for j in range(K)}
+    s_ = F4.solution("cnmf", FSET[tag], K)
+    F4.align(SPACE, s_)
+    R = F4.corr_matrix(C_REF, F4.centroids(ZZ, s_["W"]), centre=True)
+    m = {j: i for i, j, r in F4.greedy_match(R)}
+    return {j: m.get(j) for j in range(K)}
+
+
 for cfg in a.configs:
     tag, K = cfg.split(":")[0], int(cfg.split(":")[1])
     d = P2.load_run(FSET[tag], K)
@@ -162,7 +189,9 @@ for cfg in a.configs:
     sk = [shaft_key(e) for e in d["meta"]["electrode"].to_numpy()]
     coh = 100 * I[has].mean(0)
     Pl = P_LANA.reindex(keys).to_numpy(float)
-    rank = sorted(range(K), key=lambda j: -np.nanmean(Pl[lab == j]))
+    TYPE = card_types(tag, K)
+    rank = sorted(range(K), key=lambda j: (TYPE[j] is None, CARD.index(TYPE[j]) if TYPE[j] is not None else j))
+    COL = {j: (tuple(np.asarray(P2.cluster_col(TYPE[j], 7))[:3]) if TYPE[j] is not None else GREY) for j in range(K)}
     kp = np.where(has & (load >= a.loading))[0]
     lk, pk, Ik = lab[kp], pat[kp], I[kp]
     pats = np.unique(pk)
@@ -228,79 +257,80 @@ for cfg in a.configs:
         print(f"  {tag} K {K}: no map is fitted by a clean cluster, no figure")
         continue
 
-    # ---- the figure, in inches
-    M = len(chosen)
-    BARW = 0.2
-    GW = M * BARW + 0.45                                              # one cluster's group
-    LEFT, RIGHT = 1.0, 0.4
-    PLOT_W = K * GW
-    W = LEFT + PLOT_W + RIGHT
-    MAPW = PLOT_W / M                                                 # one map's pial column
-    PIAL_H = min(0.9, MAPW * 0.62)
-    GLASS_H = min(1.15, (GW - 0.1) * 0.62)
-    H_BAR, TOPM = 3.0, 0.75
-    Y_PIAL = 0.55
-    Y_GLASS = Y_PIAL + 2 * PIAL_H + 0.75
-    Y_BAR = Y_GLASS + 2 * GLASS_H + 0.55
-    H = Y_BAR + H_BAR + TOPM
-    fig = plt.figure(figsize=(W, H), dpi=200)
-    fig.patch.set_alpha(0)
-    ax = fig.add_axes([LEFT / W, Y_BAR / H, PLOT_W / W, H_BAR / H])
-    ax.patch.set_alpha(0)
-    ymax = max(np.nanmax(HI[:, chosen]), 10) * 1.05
-    xt, xl = [], []
-    for xi, j in enumerate(rank):
-        col = np.asarray(P2.cluster_col(j, K))[:3]
-        g0 = xi * GW + 0.225
+    # ---- the figure, in inches, with and without the glass brains
+    for GLASS in (True, False):
+        M = len(chosen)
+        BARW = 0.2
+        GW = M * BARW + 0.45                                              # one cluster's group
+        LEFT, RIGHT = 1.0, 0.4
+        PLOT_W = K * GW
+        W = LEFT + PLOT_W + RIGHT
+        MAPW = PLOT_W / M                                                 # one map's pial column
+        PIAL_H = min(0.9, MAPW * 0.62)
+        GLASS_H = min(1.15, (GW - 0.1) * 0.62) if GLASS else 0.0
+        H_BAR, TOPM = 3.0, 0.75
+        Y_PIAL = 0.55
+        Y_GLASS = Y_PIAL + 2 * PIAL_H + (0.75 if GLASS else 0.55)
+        Y_BAR = Y_GLASS + 2 * GLASS_H + 0.55
+        H = Y_BAR + H_BAR + TOPM
+        fig = plt.figure(figsize=(W, H), dpi=200)
+        fig.patch.set_alpha(0)
+        ax = fig.add_axes([LEFT / W, Y_BAR / H, PLOT_W / W, H_BAR / H])
+        ax.patch.set_alpha(0)
+        ymax = max(np.nanmax(HI[:, chosen]), 10) * 1.05
+        xt, xl = [], []
+        for xi, j in enumerate(rank):
+            col = np.asarray(COL[j])
+            g0 = xi * GW + 0.225
+            for k_, m in enumerate(chosen):
+                x = g0 + (k_ + 0.5) * BARW
+                ax.bar(x, 100 * obs[j, m], width=BARW * 0.88, color=col, edgecolor=P2.INK if fit[j, m] else "none",
+                       lw=1.1 if fit[j, m] else 0, zorder=2)
+                ax.plot([x, x], [LO[j, m], HI[j, m]], color=P2.INK, lw=0.5, zorder=3)
+                ax.plot([x - BARW * 0.46, x + BARW * 0.46], [coh[m]] * 2, color="black", lw=1.0, zorder=4)
+                if not clean[j]:
+                    ax.plot(x, min(HI[j, m] + 3, ymax * 0.98), "o", color=RED, ms=2.6, zorder=5)
+                xt.append(x)
+                xl.append(str(k_ + 1))
+            if xi:
+                ax.axvline(xi * GW, color="#e3e6e4", lw=0.6, zorder=0)
+            # the cluster's id and n under its group, then its glass brains (left above right)
+            xc = LEFT + g0 + M * BARW / 2
+            fig.text(xc / W, (Y_GLASS + 2 * GLASS_H + 0.12) / H, f"c{j}   n {n_[j]}" + ("" if clean[j] else f"   {100 * top[j]:.0f}% one patient"),
+                     ha="center", va="bottom", fontsize=9, fontweight="bold", color=RED if not clean[j] else col)
+            for k_, side in enumerate(("L", "R") if GLASS else ()):
+                show(fig, glass_tile(tag, K, j, side, d, tuple(col)), xc - (GW - 0.1) / 2, Y_GLASS + (1 - k_) * GLASS_H,
+                     GW - 0.1, GLASS_H, W, H)
+        ax.set_xticks(xt)
+        ax.set_xticklabels(xl, fontsize=5.5, color="#4a5462")
+        ax.tick_params(axis="x", length=0, pad=1.5)
+        ax.set_xlim(0, PLOT_W)
+        ax.set_ylim(0, ymax)
+        ax.set_ylabel("% of the cluster's electrodes inside the map", fontsize=8.5)
+        ax.tick_params(axis="y", labelsize=7.5)
+        ax.spines[["top", "right"]].set_visible(False)
+        ax.set_title(f"{MC.LABEL[tag]}, K = {K}, members with loading ≥ {a.loading:g}: the {M} maps that at least one "
+                     "clean cluster fits", fontsize=10.5, loc="left")
+        ax.legend(handles=[Patch(facecolor="white", edgecolor=P2.INK, label="fits: beats the shaft-shift null, q < 0.05"),
+                           Line2D([0], [0], color="black", lw=1.2, label="all electrodes"),
+                           Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient")],
+                  loc="upper right", frameon=False, fontsize=7.5, ncol=3)
+        # the selected maps on the pial surface, same order and numbers, left above right
         for k_, m in enumerate(chosen):
-            x = g0 + (k_ + 0.5) * BARW
-            ax.bar(x, 100 * obs[j, m], width=BARW * 0.88, color=col, edgecolor=P2.INK if fit[j, m] else "none",
-                   lw=1.1 if fit[j, m] else 0, zorder=2)
-            ax.plot([x, x], [LO[j, m], HI[j, m]], color=P2.INK, lw=0.5, zorder=3)
-            ax.plot([x - BARW * 0.46, x + BARW * 0.46], [coh[m]] * 2, color="black", lw=1.0, zorder=4)
-            if not clean[j]:
-                ax.plot(x, min(HI[j, m] + 3, ymax * 0.98), "o", color=RED, ms=2.6, zorder=5)
-            xt.append(x)
-            xl.append(str(k_ + 1))
-        if xi:
-            ax.axvline(xi * GW, color="#e3e6e4", lw=0.6, zorder=0)
-        # the cluster's id and n under its group, then its glass brains (left above right)
-        xc = LEFT + g0 + M * BARW / 2
-        fig.text(xc / W, (Y_GLASS + 2 * GLASS_H + 0.12) / H, f"c{j}   n {n_[j]}" + ("" if clean[j] else f"   {100 * top[j]:.0f}% one patient"),
-                 ha="center", va="bottom", fontsize=9, fontweight="bold", color=RED if not clean[j] else col)
-        for k_, side in enumerate(("L", "R")):
-            show(fig, glass_tile(tag, K, j, side, d, tuple(col)), xc - (GW - 0.1) / 2, Y_GLASS + (1 - k_) * GLASS_H,
-                 GW - 0.1, GLASS_H, W, H)
-    ax.set_xticks(xt)
-    ax.set_xticklabels(xl, fontsize=5.5, color="#4a5462")
-    ax.tick_params(axis="x", length=0, pad=1.5)
-    ax.set_xlim(0, PLOT_W)
-    ax.set_ylim(0, ymax)
-    ax.set_ylabel("% of the cluster's electrodes inside the map", fontsize=8.5)
-    ax.tick_params(axis="y", labelsize=7.5)
-    ax.spines[["top", "right"]].set_visible(False)
-    ax.set_title(f"{MC.LABEL[tag]}, K = {K}, members with loading ≥ {a.loading:g}: the {M} maps that at least one "
-                 "clean cluster fits", fontsize=10.5, loc="left")
-    ax.legend(handles=[Patch(facecolor="white", edgecolor=P2.INK, label="fits: beats the shaft-shift null, q < 0.05"),
-                       Line2D([0], [0], color="black", lw=1.2, label="all electrodes"),
-                       Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient")],
-              loc="upper right", frameon=False, fontsize=7.5, ncol=3)
-    # the selected maps on the pial surface, same order and numbers, left above right
-    for k_, m in enumerate(chosen):
-        xc = LEFT + (k_ + 0.5) * MAPW
-        for s_, side in enumerate(("L", "R")):
-            show(fig, pial_tile(MAPS[m][3:], side), xc - MAPW * 0.47, Y_PIAL + (1 - s_) * PIAL_H, MAPW * 0.94, PIAL_H, W, H)
-        fig.text(xc / W, (Y_PIAL - 0.05) / H, f"{k_ + 1}  " + NAMES[m].replace(" vs ", "\nvs "), ha="center", va="top",
-                 fontsize=6.8, color="#1c2330", linespacing=1.1)
-    cax = fig.add_axes([0.25 / W, (Y_PIAL + PIAL_H * 0.6) / H, 0.55 / W, 0.1 / H])
-    cb = fig.colorbar(plt.cm.ScalarMappable(norm=plt.Normalize(0, 1), cmap=NS_CMAP), cax=cax, orientation="horizontal",
-                      ticks=[0, 1])
-    cb.ax.set_xticklabels(["90th\npct", "99.5th\npct+"], fontsize=6)
-    cb.ax.tick_params(length=2)
-    cax.set_title("coloured =\ntop 10%", fontsize=6.5, pad=2)
-    out = OUTD / f"{tag}_K{K}_{LTAG}.png"
-    fig.savefig(out, transparent=True)
-    plt.close(fig)
-    print(f"wrote {out.name} ({W:.0f} x {H:.0f} in): {M} maps shown; fits per cluster: "
-          + ", ".join(f"c{j}{'' if clean[j] else '(X)'} {int(fit[j].sum())}" for j in rank)
-          + (f"; left out: {', '.join(dropped)}" if dropped else ""))
+            xc = LEFT + (k_ + 0.5) * MAPW
+            for s_, side in enumerate(("L", "R")):
+                show(fig, pial_tile(MAPS[m][3:], side), xc - MAPW * 0.47, Y_PIAL + (1 - s_) * PIAL_H, MAPW * 0.94, PIAL_H, W, H)
+            fig.text(xc / W, (Y_PIAL - 0.05) / H, f"{k_ + 1}  " + NAMES[m].replace(" vs ", "\nvs "), ha="center", va="top",
+                     fontsize=6.8, color="#1c2330", linespacing=1.1)
+        cax = fig.add_axes([0.25 / W, (Y_PIAL + PIAL_H * 0.6) / H, 0.55 / W, 0.1 / H])
+        cb = fig.colorbar(plt.cm.ScalarMappable(norm=plt.Normalize(0, 1), cmap=NS_CMAP), cax=cax, orientation="horizontal",
+                          ticks=[0, 1])
+        cb.ax.set_xticklabels(["90th\npct", "99.5th\npct+"], fontsize=6)
+        cb.ax.tick_params(length=2)
+        cax.set_title("coloured =\ntop 10%", fontsize=6.5, pad=2)
+        out = OUTD / f"{tag}_K{K}_{LTAG}{'' if GLASS else '_noglass'}.png"
+        fig.savefig(out, transparent=True)
+        plt.close(fig)
+        print(f"wrote {out.name} ({W:.0f} x {H:.0f} in): {M} maps shown; fits per cluster: "
+              + ", ".join(f"c{j}{'' if clean[j] else '(X)'} {int(fit[j].sum())}" for j in rank)
+              + (f"; left out: {', '.join(dropped)}" if dropped else ""))

@@ -206,13 +206,13 @@ def build() -> str:
     for key, title in (("highlight_15band_K7", "15 bands, K 7"), ("highlight_15zband_K7", "15 bands z, K 7"),
                        ("highlight_5band_K6", "5 bands, K 6")):
         P.append(fig(key, f"{title}, loading &ge; 0.35, the 10 maps",
-                     "x = the clusters (order of mean P(LanA)); in each cluster's group one bar per map, always in the same "
+                     "x = the clusters in the order of the cluster cards (c5, c0, c2, c6, c4, c1, c3); 15 bands z and 5 bands clusters take the place and colour of the 15-band type they match (FIG 4's rule), ids are their own; in each cluster's group one bar per map, always in the same "
                      "order and numbered under the bars. " + LEG_BARS + " Under each cluster: its members on the glass "
-                     "brain, left hemisphere above right. Bottom: the 10 maps in bar order with the same numbers, left above "
+                     "brain, left hemisphere above right (a second file, _noglass, leaves them out). Bottom: the 10 maps in bar order with the same numbers, left above "
                      "right. " + LEG_PIAL))
     P.append(table(["Solution", "Fits shown / fits in total"],
                    [["15 bands K 7", "c1 language 5 / 16; c5 sentences / semantic 3 / 6; c0 pictures / objects 4 / 4"],
-                    ["15 bands z K 7", "c0 language 7 / 18; c5 semantic 1 / 1; c1 objects 1 / 1; c6 objects, naming vs production 2 / 2 (c2 is 65% one patient)"],
+                    ["15 bands z K 7", "c0 language 7 / 18; c5 semantic 1 / 1; c1 objects 1 / 1; c6 objects, naming vs production 2 / 2 (c2 is 72% one patient at this cut)"],
                     ["5 bands K 6", "c5 auditory / production / sentences 4 / 6; c3 naming / pictures / objects 5 / 5; c2 semantic 1 / 1"]]))
 
     P += ['    <h3 id="fm-conclusion">8 &middot; Conclusion</h3>',
