@@ -49,7 +49,20 @@ ap.add_argument("--loading", type=float, default=0.35)
 ap.add_argument("--perm", type=int, default=2000)
 ap.add_argument("--no-render", action="store_true")
 ap.add_argument("--max-maps", type=int, default=10, help="at most this many maps per figure")
+ap.add_argument("--v2", action="store_true",
+                help="draw each bar's shaft-shift null (mean and 2.5-97.5 pct), fits solid with a 2.5 pt edge, the rest at "
+                     "35% opacity; 300 dpi on white; files get _v2 (plotting only, every statistic unchanged)")
+ap.add_argument("--v4", action="store_true",
+                help="as --v3 plus the chance range (2.5-97.5 % of the shifts) as a grey box on each bar, 'above chance' decided "
+                     "by the z-based p (files _v4)")
+ap.add_argument("--v3", action="store_true",
+                help="as --v2, without the patient-bootstrap whisker and the null's 95 % whisker (files _v3)")
 a, _ = ap.parse_known_args()
+if a.v4:
+    a.v3 = True
+if a.v3:
+    a.v2 = True
+VSUF = "_v4" if a.v4 else ("_v3" if a.v3 else ("_v2" if a.v2 else ""))
 
 FSET = {t: f for f, t in MC.TAG.items()}
 RED = "#d7191c"
@@ -201,11 +214,33 @@ for cfg in a.configs:
     share = lambda lb: np.array([Ik[lb == j].mean(0) if (lb == j).any() else np.zeros(len(MAPS)) for j in range(K)])
     obs = share(lk)
     ge = np.zeros_like(obs)
-    for _ in range(a.perm):
+    nulls = np.empty((a.perm,) + obs.shape)                            # every rotation's share (for the figure only)
+    for i_ in range(a.perm):
         perm = np.arange(len(kp))
         for g in groups:
             perm[g] = np.roll(g, rng.integers(1, len(g)))
-        ge += share(lk[perm]) >= obs
+        nulls[i_] = share(lk[perm])
+        ge += nulls[i_] >= obs                                         # one-sided: rotations at least as high as observed
+    NMEAN = 100 * nulls.mean(0)
+    NLO, NHI = 100 * np.quantile(nulls, [0.025, 0.975], axis=0)
+    # the professor's z: how many null SDs the real share sits above the null mean, and the normal-tail p of that z
+    # (no floor at 1/(perm+1)); its BH q over the same K x 23 cells; the null's skewness, since the normal tail is only
+    # trustworthy where the shifts are roughly bell-shaped (|skew| > 1 flagged)
+    from scipy.stats import norm, skew as _skew
+    NSD = 100 * nulls.std(0, ddof=1)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ZS = np.where(NSD > 0, (100 * obs - NMEAN) / NSD, np.nan)
+    PZ = norm.sf(ZS)
+    _f = np.isfinite(PZ).ravel()
+    _pz = PZ.ravel()[_f]
+    _o = np.argsort(_pz)
+    _q = np.minimum.accumulate((_pz[_o] * len(_pz) / (np.arange(len(_pz)) + 1))[::-1])[::-1]
+    QZ = np.full(PZ.size, np.nan)
+    _qq = np.empty_like(_q)
+    _qq[_o] = np.minimum(_q, 1)
+    QZ[np.where(_f)[0]] = _qq
+    QZ = QZ.reshape(PZ.shape)
+    SKEW = _skew(nulls, axis=0)
     pv = ((ge + 1) / (a.perm + 1)).ravel()
     o = np.argsort(pv)
     qv = np.minimum.accumulate((pv[o] * len(pv) / (np.arange(len(pv)) + 1))[::-1])[::-1]
@@ -226,7 +261,8 @@ for cfg in a.configs:
         Nm = np.bincount(pidx[sel], minlength=len(pats)).astype(float)
         den = B @ Nm
         LO[j], HI[j] = 100 * np.quantile((B @ Sm)[den > 0] / den[den > 0, None], [0.025, 0.975], axis=0)
-    fit = Q < 0.05
+    # --v4 decides with the z-based p (the professor's: no floor at 1/(perm+1)), the others with the counting p
+    fit = (QZ < 0.05) if a.v4 else (Q < 0.05)
     # the selection: maps fitted by at least one clean cluster, at most --max-maps of them, shared out between the
     # clusters in turns: the clusters with the fewest fits choose first, each takes its next map per round - its own
     # maps first (fitted by no other clean cluster), then shared ones - largest difference first (% of the cluster
@@ -250,9 +286,15 @@ for cfg in a.configs:
         chosen += sorted(mine, key=lambda m: -diff[j, m])
     rows = [dict(fset=tag, k=K, loading=a.loading, cluster=j, n=int(n_[j]), top_patient_share=round(top[j], 2),
                  clean=bool(clean[j]), map=MAPS[m][3:], pct_inside=round(100 * obs[j, m], 1),
-                 lo=round(LO[j, m], 1), hi=round(HI[j, m], 1), cohort_pct=round(coh[m], 1), q_shaft=round(Q[j, m], 4),
-                 fit=bool(fit[j, m]), shown=m in chosen) for j in range(K) for m in range(len(MAPS))]
-    pd.DataFrame(rows).to_csv(OUTD / f"{tag}_K{K}_{LTAG}.csv", index=False)
+                 lo=round(LO[j, m], 1), hi=round(HI[j, m], 1), cohort_pct=round(coh[m], 1),
+                 null_mean=round(NMEAN[j, m], 1), null_lo=round(NLO[j, m], 1), null_hi=round(NHI[j, m], 1),
+                 p_shaft=round(float(pv.reshape(obs.shape)[j, m]), 4), q_shaft=round(Q[j, m], 4),
+                 null_sd=round(NSD[j, m], 2), z=round(float(ZS[j, m]), 2), p_z=float(f"{PZ[j, m]:.3g}"),
+                 q_z=float(f"{QZ[j, m]:.3g}"), null_skew=round(float(SKEW[j, m]), 2),
+                 skewed_null=bool(abs(SKEW[j, m]) > 1),
+                 fit=bool(fit[j, m]), fit_rule="z-based q" if a.v4 else "counting q",
+                 fit_counting=bool(Q[j, m] < 0.05), fit_z=bool(QZ[j, m] < 0.05), shown=m in chosen) for j in range(K) for m in range(len(MAPS))]
+    pd.DataFrame(rows).to_csv(OUTD / f"{tag}_K{K}_{LTAG}{VSUF}.csv", index=False)
     if not chosen:
         print(f"  {tag} K {K}: no map is fitted by a clean cluster, no figure")
         continue
@@ -273,7 +315,7 @@ for cfg in a.configs:
         Y_GLASS = Y_PIAL + 2 * PIAL_H + (0.75 if GLASS else 0.55)
         Y_BAR = Y_GLASS + 2 * GLASS_H + 0.55
         H = Y_BAR + H_BAR + TOPM
-        fig = plt.figure(figsize=(W, H), dpi=200)
+        fig = plt.figure(figsize=(W, H), dpi=300 if a.v2 else 200)
         fig.patch.set_alpha(0)
         ax = fig.add_axes([LEFT / W, Y_BAR / H, PLOT_W / W, H_BAR / H])
         ax.patch.set_alpha(0)
@@ -284,10 +326,31 @@ for cfg in a.configs:
             g0 = xi * GW + 0.225
             for k_, m in enumerate(chosen):
                 x = g0 + (k_ + 0.5) * BARW
-                ax.bar(x, 100 * obs[j, m], width=BARW * 0.88, color=col, edgecolor=P2.INK if fit[j, m] else "none",
-                       lw=1.1 if fit[j, m] else 0, zorder=2)
-                ax.plot([x, x], [LO[j, m], HI[j, m]], color=P2.INK, lw=0.5, zorder=3)
-                ax.plot([x - BARW * 0.46, x + BARW * 0.46], [coh[m]] * 2, color="black", lw=1.0, zorder=4)
+                if a.v2:
+                    # fits solid with a 2.5 pt black edge, the rest the same hue at 35 % opacity; patient-bootstrap
+                    # interval grey on the left half, the shaft-shift null (2.5-97.5 pct whisker + mean tick) black on
+                    # the right half, all electrodes as a dashed line across the bar
+                    ax.bar(x, 100 * obs[j, m], width=BARW * 0.88, color=col, alpha=1.0 if fit[j, m] else 0.35,
+                           edgecolor="black" if fit[j, m] and not a.v4 else "none", lw=2.5 if fit[j, m] and not a.v4 else 0, zorder=2)
+                    xb, xn = x - BARW * 0.2, x + BARW * 0.2
+                    if not a.v3:
+                        ax.plot([xb, xb], [LO[j, m], HI[j, m]], color=P2.MUTED, lw=0.7, zorder=3)
+                        ax.plot([xn, xn], [NLO[j, m], NHI[j, m]], color="black", lw=0.9, zorder=4)
+                    else:
+                        xn = x                                          # the null tick centred on the bar
+                        if a.v4:                                        # the chance range: 95 % of the 2,000 shifts
+                            ax.add_patch(matplotlib.patches.Rectangle((x - BARW * 0.44, NLO[j, m]), BARW * 0.88,
+                                                                      NHI[j, m] - NLO[j, m], facecolor="#9aa0a6",
+                                                                      alpha=0.55, edgecolor="none", zorder=3))
+                    ax.plot([xn - BARW * 0.17, xn + BARW * 0.17], [NMEAN[j, m]] * 2, color="black", lw=1.8,
+                            solid_capstyle="butt", zorder=4)
+                    if not a.v3:
+                        ax.plot([x - BARW * 0.46, x + BARW * 0.46], [coh[m]] * 2, color="black", lw=0.9, ls=(0, (2, 1.5)), zorder=4)
+                else:
+                    ax.bar(x, 100 * obs[j, m], width=BARW * 0.88, color=col, edgecolor=P2.INK if fit[j, m] else "none",
+                           lw=1.1 if fit[j, m] else 0, zorder=2)
+                    ax.plot([x, x], [LO[j, m], HI[j, m]], color=P2.INK, lw=0.5, zorder=3)
+                    ax.plot([x - BARW * 0.46, x + BARW * 0.46], [coh[m]] * 2, color="black", lw=1.0, zorder=4)
                 if not clean[j]:
                     ax.plot(x, min(HI[j, m] + 3, ymax * 0.98), "o", color=RED, ms=2.6, zorder=5)
                 xt.append(x)
@@ -310,11 +373,30 @@ for cfg in a.configs:
         ax.tick_params(axis="y", labelsize=7.5)
         ax.spines[["top", "right"]].set_visible(False)
         ax.set_title(f"{MC.LABEL[tag]}, K = {K}, members with loading ≥ {a.loading:g}: the {M} maps that at least one "
-                     "clean cluster fits", fontsize=10.5, loc="left")
-        ax.legend(handles=[Patch(facecolor="white", edgecolor=P2.INK, label="fits: beats the shaft-shift null, q < 0.05"),
-                           Line2D([0], [0], color="black", lw=1.2, label="all electrodes"),
-                           Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient")],
-                  loc="upper right", frameon=False, fontsize=7.5, ncol=3)
+                     "clean cluster fits", fontsize=10.5, loc="left", pad=22 if a.v4 else 6)
+        if a.v4:
+            ax.text(0, 1.012, f"electrodes: each cluster's gated electrodes with loading ≥ {a.loading:g} ({int(n_.sum())} of "
+                    f"{int(has.sum())}); chance: the cluster labels shifted along the shafts within each patient, "
+                    f"{a.perm:,} times", transform=ax.transAxes, fontsize=8, color=P2.MUTED, va="bottom")
+        ax.legend(handles=([(Patch(facecolor="#398fd0", edgecolor="none", label="above chance (z-based q < 0.05): full colour") if a.v4 else
+                             Patch(facecolor="#9aa0a6", edgecolor="black", lw=2.5, label="above chance (q < 0.05)" if a.v3 else "fits (q < 0.05, shaft-shift null)")),
+                            (Line2D([0], [0], color="black", lw=1.8, ls="none", marker="_", ms=9, mew=1.8, label="chance level (shaft-shift null)")
+                             if a.v3 else Line2D([0], [0], color="black", lw=0.9, marker="_", ms=9, mew=1.8,
+                                                 label="null mean and 95 % range")),
+                            Line2D([0], [0], color="black", lw=0.9, ls=(0, (2, 1.5)), label="all electrodes"),
+                            Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50 % one patient")]
+                           [:2 if a.v3 else 4]
+                           + ([Patch(facecolor="#398fd0", alpha=0.35, edgecolor="none", label="not above chance: faded")] if a.v4 else [])
+                           + ([Patch(facecolor="#9aa0a6", alpha=0.55, edgecolor="none",
+                                     label=f"chance range (95 % of {a.perm:,} shifts)")] if a.v4 else [])
+                           + ([Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50 % one patient")]
+                              if a.v3 and not all(clean[j] for j in rank) else []) if a.v2 else
+                           [Patch(facecolor="white", edgecolor=P2.INK, label="fits: beats the shaft-shift null, q < 0.05"),
+                            Line2D([0], [0], color="black", lw=1.2, label="all electrodes"),
+                            Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient")]),
+                  frameon=False, fontsize=8 if a.v3 else 7.5, ncol=2 if a.v4 else (4 if a.v2 else 3),
+                  **(dict(loc="upper right") if a.v4 else
+                     dict(loc="lower right", bbox_to_anchor=(1.0, 1.0)) if a.v2 else dict(loc="upper right")))
         # the selected maps on the pial surface, same order and numbers, left above right
         for k_, m in enumerate(chosen):
             xc = LEFT + (k_ + 0.5) * MAPW
@@ -328,8 +410,13 @@ for cfg in a.configs:
         cb.ax.set_xticklabels(["90th\npct", "99.5th\npct+"], fontsize=6)
         cb.ax.tick_params(length=2)
         cax.set_title("coloured =\ntop 10%", fontsize=6.5, pad=2)
-        out = OUTD / f"{tag}_K{K}_{LTAG}{'' if GLASS else '_noglass'}.png"
-        fig.savefig(out, transparent=True)
+        out = OUTD / f"{tag}_K{K}_{LTAG}{'' if GLASS else '_noglass'}{VSUF}.png"
+        if a.v2:
+            fig.patch.set_facecolor("white")
+            fig.patch.set_alpha(1.0)                                    # a white page, not a transparent one
+            fig.savefig(out, facecolor="white")
+        else:
+            fig.savefig(out, transparent=True)
         plt.close(fig)
         print(f"wrote {out.name} ({W:.0f} x {H:.0f} in): {M} maps shown; fits per cluster: "
               + ", ".join(f"c{j}{'' if clean[j] else '(X)'} {int(fit[j].sum())}" for j in rank)
