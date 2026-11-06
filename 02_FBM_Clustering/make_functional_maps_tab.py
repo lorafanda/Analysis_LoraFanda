@@ -61,8 +61,12 @@ def webp(src: Path, dst: Path, max_side: int = 8200) -> None:
 
 
 def fig(key: str, title: str, legend: str) -> str:
-    return (f'    <figure style="margin:12px 0 22px"><div class="imgwrap" style="margin:0;overflow-x:auto">'
-            f'<img data-fig="{FIGROOT}/{key}.webp" alt="{title}" style="max-width:100%"></div>\n'
+    """The figure at full column width; width/height attributes give the box its shape before the image arrives, so the
+    page's lazy loader sees it (a box of width 0 is never loaded)."""
+    w, h = Image.open(OUT / f"{key}.webp").size
+    return (f'    <figure style="margin:12px 0 22px"><div class="imgwrap" style="margin:0">'
+            f'<img data-fig="{FIGROOT}/{key}.webp" alt="{title}" width="{w}" height="{h}" '
+            f'style="width:100%;height:auto;display:block"></div>\n'
             f'      <figcaption style="font-size:13px;line-height:1.5;margin-top:6px"><b>{title}.</b> {legend}'
             f' <span style="color:var(--muted)">(click to enlarge)</span></figcaption></figure>')
 
