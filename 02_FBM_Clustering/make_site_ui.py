@@ -30,7 +30,7 @@ SITE = Path("C:/Users/fanda/lorafanda.github.io/analysis_status.html")
 
 GROUPS = [   # (header or None, [data-t ...]) in display order
     (None, ["overview"]),
-    ("Pipeline", ["s1", "s2", "lana"]),
+    ("Pipeline", ["s1", "s2", "lana", "fmaps"]),
     ("Side studies", ["mm", "microepi"]),
     ("Writing", ["paper", "outline", "kiss"]),
     ("Log &amp; plans", ["notebook", "meetings", "caveats"]),
