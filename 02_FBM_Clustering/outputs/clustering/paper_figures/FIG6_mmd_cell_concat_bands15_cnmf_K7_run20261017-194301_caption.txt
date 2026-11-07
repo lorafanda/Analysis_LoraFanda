@@ -1,0 +1,123 @@
+FIG 6   ·   MMD between the types   ·   convex NMF   ·   15 frequency bands x 30 time bins   ·   K = 7
+====================================================================================================
+
+WHAT IS MEASURED
+----------------------------------------------------------------------------------------------------
+Unbiased MMD^2 (Gaussian kernel, bandwidth = median pairwise distance over the cohort,
+1.3327) between every pair of clusters, on the unit-norm rows the methods fit in.
+In-sample: against 2000 within-patient shuffles of the two labels (BH over the pairs).
+Held-out: 50 random halves of the patients; the method refitted on half A, aligned to the
+published clusters on half A (Hungarian), half B placed by the LOPO rule, MMD^2 on half B; the
+Gaussian cloud (data covariance, no clusters) through the identical procedure, 50 draws.
+The number in the matrices is the median held-out MMD^2 divided by the median cloud MMD^2. The cloud's
+sectors are convex pieces of one featureless distribution, so they are well apart by construction:
+a ratio below 1 means the two types overlap more than two such sectors, above 1 less. The dot marks
+the within-patient shuffle on the held-out half: p < 0.05 in at least 90 % of the splits (z_ho is its
+median z). The in-sample z and q are circular (the labels were fitted on these electrodes) and are
+reported for completeness.
+Two versions: argmax members (every count and test of the paper) and members at loading >= 0.3
+(the drawn set, 84.5 % of the electrodes). The cloud is cut by the same
+FRACTION, not the same threshold: its loadings are flatter and a threshold would remove half of it.
+The gap between the versions is the sensitivity of the separation to the cut.
+The maps are the standardised mean difference in dB per bin, outlined where the within-patient
+shuffle gives q < 0.05 over the bins; the bars are each band's share of the LINEAR-kernel MMD^2
+(squared mean difference in the kernel space). The Gaussian-kernel MMD has no per-bin split.
+
+PAIRS   ·   argmax
+----------------------------------------------------------------------------------------------------
+  pair         n_i   n_j   MMD2 in    z_in     q_in  held-out    z_ho  p_ho<.05    cloud   ratio  >97.5%
+  c0 vs c1   318   143    0.0985    15.6   0.0002    0.0966    14.7      1.00   0.1226    0.79    0.00
+  c4 vs c5   334   200    0.1024    25.7   0.0002    0.1028    19.8      1.00   0.1226    0.84    0.06
+  c1 vs c6   143   224    0.1117    21.4   0.0002    0.1061    14.2      1.00   0.1226    0.87    0.01
+  c0 vs c6   318   224    0.1266    12.2   0.0002    0.1084    10.8      1.00   0.1226    0.88    0.00
+  c0 vs c3   318   200    0.1503    20.1   0.0002    0.1171    13.4      1.00   0.1226    0.96    0.07
+  c1 vs c3   143   200    0.1262    15.3   0.0002    0.1204    10.8      0.99   0.1226    0.98    0.04
+  c3 vs c5   200   200    0.1063    20.3   0.0002    0.1216    10.9      1.00   0.1226    0.99    0.03
+  c1 vs c5   143   200    0.1540    15.3   0.0002    0.1231    12.6      1.00   0.1226    1.00    0.01
+  c5 vs c6   200   224    0.1541    21.1   0.0002    0.1339    16.9      0.99   0.1226    1.09    0.06
+  c3 vs c6   200   224    0.1540    19.6   0.0002    0.1353    11.3      1.00   0.1226    1.10    0.07
+  c3 vs c4   200   334    0.1077    26.2   0.0002    0.1388    18.1      1.00   0.1226    1.13    0.05
+  c1 vs c4   143   334    0.1812    31.8   0.0002    0.1607    23.3      1.00   0.1226    1.31    0.08
+  c0 vs c5   318   200    0.2300    11.6   0.0002    0.1731    11.3      1.00   0.1226    1.41    0.15
+  c2 vs c3   168   200    0.1810    11.7   0.0002    0.1851     7.0      1.00   0.1226    1.51    0.24
+  c1 vs c2   143   168    0.2045     8.7   0.0002    0.1909     7.0      1.00   0.1226    1.56    0.24
+  c0 vs c2   318   168    0.2354    12.3   0.0002    0.2133     9.4      0.99   0.1226    1.74    0.41
+  c2 vs c4   168   334    0.2149    13.8   0.0002    0.2134    10.9      1.00   0.1226    1.74    0.36
+  c4 vs c6   334   224    0.2233    25.3   0.0002    0.2171    20.1      1.00   0.1226    1.77    0.38
+  c2 vs c5   168   200    0.2582     4.5   0.0002    0.2267     5.0      0.95   0.1226    1.85    0.49
+  c2 vs c6   168   224    0.2263     9.8   0.0002    0.2295     7.0      1.00   0.1226    1.87    0.52
+  c0 vs c4   318   334    0.2659    25.2   0.0002    0.2440    21.9      1.00   0.1226    1.99    0.63
+
+  per type: nearest other type (held-out ratio)
+    c0   n 318   nearest c1  ratio 0.79  mean over pairs 1.29
+    c1   n 143   nearest c0  ratio 0.79  mean over pairs 1.08
+    c5   n 200   nearest c4  ratio 0.84  mean over pairs 1.20
+    c4   n 334   nearest c5  ratio 0.84  mean over pairs 1.46
+    c6   n 224   nearest c1  ratio 0.87  mean over pairs 1.26
+    c3   n 200   nearest c0  ratio 0.96  mean over pairs 1.11
+    c2   n 168   nearest c3  ratio 1.51  mean over pairs 1.71
+
+PAIRS   ·   cut (loading >= 0.3)
+----------------------------------------------------------------------------------------------------
+  pair         n_i   n_j   MMD2 in    z_in     q_in  held-out    z_ho  p_ho<.05    cloud   ratio  >97.5%
+  c0 vs c1   266   114    0.1255    12.6   0.0002    0.1103    13.3      1.00   0.1378    0.80    0.00
+  c4 vs c5   291   172    0.1185    23.3   0.0002    0.1124    19.2      1.00   0.1378    0.82    0.05
+  c1 vs c6   114   195    0.1335    18.9   0.0002    0.1193    12.6      1.00   0.1378    0.87    0.01
+  c0 vs c6   266   195    0.1466    10.3   0.0002    0.1202     9.9      1.00   0.1378    0.87    0.00
+  c0 vs c3   266   161    0.1901    16.9   0.0002    0.1261    11.3      1.00   0.1378    0.91    0.05
+  c3 vs c5   161   172    0.1212    18.4   0.0002    0.1318    10.1      0.99   0.1378    0.96    0.03
+  c1 vs c3   114   161    0.1589    13.5   0.0002    0.1362     9.5      0.99   0.1378    0.99    0.04
+  c1 vs c5   114   172    0.1770    13.3   0.0002    0.1394    11.7      0.99   0.1378    1.01    0.01
+  c5 vs c6   172   195    0.1766    20.0   0.0002    0.1435    15.6      0.99   0.1378    1.04    0.06
+  c3 vs c6   161   195    0.1818    15.9   0.0002    0.1458    10.0      1.00   0.1378    1.06    0.07
+  c3 vs c4   161   291    0.1245    24.0   0.0002    0.1497    16.8      1.00   0.1378    1.09    0.05
+  c1 vs c4   114   291    0.2126    29.1   0.0002    0.1760    22.0      1.00   0.1378    1.28    0.05
+  c0 vs c5   266   172    0.2666     9.4   0.0002    0.1905    10.6      1.00   0.1378    1.38    0.12
+  c2 vs c3   142   161    0.2068    10.6   0.0002    0.1998     6.5      0.99   0.1378    1.45    0.20
+  c1 vs c2   114   142    0.2393     8.7   0.0002    0.2074     6.5      0.99   0.1378    1.50    0.20
+  c2 vs c4   142   291    0.2441    13.2   0.0002    0.2261    10.7      1.00   0.1378    1.64    0.24
+  c0 vs c2   266   142    0.2815    10.8   0.0002    0.2279     9.0      0.98   0.1378    1.65    0.39
+  c4 vs c6   291   195    0.2601    23.5   0.0002    0.2403    18.4      1.00   0.1378    1.74    0.36
+  c2 vs c6   142   195    0.2578     6.9   0.0002    0.2463     6.2      0.99   0.1378    1.79    0.46
+  c2 vs c5   142   172    0.2882     3.9   0.0002    0.2481     4.8      0.94   0.1378    1.80    0.48
+  c0 vs c4   266   291    0.3195    21.8   0.0002    0.2640    20.3      1.00   0.1378    1.92    0.60
+
+  per type: nearest other type (held-out ratio)
+    c0   n 266   nearest c1  ratio 0.80  mean over pairs 1.26
+    c1   n 114   nearest c0  ratio 0.80  mean over pairs 1.07
+    c5   n 172   nearest c4  ratio 0.82  mean over pairs 1.17
+    c4   n 291   nearest c5  ratio 0.82  mean over pairs 1.41
+    c6   n 195   nearest c1  ratio 0.87  mean over pairs 1.23
+    c3   n 161   nearest c0  ratio 0.91  mean over pairs 1.08
+    c2   n 142   nearest c3  ratio 1.45  mean over pairs 1.64
+
+HELD-OUT PLACEMENT, LOPO   (leave one patient out, 3 refit seed(s) per fold: the model is nearly the published one)
+----------------------------------------------------------------------------------------------------
+  overall: 89.9 % of held-out electrodes land in their published type
+  type    placements   recall   median             IQR  precision   most confused with
+  c4            1002     0.97     0.97    0.97-0.97          0.87   c1 (1 %)
+  c0             954     0.94     0.94    0.94-0.94          0.89   c4 (2 %)
+  c5             600     0.92     0.92    0.92-0.92          0.88   c4 (7 %)
+  c2             504     0.91     0.90    0.90-0.91          0.97   c0 (5 %)
+  c6             672     0.89     0.88    0.88-0.89          0.94   c0 (3 %)
+  c1             429     0.80     0.83    0.78-0.83          0.83   c0 (9 %)
+  c3             600     0.78     0.79    0.75-0.81          0.94   c4 (7 %)
+
+HELD-OUT PLACEMENT, HALVES   (the MMD's patient halves, 50 splits: refit on half a cohort, so refit instability is in it too)
+----------------------------------------------------------------------------------------------------
+  overall: 62.2 % of held-out electrodes land in their published type
+  type    placements   recall   median             IQR  precision   most confused with
+  c4           16629     0.80     0.87    0.80-0.91          0.65   c5 (9 %)
+  c2            8580     0.72     0.82    0.72-0.88          0.86   c4 (8 %)
+  c0           16060     0.70     0.79    0.51-0.86          0.68   c1 (8 %)
+  c5            9678     0.61     0.78    0.41-0.90          0.48   c4 (25 %)
+  c6           10953     0.59     0.65    0.47-0.73          0.67   c5 (13 %)
+  c1            7115     0.44     0.52    0.21-0.71          0.45   c0 (23 %)
+  c3           10022     0.30     0.28    0.12-0.45          0.49   c4 (23 %)
+
+PROVENANCE
+----------------------------------------------------------------------------------------------------
+  run        20261017_194301
+  tables     outputs\clustering\mmd\concat_source_v17\concat_bands15\cnmf
+  built by   00_paper2_figure6_mmd.py --feature-set concat_bands15 --method cnmf
+  built on   2026-11-07 23:25
