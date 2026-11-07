@@ -228,7 +228,9 @@ def row1_column(d):
             ax.set_yticks([])
     cax = fig.add_axes([0.94, 0.07, 0.012, 0.50]); cb = fig.colorbar(im, cax=cax); cb.ax.tick_params(labelsize=6.5)
     cax.set_title("dB", fontsize=7, color=MUTED, pad=3)
-    p = OUT / "figure1_column.png"; fig.savefig(p, facecolor="white"); plt.close(fig)
+    for ax_ in fig.axes:                                            # transparent wherever nothing is drawn (11-07);
+        ax_.patch.set_alpha(0)                                      # the screens keep their white fill
+    p = OUT / "figure1_column.png"; fig.savefig(p, transparent=True); plt.close(fig)
     return p
 
 
