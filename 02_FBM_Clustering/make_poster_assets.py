@@ -113,6 +113,43 @@ def render_all(side, d, cols, rads, alphas, zoom=1.30):
     return P2._crop_alpha(np.asarray(img))
 
 
+SENTENCE_EXAMPLE = "After every meal\nit's good to\nbrush your ..."   # the paradigm figure's example (as figure 0)
+TASK_CONDS = ("audio", "picture", "reading")
+
+
+def task_header(ax, cond, scale=1.0, name=True):
+    """One condition's trial, drawn: the stimulus screen over the stimulus half (x 0-0.5) and the "?" response cue
+    over the response half (x 0.5-1), the condition's name above and "stimulus" / "response" under them; the same
+    drawing as 00_paper2_figure0_coverage.header_0, one block per axes so it sits exactly over its ERSP column."""
+    from matplotlib.patches import FancyBboxPatch
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
+    if name:
+        ax.text(0.5, 0.99, P2.COND_LABEL[cond], ha="center", va="top", fontsize=11 * scale, color=INK)
+    for k_, (x0, x1) in enumerate(((0.05, 0.45), (0.55, 0.95))):
+        ax.add_patch(FancyBboxPatch((x0, 0.24), x1 - x0, 0.46, boxstyle="round,pad=0,rounding_size=0.025",
+                                    fc="white", ec="#c4c8cc", lw=1.0, clip_on=False))
+        xc = (x0 + x1) / 2
+        if k_ == 1:
+            ax.text(xc, 0.47, "?", ha="center", va="center", fontsize=16 * scale, color=INK, fontweight="bold")
+        elif cond == "audio":
+            P2.icon_audio(_task_icon(ax, xc - 0.04, 0.15, 0.30, 0.34))
+            ax.text(xc + 0.09, 0.47, "+", ha="center", va="center", fontsize=12 * scale, color=INK)
+        elif cond == "picture":
+            P2.icon_picture(_task_icon(ax, xc, 0.34, 0.26, 0.42))
+        else:
+            ax.text(xc, 0.47, SENTENCE_EXAMPLE, ha="center", va="center", fontsize=6.6 * scale, color=INK, linespacing=1.1)
+    for k_, word in enumerate(("stimulus", "response")):
+        ax.text(0.25 + 0.5 * k_, 0.09, word, ha="center", va="center", fontsize=8.5 * scale, color=MUTED)
+
+
+def _task_icon(ax, xc, w, y0, h):
+    ia = ax.inset_axes([xc - w / 2, y0, w, h], transform=ax.transData)
+    ia.set_xlim(0, 1); ia.set_ylim(0, 1)
+    ia.set_aspect("equal", adjustable="box")
+    ia.axis("off")
+    return ia
+
+
 def image_axes(fig, spec):
     ax = fig.add_subplot(spec); ax.set_xticks([]); ax.set_yticks([])
     for s_ in ax.spines.values():
@@ -127,16 +164,6 @@ def row1(d):
     n = len(d["xyz"])
     cols = np.array([pcol[p][:3] for p in d["patient"]]); rads = np.full(n, 1.35); al = np.full(n, 235.0)
     brains = {s_: render_all(s_, d, cols, rads, al, zoom=1.25) for s_ in ("L", "T", "R")}
-    # the task screens: the header of the opening figure, cropped from its paper render
-    fig0 = CL / "paper_figures" / "paper" / "FIG0_cohort_v17.png"
-    task0 = Image.open(fig0).convert("RGB"); w0, h0 = task0.size
-    # the three conditions' screens, one above the other, so the tile is square
-    bands = [(0.165, 0.415), (0.405, 0.655), (0.645, 0.895)]
-    crops = [task0.crop((int(x0 * w0), int(0.005 * h0), int(x1 * w0), int(0.125 * h0))) for x0, x1 in bands]
-    cw = max(c.width for c in crops); ch = crops[0].height
-    task = Image.new("RGB", (cw, ch * 3), "white")
-    for i_, c in enumerate(crops):
-        task.paste(c, (0, i_ * ch))
     # one electrode as the pipeline sees it
     inp = cache_input_dir()
     df, Xc = CC.build_concat_dataset(inp, conditions=("audio", "picture", "reading"), require_high_activity=True, cache_dir=CC.DEFAULT_CONCAT_CACHE, verbose=False)
@@ -148,7 +175,11 @@ def row1(d):
     gs = GridSpec(1, 5, figure=fig, left=0.01, right=0.99, top=0.86, bottom=0.04, wspace=0.08)
     for k_, (s_, ttl) in enumerate((("L", f"left, {int((d['hemi'] == 'L').sum())} electrodes"), ("T", f"from above, {n}"), ("R", f"right, {int((d['hemi'] == 'R').sum())}"))):
         ax = image_axes(fig, gs[0, k_]); ax.imshow(brains[s_]); ax.set_title(ttl, fontsize=8, color=MUTED, loc="left")
-    ax = image_axes(fig, gs[0, 3]); ax.imshow(task); ax.set_title("the task: stimulus, then a spoken answer", fontsize=8, color=MUTED, loc="left")
+    tsub = gs[0, 3].subgridspec(3, 1, hspace=0.12)                # the three conditions' trials, drawn, one above the other
+    for i_, cond in enumerate(TASK_CONDS):
+        axt = fig.add_subplot(tsub[i_, 0]); task_header(axt, cond, scale=0.82)
+        if i_ == 0:
+            axt.set_title("the task: stimulus, then a spoken answer", fontsize=8, color=MUTED, loc="left")
     sub = gs[0, 4].subgridspec(2, 1, height_ratios=[1, 1], hspace=0.45)
     axr = fig.add_subplot(sub[0, 0])
     axr.imshow(raw, aspect="auto", origin="lower", cmap="bwr", vmin=-7, vmax=7, extent=(0, 900, 0, 400))
@@ -166,7 +197,10 @@ def row1(d):
     # the tiles singly
     for s_, img in brains.items():
         Image.fromarray(img).save(OUT / f"tile_brain_{s_}.png")
-    task.save(OUT / "tile_task.png")
+    ft = plt.figure(figsize=(2.4, 3.0), dpi=DPI)                      # the task tile alone, drawn as in the row
+    for i_, cond in enumerate(TASK_CONDS):
+        task_header(ft.add_axes([0.03, 0.03 + (2 - i_) * 0.32, 0.94, 0.30]), cond, scale=0.82)
+    ft.savefig(OUT / "tile_task.png", facecolor="white"); plt.close(ft)
     return p
 
 
@@ -174,10 +208,6 @@ def row1(d):
 def row1_column(d):
     """The task screens; under them one electrode's full ERSP and its 15-band summary, condition
     by condition in the same columns; the three cohort brains at the bottom."""
-    fig0 = CL / "paper_figures" / "paper" / "FIG0_cohort_v17.png"
-    task0 = Image.open(fig0).convert("RGB"); w0, h0 = task0.size
-    bands = [(0.170, 0.405), (0.415, 0.650), (0.660, 0.895)]
-    screens = [task0.crop((int(x0 * w0), int(0.005 * h0), int(x1 * w0), int(0.125 * h0))) for x0, x1 in bands]
     inp = cache_input_dir()
     df, Xc = CC.build_concat_dataset(inp, conditions=("audio", "picture", "reading"), require_high_activity=True, cache_dir=CC.DEFAULT_CONCAT_CACHE, verbose=False)
     i_raw = int(np.where((df.patient_id.values == EXAMPLE[0]) & (df.electrode.astype(str).values == EXAMPLE[1]))[0][0])
@@ -201,7 +231,7 @@ def row1_column(d):
     fig = plt.figure(figsize=(7.4, 10.2), dpi=DPI)
     gs = GridSpec(4, 3, figure=fig, height_ratios=[1.0, 1.25, 0.9, 1.7], left=0.09, right=0.93, top=0.985, bottom=0.03, hspace=0.28, wspace=0.05)
     for c_ in range(3):
-        ax = image_axes(fig, gs[0, c_]); ax.imshow(screens[c_])
+        task_header(fig.add_subplot(gs[0, c_]), TASK_CONDS[c_])     # drawn in the ERSP's own column: halves line up
     for c_ in range(3):
         ax = fig.add_subplot(gs[1, c_])
         im = ax.imshow(raw[:, c_ * nt_raw:(c_ + 1) * nt_raw], aspect="auto", origin="lower", cmap="bwr", vmin=-7, vmax=7, extent=(0, 100, 0, 400))
