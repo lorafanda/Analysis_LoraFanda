@@ -140,10 +140,12 @@ def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=3.0, views=("L"
             axb.text(0.03, 0.02, f"{side} {nsel}", transform=axb.transAxes, fontsize=6, color=P2.MUTED, ha="left", va="bottom")
     name = names.get(b, "") if b is not None else "no published partner"
     import textwrap
-    title = (f"c{a}  {name}" if fset == REF else f"v{a} → {name}" + (f"  (J {jac:.2f})" if b is not None else ""))
-    fs_ = 9.0 if len(title) <= 34 else max(7.0, 9.0 * 34 / len(title))   # one line, smaller when long
-    fig.text(0.04, 1 - 0.06 / H, title, fontsize=fs_, fontweight="bold", color=col, va="top")
-    fig.text(0.04, 1 - 0.27 / H, f"n {n}  ·  {npat} patients", fontsize=7.5, color=P2.MUTED, va="top")
+    # the type's name alone as the title (bigger); its id with n and patients on the line under it (11-08)
+    title = name if fset == REF else f"→ {name}" + (f"  (J {jac:.2f})" if b is not None else "")
+    fs_ = 11.5 if len(title) <= 30 else max(8.5, 11.5 * 30 / len(title))   # one line, smaller when long
+    fig.text(0.04, 1 - 0.05 / H, title, fontsize=fs_, fontweight="bold", color=col, va="top")
+    fig.text(0.04, 1 - 0.29 / H, f"{'c' if fset == REF else 'v'}{a}  ·  n {n}  ·  {npat} patients", fontsize=7.5,
+             color=P2.MUTED, va="top")
     if pcol is not None:
         patients_bar(fig.add_axes([0.04, (0.17 + 0.0) / H, 0.92, 0.13 / H]), d, a, pcol)
     for ax_ in fig.axes:

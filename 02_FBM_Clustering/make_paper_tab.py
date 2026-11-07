@@ -296,7 +296,7 @@ SECTIONS = [
               "<i>Describe the seven here (15 bands, convex NMF, K = 7) so a reader could "
               "recognise one in their own data: what distinguishes each, and which differ "
               "across conditions rather than only in amplitude. The names on the abstract "
-              "&mdash; production, beta decrease, broadband decrease, low-frequency rise "
+              "&mdash; response broadband increase, beta decrease, broadband decrease, low-frequency increase "
               "&mdash; are provisional readings of the centroids, not computed labels.</i>"),
             F("results.f1", "What the response types are",
               "How many types, what each one looks like, and how they differ across the three "

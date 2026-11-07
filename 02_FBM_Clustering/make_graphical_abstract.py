@@ -60,8 +60,8 @@ PX = 1200                                  # Cell Reports: 1200 x 1200, minimal 
 # abstract is used. c5 = 70-400 Hz burst after the GO cue in every condition; c0 =
 # 13-50 Hz decrease through stimulus and response; c2 = broadband high-frequency
 # decrease during the stimulus halves; c4 = 1-13 Hz increase, strongest after the cue.
-SHOW = [(5, "Production"), (0, "Beta decrease"), (2, "Broadband decrease"),
-        (4, "Low-frequency rise")]
+SHOW = [(5, "Response broadband increase"), (0, "Beta decrease"), (2, "Broadband decrease"),
+        (4, "Low-frequency increase")]   # renamed 11-08
 # A SHOW entry carrying this label must be the cluster the pre-cue ramp measurement in
 # main() picks, or the script refuses. On the 15-band K = 7 fit no cluster ramps before
 # the cue (every HFA pre-cue slope is negative), so no entry carries it.
