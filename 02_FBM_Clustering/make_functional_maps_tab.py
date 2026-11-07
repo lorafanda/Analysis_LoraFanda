@@ -308,11 +308,12 @@ def build() -> str:
           "telling maps. Under each cluster: its centroid (mean ERSP of the same members, &plusmn;2 dB, audio | picture | "
           "sentences) and its members on the glass brain, left above right (a second file, _noglass, leaves them out). "
           "Script: 16_highlight_maps.py --ns nimare --v4 (--all-maps, --maps); tables beside the PNGs in "
-          "out/highlight_maps/.</p>"]
+          "out/highlight_maps/. The figures carry no title (cleaner on the poster): the title is the bold first line of "
+          "each caption.</p>"]
     LEG16 = ("x = the clusters in the order of the cluster cards; in each group one bar per map, numbered under the bars. "
              + LEG_V4 + " Bottom: the maps in bar order with the same numbers, left above right. " + LEG_PIAL)
-    P.append(fig("highlight2_15band_K7_all25", f"15 bands K 7, all {nmaps} maps", LEG16))
-    P.append(fig("highlight2_15band_K7_seven", "15 bands K 7, the six chosen maps",
+    P.append(fig("highlight2_15band_K7_all25", f"15 bands, K = 7, members with loading &ge; 0.35: all {nmaps} maps", LEG16))
+    P.append(fig("highlight2_15band_K7_seven", "15 bands, K = 7, members with loading &ge; 0.35: six chosen maps",
                  "The professor's four maps vs resting state (heard sentences, pictures, reading, production), then "
                  "sentences vs words and semantic vs rest, where clusters sit significantly below chance. The correction "
                  f"runs over all {nmaps} maps, not only the six. " + LEG16))
@@ -325,7 +326,7 @@ def build() -> str:
     for key, title in (("highlight_15band_K7", "15 bands, K 7"), ("highlight_15zband_K7", "15 bands z, K 7"),
                        ("highlight_5band_K6", "5 bands, K 6")):
         c = T["hl_" + key.split("_", 1)[1]]
-        P.append(fig(key + "_v4", f"{title}, loading &ge; 0.35, the 10 maps",
+        P.append(fig(key + "_v4", f"{title.replace(', K', ', K =')}, members with loading &ge; 0.35: the 10 maps that at least one clean cluster fits",
                      ("" if key == "highlight_15band_K7" else "The clusters take the place and colour of the 15-band type "
                       "they match (FIG 4's rule), ids are their own. ") + f"Correction over {c.cluster.nunique()} clusters &times; {nmaps} maps; cut-off "
                      f"|z| &ge; {c.z_crit.iloc[0]:.2f}. " + LEG16))

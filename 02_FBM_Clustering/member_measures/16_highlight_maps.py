@@ -371,7 +371,7 @@ for cfg in a.configs:
         fig.patch.set_alpha(0)
         ax = fig.add_axes([LEFT / W, Y_BAR / H, PLOT_W / W, H_BAR / H])
         ax.patch.set_alpha(0)
-        ymax = (max(np.nanmax(100 * obs[:, chosen]), np.nanmax(CHI[:, chosen]), 10) * 1.08 if a.v4   # bars and chance boxes only
+        ymax = (max(np.nanmax(100 * obs[:, chosen]), np.nanmax(CHI[:, chosen]), 10) * 1.03 if a.v4   # bars and chance boxes only
                 else max(np.nanmax(HI[:, chosen]), 10) * 1.05)
         xt, xl = [], []
         for xi, j in enumerate(rank):
@@ -457,9 +457,10 @@ for cfg in a.configs:
         ax.set_ylabel("% of the cluster's electrodes inside the map", fontsize=8.5)
         ax.tick_params(axis="y", labelsize=7.5)
         ax.spines[["top", "right"]].set_visible(False)
-        ax.set_title(f"{MC.LABEL[tag]}, K = {K}, members with loading ≥ {a.loading:g}: "
-                     + (f"{M} chosen maps" if a.maps else f"all {M} maps" if a.all_maps else f"the {M} maps that at least one clean cluster fits"),
-                     fontsize=10.5, loc="left")
+        if not a.v4:                                                    # --v4: no title, the caption carries it
+            ax.set_title(f"{MC.LABEL[tag]}, K = {K}, members with loading ≥ {a.loading:g}: "
+                         + (f"{M} chosen maps" if a.maps else f"all {M} maps" if a.all_maps else f"the {M} maps that at least one clean cluster fits"),
+                         fontsize=10.5, loc="left")
         _bl = np.array([0.22, 0.56, 0.82])
         V4H = [Patch(facecolor=_bl, edgecolor="none", label="above chance"),
                Patch(facecolor=0.38 * _bl + 0.62, edgecolor="none", label="neither"),
@@ -468,6 +469,10 @@ for cfg in a.configs:
                Patch(facecolor="#e3e5e8", edgecolor="none", label="chance range (corrected): outside = significant")]
         if not all(clean[j] for j in rank):                            # a one-patient cluster is drawn: say what the dot is
             V4H.append(Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient"))
+        if a.v4:                                                        # rows of three: matplotlib fills columns
+            _n = len(V4H)
+            _rows = [list(range(r * 3, min(r * 3 + 3, _n))) for r in range((_n + 2) // 3)]
+            V4H = [V4H[r[c]] for c in range(3) for r in _rows if c < len(r)]
         ax.legend(handles=V4H if a.v4 else ([(Patch(facecolor="#398fd0", edgecolor="none", label="above chance: full colour") if a.v4 else
                              Patch(facecolor="#9aa0a6", edgecolor="black", lw=2.5, label="above chance (q < 0.05)" if a.v3 else "fits (q < 0.05, shaft-shift null)")),
                             (Line2D([0], [0], color="black", lw=1.8, ls="none", marker="_", ms=9, mew=1.8, label="chance level (shaft-shift null)",
@@ -488,8 +493,9 @@ for cfg in a.configs:
                            [Patch(facecolor="white", edgecolor=P2.INK, label="fits: beats the shaft-shift null, q < 0.05"),
                             Line2D([0], [0], color="black", lw=1.2, label="all electrodes"),
                             Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient")]),
-                  frameon=False, fontsize=8 if a.v3 else 7.5, ncol=2 if a.v4 else (4 if a.v2 else 3),
-                  **(dict(loc="upper left") if a.v4 else
+                  frameon=False, fontsize=6.8 if a.v4 else (8 if a.v3 else 7.5), ncol=3 if a.v4 else (4 if a.v2 else 3),
+                  **(dict(loc="lower left", bbox_to_anchor=(0.0, 1.0), handlelength=1.6, columnspacing=1.4,
+                          borderaxespad=0.2) if a.v4 else
                      dict(loc="lower right", bbox_to_anchor=(1.0, 1.0)) if a.v2 else dict(loc="upper right")))
         # the selected maps on the pial surface, same order and numbers, left above right
         for k_, m in enumerate(chosen):
