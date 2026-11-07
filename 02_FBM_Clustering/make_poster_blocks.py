@@ -3,9 +3,10 @@
 run and for the z-scored variant matched to it (2026-11-03).
 
 One block per type: the mean ERSP of its members (the paper's draw_mean, +-2 dB, three
-conditions side by side) framed in the type's colour, the two lateral glass brains under the
-paper's rule (render_hemi: loading >= 0.3 drawn, colour, size and opacity by loading), and one
-caption line (type, n, patients). The z-scored run's clusters are ordered and coloured by the
+conditions side by side, width : height 3 : 1, no frequency values: the poster's example figure carries
+that axis) framed in the type's colour, the glass brains under the paper's rule (render_hemi: loading >=
+0.3 drawn, colour, size and opacity by loading) as left | top | right (--views L R for the two lateral
+views only), the type's name on one line and one caption line (n, patients). The z-scored run's clusters are ordered and coloured by the
 published type they are matched to (Hungarian on shared electrodes) and captioned "v<id> -> type".
 
     python make_poster_blocks.py                      # both runs
@@ -82,35 +83,39 @@ def load(fset, ref):
     return d, order, {a: (mp.get(a), float(J[a, mp[a]]) if a in mp else float(J[a].max())) for a in range(REF_K)}, names
 
 
-def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=2.0):
-    """One type as a poster block: framed mean ERSP (width:height = aspect), two brains, a caption line."""
+def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=3.0, views=("L", "T", "R")):
+    """One type as a poster block: framed mean ERSP (width:height = aspect), the brains in `views`, a caption line."""
     members = d["lab"] == a
     n = int(members.sum()); npat = int(pd.Series(d["patient"][members]).nunique())
     M = Cref[members].mean(0)
-    w = 3.6; h_ersp = 0.88 * w / aspect; h_brain = 0.42 * w
-    fig = plt.figure(figsize=(w, h_ersp + h_brain + 0.75), dpi=300)
-    gs = GridSpec(2, 2, figure=fig, height_ratios=[h_ersp, h_brain], left=0.06, right=0.94, top=1 - 0.55 / (h_ersp + h_brain + 0.75), bottom=0.02, hspace=0.16, wspace=0.03)
+    w = 3.6; h_ersp = 0.92 * w / aspect; h_brain = (0.36 if "T" in views else 0.42) * w; head = 0.5
+    H = h_ersp + h_brain + head
+    fig = plt.figure(figsize=(w, H), dpi=300)
+    gs = GridSpec(2, len(views), figure=fig, height_ratios=[h_ersp, h_brain],
+                  width_ratios=[0.62 if v == "T" else 1.0 for v in views], left=0.04, right=0.96, top=1 - head / H,
+                  bottom=0.01, hspace=0.12 if "T" in views else 0.16, wspace=0.02)
     ax = fig.add_subplot(gs[0, :])
     P2.draw_mean(ax, M, d, vlim=P2.MEAN_VLIM, col=col)
     nt = d["nt"]
     ax.set_xticks([(i + 0.5) * nt for i in range(len(d["conds"]))]); ax.set_xticklabels([P2.COND_LABEL.get(c, c) for c in d["conds"]], fontsize=7)
-    ax.set_yticks([0, 4, 7, 9, 14]); ax.set_yticklabels([d["bands"][i].replace("Hz", "") for i in (0, 4, 7, 9, 14)], fontsize=6)
+    ax.set_yticks([])                                              # the frequency axis is on the example figure only
     ax.tick_params(length=0, pad=1.5, colors=P2.MUTED)
     for s_ in ax.spines.values():
         s_.set_edgecolor(col); s_.set_linewidth(2.4)
-    for i_, side in enumerate(("L", "R")):
+    for i_, side in enumerate(views):
         axb = fig.add_subplot(gs[1, i_])
         img, nsel = P2.render_hemi(side, d, a)
         axb.imshow(img); axb.set_xticks([]); axb.set_yticks([])
         for s_ in axb.spines.values():
             s_.set_visible(False)
-        axb.text(0.03, 0.02, f"{side} {nsel}", transform=axb.transAxes, fontsize=6, color=P2.MUTED, ha="left", va="bottom")
+        if side != "T":                                            # the top view shows both hemispheres
+            axb.text(0.03, 0.02, f"{side} {nsel}", transform=axb.transAxes, fontsize=6, color=P2.MUTED, ha="left", va="bottom")
     name = names.get(b, "") if b is not None else "no published partner"
     import textwrap
-    head = (f"c{a}  {name}" if fset == REF else f"v{a} → {name}" + (f"  (J {jac:.2f})" if b is not None else ""))
-    lines = textwrap.wrap(head, 30)[:2]
-    fig.text(0.06, 0.975, NL.join(lines), fontsize=9 if len(lines) == 1 else 8.2, fontweight="bold", color=col, va="top", linespacing=1.15)
-    fig.text(0.06, 0.975 - (0.045 if len(lines) == 1 else 0.075), f"n {n}  ·  {npat} patients", fontsize=7.5, color=P2.MUTED, va="top")
+    title = (f"c{a}  {name}" if fset == REF else f"v{a} → {name}" + (f"  (J {jac:.2f})" if b is not None else ""))
+    fs_ = 9.0 if len(title) <= 34 else max(7.0, 9.0 * 34 / len(title))   # one line, smaller when long
+    fig.text(0.04, 1 - 0.06 / H, title, fontsize=fs_, fontweight="bold", color=col, va="top")
+    fig.text(0.04, 1 - 0.27 / H, f"n {n}  ·  {npat} patients", fontsize=7.5, color=P2.MUTED, va="top")
     p = out / f"block_{pos:02d}_c{a}.png"
     fig.savefig(p, facecolor="white"); plt.close(fig)
     return p
@@ -135,7 +140,9 @@ def main() -> int:
             except Exception: pass
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("--sets", nargs="+", default=[REF, "concat_bands15z"])
-    ap.add_argument("--aspect", type=float, default=2.0, help="ERSP panel width : height (the poster asks 3)")
+    ap.add_argument("--aspect", type=float, default=3.0, help="ERSP panel width : height (the poster: 3)")
+    ap.add_argument("--views", nargs="+", default=["L", "T", "R"], choices=["L", "T", "R"],
+                    help="the brains under the centroid: L R = the two lateral views, L T R adds the top view between")
     ap.add_argument("--rows", type=int, default=1, help="rows of blocks in the sheet (2 = 4 + 3)")
     a = ap.parse_args()
     ref = P2.load_run(REF, REF_K, "cnmf"); ref["fset"] = REF
@@ -151,7 +158,8 @@ def main() -> int:
         try:
             for pos, a_ in enumerate(order, 1):
                 b, jac = match[a_]
-                paths.append(block(d, a_, b, jac, names, Cref, colmap[a_], out, pos, fset, aspect=a.aspect))
+                paths.append(block(d, a_, b, jac, names, Cref, colmap[a_], out, pos, fset, aspect=a.aspect,
+                                   views=tuple(a.views)))
                 print(f"  {fset} block {pos}: cluster {a_} -> {names.get(b, '-') if b is not None else '-'}")
         finally:
             P2.cluster_col = orig

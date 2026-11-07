@@ -361,7 +361,7 @@ for cfg in a.configs:
         # --v4: the centroid beside the brains when the group has room (all maps), else in its own row above them
         CENT = GLASS and a.v4
         SIDE = CENT and (GW - 0.1) >= GLASS_H * 1.38 + 2.9
-        CENT_H = (GW - 0.1) / 2.4 + 0.3 if CENT and not SIDE else 0.0
+        CENT_H = (GW - 0.1) / 3 + 0.14 + 0.3 if CENT and not SIDE else 0.0   # centroid 1 : 3
         H_BAR, TOPM = 3.0, 0.75
         Y_PIAL = 0.55
         Y_GLASS = Y_PIAL + 2 * PIAL_H + (0.75 if GLASS else 0.55)
@@ -429,19 +429,19 @@ for cfg in a.configs:
                 assert (ridx >= 0).all(), "electrodes missing from the 15-band run"
                 Mj = _C[ridx[kp[lk == j]]].mean(0)
                 if SIDE:
-                    ew, eh = 2.6, 1.45
+                    ew = 2.6
+                    eh = ew / 3 + 0.14                          # 1 : 3, plus the condition labels
                     ex0, ey0 = gx0, Y_GLASS + GLASS_H - eh / 2 + 0.08
                     gx0, gw_ = gx0 + ew + 0.3, gw_ - ew - 0.3
                 else:
                     ew, eh = gw_, CENT_H - 0.3
                     ex0, ey0 = gx0, Y_GLASS + 2 * GLASS_H + 0.15
-                axc = fig.add_axes([(ex0 + 0.32) / W, (ey0 + 0.14) / H, (ew - 0.32) / W, (eh - 0.14) / H])
+                axc = fig.add_axes([ex0 / W, (ey0 + 0.14) / H, ew / W, (eh - 0.14) / H])
                 P2.draw_mean(axc, Mj, REF, vlim=P2.MEAN_VLIM, col=tuple(col))
                 nt = REF["nt"]
                 axc.set_xticks([(i + 0.5) * nt for i in range(len(REF["conds"]))])
                 axc.set_xticklabels([P2.COND_LABEL.get(c, c).split(" ")[0] for c in REF["conds"]], fontsize=6)
-                axc.set_yticks([0, 4, 7, 9, 14])
-                axc.set_yticklabels([REF["bands"][i].replace("Hz", "") for i in (0, 4, 7, 9, 14)], fontsize=5.5)
+                axc.set_yticks([])                              # the frequency axis is on the poster's example figure only
                 axc.tick_params(length=0, pad=1.5, colors=P2.MUTED)
                 for s_ in axc.spines.values():
                     s_.set_edgecolor(col)
