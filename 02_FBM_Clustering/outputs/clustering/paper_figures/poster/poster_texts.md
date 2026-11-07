@@ -8,7 +8,7 @@ Every number below is the published one on cohort v17 (numbers.json, heldout.jso
 
 ## Row 1
 
-**Why.** Functional brain mapping before epilepsy surgery relies on electrical stimulation, which is slow and subjective. Task-evoked spectral responses could map function without stimulation, if their patterns recur across patients. We ask whether the responses of 1587 electrodes in 29 patients fall into recurring types, and how far those types survive a change of description, of algorithm and of patients.
+**Why.** Identifying eloquent cortex is crucial to avoid causing language deficits. Electrical stimulation mapping, the gold standard, is fastidious and subjective. Do task-evoked spectral responses (ERSPs) during the simple language tasks fall into types that recur across patients, and identify language-specific cortical areas?
 
 **The task and the cohort.** Three naming tasks: auditory definition, picture naming and sentence completion, each a stimulus period and a spoken response. Depth electrodes in 29 patients (Geneva and Bern): 2917 contacts seen, 1587 kept by a response gate (at least 2 % of time-frequency bins above +2.2 dB); the gate keeps 6 % to 95 % of a patient's contacts.
 
