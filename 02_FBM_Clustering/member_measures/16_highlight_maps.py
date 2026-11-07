@@ -353,7 +353,7 @@ for cfg in a.configs:
     # ---- the figure, in inches, with and without the glass brains
     for GLASS in (True, False):
         M = len(chosen)
-        BARW = 0.2
+        BARW = 0.3 if (a.brains_top and a.v4) else 0.2                 # --brains-top: wider groups, bigger brains
         GW = M * BARW + 0.45                                              # one cluster's group
         LEFT, RIGHT = 1.0, 0.4
         PLOT_W = K * GW
@@ -374,15 +374,15 @@ for cfg in a.configs:
         if BT:                                                          # brains on top, bars, pial maps left | right
             gw0 = GW - 0.1
             PIAL_H = min(0.8, MAPW * 0.47 / 1.38)
-            GLASS_H = min(1.0, gw0 / 2 / 1.38) if GLASS else 0.0
+            GLASS_H = min(1.2, gw0 / 2 / 1.38) if GLASS else 0.0
             CENT_H = gw0 / 3 + 0.14 if CENT else 0.0
             Y_PIAL = 0.55
             Y_BAR = Y_PIAL + PIAL_H + 0.45
-            Y_GLASS = Y_BAR + H_BAR + 0.30
+            Y_LEG = Y_BAR + H_BAR + 0.04                               # the legend right above the bars
+            Y_GLASS = Y_LEG + 0.58
             Y_CENT = Y_GLASS + GLASS_H + 0.06
-            Y_LAB = Y_CENT + CENT_H + 0.06 if GLASS else Y_BAR + H_BAR + 0.08
-            Y_LEG = Y_LAB + 0.28
-            H = Y_LEG + 0.62
+            Y_LAB = Y_CENT + CENT_H + 0.06 if GLASS else Y_LEG + 0.42
+            H = Y_LAB + 0.32
         fig = plt.figure(figsize=(W, H), dpi=300 if a.v2 else 200)
         fig.patch.set_alpha(0)
         ax = fig.add_axes([LEFT / W, Y_BAR / H, PLOT_W / W, H_BAR / H])
