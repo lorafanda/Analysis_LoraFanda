@@ -206,55 +206,28 @@ def row1(d):
 
 # ---------------------------------------------------------------- figure 1 as a column
 def row1_column(d):
-    """The task screens; under them one electrode's full ERSP and its 15-band summary, condition
-    by condition in the same columns; the three cohort brains at the bottom."""
-    inp = cache_input_dir()
-    df, Xc = CC.build_concat_dataset(inp, conditions=("audio", "picture", "reading"), require_high_activity=True, cache_dir=CC.DEFAULT_CONCAT_CACHE, verbose=False)
-    i_raw = int(np.where((df.patient_id.values == EXAMPLE[0]) & (df.electrode.astype(str).values == EXAMPLE[1]))[0][0])
-    raw = Xc[i_raw]
+    """The task screens; under them one electrode as the pipeline sees it (15 bands x 30 time bins per condition),
+    condition by condition in the same columns, every band labelled (Lora, 2026-11-07: the full ERSP, the cohort
+    brains and the sentence over the bands removed)."""
     m = d["meta"]; i15 = [k_ for k_, (p, e) in enumerate(zip(m.patient_id, m.electrode)) if p == EXAMPLE[0] and P2.norm(e) == P2.norm(EXAMPLE[1])][0]
     cube = d["C"][i15]
-    pcol = P2.patient_colours(d); n = len(d["xyz"])
     xt = lambda ax, c_: (ax.set_xticks([0, 50, 100] if c_ == 2 else [0, 50]), ax.set_xticklabels(["0", "50", "100 %"] if c_ == 2 else ["0", "50"], fontsize=6.5))
-    cols = np.array([pcol[p][:3] for p in d["patient"]]); rads = np.full(n, 1.35); al = np.full(n, 235.0)
-    brains = {}
-    for s_ in ("L", "T", "R"):
-        tile = OUT / f"tile_brain_{s_}.png"
-        if NO_RENDER:                               # a locked screen crashes VTK outright: reuse the saved tile
-            if not tile.exists():
-                raise SystemExit(f"--no-render but no saved tile {tile.name}: run once with the screen unlocked")
-            brains[s_] = np.asarray(Image.open(tile).convert("RGBA"))
-        else:
-            brains[s_] = render_all(s_, d, cols, rads, al, zoom=1.25)
-            Image.fromarray(brains[s_]).save(tile)
-    nt_raw = raw.shape[1] // 3; nt = d["nt"]
-    fig = plt.figure(figsize=(7.4, 10.2), dpi=DPI)
-    gs = GridSpec(4, 3, figure=fig, height_ratios=[1.0, 1.25, 0.9, 1.7], left=0.09, right=0.93, top=0.985, bottom=0.03, hspace=0.28, wspace=0.05)
+    nb = cube.shape[1]
+    fig = plt.figure(figsize=(7.4, 4.3), dpi=DPI)
+    gs = GridSpec(2, 3, figure=fig, height_ratios=[1.0, 1.45], left=0.11, right=0.93, top=0.98, bottom=0.07, hspace=0.12, wspace=0.05)
     for c_ in range(3):
         task_header(fig.add_subplot(gs[0, c_]), TASK_CONDS[c_])     # drawn in the ERSP's own column: halves line up
     for c_ in range(3):
         ax = fig.add_subplot(gs[1, c_])
-        im = ax.imshow(raw[:, c_ * nt_raw:(c_ + 1) * nt_raw], aspect="auto", origin="lower", cmap="bwr", vmin=-7, vmax=7, extent=(0, 100, 0, 400))
-        ax.axvline(50, color=INK, lw=0.7, ls="--"); xt(ax, c_); ax.tick_params(labelsize=6.5, length=2)
-        if c_ == 0:
-            ax.set_yticks([0, 100, 200, 300, 400]); ax.set_ylabel("Hz", fontsize=7.5)
-            ax.set_title(f"the full ERSP of one electrode ({EXAMPLE[0]} {EXAMPLE[1]}), ±7 dB", fontsize=7.5, color=MUTED, loc="left")
-        else:
-            ax.set_yticks([])
-    for c_ in range(3):
-        ax = fig.add_subplot(gs[2, c_])
-        ax.imshow(cube[c_], aspect="auto", origin="lower", cmap="bwr", vmin=-7, vmax=7, extent=(0, 100, -0.5, 14.5))
+        im = ax.imshow(cube[c_], aspect="auto", origin="lower", cmap="bwr", vmin=-7, vmax=7, extent=(0, 100, -0.5, nb - 0.5))
         ax.axvline(50, color=INK, lw=0.7, ls="--"); xt(ax, c_); ax.tick_params(length=2)
-        if c_ == 0:
-            ax.set_yticks([0, 4, 7, 9, 14]); ax.set_yticklabels([d["bands"][i].replace("Hz", "") for i in (0, 4, 7, 9, 14)], fontsize=6.5); ax.set_ylabel("Hz", fontsize=7.5)
-            ax.set_title("the same electrode as the pipeline sees it: 15 bands × 30 time bins per condition", fontsize=7.5, color=MUTED, loc="left")
+        if c_ == 0:                                                 # every band labelled
+            ax.set_yticks(range(nb)); ax.set_yticklabels([b_.replace("Hz", "") for b_ in d["bands"]], fontsize=5.6)
+            ax.set_ylabel("Hz", fontsize=7.5)
         else:
             ax.set_yticks([])
-    cax = fig.add_axes([0.94, 0.40, 0.012, 0.30]); cb = fig.colorbar(im, cax=cax); cb.ax.tick_params(labelsize=6.5)
+    cax = fig.add_axes([0.94, 0.07, 0.012, 0.50]); cb = fig.colorbar(im, cax=cax); cb.ax.tick_params(labelsize=6.5)
     cax.set_title("dB", fontsize=7, color=MUTED, pad=3)
-    for c_, (s_, ttl) in enumerate((("L", f"left, {int((d['hemi'] == 'L').sum())} electrodes"), ("T", f"from above, {n}"), ("R", f"right, {int((d['hemi'] == 'R').sum())}"))):
-        ax = image_axes(fig, gs[3, c_]); ax.imshow(brains[s_]); ax.set_title(ttl, fontsize=7.5, color=MUTED, loc="left")
-    fig.text(0.09, 0.005, "the 1587 electrodes that passed the response gate, each patient its colour", fontsize=7.5, color=MUTED, va="bottom")
     p = OUT / "figure1_column.png"; fig.savefig(p, facecolor="white"); plt.close(fig)
     return p
 
