@@ -152,6 +152,21 @@ def build() -> str:
     nn = {j: int(cl[cl.cluster == j].n.iloc[0]) for j in CARD}
     c1r = (a25[(a25.cluster == 1) & a25.fit].pct_inside / a25[(a25.cluster == 1) & a25.fit].cohort_pct)
     zc = float(cl.z_crit.iloc[0])
+    import glob
+    import re
+    cap = Path(sorted(glob.glob(str(ROOT / "outputs" / "clustering" / "paper_figures" / "FIG4_K07_run*_caption.txt")))[-1])
+    AG = {}
+    for m_ in re.finditer(r"^(.+?): matched r ([+-][0-9.]+) against .*?; (\d+) of (\d+) pairs above the free null, (\d+) above "
+                          r"the within-patient null; diagonal share ([0-9.]+) of \d+ electrodes against ([0-9.]+) \+- ([0-9.]+) for "
+                          r"random pairings \(z ([0-9.]+), p ([<=]) ([0-9.]+)\)", cap.read_text(encoding="utf-8"), re.M):
+        AG[m_.group(1).strip()] = dict(r=float(m_.group(2)), free=int(m_.group(3)), pairs=int(m_.group(4)),
+                                       within=int(m_.group(5)), diag=float(m_.group(6)), chance=float(m_.group(7)),
+                                       sd=float(m_.group(8)), p=m_.group(10) + " " + m_.group(11))
+    ALG = [AG[k_] for k_ in ("convex NMF vs k-means", "convex NMF vs Ward", "k-means vs Ward")]
+    FEA = {k_: AG[f"15 bands vs {k_}"] for k_ in ("5 bands", "2 bands", "HFA")}
+    hfa = info[info.fset == "hfa"]
+    hfa_ok_k = sorted({int(k_) for k_ in hfa[hfa.valid].k})
+    hfa_bad = hfa[(hfa.loading == "0") & ~hfa.k.isin(hfa_ok_k)]
     prof = ["heard_sentences_vs_resting_state", "pictures_vs_resting_state", "reading_vs_resting_state",
             "production_vs_resting_state"]
 
@@ -233,7 +248,14 @@ def build() -> str:
           + ". At K 7: " + ", ".join(f"{LABEL[f]} {('loading &ge; ' + r.loading) if r.loading != 'weighted' else 'weighted'} "
                                      f"z {r.z:.1f}" for f, r in k7best.items()) + ".</p>"]
 
-    rows4 = [[f"c{j} ({nn[j]})", zlist(up[j]), zlist(dn[j], sign=-1)] for j in CARD]
+    # the type names, as on the cluster cards (00_Paper2_Figures.TYPE_NAMES, read without importing the module)
+    _src = (ROOT / "00_Paper2_Figures.py").read_text(encoding="utf-8")
+    _i = _src.index("TYPE_NAMES = {")
+    _j = _src.index("\n\n", _i)
+    _ns = {}
+    exec(_src[_i:_j], _ns)
+    TN = _ns["TYPE_NAMES"][("concat_bands15", 7)]
+    rows4 = [[f"c{j} {TN.get(j, '')} ({nn[j]})", zlist(up[j]), zlist(dn[j], sign=-1)] for j in CARD]
     P += ['    <h3 id="fm-15k7">4 &middot; 15 bands K 7 at loading 0.35: which cluster sits above or below chance in which map</h3>',
           fig("15band_k7_all_maps_v4", f"15 bands K 7, loading &ge; 0.35, all {nmaps} maps",
               "One panel per cluster, the n of members under its id. " + LEG_V4 +
@@ -282,7 +304,7 @@ def build() -> str:
                      f"cross_feature_maps/K{k}_load035_v4.csv."))
 
     P += ['    <h3 id="fm-twosided">7 &middot; The highlight figures: every cluster, its centroid and the maps</h3>',
-          "    <p>15 bands K 7 against all maps and against seven chosen maps; then, for three solutions, the 10 most "
+          "    <p>15 bands K 7 against all maps and against six chosen maps; then, for three solutions, the 10 most "
           "telling maps. Under each cluster: its centroid (mean ERSP of the same members, &plusmn;2 dB, audio | picture | "
           "sentences) and its members on the glass brain, left above right (a second file, _noglass, leaves them out). "
           "Script: 16_highlight_maps.py --ns nimare --v4 (--all-maps, --maps); tables beside the PNGs in "
@@ -290,10 +312,10 @@ def build() -> str:
     LEG16 = ("x = the clusters in the order of the cluster cards; in each group one bar per map, numbered under the bars. "
              + LEG_V4 + " Bottom: the maps in bar order with the same numbers, left above right. " + LEG_PIAL)
     P.append(fig("highlight2_15band_K7_all25", f"15 bands K 7, all {nmaps} maps", LEG16))
-    P.append(fig("highlight2_15band_K7_seven", "15 bands K 7, the seven chosen maps",
-                 "The professor's four maps vs resting state (heard sentences, pictures, reading, production), then the "
-                 "three maps where a cluster sits significantly below chance (sentences vs words, semantic vs rest, "
-                 f"production vs motor). The correction runs over all {nmaps} maps, not only the seven. " + LEG16))
+    P.append(fig("highlight2_15band_K7_seven", "15 bands K 7, the six chosen maps",
+                 "The professor's four maps vs resting state (heard sentences, pictures, reading, production), then "
+                 "sentences vs words and semantic vs rest, where clusters sit significantly below chance. The correction "
+                 f"runs over all {nmaps} maps, not only the six. " + LEG16))
     P.append("    <p>The 10 most telling maps: a map can be shown when at least one clean cluster is above chance in it; at "
              "most 10 are shown, shared out in turns: the clusters with the fewest hits choose first, each takes one map "
              "per round, its own maps first (above chance for no other clean cluster), then shared ones, largest "
@@ -320,13 +342,32 @@ def build() -> str:
           "    <p>Language is not one module but a network of interacting sub-functions (perception, comprehension, sentence "
           "integration, semantic retrieval, naming, production), and the analysis was designed around that view: a "
           "cluster may sit in several language maps, and several clusters may share one map. Read this way, the response "
-          f"types map onto the language network in a consistent and limited way. Numbers from section 4 (15 bands K 7, "
-          f"loading &ge; 0.35, {nmaps} maps).</p>",
-          f"    <ul><li><b>One language-network cluster.</b> c1 ({nn[1]} electrodes) is above chance in {len(up[1])} of the "
+          f"types map onto the language network in a consistent and limited way.</p>",
+          "    <ul><li><b>Distinct clustering algorithms find the same types.</b> Convex NMF, k-means and Ward hierarchical "
+          f"clustering on the same 15-band description: in each of the three comparisons all "
+          f"{min(min(a_['free'], a_['within']) for a_ in ALG)} of {ALG[0]['pairs']} matched pairs of types are above both "
+          f"nulls, and {100 * min(a_['diag'] for a_ in ALG):.0f}&ndash;{100 * max(a_['diag'] for a_ in ALG):.0f}% of the "
+          f"electrodes fall in the matched type against {100 * min(a_['chance'] for a_ in ALG):.0f}&ndash;"
+          f"{100 * max(a_['chance'] for a_ in ALG):.0f}% for random pairings (matched centroids r "
+          f"{min(a_['r'] for a_ in ALG):+.2f} to {max(a_['r'] for a_ in ALG):+.2f}). The types are a property of the data, "
+          "not of one algorithm.</li>"
+          "<li><b>The types depend on frequency-specific information that high-frequency activity alone loses.</b> "
+          "Clustered on less spectral detail, convex NMF agrees less and less with the 15-band types: "
+          f"{100 * FEA['5 bands']['diag']:.0f}% of the electrodes fall in the matched type with 5 bands, "
+          f"{100 * FEA['2 bands']['diag']:.0f}% with 2 bands and {100 * FEA['HFA']['diag']:.0f}% with high-frequency "
+          f"activity (HFA) alone, against {100 * FEA['HFA']['chance']:.0f} &plusmn; {100 * FEA['HFA']['sd']:.0f}% for random "
+          f"pairings (p {FEA['HFA']['p']}, not above chance; {FEA['HFA']['free']} of {FEA['HFA']['pairs']} pairs above the "
+          "free null). HFA alone also leans on single patients: "
+          + (f"it passes the one-patient rule only at K {', '.join(map(str, hfa_ok_k))}; at K "
+             f"{', '.join(str(int(k_)) for k_ in hfa_bad.k)} one of its clusters is "
+             f"{100 * hfa_bad.max_one_patient.min():.0f}&ndash;{100 * hfa_bad.max_one_patient.max():.0f}% one patient "
+             if hfa_ok_k else "it fails the one-patient rule at every K ")
+          + "(section 3). The usual measure in intracranial language studies therefore misses most of this structure.</li>"
+          f"<li><b>One language-network cluster</b> (sections 4&ndash;5, 15 bands K 7, loading &ge; 0.35, {nmaps} maps). c1 ({nn[1]} electrodes) is above chance in {len(up[1])} of the "
           f"{nmaps} maps, at {c1r.min():.1f}&ndash;{c1r.max():.1f} times the share of all electrodes, and below chance in "
           f"{len(dn[1]) or 'none'}. The best configuration of every feature set in section 5 also has one cluster above "
           f"chance in {top_hits} or more maps.</li>"
-          f"<li><b>Two more specific functions.</b> c5 is above chance in {len(up[5])} maps ({zlist(up[5])}) and below in "
+          f"<li><b>Two more specific functions.</b> c5 (response broadband increase) is above chance in {len(up[5])} maps ({zlist(up[5])}) and below in "
           f"{len(dn[5]) or 'none'}. c0 is above chance in {len(up[0])} ({zlist(up[0])}) and below in "
           f"{zlist(dn[0], sign=-1)}.</li>"
           "<li><b>The other four types avoid language maps.</b> "

@@ -137,7 +137,7 @@ ERSP_CMAP = "bwr"
 _CANVAS_W = [17.6]          # the width of the figure being drawn (canvas())
 # the provisional type names of the main solution (Lora's readings are owed; these are the
 # ones the outline, the abstract and the talk use), for the block titles on paper
-TYPE_NAMES = {("concat_bands15", 7): {5: "production", 0: "beta decrease",
+TYPE_NAMES = {("concat_bands15", 7): {5: "response broadband increase", 0: "beta decrease",   # was "production", Lora 2026-11-07
                                       2: "broadband decrease", 4: "low-frequency rise",
                                       1: "audio-stimulus low-frequency",
                                       3: "sentence-stimulus low-frequency",   # "reading" -> "sentence", Lora 2026-10-30

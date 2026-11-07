@@ -89,6 +89,20 @@ clusters).
 
 The old figures (counting test, 23 maps) are still on disk without the `_v4` suffix. The tab no longer shows them.
 
+## Later on 7 November
+- **c5 renamed** from "production" to "response broadband increase", in `00_Paper2_Figures.TYPE_NAMES` (every figure that
+  names types). The poster cluster blocks were redrawn with `make_poster_blocks.py --sets concat_bands15`.
+- **The chosen-maps figure (`--maps`) has 6 maps:** production vs motor is out. With it, c3 loses its only significant
+  mark in that figure; c3 is still below chance in production vs motor and naming in the 25-map figure.
+- **The tab conclusion now opens with two points:**
+  - Distinct algorithms find the same types: convex NMF / k-means / Ward, 7 of 7 matched pairs above both nulls, 52–73%
+    of electrodes in the matched type against 14–15% chance.
+  - The types need frequency-specific information that HFA alone loses: 15 bands vs 5 / 2 bands / HFA gives 60 / 40 / 21%
+    against 14 ± 4%. HFA is not above chance (p = 0.059), and HFA alone passes the one-patient rule only at K 6.
+
+  Both are read when the tab is built, from the newest `outputs/clustering/paper_figures/FIG4_K07_run*_caption.txt` and
+  step 14's table.
+
 ## Update command
 From `02_FBM_Clustering/member_measures/`, on the laptop with the desktop unlocked:
 

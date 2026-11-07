@@ -51,11 +51,11 @@ ap.add_argument("--perm", type=int, default=2000)
 ap.add_argument("--no-render", action="store_true")
 ap.add_argument("--max-maps", type=int, default=10, help="at most this many maps per figure")
 ap.add_argument("--all-maps", action="store_true", help="show all maps, not only the selected ones (files _all)")
-SEVEN = ["heard_sentences_vs_resting_state", "pictures_vs_resting_state", "reading_vs_resting_state",
-         "production_vs_resting_state", "sentences_vs_words", "semantic_vs_resting_state", "production_vs_motor"]
+CHOSEN = ["heard_sentences_vs_resting_state", "pictures_vs_resting_state", "reading_vs_resting_state",
+          "production_vs_resting_state", "sentences_vs_words", "semantic_vs_resting_state"]   # production vs motor out (11-07)
 ap.add_argument("--maps", nargs="*", default=None,
-                help="show exactly these maps in this order (no names = the professor's four vs resting state plus the "
-                     "three with significant below-chance clusters); the tests and BH still run over every map (files _sel)")
+                help="show exactly these maps in this order (no names = the professor's four vs resting state plus sentences "
+                     "vs words and semantic vs rest); the tests and BH still run over every map (files _sel)")
 ap.add_argument("--v2", action="store_true",
                 help="draw each bar's shaft-shift null (mean and 2.5-97.5 pct), fits solid with a 2.5 pt edge, the rest at "
                      "35% opacity; 300 dpi on white; files get _v2 (plotting only, every statistic unchanged)")
@@ -71,7 +71,7 @@ if a.v4:
 if a.v3:
     a.v2 = True
 if a.maps is not None and not a.maps:
-    a.maps = SEVEN
+    a.maps = CHOSEN
 VSUF = ("_sel" if a.maps else "_all" if a.all_maps else "") + ("_v4" if a.v4 else ("_v3" if a.v3 else ("_v2" if a.v2 else "")))
 
 FSET = {t: f for f, t in MC.TAG.items()}
