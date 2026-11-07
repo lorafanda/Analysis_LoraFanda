@@ -28,6 +28,11 @@ LAYOUT, per K. One row per 15-band cluster (the reference), in order of mean P(L
             there is in its top 10% (the same 90th-percentile threshold as 'inside' for the electrodes); the colour runs
             from light orange at that threshold to dark red at the map's 99.5th percentile (key under the glass brains).
             Display only: the electrodes use the 5-mm sphere mean at the contact, the surface the vertex value.
+--v4 (2026-11-07, as step 16 --v4): two-sided. z = (share - mean of the shifts) / SD of the shifts, p = 2 x the
+normal tail, BH over every bar of the figure; full colour = above chance, pale = neither, white with a coloured edge =
+below chance; dark line = each bar's chance level, grey box = its corrected chance range (outside = significant); no
+bootstrap whisker or cohort tick (files _v4). The shifts come from a fresh stream per solution, so a solution's
+numbers are the same as in step 16. --styles screen poster paper: _poster / _paper.
 MATCHING: FIG 4's rule (00_paper2_figure4_correspondence.py): centroids in the 5-band description space, each
 electrode z-scored, members weighted by loading, each solution's mean centroid removed, greedy one-to-one by r."""
 import argparse
@@ -50,6 +55,8 @@ ap.add_argument("--loading", type=float, default=0.35)
 ap.add_argument("--perm", type=int, default=1000, help="shaft-shift rotations")
 ap.add_argument("--min-r", type=float, default=0.5, help="matches below this centred r are drawn faded")
 ap.add_argument("--no-render", action="store_true", help="reuse the saved tiles instead of rendering (no VTK)")
+ap.add_argument("--v4", action="store_true", help="two-sided test, corrected chance box, opaque bar styles (files _v4)")
+MC.add_style_arg(ap)
 a, _ = ap.parse_known_args()
 
 FS = [("concat_bands15", "15band", "15 bands"), ("concat_bands15z", "15zband", "15 bands z"),
@@ -209,11 +216,16 @@ for K in a.ks:
         share = lambda lb: np.array([Ik[lb == j].mean(0) if (lb == j).any() else np.zeros(len(MAPS)) for j in range(K)])
         obs = share(lk)
         ge = np.zeros_like(obs)
+        s1, s2 = np.zeros_like(obs), np.zeros_like(obs)
+        rs = np.random.default_rng(0) if a.v4 else rng                # --v4: a fresh stream per solution (= step 16)
         for _ in range(a.perm):
             perm = np.arange(len(kp))
             for g in groups:
-                perm[g] = np.roll(g, rng.integers(1, len(g)))
-            ge += share(lk[perm]) >= obs
+                perm[g] = np.roll(g, rs.integers(1, len(g)))
+            sh = share(lk[perm])
+            ge += sh >= obs
+            s1 += sh
+            s2 += sh ** 2
         p = (ge + 1) / (a.perm + 1)
         coh = T["I"][T["has"]].mean(0)
         B = rng.multinomial(len(pats), np.full(len(pats), 1 / len(pats)), size=1000).astype(float)
@@ -233,7 +245,7 @@ for K in a.ks:
             else:
                 ci, top = np.full((2, len(MAPS)), np.nan), 1.0
             bars[(i, tag)] = dict(j=j, r=r, n=n, pct=100 * obs[j], lo=100 * ci[0], hi=100 * ci[1], coh=100 * coh,
-                                  one=top > ONE_PATIENT, top=top)
+                                  one=top > ONE_PATIENT, top=top, obs=obs[j], s1=s1[j], s2=s2[j])
             pvals += [((i, tag, m), p[j, m]) for m in range(len(MAPS))] if n else []
     pv = np.array([x[1] for x in pvals])
     o = np.argsort(pv)
@@ -241,6 +253,15 @@ for K in a.ks:
     qq = np.empty_like(qv)
     qq[o] = np.minimum(qv, 1)
     Q = {pvals[k][0]: qq[k] for k in range(len(pvals))}
+    T4 = {}
+    if a.v4:                                                        # two-sided, BH over every bar of the figure
+        cells = [c for c, _ in pvals]
+        ob = np.array([bars[(i, t)]["obs"][m] for i, t, m in cells])
+        t4 = MC.shaft_z(ob, np.array([bars[(i, t)]["s1"][m] for i, t, m in cells]),
+                        np.array([bars[(i, t)]["s2"][m] for i, t, m in cells]), a.perm)
+        T4 = {c: {k_: (v[n_] if isinstance(v, np.ndarray) else v) for k_, v in t4.items()} for n_, c in enumerate(cells)}
+        print(f"  K {K}: two-sided, BH cut-off |z| >= {t4['z_crit']:.2f}; above {int(t4['above'].sum())}, "
+              f"below {int(t4['below'].sum())} of {len(cells)}")
 
     # ---- the figure, laid out in inches
     nf, nm = len(tags), len(MAPS)
@@ -253,7 +274,8 @@ for K in a.ks:
     H = TOP + K * RH + BOT
     fig = plt.figure(figsize=(W, H), dpi=200)
     fig.patch.set_alpha(0)
-    ymax = max([np.nanmax(b["hi"]) for b in bars.values() if b["n"]] + [10]) * 1.05
+    ymax = (max([np.nanmax(b["pct"]) for b in bars.values() if b["n"]] + [t["hi"] for t in T4.values()] + [10]) * 1.05
+            if a.v4 else max([np.nanmax(b["hi"]) for b in bars.values() if b["n"]] + [10]) * 1.05)
     w = 0.84 / nf
     rows_csv = []
     for ri, i in enumerate(rank):
@@ -283,19 +305,41 @@ for K in a.ks:
                 x = mi - 0.42 + w * (fi + 0.5)
                 weak = b["r"] < a.min_r
                 q = Q.get((i, tag, mi), 1.0)
-                ax.bar(x, b["pct"][mi], width=w * 0.92, color=col, hatch=HATCH[fi], edgecolor="white", lw=0,
-                       alpha=0.4 if weak else 1.0, zorder=2)
-                if q < 0.05:
-                    ax.bar(x, b["pct"][mi], width=w * 0.92, fill=False, edgecolor=P2.INK, lw=1.1, zorder=3)
-                ax.plot([x, x], [b["lo"][mi], b["hi"][mi]], color=P2.INK, lw=0.45, zorder=3)
-                if b["one"]:
-                    ax.plot(x, min(b["hi"][mi] + 3, ymax * 0.98), "o", color=RED, ms=2.6, zorder=5)
+                t4 = T4.get((i, tag, mi))
+                if a.v4 and t4 is not None:                         # as step 16 --v4
+                    c_ = np.asarray(col)
+                    ax.add_patch(matplotlib.patches.Rectangle((x - w * 0.45, t4["lo"]), w * 0.9, t4["hi"] - t4["lo"],
+                                                              facecolor="#e3e5e8", edgecolor="none", zorder=1))
+                    face = c_ if t4["above"] else ((1, 1, 1) if t4["below"] else 0.38 * c_ + 0.62)
+                    ax.bar(x, b["pct"][mi], width=w * 0.62, color=face, hatch=HATCH[fi], alpha=0.45 if weak else 1.0,
+                           edgecolor=tuple(0.75 * c_) if t4["below"] else "white", lw=0.9 if t4["below"] else 0, zorder=2)
+                    ax.plot([x - w * 0.45, x + w * 0.45], [t4["mean"]] * 2, color="#2b3038", lw=0.9,
+                            solid_capstyle="butt", zorder=4)
+                    if t4["below"]:
+                        ax.plot(x, t4["lo"], marker="v", color="#2b3038", ms=3, mew=0, zorder=5)
+                    if b["one"]:
+                        ax.plot(x, min(max(b["pct"][mi], t4["hi"]) + 2, ymax * 0.98), "o", color=RED, ms=2.6, zorder=5)
+                else:
+                    ax.bar(x, b["pct"][mi], width=w * 0.92, color=col, hatch=HATCH[fi], edgecolor="white", lw=0,
+                           alpha=0.4 if weak else 1.0, zorder=2)
+                    if q < 0.05:
+                        ax.bar(x, b["pct"][mi], width=w * 0.92, fill=False, edgecolor=P2.INK, lw=1.1, zorder=3)
+                    ax.plot([x, x], [b["lo"][mi], b["hi"][mi]], color=P2.INK, lw=0.45, zorder=3)
+                    if b["one"]:
+                        ax.plot(x, min(b["hi"][mi] + 3, ymax * 0.98), "o", color=RED, ms=2.6, zorder=5)
                 rows_csv.append(dict(K=K, loading=a.loading, row_15band=i, fset=tag, cluster=b["j"], match_r=round(b["r"], 3),
                                      n=b["n"], top_patient_share=round(b["top"], 2), map=MAPS[mi][3:],
                                      pct_inside=round(b["pct"][mi], 1), lo=round(b["lo"][mi], 1), hi=round(b["hi"][mi], 1),
-                                     cohort_pct=round(b["coh"][mi], 1), q_shaft=round(q, 4), fit=bool(q < 0.05)))
+                                     cohort_pct=round(b["coh"][mi], 1), q_shaft=round(q, 4),
+                                     fit=bool(t4["above"]) if (a.v4 and t4 is not None) else bool(q < 0.05),
+                                     **(dict(z=round(float(t4["z"]), 2), p_two_sided=float(f"{t4['p']:.3g}"),
+                                             q_two_sided=float(f"{t4['q']:.3g}"), below_chance=bool(t4["below"]),
+                                             chance_mean=round(float(t4["mean"]), 2), box_lo=round(float(t4["lo"]), 2),
+                                             box_hi=round(float(t4["hi"]), 2), z_crit=round(t4["z_crit"], 3))
+                                        if (a.v4 and t4 is not None) else {})))
             coh = bars[(i, "15band")]["coh"][mi]
-            ax.plot([mi - 0.45, mi + 0.45], [coh, coh], color="black", lw=1.0, zorder=4)
+            if not a.v4:                                            # the cohort tick (not --v4)
+                ax.plot([mi - 0.45, mi + 0.45], [coh, coh], color="black", lw=1.0, zorder=4)
         ax.set_xlim(-0.55, nm - 0.45)
         ax.set_ylim(0, ymax)
         ax.set_xticks([])
@@ -327,14 +371,25 @@ for K in a.ks:
              transform=fig.transFigure)
     fig.legend(handles=[Patch(facecolor=LEGEND_FACE, hatch=HATCH[fi] * 2, edgecolor="white", label=S[t]["label"])
                         for fi, t in enumerate(tags)]
-               + [Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient"),
-                  Patch(facecolor="white", edgecolor=P2.INK, label="beats the shaft-shift null, q < 0.05"),
-                  Line2D([0], [0], color="black", lw=1.2, label="all electrodes")],
-               loc="upper right", bbox_to_anchor=(1 - 0.3 / W, 1 - 0.12 / H), ncol=nf + 3, frameon=False, fontsize=8,
+               + [Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient")]
+               + ([Patch(facecolor=(0.22, 0.56, 0.82), edgecolor="none", label="above chance"),
+                   Patch(facecolor=(0.70, 0.83, 0.93), edgecolor="none", label="neither"),
+                   Patch(facecolor="white", edgecolor=(0.17, 0.42, 0.62), label="below chance"),
+                   Line2D([0], [0], color="#2b3038", lw=1.1, label="chance level"),
+                   Patch(facecolor="#e3e5e8", edgecolor="none", label="chance range (corrected)")] if a.v4 else
+                  [Patch(facecolor="white", edgecolor=P2.INK, label="beats the shaft-shift null, q < 0.05"),
+                   Line2D([0], [0], color="black", lw=1.2, label="all electrodes")]),
+               loc="upper right", bbox_to_anchor=(1 - 0.3 / W, 1 - 0.12 / H), ncol=nf + (6 if a.v4 else 3), frameon=False, fontsize=8,
                handlelength=2.4, handleheight=1.3)
-    out = OUTD / f"K{K}_{LTAG}.png"
-    fig.savefig(out, transparent=True)
+    VS = "_v4" if a.v4 else ""
+    out = OUTD / f"K{K}_{LTAG}{VS}.png"
+    if a.v4:
+        fig.patch.set_facecolor("white")
+        fig.patch.set_alpha(1.0)
+        MC.save_styles(fig, out, a.styles, facecolor="white")
+    else:
+        MC.save_styles(fig, out, a.styles, transparent=True)
     plt.close(fig)
-    pd.DataFrame(rows_csv).to_csv(OUTD / f"K{K}_{LTAG}.csv", index=False)
+    pd.DataFrame(rows_csv).to_csv(OUTD / f"K{K}_{LTAG}{VS}.csv", index=False)
     nfit = sum(1 for r in rows_csv if r["fit"])
     print(f"wrote {out.name} ({W:.0f} x {H:.0f} in): {nfit} of {len(rows_csv)} bars fit")

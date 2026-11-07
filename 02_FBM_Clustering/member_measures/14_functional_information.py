@@ -32,7 +32,7 @@ THE WINNER: the valid configuration with the highest z, and a patient bootstrap 
 (the null mean and sd held fixed, an approximation): if the intervals overlap, the configurations are
 equivalent on function and stability and agreement decide.
 COMPANIONS, for reading only: breadth = maps whose own information beats the null at one-sided 2.5% (about
-0.6 of 23 expected by chance); clusters per informative map and maps per cluster = enrichment >= 1.5x."""
+0.025 x the number of maps expected by chance); clusters per informative map and maps per cluster = enrichment >= 1.5x."""
 import argparse
 import re
 
@@ -51,6 +51,7 @@ ap.add_argument("--perm", type=int, default=500, help="within-patient shuffles p
 ap.add_argument("--boot", type=int, default=500, help="patient bootstraps for the top five")
 ap.add_argument("--null", default="shift", choices=["shift", "shuffle"],
                 help="shift: rotate memberships along the shaft order within patient; shuffle: permute within patient")
+MC.add_style_arg(ap)
 a, _ = ap.parse_known_args()
 ONE_PATIENT = 0.5
 ENRICH = 1.5
@@ -204,11 +205,11 @@ for ax, tag in zip(axes, tags):
         s_.set_visible(False)
 sm = plt.cm.ScalarMappable(norm=plt.Normalize(0, vmax), cmap="viridis")
 cb = fig.colorbar(sm, ax=axes, fraction=0.02, pad=0.01)
-cb.set_label("z against the within-patient shuffle", fontsize=7.5)
+cb.set_label("z against the within-patient " + ("shaft shift" if a.null == "shift" else "shuffle"), fontsize=7.5)
 cb.ax.tick_params(labelsize=7)
 fig.suptitle(f"Functional information of the partition, null: {a.null} within patient (grey: a cluster > 50% one patient; red box: best valid)",
-             fontsize=9.5, x=0.01, ha="left")
-fig.savefig(OUTD / f"functional_information{SUFFIX}.png", transparent=True, bbox_inches="tight")
+             fontsize=9.5, x=0.01, ha="left", y=1.06)          # above the panel titles at every size
+MC.save_styles(fig, OUTD / f"functional_information{SUFFIX}.png", a.styles, transparent=True, bbox_inches="tight")
 plt.close(fig)
 print(f"wrote functional_information{SUFFIX}.csv / .png in {OUTD}")
 cols = ["fset", "k", "loading", "n", "max_one_patient", "z", "excess_bits", "z_boot_lo", "z_boot_hi", "breadth",

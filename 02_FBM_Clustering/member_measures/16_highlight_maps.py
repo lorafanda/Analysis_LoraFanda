@@ -64,6 +64,7 @@ ap.add_argument("--v4", action="store_true",
                      "by the z-based p (files _v4)")
 ap.add_argument("--v3", action="store_true",
                 help="as --v2, without the patient-bootstrap whisker and the null's 95 % whisker (files _v3)")
+MC.add_style_arg(ap)
 a, _ = ap.parse_known_args()
 if a.v4:
     a.v3 = True
@@ -201,6 +202,7 @@ def card_types(tag, K):
 
 for cfg in a.configs:
     tag, K = cfg.split(":")[0], int(cfg.split(":")[1])
+    rng = np.random.default_rng(0)                                     # a fresh stream per configuration (= steps 13, 15)
     d = P2.load_run(FSET[tag], K)
     keys = [f"{p}|{P2.norm(e)}" for p, e in zip(d["meta"]["patient_id"], d["meta"]["electrode"])]
     Zm = ns.reindex(keys)[MAPS].to_numpy(float)
@@ -464,6 +466,8 @@ for cfg in a.configs:
                Patch(facecolor="white", edgecolor=0.75 * _bl, lw=1.1, label="below chance (avoids the map)"),
                Line2D([0], [0], color="#2b3038", lw=1.3, label="chance level (shaft-shift null)"),
                Patch(facecolor="#e3e5e8", edgecolor="none", label="chance range (corrected): outside = significant")]
+        if not all(clean[j] for j in rank):                            # a one-patient cluster is drawn: say what the dot is
+            V4H.append(Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient"))
         ax.legend(handles=V4H if a.v4 else ([(Patch(facecolor="#398fd0", edgecolor="none", label="above chance: full colour") if a.v4 else
                              Patch(facecolor="#9aa0a6", edgecolor="black", lw=2.5, label="above chance (q < 0.05)" if a.v3 else "fits (q < 0.05, shaft-shift null)")),
                             (Line2D([0], [0], color="black", lw=1.8, ls="none", marker="_", ms=9, mew=1.8, label="chance level (shaft-shift null)",
@@ -511,9 +515,9 @@ for cfg in a.configs:
         if a.v2:
             fig.patch.set_facecolor("white")
             fig.patch.set_alpha(1.0)                                    # a white page, not a transparent one
-            fig.savefig(out, facecolor="white")
+            MC.save_styles(fig, out, a.styles, facecolor="white")
         else:
-            fig.savefig(out, transparent=True)
+            MC.save_styles(fig, out, a.styles, transparent=True)
         plt.close(fig)
         print(f"wrote {out.name} ({W:.0f} x {H:.0f} in): {M} maps shown; fits per cluster: "
               + ", ".join(f"c{j}{'' if clean[j] else '(X)'} {int(fit[j].sum())}" for j in rank)

@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """
 make_functional_maps_tab.py - a tab of analysis_status.html: which feature set and K carry functional information
-(the NiMARE map analysis of 4-6 November 2026), the text of functional_map_analysis_2026-11-05.docx with its
+(the NiMARE map analysis of 4-7 November 2026), the text of functional_map_analysis_2026-11-05.docx with its
 figures in between and a full legend under each figure.
 
     python make_functional_maps_tab.py              build the WebP copies + the block
     python make_functional_maps_tab.py --insert     and splice it into the site (then: make_site_ui.py --insert)
+    python make_functional_maps_tab.py --docx       and write the Word document from the same HTML
 
 THE COPIES. WebP, quality 82, on a white background (the figures are saved transparent), long side <= 8200 px so the
 wide cross-feature figures keep their labels readable in the lightbox; under outputs/_status_png/functional_maps/.
 A copy is refreshed when its source is newer. The site reads them from GitHub main, so they have to be committed and
 pushed, together with the Word document the tab links to.
+THE NUMBERS. Every table and every number in the prose is read from the step outputs (CSV list below) when the tab
+is built, so the page cannot drift from the runs; a missing table stops the build.
 """
 from __future__ import annotations
 
@@ -37,14 +40,15 @@ NAV = ('    <button class="nfm" data-t="fmaps"><span class="dot" style="backgrou
 
 SOURCES = {
     "functional_information": MM / "out" / "functional_information" / "functional_information.png",
-    "15band_k7_all_maps_load035": MM / "out_k7" / "nimare" / "cluster_loadings" / "15band_cluster_loadings_load035_shaft.png",
-    **{f"cross_feature_K{k}": MM / "out" / "cross_feature_maps" / f"K{k}_load035.png" for k in (6, 7, 8, 9, 10)},
+    "15band_k7_all_maps_v4": MM / "out_k7" / "nimare" / "cluster_loadings" / "15band_cluster_loadings_load035_shaft_v4.png",
+    **{f"cross_feature_K{k}_v4": MM / "out" / "cross_feature_maps" / f"K{k}_load035_v4.png" for k in (6, 7, 8, 9, 10)},
     "highlight2_15band_K7_all25": MM / "out" / "highlight_maps" / "15band_K7_load035_all_v4.png",
     "highlight2_15band_K7_seven": MM / "out" / "highlight_maps" / "15band_K7_load035_sel_v4.png",
-    "highlight_15band_K7": MM / "out" / "highlight_maps" / "15band_K7_load035.png",
-    "highlight_15zband_K7": MM / "out" / "highlight_maps" / "15zband_K7_load035.png",
-    "highlight_5band_K6": MM / "out" / "highlight_maps" / "5band_K6_load035.png",
+    "highlight_15band_K7_v4": MM / "out" / "highlight_maps" / "15band_K7_load035_v4.png",
+    "highlight_15zband_K7_v4": MM / "out" / "highlight_maps" / "15zband_K7_load035_v4.png",
+    "highlight_5band_K6_v4": MM / "out" / "highlight_maps" / "5band_K6_load035_v4.png",
 }
+
 
 
 def webp(src: Path, dst: Path, max_side: int = 8200) -> None:
@@ -79,11 +83,37 @@ def table(head: list, rows: list) -> str:
     return f'    <table class="tbl" style="font-size:13px;margin:8px 0 16px"><thead><tr>{th}</tr></thead><tbody>\n{tr}\n    </tbody></table>'
 
 
-LEG_BARS = ("Bar = % of the cluster's members (own loading &ge; 0.35) inside the map; inside = the electrode's 5-mm sphere "
-            "is in the map's top 10%. Black tick = the same % over all 1587 electrodes. Error bar = 95% interval from "
-            "resampling patients (1,000 draws). Outline = the cluster beats the shaft-shift null (memberships rotated "
-            "along the shaft order within each patient) at q &lt; 0.05 after Benjamini&ndash;Hochberg correction. Red dot "
-            "= more than 50% of the members come from one patient.")
+
+
+CARD = [5, 0, 2, 6, 4, 1, 3]        # the cluster cards' order (P2.block_order of the 15-band K 7 types), as steps 15-16
+LABEL = {"15band": "15 bands", "15zband": "15 bands z", "5band": "5 bands", "2band": "2 bands", "hfa": "HFA",
+         "15sband": "15 bands shape", "15tband": "15 bands ternary"}
+CSV = dict(
+    info=MM / "out" / "functional_information" / "functional_information.csv",
+    loadings=MM / "out_k7" / "nimare" / "cluster_loadings" / "cluster_loadings_load035_shaft_v4.csv",
+    bymk=MM / "out" / "maps_by_k" / "maps_by_k.csv",
+    bymk_best=MM / "out" / "maps_by_k" / "maps_by_k_best.csv",
+    all25=MM / "out" / "highlight_maps" / "15band_K7_load035_all_v4.csv",
+    **{f"hl_{t}": MM / "out" / "highlight_maps" / f"{t}_load035_v4.csv" for t in ("15band_K7", "15zband_K7", "5band_K6")},
+    **{f"cross_K{k}": MM / "out" / "cross_feature_maps" / f"K{k}_load035_v4.csv" for k in (6, 7, 8, 9, 10)},
+)
+
+
+def nm(m: str) -> str:
+    """A map's display name."""
+    return m.replace("_vs_resting_state", " vs rest").replace("_vs_", " vs ").replace("_", " ")
+
+
+def zlist(sub, col="z", sign=1) -> str:
+    sub = sub.sort_values(col, ascending=sign < 0)
+    return ", ".join(f"{nm(m)} {z:+.1f}".replace("-", "&minus;") for m, z in zip(sub["map"], sub[col])) or "none"
+
+
+LEG_V4 = ("Bar = % of the cluster's members (own loading &ge; 0.35) inside the map (the electrode's 5-mm sphere in the "
+          "map's top 10%). Full colour = above chance; pale = neither; white with a coloured edge and &#9660; = below "
+          "chance (the cluster avoids the map). Dark line = chance level, the mean over 2,000 shaft shifts; grey box = "
+          "the corrected chance range, so a bar outside the box is exactly a significant one (two-sided, "
+          "Benjamini&ndash;Hochberg over every bar of the figure). Red dot = more than 50% of the members from one patient.")
 LEG_PIAL = ("Pial maps: a vertex is coloured when the map there is in its top 10% (the same 90th-percentile threshold as "
             "&lsquo;inside&rsquo; for the electrodes); colour runs from light orange at that threshold to dark red at the "
             "map's 99.5th percentile and only shows how far above the threshold it is. Display only: the electrodes use "
@@ -91,231 +121,380 @@ LEG_PIAL = ("Pial maps: a vertex is coloured when the map there is in its top 10
 
 
 def build() -> str:
+    import pandas as pd
     for key, src in SOURCES.items():
         if not src.exists():
             raise SystemExit(f"missing source {src}")
         webp(src, OUT / f"{key}.webp")
+    for key, src in CSV.items():
+        if not src.exists():
+            raise SystemExit(f"missing table {src}")
+    T = {k: pd.read_csv(v) for k, v in CSV.items()}
+    info, cl, bymk, a25 = T["info"], T["loadings"], T["bymk"], T["all25"]
+    nmaps = cl["map"].nunique()
     stamp = time.strftime("%Y-%m-%d")
+
+    # ---- numbers used in the prose, all read from the tables
+    def best_valid(k):
+        v = info[(info.k == k) & info.valid].sort_values("z", ascending=False)
+        return v.iloc[0] if len(v) else None
+    bv = {k: best_valid(k) for k in (6, 7, 8, 9, 10)}
+    k7v = info[(info.k == 7) & info.valid].sort_values("z", ascending=False)
+    k7best = {}
+    for _, r in k7v.iterrows():
+        k7best.setdefault(r.fset, r)
+    clean0 = bymk[bymk.one_patient_clusters == 0]
+    top_hits = min(max(int(x.split()[-1]) for x in str(r.above).split(" | ")) for r in T["bymk_best"].itertuples())
+    max_ge2_clean = int(clean0.clean_ge2.max())
+    max_ge2_any = bymk[bymk.clean_ge2 == bymk.clean_ge2.max()].iloc[0]
+    up = {j: cl[(cl.cluster == j) & cl.above_chance] for j in CARD}
+    dn = {j: cl[(cl.cluster == j) & cl.below_chance] for j in CARD}
+    nn = {j: int(cl[cl.cluster == j].n.iloc[0]) for j in CARD}
+    c1r = (a25[(a25.cluster == 1) & a25.fit].pct_inside / a25[(a25.cluster == 1) & a25.fit].cohort_pct)
+    zc = float(cl.z_crit.iloc[0])
+    prof = ["heard_sentences_vs_resting_state", "pictures_vs_resting_state", "reading_vs_resting_state",
+            "production_vs_resting_state"]
+
+    def who(m, col):
+        s = cl[(cl["map"] == m) & cl[col]]
+        return ", ".join(f"c{j}" for j in CARD if j in set(s.cluster)) or "none"
+
     P = []
     P += [B_SEC, '  <section id="fmaps">',
           f'    <div class="eyebrow" style="color:{ACC}">Functional maps &middot; feature set and K, {stamp}</div>',
           "    <h2>Which feature set and K carry functional information?</h2>",
           '    <p class="lead">NiMARE functional maps against the convex-NMF response types, cohort v17 (1587 electrodes, '
-          '29 patients). Analyses of 4&ndash;6 November 2026; every number was read back from the output tables. The same '
-          f'text as the Word document: <a href="{DOCX_URL}">functional_map_analysis_2026-11-05.docx</a>. Updated 7 November: '
-          'two more maps (25), the two-sided test of section 7 and the conclusion.</p>']
+          f'29 patients). Analyses of 4&ndash;7 November 2026. Every figure was redrawn on 7 November on all {nmaps} maps '
+          'with one test (section 2), and every number on this tab is read from the output table named with it when the '
+          f'tab is built. Word document: <a href="{DOCX_URL}">functional_map_analysis_2026-11-05.docx</a>.</p>']
 
     P += ['    <h3 id="fm-answer">1 &middot; Question and short answer</h3>',
           "    <p><b>Question.</b> Across feature sets, numbers of clusters K 6&ndash;10 and minimum loading cuts, which "
           "partition carries the most functional information against fMRI meta-analytic maps, without relying on "
           "clusters that are more than half one patient? Many-to-many fits are allowed: one cluster may sit in several "
           "maps, several clusters in one map.</p>",
-          "    <p><b>Short answer.</b> No feature set or K clearly beats 15 bands K 7. Every option tops out at about three "
-          "functional clusters: one perisylvian language cluster that sits in almost every language map, one sentence / "
-          "semantic cluster and one picture-naming / object cluster. A higher K does not add new functions; where it adds "
-          "clusters with maps, it splits the language region or adds single, borderline fits. 2 bands carries the most "
-          "total map information (the highest score at K 7, 8 and 10) but is a different partition from 15 bands (ARI "
-          "0.15). 15 bands K 7 at loading &ge; 0.35 is the strongest configuration that keeps every cluster multi-patient; "
-          "the choice of solution can rest on stability and agreement, where 15 bands leads.</p>"]
+          f"    <p><b>Short answer.</b> No feature set or K clearly beats 15 bands K 7. Where every cluster is multi-patient, "
+          f"no feature set, K or loading has more than {max_ge2_clean} clusters above chance in at least two maps (section "
+          "5); 15 bands K 7 reaches that number at loadings 0.3&ndash;0.4: one perisylvian language cluster, one sentence / "
+          "semantic cluster and one picture-naming / object cluster. 2 bands carries the most total map information at K "
+          + ", ".join(str(k) for k in (6, 7, 8, 9, 10) if bv[k] is not None and bv[k].fset == "2band")
+          + " (section 3) but is a different partition from 15 bands (ARI 0.15).</p>"]
 
     P += ['    <h3 id="fm-maps">2 &middot; The maps and the methods</h3>',
-          "    <p>23 unthresholded association maps computed with NiMARE (MKDA chi-square, 6-mm kernel) from NeuroSynth v7 "
-          "(abstract terms, tf-idf &ge; 0.001); every map, and both sides of every contrast, has at least 200 studies.</p>",
+          f"    <p>{nmaps} unthresholded association maps computed with NiMARE (MKDA chi-square, 6-mm kernel) from NeuroSynth "
+          "v7 (abstract terms, tf-idf &ge; 0.001); every map, and both sides of every contrast, has at least 200 studies, "
+          "except heard sentences vs rest (154, kept at 150).</p>",
           table(["Kind", "Maps", "What it compares"],
                 [["10 single terms", "pictures, objects, listening, auditory, sentences, reading, naming, semantic, "
                   "phonological, production", "studies with the term vs all other studies"],
                  ["7 task contrasts", "naming vs objects, listening vs auditory, sentences vs words, naming vs production, "
                   "semantic vs memory retrieval, production vs motor, language vs resting state",
                   "studies with term X vs studies with term Y (shared studies dropped)"],
-                 ["6 task vs rest", "pictures, listening, sentences, naming, semantic, production vs resting state",
-                  "task studies vs about 1,500 resting-state studies"],
-                 ["2 task vs rest (added 7 Nov)", "reading vs resting state (592 studies); heard sentences vs resting "
-                  "state (154 studies carrying a sentence term AND a listening term: the one map under the 200 rule, kept "
-                  "at 150)", "as the row above"]]),
-          "    <p>Sections 3&ndash;6 use the first 23 maps and the counting test below; section 7 uses all 25 maps and "
-          "the two-sided test.</p>",
+                 ["8 task vs rest", "pictures, listening, sentences, naming, semantic, production, reading (592 studies) and "
+                  "heard sentences (154 studies with a sentence term AND a listening term) vs resting state",
+                  "task studies vs about 1,500 resting-state studies"]]),
           "    <ul>"
           "<li><b>Inside a map:</b> the mean z over a 5-mm sphere around the contact is in the map's top 10% of in-mask "
-          "voxels. The share of all electrodes inside a map runs from 3.5% (naming vs production) to 21% (semantic).</li>"
-          "<li><b>One-patient rule:</b> a configuration is valid when no cluster has more than 50% of its members from one "
-          "patient, after the loading cut. One-patient clusters are still of interest if they come with more functional "
-          "clusters that are multi-patient.</li>"
-          "<li><b>Loading cut:</b> only members whose own convex-NMF loading is at or above the cut (0 / 0.3 / 0.35 / 0.4); "
-          "the weighted version keeps every electrode in every cluster in proportion to its loading.</li>"
-          "<li><b>Fit (shaft-shift null):</b> within each patient, electrodes in shaft order, cluster labels rotated by a "
-          "random offset against the map values (1,000&ndash;2,000 rotations); p = share of rotations at least as high as "
-          "observed; Benjamini&ndash;Hochberg over all clusters &times; 23 maps; fit = q &lt; 0.05 (sections 3&ndash;6).</li>"
-          "<li><b>Two-sided test (section 7):</b> the same 2,000 rotations; z = (cluster % &minus; mean of the rotations) "
-          "/ SD of the rotations; p = 2 &times; the normal tail beyond |z| (no floor at 1/2,001); Benjamini&ndash;Hochberg "
-          "over 7 clusters &times; 25 maps = 175 bars; above chance = z &gt; 0 and q &lt; 0.05, below chance = z &lt; 0 "
-          "and q &lt; 0.05. The cut-off works out at |z| &ge; 2.58.</li>"
-          "<li><b>Functional information:</b> mutual information between cluster membership and inside / outside, summed "
-          "over the 23 maps, as a z against the same null; compared within one K (it grows with the number of electrodes "
-          "and with K).</li></ul>"]
+          "voxels.</li>"
+          "<li><b>One-patient rule:</b> a cluster is clean when at most 50% of its members (after the loading cut) come "
+          "from one patient; a configuration is valid when every cluster is clean.</li>"
+          "<li><b>Loading cut:</b> only members whose own convex-NMF loading is at or above the cut; the weighted version "
+          "(step 14) keeps every electrode in every cluster in proportion to its loading.</li>"
+          "<li><b>One test for every bar (steps 13, 15, 16, 17):</b> within each patient the electrodes are put in shaft "
+          "order (shaft name, contact number, from the recording's contact names) and the cluster labels rotated by a "
+          "random offset, 2,000 times; z = (cluster % &minus; mean of the shifts) / SD of the shifts; p = 2 &times; the "
+          "normal tail beyond |z|; Benjamini&ndash;Hochberg over every bar of the figure (or of the configuration, step "
+          "17); above chance = z &gt; 0 and q &lt; 0.05, below chance = z &lt; 0 and q &lt; 0.05. The grey box in the "
+          "figures is the corrected chance range (mean &plusmn; the |z| at the cut-off &times; SD). Every step draws the "
+          "same shifts for a given solution, so the same bar has the same z in every figure (checked for 15 bands K 7 "
+          "across steps 13, 15, 16 and 17); only the correction family, and so the cut-off, differs between figures.</li>"
+          f"<li><b>Functional information (step 14):</b> mutual information between cluster membership and inside / "
+          f"outside, summed over the {nmaps} maps, as a z against 500 shaft shifts; compared within one K (it grows with "
+          "the number of electrodes and with K).</li>"
+          "<li><b>Figure versions:</b> every figure is also saved as <code>_poster</code> (72% of the height) and "
+          "<code>_paper</code> (60% of the width, 51% of the height, text &times; 0.62, 600 dpi) beside the PNG named "
+          "under it (option <code>--styles screen poster paper</code>).</li></ul>"]
 
+    rows3 = [[LABEL.get(f, f), f"{100 * g[g.loading == '0'].max_one_patient.iloc[0]:.0f}%",
+              ("yes (" + ", ".join(g[g.valid].loading) + ")") if g.valid.any() else "no"]
+             for f, g in info[info.k == 7].groupby("fset", sort=False)]
     P += ['    <h3 id="fm-info">3 &middot; Functional information per feature set, K and loading</h3>',
-          table(["Feature set", "Largest one-patient share at K 7", "Valid at K 7"],
-                [["15 bands", "36%", "yes (up to loading 0.4)"], ["5 bands", "31%", "yes (up to 0.45)"],
-                 ["2 bands", "35%", "yes (up to 0.35)"], ["HFA", "79% (PAT_3455)", "no"], ["15 bands z", "64% (PAT_3975)", "no"],
-                 ["15 bands shape", "75%", "no"], ["15 bands ternary", "86%", "no"]]),
+          table(["Feature set", "Largest one-patient share at K 7, all electrodes", "Valid at K 7 (loadings)"], rows3),
           fig("functional_information", "Functional information of the partition",
               "One panel per feature set; rows = loading cut (and weighted), columns = K. Cell = z of the summed mutual "
-              "information between cluster membership and the 23 maps against the within-patient shaft-shift null; the "
-              "number in the cell is that z. Grey = a cluster is more than 50% one patient (the weighted row must also pass "
-              "with its hard clusters). Red box = the best valid cell. z grows with the number of electrodes and with K, so "
-              "compare within one column."),
-          "    <p>At K 7, valid: 2 bands weighted z 18.1, 15 bands loading &ge; 0.35 z 13.4, 5 bands weighted z 13.3. 2 bands "
-          "has the highest score at K 7, 8 and 10; at K 6 5 bands is marginally higher (17.1 vs 16.7); at K 9 no "
-          "configuration of any feature set passes the one-patient rule. 2 bands' clusters split mainly into high gamma vs "
-          "low frequency, which fMRI follows most closely, but it agrees poorly with 15 bands (ARI 0.15).</p>"]
+              f"information between cluster membership and the {nmaps} maps against the within-patient shaft-shift null "
+              "(500 shifts). Grey = a cluster is more than 50% one patient (the weighted row must also pass with its hard "
+              "clusters). Red box = the best valid cell. z grows with the number of electrodes and with K, so compare "
+              "within one column. Script: 14_functional_information.py; table: out/functional_information/"
+              "functional_information.csv."),
+          "    <p>Best valid configuration per K: " + "; ".join(
+              f"K {k}: {LABEL[bv[k].fset]} {('loading &ge; ' + bv[k].loading) if bv[k].loading != 'weighted' else 'weighted'} "
+              f"z {bv[k].z:.1f}" if bv[k] is not None else f"K {k}: none valid" for k in (6, 7, 8, 9, 10))
+          + ". At K 7: " + ", ".join(f"{LABEL[f]} {('loading &ge; ' + r.loading) if r.loading != 'weighted' else 'weighted'} "
+                                     f"z {r.z:.1f}" for f, r in k7best.items()) + ".</p>"]
 
-    P += ['    <h3 id="fm-15k7">4 &middot; 15 bands K 7 at loading 0.35: which cluster fits which map</h3>',
-          fig("15band_k7_all_maps_load035", "15 bands K 7, loading &ge; 0.35, all 23 maps",
-              "One panel per cluster (order of mean P(LanA)), the n of members under its id. " + LEG_BARS +
-              " Correction over 7 &times; 23 = 161 bars; 25 fit."),
-          table(["Cluster (n)", "Maps that fit", "Confidence"],
-                [["c1 audio-stimulus low-frequency (84)", "16 of 23: auditory 48% (3.0&times;), listening 48%, listening vs "
-                  "rest 45%, sentences vs rest 36%, language vs rest 34%, production vs motor 31% (3.1&times;), sentences, "
-                  "sentences vs words, production, semantic vs memory retrieval, reading, phonological and others",
-                  "high: also at loading 0, and with the patient bootstrap"],
-                 ["c5 production (132)", "sentences 33% (2.0&times;), sentences vs words 24% (2.0&times;), semantic 34% "
-                  "(1.6&times;), sentences vs rest 22%, listening vs auditory 15%", "moderate; needs the loading cut"],
-                 ["c0 beta decrease (219)", "pictures vs rest 21% (2.1&times;), naming vs rest 19% (2.0&times;), objects 15% "
-                  "(1.8&times;), naming vs production 10% (2.7&times;)", "moderate; small shares, weak map"],
-                 ["c4, c2, c3, c6", "none", "no functional map"]])]
+    rows4 = [[f"c{j} ({nn[j]})", zlist(up[j]), zlist(dn[j], sign=-1)] for j in CARD]
+    P += ['    <h3 id="fm-15k7">4 &middot; 15 bands K 7 at loading 0.35: which cluster sits above or below chance in which map</h3>',
+          fig("15band_k7_all_maps_v4", f"15 bands K 7, loading &ge; 0.35, all {nmaps} maps",
+              "One panel per cluster, the n of members under its id. " + LEG_V4 +
+              f" Correction over 7 &times; {nmaps} = {7 * nmaps} bars; cut-off |z| &ge; {zc:.2f}. Script: "
+              "13_cluster_loadings.py --k 7 --ns nimare --fset 15band --loadings 0.35 --v4; table: out_k7/nimare/"
+              "cluster_loadings/cluster_loadings_load035_shaft_v4.csv."),
+          table(["Cluster (n)", "Above chance (z)", "Below chance (z)"], rows4),
+          "    <p>No cluster is above chance in "
+          + ", ".join(nm(m) for m in sorted(cl["map"].unique()) if cl[(cl["map"] == m) & cl.above_chance].empty)
+          + ".</p>"]
 
+    best = T["bymk_best"]
+    rows5 = [[LABEL[r.fset], f"K {r.K}, loading {r.loading:g}", r.clean_ge1,
+              f"{r.clean_ge2} ({r.above})", r.one_patient_clusters] for r in best.itertuples()]
+    r157 = bymk[(bymk.fset == "15band") & (bymk.K == 7) & (bymk.loading == 0.35)].iloc[0]
+    rows5.append(["15 bands (reference)", "K 7, loading 0.35", r157.clean_ge1, f"{r157.clean_ge2} ({r157.above})",
+                  r157.one_patient_clusters])
     P += ['    <h3 id="fm-higherk">5 &middot; Does a higher K give more functional clusters?</h3>',
-          "    <p>Each feature set at K 6&ndash;10 &times; loading 0 / 0.3 / 0.35 / 0.4, 23 maps, shaft-shift null, q &lt; "
-          "0.05 per configuration. Many fits are a single map near the threshold, so clusters that fit at least two maps "
-          "are counted too.</p>",
-          table(["Best configuration", "Clean clusters with &ge; 1 map", "&ge; 2 maps", "One-patient clusters"],
-                [["<b>15 bands K 7, loading 0.35</b>", "3", "<b>3</b> (language 16, sentences / semantic 5&ndash;6, pictures / objects 4)", "0"],
-                 ["15 bands z K 7, 0.3&ndash;0.35", "4", "2 (language 18; c6 2, weak)", "1"],
-                 ["5 bands K 8, 0.3", "5", "2 (language 18, c6 3)", "0"],
-                 ["5 bands K 6, 0.3", "3", "3 (language 16, c5 8, c3 5)", "0"],
-                 ["2 bands K 9, 0.4", "5", "3 (two language clusters, c2)", "2"],
-                 ["2 bands K 10, 0.4", "4", "4 (c6 13, c2 4, c3 2, c7 2)", "2"]]),
-          "    <p>No feature set gains much from a higher K: with single-map fits discounted, almost every best configuration "
-          "gives three functional clusters. Where a higher K adds clusters with maps (2 bands K 9), it splits the language "
-          "region rather than adding a function. The full per-K tables are in section 4.4 of the Word document.</p>"]
+          "    <p>Each feature set at K 6&ndash;10 &times; loading 0 / 0.3 / 0.35 / 0.4, every cluster &times; every map, "
+          "the test of section 2 with the correction over that configuration. Many hits are single maps near the "
+          "threshold, so clusters above chance in at least two maps are counted too. Best = the most clean clusters above "
+          "chance in &ge; 2 maps, then in &ge; 1, then the fewest one-patient clusters.</p>",
+          table(["Feature set", "Configuration", "Clean clusters above chance in &ge; 1 map",
+                 "&ge; 2 maps (maps per cluster; X = one-patient)", "One-patient clusters"], rows5),
+          f"    <p>Where every cluster is clean, the most clusters above chance in at least two maps is {max_ge2_clean}, "
+          "reached by "
+          + "; ".join(f"{LABEL[f]} K " + ", ".join(sorted({f'{k}' for k in g.K})) for f, g in
+                      clean0[clean0.clean_ge2 == max_ge2_clean].groupby("fset", sort=False))
+          + f". Accepting one-patient clusters, the most is {int(max_ge2_any.clean_ge2)} ({LABEL[max_ge2_any.fset]} K "
+          f"{max_ge2_any.K}, loading {max_ge2_any.loading:g}, with {max_ge2_any.one_patient_clusters} one-patient "
+          "clusters). Script: 17_maps_by_k.py --ns nimare; tables: out/maps_by_k/maps_by_k.csv (every configuration) and "
+          "maps_by_k_best.csv.</p>"]
 
     P += ['    <h3 id="fm-cross">6 &middot; Every feature set against the 15-band clusters, K 6&ndash;10</h3>',
           "    <p>One figure per K. Rows = the 15-band clusters; in each row, each feature set's matched cluster (FIG 4's "
           "rule: centroids in the 5-band description space, each solution's mean removed, greedy one-to-one by r).</p>"]
     for k in (6, 7, 8, 9, 10):
-        P.append(fig(f"cross_feature_K{k}", f"K = {k}, loading &ge; 0.35, all feature sets",
+        c = T[f"cross_K{k}"]
+        P.append(fig(f"cross_feature_K{k}_v4", f"K = {k}, loading &ge; 0.35, all feature sets",
                      "Left: each feature set's matched cluster on the glass brain (left and right hemisphere), drawn in the "
                      "row's colour, with its own id, n and match r; faded = weak match (r &lt; 0.5). Right: for each of the "
-                     "23 maps one bar per feature set, the pattern telling the feature set (legend top right). " + LEG_BARS +
-                     " Correction over every bar of the figure. Bottom: " + LEG_PIAL))
+                     f"{nmaps} maps one bar per feature set, the pattern telling the feature set (legend top right). " + LEG_V4 +
+                     f" Here the correction runs over all {len(c)} bars of the figure (cut-off |z| &ge; "
+                     f"{c.z_crit.iloc[0]:.2f}): {int(c.fit.sum())} above chance, {int(c.below_chance.sum())} below. Bottom: "
+                     + LEG_PIAL + f" Script: 15_cross_feature_maps.py --ns nimare --perm 2000 --v4; table: out/"
+                     f"cross_feature_maps/K{k}_load035_v4.csv."))
 
-    P += ['    <h3 id="fm-twosided">7 &middot; 15 bands K 7, loading 0.35: above and below chance, all 25 maps</h3>',
-          "    <p>Each bar asks one thing: does this cluster sit in the map more, or less, often than chance? Chance = the "
-          "cluster labels shifted along the shafts within each patient, 2,000 times. The grey box is drawn at the "
-          "corrected cut-off (mean &plusmn; 2.58 SD of the shifts), so a bar outside the box is exactly a significant "
-          "one (checked: 0 exceptions of 175).</p>"]
-    LEG2 = ("x = the clusters in the order of the cluster cards; in each group one bar per map, numbered under the bars. "
-            "Bar = % of the cluster's members (own loading &ge; 0.35) inside the map. Full colour = above chance; pale "
-            "= neither; white with a coloured edge and &#9660; = below chance (the cluster avoids the map). Dark line = "
-            "chance level (mean of the 2,000 shifts); grey box = the corrected chance range. Under each cluster: its "
-            "centroid (mean ERSP of the same members, &plusmn;2 dB, audio | picture | sentences) and its members on the "
-            "glass brain, left above right. Bottom: " + LEG_PIAL)
-    P.append(fig("highlight2_15band_K7_all25", "All 25 maps", LEG2))
-    P.append(fig("highlight2_15band_K7_seven", "The seven chosen maps",
+    P += ['    <h3 id="fm-twosided">7 &middot; The highlight figures: every cluster, its centroid and the maps</h3>',
+          "    <p>15 bands K 7 against all maps and against seven chosen maps; then, for three solutions, the 10 most "
+          "telling maps. Under each cluster: its centroid (mean ERSP of the same members, &plusmn;2 dB, audio | picture | "
+          "sentences) and its members on the glass brain, left above right (a second file, _noglass, leaves them out). "
+          "Script: 16_highlight_maps.py --ns nimare --v4 (--all-maps, --maps); tables beside the PNGs in "
+          "out/highlight_maps/.</p>"]
+    LEG16 = ("x = the clusters in the order of the cluster cards; in each group one bar per map, numbered under the bars. "
+             + LEG_V4 + " Bottom: the maps in bar order with the same numbers, left above right. " + LEG_PIAL)
+    P.append(fig("highlight2_15band_K7_all25", f"15 bands K 7, all {nmaps} maps", LEG16))
+    P.append(fig("highlight2_15band_K7_seven", "15 bands K 7, the seven chosen maps",
                  "The professor's four maps vs resting state (heard sentences, pictures, reading, production), then the "
                  "three maps where a cluster sits significantly below chance (sentences vs words, semantic vs rest, "
-                 "production vs motor). Same test and correction as above (over all 25 maps, not only the seven). " + LEG2))
-    P.append(table(["Cluster (n)", "Above chance (z)", "Below chance (z)"],
-                   [["c5 (132)", "sentences vs words +4.2, sentences +3.7, semantic +3.4, sentences vs rest +3.0, listening "
-                     "vs auditory +2.7, listening +2.7, heard sentences vs rest +2.6", "none"],
-                    ["c0 (219)", "objects +4.0, naming vs production +3.6, naming vs rest +3.4, pictures vs rest +3.1",
-                     "sentences vs words &minus;3.0"],
-                    ["c2 (121)", "none", "semantic vs rest &minus;2.7"],
-                    ["c6 (146)", "none", "sentences vs words &minus;3.6, sentences &minus;2.6"],
-                    ["c4 (242)", "none", "language vs rest &minus;4.2, listening vs rest &minus;3.5, naming vs rest &minus;3.4, "
-                     "production vs rest &minus;3.2, reading vs rest &minus;3.0, phonological &minus;2.9, naming &minus;2.7, "
-                     "semantic vs rest &minus;2.7, sentences vs rest &minus;2.6"],
-                    ["c1 (84)", "18 of 25: auditory +6.5, production +6.4, listening vs rest +6.2, production vs motor "
-                     "+6.1, listening +5.8, language vs rest +5.5, sentences vs rest +5.1, heard sentences vs rest +5.0, "
-                     "sentences vs words +4.9, semantic vs memory retrieval +4.8, production vs rest +4.7, naming vs objects "
-                     "+4.5, reading +4.3, semantic vs rest +4.1, sentences +4.0, listening vs auditory +3.5, reading vs rest "
-                     "+3.5, phonological +3.4", "none"],
-                    ["c3 (114)", "none", "production vs motor &minus;3.1, naming &minus;2.7"]]))
-    P.append("    <p>No cluster is above chance in two maps: naming and pictures (the single terms).</p>")
-
-    P += ['    <h3 id="fm-highlight">7b &middot; First version: the 10 most telling maps (counting test, 23 maps)</h3>',
-          "    <p>A map can be shown when at least one clean cluster fits it; at most 10 are shown, shared out in turns: the "
-          "clusters with the fewest fits choose first, each takes one map per round, its own maps first (fitted by no other "
-          "clean cluster), then shared ones, largest difference first (% of the cluster inside minus % of all "
-          "electrodes). A cluster with few fits keeps all of them; the language cluster fills the remaining places. The "
-          "outlines use the same q, so the selection adds no test of its own.</p>"]
+                 f"production vs motor). The correction runs over all {nmaps} maps, not only the seven. " + LEG16))
+    P.append("    <p>The 10 most telling maps: a map can be shown when at least one clean cluster is above chance in it; at "
+             "most 10 are shown, shared out in turns: the clusters with the fewest hits choose first, each takes one map "
+             "per round, its own maps first (above chance for no other clean cluster), then shared ones, largest "
+             "difference first (% of the cluster inside minus % of all electrodes). The colours use the same q, so the "
+             "selection adds no test of its own.</p>")
+    rows7 = []
     for key, title in (("highlight_15band_K7", "15 bands, K 7"), ("highlight_15zband_K7", "15 bands z, K 7"),
                        ("highlight_5band_K6", "5 bands, K 6")):
-        P.append(fig(key, f"{title}, loading &ge; 0.35, the 10 maps",
-                     "x = the clusters in the order of the cluster cards (c5, c0, c2, c6, c4, c1, c3); 15 bands z and 5 bands clusters take the place and colour of the 15-band type they match (FIG 4's rule), ids are their own; in each cluster's group one bar per map, always in the same "
-                     "order and numbered under the bars. " + LEG_BARS + " Under each cluster: its members on the glass "
-                     "brain, left hemisphere above right (a second file, _noglass, leaves them out). Bottom: the 10 maps in bar order with the same numbers, left above "
-                     "right. " + LEG_PIAL))
-    P.append(table(["Solution", "Fits shown / fits in total"],
-                   [["15 bands K 7", "c1 language 5 / 16; c5 sentences / semantic 3 / 6; c0 pictures / objects 4 / 4"],
-                    ["15 bands z K 7", "c0 language 7 / 18; c5 semantic 1 / 1; c1 objects 1 / 1; c6 objects, naming vs production 2 / 2 (c2 is 72% one patient at this cut)"],
-                    ["5 bands K 6", "c5 auditory / production / sentences 4 / 6; c3 naming / pictures / objects 5 / 5; c2 semantic 1 / 1"]]))
+        c = T["hl_" + key.split("_", 1)[1]]
+        P.append(fig(key + "_v4", f"{title}, loading &ge; 0.35, the 10 maps",
+                     ("" if key == "highlight_15band_K7" else "The clusters take the place and colour of the 15-band type "
+                      "they match (FIG 4's rule), ids are their own. ") + f"Correction over {c.cluster.nunique()} clusters &times; {nmaps} maps; cut-off "
+                     f"|z| &ge; {c.z_crit.iloc[0]:.2f}. " + LEG16))
+        parts = []
+        for j, g in c.groupby("cluster"):
+            u, d_ = g[g.fit], g[g.below_chance]
+            if len(u) or len(d_):
+                parts.append(f"c{j}{'' if g.clean.iloc[0] else ' (one-patient)'}: above {int(u.shown.sum())} / {len(u)}, "
+                             f"below {len(d_)}")
+        rows7.append([title, "; ".join(parts)])
+    P.append(table(["Solution", "Per cluster: above chance shown / in total, below chance"], rows7))
 
     P += ['    <h3 id="fm-conclusion">8 &middot; Conclusion</h3>',
           "    <p>Language is not one module but a network of interacting sub-functions (perception, comprehension, sentence "
           "integration, semantic retrieval, naming, production), and the analysis was designed around that view: a "
           "cluster may sit in several language maps, and several clusters may share one map. Read this way, the response "
-          "types map onto the language network in a consistent and limited way. Numbers from section 7 (15 bands K 7, "
-          "loading &ge; 0.35, 25 maps, two-sided test).</p>",
-          "    <ul><li><b>One language-network cluster.</b> 15 bands c1 (84 electrodes) is above chance in 18 of the 25 maps, "
-          "at 1.8&ndash;3.1 times the share of all electrodes (perception, comprehension, sentences, reading, production, "
-          "language vs rest), and below chance in none. The best configuration of every feature set in section 5 also "
-          "has one such cluster.</li>"
-          "<li><b>Two more specific functions.</b> c5 is above chance in 7 maps, all sentence, semantic or listening maps "
-          "(sentences vs words, sentences, semantic, sentences vs rest, listening vs auditory, listening, heard sentences "
-          "vs rest), and below in none. c0 is above chance in 4 picture-naming / object maps (objects, naming vs production, "
-          "naming vs rest, pictures vs rest) and below chance in sentences vs words.</li>"
-          "<li><b>The other four types avoid language maps.</b> c2, c6, c4 and c3 are above chance in no map, and each "
-          "is below chance in at least one: c4 in 9 of 25 (language vs rest z &minus;4.2, and listening, naming, production, "
-          "reading, semantic and sentences vs rest, phonological, naming), c6 in sentences vs words and sentences, c3 in "
-          "production vs motor and naming, c2 in semantic vs rest.</li>"
-          "<li><b>The professor's four maps vs resting state.</b> Heard sentences: c1 and c5 above. Pictures: c0 above. "
-          "Reading: c1 above, c4 below. Production: c1 above, c4 below.</li>"
-          "<li><b>More clusters do not mean more functions</b> (sections 5&ndash;6, 23 maps, counting test). Raising K "
-          "splits the language region or adds single, borderline fits; the extra clusters are mostly one-patient or carry "
-          "no map.</li>"
-          "<li><b>15 bands K 7 holds</b> (sections 3&ndash;5). At loading &ge; 0.35 it recovers the three functions with "
-          "every cluster multi-patient; function does not separate it from 5 bands K 6 or 15 bands z K 7, stability and "
-          "agreement do.</li></ul>"]
+          f"types map onto the language network in a consistent and limited way. Numbers from section 4 (15 bands K 7, "
+          f"loading &ge; 0.35, {nmaps} maps).</p>",
+          f"    <ul><li><b>One language-network cluster.</b> c1 ({nn[1]} electrodes) is above chance in {len(up[1])} of the "
+          f"{nmaps} maps, at {c1r.min():.1f}&ndash;{c1r.max():.1f} times the share of all electrodes, and below chance in "
+          f"{len(dn[1]) or 'none'}. The best configuration of every feature set in section 5 also has one cluster above "
+          f"chance in {top_hits} or more maps.</li>"
+          f"<li><b>Two more specific functions.</b> c5 is above chance in {len(up[5])} maps ({zlist(up[5])}) and below in "
+          f"{len(dn[5]) or 'none'}. c0 is above chance in {len(up[0])} ({zlist(up[0])}) and below in "
+          f"{zlist(dn[0], sign=-1)}.</li>"
+          "<li><b>The other four types avoid language maps.</b> "
+          + ", ".join(f"c{j}" for j in CARD if not len(up[j]))
+          + " are above chance in no map, and each is below chance in at least one: "
+          + "; ".join(f"c{j} in {len(dn[j])}" for j in CARD if not len(up[j])) + ".</li>"
+          "<li><b>The professor's four maps vs resting state.</b> "
+          + " ".join(f"{nm(m).replace(' vs rest', '').capitalize()}: above {who(m, 'above_chance')}, below "
+                     f"{who(m, 'below_chance')}." for m in prof) + "</li>"
+          f"<li><b>More clusters do not mean more functions</b> (section 5). Where every cluster is clean, no feature "
+          f"set, K or loading has more than {max_ge2_clean} clusters above chance in two or more maps; higher K adds "
+          "single-map hits or one-patient clusters.</li>"
+          "<li><b>15 bands K 7 holds</b> (sections 3&ndash;5). At loadings 0.3&ndash;0.4 it reaches that maximum with every "
+          "cluster multi-patient; function does not single it out, stability and agreement do.</li></ul>"]
 
     P += ['    <h3 id="fm-limits">9 &middot; Limitations</h3>',
           "    <ul><li><b>The maps are not this task:</b> words in abstracts across thousands of fMRI studies; BOLD tracks high "
           "gamma better than low-frequency responses, favouring feature sets built on high gamma.</li>"
           "<li><b>Rest maps</b> compare task studies with resting-state connectivity studies (mostly the default network): "
-          "they mark task-responsive cortex rather than a function.</li>"
-          "<li><b>Heard sentences vs rest</b> rests on 154 studies, the one map under the 200-study rule (kept at "
-          "150).</li>"
+          "they mark task-responsive cortex rather than a function; the same resting-state studies sit in all eight, so "
+          "those maps are not independent.</li>"
+          "<li><b>Heard sentences vs rest</b> rests on 154 studies, the one map under the 200-study rule.</li>"
           "<li><b>Coverage:</b> contacts are placed for epilepsy, often deep or mesial temporal, 54% centred in white "
-          "matter; only 3.5&ndash;21% of electrodes fall in any map.</li>"
+          "matter; a cluster without a map may sit where the maps do not reach.</li>"
           "<li><b>Spatial dependence:</b> the null keeps neighbours together within a shaft, not across nearby shafts.</li>"
-          "<li><b>Many looks:</b> corrections are within a configuration, not across the whole search; single borderline "
-          "fits are not findings, and the c5 fit is reported with its loading cut.</li>"
-          "<li><b>The information score</b> grows with n and K; it is compared within K and alongside counts of fitting "
-          "clusters. Bootstrap intervals on z are approximate.</li></ul>",
+          "<li><b>Normal tail:</b> p comes from z with a normal tail (no floor at 1/2,001); where the shifts are skewed the "
+          "tail is approximate (the step-16 tables flag |skew| &gt; 1).</li>"
+          "<li><b>Many looks:</b> corrections are within a figure or configuration, not across the whole search; single "
+          "borderline hits are not findings.</li>"
+          "<li><b>The information score</b> grows with n and K; it is compared within K and alongside counts of clusters "
+          "with maps. Its bootstrap intervals hold the null fixed and are approximate.</li></ul>",
           "    <p style=\"color:var(--muted);font-size:13px\">Scripts in 02_FBM_Clustering/member_measures: 0_nimare_maps.py "
-          "(maps), 4 (sampling), 13 (per-cluster figure, --outline shaft), 14 (functional information), 15 (cross-feature "
-          "figures), 16 (highlight figures; section 7: --ns nimare --configs 15band:7 --v4 --all-maps, and --maps for the "
-          "seven). This tab: make_functional_maps_tab.py.</p>",
+          "(maps), 4_neurosynth.py --ns nimare (sampling), 13 (per-cluster figure), 14 (functional information), 15 "
+          "(cross-feature figures), 16 (highlight figures), 17 (higher K); shared test and figure versions in "
+          "mm_common.py (shaft_z, save_styles). This tab: make_functional_maps_tab.py.</p>",
           "  </section>", E_SEC]
     return "\n".join(P)
+
+
+def write_docx(html: str, path: Path) -> None:
+    """The Word document from the tab's own HTML (python-docx, no Word automation): h2 -> title, h3 -> heading, p / li /
+    table / figure (the WebP copy, as PNG) / figcaption, bold and code runs kept; so the document and the tab say the same."""
+    import io
+    from html.parser import HTMLParser
+    import docx
+    from docx.shared import Cm, Pt
+
+    d = docx.Document()
+    st = d.styles["Normal"]
+    st.font.name = "Calibri"
+    st.font.size = Pt(10.5)
+
+    class P(HTMLParser):
+        def __init__(self):
+            super().__init__(convert_charrefs=True)
+            self.par, self.bold, self.code, self.small = None, 0, 0, False
+            self.table, self.row, self.cell, self.in_cell, self.skip = None, None, None, False, 0
+            self.rows = []
+
+        def new_par(self, style=None, small=False):
+            self.par = d.add_paragraph(style=style)
+            self.small = small
+
+        def handle_starttag(self, tag, attrs):
+            a = dict(attrs)
+            if tag in ("script", "style"):
+                self.skip += 1
+            elif tag == "h2":
+                self.par = d.add_heading(level=0)
+            elif tag == "h3":
+                self.par = d.add_heading(level=1)
+            elif tag == "p" and not self.in_cell:
+                self.new_par(small="muted" in a.get("style", ""))
+            elif tag == "div" and a.get("class") == "eyebrow":
+                self.new_par(small=True)
+            elif tag == "li":
+                self.new_par("List Bullet")
+            elif tag == "figcaption":
+                self.new_par(small=True)
+            elif tag == "img" and a.get("data-fig"):
+                src = OUT / Path(a["data-fig"]).name
+                buf = io.BytesIO()
+                im = Image.open(src).convert("RGB")
+                if max(im.size) > 2400:                      # a document, not the lightbox: 2400 px, JPEG (the repo hook stops files > 5 MB)
+                    f_ = 2400 / max(im.size)
+                    im = im.resize((round(im.width * f_), round(im.height * f_)), Image.LANCZOS)
+                im.save(buf, "JPEG", quality=84)
+                buf.seek(0)
+                d.add_picture(buf, width=Cm(16.5))
+            elif tag == "table":
+                self.rows = []
+            elif tag == "tr":
+                self.row = []
+            elif tag in ("td", "th"):
+                self.in_cell = True
+                self.row.append([tag == "th", ""])
+            elif tag == "b":
+                self.bold += 1
+            elif tag == "code":
+                self.code += 1
+            elif tag == "br" and self.par is not None:
+                self.par.add_run("\n")
+
+        def handle_endtag(self, tag):
+            if tag in ("script", "style"):
+                self.skip -= 1
+            elif tag in ("td", "th"):
+                self.in_cell = False
+            elif tag == "tr":
+                self.rows.append(self.row)
+            elif tag == "table":
+                ncol = max(len(r) for r in self.rows)
+                t = d.add_table(rows=len(self.rows), cols=ncol)
+                t.style = "Table Grid"
+                for i, r in enumerate(self.rows):
+                    for k, (head, txt) in enumerate(r):
+                        c = t.cell(i, k)
+                        c.text = ""
+                        run = c.paragraphs[0].add_run(txt.strip())
+                        run.bold = head
+                        run.font.size = Pt(9)
+                d.add_paragraph()
+            elif tag == "b":
+                self.bold -= 1
+            elif tag == "code":
+                self.code -= 1
+            elif tag in ("p", "li", "h2", "h3", "figcaption", "div"):
+                if not self.in_cell:
+                    self.par = None
+
+        def handle_data(self, data):
+            if self.skip or not data.strip() and self.par is None:
+                return
+            if self.in_cell:
+                self.row[-1][1] += data
+                return
+            if self.par is None:
+                return
+            txt = data.replace("(click to enlarge)", "")
+            if not txt:
+                return
+            run = self.par.add_run(txt)
+            run.bold = bool(self.bold)
+            if self.code:
+                run.font.name = "Consolas"
+            if self.small:
+                run.font.size = Pt(9)
+
+    P().feed(html)
+    d.save(path)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--insert", action="store_true")
+    ap.add_argument("--docx", action="store_true", help="also write the Word document from the same HTML")
     a = ap.parse_args()
     html = build()
     (OUT / "webblock_functional_maps.html").write_text(html, encoding="utf-8")
+    if a.docx:                                       # write in memory, then to the share, then read back (the share
+        import io, tempfile                          # truncates failed writes)
+        tmp = Path(tempfile.gettempdir()) / "functional_map_analysis.docx"
+        write_docx(html, tmp)
+        dst = ROOT.parent / DOCX
+        dst.write_bytes(tmp.read_bytes())
+        if dst.read_bytes() != tmp.read_bytes():
+            raise SystemExit(f"{dst}: written bytes differ, write it again")
+        print(f"-> {dst}   ({dst.stat().st_size / 1e6:.1f} MB)")
     mb = sum(f.stat().st_size for f in OUT.glob("*.webp")) / 1e6
     print(f"-> {OUT}   {len(SOURCES)} copies, {mb:.1f} MB")
     if not a.insert:
