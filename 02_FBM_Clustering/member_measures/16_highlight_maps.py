@@ -64,6 +64,9 @@ ap.add_argument("--v4", action="store_true",
                      "by the z-based p (files _v4)")
 ap.add_argument("--v3", action="store_true",
                 help="as --v2, without the patient-bootstrap whisker and the null's 95 % whisker (files _v3)")
+ap.add_argument("--brains-top", action="store_true",
+                help="per cluster, top to bottom: centroid, glass brains left | right, bars; pial maps left | right")
+ap.add_argument("--transparent", action="store_true", help="transparent background")
 MC.add_style_arg(ap)
 a, _ = ap.parse_known_args()
 if a.v4:
@@ -367,6 +370,19 @@ for cfg in a.configs:
         Y_GLASS = Y_PIAL + 2 * PIAL_H + (0.75 if GLASS else 0.55)
         Y_BAR = Y_GLASS + 2 * GLASS_H + CENT_H + 0.55
         H = Y_BAR + H_BAR + TOPM
+        BT = a.brains_top and a.v4
+        if BT:                                                          # brains on top, bars, pial maps left | right
+            gw0 = GW - 0.1
+            PIAL_H = min(0.8, MAPW * 0.47 / 1.38)
+            GLASS_H = min(1.0, gw0 / 2 / 1.38) if GLASS else 0.0
+            CENT_H = gw0 / 3 + 0.14 if CENT else 0.0
+            Y_PIAL = 0.55
+            Y_BAR = Y_PIAL + PIAL_H + 0.45
+            Y_GLASS = Y_BAR + H_BAR + 0.30
+            Y_CENT = Y_GLASS + GLASS_H + 0.06
+            Y_LAB = Y_CENT + CENT_H + 0.06 if GLASS else Y_BAR + H_BAR + 0.08
+            Y_LEG = Y_LAB + 0.28
+            H = Y_LEG + 0.62
         fig = plt.figure(figsize=(W, H), dpi=300 if a.v2 else 200)
         fig.patch.set_alpha(0)
         ax = fig.add_axes([LEFT / W, Y_BAR / H, PLOT_W / W, H_BAR / H])
@@ -420,7 +436,7 @@ for cfg in a.configs:
                 ax.axvline(xi * GW, color="#e3e6e4", lw=0.6, zorder=0)
             # the cluster's id and n under its group, then its glass brains (left above right)
             xc = LEFT + g0 + M * BARW / 2
-            fig.text(xc / W, (Y_GLASS + 2 * GLASS_H + CENT_H + 0.12) / H, f"c{j}   n {n_[j]}" + ("" if clean[j] else f"   {100 * top[j]:.0f}% one patient"),
+            fig.text(xc / W, ((Y_LAB if BT else Y_GLASS + 2 * GLASS_H + CENT_H + 0.12)) / H, f"c{j}   n {n_[j]}" + ("" if clean[j] else f"   {100 * top[j]:.0f}% one patient"),
                      ha="center", va="bottom", fontsize=9, fontweight="bold", color=RED if not clean[j] else col)
             gx0, gw_ = xc - (GW - 0.1) / 2, GW - 0.1
             if CENT:
@@ -428,7 +444,10 @@ for cfg in a.configs:
                 ridx = REF_KEYS.get_indexer(keys)
                 assert (ridx >= 0).all(), "electrodes missing from the 15-band run"
                 Mj = _C[ridx[kp[lk == j]]].mean(0)
-                if SIDE:
+                if BT:
+                    ew, eh = gw_, CENT_H
+                    ex0, ey0 = gx0, Y_CENT - 0.14 + 0.14
+                elif SIDE:
                     ew = 2.6
                     eh = ew / 3 + 0.14                          # 1 : 3, plus the condition labels
                     ex0, ey0 = gx0, Y_GLASS + GLASS_H - eh / 2 + 0.08
@@ -447,8 +466,12 @@ for cfg in a.configs:
                     s_.set_edgecolor(col)
                     s_.set_linewidth(2.0)
             for k_, side in enumerate(("L", "R") if GLASS else ()):
-                show(fig, glass_tile(tag, K, j, side, d, tuple(col)), gx0, Y_GLASS + (1 - k_) * GLASS_H,
-                     gw_, GLASS_H, W, H)
+                if BT:                                                  # left | right, side by side
+                    show(fig, glass_tile(tag, K, j, side, d, tuple(col)), gx0 + k_ * gw_ / 2, Y_GLASS, gw_ / 2,
+                         GLASS_H, W, H)
+                else:
+                    show(fig, glass_tile(tag, K, j, side, d, tuple(col)), gx0, Y_GLASS + (1 - k_) * GLASS_H,
+                         gw_, GLASS_H, W, H)
         ax.set_xticks(xt)
         ax.set_xticklabels(xl, fontsize=5.5, color="#4a5462")
         ax.tick_params(axis="x", length=0, pad=1.5)
@@ -494,31 +517,38 @@ for cfg in a.configs:
                             Line2D([0], [0], color="black", lw=1.2, label="all electrodes"),
                             Line2D([0], [0], marker="o", ls="", color=RED, ms=4, label="> 50% one patient")]),
                   frameon=False, fontsize=6.8 if a.v4 else (8 if a.v3 else 7.5), ncol=3 if a.v4 else (4 if a.v2 else 3),
-                  **(dict(loc="lower left", bbox_to_anchor=(0.0, 1.0), handlelength=1.6, columnspacing=1.4,
+                  **(dict(loc="lower left", bbox_to_anchor=(0.0, (Y_LEG - Y_BAR) / H_BAR), handlelength=1.6,
+                          columnspacing=1.4, borderaxespad=0.0) if BT else
+                     dict(loc="lower left", bbox_to_anchor=(0.0, 1.0), handlelength=1.6, columnspacing=1.4,
                           borderaxespad=0.2) if a.v4 else
                      dict(loc="lower right", bbox_to_anchor=(1.0, 1.0)) if a.v2 else dict(loc="upper right")))
         # the selected maps on the pial surface, same order and numbers, left above right
         for k_, m in enumerate(chosen):
             xc = LEFT + (k_ + 0.5) * MAPW
             for s_, side in enumerate(("L", "R")):
-                show(fig, pial_tile(MAPS[m][3:], side), xc - MAPW * 0.47, Y_PIAL + (1 - s_) * PIAL_H, MAPW * 0.94, PIAL_H, W, H)
+                if BT:                                                  # left | right, side by side
+                    show(fig, pial_tile(MAPS[m][3:], side), xc - MAPW * 0.47 + s_ * MAPW * 0.47, Y_PIAL, MAPW * 0.47,
+                         PIAL_H, W, H)
+                else:
+                    show(fig, pial_tile(MAPS[m][3:], side), xc - MAPW * 0.47, Y_PIAL + (1 - s_) * PIAL_H, MAPW * 0.94,
+                         PIAL_H, W, H)
             fig.text(xc / W, (Y_PIAL - 0.05) / H, f"{k_ + 1}  " + NAMES[m].replace(" vs ", "\nvs "), ha="center", va="top",
                      fontsize=6.8, color="#1c2330", linespacing=1.1)
         if CENT:                                                        # the centroids' colour scale
-            eax = fig.add_axes([0.25 / W, (Y_GLASS + GLASS_H) / H, 0.55 / W, 0.1 / H])
+            eax = fig.add_axes([0.25 / W, ((Y_CENT + CENT_H * 0.35) if BT else (Y_GLASS + GLASS_H)) / H, 0.55 / W, 0.1 / H])
             eb = fig.colorbar(plt.cm.ScalarMappable(norm=plt.Normalize(-P2.MEAN_VLIM, P2.MEAN_VLIM), cmap=P2.ERSP_CMAP),
                               cax=eax, orientation="horizontal", ticks=[-P2.MEAN_VLIM, 0, P2.MEAN_VLIM])
             eb.ax.set_xticklabels([f"-{P2.MEAN_VLIM:g}", "0", f"+{P2.MEAN_VLIM:g}"], fontsize=6)
             eb.ax.tick_params(length=2)
             eax.set_title("centroid\n(dB)", fontsize=6.5, pad=2)
-        cax = fig.add_axes([0.25 / W, (Y_PIAL + PIAL_H * 0.6) / H, 0.55 / W, 0.1 / H])
+        cax = fig.add_axes([0.25 / W, (Y_PIAL + PIAL_H * (0.3 if BT else 0.6)) / H, 0.55 / W, 0.1 / H])
         cb = fig.colorbar(plt.cm.ScalarMappable(norm=plt.Normalize(0, 1), cmap=NS_CMAP), cax=cax, orientation="horizontal",
                           ticks=[0, 1])
         cb.ax.set_xticklabels(["90th\npct", "99.5th\npct+"], fontsize=6)
         cb.ax.tick_params(length=2)
         cax.set_title("coloured =\ntop 10%", fontsize=6.5, pad=2)
         out = OUTD / f"{tag}_K{K}_{LTAG}{'' if GLASS else '_noglass'}{VSUF}.png"
-        if a.v2:
+        if a.v2 and not a.transparent:
             fig.patch.set_facecolor("white")
             fig.patch.set_alpha(1.0)                                    # a white page, not a transparent one
             MC.save_styles(fig, out, a.styles, facecolor="white")

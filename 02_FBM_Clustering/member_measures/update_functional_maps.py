@@ -22,7 +22,7 @@ STEPS = [
     ["15_cross_feature_maps.py", "--ns", "nimare", "--perm", "2000", "--v4", *ST],
     ["16_highlight_maps.py", "--ns", "nimare", "--configs", "15band:7", "15zband:7", "5band:6", "--v4", *ST],
     ["16_highlight_maps.py", "--ns", "nimare", "--configs", "15band:7", "--v4", "--all-maps", *ST],
-    ["16_highlight_maps.py", "--ns", "nimare", "--configs", "15band:7", "--v4", "--maps", *ST],
+    ["16_highlight_maps.py", "--ns", "nimare", "--configs", "15band:7", "--v4", "--maps", "--brains-top", "--transparent", *ST],
     ["17_maps_by_k.py", "--ns", "nimare"],
 ]
 

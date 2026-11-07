@@ -316,7 +316,8 @@ def build() -> str:
     P.append(fig("highlight2_15band_K7_seven", "15 bands, K = 7, members with loading &ge; 0.35: six chosen maps",
                  "The professor's four maps vs resting state (heard sentences, pictures, reading, production), then "
                  "sentences vs words and semantic vs rest, where clusters sit significantly below chance. The correction "
-                 f"runs over all {nmaps} maps, not only the six. " + LEG16))
+                 f"runs over all {nmaps} maps, not only the six. " + "Here each cluster's centroid and its glass brains (left | right) sit above its bars, the pial maps are "
+                 "shown left | right, and the background is transparent (for the poster). " + LEG16))
     P.append("    <p>The 10 most telling maps: a map can be shown when at least one clean cluster is above chance in it; at "
              "most 10 are shown, shared out in turns: the clusters with the fewest hits choose first, each takes one map "
              "per round, its own maps first (above chance for no other clean cluster), then shared ones, largest "
