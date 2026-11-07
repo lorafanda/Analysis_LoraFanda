@@ -117,7 +117,7 @@ SENTENCE_EXAMPLE = "After every meal\nit's good to\nbrush your ..."   # the para
 TASK_CONDS = ("audio", "picture", "reading")
 
 
-def task_header(ax, cond, scale=1.0, name=True):
+def task_header(ax, cond, scale=1.0, name=True, words=True):
     """One condition's trial, drawn: the stimulus screen over the stimulus half (x 0-0.5) and the "?" response cue
     over the response half (x 0.5-1), the condition's name above and "stimulus" / "response" under them; the same
     drawing as 00_paper2_figure0_coverage.header_0, one block per axes so it sits exactly over its ERSP column."""
@@ -138,6 +138,9 @@ def task_header(ax, cond, scale=1.0, name=True):
             P2.icon_picture(_task_icon(ax, xc, 0.34, 0.26, 0.42))
         else:
             ax.text(xc, 0.47, SENTENCE_EXAMPLE, ha="center", va="center", fontsize=6.6 * scale, color=INK, linespacing=1.1)
+    if not words:                                                   # no "stimulus" / "response": drop that band
+        ax.set_ylim(0.22, 1.0)
+        return
     for k_, word in enumerate(("stimulus", "response")):
         ax.text(0.25 + 0.5 * k_, 0.09, word, ha="center", va="center", fontsize=8.5 * scale, color=MUTED)
 
@@ -213,12 +216,16 @@ def row1_column(d):
     cube = d["C"][i15]
     xt = lambda ax, c_: (ax.set_xticks([0, 50, 100] if c_ == 2 else [0, 50]), ax.set_xticklabels(["0", "50", "100 %"] if c_ == 2 else ["0", "50"], fontsize=6.5))
     nb = cube.shape[1]
-    fig = plt.figure(figsize=(7.4, 4.3), dpi=DPI)
-    gs = GridSpec(2, 3, figure=fig, height_ratios=[1.0, 1.45], left=0.11, right=0.93, top=0.98, bottom=0.07, hspace=0.12, wspace=0.05)
+    # laid out in inches: three square ERSP panels (1 : 1 per condition), the screens right above them (11-07)
+    W, L_, R_, G_, B_, GAP, HH, T_ = 7.4, 0.81, 0.55, 0.10, 0.30, 0.04, 0.78, 0.03
+    PW = (W - L_ - R_ - 2 * G_) / 3
+    H = B_ + PW + GAP + HH + T_
+    fig = plt.figure(figsize=(W, H), dpi=DPI)
+    X0 = [L_ + c_ * (PW + G_) for c_ in range(3)]
+    for c_ in range(3):                                             # drawn in the ERSP's own column: halves line up
+        task_header(fig.add_axes([X0[c_] / W, (B_ + PW + GAP) / H, PW / W, HH / H]), TASK_CONDS[c_], words=False)
     for c_ in range(3):
-        task_header(fig.add_subplot(gs[0, c_]), TASK_CONDS[c_])     # drawn in the ERSP's own column: halves line up
-    for c_ in range(3):
-        ax = fig.add_subplot(gs[1, c_])
+        ax = fig.add_axes([X0[c_] / W, B_ / H, PW / W, PW / H])
         im = ax.imshow(cube[c_], aspect="auto", origin="lower", cmap="bwr", vmin=-7, vmax=7, extent=(0, 100, -0.5, nb - 0.5))
         ax.axvline(50, color=INK, lw=0.7, ls="--"); xt(ax, c_); ax.tick_params(length=2)
         if c_ == 0:                                                 # every band labelled
@@ -226,7 +233,7 @@ def row1_column(d):
             ax.set_ylabel("Hz", fontsize=7.5)
         else:
             ax.set_yticks([])
-    cax = fig.add_axes([0.94, 0.07, 0.012, 0.50]); cb = fig.colorbar(im, cax=cax); cb.ax.tick_params(labelsize=6.5)
+    cax = fig.add_axes([(W - R_ + 0.08) / W, B_ / H, 0.09 / W, PW / H]); cb = fig.colorbar(im, cax=cax); cb.ax.tick_params(labelsize=6.5)
     cax.set_title("dB", fontsize=7, color=MUTED, pad=3)
     for ax_ in fig.axes:                                            # transparent wherever nothing is drawn (11-07);
         ax_.patch.set_alpha(0)                                      # the screens keep their white fill
