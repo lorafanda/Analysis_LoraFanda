@@ -115,3 +115,26 @@ script prints) and push both repos.
 ## Open
 - Steps 11 (composition) and 12 (best maps) still use the counting test; they are not on the tab.
 - The ARI 0.15 between 2 bands and 15 bands in the short answer comes from the agreement analysis, not from these tables.
+
+## Night of 7–8 November: poster figures
+- **Step 16 `--v4`:**
+  - no figure title; the website caption's bold first line carries it
+  - smaller legend above the bars, in rows of three
+  - centroids at 1 : 3 without y values
+- **`make_poster_blocks.py`:**
+  - left | top | right brains (`--views`)
+  - centroid at 1 : 3 (`--aspect 3`) with no frequency values
+  - the type name on one line
+- **Frequency axis:** only the poster's example figure carries it.
+- **`make_poster_assets.py`:**
+  - The task screens are drawn by `task_header()` instead of cropped from the FIG0 PNG; the crop fractions had gone
+    stale and cut the boxes.
+  - `figure1_column.png` is now the task screens (no "stimulus" / "response" words) over the example electrode's
+    15-band ERSP: three square panels, every band labelled, transparent background. The full ERSP and the cohort brains
+    are removed.
+- **Rename redrawn everywhere:** every figure that prints type names was redrawn with c5 = "response broadband
+  increase": cluster cards, poster assets, member measures, FIG 6 (screen and paper), FIG 1 paper.
+  `00_Paper2_Figures.py --figure 1` needs `--k 7` (its default is the held-out peak, K 30).
+- **Commit limits:** the repo's pre-commit hook blocks a file > 5 MB or a commit > 25 MB. Split commits; never use
+  `--no-verify`.
+- **Maybe later:** transparent backgrounds for the cluster blocks, strips and step-16 figures (for a presentation).
