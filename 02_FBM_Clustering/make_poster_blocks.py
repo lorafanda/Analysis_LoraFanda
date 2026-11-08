@@ -114,7 +114,7 @@ def patients_bar(ax, d, a, pcol):
             color=P2.MUTED, ha="right", va="top")
 
 
-def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=3.0, views=("L", "T", "R"), pcol=None):
+def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=3.0, views=("L", "T", "R"), pcol=None, center=False):
     """One type as a poster block: framed mean ERSP (width:height = aspect), the brains in `views`, a caption line;
     with `pcol` (patient colours) a patient bar under the brains, written as ..._patients.png."""
     members = members_of(d, a)
@@ -159,14 +159,15 @@ def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=3.0, views=("L"
     # the type's name alone as the title (bigger); its id with n and patients on the line under it (11-08)
     title = name if fset == REF else f"→ {name}" + (f"  (J {jac:.2f})" if b is not None else "")
     fs_ = 11.5 if len(title) <= 30 else max(8.5, 11.5 * 30 / len(title))   # one line, smaller when long
-    fig.text(0.04, 1 - 0.05 / H, title, fontsize=fs_, fontweight="bold", color=col, va="top")
-    fig.text(0.04, 1 - 0.29 / H, f"{'c' if fset == REF else 'v'}{a}  ·  n {n}  ·  {npat} patients  ·  loading ≥ {MIN_LOAD:g}", fontsize=7.5,
-             color=P2.MUTED, va="top")
+    tx, ha = (0.5, "center") if center else (0.04, "left")         # centred version: title and subtitle centred
+    fig.text(tx, 1 - 0.05 / H, title, fontsize=fs_, fontweight="bold", color=col, va="top", ha=ha)
+    fig.text(tx, 1 - 0.29 / H, f"{'c' if fset == REF else 'v'}{a}  ·  n {n}  ·  {npat} patients  ·  loading ≥ {MIN_LOAD:g}", fontsize=7.5,
+             color=P2.MUTED, va="top", ha=ha)
     if pcol is not None:
         patients_bar(fig.add_axes([0.04, (0.17 + 0.0) / H, 0.92, 0.13 / H]), d, a, pcol)
     for ax_ in fig.axes:
         ax_.patch.set_alpha(0)
-    p = out / f"block_{pos:02d}_c{a}{'_patients' if pcol is not None else ''}.png"
+    p = out / f"block_{pos:02d}_c{a}{'_patients' if pcol is not None else ''}{'_centered' if center else ''}.png"
     fig.savefig(p, transparent=True); plt.close(fig)
     return p
 
@@ -207,19 +208,19 @@ def main() -> int:
         rorder = [int(j) for j in P2.block_order(np.stack([Cref[ref["lab"] == j].mean(0) for j in range(REF_K)]), ref)[0]]
         colmap = {a_: (orig(match[a_][0], REF_K) if match[a_][0] is not None else GREY) for a_ in range(REF_K)}
         P2.cluster_col = lambda j, kk: colmap.get(j, GREY)
-        paths, ppaths = [], []
+        V = {suf: [] for suf in ("", "_patients", "_centered", "_patients_centered")}
         pcol = P2.patient_colours(d)
         try:
             for pos, a_ in enumerate(order, 1):
                 b, jac = match[a_]
-                paths.append(block(d, a_, b, jac, names, Cref, colmap[a_], out, pos, fset, aspect=a.aspect,
-                                   views=tuple(a.views)))
-                ppaths.append(block(d, a_, b, jac, names, Cref, colmap[a_], out, pos, fset, aspect=a.aspect,
-                                    views=tuple(a.views), pcol=pcol))
+                for suf in V:                                       # plain / patient bar, left / centred writing
+                    V[suf].append(block(d, a_, b, jac, names, Cref, colmap[a_], out, pos, fset, aspect=a.aspect,
+                                        views=tuple(a.views), pcol=pcol if "patients" in suf else None,
+                                        center="centered" in suf))
                 print(f"  {fset} block {pos}: cluster {a_} -> {names.get(b, '-') if b is not None else '-'}")
         finally:
             P2.cluster_col = orig
-        for ps_, suf in ((paths, ""), (ppaths, "_patients")):          # the strip (one row) and the grid (4 + 3)
+        for suf, ps_ in V.items():                                      # the strip (one row) and the grid (4 + 3)
             for rows, kind in ((1, "strip"), (2, "grid")):
                 s = strip(ps_, OUT / f"{fset}_{kind}{suf}.png", rows=rows)
                 print(f"  {s.name}: {Image.open(s).size[0]} x {Image.open(s).size[1]} px")
