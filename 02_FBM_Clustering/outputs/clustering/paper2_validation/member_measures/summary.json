@@ -1,6 +1,6 @@
 {
  "cache": "concat_source_v17",
- "built": "2026-11-08 00:42",
+ "built": "2026-11-08 00:48",
  "sets": [
   {
    "fset": "concat_bands15",
@@ -20,9 +20,9 @@
     "0": "beta decrease",
     "2": "broadband decrease",
     "4": "low-frequency increase",
-    "1": "audio-stimulus low-frequency",
-    "3": "sentence-stimulus low-frequency",
-    "6": "response-period low-frequency decrease"
+    "1": "audio-stimulus increase",
+    "3": "sentence-stimulus increase",
+    "6": "response low-freq. decrease"
    },
    "match": {
     "0": [

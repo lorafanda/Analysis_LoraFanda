@@ -132,4 +132,4 @@ PROVENANCE
   run        20261017_194301
   tables     outputs\clustering\mmd\concat_source_v17\concat_bands15\cnmf
   built by   00_paper2_figure6_mmd.py --feature-set concat_bands15 --method cnmf
-  built on   2026-11-08 00:43
+  built on   2026-11-08 00:48

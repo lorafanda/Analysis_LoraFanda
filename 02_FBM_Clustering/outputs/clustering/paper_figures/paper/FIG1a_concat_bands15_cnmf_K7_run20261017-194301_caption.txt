@@ -18,7 +18,7 @@ PROVENANCE
   render         pyvista/VTK offscreen, material constants read live from
                  functions/lf_recon_shared_config.py (the visualizer's own)
   built by       00_Paper2_Figures.py --figure 1 --feature-set concat_bands15 --k 7 --method cnmf
-  built on       2026-11-08 00:43
+  built on       2026-11-08 00:49
 
 HOW K WAS CHOSEN
 ----------------------------------------------------------------------------------------------------
