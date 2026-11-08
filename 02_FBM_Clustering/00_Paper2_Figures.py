@@ -139,9 +139,9 @@ _CANVAS_W = [17.6]          # the width of the figure being drawn (canvas())
 # ones the outline, the abstract and the talk use), for the block titles on paper
 TYPE_NAMES = {("concat_bands15", 7): {5: "response broadband increase", 0: "beta decrease",   # was "production", Lora 2026-11-07
                                       2: "broadband decrease", 4: "low-frequency increase",   # rise -> increase, 11-08
-                                      1: "audio-stimulus low-frequency",
-                                      3: "sentence-stimulus low-frequency",   # "reading" -> "sentence", Lora 2026-10-30
-                                      6: "response-period low-frequency decrease"}}   # fall -> decrease, 11-08
+                                      1: "audio-stimulus increase",   # 11-08
+                                      3: "sentence-stimulus increase",   # "reading" -> "sentence", Lora 2026-10-30
+                                      6: "response low-freq. decrease"}}   # fall -> decrease, 11-08
 
 
 def canvas(w_in: float) -> float:

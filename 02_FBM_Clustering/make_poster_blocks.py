@@ -4,8 +4,8 @@ run and for the z-scored variant matched to it (2026-11-03).
 
 One block per type: the mean ERSP of its members (the paper's draw_mean, +-2 dB, three
 conditions side by side, width : height 3 : 1, no frequency values: the poster's example figure carries
-that axis) framed in the type's colour, the glass brains under the paper's rule (render_hemi: loading >=
-0.3 drawn, colour, size and opacity by loading) as left | top | right (--views L R for the two lateral
+that axis) framed in the type's colour, the glass brains (render_hemi: colour, size and opacity by
+loading); ONE rule for every part of the block: the members with own loading >= --min-loading (0.35) as left | top | right (--views L R for the two lateral
 views only), the type's name on one line and one caption line (n, patients). The z-scored run's clusters are ordered and coloured by the
 published type they are matched to (Hungarian on shared electrodes) and captioned "v<id> -> type".
 
@@ -42,6 +42,12 @@ REF, REF_K = "concat_bands15", 7
 OUT = ROOT / "outputs" / "clustering" / "paper_figures" / "poster"
 NL = chr(10)
 GREY = (0.60, 0.60, 0.60)
+MIN_LOAD = 0.35          # one rule for the whole block: members (argmax) with own loading >= this (main() sets it)
+
+
+def members_of(d, a):
+    """The cluster's members whose own loading is at or above MIN_LOAD."""
+    return (d["lab"] == a) & (d["Gn"][:, a] >= MIN_LOAD)
 
 
 def keys_of(meta):
@@ -86,7 +92,7 @@ def load(fset, ref):
 def patients_bar(ax, d, a, pcol):
     """Who the cluster is made of: one segment per patient (FIG 1's colours), widest first, width = that patient's
     electrodes in the cluster; the count in each segment wide enough to hold it."""
-    vc = pd.Series(d["patient"][d["lab"] == a]).value_counts()
+    vc = pd.Series(d["patient"][members_of(d, a)]).value_counts()
     n = int(vc.sum())
     x = 0.0
     for p_, c_ in vc.items():
@@ -111,7 +117,7 @@ def patients_bar(ax, d, a, pcol):
 def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=3.0, views=("L", "T", "R"), pcol=None):
     """One type as a poster block: framed mean ERSP (width:height = aspect), the brains in `views`, a caption line;
     with `pcol` (patient colours) a patient bar under the brains, written as ..._patients.png."""
-    members = d["lab"] == a
+    members = members_of(d, a)
     n = int(members.sum()); npat = int(pd.Series(d["patient"][members]).nunique())
     M = Cref[members].mean(0)
     w = 3.6; h_ersp = 0.92 * w / aspect; h_brain = (0.36 if "T" in views else 0.42) * w; head = 0.5
@@ -132,7 +138,17 @@ def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=3.0, views=("L"
         s_.set_edgecolor(col); s_.set_linewidth(1.2)
     for i_, side in enumerate(views):
         axb = fig.add_subplot(gs[1, i_])
-        img, nsel = P2.render_hemi(side, d, a)
+        d2 = dict(d)                                               # only the members at the cut are drawn
+        G = d["Gn"].copy()
+        G[~members, a] = 0.0
+        d2["Gn"] = G
+        cut0 = P2.LOAD_CUT
+        P2.LOAD_CUT = MIN_LOAD
+        try:
+            img, _ = P2.render_hemi(side, d2, a)
+        finally:
+            P2.LOAD_CUT = cut0
+        nsel = int((members & (d["hemi"] == side)).sum()) if side != "T" else n
         axb.imshow(img); axb.set_xticks([]); axb.set_yticks([])
         for s_ in axb.spines.values():
             s_.set_visible(False)
@@ -144,7 +160,7 @@ def block(d, a, b, jac, names, Cref, col, out, pos, fset, aspect=3.0, views=("L"
     title = name if fset == REF else f"→ {name}" + (f"  (J {jac:.2f})" if b is not None else "")
     fs_ = 11.5 if len(title) <= 30 else max(8.5, 11.5 * 30 / len(title))   # one line, smaller when long
     fig.text(0.04, 1 - 0.05 / H, title, fontsize=fs_, fontweight="bold", color=col, va="top")
-    fig.text(0.04, 1 - 0.29 / H, f"{'c' if fset == REF else 'v'}{a}  ·  n {n}  ·  {npat} patients", fontsize=7.5,
+    fig.text(0.04, 1 - 0.29 / H, f"{'c' if fset == REF else 'v'}{a}  ·  n {n}  ·  {npat} patients  ·  loading ≥ {MIN_LOAD:g}", fontsize=7.5,
              color=P2.MUTED, va="top")
     if pcol is not None:
         patients_bar(fig.add_axes([0.04, (0.17 + 0.0) / H, 0.92, 0.13 / H]), d, a, pcol)
@@ -178,7 +194,10 @@ def main() -> int:
     ap.add_argument("--aspect", type=float, default=3.0, help="ERSP panel width : height (the poster: 3)")
     ap.add_argument("--views", nargs="+", default=["L", "T", "R"], choices=["L", "T", "R"],
                     help="the brains under the centroid: L R = the two lateral views, L T R adds the top view between")
+    ap.add_argument("--min-loading", type=float, default=0.35,
+                    help="the block's electrodes: members with own loading >= this (0 = every member)")
     a = ap.parse_args()
+    globals()["MIN_LOAD"] = a.min_loading
     ref = P2.load_run(REF, REF_K, "cnmf"); ref["fset"] = REF
     Cref = P2.cube(ref["X"], ref)
     for fset in a.sets:
