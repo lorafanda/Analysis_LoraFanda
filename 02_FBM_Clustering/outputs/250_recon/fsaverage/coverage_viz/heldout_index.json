@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-03 01:34",
+ "generated": "2026-11-03 02:01",
  "cache": "concat_source_v17",
  "runs": {
   "cnmf__concat_bands2__20261017_195555": {
@@ -9,7 +9,7 @@
    "method": "cnmf",
    "lopo_overall": 0.6047,
    "halves_overall": 0.482,
-   "written": "2026-11-03 01:33"
+   "written": "2026-11-03 02:01"
   },
   "kmeans__concat_bands2__20261017_192551": {
    "file": "runs/kmeans__concat_bands2__20261017_192551/heldout.json",
@@ -18,7 +18,7 @@
    "method": "kmeans",
    "lopo_overall": 0.7648,
    "halves_overall": 0.5854,
-   "written": "2026-11-03 01:33"
+   "written": "2026-11-03 02:01"
   },
   "hierarchical__concat_bands2__20261017_193332": {
    "file": "runs/hierarchical__concat_bands2__20261017_193332/heldout.json",
@@ -27,7 +27,7 @@
    "method": "hierarchical",
    "lopo_overall": 0.5167,
    "halves_overall": 0.4524,
-   "written": "2026-11-03 01:33"
+   "written": "2026-11-03 02:01"
   },
   "cnmf__concat_bands5__20261017_195011": {
    "file": "runs/cnmf__concat_bands5__20261017_195011/heldout.json",
@@ -36,7 +36,7 @@
    "method": "cnmf",
    "lopo_overall": 0.641,
    "halves_overall": 0.5372,
-   "written": "2026-11-03 01:33"
+   "written": "2026-11-03 02:01"
   },
   "kmeans__concat_bands5__20261017_192531": {
    "file": "runs/kmeans__concat_bands5__20261017_192531/heldout.json",
@@ -45,7 +45,7 @@
    "method": "kmeans",
    "lopo_overall": 0.7578,
    "halves_overall": 0.5728,
-   "written": "2026-11-03 01:33"
+   "written": "2026-11-03 02:01"
   },
   "hierarchical__concat_bands5__20261017_193326": {
    "file": "runs/hierarchical__concat_bands5__20261017_193326/heldout.json",
@@ -54,7 +54,7 @@
    "method": "hierarchical",
    "lopo_overall": 0.5728,
    "halves_overall": 0.4663,
-   "written": "2026-11-03 01:33"
+   "written": "2026-11-03 02:01"
   },
   "cnmf__concat_bands15__20261017_194301": {
    "file": "runs/cnmf__concat_bands15__20261017_194301/heldout.json",
@@ -63,7 +63,7 @@
    "method": "cnmf",
    "lopo_overall": 0.8994,
    "halves_overall": 0.6221,
-   "written": "2026-11-03 01:33"
+   "written": "2026-11-03 02:01"
   },
   "kmeans__concat_bands15__20261017_192459": {
    "file": "runs/kmeans__concat_bands15__20261017_192459/heldout.json",
@@ -72,7 +72,7 @@
    "method": "kmeans",
    "lopo_overall": 0.8278,
    "halves_overall": 0.6343,
-   "written": "2026-11-03 01:33"
+   "written": "2026-11-03 02:01"
   },
   "hierarchical__concat_bands15__20261017_193312": {
    "file": "runs/hierarchical__concat_bands15__20261017_193312/heldout.json",
@@ -81,7 +81,7 @@
    "method": "hierarchical",
    "lopo_overall": 0.5003,
    "halves_overall": 0.4463,
-   "written": "2026-11-03 01:34"
+   "written": "2026-11-03 02:01"
   },
   "cnmf__concat_hfa__20261017_200121": {
    "file": "runs/cnmf__concat_hfa__20261017_200121/heldout.json",
@@ -90,7 +90,7 @@
    "method": "cnmf",
    "lopo_overall": 0.6024,
    "halves_overall": 0.486,
-   "written": "2026-11-03 01:34"
+   "written": "2026-11-03 02:01"
   },
   "kmeans__concat_hfa__20261017_192608": {
    "file": "runs/kmeans__concat_hfa__20261017_192608/heldout.json",
@@ -99,7 +99,7 @@
    "method": "kmeans",
    "lopo_overall": 0.736,
    "halves_overall": 0.6423,
-   "written": "2026-11-03 01:34"
+   "written": "2026-11-03 02:01"
   },
   "hierarchical__concat_hfa__20261017_193338": {
    "file": "runs/hierarchical__concat_hfa__20261017_193338/heldout.json",
@@ -108,7 +108,7 @@
    "method": "hierarchical",
    "lopo_overall": 0.6194,
    "halves_overall": 0.5708,
-   "written": "2026-11-03 01:34"
+   "written": "2026-11-03 02:01"
   },
   "cnmf__concat_bands15z__20261102_221405": {
    "file": "runs/cnmf__concat_bands15z__20261102_221405/heldout.json",
@@ -117,7 +117,34 @@
    "method": "cnmf",
    "lopo_overall": 0.7442,
    "halves_overall": 0.6037,
-   "written": "2026-11-03 01:34"
+   "written": "2026-11-03 02:01"
+  },
+  "kmeans__concat_bands15z__20261102_220821": {
+   "file": "runs/kmeans__concat_bands15z__20261102_220821/heldout.json",
+   "k": 7,
+   "feature_set": "concat_bands15z",
+   "method": "kmeans",
+   "lopo_overall": 0.6545,
+   "halves_overall": 0.5956,
+   "written": "2026-11-03 02:01"
+  },
+  "cnmf__concat_bands15s__20261102_222007": {
+   "file": "runs/cnmf__concat_bands15s__20261102_222007/heldout.json",
+   "k": 7,
+   "feature_set": "concat_bands15s",
+   "method": "cnmf",
+   "lopo_overall": 0.6654,
+   "halves_overall": 0.5237,
+   "written": "2026-11-03 02:01"
+  },
+  "kmeans__concat_bands15s__20261102_220833": {
+   "file": "runs/kmeans__concat_bands15s__20261102_220833/heldout.json",
+   "k": 7,
+   "feature_set": "concat_bands15s",
+   "method": "kmeans",
+   "lopo_overall": 0.5959,
+   "halves_overall": 0.4946,
+   "written": "2026-11-03 02:01"
   }
  }
 }
