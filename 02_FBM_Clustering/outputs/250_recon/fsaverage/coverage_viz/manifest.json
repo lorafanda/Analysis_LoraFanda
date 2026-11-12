@@ -61,48 +61,48 @@
           "lh": {
             "file": "coverage_cohort1_n29_r6_lh_u8.bin",
             "dtype": "uint8",
-            "pct_vertices_sampled": 59.6,
-            "max_patients_at_a_vertex": 21,
-            "max_contacts_at_a_vertex": 66
+            "pct_vertices_sampled": 52.9,
+            "max_patients_at_a_vertex": 22,
+            "max_contacts_at_a_vertex": 77
           },
           "rh": {
             "file": "coverage_cohort1_n29_r6_rh_u8.bin",
             "dtype": "uint8",
-            "pct_vertices_sampled": 66.3,
-            "max_patients_at_a_vertex": 21,
-            "max_contacts_at_a_vertex": 67
+            "pct_vertices_sampled": 61.8,
+            "max_patients_at_a_vertex": 22,
+            "max_contacts_at_a_vertex": 79
           }
         },
         "10": {
           "lh": {
             "file": "coverage_cohort1_n29_r10_lh_u8.bin",
             "dtype": "uint8",
-            "pct_vertices_sampled": 81.3,
+            "pct_vertices_sampled": 73.9,
             "max_patients_at_a_vertex": 24,
-            "max_contacts_at_a_vertex": 138
+            "max_contacts_at_a_vertex": 158
           },
           "rh": {
             "file": "coverage_cohort1_n29_r10_rh_u8.bin",
             "dtype": "uint8",
-            "pct_vertices_sampled": 83.7,
+            "pct_vertices_sampled": 79.1,
             "max_patients_at_a_vertex": 24,
-            "max_contacts_at_a_vertex": 178
+            "max_contacts_at_a_vertex": 194
           }
         },
         "15": {
           "lh": {
-            "file": "coverage_cohort1_n29_r15_lh_u8.bin",
-            "dtype": "uint8",
-            "pct_vertices_sampled": 94.2,
+            "file": "coverage_cohort1_n29_r15_lh_u16.bin",
+            "dtype": "uint16",
+            "pct_vertices_sampled": 88.5,
             "max_patients_at_a_vertex": 24,
-            "max_contacts_at_a_vertex": 232
+            "max_contacts_at_a_vertex": 277
           },
           "rh": {
             "file": "coverage_cohort1_n29_r15_rh_u16.bin",
             "dtype": "uint16",
-            "pct_vertices_sampled": 91.8,
+            "pct_vertices_sampled": 89.6,
             "max_patients_at_a_vertex": 24,
-            "max_contacts_at_a_vertex": 325
+            "max_contacts_at_a_vertex": 357
           }
         }
       }
@@ -117,7 +117,7 @@
           "nbr_r6_lh_idx.p00.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 1042251
+        "nnz": 1039782
       },
       "rh": {
         "off": "nbr_r6_rh_off.bin",
@@ -125,7 +125,7 @@
           "nbr_r6_rh_idx.p00.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 1100899
+        "nnz": 1101250
       }
     },
     "10": {
@@ -136,7 +136,7 @@
           "nbr_r10_lh_idx.p01.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 3243718
+        "nnz": 3224072
       },
       "rh": {
         "off": "nbr_r10_rh_off.bin",
@@ -145,7 +145,7 @@
           "nbr_r10_rh_idx.p01.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 3339771
+        "nnz": 3336657
       }
     },
     "15": {
@@ -159,7 +159,7 @@
           "nbr_r15_lh_idx.p04.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 9041963
+        "nnz": 8980017
       },
       "rh": {
         "off": "nbr_r15_rh_off.bin",
@@ -171,7 +171,7 @@
           "nbr_r15_rh_idx.p04.bin"
         ],
         "n_vertices": 163842,
-        "nnz": 9210209
+        "nnz": 9220250
       }
     }
   },
@@ -476,7 +476,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -757,7 +786,32 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -1027,7 +1081,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -1319,7 +1402,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -1563,7 +1675,28 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -1793,7 +1926,32 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -2082,7 +2240,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -2325,7 +2512,28 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -2702,7 +2910,108 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          },
+          "7": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_07.png"
+          },
+          "8": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_08.png"
+          },
+          "9": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_09.png"
+          },
+          "10": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_10.png"
+          },
+          "11": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_11.png"
+          },
+          "12": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_12.png"
+          },
+          "13": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_13.png"
+          },
+          "14": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_14.png"
+          },
+          "15": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_15.png"
+          },
+          "16": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_16.png"
+          },
+          "17": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_17.png"
+          },
+          "18": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_18.png"
+          },
+          "19": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_19.png"
+          },
+          "20": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_20.png"
+          },
+          "21": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_21.png"
+          },
+          "22": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_22.png"
+          },
+          "23": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_23.png"
+          },
+          "24": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_24.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -2990,7 +3299,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -3243,7 +3581,28 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -3515,7 +3874,40 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          },
+          "7": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_07.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -3794,7 +4186,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -4031,7 +4452,28 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -4310,7 +4752,36 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
@@ -4584,7 +5055,44 @@
         }
       },
       "figures": {
-        "per_cluster": {},
+        "per_cluster": {
+          "0": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_00.png"
+          },
+          "1": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_01.png"
+          },
+          "2": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_02.png"
+          },
+          "3": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_03.png"
+          },
+          "4": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_04.png"
+          },
+          "5": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_05.png"
+          },
+          "6": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_06.png"
+          },
+          "7": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_07.png"
+          },
+          "8": {
+            "glass": {},
+            "centroid": "cluster_centroids/cluster_08.png"
+          }
+        },
         "overview": []
       },
       "sweep": {
