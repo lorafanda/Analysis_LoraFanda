@@ -1,5 +1,5 @@
 {
- "n_spin": 5000,
+ "n_spin": 1000,
  "seed": 0,
  "thresholds": [
   0.1,
@@ -18,28 +18,28 @@
  },
  "atlas_outside_volume": 0,
  "surface_vs_contact_P": {
-  "max_abs_diff": 0.4218362122774125,
-  "n_differ_over_0p01": 28
+  "max_abs_diff": 0.5161290094256401,
+  "n_differ_over_0p01": 170
  },
  "all": {
-  "n_in": 651,
-  "n_out": 936,
-  "rms_diff_db": 0.11462153096985178,
-  "rms_null_mean": 0.11077155178906757,
-  "rms_null_95": 0.17784101398256044,
-  "p_rms": 0.3715256948610278,
+  "n_in": 625,
+  "n_out": 962,
+  "rms_diff_db": 0.11841268453062492,
+  "rms_null_mean": 0.11642587315960062,
+  "rms_null_95": 0.1838257957588677,
+  "p_rms": 0.39760239760239763,
   "cells_q05": 0,
   "cells": 1350,
   "clusters_q05_t10": 0,
   "clusters_q05_t20": 0
  },
  "L": {
-  "n_in": 371,
-  "n_out": 344,
-  "rms_diff_db": 0.17654896846439133,
-  "rms_null_mean": 0.1392809958159388,
-  "rms_null_95": 0.21594527044125753,
-  "p_rms": 0.16516696660667868,
+  "n_in": 359,
+  "n_out": 356,
+  "rms_diff_db": 0.17072304546539352,
+  "rms_null_mean": 0.14394316494692924,
+  "rms_null_95": 0.22056014931387885,
+  "p_rms": 0.2127872127872128,
   "cells_q05": 0,
   "cells": 1350,
   "clusters_q05_t10": 0,

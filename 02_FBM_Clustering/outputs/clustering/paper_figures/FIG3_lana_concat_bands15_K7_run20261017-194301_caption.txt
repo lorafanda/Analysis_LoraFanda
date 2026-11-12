@@ -7,7 +7,7 @@ B's y axis runs to the same limit in every FIG 3 at this K, so the figures can b
 laid side by side and a bar that looks taller is taller; the limit is the maximum
 reached in: concat_bands15. A's y axis spans the full range of P_lana,
 which is the same set of electrodes in every feature set.
-  B top 0.7077   (drawn with a small margin)
+  B top 0.6984   (drawn with a small margin)
   recorded in FIG3_extents_K07.json; --all rebuilds every feature set on one set
 
 WHAT P_lana IS
@@ -70,7 +70,7 @@ Confidence intervals BOOTSTRAP PATIENTS, not electrodes, for the same reason: an
 electrode bootstrap treats contacts on one shaft as independent draws and returns
 intervals several times too narrow.
 
-  5000 permutations of EACH null, 2000 bootstraps, patients resampled
+  1000 permutations of EACH null, 1000 bootstraps, patients resampled
   with replacement
 
 Both are reported on the figure and in the table below. Where they disagree, the
@@ -88,8 +88,8 @@ PANEL A - P(LanA) of every electrode, clusters ranked by the mean
 One violin per cluster over its electrodes' P_lana, ranked by the mean (the short
 dark line, with its patient-bootstrap interval). Every electrode at or above a
 normalised loading of 0.30 on its cluster (its share of the K loadings) is a
-point, coloured and sized by FIG 1's ramps: greyer and smaller the weaker it belongs,
-full colour from 0.50, full size from 0.70. Below 0.30 it is not
+point, darker and smaller the weaker it belongs: near-black at 0.30, its cluster's
+full colour and FIG 1's full size from 0.70. Below 0.30 it is not
 drawn: 246 of 1587 electrodes (16%). Display only: the violin and every
 statistic use all argmax members.
 Dark dash = the shaft-shift null, pale dash = the within-patient null, dotted line =
@@ -97,8 +97,8 @@ the cohort mean, % over each violin = coverage.
   own-cluster loading   min 0.200   median 0.410   max 0.884   (1/K = 0.143)
 
   cohort mean P_lana             0.1418
-  most  c1  0.2070 [0.1334, 0.3173]  shaft null 0.2000 q=0.374  (within-patient null 0.1384 q=0.0014)
-  least c0  0.1129 [0.0982, 0.1339]  shaft null 0.1121 q=0.599
+  most  c1  0.2070 [0.1351, 0.3062]  shaft null 0.1999 q=0.371  (within-patient null 0.1383 q=0.00699)
+  least c0  0.1129 [0.0983, 0.1352]  shaft null 0.1122 q=0.612
   clusters above the SHAFT-SHIFT null at q<0.05   0 of 7
   above the weaker within-patient null              1 of 7
 
@@ -115,29 +115,30 @@ core of the network; both are drawn so the choice is visible.
 
   P_lana >= 0.10   cohort rate 40.8%   (1 of 7 above the shaft-shift null at q<0.05, 2 above the within-patient one)
   cluster   n     inside  [95% CI]           x cohort   shaft null  q        within null  q
-  c1       143    54.5%  [ 40.4,  70.8]    1.34     54.2%  0.81       40.9%  0.0028 
-  c5       200    54.5%  [ 46.5,  63.1]    1.33     49.3%  0.0364     44.2%  0.0014 
-  c4       334    43.7%  [ 37.8,  49.2]    1.07     42.6%  0.81       43.0%  0.929  
-  c2       168    36.3%  [ 29.5,  42.9]    0.89     37.0%  0.81       39.6%  1      
-  c3       200    38.5%  [ 30.2,  46.0]    0.94     39.1%  0.81       41.0%  1      
-  c6       224    32.1%  [ 24.4,  46.0]    0.79     36.9%  0.997      42.4%  1      
-  c0       318    33.0%  [ 25.2,  43.3]    0.81     33.4%  0.81       35.9%  1      
+  c1       143    54.5%  [ 41.8,  69.8]    1.34     54.2%  0.816      40.8%  0.0035 
+  c5       200    54.5%  [ 46.4,  63.5]    1.33     49.3%  0.049      44.0%  0.0035 
+  c4       334    43.7%  [ 37.6,  49.4]    1.07     42.6%  0.816      42.9%  0.925  
+  c2       168    36.3%  [ 29.5,  43.0]    0.89     37.0%  0.816      39.6%  1      
+  c3       200    38.5%  [ 30.5,  45.7]    0.94     39.2%  0.816      41.2%  1      
+  c6       224    32.1%  [ 24.8,  45.8]    0.79     36.9%  1          42.4%  1      
+  c0       318    33.0%  [ 25.3,  42.3]    0.81     33.4%  0.816      35.9%  1      
 
   P_lana >= 0.20   cohort rate 16.3%   (0 of 7 above the shaft-shift null at q<0.05, 1 above the within-patient one)
   cluster   n     inside  [95% CI]           x cohort   shaft null  q        within null  q
-  c1       143    24.5%  [  9.4,  46.5]    1.50     25.4%  0.958      15.0%  0.0056 
-  c5       200    21.5%  [ 12.9,  30.4]    1.32     20.0%  0.561      20.9%  0.997  
-  c4       334    20.4%  [ 15.4,  25.9]    1.25     19.7%  0.79       17.4%  0.172  
-  c2       168    12.5%  [  9.5,  19.4]    0.77     12.7%  0.958      14.3%  0.997  
-  c3       200    11.5%  [  7.1,  16.2]    0.70     13.2%  0.958      16.9%  0.997  
-  c6       224    14.3%  [  9.5,  21.3]    0.88     16.0%  0.958      16.6%  0.997  
-  c0       318    11.6%  [  6.6,  17.4]    0.71     10.4%  0.47       13.4%  0.997  
+  c1       143    24.5%  [  9.8,  45.3]    1.50     25.4%  0.946      14.9%  0.00699
+  c5       200    21.5%  [ 12.6,  32.0]    1.32     20.0%  0.545      20.9%  0.956  
+  c4       334    20.4%  [ 15.0,  26.1]    1.25     19.7%  0.727      17.5%  0.196  
+  c2       168    12.5%  [  9.5,  19.3]    0.77     12.7%  0.946      14.4%  1      
+  c3       200    11.5%  [  7.3,  16.4]    0.70     13.3%  0.946      16.9%  1      
+  c6       224    14.3%  [  9.4,  21.0]    0.88     16.0%  0.946      16.6%  1      
+  c0       318    11.6%  [  6.5,  17.2]    0.71     10.4%  0.49       13.4%  1      
 
 PANEL C - what the network is made of
 ----------------------------------------------------------------------------------------------------
 The same electrodes the other way round: the type composition of the electrodes
 inside the network at each threshold, of the whole cohort, and of the electrodes
-outside it, each bar summing to 100%. Descriptive - the per-cluster test is B.
+outside it, each bar summing to 100%. A segment's width is its share of the group and
+the number printed in it is its electrode count. Descriptive - the per-cluster test is B.
 
   group               n     c1     c5     c4     c2     c3     c6     c0   
   inside P >= 0.2    259     14%    17%    26%     8%     9%    12%    14%
@@ -156,13 +157,13 @@ to 1, so one cluster tracking the atlas forces the others negative) and they are
 dominated by the mass of electrodes below P = 0.1. For the record:
 
   cluster  rho [95% CI]                 q shaft   q within-pat
-  c1       +0.140 [+0.053, +0.218]     0.0056       0.0007
-  c5       +0.036 [-0.043, +0.124]     0.0425        0.461
-  c4       +0.029 [-0.062, +0.109]      0.544        0.623
-  c2       -0.014 [-0.087, +0.059]      0.871        0.623
-  c3       -0.086 [-0.151, -0.011]     0.0056       0.0007
-  c6       +0.013 [-0.072, +0.086]      0.992        0.716
-  c0       -0.037 [-0.119, +0.058]      0.273         0.71
+  c1       +0.140 [+0.040, +0.213]     0.0105       0.0035
+  c5       +0.036 [-0.045, +0.115]     0.0396        0.436
+  c4       +0.029 [-0.061, +0.110]      0.541         0.61
+  c2       -0.014 [-0.082, +0.060]      0.879         0.61
+  c3       -0.086 [-0.148, -0.022]     0.0105       0.0035
+  c6       +0.013 [-0.062, +0.086]       0.99        0.711
+  c0       -0.037 [-0.125, +0.061]      0.278        0.711
   largest |rho| 0.140; 3 of 7 pass the shaft-shift null.
 
 

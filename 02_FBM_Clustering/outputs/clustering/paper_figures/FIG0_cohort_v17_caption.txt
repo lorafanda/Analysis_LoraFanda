@@ -1,49 +1,67 @@
-FIG 0   ·   the task and the cohort
+FIG 0   ·   the task, through one electrode per type   (the paper's Figure 1)
 ====================================================================================================
 
 THE TASK
 ----------------------------------------------------------------------------------------------------
-Three naming conditions: an auditory stimulus, a picture, a written sentence. Each
-trial is stimulus, then a response cue. The time axis is WARPED, not clock time:
-stimulus and response each occupy half a block (proportions 0, 0.5, 0.5), the
-response cue falls at mid-block (dashed), and the fixation screen contributes no
-bins - the baseline every dB value is expressed against comes from it. This is the
-axis every centroid and every cube in the paper is drawn on.
+Three naming conditions: a spoken definition (audio), a picture, a written sentence to
+complete (sentences). Each trial is fixation, stimulus, then a response cue ("?") and the
+spoken answer. The time axis is WARPED, not clock time: stimulus and response each occupy
+half a block (proportions 0, 0.5, 0.5), the response cue falls at mid-block (dashed), and
+the fixation screen contributes no bins - the baseline every dB value is expressed against
+comes from it. This is the axis every centroid and every cube in the paper is drawn on;
+under the bottom cube it is labelled as FIG 2 labels it, % of trial per condition: 0 and
+50 in each block, 100 at the end.
 
-PANEL A - four electrodes, chosen by hand as illustrations
+THE HEADER - each condition's trial over its own block
 ----------------------------------------------------------------------------------------------------
-Not selected by any statistic and not a claim about the cohort: they show what the
-recordings look like and what the three conditions do to a contact of each kind.
-Each is drawn alone on the lateral view of its own hemisphere (LH / RH), and its
-three conditions concatenated on the axis above, 0-400 Hz, on the project's +-7 dB
-scale. Top to bottom in one column. The condition names - audio, picture,
-sentences - and the stimulus / response words over each pair of screens are
-written once, over the first electrode; the strips below it are the same strip.
+Over each condition's block, its stimulus screen over the stimulus half and the "?"
+response cue over the response half: the speaker with the fixation cross that stays on
+screen while the definition is spoken, the picture, the written sentence. The fixation
+screen before the stimulus has no bins on this axis and is not drawn. The picture is the
+paradigm figure's own drawing (stim_picture.png in paper_figures/assets/); the
+sentence is the paradigm figure's example.
 
-  AUDITORY     PAT_3455 OTD7  superior temporal gyrus  (R, x 57  y -35  z 2)
-               selective to the auditory stimulus, and again when the patient speaks
-               gate margin  audio 7.00  picture 4.42  reading 1.75   (>= 1 passes)   peak +7.3 dB   in the analysed cohort
-
-  VISUAL       EL043 IOG7  inferior occipital gyrus  (L, x -27  y -100  z -3)
-               responds to the picture and the written sentence, not to the sound
-               gate margin  audio 0.97  picture 8.37  reading 4.92   (>= 1 passes)   peak +11.1 dB   in the analysed cohort
-
-  MOTOR        PAT_6953 TPD10  sensorimotor cortex, around the central sulcus  (R, x 38  y -18  z 36)
-               the verbal response: a burst after the cue in every condition, nothing to the stimulus
-               gate margin  audio 4.39  picture 4.28  reading 4.18   (>= 1 passes)   peak +7.2 dB   in the analysed cohort
-
-  PREPARATORY  PAT_6854 IAG6  anterior insula  (L, x -32  y 22  z 4)
-               activity building toward the response cue in every condition
-               gate margin  audio 2.14  picture 1.25  reading 2.61   (>= 1 passes)   peak +4.7 dB   in the analysed cohort
-
-PANEL B - every electrode the gate saw
+THE ROWS - one electrode per type, and one visual electrode
 ----------------------------------------------------------------------------------------------------
-Left, from above (anterior up, left on the left), right. Electrodes that passed
-the gate - the cohort every later figure is computed on - in green at full size;
-the ones it rejected smaller, grey and lighter.
-  seen 2917   kept 1587   rejected 1330
-  drawn   left 1209   from above 2917   right 1708
-  without fsaverage coordinates, so not drawn: 0 kept, 0 rejected
+Each type's row is its most representative electrode in the main solution (15 bands,
+convex NMF, K = 7): the highest correlation with the type's mean among electrodes with a
+loading of at least 0.5 on it, PAT_3455 left out for its broadband burst. Two are chosen
+by hand: PAT_5533 IPD3 for the audio-stimulus type, which the clustering itself gives no
+loading on that type (beta decrease 0.37, low-frequency increase 0.36, response broadband increase 0.27), and
+a visual electrode, EL043 IOG7, which stands for no type and is framed grey. The
+response-period decrease, low-frequency increase and sentence-stimulus types have no row.
+Each row: the electrode alone on the lateral view of its own hemisphere, in its colour,
+and its three conditions concatenated, 0-400 Hz, on the project's +-7 dB scale, framed
+in the same colour. Nothing is written beside the rows; top to bottom they are:
+
+  c5 production                      EL033 PHG_R12  right middle temporal  (R, x 64  y -42  z -12)
+                                     high gamma after the response cue in every condition, nothing to the stimulus
+                                     gate margin  audio 14.45  picture 10.83  reading 16.03   (>= 1 passes)   peak +7.4 dB   in the analysed cohort
+
+  c0 beta decrease                   PAT_1327 CPG13  left postcentral  (L, x -58  y -22  z 29)
+                                     beta down through the trial, high gamma up after the response cue
+                                     gate margin  audio 3.47  picture 3.66  reading 3.48   (>= 1 passes)   peak +5.9 dB   in the analysed cohort
+
+  c2 broadband decrease              PAT_3965 had6  right inferior temporal  (R, x 43  y -23  z -23)
+                                     broadband power down during the stimulus and the response, most in sentences
+                                     gate margin  audio 4.01  picture 1.47  reading 6.48   (>= 1 passes)   peak +5.2 dB   in the analysed cohort
+
+  c1 audio-stimulus low-frequency    PAT_5533 IPD3  right insula  (R, x 35  y -25  z 10)
+                                     high gamma to the spoken stimulus, and after the cue in picture and sentences
+                                     gate margin  audio 5.44  picture 5.81  reading 3.74   (>= 1 passes)   peak +16.8 dB   in the analysed cohort
+
+  visual (no type)                   EL043 IOG7  inferior occipital gyrus  (L, x -27  y -100  z -3)
+                                     responds to the picture and the written sentence, not to the sound
+                                     gate margin  audio 0.97  picture 8.37  reading 4.92   (>= 1 passes)   peak +11.1 dB   in the analysed cohort
+
+THE BRAINS UNDER THE ROWS - the electrodes the gate kept (2026-11-01)
+----------------------------------------------------------------------------------------------------
+Left, from above (anterior up, left on the left), right: every electrode that passed
+the gate, in its patient's colour (FIG S0's colours). The electrodes it rejected are not
+drawn here; FIG S0 B draws them, grey, beside these.
+  gate passed 1587 of the 2917 it saw
+  drawn   left 715   from above 1587   right 872
+  without fsaverage coordinates, so not drawn: 0
 
 THE GATE, as the cache that applied it recorded it
 ----------------------------------------------------------------------------------------------------
@@ -65,11 +83,12 @@ PROVENANCE
   gate params     outputs/_dataset/concat_source_v17/params.json
   coordinates     outputs/250_recon/fsaverage/coords/ALL_PATIENTS_contacts_fsaverage.csv
   exemplars       EXEMPLARS in 00_paper2_figure0_coverage.py
-  built on        2026-10-26 01:58
+  built on        2026-11-12 18:15
 
 WHAT THIS FIGURE DOES NOT SHOW
 ----------------------------------------------------------------------------------------------------
-  - Who the cohort is made of, patient by patient, how much of it the atlas covers,
-    and what the gate decides at the line: FIG S0, the supplement.
-  - Any claim that these four are typical. They are the clearest examples, picked
-    to explain the task.
+  - Who the cohort is made of, patient by patient, and the electrodes the gate
+    rejected: FIG S0 A and B.
+  - Every type: three of the seven have no row.
+  - Features below 30 Hz clearly: on a linear 0-400 Hz axis they are a thin strip at
+    the bottom of each cube.
