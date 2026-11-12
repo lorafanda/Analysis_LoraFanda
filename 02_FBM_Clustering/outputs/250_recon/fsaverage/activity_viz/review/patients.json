@@ -589,8 +589,8 @@
 "raw_id": "EL034",
 "system": "Bern",
 "ran": true,
-"run_start": "2026-09-30 21:50",
-"status": "error-other",
+"run_start": "2026-10-16 02:18",
+"status": "ok",
 "reference": "WM reference, 23 contacts (skipped as data)",
 "wm_n": 23,
 "wm_source": "BIDS TSV",
@@ -606,7 +606,7 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "12",
+"unexplained_peaks": "11",
 "trials": {
 "audio": {
 "in": "53",
@@ -1558,7 +1558,7 @@
 "raw_id": "PAT_3455",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-10-12 16:28",
+"run_start": "2026-10-16 00:59",
 "status": "ok",
 "reference": "WM reference, 11 contacts (skipped as data)",
 "wm_n": 11,
@@ -1592,20 +1592,20 @@
 "trials": {
 "audio": {
 "in": "48",
-"kept": "42",
-"used": "42",
+"kept": "38",
+"used": "38",
 "cubes": "86"
 },
 "picture": {
 "in": "53",
-"kept": "47",
-"used": "47",
+"kept": "40",
+"used": "40",
 "cubes": "86"
 },
 "reading": {
 "in": "51",
-"kept": "40",
-"used": "40",
+"kept": "32",
+"used": "32",
 "cubes": "86"
 }
 },
@@ -1881,12 +1881,12 @@
 "raw_id": "PAT_3965",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-10-05 23:06",
+"run_start": "2026-10-16 16:45",
 "status": "ok",
-"reference": "WM reference, 43 contacts (skipped as data)",
-"wm_n": 43,
+"reference": "WM reference, 42 contacts (skipped as data)",
+"wm_n": 42,
 "wm_source": "BIDS TSV",
-"bad_n": 7,
+"bad_n": 19,
 "bad_list": [
 "cmd11",
 "y1",
@@ -1894,7 +1894,19 @@
 "y3",
 "y4",
 "cmd12",
-"had2"
+"had2",
+"had1",
+"had3",
+"had4",
+"ad1",
+"ad2",
+"ad3",
+"ad4",
+"ad5",
+"cmd1",
+"cmd2",
+"cmd3",
+"cmd4"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "40-1311 s",
@@ -1905,19 +1917,19 @@
 "in": "50",
 "kept": "45",
 "used": "45",
-"cubes": "168"
+"cubes": "158"
 },
 "picture": {
 "in": "51",
 "kept": "48",
 "used": "48",
-"cubes": "168"
+"cubes": "158"
 },
 "reading": {
 "in": "51",
 "kept": "43",
 "used": "43",
-"cubes": "168"
+"cubes": "158"
 }
 },
 "hg_reref": "WM",
@@ -1929,12 +1941,12 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 218,
-"n_data": 168,
+"n_data": 158,
 "n_status": {
-"data": 168,
-"wm_ref": 43,
-"bad": 3,
-"unknown": 4,
+"data": 158,
+"wm_ref": 42,
+"bad": 15,
+"unknown": 3,
 "not_recorded": 0,
 "not_run": 0,
 "aux": 0
@@ -1945,14 +1957,18 @@
 "raw_id": "PAT_3975",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-10-12 15:34",
+"run_start": "2026-10-16 16:19",
 "status": "ok",
-"reference": "WM reference, 11 contacts (MANUAL list)",
-"wm_n": 11,
+"reference": "WM reference, 10 contacts (MANUAL list)",
+"wm_n": 10,
 "wm_source": "BIDS TSV",
-"bad_n": 53,
+"bad_n": 57,
 "bad_list": [
 "TPG1",
+"CPD1",
+"CPD2",
+"CPD3",
+"CPD4",
 "PHD1",
 "PHD2",
 "PHD3",
@@ -2009,25 +2025,25 @@
 "notch": "interp \u00b7 per shaft",
 "crop": "200-1550 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "21",
+"unexplained_peaks": "15",
 "trials": {
 "audio": {
 "in": "50",
-"kept": "40",
-"used": "40",
-"cubes": "140"
+"kept": "36",
+"used": "36",
+"cubes": "137"
 },
 "picture": {
 "in": "50",
-"kept": "40",
-"used": "40",
-"cubes": "140"
+"kept": "37",
+"used": "37",
+"cubes": "137"
 },
 "reading": {
 "in": "50",
-"kept": "29",
-"used": "29",
-"cubes": "140"
+"kept": "26",
+"used": "26",
+"cubes": "137"
 }
 },
 "hg_reref": "WM",
@@ -2039,11 +2055,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 212,
-"n_data": 140,
+"n_data": 137,
 "n_status": {
-"data": 140,
-"wm_ref": 11,
-"bad": 53,
+"data": 137,
+"wm_ref": 10,
+"bad": 57,
 "unknown": 8,
 "not_recorded": 0,
 "not_run": 0,
@@ -2173,12 +2189,12 @@
 "raw_id": "PAT_1327",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-09-30 19:57",
+"run_start": "2026-10-16 01:24",
 "status": "ok",
-"reference": "WM reference, 44 contacts (skipped as data)",
-"wm_n": 44,
+"reference": "WM reference, 43 contacts (skipped as data)",
+"wm_n": 43,
 "wm_source": "BIDS TSV",
-"bad_n": 8,
+"bad_n": 25,
 "bad_list": [
 "CAG5",
 "CPG1",
@@ -2187,30 +2203,47 @@
 "PHG3",
 "FOD7",
 "HAG2",
-"AG8"
+"AG8",
+"HAG1",
+"HAG3",
+"HAG4",
+"HAG5",
+"HAG6",
+"HAG7",
+"HAG8",
+"HAG9",
+"HAG10",
+"HAG11",
+"HAG12",
+"AG4",
+"AG5",
+"AG6",
+"AG7",
+"AG9",
+"AG10"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "none",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "11",
+"unexplained_peaks": "12",
 "trials": {
 "audio": {
 "in": "52",
 "kept": "34",
 "used": "34",
-"cubes": "162"
+"cubes": "146"
 },
 "picture": {
 "in": "54",
 "kept": "51",
 "used": "51",
-"cubes": "162"
+"cubes": "146"
 },
 "reading": {
 "in": "53",
 "kept": "43",
 "used": "43",
-"cubes": "162"
+"cubes": "146"
 }
 },
 "hg_reref": "WM",
@@ -2222,11 +2255,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 224,
-"n_data": 162,
+"n_data": 146,
 "n_status": {
-"data": 162,
-"wm_ref": 44,
-"bad": 8,
+"data": 146,
+"wm_ref": 43,
+"bad": 25,
 "unknown": 10,
 "not_recorded": 0,
 "not_run": 0,
