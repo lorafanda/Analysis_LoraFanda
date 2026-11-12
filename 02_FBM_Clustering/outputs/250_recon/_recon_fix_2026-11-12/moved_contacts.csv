@@ -1,0 +1,398 @@
+patient,name,name_raw,x_before,y_before,z_before,x_after,y_after,z_after,moved_mm,region_before,region_after,yeo7_before,yeo7_after,in_cohort,cluster_main_solution
+PAT_3975,FOG2,FOG2 D L,-8.77,14.52,42.12,-22.75,27.7,-15.32,60.6,superior frontal,lateral orbitofrontal,7Networks_4,7Networks_5,True,c3
+PAT_3975,FOG3,FOG3 D L,-48.3,7.66,15.54,-22.48,31.1,-13.72,45.5,pars opercularis,lateral orbitofrontal,7Networks_4,7Networks_5,False,
+PAT_3975,FOG4,FOG4 D L,-39.04,18.77,52.68,-29.73,28.11,1.05,53.3,caudal middle frontal,lateral orbitofrontal,7Networks_7,7Networks_4,True,c0
+PAT_3975,FOG5,FOG5 D L,-39.04,18.77,52.68,-29.73,28.11,1.05,53.3,caudal middle frontal,lateral orbitofrontal,7Networks_7,7Networks_4,True,c0
+PAT_3975,FOG6,FOG6 D L,-39.24,9.69,35.19,-30.1,27.92,4.26,37.0,caudal middle frontal,pars triangularis,7Networks_6,7Networks_4,True,c0
+PAT_3975,FOG7,FOG7 D L,-41.83,-0.06,-42.89,-27.77,47.28,18.52,78.8,inferior temporal,rostral middle frontal,7Networks_5,7Networks_6,True,c0
+PAT_3975,FOG11,FOG11 D L,-27.26,2.94,-14.94,-39.0,42.61,15.96,51.6,medial wall (no label),rostral middle frontal,FreeSurfer_Defined_Medial_Wall,7Networks_6,True,c2
+PAT_3975,FOG12,FOG12 D L,-5.27,1.52,-13.96,-41.33,43.63,18.34,64.2,medial wall (no label),rostral middle frontal,FreeSurfer_Defined_Medial_Wall,7Networks_6,True,c2
+PAT_3975,FOG13,FOG13 D L,-46.41,3.41,-37.15,-38.41,44.15,26.56,76.0,middle temporal,rostral middle frontal,7Networks_5,7Networks_4,True,c2
+PAT_3975,FOG14,FOG14 D L,-48.48,7.13,-1.96,-36.92,43.15,27.3,47.8,pars opercularis,rostral middle frontal,7Networks_4,7Networks_4,False,
+PAT_3975,FOG15,FOG15 D L,-48.48,7.13,-1.96,-36.92,43.15,27.3,47.8,pars opercularis,rostral middle frontal,7Networks_4,7Networks_4,False,
+PAT_3975,CPG1,CPG1 D L,-58.94,-37.76,32.55,-5.26,-27.09,28.77,54.9,supramarginal,posterior cingulate,7Networks_4,7Networks_6,True,c4
+PAT_3975,CPG2,CPG2 D L,-58.94,-37.76,32.55,-5.26,-27.09,28.77,54.9,supramarginal,posterior cingulate,7Networks_4,7Networks_6,False,
+PAT_3975,CPG3,CPG3 D L,-58.94,-37.76,32.55,-5.26,-27.09,28.77,54.9,supramarginal,posterior cingulate,7Networks_4,7Networks_6,False,
+PAT_3975,CPG4,CPG4 D L,-17.11,-33.69,75.82,-15.64,-30.63,39.25,36.7,postcentral,posterior cingulate,7Networks_2,7Networks_4,False,
+PAT_3975,CPG5,CPG5 D L,-43.02,-29.99,41.01,-35.27,-31.66,18.56,23.8,postcentral,insula,7Networks_2,7Networks_2,False,
+PAT_3975,CPG6,CPG6 D L,-43.55,-29.7,41.25,-35.61,-32.39,17.92,24.8,postcentral,insula,7Networks_2,7Networks_2,False,
+PAT_3975,CPG7,CPG7 D L,-55.49,-40.18,-3.99,-36.77,-33.85,16.32,28.3,middle temporal,supramarginal,7Networks_7,7Networks_2,False,
+PAT_3975,CPG8,CPG8 D L,-15.15,-31.06,74.39,-37.9,-34.87,15.02,63.7,postcentral,supramarginal,7Networks_2,7Networks_2,True,c6
+PAT_3975,CPG9,CPG9 D L,-6.34,-43.49,62.5,-41.46,-37.84,17.09,57.7,paracentral,supramarginal,7Networks_2,7Networks_2,True,c0
+PAT_3975,CPG11,CPG11 D L,-7.67,-43.26,61.91,-44.39,-38.94,19.78,56.1,paracentral,supramarginal,7Networks_2,7Networks_2,True,c6
+PAT_3975,CPG13,CPG13 D L,-11.65,-42.43,61.29,-54.46,-44.72,27.33,54.7,paracentral,supramarginal,7Networks_2,7Networks_4,True,c6
+PAT_3975,CPG14,CPG14 D L,-15.14,-42.49,57.38,-53.94,-43.32,29.11,48.0,paracentral,supramarginal,7Networks_2,7Networks_4,True,c6
+PAT_3975,CPG15,CPG15 D L,-33.37,-38.6,47.44,-63.92,-47.62,19.23,42.5,superior parietal,superior temporal,7Networks_3,7Networks_7,False,
+PAT_3975,TPG1,TPG1 D L,-41.39,7.79,46.36,-27.69,4.54,-46.08,93.5,caudal middle frontal,fusiform,7Networks_7,7Networks_5,False,
+PAT_3975,TPG2,TPG2 D L,-16.31,-8.48,-13.02,-41.77,0.49,-42.18,39.7,medial wall (no label),inferior temporal,FreeSurfer_Defined_Medial_Wall,7Networks_5,False,
+PAT_3975,TPG3,TPG3 D L,-23.32,-10.87,-37.4,-49.37,-6.94,-33.16,26.7,entorhinal,inferior temporal,7Networks_5,7Networks_7,False,
+PAT_3975,TPG4,TPG4 D L,-39.28,-7.83,-6.6,-49.78,-5.41,-34.31,29.7,insula,middle temporal,7Networks_4,7Networks_7,False,
+PAT_3975,TPG5,TPG5 D L,-41.96,8.92,46.26,-51.19,-5.53,-33.97,82.0,caudal middle frontal,middle temporal,7Networks_7,7Networks_7,False,
+PAT_3975,AG1,AG1 D L,-22.52,0.88,66.79,-22.42,-7.17,-26.84,94.0,superior frontal,entorhinal,7Networks_3,7Networks_5,False,
+PAT_3975,AG2,AG2 D L,-65.87,-11.41,11.88,-24.6,-8.79,-26.38,56.3,postcentral,entorhinal,7Networks_2,7Networks_5,False,
+PAT_3975,AG3,AG3 D L,-35.4,-16.23,-18.59,-28.85,-7.96,-27.6,13.9,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,AG4,AG4 D L,-59.87,-13.19,-7.81,-33.63,-8.65,-25.29,31.9,superior temporal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,AG5,AG5 D L,-9.8,-2.4,42.22,-35.51,-11.41,-23.21,70.9,superior frontal,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,AG7,AG7 D L,-16.57,-16.49,-27.1,-39.04,-13.7,-28.23,22.7,entorhinal,fusiform,7Networks_5,7Networks_5,True,c2
+PAT_3975,AG8,AG8 D L,-27.57,-17.03,-34.58,-39.87,-14.08,-28.31,14.1,entorhinal,fusiform,7Networks_5,7Networks_5,True,c2
+PAT_3975,AG9,AG9 D L,-42.65,-5.71,49.28,-55.45,-19.51,-27.47,79.0,precentral,middle temporal,7Networks_3,7Networks_7,True,c2
+PAT_3975,AG10,AG10 D L,-42.67,-20.36,-27.52,-54.93,-18.01,-26.97,12.5,inferior temporal,middle temporal,7Networks_5,7Networks_7,True,c2
+PAT_3975,AG11,AG11 D L,-27.37,6.13,55.39,-58.66,-16.71,-26.72,90.8,caudal middle frontal,middle temporal,7Networks_6,7Networks_7,True,c2
+PAT_3975,AG12,AG12 D L,-9.53,-5.35,67.33,-63.19,-15.07,-25.2,107.4,superior frontal,middle temporal,7Networks_4,7Networks_7,True,c2
+PAT_3975,HAG1,HAG1 D L,-56.5,-13.59,41.26,-30.3,-18.95,-20.18,67.0,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,HAG2,HAG2 D L,-43.97,-20.36,-1.52,-36.84,-19.86,-18.51,18.4,superior temporal,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,HAG3,HAG3 D L,-33.26,-26.31,15.36,-38.23,-23.92,-16.24,32.1,insula,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,HAG4,HAG4 D L,-33.26,-26.31,15.36,-38.23,-23.92,-16.24,32.1,insula,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c3
+PAT_3975,HAG6,HAG6 D L,-2.43,-15.81,56.49,-41.69,-27.56,-23.46,89.8,paracentral,fusiform,7Networks_2,7Networks_5,True,c3
+PAT_3975,HAG8,HAG8 D L,-65.55,-32.81,26.33,-51.37,-30.59,-8.43,37.6,supramarginal,middle temporal,7Networks_4,7Networks_7,True,c1
+PAT_3975,HAG9,HAG9 D L,-65.82,-30.55,28.3,-54.13,-31.28,-8.52,38.6,supramarginal,middle temporal,7Networks_4,7Networks_7,False,
+PAT_3975,HAG10,HAG10 D L,-3.06,-31.62,55.84,-55.49,-34.21,-7.9,82.6,paracentral,middle temporal,7Networks_2,7Networks_7,False,
+PAT_3975,HAG11,HAG11 D L,-45.48,-28.19,41.58,-60.05,-36.73,-7.15,51.6,postcentral,middle temporal,7Networks_2,7Networks_7,False,
+PAT_3975,HAG12,HAG12 D L,-45.8,-33.6,8.75,-60.38,-37.9,-6.43,21.5,superior temporal,middle temporal,7Networks_2,7Networks_7,False,
+PAT_3975,PHG1,PHG1 D L,-18.74,-29.03,-19.18,-29.4,-31.02,-21.02,11.0,parahippocampal,parahippocampal,7Networks_7,7Networks_7,False,
+PAT_3975,PHG2,PHG2 D L,-2.65,-20.44,52.05,-33.76,-31.02,-18.56,77.9,paracentral,parahippocampal,7Networks_2,7Networks_7,False,
+PAT_3975,PHG3,PHG3 D L,-64.75,-29.65,19.88,-34.16,-33.05,-17.52,48.4,supramarginal,parahippocampal,7Networks_4,7Networks_7,False,
+PAT_3975,PHG5,PHG5 D L,-27.58,-27.87,51.45,-43.13,-40.34,-24.42,78.4,precentral,fusiform,7Networks_2,7Networks_3,True,c0
+PAT_3975,PHG6,PHG6 D L,-38.76,-35.91,46.38,-46.66,-43.78,-19.82,67.1,postcentral,inferior temporal,7Networks_2,7Networks_3,True,c0
+PAT_3975,PHG7,PHG7 D L,-5.15,-36.11,51.93,-48.83,-46.5,-21.54,86.1,paracentral,inferior temporal,7Networks_2,7Networks_3,True,c1
+PAT_3975,PHG8,PHG8 D L,-40.71,-35.01,47.53,-57.77,-46.44,-14.71,65.5,postcentral,inferior temporal,7Networks_2,7Networks_6,True,c3
+PAT_3975,PHG9,PHG9 D L,-40.78,-38.03,40.83,-57.33,-49.13,-13.33,57.7,supramarginal,inferior temporal,7Networks_3,7Networks_6,True,c3
+PAT_3975,PHG10,PHG10 D L,-11.05,-61.8,17.55,-58.18,-50.71,-11.51,56.5,precuneus,inferior temporal,7Networks_7,7Networks_6,True,c3
+PAT_3975,PHG11,PHG11 D L,-52.13,-53.46,28.38,-57.18,-52.27,-6.41,35.2,supramarginal,middle temporal,7Networks_7,7Networks_6,True,c3
+PAT_3975,PHG12,PHG12 D L,-7.83,-56.83,5.42,-56.24,-53.12,-6.77,50.1,isthmus cingulate,middle temporal,7Networks_7,7Networks_6,False,
+PAT_3975,IAG5,IAG5 D L,-52.81,-11.52,-36.7,-31.69,14.32,10.28,57.6,inferior temporal,insula,7Networks_5,7Networks_4,True,c2
+PAT_3975,IAG7,IAG7 D L,-53.1,-6.59,5.73,-31.43,18.08,10.19,33.1,precentral,insula,7Networks_4,7Networks_4,True,c2
+PAT_3975,IAG8,IAG8 D L,-39.44,-5.71,10.34,-31.71,18.3,10.33,25.2,insula,pars triangularis,7Networks_2,7Networks_4,False,
+PAT_3975,IAG9,IAG9 D L,-5.74,-1.51,68.41,-35.71,13.09,28.03,52.4,superior frontal,caudal middle frontal,7Networks_4,7Networks_6,True,c0
+PAT_3975,IAG10,IAG10 D L,-21.89,2.96,58.76,-35.87,12.92,28.39,34.9,superior frontal,caudal middle frontal,7Networks_3,7Networks_6,True,c0
+PAT_3975,IAG11,IAG11 D L,-55.97,-5.42,45.78,-36.14,12.69,29.12,31.6,precentral,caudal middle frontal,7Networks_2,7Networks_6,True,c3
+PAT_3975,IAG12,IAG12 D L,-42.7,-4.65,12.91,-33.34,29.59,42.43,46.2,precentral,rostral middle frontal,7Networks_2,7Networks_6,True,c0
+PAT_3975,IAG13,IAG13 D L,-53.51,-7.09,22.46,-32.98,29.23,42.96,46.5,precentral,rostral middle frontal,7Networks_2,7Networks_6,True,c3
+PAT_3975,IAG14,IAG14 D L,-46.04,-0.05,34.59,-31.73,28.85,43.03,33.3,precentral,rostral middle frontal,7Networks_3,7Networks_7,True,c0
+PAT_3975,IAG15,IAG15 D L,-14.55,-13.69,-16.14,-28.4,13.04,45.34,68.5,medial wall (no label),caudal middle frontal,FreeSurfer_Defined_Medial_Wall,7Networks_7,False,
+PAT_3975,IAG16,IAG16 D L,-24.98,11.28,51.28,-26.06,14.96,43.57,8.6,caudal middle frontal,caudal middle frontal,7Networks_6,7Networks_7,False,
+PAT_3975,IAG17,IAG17 D L,0.62,-10.25,21.03,-25.52,20.5,49.13,49.2,medial wall (no label),superior frontal,FreeSurfer_Defined_Medial_Wall,7Networks_7,False,
+PAT_3975,IAG18,IAG18 D L,-49.67,-8.21,25.93,-26.44,22.09,51.51,46.0,precentral,superior frontal,7Networks_2,7Networks_7,False,
+PAT_3975,IMG1,IMG1 D L,-21.42,-1.14,60.26,-39.46,-6.81,-4.99,67.9,superior frontal,insula,7Networks_3,7Networks_4,True,c2
+PAT_3975,IMG2,IMG2 D L,-65.16,-13.13,0.22,-38.31,0.29,7.4,30.9,superior temporal,insula,7Networks_2,7Networks_4,False,
+PAT_3975,IMG3,IMG3 D L,-64.81,-12.54,0.66,-37.13,1.05,7.61,31.6,superior temporal,insula,7Networks_2,7Networks_4,False,
+PAT_3975,IMG6,IMG6 D L,-66.88,-20.62,-12.33,-35.43,0.62,12.68,45.5,middle temporal,insula,7Networks_7,7Networks_4,True,c4
+PAT_3975,IMG7,IMG7 D L,-63.33,-19.45,-12.03,-37.14,-0.83,13.8,41.2,middle temporal,insula,7Networks_7,7Networks_4,True,c6
+PAT_3975,IMG9,IMG9 D L,-46.37,-9.88,53.72,-35.24,5.79,28.54,31.7,precentral,caudal middle frontal,7Networks_2,7Networks_6,True,c0
+PAT_3975,IMG16,IMG16 D L,-42.79,-23.93,-24.79,-39.98,2.51,55.64,84.7,inferior temporal,caudal middle frontal,7Networks_5,7Networks_6,True,c0
+PAT_3975,IMG17,IMG17 D L,-22.5,-23.14,-17.57,-33.32,2.21,56.68,79.2,parahippocampal,caudal middle frontal,FreeSurfer_Defined_Medial_Wall,7Networks_6,True,c3
+PAT_3975,IMG18,IMG18 D L,-56.55,-31.73,-25.99,-34.48,2.12,57.14,92.4,inferior temporal,caudal middle frontal,7Networks_7,7Networks_6,False,
+PAT_3975,FOD1,FOD1 D R,52.06,-5.5,-18.3,14.21,19.14,-16.68,45.2,superior temporal,lateral orbitofrontal,7Networks_7,7Networks_5,False,
+PAT_3975,FOD2,FOD2 D R,18.71,24.4,57.84,21.8,21.73,-21.8,79.7,superior frontal,lateral orbitofrontal,7Networks_7,7Networks_5,True,c3
+PAT_3975,FOD4,FOD4 D R,61.77,1.3,-9.07,23.38,29.29,-14.02,47.8,superior temporal,lateral orbitofrontal,7Networks_2,7Networks_5,True,c3
+PAT_3975,FOD7,FOD7 D R,41.66,14.08,39.82,31.94,25.61,3.32,39.5,caudal middle frontal,lateral orbitofrontal,7Networks_6,7Networks_4,True,c3
+PAT_3975,FOD8,FOD8 D R,55.66,-8.49,-20.31,32.28,25.97,5.14,48.8,middle temporal,pars triangularis,7Networks_7,7Networks_4,True,c3
+PAT_3975,FOD10,FOD10 D R,7.09,13.54,44.81,32.75,25.38,6.25,47.8,superior frontal,pars triangularis,7Networks_4,7Networks_4,True,c3
+PAT_3975,FOD15,FOD15 D R,57.92,4.42,35.49,44.24,39.2,28.55,38.0,precentral,rostral middle frontal,7Networks_3,7Networks_6,True,c4
+PAT_3975,CPD1,CPD1 D R,3.82,-26.92,62.41,5.75,-32.9,28.07,34.9,paracentral,isthmus cingulate,7Networks_2,7Networks_6,False,
+PAT_3975,CPD2,CPD2 D R,3.82,-26.92,62.41,5.75,-32.9,28.07,34.9,paracentral,isthmus cingulate,7Networks_2,7Networks_6,False,
+PAT_3975,CPD3,CPD3 D R,31.86,-49.62,39.74,33.36,-37.01,40.87,12.8,superior parietal,superior parietal,7Networks_3,7Networks_3,False,
+PAT_3975,CPD4,CPD4 D R,8.31,-41.23,45.18,34.04,-37.43,40.59,26.4,precuneus,superior parietal,7Networks_4,7Networks_3,False,
+PAT_3975,CPD5,CPD5 D R,11.79,-39.7,44.25,34.26,-37.82,40.37,22.9,precuneus,superior parietal,7Networks_4,7Networks_3,False,
+PAT_3975,CPD9,CPD9 D R,4.9,-54.52,22.16,56.12,-43.42,29.48,52.9,precuneus,supramarginal,7Networks_7,7Networks_4,False,
+PAT_3975,CPD10,CPD10 D R,53.0,-52.68,26.53,56.13,-44.13,28.68,9.4,inferior parietal,supramarginal,7Networks_7,7Networks_4,False,
+PAT_3975,CPD11,CPD11 D R,56.54,-53.37,29.18,57.0,-44.96,27.47,8.6,inferior parietal,supramarginal,7Networks_7,7Networks_4,False,
+PAT_3975,CPD12,CPD12 D R,12.57,-45.0,-6.18,54.85,-47.12,25.35,52.8,lingual,supramarginal,7Networks_1,7Networks_6,False,
+PAT_3975,CPD13,CPD13 D R,21.0,-50.73,-2.31,55.68,-47.24,27.95,46.2,lingual,supramarginal,7Networks_1,7Networks_6,True,c2
+PAT_3975,CPD14,CPD14 D R,45.99,-63.65,-4.26,56.27,-47.53,29.5,38.8,inferior temporal,inferior parietal,7Networks_3,7Networks_6,False,
+PAT_3975,CPD15,CPD15 D R,27.03,-55.58,-8.03,56.27,-47.53,29.5,48.3,lingual,inferior parietal,7Networks_1,7Networks_6,False,
+PAT_3975,TPD1,TPD1 D R,2.12,1.87,-1.17,38.48,2.63,-42.67,55.2,medial wall (no label),inferior temporal,FreeSurfer_Defined_Medial_Wall,7Networks_5,False,
+PAT_3975,TPD3,TPD3 D R,41.48,4.49,55.41,44.73,-1.1,-40.01,95.6,caudal middle frontal,inferior temporal,7Networks_6,7Networks_5,False,
+PAT_3975,TPD4,TPD4 D R,5.95,15.27,56.64,47.57,-1.77,-34.15,101.3,superior frontal,middle temporal,7Networks_4,7Networks_5,False,
+PAT_3975,TPD5,TPD5 D R,4.45,6.31,57.25,49.23,-5.57,-32.22,100.8,superior frontal,middle temporal,7Networks_4,7Networks_5,False,
+PAT_3975,AD1,AD1 D R,7.21,1.13,70.32,23.71,-7.63,-25.24,97.4,superior frontal,entorhinal,7Networks_4,7Networks_5,False,
+PAT_3975,AD2,AD2 D R,32.38,31.57,41.84,25.0,-7.61,-25.74,78.5,rostral middle frontal,entorhinal,7Networks_6,7Networks_5,False,
+PAT_3975,AD3,AD3 D R,54.61,-23.72,-10.34,26.64,-8.18,-25.76,35.5,middle temporal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,AD4,AD4 D R,19.88,-13.6,-32.14,28.57,-10.12,-24.78,11.9,entorhinal,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,AD5,AD5 D R,44.06,-9.63,10.81,31.02,-9.37,-27.18,40.2,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,AD6,AD6 D R,59.68,-13.73,15.48,36.96,-11.41,-24.14,45.7,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,AD8,AD8 D R,1.84,-1.48,4.29,39.59,-10.92,-29.82,51.7,medial wall (no label),fusiform,FreeSurfer_Defined_Medial_Wall,7Networks_5,False,
+PAT_3975,AD9,AD9 D R,44.8,-7.09,57.84,52.68,-13.68,-29.25,87.7,precentral,inferior temporal,7Networks_2,7Networks_7,False,
+PAT_3975,AD10,AD10 D R,44.8,-7.09,57.84,52.84,-13.98,-28.56,87.0,precentral,inferior temporal,7Networks_2,7Networks_7,False,
+PAT_3975,HAD1,HAD1 D R,58.27,-22.17,32.68,28.47,-15.96,-22.28,62.8,supramarginal,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,HAD2,HAD2 D R,61.71,-23.65,30.99,30.44,-16.92,-21.34,61.3,supramarginal,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,HAD3,HAD3 D R,56.23,-36.08,-23.55,35.91,-20.99,-18.85,25.7,inferior temporal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,HAD4,HAD4 D R,40.21,-14.14,34.45,38.96,-18.77,-18.53,53.2,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+PAT_3975,HAD5,HAD5 D R,49.01,-27.24,-4.59,40.86,-18.51,-24.16,22.9,superior temporal,fusiform,7Networks_7,7Networks_5,False,
+PAT_3975,HAD6,HAD6 D R,65.26,-32.99,-5.06,41.41,-20.23,-23.35,32.7,middle temporal,fusiform,7Networks_7,7Networks_5,False,
+PAT_3975,HAD7,HAD7 D R,9.36,-3.93,47.05,42.12,-22.83,-23.16,79.7,superior frontal,inferior temporal,7Networks_2,7Networks_5,False,
+PAT_3975,HAD8,HAD8 D R,40.44,-23.03,16.25,57.15,-25.83,-21.63,41.5,supramarginal,middle temporal,7Networks_2,7Networks_7,False,
+PAT_3975,HAD9,HAD9 D R,49.12,-33.04,-0.43,57.15,-25.83,-21.63,23.8,superior temporal,middle temporal,7Networks_7,7Networks_7,True,c4
+PAT_3975,HAD10,HAD10 D R,48.99,-19.8,60.12,57.86,-24.83,-21.88,82.6,postcentral,middle temporal,7Networks_2,7Networks_7,True,c4
+PAT_3975,HAD12,HAD12 D R,30.44,-14.66,70.8,61.23,-30.51,-18.78,96.0,precentral,middle temporal,7Networks_2,7Networks_7,True,c4
+PAT_3975,PHD1,PHD1 D R,17.58,-24.98,68.8,29.51,-33.01,-23.4,93.3,precentral,fusiform,7Networks_2,7Networks_1,False,
+PAT_3975,PHD2,PHD2 D R,29.61,-30.86,-7.87,29.66,-31.11,-20.91,13.1,medial wall (no label),parahippocampal,FreeSurfer_Defined_Medial_Wall,7Networks_1,False,
+PAT_3975,PHD3,PHD3 D R,11.39,-25.72,-4.84,34.58,-30.51,-18.86,27.5,medial wall (no label),parahippocampal,FreeSurfer_Defined_Medial_Wall,7Networks_1,False,
+PAT_3975,PHD4,PHD4 D R,2.95,-15.18,31.24,35.37,-30.12,-19.14,61.7,posterior cingulate,parahippocampal,7Networks_6,7Networks_1,False,
+PAT_3975,PHD5,PHD5 D R,47.98,-29.33,56.9,40.49,-30.9,-23.97,81.2,postcentral,fusiform,7Networks_2,7Networks_5,False,
+PAT_3975,PHD6,PHD6 D R,50.83,-40.65,9.41,43.98,-38.18,-21.75,32.0,banks of STS,fusiform,7Networks_2,7Networks_3,False,
+PAT_3975,PHD8,PHD8 D R,5.19,-20.95,57.42,46.06,-40.45,-20.85,90.4,paracentral,inferior temporal,7Networks_2,7Networks_3,True,c4
+PAT_3975,PHD9,PHD9 D R,62.6,-43.78,16.29,56.71,-38.56,-16.74,34.0,supramarginal,middle temporal,7Networks_4,7Networks_6,True,c4
+PAT_3975,PHD10,PHD10 D R,39.45,-31.68,14.02,59.06,-37.56,-16.28,36.6,superior temporal,middle temporal,7Networks_2,7Networks_6,True,c4
+PAT_3975,PHD12,PHD12 D R,40.98,-31.12,12.84,63.43,-36.73,-17.16,37.9,superior temporal,middle temporal,7Networks_2,7Networks_6,True,c3
+PAT_3975,IAD1,IAD1 D R,52.52,-12.04,-28.71,42.9,8.23,-5.84,32.0,middle temporal,insula,7Networks_7,7Networks_4,False,
+PAT_3975,IAD2,IAD2 D R,36.17,-9.9,-25.4,42.01,9.6,-4.07,29.5,medial wall (no label),insula,FreeSurfer_Defined_Medial_Wall,7Networks_4,False,
+PAT_3975,IAD3,IAD3 D R,56.35,-15.64,-26.16,39.91,9.57,-1.43,38.9,middle temporal,insula,7Networks_7,7Networks_4,True,c2
+PAT_3975,IAD4,IAD4 D R,23.95,17.58,53.84,36.97,11.27,2.29,53.5,superior frontal,insula,7Networks_6,7Networks_4,True,c2
+PAT_3975,IAD5,IAD5 D R,64.08,-5.83,2.03,35.62,16.4,4.94,36.2,superior temporal,insula,7Networks_2,7Networks_4,True,c2
+PAT_3975,IAD6,IAD6 D R,41.87,-2.3,5.96,33.07,19.42,7.46,23.5,insula,insula,7Networks_4,7Networks_4,True,c4
+PAT_3975,IAD7,IAD7 D R,64.15,-4.93,8.73,32.65,20.43,8.11,40.4,postcentral,insula,7Networks_2,7Networks_4,True,c3
+PAT_3975,IAD8,IAD8 D R,63.5,-5.04,8.02,32.81,19.74,8.69,39.5,postcentral,insula,7Networks_2,7Networks_4,True,c3
+PAT_3975,IAD9,IAD9 D R,64.15,-4.93,8.73,32.65,20.43,8.11,40.4,postcentral,insula,7Networks_2,7Networks_4,False,
+PAT_3975,IAD10,IAD10 D R,34.69,7.81,30.02,29.86,33.46,31.6,26.2,caudal middle frontal,rostral middle frontal,7Networks_6,7Networks_4,True,c3
+PAT_3975,IAD12,IAD12 D R,35.7,6.27,31.48,28.79,34.46,33.42,29.1,caudal middle frontal,rostral middle frontal,7Networks_6,7Networks_6,True,c3
+PAT_3975,IAD13,IAD13 D R,40.27,-9.24,-37.72,28.17,35.43,33.18,84.7,inferior temporal,rostral middle frontal,7Networks_5,7Networks_6,False,
+PAT_3975,IAD14,IAD14 D R,53.61,-9.54,-40.85,27.53,35.55,33.76,91.0,inferior temporal,rostral middle frontal,7Networks_5,7Networks_6,True,c3
+PAT_3975,IAD15,IAD15 D R,2.58,16.31,32.06,20.96,42.03,34.32,31.7,caudal ant. cingulate,superior frontal,7Networks_4,7Networks_7,False,
+PAT_3975,IAD16,IAD16 D R,53.28,5.12,-1.59,20.63,41.85,34.95,61.2,precentral,superior frontal,7Networks_4,7Networks_7,False,
+PAT_3975,IAD17,IAD17 D R,38.4,2.39,6.69,20.33,42.35,37.8,53.8,insula,superior frontal,7Networks_4,7Networks_7,True,c4
+PAT_3975,IAD18,IAD18 D R,63.25,-2.49,9.16,20.94,42.28,39.84,68.8,precentral,superior frontal,7Networks_2,7Networks_7,True,c4
+PAT_3975,IMD1,IMD1 D R,33.64,-9.35,58.66,41.9,-6.57,2.54,56.8,precentral,insula,7Networks_2,7Networks_2,True,c3
+PAT_3975,IMD2,IMD2 D R,2.38,-15.25,-11.25,40.42,-7.32,5.43,42.3,medial wall (no label),insula,FreeSurfer_Defined_Medial_Wall,7Networks_2,True,c2
+PAT_3975,IMD3,IMD3 D R,29.68,-17.87,-20.81,39.6,-7.7,6.55,30.8,medial wall (no label),insula,FreeSurfer_Defined_Medial_Wall,7Networks_2,True,c3
+PAT_3975,IMD4,IMD4 D R,18.63,-6.31,66.21,38.57,-8.26,9.05,60.6,superior frontal,insula,7Networks_4,7Networks_2,True,c3
+PAT_3975,IMD5,IMD5 D R,51.25,-21.73,6.43,36.07,-9.45,13.03,20.6,superior temporal,insula,7Networks_2,7Networks_2,False,
+PAT_3975,IMD6,IMD6 D R,41.72,-24.51,-22.74,36.1,-9.4,14.38,40.5,fusiform,insula,7Networks_5,7Networks_2,False,
+PAT_3975,IMD8,IMD8 D R,42.29,-18.48,37.08,37.41,-12.01,17.31,21.4,postcentral,insula,7Networks_2,7Networks_2,True,c0
+PAT_3975,IMD9,IMD9 D R,44.22,-25.81,18.21,38.09,-12.71,18.4,14.5,supramarginal,postcentral,7Networks_2,7Networks_2,False,
+PAT_3975,IMD10,IMD10 D R,62.16,-44.21,17.04,35.9,-17.59,38.37,43.0,supramarginal,precentral,7Networks_4,7Networks_2,False,
+PAT_3975,IMD11,IMD11 D R,35.85,-25.13,47.42,34.02,-17.25,41.66,9.9,precentral,precentral,7Networks_2,7Networks_2,True,c5
+PAT_3975,IMD13,IMD13 D R,3.85,-20.46,28.99,33.77,-17.62,42.45,32.9,posterior cingulate,precentral,7Networks_6,7Networks_2,True,c0
+EL046,Fp_L1,Fp_L1 D L,-26.99,-27.05,-14.18,-2.24,19.88,-19.99,53.4,medial wall (no label),medial orbitofrontal,FreeSurfer_Defined_Medial_Wall,7Networks_5,True,c6
+EL046,Fp_L2,Fp_L2 D L,-40.66,-25.92,-23.59,-2.42,20.75,-17.93,60.6,fusiform,medial orbitofrontal,7Networks_5,7Networks_5,True,c4
+EL046,Fp_L3,Fp_L3 D L,-40.46,-27.11,-23.96,-2.79,20.37,-16.29,61.1,fusiform,medial orbitofrontal,7Networks_5,7Networks_5,True,c6
+EL046,Fp_L4,Fp_L4 D L,-2.75,-4.31,2.5,-3.35,21.53,-15.32,31.4,medial wall (no label),medial orbitofrontal,FreeSurfer_Defined_Medial_Wall,7Networks_5,False,
+EL046,Fp_L5,Fp_L5 D L,-47.03,-12.52,14.01,-3.2,20.19,-12.79,60.9,postcentral,medial orbitofrontal,7Networks_2,7Networks_5,True,c6
+EL046,Fp_L6,Fp_L6 D L,-3.93,-1.59,54.43,-3.2,20.19,-12.79,70.7,superior frontal,medial orbitofrontal,7Networks_4,7Networks_5,True,c4
+EL046,Fp_L7,Fp_L7 D L,-3.93,-1.59,54.43,-3.2,20.19,-12.79,70.7,superior frontal,medial orbitofrontal,7Networks_4,7Networks_5,True,c4
+EL046,Fp_L9,Fp_L9 D L,-54.46,-30.17,-22.39,-12.71,17.31,-16.1,63.5,inferior temporal,lateral orbitofrontal,7Networks_7,7Networks_5,False,
+EL046,Fp_L10,Fp_L10 D L,-54.52,-30.92,-22.53,-12.71,17.31,-16.1,64.2,inferior temporal,lateral orbitofrontal,7Networks_7,7Networks_5,False,
+EL046,Fp_L12,Fp_L12 D L,-54.73,-31.19,-23.15,-13.16,17.48,-16.24,64.4,inferior temporal,lateral orbitofrontal,7Networks_7,7Networks_5,True,c6
+EL046,OF_L1,OF_L1 D L,-34.44,-23.41,5.45,-3.54,8.84,-15.21,49.2,insula,medial orbitofrontal,7Networks_2,7Networks_5,False,
+EL046,OF_L2,OF_L2 D L,-54.59,-31.99,-19.84,-3.02,10.11,-14.19,66.8,inferior temporal,medial orbitofrontal,7Networks_7,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,OF_L3,OF_L3 D L,-64.47,-17.73,20.11,-4.08,10.44,-18.2,76.9,postcentral,medial orbitofrontal,7Networks_2,7Networks_5,True,c6
+EL046,OF_L4,OF_L4 D L,-52.48,-20.7,7.81,-4.35,9.09,-17.65,62.1,transverse temporal,medial orbitofrontal,7Networks_2,7Networks_5,False,
+EL046,OF_L5,OF_L5 D L,-40.52,-20.83,14.25,-9.22,7.56,-18.64,53.5,postcentral,medial orbitofrontal,7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,OF_L6,OF_L6 D L,-57.16,-17.84,11.51,-11.19,9.5,-18.78,61.5,postcentral,medial orbitofrontal,7Networks_2,7Networks_5,True,c6
+EL046,OF_L7,OF_L7 D L,-56.93,-36.14,-29.57,-11.19,9.5,-18.78,65.5,inferior temporal,medial orbitofrontal,7Networks_5,7Networks_5,False,
+EL046,OF_L8,OF_L8 D L,-32.45,-7.27,47.69,-11.19,9.5,-18.78,71.8,precentral,medial orbitofrontal,7Networks_3,7Networks_5,False,
+EL046,OF_L9,OF_L9 D L,-62.83,-19.05,15.18,-12.55,10.74,-18.14,67.3,postcentral,lateral orbitofrontal,7Networks_2,7Networks_5,True,c4
+EL046,OF_L10,OF_L10 D L,-15.58,-29.64,-6.86,-12.97,12.08,-17.27,43.1,medial wall (no label),lateral orbitofrontal,FreeSurfer_Defined_Medial_Wall,7Networks_5,True,c4
+EL046,OF_L11,OF_L11 D L,-15.6,-28.8,-7.4,-13.21,13.29,-16.61,43.2,medial wall (no label),lateral orbitofrontal,FreeSurfer_Defined_Medial_Wall,7Networks_5,False,
+EL046,OF_L12,OF_L12 D L,-49.63,-6.47,51.39,-13.21,13.29,-16.61,79.6,precentral,lateral orbitofrontal,7Networks_4,7Networks_5,True,c6
+EL046,OF_L13,OF_L13 D L,-9.62,-29.28,-2.99,-13.62,16.62,-16.44,48.0,medial wall (no label),lateral orbitofrontal,FreeSurfer_Defined_Medial_Wall,7Networks_5,False,
+EL046,OF_L14,OF_L14 D L,-24.95,-5.19,47.38,-28.62,19.92,-9.21,62.0,caudal middle frontal,lateral orbitofrontal,7Networks_3,7Networks_7,False,
+EL046,OF_L15,OF_L15 D L,-24.95,-5.19,47.38,-28.62,19.92,-9.21,62.0,caudal middle frontal,lateral orbitofrontal,7Networks_3,7Networks_7,False,
+EL046,FOp_L1,FOp_L1 D L,-7.67,0.68,41.01,-13.22,9.93,-18.2,60.2,posterior cingulate,lateral orbitofrontal,7Networks_4,7Networks_5,True,c4
+EL046,FOp_L3,FOp_L3 D L,-34.85,2.56,11.9,-13.22,9.93,-18.2,37.8,insula,lateral orbitofrontal,7Networks_4,7Networks_5,False,
+EL046,FOp_L4,FOp_L4 D L,-34.85,2.56,11.9,-13.22,9.93,-18.2,37.8,insula,lateral orbitofrontal,7Networks_4,7Networks_5,False,
+EL046,FOp_L5,FOp_L5 D L,-34.85,2.56,11.9,-30.32,19.32,-8.41,26.7,insula,insula,7Networks_4,7Networks_6,False,
+EL046,FOp_L6,FOp_L6 D L,-49.94,-33.65,-30.26,-33.13,13.97,5.06,61.6,inferior temporal,insula,7Networks_5,7Networks_4,True,c6
+EL046,FOp_L7,FOp_L7 D L,-49.94,-33.65,-30.26,-33.33,14.06,4.69,61.4,inferior temporal,insula,7Networks_5,7Networks_4,True,c6
+EL046,FOp_L8,FOp_L8 D L,-17.89,-33.93,-4.28,-33.55,13.03,4.65,50.3,medial wall (no label),insula,FreeSurfer_Defined_Medial_Wall,7Networks_4,False,
+EL046,FOp_L9,FOp_L9 D L,-17.89,-33.93,-4.28,-33.55,13.03,4.65,50.3,medial wall (no label),insula,FreeSurfer_Defined_Medial_Wall,7Networks_4,False,
+EL046,FOp_L10,FOp_L10 D L,-17.89,-33.93,-4.28,-33.55,13.03,4.65,50.3,medial wall (no label),insula,FreeSurfer_Defined_Medial_Wall,7Networks_4,False,
+EL046,CinG_L1,CinG_L1 D L,-5.72,-6.05,43.03,-0.41,8.76,-0.92,46.7,posterior cingulate,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,CinG_L2,CinG_L2 D L,-5.72,-6.05,43.03,-0.49,9.69,-1.21,47.2,posterior cingulate,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,CinG_L3,CinG_L3 D L,-7.17,-4.31,64.78,-0.49,9.69,-1.21,67.8,superior frontal,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,CinG_L4,CinG_L4 D L,-7.17,-4.31,64.78,-0.49,9.69,-1.21,67.8,superior frontal,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,CinG_L5,CinG_L5 D L,-43.32,-17.66,-38.04,-0.49,9.69,-1.21,62.8,inferior temporal,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+EL046,CinG_L7,CinG_L7 D L,-43.32,-17.66,-38.04,-0.49,9.69,-1.21,62.8,inferior temporal,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+EL046,CinG_L9,CinG_L9 D L,-43.32,-17.66,-38.04,-2.08,13.14,-4.61,61.4,inferior temporal,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+EL046,CinG_L10,CinG_L10 D L,-38.91,-40.43,-26.84,-31.07,17.22,8.77,68.2,fusiform,insula,7Networks_3,7Networks_4,False,
+EL046,CinG_L11,CinG_L11 D L,-38.91,-40.43,-26.84,-31.07,17.22,8.77,68.2,fusiform,insula,7Networks_3,7Networks_4,False,
+EL046,CinG_L12,CinG_L12 D L,-38.91,-40.43,-26.84,-30.99,17.43,9.31,68.7,fusiform,insula,7Networks_3,7Networks_4,False,
+EL046,CinG_L13,CinG_L13 D L,-11.69,-13.91,42.5,-30.99,17.43,9.31,49.6,posterior cingulate,insula,7Networks_2,7Networks_4,False,
+EL046,CinG_L14,CinG_L14 D L,-11.69,-13.91,42.5,-30.99,17.43,9.31,49.6,posterior cingulate,insula,7Networks_2,7Networks_4,False,
+EL046,CinG_L15,CinG_L15 D L,-11.69,-13.91,42.5,-30.99,17.43,9.31,49.6,posterior cingulate,insula,7Networks_2,7Networks_4,False,
+EL046,A_L1,A_L1 D L,-62.2,-26.26,29.37,-8.33,-14.75,-20.46,74.3,supramarginal,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,A_L2,A_L2 D L,-48.11,-16.52,51.29,-9.01,-13.88,-19.72,81.1,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,A_L3,A_L3 D L,-49.33,-27.36,3.47,-20.32,-9.76,-24.47,44.0,superior temporal,entorhinal,7Networks_2,7Networks_5,True,c6
+EL046,A_L4,A_L4 D L,-49.33,-27.36,3.47,-21.15,-9.61,-24.55,43.5,superior temporal,entorhinal,7Networks_2,7Networks_5,True,c6
+EL046,A_L5,A_L5 D L,-34.76,-38.0,-15.76,-20.19,-8.66,-24.89,34.0,fusiform,entorhinal,7Networks_1,7Networks_5,False,
+EL046,A_L6,A_L6 D L,-23.83,-7.75,50.67,-21.07,-8.67,-25.02,75.7,precentral,entorhinal,7Networks_3,7Networks_5,False,
+EL046,A_L7,A_L7 D L,-20.64,-38.28,-16.5,-21.06,-7.79,-25.64,31.8,parahippocampal,entorhinal,7Networks_7,7Networks_5,False,
+EL046,A_L8,A_L8 D L,-59.22,-20.35,29.08,-21.06,-7.79,-25.64,67.9,supramarginal,entorhinal,7Networks_4,7Networks_5,False,
+EL046,A_L9,A_L9 D L,-47.05,-35.53,-27.22,-19.89,-4.43,-28.5,41.3,inferior temporal,entorhinal,7Networks_3,7Networks_5,False,
+EL046,A_L10,A_L10 D L,-3.88,-28.22,12.33,-20.82,-4.22,-27.09,49.2,medial wall (no label),entorhinal,FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,False,
+EL046,A_L11,A_L11 D L,-56.75,-17.85,50.32,-23.06,-5.02,-26.05,84.5,postcentral,entorhinal,7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,A_L12,A_L12 D L,-33.04,-26.16,11.15,-23.9,-5.08,-25.4,43.2,insula,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c2
+EL046,A_L13,A_L13 D L,-22.51,-34.78,-7.26,-22.34,1.13,-24.0,39.6,medial wall (no label),entorhinal,FreeSurfer_Defined_Medial_Wall,7Networks_5,False,
+EL046,A_L14,A_L14 D L,-53.41,-19.81,13.02,-22.84,3.04,-25.49,54.2,postcentral,entorhinal,7Networks_2,7Networks_5,False,
+EL046,A_L15,A_L15 D L,-59.42,-19.76,15.87,-26.14,4.0,-25.69,58.3,postcentral,temporal pole,7Networks_2,7Networks_5,False,
+EL046,EntG_L1,EntG_L1 D L,-22.93,-7.93,55.2,-20.19,-8.66,-24.89,80.1,superior frontal,entorhinal,7Networks_3,7Networks_5,False,
+EL046,EntG_L2,EntG_L2 D L,-49.33,-27.36,3.47,-20.19,-8.66,-24.89,44.8,superior temporal,entorhinal,7Networks_2,7Networks_5,False,
+EL046,EntG_L3,EntG_L3 D L,-34.76,-38.0,-15.76,-20.19,-8.66,-24.89,34.0,fusiform,entorhinal,7Networks_1,7Networks_5,False,
+EL046,EntG_L4,EntG_L4 D L,-34.76,-38.0,-15.76,-20.19,-8.66,-24.89,34.0,fusiform,entorhinal,7Networks_1,7Networks_5,False,
+EL046,EntG_L5,EntG_L5 D L,-23.83,-7.75,50.67,-21.07,-8.67,-25.02,75.7,precentral,entorhinal,7Networks_3,7Networks_5,False,
+EL046,EntG_L6,EntG_L6 D L,-20.64,-38.28,-16.5,-20.32,-7.77,-25.52,31.8,parahippocampal,entorhinal,7Networks_7,7Networks_5,False,
+EL046,EntG_L7,EntG_L7 D L,-2.65,17.73,23.83,-20.46,-4.3,-27.58,58.7,caudal ant. cingulate,entorhinal,7Networks_6,FreeSurfer_Defined_Medial_Wall,False,
+EL046,EntG_L8,EntG_L8 D L,-47.05,-35.53,-27.22,-21.52,-5.07,-27.64,39.7,inferior temporal,entorhinal,7Networks_3,FreeSurfer_Defined_Medial_Wall,False,
+EL046,EntG_L9,EntG_L9 D L,-47.59,-36.61,-27.66,-23.71,-5.76,-27.03,39.0,inferior temporal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,False,
+EL046,EntG_L10,EntG_L10 D L,-48.21,-37.15,-28.49,-23.71,-5.76,-27.03,39.8,inferior temporal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,False,
+EL046,EntG_L11,EntG_L11 D L,-3.1,-27.9,12.88,-25.25,-4.83,-24.28,49.0,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,False,
+EL046,EntG_L12,EntG_L12 D L,-56.87,-42.24,-26.79,-27.06,-5.33,-23.92,47.5,inferior temporal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,False,
+EL046,EntG_L13,EntG_L13 D L,-56.87,-42.24,-26.79,-27.06,-5.33,-23.92,47.5,inferior temporal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,False,
+EL046,EntG_L14,EntG_L14 D L,-64.5,-34.75,-8.82,-28.32,-2.1,-21.94,50.5,middle temporal,insula,7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,EntG_L15,EntG_L15 D L,-31.97,22.05,49.36,-27.89,-2.04,-21.42,74.9,caudal middle frontal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_L1,aH_L1 D L,-43.11,-47.74,-15.66,-9.33,-14.65,-20.37,47.5,fusiform,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,True,c4
+EL046,aH_L2,aH_L2 D L,-58.13,-20.11,47.01,-11.12,-15.12,-20.03,82.0,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c4
+EL046,aH_L3,aH_L3 D L,-46.72,-19.2,44.84,-13.05,-15.19,-18.83,72.1,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_L4,aH_L4 D L,-31.16,13.0,49.49,-13.21,-14.7,-18.38,75.5,caudal middle frontal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_L5,aH_L5 D L,-11.51,-24.64,39.96,-13.85,-15.18,-18.12,58.9,posterior cingulate,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,aH_L6,aH_L6 D L,-45.08,-27.99,40.0,-21.48,-6.89,-11.82,60.7,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_L7,aH_L7 D L,-18.13,-7.52,-34.04,-23.01,-8.25,-11.8,22.8,entorhinal,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_L9,aH_L9 D L,-33.52,-29.25,15.58,-23.96,-8.81,-12.68,36.2,insula,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_L10,aH_L10 D L,-18.96,-41.53,-13.52,-29.33,-13.17,-16.67,30.4,parahippocampal,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,aH_L11,aH_L11 D L,-17.08,-38.2,-2.5,-29.33,-13.17,-16.67,31.3,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,aH_L12,aH_L12 D L,-51.49,-18.15,42.59,-30.53,-13.23,-18.23,64.5,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c4
+EL046,aH_L13,aH_L13 D L,-0.96,-18.11,38.17,-33.21,-12.29,-20.01,66.8,posterior cingulate,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_L14,aH_L14 D L,-41.7,-13.52,57.0,-33.86,-12.9,-19.95,77.3,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_L15,aH_L15 D L,-55.5,-38.9,-4.99,-34.69,-12.66,-20.38,36.9,middle temporal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pH_L1,pH_L1 D L,-38.58,-22.67,51.26,-10.46,-23.83,-11.73,69.0,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pH_L2,pH_L2 D L,-47.7,-30.16,49.23,-12.11,-23.9,-11.59,70.7,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c4
+EL046,pH_L3,pH_L3 D L,-27.83,-53.82,-11.79,-12.82,-24.17,-11.38,33.2,fusiform,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,True,c4
+EL046,pH_L4,pH_L4 D L,-36.11,-27.36,49.48,-13.53,-24.51,-12.6,66.1,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,pH_L5,pH_L5 D L,-25.64,-54.2,-12.93,-15.2,-25.12,-13.22,30.9,fusiform,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pH_L6,pH_L6 D L,-43.56,-37.26,21.16,-15.66,-25.14,-13.49,46.1,supramarginal,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pH_L8,pH_L8 D L,-63.17,-28.39,33.38,-28.78,-28.65,-13.63,58.2,supramarginal,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pH_L9,pH_L9 D L,-3.45,-28.89,55.67,-30.2,-28.77,-13.89,74.5,paracentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pH_L12,pH_L12 D L,-52.22,0.88,36.63,-27.86,-28.73,-10.06,60.4,precentral,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,pH_L13,pH_L13 D L,-61.7,-35.23,14.18,-38.44,-29.92,-13.65,36.7,superior temporal,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,pH_L14,pH_L14 D L,-51.94,-58.94,-16.27,-38.48,-30.37,-13.26,31.7,inferior temporal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,pH_L15,pH_L15 D L,-39.71,7.59,38.15,-38.56,-29.92,-13.34,63.7,caudal middle frontal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,pH_L16,pH_L16 D L,-44.13,4.23,43.03,-31.94,-29.24,-20.75,73.1,precentral,parahippocampal,7Networks_6,7Networks_1,False,
+EL046,pH_L17,pH_L17 D L,-40.15,8.3,38.58,-33.34,-29.1,-20.04,69.9,caudal middle frontal,parahippocampal,7Networks_6,7Networks_3,False,
+EL046,pH_L18,pH_L18 D L,-36.42,-21.37,67.14,-34.2,-29.96,-20.33,87.9,precentral,fusiform,7Networks_2,7Networks_3,False,
+EL046,ColS_L1,ColS_L1 D L,-46.13,-17.3,51.83,-14.86,-19.04,-19.02,77.5,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L3,ColS_L3 D L,-59.49,-44.91,-16.07,-26.08,-18.08,-21.37,43.2,inferior temporal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L5,ColS_L5 D L,-65.01,-14.0,-16.24,-24.54,-17.61,-11.98,40.8,middle temporal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L6,ColS_L6 D L,-11.66,-23.56,39.85,-27.28,-17.27,-12.95,55.4,posterior cingulate,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L7,ColS_L7 D L,-15.24,-26.4,39.04,-30.99,-17.89,-16.28,58.1,posterior cingulate,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L8,ColS_L8 D L,-38.1,-18.33,52.38,-32.04,-18.19,-16.86,69.5,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L9,ColS_L9 D L,-51.49,-18.03,57.25,-32.5,-18.97,-16.55,76.2,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L10,ColS_L10 D L,-52.1,-18.84,57.05,-34.34,-18.83,-16.88,76.0,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L11,ColS_L11 D L,-54.95,-2.12,-23.47,-35.65,-18.91,-16.98,26.4,middle temporal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,ColS_L12,ColS_L12 D L,-54.95,-2.12,-23.47,-36.11,-17.18,-18.26,24.7,middle temporal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L1,al_L1 D L,-44.72,-9.31,57.46,-17.35,-3.37,-11.83,74.7,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L2,al_L2 D L,-44.74,-8.32,57.98,-16.35,-2.86,-11.77,75.5,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L3,al_L3 D L,-21.3,-37.01,-4.4,-14.23,-3.35,-12.42,35.3,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L4,al_L4 D L,-31.03,-45.48,-22.91,-14.23,-3.35,-12.42,46.6,fusiform,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L5,al_L5 D L,-31.03,-45.48,-22.91,-14.23,-3.35,-12.42,46.6,fusiform,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L6,al_L6 D L,-31.03,-45.48,-22.91,-14.23,-3.35,-12.42,46.6,fusiform,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L7,al_L7 D L,-31.03,-45.48,-22.91,-13.5,-3.02,-12.63,47.1,fusiform,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,True,c0
+EL046,aI_L8,al_L8 D L,-43.82,-5.74,52.29,-13.5,-3.02,-12.63,71.7,precentral,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,True,c0
+EL046,aI_L9,al_L9 D L,-43.82,-5.74,52.29,-12.27,-2.3,-12.83,72.4,precentral,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L10,al_L10 D L,-43.82,-5.74,52.29,-2.94,-3.24,-1.23,67.4,precentral,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,True,c1
+EL046,aI_L11,al_L11 D L,-44.04,-10.79,57.85,-2.94,-3.24,-1.23,72.4,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c0
+EL046,aI_L12,al_L12 D L,-43.32,-17.66,-38.04,-2.94,-3.24,-1.23,56.5,inferior temporal,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L13,al_L13 D L,-43.32,-17.66,-38.04,-2.56,-4.73,5.64,61.1,inferior temporal,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L14,al_L14 D L,-43.57,-10.98,62.31,-2.56,-4.73,5.64,70.2,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L15,al_L15 D L,-43.08,-11.89,54.91,-2.56,-4.73,5.64,64.2,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L16,al_L16 D L,-23.18,-8.33,54.45,0.32,9.63,9.68,53.7,precentral,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aI_L17,al_L17 D L,-25.18,-5.74,-25.61,0.29,9.83,10.23,46.6,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,True,c3
+EL046,aI_L18,al_L18 D L,-41.77,-18.67,34.29,0.22,11.05,11.0,56.5,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L1,pl_L1 D L,-29.68,0.36,-20.93,-15.22,-11.39,-13.8,20.0,insula,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L2,pl_L2 D L,-29.68,0.36,-20.93,-15.22,-11.39,-13.8,20.0,insula,medial wall (no label),7Networks_5,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L3,pl_L3 D L,-23.33,-42.68,-12.45,-15.59,-12.17,-14.0,31.5,parahippocampal,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L4,pl_L4 D L,-23.2,-47.89,-16.17,-15.59,-12.17,-14.0,36.6,fusiform,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L5,pl_L5 D L,-36.78,30.75,37.35,-15.73,-13.22,-14.55,71.2,rostral middle frontal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L6,pl_L6 D L,-47.25,-34.02,15.12,-16.64,-13.41,-13.98,47.0,supramarginal,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L7,pl_L7 D L,-8.1,-24.22,42.9,-10.42,-29.12,-3.86,47.1,posterior cingulate,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L8,pl_L8 D L,-46.58,-38.5,15.26,-10.42,-29.12,-3.86,42.0,superior temporal,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L9,pl_L9 D L,-32.39,11.37,10.29,-8.73,-28.14,-2.27,47.7,insula,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L10,pl_L10 D L,-32.39,11.37,10.29,-8.84,-28.72,-2.18,48.1,insula,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L11,pl_L11 D L,-58.63,-57.68,-12.36,-5.11,-25.97,5.91,64.8,inferior temporal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L12,pl_L12 D L,-58.62,-53.77,-11.47,-5.39,-26.12,6.93,62.7,inferior temporal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L13,pl_L13 D L,-13.54,-34.78,47.69,-5.36,-25.88,7.53,41.9,paracentral,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L14,pl_L14 D L,-40.51,-38.23,40.67,-5.65,-26.1,8.48,49.0,supramarginal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L15,pl_L15 D L,-40.51,-38.23,40.67,-5.65,-26.1,8.48,49.0,supramarginal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L16,pl_L16 D L,-58.08,-45.62,0.82,-5.65,-26.1,8.48,56.5,banks of STS,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L17,pl_L17 D L,-63.95,-44.71,0.29,-5.65,-26.1,8.48,61.7,banks of STS,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,pI_L18,pl_L18 D L,-63.95,-44.71,0.29,-5.89,-26.58,8.82,61.4,banks of STS,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_R1,aH_R1 D R,43.38,-29.1,39.37,11.04,-15.43,-19.9,68.9,supramarginal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,True,c4
+EL046,aH_R2,aH_R2 D R,47.99,-28.12,40.17,11.72,-15.34,-19.62,71.1,supramarginal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,True,c4
+EL046,aH_R3,aH_R3 D R,49.03,-28.88,41.21,22.07,-9.95,-23.97,73.0,supramarginal,entorhinal,7Networks_3,7Networks_5,True,c4
+EL046,aH_R4,aH_R4 D R,22.02,31.87,41.75,22.07,-9.95,-23.97,77.9,superior frontal,entorhinal,7Networks_7,7Networks_5,True,c6
+EL046,aH_R5,aH_R5 D R,13.62,-23.54,39.73,22.07,-9.95,-23.97,65.7,posterior cingulate,entorhinal,7Networks_4,7Networks_5,True,c6
+EL046,aH_R6,aH_R6 D R,66.79,-47.52,0.95,23.65,-10.68,-23.97,62.0,middle temporal,entorhinal,7Networks_7,7Networks_5,True,c6
+EL046,aH_R7,aH_R7 D R,41.61,-17.92,49.6,25.59,-11.16,-24.0,75.6,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,True,c6
+EL046,aH_R9,aH_R9 D R,57.2,-50.65,-11.82,28.49,-11.92,-23.5,49.6,inferior temporal,medial wall (no label),7Networks_6,FreeSurfer_Defined_Medial_Wall,True,c4
+EL046,aH_R10,aH_R10 D R,56.93,-23.21,37.51,31.41,-13.41,-22.68,66.1,supramarginal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,True,c5
+EL046,aH_R11,aH_R11 D R,61.42,-24.29,35.27,33.14,-14.36,-22.28,64.9,supramarginal,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,True,c5
+EL046,aH_R12,aH_R12 D R,42.65,-16.97,49.81,34.62,-12.85,-23.89,74.3,postcentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_R13,aH_R13 D R,60.92,-41.72,-1.0,35.6,-14.15,-22.85,43.3,banks of STS,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_R14,aH_R14 D R,0.58,-21.21,22.7,36.81,-13.42,-23.15,59.0,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,False,
+EL046,aH_R15,aH_R15 D R,12.0,-7.19,72.52,37.34,-13.39,-22.8,98.8,superior frontal,medial wall (no label),7Networks_4,FreeSurfer_Defined_Medial_Wall,False,
+EL048,A_R1,A_R1 D R,25.77,-2.5,48.42,20.92,-9.51,-24.09,73.0,caudal middle frontal,entorhinal,7Networks_3,7Networks_5,False,
+EL048,A_R2,A_R2 D R,48.61,-9.83,34.82,24.71,-10.09,-24.32,63.8,precentral,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL048,A_R3,A_R3 D R,1.82,-1.41,30.47,35.62,-8.77,-25.96,66.2,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,False,
+EL048,A_R4,A_R4 D R,0.25,-2.08,27.22,37.29,-10.93,-22.91,63.0,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,True,c4
+EL048,A_R5,A_R5 D R,3.85,42.9,39.86,51.58,-7.75,-20.93,92.4,superior frontal,middle temporal,7Networks_7,7Networks_7,True,c3
+EL048,A_R6,A_R6 D R,14.13,-20.13,-19.79,52.61,-11.67,-28.69,40.4,medial wall (no label),middle temporal,FreeSurfer_Defined_Medial_Wall,7Networks_7,True,c3
+EL048,A_R7,A_R7 D R,62.3,-35.64,-17.21,55.41,-14.58,-26.83,24.2,middle temporal,middle temporal,7Networks_6,7Networks_7,True,c2
+EL048,A_R8,A_R8 D R,44.38,38.04,3.72,59.35,-18.08,-24.66,64.6,pars triangularis,middle temporal,7Networks_4,7Networks_7,True,c2
+EL048,A_R9,A_R9 D R,4.5,-18.31,-18.19,60.05,-17.54,-24.99,56.0,medial wall (no label),middle temporal,FreeSurfer_Defined_Medial_Wall,7Networks_7,False,
+EL048,EntG_R1,EntG_R1 D R,4.74,19.96,-26.24,23.19,-5.01,-37.8,33.1,medial orbitofrontal,entorhinal,7Networks_5,7Networks_5,False,
+EL048,EntG_R2,EntG_R2 D R,16.48,17.0,62.39,24.2,-6.59,-37.71,103.1,superior frontal,entorhinal,7Networks_7,7Networks_5,True,c4
+EL048,EntG_R3,EntG_R3 D R,24.96,53.01,26.23,29.15,-7.53,-35.89,86.8,rostral middle frontal,entorhinal,7Networks_7,7Networks_5,True,c6
+EL048,EntG_R4,EntG_R4 D R,28.0,-16.88,-11.82,32.55,-10.83,-38.34,27.6,medial wall (no label),fusiform,FreeSurfer_Defined_Medial_Wall,7Networks_5,True,c6
+EL048,EntG_R5,EntG_R5 D R,66.89,-8.12,21.43,34.38,-11.04,-38.96,68.7,postcentral,fusiform,7Networks_2,7Networks_5,True,c4
+EL048,EntG_R6,EntG_R6 D R,41.45,41.34,18.43,48.64,-5.25,-34.05,70.5,rostral middle frontal,inferior temporal,7Networks_6,7Networks_5,True,c4
+EL048,EntG_R8,EntG_R8 D R,37.37,-17.2,-17.82,49.23,-5.57,-32.22,22.0,medial wall (no label),middle temporal,FreeSurfer_Defined_Medial_Wall,7Networks_5,True,c3
+EL048,EntG_R9,EntG_R9 D R,59.88,1.65,36.48,54.35,-8.42,-30.07,67.5,precentral,middle temporal,7Networks_2,7Networks_7,True,c3
+EL048,EntG_R10,EntG_R10 D R,15.19,22.05,57.51,57.0,-8.23,-30.39,101.9,superior frontal,middle temporal,7Networks_7,7Networks_7,True,c5
+EL048,EntG_R11,EntG_R11 D R,36.29,6.52,33.5,60.67,-12.68,-27.91,68.8,caudal middle frontal,middle temporal,7Networks_6,7Networks_7,True,c6
+EL048,EntG_R12,EntG_R12 D R,48.37,-20.15,-11.34,63.33,-12.76,-26.81,22.8,superior temporal,middle temporal,7Networks_7,7Networks_7,False,
+EL048,aH_R1,aH_R1 D R,35.5,-39.45,-14.46,27.42,-25.57,-13.71,16.1,fusiform,medial wall (no label),7Networks_1,FreeSurfer_Defined_Medial_Wall,False,
+EL048,aH_R2,aH_R2 D R,22.59,-8.47,57.27,29.91,-29.81,-21.91,82.3,precentral,parahippocampal,7Networks_3,7Networks_7,False,
+EL048,aH_R3,aH_R3 D R,35.49,-25.55,11.19,34.42,-27.46,-21.21,32.5,insula,parahippocampal,7Networks_2,7Networks_1,True,c4
+EL048,aH_R4,aH_R4 D R,4.62,-16.88,30.49,35.69,-25.91,-22.76,62.3,posterior cingulate,parahippocampal,7Networks_6,7Networks_1,False,
+EL048,aH_R7,aH_R7 D R,38.27,41.69,26.97,55.27,-38.5,-27.42,98.4,rostral middle frontal,inferior temporal,7Networks_6,7Networks_6,False,
+EL048,aH_R8,aH_R8 D R,9.49,-2.73,48.58,57.81,-36.88,-16.81,88.2,superior frontal,middle temporal,7Networks_2,7Networks_6,True,c2
+EL048,aH_R9,aH_R9 D R,24.41,40.83,-16.49,57.05,-34.96,-17.87,82.5,lateral orbitofrontal,middle temporal,7Networks_6,7Networks_6,True,c2
+EL048,pH_R1,pH_R1 D R,53.08,-33.77,16.95,30.26,-37.33,-6.09,32.6,superior temporal,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL048,pH_R2,pH_R2 D R,11.6,-40.12,1.67,25.22,-39.48,-14.0,20.8,isthmus cingulate,parahippocampal,7Networks_1,7Networks_1,False,
+EL048,pH_R3,pH_R3 D R,3.04,-15.89,69.99,32.05,-40.33,-11.74,90.1,paracentral,parahippocampal,7Networks_2,7Networks_1,False,
+EL048,pH_R4,pH_R4 D R,58.96,-61.7,5.28,32.91,-43.15,-13.19,36.9,middle temporal,fusiform,7Networks_4,7Networks_1,True,c4
+EL048,pH_R5,pH_R5 D R,17.44,-49.78,-0.28,35.05,-43.44,-11.23,21.7,isthmus cingulate,fusiform,7Networks_1,7Networks_1,False,
+EL048,pH_R7,pH_R7 D R,29.47,-58.51,-9.07,42.45,-51.13,-15.43,16.2,fusiform,fusiform,7Networks_1,7Networks_3,False,
+EL048,pH_R9,pH_R9 D R,11.41,42.65,4.37,51.37,-61.21,-8.75,112.1,rostral ant. cingulate,inferior temporal,7Networks_7,7Networks_3,False,
+EL048,pH_R10,pH_R10 D R,55.51,-46.33,33.14,51.95,-63.15,-6.95,43.6,supramarginal,inferior temporal,7Networks_6,7Networks_3,False,
+EL048,pH_R11,pH_R11 D R,57.69,-50.32,37.67,54.26,-57.06,-2.61,41.0,inferior parietal,middle temporal,7Networks_6,7Networks_3,False,
+EL048,pH_R12,pH_R12 D R,53.97,-56.77,14.69,52.44,-58.06,-1.07,15.9,inferior parietal,middle temporal,7Networks_7,7Networks_3,True,c4
+EL048,pH_R13,pH_R13 D R,54.75,-45.33,43.81,51.45,-59.47,0.33,45.8,supramarginal,middle temporal,7Networks_6,7Networks_3,False,
+EL048,pH_R14,pH_R14 D R,40.78,47.8,0.99,50.94,-59.93,0.78,108.2,rostral middle frontal,middle temporal,7Networks_6,7Networks_3,False,
+EL048,pH_R15,pH_R15 D R,40.68,-43.19,36.75,50.44,-60.37,1.19,40.7,supramarginal,middle temporal,7Networks_6,7Networks_3,False,
+EL048,PHG_R2,PHG_R2 D R,42.6,-31.75,12.44,27.64,-33.95,-19.13,35.0,superior temporal,parahippocampal,7Networks_2,7Networks_7,False,
+EL048,PHG_R3,PHG_R3 D R,5.37,-9.98,64.71,30.22,-34.36,-17.28,89.1,paracentral,parahippocampal,7Networks_2,7Networks_7,False,
+EL048,PHG_R4,PHG_R4 D R,14.61,-28.79,38.66,33.4,-37.81,-16.9,59.3,posterior cingulate,fusiform,7Networks_4,7Networks_1,False,
+EL048,PHG_R5,PHG_R5 D R,13.47,-38.75,0.25,36.06,-37.61,-14.96,27.3,isthmus cingulate,fusiform,FreeSurfer_Defined_Medial_Wall,7Networks_1,False,
+EL048,PHG_R8,PHG_R8 D R,53.3,-47.2,22.09,43.44,-47.88,-15.33,38.7,supramarginal,fusiform,7Networks_7,7Networks_3,False,
+EL048,PHG_R9,PHG_R9 D R,53.17,-33.8,49.83,55.41,-49.98,-8.07,60.2,supramarginal,middle temporal,7Networks_3,7Networks_6,True,c3
+EL048,PHG_R11,PHG_R11 D R,19.38,-46.56,-4.4,61.07,-55.48,-2.51,42.7,lingual,middle temporal,7Networks_1,7Networks_6,False,
+EL048,PHG_R12,PHG_R12 D R,32.0,-48.96,-7.5,62.95,-54.2,-2.57,31.8,lingual,middle temporal,7Networks_1,7Networks_6,False,
+EL048,PHG_R13,PHG_R13 D R,53.28,-60.88,6.54,65.06,-52.47,0.03,15.9,middle temporal,middle temporal,7Networks_4,7Networks_6,True,c4
+EL048,PHG_R14,PHG_R14 D R,12.56,-46.63,-3.94,65.98,-50.84,1.23,53.8,lingual,middle temporal,7Networks_1,7Networks_6,True,c5
+EL048,PHG_R15,PHG_R15 D R,31.02,-50.56,-7.33,66.03,-50.17,2.46,36.4,lingual,middle temporal,7Networks_1,7Networks_7,False,
+EL048,A_L1,A_L1 D L,-58.05,-24.68,5.39,-24.18,-16.02,-22.58,44.8,superior temporal,medial wall (no label),7Networks_2,FreeSurfer_Defined_Medial_Wall,False,
+EL048,A_L2,A_L2 D L,-22.95,4.61,63.77,-27.1,-14.7,-23.19,89.2,superior frontal,medial wall (no label),7Networks_3,FreeSurfer_Defined_Medial_Wall,True,c3
+EL048,A_L3,A_L3 D L,-52.38,-26.18,-10.28,-31.85,-13.97,-22.84,27.0,middle temporal,medial wall (no label),7Networks_7,FreeSurfer_Defined_Medial_Wall,True,c3
+EL048,A_L4,A_L4 D L,-22.51,-21.27,-12.43,-34.73,-11.13,-24.37,19.9,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,True,c3
+EL048,A_L5,A_L5 D L,-30.32,-22.73,-17.82,-35.45,-11.12,-23.0,13.7,medial wall (no label),medial wall (no label),FreeSurfer_Defined_Medial_Wall,FreeSurfer_Defined_Medial_Wall,True,c6
+EL048,A_L6,A_L6 D L,-39.05,-20.98,-25.68,-52.12,-8.82,-20.56,18.6,fusiform,middle temporal,7Networks_5,7Networks_7,True,c5
+EL048,A_L8,A_L8 D L,-68.16,-22.38,-13.87,-56.41,-10.71,-29.39,22.7,middle temporal,middle temporal,7Networks_7,7Networks_7,True,c5
+EL048,A_L9,A_L9 D L,-6.79,11.35,48.81,-58.59,-5.54,-31.49,97.0,superior frontal,middle temporal,7Networks_4,7Networks_7,True,c5
+EL048,aH_L2,aH_L2 D L,-30.06,-34.44,-5.0,-29.68,-27.79,-26.67,22.7,medial wall (no label),parahippocampal,FreeSurfer_Defined_Medial_Wall,7Networks_5,True,c4
+EL048,aH_L3,aH_L3 D L,-68.04,-33.26,5.9,-35.19,-25.95,-24.56,45.4,superior temporal,fusiform,7Networks_2,7Networks_5,True,c4
+EL048,aH_L4,aH_L4 D L,-1.73,27.21,16.04,-45.28,-29.83,-26.5,83.4,caudal ant. cingulate,inferior temporal,7Networks_7,7Networks_5,True,c5
+EL048,aH_L5,aH_L5 D L,-10.46,-7.19,43.6,-54.61,-29.33,-21.91,82.0,superior frontal,inferior temporal,7Networks_2,7Networks_7,True,c5
+EL048,aH_L6,aH_L6 D L,-48.32,-11.76,27.87,-56.66,-25.25,-22.17,52.5,postcentral,inferior temporal,7Networks_2,7Networks_7,True,c5
+EL048,aH_L7,aH_L7 D L,-50.78,-25.61,-10.14,-59.84,-22.69,-23.56,16.4,middle temporal,middle temporal,7Networks_7,7Networks_7,True,c2
+EL048,aH_L8,aH_L8 D L,-65.24,-13.96,25.5,-61.34,-21.67,-24.52,50.8,postcentral,middle temporal,7Networks_2,7Networks_7,False,
+EL048,aH_L9,aH_L9 D L,-53.9,-10.36,26.84,-63.52,-20.05,-23.77,52.4,postcentral,middle temporal,7Networks_2,7Networks_7,False,
