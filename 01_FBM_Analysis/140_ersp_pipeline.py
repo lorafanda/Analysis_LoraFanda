@@ -9,6 +9,9 @@
     python .\140_ersp_pipeline.py --patient PAT_3455 --wm-noref-only
                                                     (only the reference contacts, unreferenced: ERSP_noref /
                                                      PerTrial/HFA_noref / PerTrial/Signal_noref; the run untouched)
+    python 140_ersp_pipeline.py --patient EL035 --rt-only TTG_R6 TTG_R1
+                                                    (those contacts only, ERSP in real seconds, onset-aligned, cfg.time_window;
+                                                     -> outputs/03_ERSP_RT/<patient>/LM/ERSP/<cond>/ with the _metrics.npz; the run untouched)
 
 Run it from anywhere; it changes into 01_FBM_Analysis itself, the way the notebook kernel
 sits there. Use the same Python the notebook runs in (it needs mne, h5py, scipy).
@@ -98,6 +101,9 @@ EXPORT_TRIAL_SCORES = True   # PerTrial/TrialScores/<pid>_<cond>_trial_scores.ts
 WRITE_WM_NOREF     = getattr(cfg, "write_wm_noref_figures", False)   # OFF since 2026-10-16 (Lora): no *_noref folders in a run; --wm-noref-only still makes them on demand   # ERSP_noref/, PerTrial/HFA_noref/, PerTrial/Signal_noref/:
                                                                      # the reference contacts, unreferenced (2026-10-13, see write_wm_noref_figures)
 WM_NOREF_ONLY      = False  # --wm-noref-only: only those figures; the run's products, report and logs untouched
+RT_ONLY            = None   # --rt-only CONTACT ...: those contacts' ERSPs in real seconds (cfg.time_window, onset-aligned) into
+                            # outputs/03_ERSP_RT/<patient>/; cubes, QC figures, report row and logs/ untouched (Lora, 2026-11-15)
+run_root_rt        = os.path.join(cfg.outputs_root, "03_ERSP_RT")
 
 ersp_params = fe.ERSPParams(
     nperseg=cfg.nperseg, nfft=cfg.nfft, noverlap=cfg.noverlap,
@@ -760,7 +766,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                   + (", decided and applied PER SHAFT" if per_shaft else ""))
 
         report_dir  = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
-                                            getattr(cfg, "REPORT_DIR", "Report") + ("_noref" if WM_NOREF_ONLY else ""))
+                                            getattr(cfg, "REPORT_DIR", "Report") + ("_noref" if WM_NOREF_ONLY else ("_rt" if RT_ONLY is not None else "")))
         report_path = os.path.join(report_dir, f"{patient_id}_IQR.tsv")
         all_trials = {}
         cond_groups = tr.collect_trials(prep_dir, fs, outlier_method="IQR",
@@ -790,7 +796,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             cond_groups = rebased
 
         if RUN_ERSP_PIPELINE:
-            if WRITE_MONTAGE and not WM_NOREF_ONLY:
+            if WRITE_MONTAGE and not WM_NOREF_ONLY and RT_ONLY is None:
                 tr.plot_montage_overview(signals=signals, fs=fs, names=names,
                                          cond_groups=cond_groups, save_dir=report_dir, patient_id=patient_id)
             ersp_root = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "ERSP")
@@ -929,9 +935,22 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                     sig_dir=os.path.join(io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
                                                                getattr(cfg, "SIGNAL_DIR", "Signal") + "_noref"), cond))
                 print(f"[reference contacts, unreferenced: {_n_noref} x ERSP / HFA / Signal -> *_noref] ", end="", flush=True)
+            if RT_ONLY is not None:
+                _miss = sorted(set(RT_ONLY) - set(names)); _ref = sorted(set(RT_ONLY) & set(wm_skip))
+                if _miss: print(f"[RT: not in this recording: {', '.join(_miss)}] ", end="", flush=True)
+                if _ref: print(f"[RT: reference contacts, skipped: {', '.join(_ref)}] ", end="", flush=True)
             for ci, chan_name in enumerate(names):
                 if WM_NOREF_ONLY: continue
                 if chan_name in wm_skip: continue
+                if RT_ONLY is not None:                       # --rt-only: this contact in real seconds, nothing else
+                    if chan_name not in RT_ONLY: continue
+                    res = fe.compute_ersp(signals=sig_c, fs=fs, onsets=on_c, offsets=off_c, channel_idx=ci,
+                                          trial_ends=te_c, mode="RT", time_window=cfg.time_window, params=ersp_params)
+                    _rt_dir = _ensure(os.path.join(io.patient_output_dir(run_root_rt, patient_id, cfg.block_name, "ERSP"), cond))
+                    fe.plot_ersp(res, patient_id=patient_id, condition=cond, reref_type=reref, chan_name=chan_name,
+                                 save_dir=_rt_dir, params=ersp_params, plot_title=False, save_sidecar=True, filename_suffix="_RT")
+                    print(f"[RT {chan_name}: {res['meta']['n_trials']} trials, {cfg.time_window[0]:g}..{cfg.time_window[1]:g} s] ", end="", flush=True)
+                    continue
                 if chan_name in micro_names_set: continue
                 if RUN_CLUSTER_EXPORT and chan_name in skip and not RUN_ERSP_PIPELINE: continue
 
@@ -1034,7 +1053,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 del res
             print(" done")
 
-            if EXPORT_TRIAL_SCORES and _score_rows:
+            if EXPORT_TRIAL_SCORES and _score_rows and RT_ONLY is None:
                 _sdir = _ensure(io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
                                                       getattr(cfg, "TRIALSCORES_DIR", "TrialScores")))
                 _sp = os.path.join(_sdir, f"{patient_id}_{cond}_trial_scores.tsv")
@@ -1045,10 +1064,10 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                       f"({_n_ch} channels x {_n_tr} trials)")
 
         # ── PER-BLOCK CLEANING REPORT (not in the noref-only mode: the run's files stay as they are)
-        if notch_audit_rows and not WM_NOREF_ONLY:
+        if notch_audit_rows and not WM_NOREF_ONLY and RT_ONLY is None:
             pd.DataFrame(notch_audit_rows).to_csv(
                 os.path.join(report_dir, f"{patient_id}_notch_audit.tsv"), sep="\t", index=False)
-        if notch_scope != "file" and not WM_NOREF_ONLY:
+        if notch_scope != "file" and not WM_NOREF_ONLY and RT_ONLY is None:
             pd.DataFrame(peak_rows, columns=["condition", "shaft", "freq_hz", "z", "peak_db", "above_db", "on_comb"]).to_csv(
                 os.path.join(report_dir, f"{patient_id}_unexplained_peaks.tsv"), sep="\t", index=False)
             print(f"  [{patient_id}] notch audit -> {patient_id}_notch_audit.tsv, "
@@ -1107,6 +1126,8 @@ def main():
     ap.add_argument("--macros-only", action="store_true", help="MicroEPI patients: skip the micro wires")
     ap.add_argument("--wm-noref-only", action="store_true",
                     help="only the reference contacts' unreferenced figures (*_noref folders); cubes, QC figures, report row and logs/ untouched")
+    ap.add_argument("--rt-only", nargs="+", metavar="CONTACT",
+                    help="only these contacts, their ERSP in real seconds (cfg.time_window, onset-aligned) into outputs/03_ERSP_RT/<patient>/LM/ERSP/<cond>/; cubes, QC figures, report row and logs/ untouched")
     a = ap.parse_args()
 
     RUN_ERSP_PIPELINE  = not a.no_qc
@@ -1117,8 +1138,12 @@ def main():
     if a.wm_noref_only:
         WM_NOREF_ONLY = True
         RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_PSD_PLOTS = True, False, False
+    global RT_ONLY
+    if a.rt_only:
+        RT_ONLY = set(a.rt_only)
+        RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_PSD_PLOTS = True, False, False
 
-    log_dir = os.path.join(run_root_ersp, "logs_wm_noref" if WM_NOREF_ONLY else "logs")   # 141 reads logs/: a check is not a run
+    log_dir = os.path.join(run_root_ersp, "logs_wm_noref" if WM_NOREF_ONLY else ("logs_rt" if RT_ONLY is not None else "logs"))   # 141 reads logs/: a check is not a run
     os.makedirs(log_dir, exist_ok=True)
     for pid_raw in a.patient:
         # config keys are ints for the old HUG spelling (3455) and strings otherwise
@@ -1148,8 +1173,8 @@ def main():
             print("WM REREFERENCING REPORT (this patient)")
             print("=" * 72)
             print_report_line(row)
-            if WM_NOREF_ONLY:
-                print("  (--wm-noref-only: the report row is not merged into wm_reref_report.tsv)")
+            if WM_NOREF_ONLY or RT_ONLY is not None:
+                print("  (--wm-noref-only / --rt-only: the report row is not merged into wm_reref_report.tsv)")
             else:
                 merge_report(row)
         finally:
