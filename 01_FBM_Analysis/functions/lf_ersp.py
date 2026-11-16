@@ -1397,8 +1397,10 @@ def plot_ersp(
     plt.ylabel("Frequency (Hz)"); plt.ylim(0, params.fmax)
 
     if mode == "RT":
-        plt.xlabel("Time (s) rel. onset")
-        plt.axvline(0.0, color="k", ls="-", lw=1.5, label="stim")
+        go_aligned = ersp["meta"].get("align") == "go"
+        plt.xlabel("Time (s) rel. GO cue" if go_aligned else "Time (s) rel. onset")
+        # markers from the sidecar: onset-locked 0 / +mean stimulus duration, GO-locked -mean stimulus duration / 0
+        plt.axvline(mk.get("onset", 0.0), color="k", ls="-", lw=1.5, label="stim")
         if mk.get("offset") is not None:
             plt.axvline(mk["offset"], color="k", ls="--", lw=1.5, label="resp")
     else:

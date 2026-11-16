@@ -10,8 +10,9 @@
                                                     (only the reference contacts, unreferenced: ERSP_noref /
                                                      PerTrial/HFA_noref / PerTrial/Signal_noref; the run untouched)
     python 140_ersp_pipeline.py --patient EL035 --rt-only TTG_R6 TTG_R1
-                                                    (those contacts only, ERSP in real seconds, onset-aligned, cfg.time_window;
-                                                     -> outputs/03_ERSP_RT/<patient>/LM/ERSP/<cond>/ with the _metrics.npz; the run untouched)
+                                                    (those contacts only, ERSP in real seconds, cfg.time_window, locked to the
+                                                     stimulus onset (_RT) and to the GO cue (_RTgo) -> outputs/03_ERSP_RT/<patient>/
+                                                     LM/ERSP/<cond>/ with the _metrics.npz sidecars; the run untouched)
 
 Run it from anywhere; it changes into 01_FBM_Analysis itself, the way the notebook kernel
 sits there. Use the same Python the notebook runs in (it needs mne, h5py, scipy).
@@ -101,8 +102,9 @@ EXPORT_TRIAL_SCORES = True   # PerTrial/TrialScores/<pid>_<cond>_trial_scores.ts
 WRITE_WM_NOREF     = getattr(cfg, "write_wm_noref_figures", False)   # OFF since 2026-10-16 (Lora): no *_noref folders in a run; --wm-noref-only still makes them on demand   # ERSP_noref/, PerTrial/HFA_noref/, PerTrial/Signal_noref/:
                                                                      # the reference contacts, unreferenced (2026-10-13, see write_wm_noref_figures)
 WM_NOREF_ONLY      = False  # --wm-noref-only: only those figures; the run's products, report and logs untouched
-RT_ONLY            = None   # --rt-only CONTACT ...: those contacts' ERSPs in real seconds (cfg.time_window, onset-aligned) into
-                            # outputs/03_ERSP_RT/<patient>/; cubes, QC figures, report row and logs/ untouched (Lora, 2026-11-15)
+RT_ONLY            = None   # --rt-only CONTACT ...: those contacts' ERSPs in real seconds (cfg.time_window), locked to the stimulus
+                            # onset (_RT) and to the GO cue (_RTgo, 2026-11-16), into outputs/03_ERSP_RT/<patient>/; cubes, QC figures,
+                            # report row and logs/ untouched (Lora, 2026-11-15)
 run_root_rt        = os.path.join(cfg.outputs_root, "03_ERSP_RT")
 
 ersp_params = fe.ERSPParams(
@@ -949,7 +951,11 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                     _rt_dir = _ensure(os.path.join(io.patient_output_dir(run_root_rt, patient_id, cfg.block_name, "ERSP"), cond))
                     fe.plot_ersp(res, patient_id=patient_id, condition=cond, reref_type=reref, chan_name=chan_name,
                                  save_dir=_rt_dir, params=ersp_params, plot_title=False, save_sidecar=True, filename_suffix="_RT")
-                    print(f"[RT {chan_name}: {res['meta']['n_trials']} trials, {cfg.time_window[0]:g}..{cfg.time_window[1]:g} s] ", end="", flush=True)
+                    res_go = fe.compute_ersp(signals=sig_c, fs=fs, onsets=on_c, offsets=off_c, channel_idx=ci,
+                                             trial_ends=te_c, mode="RT", time_window=cfg.time_window, align="go", params=ersp_params)
+                    fe.plot_ersp(res_go, patient_id=patient_id, condition=cond, reref_type=reref, chan_name=chan_name,
+                                 save_dir=_rt_dir, params=ersp_params, plot_title=False, save_sidecar=True, filename_suffix="_RTgo")
+                    print(f"[RT {chan_name}: {res['meta']['n_trials']} trials, {cfg.time_window[0]:g}..{cfg.time_window[1]:g} s, onset- and cue-locked] ", end="", flush=True)
                     continue
                 if chan_name in micro_names_set: continue
                 if RUN_CLUSTER_EXPORT and chan_name in skip and not RUN_ERSP_PIPELINE: continue
@@ -1127,7 +1133,7 @@ def main():
     ap.add_argument("--wm-noref-only", action="store_true",
                     help="only the reference contacts' unreferenced figures (*_noref folders); cubes, QC figures, report row and logs/ untouched")
     ap.add_argument("--rt-only", nargs="+", metavar="CONTACT",
-                    help="only these contacts, their ERSP in real seconds (cfg.time_window, onset-aligned) into outputs/03_ERSP_RT/<patient>/LM/ERSP/<cond>/; cubes, QC figures, report row and logs/ untouched")
+                    help="only these contacts, their ERSP in real seconds (cfg.time_window) locked to the stimulus onset (_RT) and to the GO cue (_RTgo), into outputs/03_ERSP_RT/<patient>/LM/ERSP/<cond>/; cubes, QC figures, report row and logs/ untouched")
     a = ap.parse_args()
 
     RUN_ERSP_PIPELINE  = not a.no_qc
