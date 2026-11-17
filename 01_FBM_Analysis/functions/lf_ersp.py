@@ -1525,7 +1525,9 @@ def plot_hg_trials(
     sort_ascending=True,
     trial_end_indices=None,       # supports trial-end-based segmentation
     sort_by="stim",               # "stim" | "resp" | "total" | "none"
-    align="onset",                # "onset" (t=0 is stimulus onset) | "go" (t=0 is the GO cue)
+    align="onset",                # "onset" (t=0 is stimulus onset) | "go" (t=0 is the GO cue) | "warp" (time-normalised, 2026-11-17)
+    warp_proportions=None,        # align="warp": (baseline, stimulus, response) shares of the grid - ERSPParams.proportions
+    warp_bins=None,               # align="warp": the grid's number of columns - ERSPParams.n_time_bins
     fmt="png",                    # "png" | "tif" — PNG everywhere since 2026-09-07
     rejected_trials=None,         # indices (ORIGINAL order) the ERSP average dropped
     reject_z=None,                # or let the plot apply the z rule to its own matrix
@@ -1558,6 +1560,16 @@ def plot_hg_trials(
          to stimulus ONSET, whatever the axis shows. Only the display shifts, so
          the z units stay identical to the onset-aligned figure and the two are
          directly comparable.
+
+    `align="warp"` (2026-11-17) is the time-normalised twin of the onset figure: every
+    trial is stretched onto one grid of `warp_bins` columns split baseline / stimulus /
+    response in `warp_proportions`, piece by piece, the way compute_ersp's TN branch
+    builds the ERSP cubes (same proportions, same bin rounding, same clamped linear
+    interpolation). The onset, the GO cue and the trial end then sit at the same column
+    on every row, so the raster lines up with the contact's ERSP. The z values are the
+    onset figure's - baseline per trial, in seconds, before the warp - and only the
+    display is resampled. A trial without a usable offset takes the median stimulus
+    duration of the others, as in compute_ersp. File tag _TN.
     """
     import numpy as _np
     import matplotlib.pyplot as _plt
@@ -1668,8 +1680,57 @@ def plot_hg_trials(
 
     # --- common time axis
     go_aligned = str(align).lower() == "go"
+    warped = str(align).lower() == "warp"
     max_len = max(len(z) for z in trials_z)
-    if go_aligned:
+    if warped:
+        # TIME-NORMALISED (2026-11-17). The grid and the three pieces are compute_ersp's
+        # TN ones - same proportions, same bin rounding, same clamped linear
+        # interpolation - so a column here is the column of the ERSP cube.
+        if warp_proportions is None or warp_bins is None:
+            raise ValueError("plot_hg_trials: align='warp' needs warp_proportions and warp_bins.")
+        pB, pS, pP = (float(v) for v in warp_proportions)
+        _tot = pB + pS + pP
+        if not _np.isclose(_tot, 1.0):
+            pB, pS, pP = pB / _tot, pS / _tot, pP / _tot
+        N = int(warp_bins)
+
+        def _nb(prop):
+            return 0 if prop <= 0 else max(2, int(round(prop * N)))
+
+        nB, nS, nP = _nb(pB), _nb(pS), _nb(pP)
+        nP += (N - (nB + nS + nP))
+        i0, i1, i2, i3 = 0, nB, nB + nS, N
+        t_common = _np.linspace(0.0, 100.0, N, endpoint=False)
+        x_onset, x_go = 100.0 * pB, 100.0 * (pB + pS)
+        _offs = _np.asarray(off_rel_s, dtype=float)
+        _ok = _np.isfinite(_offs) & (_offs > 0)
+        _off_fallback = float(_np.median(_offs[_ok])) if _ok.any() else 0.5
+        _eps = 1.0 / fs
+
+        def _warp_row(t_src, z_src, j0, j1, a0, a1, row):
+            # z_src[t_src in [a0, a1]] -> row[j0:j1], clamped at both ends (compute_ersp._warp_piece)
+            if j1 <= j0 or t_src.size < 2:
+                return
+            t_u, idx = _np.unique(t_src, return_index=True)
+            if t_u.size < 2 or t_u[-1] <= t_u[0]:
+                return
+            z_u = z_src[idx]
+            u = _np.linspace(a0, a1, j1 - j0, endpoint=False)
+            row[j0:j1] = _np.interp(u, t_u, z_u, left=float(z_u[0]), right=float(z_u[-1]))
+
+        trial_matrix = _np.full((len(trials_z), N), _np.nan, dtype=float)
+        for r, z in enumerate(trials_z):
+            tv = t_vecs[r]
+            off_t = float(_offs[r]) if (r < _offs.size and _ok[r]) else _off_fallback
+            off_t = max(_eps, off_t)
+            end_t = max(off_t + _eps, float(tv[-1]))
+            m_base = (tv >= baseline_w[0]) & (tv < 0.0)
+            m_stim = (tv >= 0.0) & (tv < off_t)
+            m_post = (tv >= off_t) & (tv <= end_t)
+            _warp_row(tv[m_base], z[m_base], i0, i1, baseline_w[0], 0.0, trial_matrix[r])
+            _warp_row(tv[m_stim], z[m_stim], i1, i2, 0.0, off_t, trial_matrix[r])
+            _warp_row(tv[m_post], z[m_post], i2, i3, off_t, end_t, trial_matrix[r])
+    elif go_aligned:
         # Shift each trial so t=0 is its own GO cue, then RESAMPLE onto one grid.
         # A trial with no usable offset cannot be GO-aligned at all and is dropped
         # rather than silently plotted against the wrong zero.
@@ -1768,7 +1829,7 @@ def plot_hg_trials(
             chan_name = str(channel_names[channel_idx])
         else:
             chan_name = f"Ch{channel_idx}"
-    _atag = "_GO" if str(align).lower() == "go" else ""
+    _atag = "_GO" if go_aligned else ("_TN" if warped else "")
     _ext = "png" if str(fmt).lower() == "png" else "tif"
     # "HFA" since 2026-09-30 (the 03_ERSP tree); the 04_ersp_LM files say HGtrials
     title = f"{patient_id} – {condition} – {reref_type}-ref HFA trials: {chan_name}"
@@ -1782,7 +1843,7 @@ def plot_hg_trials(
     cmap.set_bad(alpha=0.0)
 
     title = title + (f"  |  sorted by: {sb}" if sb else "") + \
-        ("  |  aligned: GO" if go_aligned else "")
+        ("  |  aligned: GO" if go_aligned else ("  |  time-normalised" if warped else ""))
     if _n_rej:
         # the breakdown goes under the title, wrapped: with several reasons in play a
         # single line of it runs off both edges of the figure
@@ -1798,8 +1859,8 @@ def plot_hg_trials(
         cmap=cmap, vmin=vmin, vmax=vmax, interpolation="none"
     )
 
-    # the aligned event sits at 0 s: stimulus onset, or the GO cue
-    _plt.axvline(x=0.0, color="k", linestyle="-", linewidth=1.2, zorder=3)
+    # the aligned event sits at 0 s: stimulus onset, or the GO cue; warped, the onset column
+    _plt.axvline(x=(x_onset if warped else 0.0), color="k", linestyle="-", linewidth=1.2, zorder=3)
 
 
     half_ms = 30.0
@@ -1811,7 +1872,10 @@ def plot_hg_trials(
                 _plt.plot([x_ - half_ms/1000.0, x_ + half_ms/1000.0], [y, y],
                           linestyle="--", color=color, lw=lw, solid_capstyle="butt", zorder=4)
 
-    if go_aligned:
+    if warped:
+        # every GO cue sits at the same column and every trial ends at the right edge
+        _plt.axvline(x=x_go, color="m", linestyle="--", linewidth=1.4, zorder=4)
+    elif go_aligned:
         # 0 is GO. Magenta now marks where the stimulus STARTED (negative, its
         # distance from 0 is the stimulus duration), and green marks the end of the
         # response window. Sorted by "resp" the green ticks form a staircase, which
@@ -1823,9 +1887,13 @@ def plot_hg_trials(
 
     # annotate original row index (1-based) at baseline start; a rejected trial keeps
     # its number, in red, with a red X beside it - the row is still drawn above
+    # (label columns in seconds on the time axes, in per cent on the warped one)
+    _x_num = (t_common[0] + 0.5) if warped else (baseline_w[0] + 0.05)
+    _x_cross = (t_common[0] - 0.4) if warped else (baseline_w[0] - 0.02)
+    _x_z = t_common[-1] + (0.4 if warped else 0.02)
     for new_row, orig_idx in enumerate(order):
         _is_rej = int(orig_idx) in _rej_orig
-        _plt.text(baseline_w[0] + 0.05, new_row + 1,
+        _plt.text(_x_num, new_row + 1,
                   str(int(orig_idx) + 1), fontsize=5,
                   color=("#c1121f" if _is_rej else "k"),
                   fontweight=("bold" if _is_rej else "normal"),
@@ -1838,11 +1906,11 @@ def plot_hg_trials(
             _zv = float(trial_z[int(orig_idx)])
             if _np.isfinite(_zv):
                 _zc = "#c1121f" if _zv >= 3.0 else ("#d97706" if _zv >= 2.0 else "#6b7280")
-                _plt.text(t_common[-1] + 0.02, new_row + 1, f"{_zv:+.1f}", fontsize=5,
+                _plt.text(_x_z, new_row + 1, f"{_zv:+.1f}", fontsize=5,
                           color=_zc, fontweight=("bold" if _zv >= 3.0 else "normal"),
                           va="center", ha="left", clip_on=False, zorder=6)
         if _is_rej:
-            _plt.text(baseline_w[0] - 0.02, new_row + 1, "\u2715", fontsize=6,
+            _plt.text(_x_cross, new_row + 1, "\u2715", fontsize=6,
                       color="#c1121f", va="center", ha="right", zorder=6, clip_on=False)
             # the reason on the row itself: with several filters in play a single
             # count at the bottom cannot say which one took which trial
@@ -1869,7 +1937,9 @@ def plot_hg_trials(
     _plt.title(title, fontsize=8, linespacing=1.35)
     _plt.xlabel("Time (s) relative to GO cue   (magenta = stimulus onset, "
                 "green = end of response window)" if go_aligned
-                else "Time (s) relative to onset")
+                else ("Normalised time (%)   (black = stimulus onset, magenta = GO cue, "
+                      "right edge = trial end)" if warped
+                      else "Time (s) relative to onset"))
     _plt.ylabel("Trials (sorted)")
     _plt.xlim(t_common[0], t_common[-1])
     _plt.tight_layout()

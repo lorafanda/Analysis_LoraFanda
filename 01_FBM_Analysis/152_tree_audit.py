@@ -12,7 +12,8 @@ WHAT IS CHECKED, per patient folder <pid>/ of outputs/<cfg.ERSP_TREE>:
             optional <pid>_overview.pdf. Any other folder or file is an orphan (old layouts, *_noref,
             copies, notebooks' leftovers).
   names     each folder has one legal file name: <pid>_<cond>_WM_ERSP_<ch>_TN.npy (cubes),
-            ..._TN_half1/2.npy, ..._TN_CLEAN.png, ..._TN.png, <pid>_<cond>_WM_HFAtrials_<ch>.png,
+            ..._TN_half1/2.npy, ..._TN_CLEAN.png, ..._TN.png, <pid>_<cond>_WM_HFAtrials_<ch>.png
+            (and its time-normalised twin ..._HFAtrials_<ch>_TN.png, 2026-11-17),
             <pid>_<cond>_WM_SIGtrials_<ch>.png, the Report and TrialScores names. The pid and the
             condition in the name must be the folder's. "Copy", "(1)", .tif, .json sidecars, _GO,
             CAR/NONE references: orphans.
@@ -86,9 +87,9 @@ def patterns(pid, cond):
         "ERSP_halves": re.compile(rf"^{p}_{c}_{REF}_ERSP_(?P<ch>.+?)_TN_half[12]\.npy$"),
         "ERSP_clean": re.compile(rf"^{p}_{c}_{REF}_ERSP_(?P<ch>.+?)_TN_CLEAN\.png$"),
         "ERSP": re.compile(rf"^{p}_{c}_{REF}_ERSP_(?P<ch>.+?)_TN\.png$"),
-        "HFA": re.compile(rf"^{p}_{c}_{REF}_HFAtrials_(?P<ch>.+?)\.png$"),
+        "HFA": re.compile(rf"^{p}_{c}_{REF}_HFAtrials_(?P<ch>.+?)(?:_TN)?\.png$"),
         "Signal": re.compile(rf"^{p}_{c}_{REF}_SIGtrials_(?P<ch>.+?)\.png$"),
-        "Photodiode": re.compile(rf"^{p}_{c}_{REF}_(?:ERSP_(?P<ch1>.+?)_TN|HFAtrials_(?P<ch2>.+?))\.png$"),
+        "Photodiode": re.compile(rf"^{p}_{c}_{REF}_(?:ERSP_(?P<ch1>.+?)_TN|HFAtrials_(?P<ch2>.+?)(?:_TN)?)\.png$"),
     }
 
 

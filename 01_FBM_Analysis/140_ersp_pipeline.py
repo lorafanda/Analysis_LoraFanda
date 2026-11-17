@@ -13,6 +13,10 @@
                                                     (those contacts only, ERSP in real seconds, cfg.time_window, locked to the
                                                      stimulus onset (_RT) and to the GO cue (_RTgo) -> outputs/03_ERSP_RT/<patient>/
                                                      LM/ERSP/<cond>/ with the _metrics.npz sidecars; the run untouched)
+    python 140_ersp_pipeline.py --patient PAT_3975 --hfa-warp [IAD3 HAG8 ...]
+                                                    (only the time-normalised HFA rasters, *_TN.png beside the onset-aligned ones in
+                                                     PerTrial/HFA/<cond>/, for the listed contacts or for all of them; the run untouched.
+                                                     A full run writes both rasters for every contact, 2026-11-17)
 
 Run it from anywhere; it changes into 01_FBM_Analysis itself, the way the notebook kernel
 sits there. Use the same Python the notebook runs in (it needs mne, h5py, scipy).
@@ -105,6 +109,9 @@ WM_NOREF_ONLY      = False  # --wm-noref-only: only those figures; the run's pro
 RT_ONLY            = None   # --rt-only CONTACT ...: those contacts' ERSPs in real seconds (cfg.time_window), locked to the stimulus
                             # onset (_RT) and to the GO cue (_RTgo, 2026-11-16), into outputs/03_ERSP_RT/<patient>/; cubes, QC figures,
                             # report row and logs/ untouched (Lora, 2026-11-15)
+HFA_WARP           = None   # --hfa-warp [CONTACT ...]: only the time-normalised HFA rasters (*_TN.png beside the onset-aligned ones in
+                            # PerTrial/HFA/<cond>/) for those contacts, or for every contact without a list; cubes, ERSP figures, trial
+                            # scores, report row and logs/ untouched (Lora, 2026-11-17). A full run writes both rasters for every contact.
 run_root_rt        = os.path.join(cfg.outputs_root, "03_ERSP_RT")
 
 ersp_params = fe.ERSPParams(
@@ -768,7 +775,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                   + (", decided and applied PER SHAFT" if per_shaft else ""))
 
         report_dir  = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name,
-                                            getattr(cfg, "REPORT_DIR", "Report") + ("_noref" if WM_NOREF_ONLY else ("_rt" if RT_ONLY is not None else "")))
+                                            getattr(cfg, "REPORT_DIR", "Report") + ("_noref" if WM_NOREF_ONLY else ("_rt" if RT_ONLY is not None else ("_tn" if HFA_WARP is not None else ""))))
         report_path = os.path.join(report_dir, f"{patient_id}_IQR.tsv")
         all_trials = {}
         cond_groups = tr.collect_trials(prep_dir, fs, outlier_method="IQR",
@@ -798,7 +805,7 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
             cond_groups = rebased
 
         if RUN_ERSP_PIPELINE:
-            if WRITE_MONTAGE and not WM_NOREF_ONLY and RT_ONLY is None:
+            if WRITE_MONTAGE and not WM_NOREF_ONLY and RT_ONLY is None and HFA_WARP is None:
                 tr.plot_montage_overview(signals=signals, fs=fs, names=names,
                                          cond_groups=cond_groups, save_dir=report_dir, patient_id=patient_id)
             ersp_root = io.patient_output_dir(run_root_ersp, patient_id, cfg.block_name, "ERSP")
@@ -941,6 +948,10 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                 _miss = sorted(set(RT_ONLY) - set(names)); _ref = sorted(set(RT_ONLY) & set(wm_skip))
                 if _miss: print(f"[RT: not in this recording: {', '.join(_miss)}] ", end="", flush=True)
                 if _ref: print(f"[RT: reference contacts, skipped: {', '.join(_ref)}] ", end="", flush=True)
+            if HFA_WARP:
+                _miss = sorted(set(HFA_WARP) - set(names)); _ref = sorted(set(HFA_WARP) & set(wm_skip))
+                if _miss: print(f"[TN rasters: not in this recording: {', '.join(_miss)}] ", end="", flush=True)
+                if _ref: print(f"[TN rasters: reference contacts, skipped: {', '.join(_ref)}] ", end="", flush=True)
             for ci, chan_name in enumerate(names):
                 if WM_NOREF_ONLY: continue
                 if chan_name in wm_skip: continue
@@ -959,19 +970,17 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                     continue
                 if chan_name in micro_names_set: continue
                 if RUN_CLUSTER_EXPORT and chan_name in skip and not RUN_ERSP_PIPELINE: continue
+                if HFA_WARP and chan_name not in HFA_WARP: continue   # --hfa-warp with a list: those contacts only
 
                 res = fe.compute_ersp(
                     signals=sig_c, fs=fs, onsets=on_c, offsets=off_c, channel_idx=ci,
                     trial_ends=te_c, mode=cfg.mode, time_window=cfg.time_window,
                     params=ersp_params)
 
-                if RUN_ERSP_PIPELINE and WRITE_ERSP_PLOTS:
-                    fe.plot_ersp(res, patient_id=patient_id, condition=cond,
-                                 reref_type=reref, chan_name=chan_name,
-                                 save_dir=(_ensure(photo_dir) if _is_photodiode(chan_name) else ersp_dir),
-                                 params=ersp_params, plot_title=False, save_sidecar=False)
-                if RUN_ERSP_PIPELINE and WRITE_HG_PLOTS:
-                    fe.plot_hg_trials(
+                # the HFA raster's arguments, shared by the onset-aligned figure and its
+                # time-normalised twin (2026-11-17): same trials, order, marks and rejected rows
+                if HFA_WARP is not None or (RUN_ERSP_PIPELINE and WRITE_HG_PLOTS):
+                    _hfa_kw = dict(
                         signals=sig_c, fs=fs,
                         onsets=(_hg_all["on"] if _hg_all is not None else on_c),
                         offsets=(_hg_all["off"] if _hg_all is not None else off_c),
@@ -989,6 +998,21 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                         add_separators=False, sort_ascending=True,
                         trial_end_indices=(_hg_all["te"] if _hg_all is not None else te_c),
                         sort_by="stim")
+                    _hfa_tn = dict(align="warp", warp_proportions=ersp_params.proportions,
+                                   warp_bins=ersp_params.n_time_bins)
+                if HFA_WARP is not None:                      # --hfa-warp: the time-normalised raster, nothing else
+                    fe.plot_hg_trials(**_hfa_kw, **_hfa_tn)
+                    del res
+                    continue
+
+                if RUN_ERSP_PIPELINE and WRITE_ERSP_PLOTS:
+                    fe.plot_ersp(res, patient_id=patient_id, condition=cond,
+                                 reref_type=reref, chan_name=chan_name,
+                                 save_dir=(_ensure(photo_dir) if _is_photodiode(chan_name) else ersp_dir),
+                                 params=ersp_params, plot_title=False, save_sidecar=False)
+                if RUN_ERSP_PIPELINE and WRITE_HG_PLOTS:
+                    fe.plot_hg_trials(**_hfa_kw)
+                    fe.plot_hg_trials(**_hfa_kw, **_hfa_tn)   # *_TN.png: the same rows on the ERSP's normalised time axis
                 # the HFA raster's twin (2026-10-02): the same trials, order, marks and rejected
                 # rows, each row the broadband cleaned voltage as a trace, one µV scale for the cohort
                 if RUN_ERSP_PIPELINE and WRITE_SIGNAL_PLOTS and not _is_photodiode(chan_name):
@@ -1070,10 +1094,10 @@ def process_patient(pid_raw, RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_P
                       f"({_n_ch} channels x {_n_tr} trials)")
 
         # ── PER-BLOCK CLEANING REPORT (not in the noref-only mode: the run's files stay as they are)
-        if notch_audit_rows and not WM_NOREF_ONLY and RT_ONLY is None:
+        if notch_audit_rows and not WM_NOREF_ONLY and RT_ONLY is None and HFA_WARP is None:
             pd.DataFrame(notch_audit_rows).to_csv(
                 os.path.join(report_dir, f"{patient_id}_notch_audit.tsv"), sep="\t", index=False)
-        if notch_scope != "file" and not WM_NOREF_ONLY and RT_ONLY is None:
+        if notch_scope != "file" and not WM_NOREF_ONLY and RT_ONLY is None and HFA_WARP is None:
             pd.DataFrame(peak_rows, columns=["condition", "shaft", "freq_hz", "z", "peak_db", "above_db", "on_comb"]).to_csv(
                 os.path.join(report_dir, f"{patient_id}_unexplained_peaks.tsv"), sep="\t", index=False)
             print(f"  [{patient_id}] notch audit -> {patient_id}_notch_audit.tsv, "
@@ -1134,6 +1158,8 @@ def main():
                     help="only the reference contacts' unreferenced figures (*_noref folders); cubes, QC figures, report row and logs/ untouched")
     ap.add_argument("--rt-only", nargs="+", metavar="CONTACT",
                     help="only these contacts, their ERSP in real seconds (cfg.time_window) locked to the stimulus onset (_RT) and to the GO cue (_RTgo), into outputs/03_ERSP_RT/<patient>/LM/ERSP/<cond>/; cubes, QC figures, report row and logs/ untouched")
+    ap.add_argument("--hfa-warp", nargs="*", metavar="CONTACT",
+                    help="only the time-normalised HFA rasters (PerTrial/HFA/<cond>/*_TN.png, beside the onset-aligned ones) for these contacts, or for every contact without a list; cubes, ERSP figures, trial scores, report row and logs/ untouched")
     a = ap.parse_args()
 
     RUN_ERSP_PIPELINE  = not a.no_qc
@@ -1148,8 +1174,12 @@ def main():
     if a.rt_only:
         RT_ONLY = set(a.rt_only)
         RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_PSD_PLOTS = True, False, False
+    global HFA_WARP
+    if a.hfa_warp is not None:
+        HFA_WARP = set(a.hfa_warp)                    # empty = every contact
+        RUN_ERSP_PIPELINE, RUN_CLUSTER_EXPORT, DO_MONTAGE_PSD_PLOTS = True, False, False
 
-    log_dir = os.path.join(run_root_ersp, "logs_wm_noref" if WM_NOREF_ONLY else ("logs_rt" if RT_ONLY is not None else "logs"))   # 141 reads logs/: a check is not a run
+    log_dir = os.path.join(run_root_ersp, "logs_wm_noref" if WM_NOREF_ONLY else ("logs_rt" if RT_ONLY is not None else ("logs_tn" if HFA_WARP is not None else "logs")))   # 141 reads logs/: a check is not a run
     os.makedirs(log_dir, exist_ok=True)
     for pid_raw in a.patient:
         # config keys are ints for the old HUG spelling (3455) and strings otherwise
@@ -1179,8 +1209,8 @@ def main():
             print("WM REREFERENCING REPORT (this patient)")
             print("=" * 72)
             print_report_line(row)
-            if WM_NOREF_ONLY or RT_ONLY is not None:
-                print("  (--wm-noref-only / --rt-only: the report row is not merged into wm_reref_report.tsv)")
+            if WM_NOREF_ONLY or RT_ONLY is not None or HFA_WARP is not None:
+                print("  (--wm-noref-only / --rt-only / --hfa-warp: the report row is not merged into wm_reref_report.tsv)")
             else:
                 merge_report(row)
         finally:
