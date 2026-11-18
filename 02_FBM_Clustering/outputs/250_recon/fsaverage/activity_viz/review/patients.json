@@ -2270,10 +2270,10 @@
 "patient": "PAT_6717",
 "raw_id": "PAT_6717",
 "system": "HUG",
-"ran": false,
-"run_start": "",
-"status": "not run",
-"reference": "",
+"ran": true,
+"run_start": "2026-11-16 20:14",
+"status": "ok",
+"reference": "WM reference, 0 contacts (skipped as data)",
 "wm_n": 0,
 "wm_source": "",
 "bad_n": 2,
@@ -2281,11 +2281,30 @@
 "TSP6",
 "HPD1"
 ],
-"notch": "",
+"notch": "interp \u00b7 per shaft",
 "crop": "",
-"conditions": "",
-"unexplained_peaks": "",
-"trials": {},
+"conditions": "audio/picture/reading",
+"unexplained_peaks": "5",
+"trials": {
+"audio": {
+"in": "50",
+"kept": "33",
+"used": "33",
+"cubes": "132"
+},
+"picture": {
+"in": "51",
+"kept": "34",
+"used": "34",
+"cubes": "132"
+},
+"reading": {
+"in": "23",
+"kept": "22",
+"used": "22",
+"cubes": "132"
+}
+},
 "hg_reref": "CAR",
 "anatomy_source": "no electrodes TSV",
 "in_cohort": true,
@@ -2295,14 +2314,14 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 132,
-"n_data": 0,
+"n_data": 132,
 "n_status": {
-"data": 0,
+"data": 132,
 "wm_ref": 0,
 "bad": 0,
 "unknown": 0,
 "not_recorded": 0,
-"not_run": 132,
+"not_run": 0,
 "aux": 0
 }
 },
