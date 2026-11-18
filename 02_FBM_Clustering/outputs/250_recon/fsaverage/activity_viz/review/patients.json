@@ -2267,6 +2267,46 @@
 }
 },
 {
+"patient": "PAT_6717",
+"raw_id": "PAT_6717",
+"system": "HUG",
+"ran": false,
+"run_start": "",
+"status": "not run",
+"reference": "",
+"wm_n": 0,
+"wm_source": "",
+"bad_n": 2,
+"bad_list": [
+"TSP6",
+"HPD1"
+],
+"notch": "",
+"crop": "",
+"conditions": "",
+"unexplained_peaks": "",
+"trials": {},
+"hg_reref": "CAR",
+"anatomy_source": "no electrodes TSV",
+"in_cohort": true,
+"cohort_note": "",
+"tree": "03_ERSP",
+"hfa_dir": "PerTrial/HFA",
+"hfa_stem": "HFAtrials",
+"report_dir": "PerTrial/Report",
+"n_contacts": 132,
+"n_data": 0,
+"n_status": {
+"data": 0,
+"wm_ref": 0,
+"bad": 0,
+"unknown": 0,
+"not_recorded": 0,
+"not_run": 132,
+"aux": 0
+}
+},
+{
 "patient": "EL044",
 "raw_id": "EL044",
 "system": "Bern",
