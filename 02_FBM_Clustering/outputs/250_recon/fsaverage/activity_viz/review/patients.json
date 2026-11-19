@@ -1558,12 +1558,12 @@
 "raw_id": "PAT_3455",
 "system": "HUG",
 "ran": true,
-"run_start": "2026-10-16 00:59",
+"run_start": "2026-11-19 00:10",
 "status": "ok",
-"reference": "WM reference, 11 contacts (skipped as data)",
-"wm_n": 11,
+"reference": "WM reference, 9 contacts (skipped as data)",
+"wm_n": 9,
 "wm_source": "BIDS TSV",
-"bad_n": 19,
+"bad_n": 33,
 "bad_list": [
 "HAD9",
 "HAD10",
@@ -1583,30 +1583,44 @@
 "OPD5",
 "TSP4",
 "TSP5",
-"TSP6"
+"TSP6",
+"CPD1",
+"IMD10",
+"AD2",
+"AD3",
+"AD4",
+"AD5",
+"AD6",
+"PHD2",
+"PHD3",
+"PHD4",
+"PHD5",
+"PHD6",
+"PHD7",
+"PHD8"
 ],
 "notch": "interp \u00b7 per shaft",
 "crop": "250-1836 s",
 "conditions": "audio/picture/reading",
-"unexplained_peaks": "21",
+"unexplained_peaks": "20",
 "trials": {
 "audio": {
 "in": "48",
-"kept": "38",
-"used": "38",
-"cubes": "86"
+"kept": "33",
+"used": "33",
+"cubes": "74"
 },
 "picture": {
 "in": "53",
 "kept": "40",
 "used": "40",
-"cubes": "86"
+"cubes": "74"
 },
 "reading": {
 "in": "51",
-"kept": "32",
-"used": "32",
-"cubes": "86"
+"kept": "25",
+"used": "25",
+"cubes": "74"
 }
 },
 "hg_reref": "WM",
@@ -1618,11 +1632,11 @@
 "hfa_stem": "HFAtrials",
 "report_dir": "PerTrial/Report",
 "n_contacts": 116,
-"n_data": 86,
+"n_data": 74,
 "n_status": {
-"data": 86,
-"wm_ref": 11,
-"bad": 19,
+"data": 74,
+"wm_ref": 9,
+"bad": 33,
 "unknown": 0,
 "not_recorded": 0,
 "not_run": 0,

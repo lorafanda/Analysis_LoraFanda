@@ -1,9 +1,9 @@
 {
- "built": "2026-11-18 22:23",
+ "built": "2026-11-19 14:04",
  "source_tree": "//nasac-m2.unige.ch/m-HumanNeuronLab/ANALYSIS/FLM/Analysis_LoraFanda/01_FBM_Analysis/outputs/03_ERSP",
  "n_patient": 35,
  "n_contact": 5204,
- "n_data": 3121,
+ "n_data": 3109,
  "non_cohort": {
   "EL044": "ECoG grids only, and only the audio block was recorded",
   "PAT_3301": "picture naming only - no audio or reading block",
