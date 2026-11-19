@@ -94,9 +94,11 @@ CSV = dict(
     bymk=MM / "out" / "maps_by_k" / "maps_by_k.csv",
     bymk_best=MM / "out" / "maps_by_k" / "maps_by_k_best.csv",
     all25=MM / "out" / "highlight_maps" / "15band_K7_load035_all_v4.csv",
+    sel6=MM / "out" / "highlight_maps" / "15band_K7_load035_sel_v4.csv",
     **{f"hl_{t}": MM / "out" / "highlight_maps" / f"{t}_load035_v4.csv" for t in ("15band_K7", "15zband_K7", "5band_K6")},
     **{f"cross_K{k}": MM / "out" / "cross_feature_maps" / f"K{k}_load035_v4.csv" for k in (6, 7, 8, 9, 10)},
 )
+NUMS = ROOT / "outputs" / "clustering" / "paper2_validation" / "numbers.json"   # validation numbers (make_validation_story.py)
 
 
 def nm(m: str) -> str:
@@ -109,15 +111,30 @@ def zlist(sub, col="z", sign=1) -> str:
     return ", ".join(f"{nm(m)} {z:+.1f}".replace("-", "&minus;") for m, z in zip(sub["map"], sub[col])) or "none"
 
 
-LEG_V4 = ("Bar = % of the cluster's members (own loading &ge; 0.35) inside the map (the electrode's 5-mm sphere in the "
-          "map's top 10%). Full colour = above chance; pale = neither; white with a coloured edge and &#9660; = below "
-          "chance (the cluster avoids the map). Dark line = chance level, the mean over 2,000 shaft shifts; grey box = "
-          "the corrected chance range, so a bar outside the box is exactly a significant one (two-sided, "
-          "Benjamini&ndash;Hochberg over every bar of the figure). Red dot = more than 50% of the members from one patient.")
-LEG_PIAL = ("Pial maps: a vertex is coloured when the map there is in its top 10% (the same 90th-percentile threshold as "
-            "&lsquo;inside&rsquo; for the electrodes); colour runs from light orange at that threshold to dark red at the "
-            "map's 99.5th percentile and only shows how far above the threshold it is. Display only: the electrodes use "
-            "the 5-mm sphere mean at the contact.")
+# How to read the figures is explained ONCE, in section 2 (READ); the captions point there.
+LEG_V4 = "Bars, dark line, grey box and markers as in section 2 (how to read the bar figures)."
+LEG_PIAL = "Pial maps as in section 2."
+READ = ("<li><b>Bar:</b> % of the cluster's members (own loading &ge; 0.35) inside the map. Full colour = above chance; "
+        "pale = neither; white with a coloured edge and &#9660; = below chance (the cluster avoids the map). Red dot = "
+        "more than 50% of the members from one patient.</li>"
+        "<li><b>Chance level (dark line):</b> within each patient the electrodes are put in shaft order (shaft name, "
+        "contact number, from the recording's contact names) and the cluster labels rotated by a random offset, 2,000 "
+        "times. A rotation keeps neighbouring contacts together but breaks the link between a cluster and its place. "
+        "The chance level is the mean share inside the map over the 2,000 rotations.</li>"
+        "<li><b>SD and z:</b> the SD is how much the 2,000 rotations spread around that mean. z = (bar &minus; chance "
+        "level) / SD: how many SDs the real bar sits from chance. Positive = more members inside the map than chance, "
+        "negative = fewer. p = 2 &times; the normal tail beyond |z|.</li>"
+        "<li><b>Grey box (chance range):</b> chance level &plusmn; z<sub>cut</sub> &times; SD. One bar alone would need "
+        "|z| of about 2; with many bars a few reach 2 by luck, so Benjamini&ndash;Hochberg over every bar of the figure "
+        "(or of the configuration, step 17) raises the cut (to {zc:.2f} for 15 bands K 7). A bar outside the box is "
+        "exactly a significant one (q &lt; 0.05): above it = above chance, below it = below chance. The box is cut off "
+        "at 0%, so some boxes look lopsided; a bar touching the edge is borderline.</li>"
+        "<li><b>Same z everywhere:</b> every step draws the same rotations for a given solution, so the same bar has the "
+        "same z in every figure (checked for 15 bands K 7 across steps 13, 15, 16 and 17); only the correction family, "
+        "and so the cut, differs between figures.</li>"
+        "<li><b>Pial maps:</b> a vertex is coloured when the map there is in its top 10% (the same threshold as "
+        "&lsquo;inside&rsquo; for the electrodes), light orange at that threshold to dark red at the map's 99.5th "
+        "percentile. Display only: the electrodes use the 5-mm sphere mean at the contact.</li>")
 
 
 def build() -> str:
@@ -162,7 +179,31 @@ def build() -> str:
         AG[m_.group(1).strip()] = dict(r=float(m_.group(2)), free=int(m_.group(3)), pairs=int(m_.group(4)),
                                        within=int(m_.group(5)), diag=float(m_.group(6)), chance=float(m_.group(7)),
                                        sd=float(m_.group(8)), p=m_.group(10) + " " + m_.group(11))
+    for m_ in re.finditer(r"^(.+?): matched r .*?; mean adjusted overlap ([0-9.]+) \(raw Jaccard", cap.read_text(encoding="utf-8"), re.M):
+        AG[m_.group(1).strip()]["adj"] = float(m_.group(2))
     ALG = [AG[k_] for k_ in ("convex NMF vs k-means", "convex NMF vs Ward", "k-means vs Ward")]
+    # validation numbers (agreement ARI, the one-patient rule, leave-one-patient-out), as on the poster
+    import json
+    if not NUMS.exists():
+        raise SystemExit(f"missing {NUMS}")
+    NV = json.loads(NUMS.read_text(encoding="utf-8"))["values"]
+    ari_km, ari_wd = NV["ari_algo"]["k-means vs convex NMF"]["ari"], NV["ari_algo"]["Ward vs convex NMF"]["ari"]
+    k_dom = int(NV["gen_first_dominated_k"])
+    lopo_acc, lopo_chance = NV["conf"]["lopo"]["overall"], NV["lopo_predict"]["chance_mean"]
+    rec = {int(k_): v_ for k_, v_ in NV["conf"]["lopo"]["recall"].items()}
+    low2 = sorted(rec, key=rec.get)[:2]
+    refit, refit0 = NV["lopo"]["real_mean"], NV["lopo"]["null_mean"]
+    # the six chosen maps: their 42 bars corrected on their own, against the figure's correction over every map
+    import sys
+    sys.path.insert(0, str(MM))
+    import mm_common as MC
+    s6 = T["sel6"][T["sel6"].shown]
+    q6 = MC.bh(s6.p_z_two_sided.values) < 0.05
+    six = dict(n=len(s6), up=int((q6 & (s6.z > 0)).sum()), dn=int((q6 & (s6.z < 0)).sum()),
+               zcut=float(s6.z.abs()[q6].min()), up_all=int(s6.fit.sum()), dn_all=int(s6.below_chance.sum()),
+               nall=len(T["sel6"]), maps=s6["map"].nunique())
+    c1six = s6[(s6.cluster == 1) & s6.fit]
+    fig_date = time.strftime("%Y-%m-%d", time.localtime(max(p.stat().st_mtime for p in SOURCES.values())))
     FEA = {k_: AG[f"15 bands vs {k_}"] for k_ in ("5 bands", "2 bands", "HFA")}
     hfa = info[info.fset == "hfa"]
     hfa_ok_k = sorted({int(k_) for k_ in hfa[hfa.valid].k})
@@ -178,10 +219,10 @@ def build() -> str:
     P += [B_SEC, '  <section id="fmaps">',
           f'    <div class="eyebrow" style="color:{ACC}">Functional maps &middot; feature set and K, {stamp}</div>',
           "    <h2>Which feature set and K carry functional information?</h2>",
-          '    <p class="lead">NiMARE functional maps against the convex-NMF response types, cohort v17 (1587 electrodes, '
-          f'29 patients). Analyses of 4&ndash;7 November 2026. Every figure was redrawn on 7 November on all {nmaps} maps '
-          'with one test (section 2), and every number on this tab is read from the output table named with it when the '
-          f'tab is built. Word document: <a href="{DOCX_URL}">functional_map_analysis_2026-11-05.docx</a>.</p>']
+          '    <p class="lead">NiMARE functional maps against the convex-NMF response clusters, cohort v17 (1587 electrodes, '
+          f'29 patients). Analyses of 4&ndash;7 November 2026; figures last rebuilt {fig_date}, all on {nmaps} maps with '
+          'one test (section 2). Every number on this tab is read from the output table named with it when the tab is '
+          f'built. Word document: <a href="{DOCX_URL}">functional_map_analysis_2026-11-05.docx</a>.</p>']
 
     P += ['    <h3 id="fm-answer">1 &middot; Question and short answer</h3>',
           "    <p><b>Question.</b> Across feature sets, numbers of clusters K 6&ndash;10 and minimum loading cuts, which "
@@ -198,7 +239,7 @@ def build() -> str:
     P += ['    <h3 id="fm-maps">2 &middot; The maps and the methods</h3>',
           f"    <p>{nmaps} unthresholded association maps computed with NiMARE (MKDA chi-square, 6-mm kernel) from NeuroSynth "
           "v7 (abstract terms, tf-idf &ge; 0.001); every map, and both sides of every contrast, has at least 200 studies, "
-          "except heard sentences vs rest (154, kept at 150).</p>",
+          "except heard sentences vs rest (154 studies, kept with a 150-study floor; the one map under the rule).</p>",
           table(["Kind", "Maps", "What it compares"],
                 [["10 single terms", "pictures, objects, listening, auditory, sentences, reading, naming, semantic, "
                   "phonological, production", "studies with the term vs all other studies"],
@@ -209,26 +250,24 @@ def build() -> str:
                   "heard sentences (154 studies with a sentence term AND a listening term) vs resting state",
                   "task studies vs about 1,500 resting-state studies"]]),
           "    <ul>"
+          "<li><b>Convex NMF and loading:</b> convex NMF describes every electrode's ERSP as a mix of K prototype "
+          "responses (data &asymp; prototypes &times; loadings). A prototype (the cluster's centroid) is a weighted "
+          "average of real electrodes; an electrode's loading is how strongly it expresses each prototype. An electrode "
+          "is a member of the cluster it loads on most.</li>"
           "<li><b>Inside a map:</b> the mean z over a 5-mm sphere around the contact is in the map's top 10% of in-mask "
           "voxels.</li>"
           "<li><b>One-patient rule:</b> a cluster is clean when at most 50% of its members (after the loading cut) come "
           "from one patient; a configuration is valid when every cluster is clean.</li>"
-          "<li><b>Loading cut:</b> only members whose own convex-NMF loading is at or above the cut; the weighted version "
+          "<li><b>Loading cut:</b> only members whose own loading is at or above the cut; the weighted version "
           "(step 14) keeps every electrode in every cluster in proportion to its loading.</li>"
-          "<li><b>One test for every bar (steps 13, 15, 16, 17):</b> within each patient the electrodes are put in shaft "
-          "order (shaft name, contact number, from the recording's contact names) and the cluster labels rotated by a "
-          "random offset, 2,000 times; z = (cluster % &minus; mean of the shifts) / SD of the shifts; p = 2 &times; the "
-          "normal tail beyond |z|; Benjamini&ndash;Hochberg over every bar of the figure (or of the configuration, step "
-          "17); above chance = z &gt; 0 and q &lt; 0.05, below chance = z &lt; 0 and q &lt; 0.05. The grey box in the "
-          "figures is the corrected chance range (mean &plusmn; the |z| at the cut-off &times; SD). Every step draws the "
-          "same shifts for a given solution, so the same bar has the same z in every figure (checked for 15 bands K 7 "
-          "across steps 13, 15, 16 and 17); only the correction family, and so the cut-off, differs between figures.</li>"
           f"<li><b>Functional information (step 14):</b> mutual information between cluster membership and inside / "
           f"outside, summed over the {nmaps} maps, as a z against 500 shaft shifts; compared within one K (it grows with "
           "the number of electrodes and with K).</li>"
           "<li><b>Figure versions:</b> every figure is also saved as <code>_poster</code> (72% of the height) and "
           "<code>_paper</code> (60% of the width, 51% of the height, text &times; 0.62, 600 dpi) beside the PNG named "
-          "under it (option <code>--styles screen poster paper</code>).</li></ul>"]
+          "under it (option <code>--styles screen poster paper</code>).</li></ul>",
+          "    <p><b>How to read the bar figures (one test for every bar, steps 13, 15, 16, 17).</b></p>",
+          "    <ul>" + READ.format(zc=zc) + "</ul>"]
 
     rows3 = [[LABEL.get(f, f), f"{100 * g[g.loading == '0'].max_one_patient.iloc[0]:.0f}%",
               ("yes (" + ", ".join(g[g.valid].loading) + ")") if g.valid.any() else "no"]
@@ -316,7 +355,12 @@ def build() -> str:
     P.append(fig("highlight2_15band_K7_seven", "15 bands, K = 7, members with loading &ge; 0.35: six chosen maps",
                  "The professor's four maps vs resting state (heard sentences, pictures, reading, production), then "
                  "sentences vs words and semantic vs rest, where clusters sit significantly below chance. The correction "
-                 f"runs over all {nmaps} maps, not only the six. " + "Here each cluster's centroid and its glass brains (left | right) sit above its bars, the pial maps are "
+                 f"runs over all {six['nall']} bars (7 clusters &times; {nmaps} maps; cut |z| &ge; {zc:.2f}): "
+                 f"{six['up_all']} of the {six['n']} bars shown above chance, {six['dn_all']} below. Correcting over only "
+                 f"the {six['n']} bars shown (7 &times; {six['maps']}) gives cut |z| &ge; {six['zcut']:.2f} and "
+                 f"{six['up']} above, {six['dn']} below, so either family gives the same calls. c1 (audio-stimulus "
+                 f"increase) is above chance in {len(c1six)} of the {six['maps']}: {zlist(c1six)}. "
+                 "Here each cluster's centroid and its glass brains (left | right) sit above its bars, the pial maps are "
                  "shown left | right, and the background is transparent (for the poster). " + LEG16))
     P.append("    <p>The 10 most telling maps: a map can be shown when at least one clean cluster is above chance in it; at "
              "most 10 are shown, shared out in turns: the clusters with the fewest hits choose first, each takes one map "
@@ -328,7 +372,7 @@ def build() -> str:
                        ("highlight_5band_K6", "5 bands, K 6")):
         c = T["hl_" + key.split("_", 1)[1]]
         P.append(fig(key + "_v4", f"{title.replace(', K', ', K =')}, members with loading &ge; 0.35: the 10 maps that at least one clean cluster fits",
-                     ("" if key == "highlight_15band_K7" else "The clusters take the place and colour of the 15-band type "
+                     ("" if key == "highlight_15band_K7" else "The clusters take the place and colour of the 15-band cluster "
                       "they match (FIG 4's rule), ids are their own. ") + f"Correction over {c.cluster.nunique()} clusters &times; {nmaps} maps; cut-off "
                      f"|z| &ge; {c.z_crit.iloc[0]:.2f}. " + LEG16))
         parts = []
@@ -340,26 +384,35 @@ def build() -> str:
         rows7.append([title, "; ".join(parts)])
     P.append(table(["Solution", "Per cluster: above chance shown / in total, below chance"], rows7))
 
+    avoid = [j for j in CARD if not len(up[j])]
     P += ['    <h3 id="fm-conclusion">8 &middot; Conclusion</h3>',
           "    <p>Language is not one module but a network of interacting sub-functions (perception, comprehension, sentence "
           "integration, semantic retrieval, naming, production), and the analysis was designed around that view: a "
           "cluster may sit in several language maps, and several clusters may share one map. Read this way, the response "
-          f"types map onto the language network in a consistent and limited way.</p>",
-          "    <ul><li><b>Distinct clustering algorithms find the same types.</b> Convex NMF, k-means and Ward hierarchical "
-          f"clustering on the same 15-band description: in each of the three comparisons all "
-          f"{min(min(a_['free'], a_['within']) for a_ in ALG)} of {ALG[0]['pairs']} matched pairs of types are above both "
+          f"clusters map onto the language network in a consistent and limited way.</p>",
+          "    <p><b>How agreement is measured</b> (FIG 4). Each cluster is paired one-to-one with its best-matching cluster "
+          "in the other solution, by the correlation of their centroids. For each pair, the share of electrodes they have "
+          "in common (Jaccard, J) is corrected for chance as (J &minus; J0) / (1 &minus; J0) and averaged over the 7 "
+          "pairs; J0 is the overlap randomly shuffled labels give, so 0 = no more overlap than random labels and 1 = the "
+          "two clusters hold exactly the same electrodes. A pair clears both nulls when its overlap is above labels "
+          "shuffled across all electrodes (free null) and above labels shuffled only within each patient (within-patient "
+          "null); both keep the cluster sizes and redo the matching in every draw.</p>",
+          "    <ul><li><b>Distinct clustering algorithms find the same clusters.</b> Convex NMF, k-means and Ward hierarchical "
+          "clustering on the same 15-band description: mean adjusted overlap "
+          + " / ".join(f"{a_['adj']:.2f}" for a_ in ALG) + " (convex NMF vs k-means / vs Ward / k-means vs Ward); in each "
+          f"comparison all {min(min(a_['free'], a_['within']) for a_ in ALG)} of {ALG[0]['pairs']} matched pairs clear both "
           f"nulls, and {100 * min(a_['diag'] for a_ in ALG):.0f}&ndash;{100 * max(a_['diag'] for a_ in ALG):.0f}% of the "
-          f"electrodes fall in the matched type against {100 * min(a_['chance'] for a_ in ALG):.0f}&ndash;"
-          f"{100 * max(a_['chance'] for a_ in ALG):.0f}% for random pairings (matched centroids r "
-          f"{min(a_['r'] for a_ in ALG):+.2f} to {max(a_['r'] for a_ in ALG):+.2f}). The types are a property of the data, "
-          "not of one algorithm.</li>"
-          "<li><b>The types depend on frequency-specific information that HFA, the industry standard, alone loses.</b> "
+          f"electrodes fall in the matched cluster against {100 * min(a_['chance'] for a_ in ALG):.0f}&ndash;"
+          f"{100 * max(a_['chance'] for a_ in ALG):.0f}% for random pairings. ARI with convex NMF: k-means {ari_km:.2f}, "
+          f"Ward {ari_wd:.2f} (weak for Ward). The clusters are a property of the data, not of one algorithm.</li>"
+          "<li><b>The clusters depend on frequency-specific information that HFA, the industry standard, alone loses.</b> "
           "Clustered on less spectral detail, down to high-frequency activity (HFA, 70-150 Hz) alone, convex NMF agrees "
-          "less and less with the 15-band types: "
-          f"{100 * FEA['5 bands']['diag']:.0f}% of the electrodes fall in the matched type with 5 bands, "
-          f"{100 * FEA['2 bands']['diag']:.0f}% with 2 bands and {100 * FEA['HFA']['diag']:.0f}% with HFA alone, against {100 * FEA['HFA']['chance']:.0f} &plusmn; {100 * FEA['HFA']['sd']:.0f}% for random "
-          f"pairings (p {FEA['HFA']['p']}, not above chance; {FEA['HFA']['free']} of {FEA['HFA']['pairs']} pairs above the "
-          "free null). HFA alone also leans on single patients: "
+          "less and less with the 15-band clusters: mean adjusted overlap "
+          f"{FEA['5 bands']['adj']:.2f} with 5 bands, {FEA['2 bands']['adj']:.2f} with 2 bands, {FEA['HFA']['adj']:.2f} "
+          f"with HFA; {100 * FEA['HFA']['diag']:.0f}% of the electrodes in the matched cluster with HFA against "
+          f"{100 * FEA['HFA']['chance']:.0f} &plusmn; {100 * FEA['HFA']['sd']:.0f}% for random pairings (p "
+          f"{FEA['HFA']['p']}, not above chance; {FEA['HFA']['free']} of {FEA['HFA']['pairs']} pairs above the free "
+          "null). HFA alone also leans on single patients: "
           + (f"it passes the one-patient rule only at K {', '.join(map(str, hfa_ok_k))}; at K "
              f"{', '.join(str(int(k_)) for k_ in hfa_bad.k)} one of its clusters is "
              f"{100 * hfa_bad.max_one_patient.min():.0f}&ndash;{100 * hfa_bad.max_one_patient.max():.0f}% one patient "
@@ -372,18 +425,23 @@ def build() -> str:
           f"<li><b>Two more specific functions.</b> c5 (response broadband increase) is above chance in {len(up[5])} maps ({zlist(up[5])}) and below in "
           f"{len(dn[5]) or 'none'}. c0 is above chance in {len(up[0])} ({zlist(up[0])}) and below in "
           f"{zlist(dn[0], sign=-1)}.</li>"
-          "<li><b>The other four types avoid language maps.</b> "
-          + ", ".join(f"c{j}" for j in CARD if not len(up[j]))
+          f"<li><b>The other {len(avoid)} clusters avoid language maps.</b> "
+          + ", ".join(f"c{j}" for j in avoid)
           + " are above chance in no map, and each is below chance in at least one: "
-          + "; ".join(f"c{j} in {len(dn[j])}" for j in CARD if not len(up[j])) + ".</li>"
+          + "; ".join(f"c{j} in {len(dn[j])}" for j in avoid) + ".</li>"
           "<li><b>The professor's four maps vs resting state.</b> "
           + " ".join(f"{nm(m).replace(' vs rest', '').capitalize()}: above {who(m, 'above_chance')}, below "
                      f"{who(m, 'below_chance')}." for m in prof) + "</li>"
-          f"<li><b>More clusters do not mean more functions</b> (section 5). Where every cluster is clean, no feature "
-          f"set, K or loading has more than {max_ge2_clean} clusters above chance in two or more maps; higher K adds "
-          "single-map hits or one-patient clusters.</li>"
-          "<li><b>15 bands K 7 holds</b> (sections 3&ndash;5). At loadings 0.3&ndash;0.4 it reaches that maximum with every "
-          "cluster multi-patient; function does not single it out, stability and agreement do.</li></ul>"]
+          f"<li><b>Why 15 bands K 7.</b> K 7 is the largest K at which no cluster is more than half one patient (K {k_dom} "
+          "is the first with one); the held-out curve has no peak to choose from (it keeps rising). At K 7 the clusters "
+          f"agree across algorithms (above), and with one patient left out, {100 * lopo_acc:.0f}% of that patient's "
+          f"electrodes are predicted into their own cluster (chance {100 * lopo_chance:.0f}%); "
+          + " and ".join(f"c{j} {TN.get(j, '')} ({100 * rec[j]:.0f}%)" for j in low2)
+          + " leak most to other clusters. This is a prediction from the fitted prototypes: refitting the clustering "
+          f"without the patient is not above its shaft null ({refit:.2f} vs {refit0:.2f}). Function does not single K 7 "
+          f"out (section 5): where every cluster is clean, no feature set, K or loading has more than {max_ge2_clean} "
+          "clusters above chance in two or more maps, and 15 bands K 7 reaches that number at loadings 0.3&ndash;0.4; "
+          "higher K adds single-map hits or one-patient clusters.</li></ul>"]
 
     P += ['    <h3 id="fm-limits">9 &middot; Limitations</h3>',
           "    <ul><li><b>The maps are not this task:</b> words in abstracts across thousands of fMRI studies; BOLD tracks high "
@@ -391,7 +449,9 @@ def build() -> str:
           "<li><b>Rest maps</b> compare task studies with resting-state connectivity studies (mostly the default network): "
           "they mark task-responsive cortex rather than a function; the same resting-state studies sit in all eight, so "
           "those maps are not independent.</li>"
-          "<li><b>Heard sentences vs rest</b> rests on 154 studies, the one map under the 200-study rule.</li>"
+          "<li><b>Contact positions:</b> every result here was computed before the 12 and 16 November reconstruction "
+          "fixes (EL046, EL048 and PAT_3975 positions); they may shift after 4_neurosynth.py and steps 13&ndash;17 are "
+          "rerun.</li>"
           "<li><b>Coverage:</b> contacts are placed for epilepsy, often deep or mesial temporal, 54% centred in white "
           "matter; a cluster without a map may sit where the maps do not reach.</li>"
           "<li><b>Spatial dependence:</b> the null keeps neighbours together within a shaft, not across nearby shafts.</li>"
