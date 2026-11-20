@@ -4492,6 +4492,211 @@
       }
     },
     {
+      "id": "hierarchical__concat_bands15z__20261120_232736",
+      "track": "hierarchical/concat_bands15z",
+      "track_label": "Ward \u00b7 15 bands, each z-scored (v17)",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232736",
+      "path": "hierarchical/concat_bands15z/runs/20261120_232736",
+      "dir": "runs/hierarchical__concat_bands15z__20261120_232736",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 286,
+        "1": 485,
+        "2": 209,
+        "3": 211,
+        "4": 396
+      },
+      "cluster_patients": {
+        "0": 10,
+        "1": 26,
+        "2": 8,
+        "3": 5,
+        "4": 25
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 96,
+          "PAT_3455": 71,
+          "PAT_3965": 68,
+          "EL052": 21,
+          "EL048": 11,
+          "EL043": 6,
+          "EL046": 5,
+          "EL034": 3,
+          "EL037": 3,
+          "PAT_6854": 2
+        },
+        "1": {
+          "EL030": 60,
+          "EL033": 58,
+          "PAT_3390": 46,
+          "EL042": 40,
+          "EL045": 36,
+          "EL051": 33,
+          "PAT_6704": 25,
+          "EL043": 25,
+          "EL048": 24,
+          "EL036": 23,
+          "EL035": 22,
+          "EL040": 20,
+          "PAT_6854": 13,
+          "PAT_2868": 9,
+          "PAT_6953": 7,
+          "PAT_5515": 7,
+          "EL046": 7,
+          "PAT_3066": 5,
+          "EL052": 4,
+          "PAT_3965": 4,
+          "PAT_6619": 4,
+          "PAT_1327": 4,
+          "EL034": 3,
+          "EL037": 3,
+          "EL038": 2,
+          "PAT_3780": 1
+        },
+        "2": {
+          "PAT_6854": 75,
+          "PAT_1327": 71,
+          "PAT_5533": 29,
+          "PAT_3975": 13,
+          "PAT_3066": 10,
+          "PAT_3390": 5,
+          "PAT_3780": 5,
+          "EL052": 1
+        },
+        "3": {
+          "PAT_6953": 115,
+          "PAT_3780": 74,
+          "EL038": 9,
+          "EL040": 8,
+          "EL030": 5
+        },
+        "4": {
+          "PAT_6619": 54,
+          "EL038": 38,
+          "EL046": 35,
+          "PAT_6854": 35,
+          "EL043": 30,
+          "EL037": 25,
+          "PAT_5533": 23,
+          "PAT_3066": 22,
+          "EL042": 20,
+          "PAT_1327": 20,
+          "PAT_6704": 18,
+          "EL045": 15,
+          "PAT_3780": 12,
+          "EL035": 11,
+          "PAT_6953": 10,
+          "EL040": 7,
+          "EL030": 6,
+          "PAT_2868": 4,
+          "EL036": 2,
+          "PAT_5515": 2,
+          "EL052": 2,
+          "PAT_3390": 2,
+          "EL034": 1,
+          "PAT_3455": 1,
+          "PAT_3975": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
       "id": "cnmf__concat_bands15s__20261102_222007",
       "track": "cnmf/concat_bands15s",
       "track_label": "Convex NMF \u00b7 15 bands, per-band shape (v17)",
@@ -5093,6 +5298,5437 @@
             "centroid": "cluster_centroids/cluster_08.png"
           }
         },
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "hierarchical__concat_bands15s__20261120_232741",
+      "track": "hierarchical/concat_bands15s",
+      "track_label": "Ward \u00b7 15 bands, per-band shape (v17)",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232741",
+      "path": "hierarchical/concat_bands15s/runs/20261120_232741",
+      "dir": "runs/hierarchical__concat_bands15s__20261120_232741",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 95,
+        "1": 234,
+        "2": 484,
+        "3": 325,
+        "4": 449
+      },
+      "cluster_patients": {
+        "0": 3,
+        "1": 14,
+        "2": 18,
+        "3": 21,
+        "4": 13
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 92,
+          "PAT_3965": 2,
+          "EL034": 1
+        },
+        "1": {
+          "PAT_3455": 71,
+          "PAT_3965": 70,
+          "EL052": 25,
+          "EL030": 23,
+          "EL043": 14,
+          "PAT_2868": 9,
+          "EL037": 6,
+          "EL034": 6,
+          "PAT_3975": 4,
+          "PAT_1327": 2,
+          "EL046": 1,
+          "EL035": 1,
+          "PAT_3390": 1,
+          "PAT_6619": 1
+        },
+        "2": {
+          "PAT_3780": 91,
+          "PAT_1327": 90,
+          "PAT_6854": 79,
+          "EL038": 45,
+          "PAT_6619": 41,
+          "PAT_5533": 40,
+          "PAT_3066": 25,
+          "EL037": 17,
+          "EL030": 14,
+          "PAT_3975": 13,
+          "EL033": 7,
+          "EL045": 7,
+          "PAT_3390": 7,
+          "PAT_2868": 3,
+          "PAT_5515": 2,
+          "EL052": 1,
+          "EL035": 1,
+          "EL042": 1
+        },
+        "3": {
+          "EL042": 59,
+          "EL046": 46,
+          "EL043": 46,
+          "PAT_6854": 32,
+          "EL035": 31,
+          "PAT_6704": 21,
+          "PAT_6619": 16,
+          "PAT_3066": 12,
+          "PAT_5533": 12,
+          "PAT_6953": 10,
+          "EL037": 8,
+          "PAT_5515": 7,
+          "EL040": 6,
+          "EL045": 5,
+          "EL038": 4,
+          "PAT_1327": 3,
+          "EL048": 2,
+          "EL052": 2,
+          "PAT_3455": 1,
+          "PAT_3780": 1,
+          "PAT_3975": 1
+        },
+        "4": {
+          "PAT_6953": 122,
+          "EL033": 51,
+          "PAT_3390": 45,
+          "EL045": 39,
+          "EL030": 34,
+          "EL051": 33,
+          "EL048": 33,
+          "EL040": 29,
+          "EL036": 25,
+          "PAT_6704": 22,
+          "PAT_6854": 14,
+          "EL043": 1,
+          "PAT_2868": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "cnmf__concat_bands15t__20261102_232300",
+      "track": "cnmf/concat_bands15t",
+      "track_label": "Convex NMF \u00b7 15 bands, ternary map",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261102_232300",
+      "path": "cnmf/concat_bands15t/runs/20261102_232300",
+      "dir": "runs/cnmf__concat_bands15t__20261102_232300",
+      "k": 7,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 334,
+        "1": 211,
+        "2": 75,
+        "3": 212,
+        "4": 158,
+        "5": 251,
+        "6": 346
+      },
+      "cluster_patients": {
+        "0": 27,
+        "1": 24,
+        "2": 6,
+        "3": 18,
+        "4": 13,
+        "5": 24,
+        "6": 22
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "EL042": 37,
+          "EL030": 32,
+          "PAT_6854": 32,
+          "PAT_3390": 24,
+          "EL033": 19,
+          "EL035": 17,
+          "PAT_6953": 16,
+          "EL046": 15,
+          "EL051": 15,
+          "PAT_3975": 14,
+          "PAT_6619": 14,
+          "EL043": 11,
+          "PAT_3066": 11,
+          "PAT_6704": 10,
+          "PAT_2868": 10,
+          "EL040": 7,
+          "PAT_5515": 6,
+          "EL036": 5,
+          "EL045": 5,
+          "PAT_5533": 5,
+          "EL052": 5,
+          "EL037": 5,
+          "EL038": 4,
+          "PAT_1327": 4,
+          "EL048": 4,
+          "PAT_3965": 4,
+          "EL034": 3
+        },
+        "1": {
+          "PAT_6854": 70,
+          "PAT_6619": 25,
+          "EL042": 17,
+          "PAT_3066": 15,
+          "PAT_5533": 13,
+          "PAT_3975": 10,
+          "PAT_1327": 10,
+          "EL038": 8,
+          "EL035": 7,
+          "EL046": 6,
+          "PAT_3455": 5,
+          "PAT_3390": 4,
+          "EL037": 3,
+          "PAT_3780": 3,
+          "EL040": 3,
+          "EL036": 2,
+          "PAT_6953": 2,
+          "EL052": 2,
+          "EL045": 1,
+          "EL043": 1,
+          "PAT_2868": 1,
+          "PAT_3965": 1,
+          "PAT_5515": 1,
+          "PAT_6704": 1
+        },
+        "2": {
+          "PAT_3455": 66,
+          "PAT_1327": 4,
+          "EL052": 2,
+          "PAT_3066": 1,
+          "PAT_3780": 1,
+          "PAT_3975": 1
+        },
+        "3": {
+          "PAT_1327": 51,
+          "PAT_3975": 41,
+          "PAT_5533": 29,
+          "PAT_6854": 21,
+          "EL038": 19,
+          "EL037": 11,
+          "PAT_6953": 9,
+          "EL051": 8,
+          "PAT_3780": 6,
+          "PAT_6704": 4,
+          "PAT_3066": 3,
+          "EL033": 3,
+          "EL042": 2,
+          "EL030": 1,
+          "EL052": 1,
+          "EL048": 1,
+          "EL043": 1,
+          "EL040": 1
+        },
+        "4": {
+          "PAT_3965": 66,
+          "PAT_3975": 35,
+          "EL052": 18,
+          "EL043": 11,
+          "EL048": 8,
+          "EL046": 5,
+          "PAT_3780": 3,
+          "EL037": 3,
+          "EL034": 3,
+          "PAT_6854": 2,
+          "EL038": 2,
+          "EL045": 1,
+          "PAT_3066": 1
+        },
+        "5": {
+          "PAT_6953": 53,
+          "PAT_3780": 33,
+          "EL043": 32,
+          "EL046": 20,
+          "EL030": 14,
+          "EL036": 11,
+          "EL037": 9,
+          "EL038": 8,
+          "PAT_3975": 8,
+          "EL045": 7,
+          "EL051": 7,
+          "PAT_6704": 6,
+          "PAT_6619": 5,
+          "EL040": 5,
+          "EL035": 5,
+          "EL033": 5,
+          "PAT_1327": 5,
+          "PAT_3390": 4,
+          "EL042": 4,
+          "EL048": 4,
+          "PAT_5515": 2,
+          "PAT_3066": 2,
+          "EL034": 1,
+          "PAT_3455": 1
+        },
+        "6": {
+          "PAT_6953": 52,
+          "PAT_3780": 46,
+          "EL045": 37,
+          "EL033": 31,
+          "EL030": 24,
+          "PAT_6704": 22,
+          "PAT_3390": 21,
+          "PAT_1327": 21,
+          "EL040": 19,
+          "EL048": 18,
+          "PAT_6619": 14,
+          "EL038": 8,
+          "EL036": 7,
+          "EL043": 5,
+          "PAT_5533": 5,
+          "EL035": 4,
+          "PAT_3066": 4,
+          "EL051": 3,
+          "PAT_2868": 2,
+          "EL046": 1,
+          "PAT_3975": 1,
+          "PAT_3965": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
+      },
+      "has_loadings": true
+    },
+    {
+      "id": "kmeans__concat_bands15t__20261102_225346",
+      "track": "kmeans/concat_bands15t",
+      "track_label": "K-means \u00b7 15 bands, ternary map",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261102_225346",
+      "path": "kmeans/concat_bands15t/runs/20261102_225346",
+      "dir": "runs/kmeans__concat_bands15t__20261102_225346",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 320,
+        "1": 343,
+        "2": 239,
+        "3": 271,
+        "4": 414
+      },
+      "cluster_patients": {
+        "0": 20,
+        "1": 29,
+        "2": 14,
+        "3": 27,
+        "4": 20
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_6854": 80,
+          "PAT_1327": 59,
+          "PAT_5533": 33,
+          "EL038": 29,
+          "PAT_3975": 22,
+          "PAT_3780": 20,
+          "PAT_6619": 19,
+          "PAT_3066": 16,
+          "EL046": 9,
+          "EL042": 7,
+          "EL037": 7,
+          "EL030": 4,
+          "PAT_3390": 4,
+          "EL033": 3,
+          "PAT_3455": 3,
+          "EL035": 1,
+          "EL052": 1,
+          "EL043": 1,
+          "EL040": 1,
+          "PAT_6704": 1
+        },
+        "1": {
+          "EL043": 39,
+          "PAT_3975": 30,
+          "PAT_6854": 23,
+          "PAT_6704": 22,
+          "PAT_6953": 22,
+          "EL046": 21,
+          "EL042": 20,
+          "EL037": 17,
+          "PAT_6619": 17,
+          "PAT_3066": 15,
+          "EL035": 15,
+          "EL030": 13,
+          "PAT_5533": 13,
+          "EL038": 10,
+          "EL051": 10,
+          "EL045": 8,
+          "PAT_1327": 7,
+          "EL036": 7,
+          "EL040": 7,
+          "PAT_3390": 6,
+          "EL048": 5,
+          "PAT_5515": 5,
+          "EL052": 3,
+          "PAT_2868": 2,
+          "EL033": 2,
+          "EL034": 1,
+          "PAT_3455": 1,
+          "PAT_3780": 1,
+          "PAT_3965": 1
+        },
+        "2": {
+          "PAT_3455": 68,
+          "PAT_3965": 66,
+          "PAT_3975": 48,
+          "EL052": 21,
+          "EL043": 10,
+          "EL048": 6,
+          "EL034": 3,
+          "EL046": 3,
+          "EL037": 3,
+          "EL038": 3,
+          "PAT_3780": 3,
+          "PAT_3066": 2,
+          "PAT_6854": 2,
+          "EL036": 1
+        },
+        "3": {
+          "EL042": 33,
+          "EL030": 28,
+          "PAT_3390": 22,
+          "EL051": 21,
+          "EL033": 21,
+          "PAT_6854": 20,
+          "EL035": 17,
+          "PAT_6953": 17,
+          "EL046": 13,
+          "PAT_3975": 9,
+          "EL043": 9,
+          "PAT_2868": 9,
+          "EL036": 7,
+          "EL040": 6,
+          "PAT_3965": 5,
+          "PAT_6619": 5,
+          "PAT_5515": 4,
+          "PAT_6704": 4,
+          "EL037": 4,
+          "EL052": 3,
+          "PAT_3066": 3,
+          "EL034": 3,
+          "EL048": 2,
+          "PAT_1327": 2,
+          "PAT_5533": 2,
+          "EL045": 1,
+          "EL038": 1
+        },
+        "4": {
+          "PAT_6953": 93,
+          "PAT_3780": 68,
+          "EL045": 42,
+          "EL033": 32,
+          "PAT_1327": 27,
+          "EL030": 26,
+          "EL048": 22,
+          "PAT_3390": 21,
+          "EL040": 21,
+          "PAT_6619": 17,
+          "PAT_6704": 16,
+          "EL036": 10,
+          "EL038": 6,
+          "PAT_5533": 4,
+          "EL043": 2,
+          "EL051": 2,
+          "PAT_2868": 2,
+          "EL046": 1,
+          "PAT_3975": 1,
+          "PAT_3066": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "hierarchical__concat_bands15t__20261120_232746",
+      "track": "hierarchical/concat_bands15t",
+      "track_label": "Ward \u00b7 15 bands, ternary map",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232746",
+      "path": "hierarchical/concat_bands15t/runs/20261120_232746",
+      "dir": "runs/hierarchical__concat_bands15t__20261120_232746",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 251,
+        "1": 268,
+        "2": 551,
+        "3": 221,
+        "4": 296
+      },
+      "cluster_patients": {
+        "0": 11,
+        "1": 15,
+        "2": 21,
+        "3": 26,
+        "4": 26
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 75,
+          "PAT_3455": 71,
+          "PAT_3965": 68,
+          "EL052": 21,
+          "EL043": 6,
+          "EL034": 3,
+          "EL037": 3,
+          "EL036": 1,
+          "EL046": 1,
+          "PAT_1327": 1,
+          "PAT_3066": 1
+        },
+        "1": {
+          "PAT_6854": 79,
+          "PAT_1327": 71,
+          "PAT_5533": 29,
+          "PAT_3975": 16,
+          "PAT_3066": 14,
+          "EL042": 12,
+          "PAT_3780": 11,
+          "EL046": 10,
+          "PAT_6619": 9,
+          "EL038": 7,
+          "EL037": 4,
+          "EL033": 3,
+          "EL052": 1,
+          "PAT_5515": 1,
+          "PAT_6704": 1
+        },
+        "2": {
+          "PAT_6953": 105,
+          "PAT_3780": 80,
+          "EL045": 51,
+          "EL033": 49,
+          "PAT_3390": 39,
+          "EL048": 32,
+          "PAT_6704": 31,
+          "EL040": 28,
+          "PAT_6619": 28,
+          "EL030": 26,
+          "EL036": 12,
+          "EL038": 12,
+          "EL035": 10,
+          "EL051": 10,
+          "PAT_5533": 9,
+          "PAT_1327": 9,
+          "EL043": 7,
+          "PAT_3975": 4,
+          "EL046": 4,
+          "PAT_2868": 3,
+          "EL052": 2
+        },
+        "3": {
+          "EL042": 44,
+          "EL030": 23,
+          "EL051": 21,
+          "PAT_6854": 19,
+          "EL046": 18,
+          "PAT_2868": 10,
+          "EL035": 9,
+          "PAT_3390": 9,
+          "PAT_3066": 8,
+          "EL043": 8,
+          "EL036": 5,
+          "EL033": 5,
+          "PAT_5515": 5,
+          "PAT_6953": 5,
+          "PAT_3965": 4,
+          "EL038": 4,
+          "EL037": 4,
+          "EL034": 3,
+          "EL040": 3,
+          "PAT_6704": 3,
+          "EL052": 3,
+          "PAT_1327": 2,
+          "PAT_6619": 2,
+          "PAT_5533": 2,
+          "EL048": 1,
+          "PAT_3975": 1
+        },
+        "4": {
+          "EL043": 40,
+          "PAT_6854": 27,
+          "EL038": 26,
+          "EL030": 22,
+          "PAT_6953": 22,
+          "EL037": 20,
+          "PAT_6619": 19,
+          "EL046": 14,
+          "EL035": 14,
+          "PAT_3975": 14,
+          "PAT_3066": 14,
+          "PAT_1327": 12,
+          "PAT_5533": 12,
+          "PAT_6704": 8,
+          "EL036": 7,
+          "PAT_3390": 5,
+          "EL040": 4,
+          "EL042": 4,
+          "PAT_5515": 3,
+          "EL048": 2,
+          "EL051": 2,
+          "EL033": 1,
+          "EL034": 1,
+          "EL052": 1,
+          "PAT_3455": 1,
+          "PAT_3780": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "cnmf__concat_bands15n__20261120_234452",
+      "track": "cnmf/concat_bands15n",
+      "track_label": "Convex NMF \u00b7 15 bands, noise-normalised",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_234452",
+      "path": "cnmf/concat_bands15n/runs/20261120_234452",
+      "dir": "runs/cnmf__concat_bands15n__20261120_234452",
+      "k": 7,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 275,
+        "1": 337,
+        "2": 221,
+        "3": 98,
+        "4": 187,
+        "5": 141,
+        "6": 328
+      },
+      "cluster_patients": {
+        "0": 16,
+        "1": 21,
+        "2": 23,
+        "3": 4,
+        "4": 13,
+        "5": 23,
+        "6": 27
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3780": 76,
+          "PAT_6953": 73,
+          "EL045": 28,
+          "EL048": 25,
+          "EL038": 13,
+          "EL040": 12,
+          "EL046": 11,
+          "EL036": 11,
+          "EL043": 9,
+          "PAT_3390": 6,
+          "PAT_3965": 3,
+          "EL030": 2,
+          "PAT_6619": 2,
+          "PAT_2868": 2,
+          "EL033": 1,
+          "PAT_1327": 1
+        },
+        "1": {
+          "PAT_6854": 93,
+          "PAT_1327": 72,
+          "PAT_5533": 37,
+          "PAT_6619": 31,
+          "PAT_3066": 24,
+          "EL038": 19,
+          "EL037": 10,
+          "PAT_3975": 9,
+          "PAT_3780": 9,
+          "EL046": 6,
+          "EL042": 5,
+          "EL045": 5,
+          "PAT_3390": 4,
+          "EL030": 3,
+          "EL033": 3,
+          "PAT_3455": 2,
+          "EL040": 1,
+          "EL052": 1,
+          "EL043": 1,
+          "PAT_6704": 1,
+          "PAT_6953": 1
+        },
+        "2": {
+          "PAT_6704": 37,
+          "PAT_6953": 32,
+          "EL033": 28,
+          "PAT_3390": 16,
+          "EL051": 13,
+          "EL030": 11,
+          "EL042": 11,
+          "PAT_1327": 10,
+          "EL035": 10,
+          "EL040": 9,
+          "PAT_5533": 8,
+          "EL045": 8,
+          "EL043": 6,
+          "PAT_6619": 5,
+          "EL038": 4,
+          "EL048": 4,
+          "EL052": 2,
+          "PAT_3780": 2,
+          "EL036": 1,
+          "PAT_2868": 1,
+          "EL046": 1,
+          "PAT_3975": 1,
+          "PAT_3455": 1
+        },
+        "3": {
+          "PAT_3975": 94,
+          "EL038": 2,
+          "EL037": 1,
+          "PAT_6854": 1
+        },
+        "4": {
+          "PAT_3455": 69,
+          "PAT_3965": 66,
+          "EL052": 21,
+          "EL043": 11,
+          "EL046": 5,
+          "EL037": 3,
+          "EL034": 3,
+          "PAT_3066": 2,
+          "EL035": 2,
+          "PAT_6854": 2,
+          "EL038": 1,
+          "PAT_3975": 1,
+          "PAT_5533": 1
+        },
+        "5": {
+          "EL043": 22,
+          "PAT_6953": 17,
+          "EL030": 14,
+          "EL038": 9,
+          "EL046": 9,
+          "EL037": 8,
+          "PAT_6619": 7,
+          "PAT_1327": 6,
+          "EL042": 6,
+          "EL035": 6,
+          "EL048": 5,
+          "PAT_3780": 5,
+          "PAT_5515": 5,
+          "EL040": 5,
+          "EL045": 4,
+          "EL036": 3,
+          "PAT_3390": 2,
+          "PAT_3066": 2,
+          "PAT_3975": 2,
+          "EL033": 1,
+          "EL034": 1,
+          "EL051": 1,
+          "PAT_6854": 1
+        },
+        "6": {
+          "EL030": 41,
+          "EL042": 38,
+          "PAT_6854": 28,
+          "PAT_3390": 25,
+          "EL033": 25,
+          "EL051": 19,
+          "EL035": 15,
+          "EL046": 15,
+          "PAT_6619": 13,
+          "EL043": 12,
+          "EL036": 10,
+          "PAT_2868": 10,
+          "EL037": 9,
+          "PAT_3066": 9,
+          "PAT_6953": 9,
+          "EL040": 8,
+          "PAT_1327": 6,
+          "EL045": 6,
+          "PAT_5533": 6,
+          "PAT_6704": 5,
+          "EL052": 4,
+          "PAT_5515": 4,
+          "EL034": 3,
+          "PAT_3975": 3,
+          "PAT_3965": 3,
+          "EL038": 1,
+          "EL048": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
+      },
+      "has_loadings": true
+    },
+    {
+      "id": "kmeans__concat_bands15n__20261120_231145",
+      "track": "kmeans/concat_bands15n",
+      "track_label": "K-means \u00b7 15 bands, noise-normalised",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_231145",
+      "path": "kmeans/concat_bands15n/runs/20261120_231145",
+      "dir": "runs/kmeans__concat_bands15n__20261120_231145",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 275,
+        "1": 277,
+        "2": 429,
+        "3": 334,
+        "4": 272
+      },
+      "cluster_patients": {
+        "0": 12,
+        "1": 27,
+        "2": 20,
+        "3": 19,
+        "4": 28
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 81,
+          "PAT_3965": 70,
+          "PAT_3455": 69,
+          "EL052": 21,
+          "EL043": 11,
+          "EL046": 5,
+          "EL048": 4,
+          "EL034": 3,
+          "PAT_3066": 3,
+          "EL037": 3,
+          "PAT_6854": 3,
+          "EL038": 2
+        },
+        "1": {
+          "EL043": 31,
+          "PAT_6704": 26,
+          "EL042": 21,
+          "PAT_6953": 20,
+          "EL046": 17,
+          "EL037": 17,
+          "PAT_6619": 15,
+          "EL035": 13,
+          "EL038": 11,
+          "PAT_3066": 11,
+          "PAT_5533": 11,
+          "EL030": 10,
+          "PAT_6854": 9,
+          "PAT_3975": 9,
+          "PAT_5515": 7,
+          "EL040": 7,
+          "PAT_1327": 7,
+          "EL045": 6,
+          "EL036": 5,
+          "EL051": 5,
+          "PAT_3390": 5,
+          "EL048": 5,
+          "PAT_3780": 3,
+          "EL052": 2,
+          "EL033": 2,
+          "EL034": 1,
+          "PAT_3455": 1
+        },
+        "2": {
+          "PAT_6953": 103,
+          "PAT_3780": 66,
+          "EL045": 43,
+          "EL033": 34,
+          "EL030": 26,
+          "EL048": 23,
+          "EL040": 22,
+          "PAT_3390": 21,
+          "PAT_1327": 21,
+          "PAT_6619": 19,
+          "PAT_6704": 12,
+          "EL036": 12,
+          "EL051": 9,
+          "EL038": 6,
+          "PAT_5533": 4,
+          "PAT_2868": 3,
+          "EL043": 2,
+          "EL046": 1,
+          "PAT_3975": 1,
+          "PAT_3066": 1
+        },
+        "3": {
+          "PAT_6854": 91,
+          "PAT_1327": 65,
+          "PAT_5533": 36,
+          "EL038": 28,
+          "PAT_3780": 22,
+          "PAT_6619": 21,
+          "PAT_3066": 19,
+          "PAT_3975": 16,
+          "EL046": 9,
+          "EL042": 6,
+          "EL037": 6,
+          "PAT_3390": 4,
+          "EL030": 3,
+          "PAT_3455": 2,
+          "EL033": 2,
+          "EL035": 1,
+          "EL040": 1,
+          "EL052": 1,
+          "PAT_6704": 1
+        },
+        "4": {
+          "EL042": 33,
+          "EL030": 32,
+          "PAT_3390": 23,
+          "PAT_6854": 22,
+          "EL033": 20,
+          "EL051": 19,
+          "EL035": 19,
+          "EL043": 17,
+          "EL046": 15,
+          "PAT_2868": 10,
+          "PAT_6953": 9,
+          "EL036": 8,
+          "EL037": 5,
+          "EL040": 5,
+          "EL052": 4,
+          "PAT_6704": 4,
+          "PAT_6619": 3,
+          "PAT_3975": 3,
+          "EL034": 3,
+          "PAT_3066": 3,
+          "EL048": 3,
+          "EL038": 2,
+          "EL045": 2,
+          "PAT_1327": 2,
+          "PAT_5515": 2,
+          "PAT_3965": 2,
+          "PAT_3780": 1,
+          "PAT_5533": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "hierarchical__concat_bands15n__20261120_232752",
+      "track": "hierarchical/concat_bands15n",
+      "track_label": "Ward \u00b7 15 bands, noise-normalised",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232752",
+      "path": "hierarchical/concat_bands15n/runs/20261120_232752",
+      "dir": "runs/hierarchical__concat_bands15n__20261120_232752",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 276,
+        "1": 324,
+        "2": 270,
+        "3": 314,
+        "4": 403
+      },
+      "cluster_patients": {
+        "0": 9,
+        "1": 17,
+        "2": 9,
+        "3": 24,
+        "4": 24
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 96,
+          "PAT_3455": 71,
+          "PAT_3965": 68,
+          "EL052": 20,
+          "EL046": 7,
+          "EL043": 6,
+          "EL034": 3,
+          "EL037": 3,
+          "PAT_6854": 2
+        },
+        "1": {
+          "PAT_6854": 78,
+          "PAT_1327": 72,
+          "PAT_6619": 34,
+          "PAT_5533": 29,
+          "EL038": 22,
+          "PAT_3780": 19,
+          "PAT_3066": 17,
+          "PAT_3975": 13,
+          "EL042": 13,
+          "PAT_3390": 7,
+          "EL033": 6,
+          "EL030": 5,
+          "EL040": 3,
+          "EL037": 2,
+          "PAT_5515": 2,
+          "EL052": 1,
+          "EL035": 1
+        },
+        "2": {
+          "PAT_6953": 104,
+          "PAT_3780": 72,
+          "EL045": 34,
+          "EL048": 27,
+          "EL040": 12,
+          "EL036": 11,
+          "PAT_6619": 6,
+          "PAT_2868": 3,
+          "EL033": 1
+        },
+        "3": {
+          "EL043": 39,
+          "EL046": 39,
+          "PAT_6854": 28,
+          "EL030": 25,
+          "EL038": 25,
+          "EL037": 23,
+          "PAT_6953": 22,
+          "PAT_3066": 17,
+          "EL036": 14,
+          "PAT_1327": 13,
+          "PAT_6619": 12,
+          "PAT_5533": 12,
+          "EL045": 12,
+          "EL048": 8,
+          "EL042": 8,
+          "EL040": 7,
+          "PAT_3390": 2,
+          "PAT_6704": 2,
+          "EL034": 1,
+          "EL051": 1,
+          "PAT_3455": 1,
+          "PAT_5515": 1,
+          "PAT_3780": 1,
+          "PAT_3975": 1
+        },
+        "4": {
+          "EL033": 51,
+          "PAT_3390": 44,
+          "PAT_6704": 41,
+          "EL030": 41,
+          "EL042": 39,
+          "EL051": 32,
+          "EL035": 32,
+          "PAT_6854": 17,
+          "EL043": 16,
+          "EL040": 13,
+          "PAT_5533": 11,
+          "PAT_2868": 10,
+          "PAT_1327": 10,
+          "EL052": 7,
+          "PAT_6953": 6,
+          "PAT_6619": 6,
+          "PAT_5515": 6,
+          "EL045": 5,
+          "PAT_3965": 4,
+          "EL034": 3,
+          "PAT_3066": 3,
+          "EL037": 3,
+          "EL038": 2,
+          "EL046": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "cnmf__concat_bands15nu__20261120_235104",
+      "track": "cnmf/concat_bands15nu",
+      "track_label": "Convex NMF \u00b7 15 bands, noise-normalised, unit length",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_235104",
+      "path": "cnmf/concat_bands15nu/runs/20261120_235104",
+      "dir": "runs/cnmf__concat_bands15nu__20261120_235104",
+      "k": 7,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 275,
+        "1": 337,
+        "2": 221,
+        "3": 98,
+        "4": 187,
+        "5": 141,
+        "6": 328
+      },
+      "cluster_patients": {
+        "0": 16,
+        "1": 21,
+        "2": 23,
+        "3": 4,
+        "4": 13,
+        "5": 23,
+        "6": 27
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3780": 76,
+          "PAT_6953": 73,
+          "EL045": 28,
+          "EL048": 25,
+          "EL038": 13,
+          "EL040": 12,
+          "EL046": 11,
+          "EL036": 11,
+          "EL043": 9,
+          "PAT_3390": 6,
+          "PAT_3965": 3,
+          "EL030": 2,
+          "PAT_6619": 2,
+          "PAT_2868": 2,
+          "EL033": 1,
+          "PAT_1327": 1
+        },
+        "1": {
+          "PAT_6854": 93,
+          "PAT_1327": 72,
+          "PAT_5533": 37,
+          "PAT_6619": 31,
+          "PAT_3066": 24,
+          "EL038": 19,
+          "EL037": 10,
+          "PAT_3975": 9,
+          "PAT_3780": 9,
+          "EL046": 6,
+          "EL042": 5,
+          "EL045": 5,
+          "PAT_3390": 4,
+          "EL030": 3,
+          "EL033": 3,
+          "PAT_3455": 2,
+          "EL040": 1,
+          "EL052": 1,
+          "EL043": 1,
+          "PAT_6704": 1,
+          "PAT_6953": 1
+        },
+        "2": {
+          "PAT_6704": 37,
+          "PAT_6953": 32,
+          "EL033": 28,
+          "PAT_3390": 16,
+          "EL051": 13,
+          "EL030": 11,
+          "EL042": 11,
+          "PAT_1327": 10,
+          "EL035": 10,
+          "EL040": 9,
+          "PAT_5533": 8,
+          "EL045": 8,
+          "EL043": 6,
+          "PAT_6619": 5,
+          "EL038": 4,
+          "EL048": 4,
+          "EL052": 2,
+          "PAT_3780": 2,
+          "EL036": 1,
+          "PAT_2868": 1,
+          "EL046": 1,
+          "PAT_3975": 1,
+          "PAT_3455": 1
+        },
+        "3": {
+          "PAT_3975": 94,
+          "EL038": 2,
+          "EL037": 1,
+          "PAT_6854": 1
+        },
+        "4": {
+          "PAT_3455": 69,
+          "PAT_3965": 66,
+          "EL052": 21,
+          "EL043": 11,
+          "EL046": 5,
+          "EL037": 3,
+          "EL034": 3,
+          "PAT_3066": 2,
+          "EL035": 2,
+          "PAT_6854": 2,
+          "EL038": 1,
+          "PAT_3975": 1,
+          "PAT_5533": 1
+        },
+        "5": {
+          "EL043": 22,
+          "PAT_6953": 17,
+          "EL030": 14,
+          "EL038": 9,
+          "EL046": 9,
+          "EL037": 8,
+          "PAT_6619": 7,
+          "PAT_1327": 6,
+          "EL042": 6,
+          "EL035": 6,
+          "EL048": 5,
+          "PAT_3780": 5,
+          "PAT_5515": 5,
+          "EL040": 5,
+          "EL045": 4,
+          "EL036": 3,
+          "PAT_3390": 2,
+          "PAT_3066": 2,
+          "PAT_3975": 2,
+          "EL033": 1,
+          "EL034": 1,
+          "EL051": 1,
+          "PAT_6854": 1
+        },
+        "6": {
+          "EL030": 41,
+          "EL042": 38,
+          "PAT_6854": 28,
+          "PAT_3390": 25,
+          "EL033": 25,
+          "EL051": 19,
+          "EL035": 15,
+          "EL046": 15,
+          "PAT_6619": 13,
+          "EL043": 12,
+          "EL036": 10,
+          "PAT_2868": 10,
+          "EL037": 9,
+          "PAT_3066": 9,
+          "PAT_6953": 9,
+          "EL040": 8,
+          "PAT_1327": 6,
+          "EL045": 6,
+          "PAT_5533": 6,
+          "PAT_6704": 5,
+          "EL052": 4,
+          "PAT_5515": 4,
+          "EL034": 3,
+          "PAT_3975": 3,
+          "PAT_3965": 3,
+          "EL038": 1,
+          "EL048": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
+      },
+      "has_loadings": true
+    },
+    {
+      "id": "kmeans__concat_bands15nu__20261120_231156",
+      "track": "kmeans/concat_bands15nu",
+      "track_label": "K-means \u00b7 15 bands, noise-normalised, unit length",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_231156",
+      "path": "kmeans/concat_bands15nu/runs/20261120_231156",
+      "dir": "runs/kmeans__concat_bands15nu__20261120_231156",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 275,
+        "1": 277,
+        "2": 429,
+        "3": 334,
+        "4": 272
+      },
+      "cluster_patients": {
+        "0": 12,
+        "1": 27,
+        "2": 20,
+        "3": 19,
+        "4": 28
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 81,
+          "PAT_3965": 70,
+          "PAT_3455": 69,
+          "EL052": 21,
+          "EL043": 11,
+          "EL046": 5,
+          "EL048": 4,
+          "EL034": 3,
+          "PAT_3066": 3,
+          "EL037": 3,
+          "PAT_6854": 3,
+          "EL038": 2
+        },
+        "1": {
+          "EL043": 31,
+          "PAT_6704": 26,
+          "EL042": 21,
+          "PAT_6953": 20,
+          "EL046": 17,
+          "EL037": 17,
+          "PAT_6619": 15,
+          "EL035": 13,
+          "EL038": 11,
+          "PAT_3066": 11,
+          "PAT_5533": 11,
+          "EL030": 10,
+          "PAT_6854": 9,
+          "PAT_3975": 9,
+          "PAT_5515": 7,
+          "EL040": 7,
+          "PAT_1327": 7,
+          "EL045": 6,
+          "EL036": 5,
+          "EL051": 5,
+          "PAT_3390": 5,
+          "EL048": 5,
+          "PAT_3780": 3,
+          "EL052": 2,
+          "EL033": 2,
+          "EL034": 1,
+          "PAT_3455": 1
+        },
+        "2": {
+          "PAT_6953": 103,
+          "PAT_3780": 66,
+          "EL045": 43,
+          "EL033": 34,
+          "EL030": 26,
+          "EL048": 23,
+          "EL040": 22,
+          "PAT_3390": 21,
+          "PAT_1327": 21,
+          "PAT_6619": 19,
+          "PAT_6704": 12,
+          "EL036": 12,
+          "EL051": 9,
+          "EL038": 6,
+          "PAT_5533": 4,
+          "PAT_2868": 3,
+          "EL043": 2,
+          "EL046": 1,
+          "PAT_3975": 1,
+          "PAT_3066": 1
+        },
+        "3": {
+          "PAT_6854": 91,
+          "PAT_1327": 65,
+          "PAT_5533": 36,
+          "EL038": 28,
+          "PAT_3780": 22,
+          "PAT_6619": 21,
+          "PAT_3066": 19,
+          "PAT_3975": 16,
+          "EL046": 9,
+          "EL042": 6,
+          "EL037": 6,
+          "PAT_3390": 4,
+          "EL030": 3,
+          "PAT_3455": 2,
+          "EL033": 2,
+          "EL035": 1,
+          "EL040": 1,
+          "EL052": 1,
+          "PAT_6704": 1
+        },
+        "4": {
+          "EL042": 33,
+          "EL030": 32,
+          "PAT_3390": 23,
+          "PAT_6854": 22,
+          "EL033": 20,
+          "EL051": 19,
+          "EL035": 19,
+          "EL043": 17,
+          "EL046": 15,
+          "PAT_2868": 10,
+          "PAT_6953": 9,
+          "EL036": 8,
+          "EL037": 5,
+          "EL040": 5,
+          "EL052": 4,
+          "PAT_6704": 4,
+          "PAT_6619": 3,
+          "PAT_3975": 3,
+          "EL034": 3,
+          "PAT_3066": 3,
+          "EL048": 3,
+          "EL038": 2,
+          "EL045": 2,
+          "PAT_1327": 2,
+          "PAT_5515": 2,
+          "PAT_3965": 2,
+          "PAT_3780": 1,
+          "PAT_5533": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "hierarchical__concat_bands15nu__20261120_232758",
+      "track": "hierarchical/concat_bands15nu",
+      "track_label": "Ward \u00b7 15 bands, noise-normalised, unit length",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232758",
+      "path": "hierarchical/concat_bands15nu/runs/20261120_232758",
+      "dir": "runs/hierarchical__concat_bands15nu__20261120_232758",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 276,
+        "1": 324,
+        "2": 270,
+        "3": 314,
+        "4": 403
+      },
+      "cluster_patients": {
+        "0": 9,
+        "1": 17,
+        "2": 9,
+        "3": 24,
+        "4": 24
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 96,
+          "PAT_3455": 71,
+          "PAT_3965": 68,
+          "EL052": 20,
+          "EL046": 7,
+          "EL043": 6,
+          "EL034": 3,
+          "EL037": 3,
+          "PAT_6854": 2
+        },
+        "1": {
+          "PAT_6854": 78,
+          "PAT_1327": 72,
+          "PAT_6619": 34,
+          "PAT_5533": 29,
+          "EL038": 22,
+          "PAT_3780": 19,
+          "PAT_3066": 17,
+          "PAT_3975": 13,
+          "EL042": 13,
+          "PAT_3390": 7,
+          "EL033": 6,
+          "EL030": 5,
+          "EL040": 3,
+          "EL037": 2,
+          "PAT_5515": 2,
+          "EL052": 1,
+          "EL035": 1
+        },
+        "2": {
+          "PAT_6953": 104,
+          "PAT_3780": 72,
+          "EL045": 34,
+          "EL048": 27,
+          "EL040": 12,
+          "EL036": 11,
+          "PAT_6619": 6,
+          "PAT_2868": 3,
+          "EL033": 1
+        },
+        "3": {
+          "EL043": 39,
+          "EL046": 39,
+          "PAT_6854": 28,
+          "EL030": 25,
+          "EL038": 25,
+          "EL037": 23,
+          "PAT_6953": 22,
+          "PAT_3066": 17,
+          "EL036": 14,
+          "PAT_1327": 13,
+          "PAT_6619": 12,
+          "PAT_5533": 12,
+          "EL045": 12,
+          "EL048": 8,
+          "EL042": 8,
+          "EL040": 7,
+          "PAT_3390": 2,
+          "PAT_6704": 2,
+          "EL034": 1,
+          "EL051": 1,
+          "PAT_3455": 1,
+          "PAT_5515": 1,
+          "PAT_3780": 1,
+          "PAT_3975": 1
+        },
+        "4": {
+          "EL033": 51,
+          "PAT_3390": 44,
+          "PAT_6704": 41,
+          "EL030": 41,
+          "EL042": 39,
+          "EL051": 32,
+          "EL035": 32,
+          "PAT_6854": 17,
+          "EL043": 16,
+          "EL040": 13,
+          "PAT_5533": 11,
+          "PAT_2868": 10,
+          "PAT_1327": 10,
+          "EL052": 7,
+          "PAT_6953": 6,
+          "PAT_6619": 6,
+          "PAT_5515": 6,
+          "EL045": 5,
+          "PAT_3965": 4,
+          "EL034": 3,
+          "PAT_3066": 3,
+          "EL037": 3,
+          "EL038": 2,
+          "EL046": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "cnmf__concat_bands5s__20261120_235519",
+      "track": "cnmf/concat_bands5s",
+      "track_label": "Convex NMF \u00b7 5 bands, per-band shape",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_235519",
+      "path": "cnmf/concat_bands5s/runs/20261120_235519",
+      "dir": "runs/cnmf__concat_bands5s__20261120_235519",
+      "k": 7,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 381,
+        "1": 205,
+        "2": 289,
+        "3": 87,
+        "4": 236,
+        "5": 103,
+        "6": 286
+      },
+      "cluster_patients": {
+        "0": 26,
+        "1": 21,
+        "2": 18,
+        "3": 7,
+        "4": 24,
+        "5": 9,
+        "6": 21
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "EL033": 54,
+          "EL030": 45,
+          "PAT_3390": 41,
+          "EL045": 33,
+          "PAT_6953": 29,
+          "EL051": 26,
+          "PAT_6704": 21,
+          "EL042": 19,
+          "EL040": 18,
+          "PAT_6854": 16,
+          "PAT_6619": 12,
+          "EL036": 10,
+          "PAT_1327": 10,
+          "PAT_2868": 9,
+          "EL048": 6,
+          "EL043": 6,
+          "EL035": 5,
+          "PAT_3066": 5,
+          "EL046": 4,
+          "PAT_3780": 3,
+          "PAT_5533": 2,
+          "EL037": 2,
+          "PAT_3975": 2,
+          "EL038": 1,
+          "PAT_5515": 1,
+          "PAT_3965": 1
+        },
+        "1": {
+          "PAT_3965": 66,
+          "EL052": 24,
+          "PAT_6854": 20,
+          "EL046": 19,
+          "EL043": 16,
+          "EL030": 8,
+          "PAT_5533": 8,
+          "EL035": 6,
+          "EL034": 6,
+          "PAT_3455": 6,
+          "PAT_3975": 6,
+          "EL037": 5,
+          "EL040": 3,
+          "EL051": 3,
+          "EL048": 2,
+          "PAT_3066": 2,
+          "EL036": 1,
+          "PAT_3390": 1,
+          "PAT_3780": 1,
+          "PAT_6619": 1,
+          "PAT_6704": 1
+        },
+        "2": {
+          "PAT_6854": 85,
+          "PAT_1327": 63,
+          "PAT_5533": 34,
+          "PAT_6619": 31,
+          "PAT_3066": 20,
+          "EL037": 12,
+          "EL042": 9,
+          "PAT_3975": 7,
+          "EL038": 6,
+          "PAT_6704": 5,
+          "PAT_6953": 5,
+          "EL030": 3,
+          "PAT_3390": 3,
+          "EL046": 2,
+          "EL036": 1,
+          "EL045": 1,
+          "EL052": 1,
+          "PAT_3780": 1
+        },
+        "3": {
+          "PAT_3455": 66,
+          "PAT_1327": 10,
+          "EL033": 4,
+          "EL030": 3,
+          "EL043": 2,
+          "EL035": 1,
+          "EL052": 1
+        },
+        "4": {
+          "EL042": 32,
+          "PAT_6953": 28,
+          "EL043": 25,
+          "EL035": 18,
+          "PAT_6704": 16,
+          "PAT_6619": 14,
+          "EL030": 12,
+          "EL038": 10,
+          "PAT_1327": 9,
+          "EL046": 9,
+          "EL037": 8,
+          "PAT_5515": 8,
+          "EL036": 7,
+          "PAT_3066": 6,
+          "EL048": 6,
+          "EL045": 6,
+          "PAT_5533": 5,
+          "PAT_3780": 5,
+          "EL040": 4,
+          "PAT_3390": 3,
+          "PAT_6854": 2,
+          "EL051": 1,
+          "PAT_2868": 1,
+          "PAT_3975": 1
+        },
+        "5": {
+          "PAT_3975": 93,
+          "EL038": 3,
+          "EL034": 1,
+          "EL043": 1,
+          "EL037": 1,
+          "EL052": 1,
+          "PAT_3066": 1,
+          "PAT_3965": 1,
+          "PAT_6854": 1
+        },
+        "6": {
+          "PAT_3780": 82,
+          "PAT_6953": 70,
+          "EL038": 29,
+          "EL048": 21,
+          "EL046": 13,
+          "EL045": 11,
+          "EL043": 11,
+          "EL040": 10,
+          "EL036": 6,
+          "PAT_3390": 5,
+          "PAT_3965": 4,
+          "EL037": 3,
+          "EL035": 3,
+          "PAT_3066": 3,
+          "PAT_2868": 3,
+          "PAT_1327": 3,
+          "EL051": 3,
+          "PAT_5533": 3,
+          "EL052": 1,
+          "PAT_3975": 1,
+          "PAT_6854": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
+      },
+      "has_loadings": true
+    },
+    {
+      "id": "kmeans__concat_bands5s__20261120_231206",
+      "track": "kmeans/concat_bands5s",
+      "track_label": "K-means \u00b7 5 bands, per-band shape",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_231206",
+      "path": "kmeans/concat_bands5s/runs/20261120_231206",
+      "dir": "runs/kmeans__concat_bands5s__20261120_231206",
+      "k": 12,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 76,
+        "1": 71,
+        "2": 116,
+        "3": 121,
+        "4": 195,
+        "5": 180,
+        "6": 98,
+        "7": 128,
+        "8": 128,
+        "9": 263,
+        "10": 89,
+        "11": 122
+      },
+      "cluster_patients": {
+        "0": 10,
+        "1": 2,
+        "2": 21,
+        "3": 12,
+        "4": 17,
+        "5": 14,
+        "6": 4,
+        "7": 5,
+        "8": 21,
+        "9": 16,
+        "10": 12,
+        "11": 21
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "EL046": 36,
+          "EL043": 19,
+          "EL037": 6,
+          "EL036": 5,
+          "EL048": 3,
+          "EL040": 2,
+          "EL038": 2,
+          "EL035": 1,
+          "PAT_3066": 1,
+          "PAT_3965": 1
+        },
+        "1": {
+          "PAT_3455": 70,
+          "EL052": 1
+        },
+        "2": {
+          "PAT_6953": 16,
+          "PAT_1327": 12,
+          "PAT_6619": 12,
+          "EL043": 11,
+          "EL030": 10,
+          "EL038": 8,
+          "PAT_5515": 7,
+          "EL042": 6,
+          "EL048": 5,
+          "EL045": 5,
+          "PAT_3066": 5,
+          "EL040": 3,
+          "EL037": 3,
+          "PAT_3975": 3,
+          "PAT_6854": 2,
+          "EL035": 2,
+          "PAT_3390": 2,
+          "EL036": 1,
+          "EL033": 1,
+          "PAT_3780": 1,
+          "PAT_6704": 1
+        },
+        "3": {
+          "PAT_3965": 67,
+          "EL052": 21,
+          "EL043": 8,
+          "PAT_3975": 4,
+          "PAT_6854": 4,
+          "EL046": 3,
+          "EL034": 3,
+          "EL037": 3,
+          "EL048": 3,
+          "PAT_3066": 2,
+          "PAT_3455": 2,
+          "EL038": 1
+        },
+        "4": {
+          "EL033": 47,
+          "PAT_3390": 39,
+          "EL030": 29,
+          "EL042": 22,
+          "PAT_6953": 14,
+          "EL040": 11,
+          "PAT_2868": 5,
+          "PAT_3780": 4,
+          "EL036": 4,
+          "PAT_6619": 4,
+          "PAT_1327": 3,
+          "EL048": 3,
+          "EL046": 3,
+          "PAT_5533": 3,
+          "EL045": 2,
+          "EL043": 1,
+          "EL038": 1
+        },
+        "5": {
+          "PAT_6953": 68,
+          "EL045": 34,
+          "EL048": 19,
+          "EL040": 11,
+          "PAT_6854": 11,
+          "PAT_3780": 10,
+          "EL036": 7,
+          "PAT_6619": 5,
+          "EL038": 3,
+          "EL033": 3,
+          "PAT_2868": 3,
+          "PAT_3066": 3,
+          "PAT_3965": 2,
+          "PAT_3390": 1
+        },
+        "6": {
+          "PAT_3975": 95,
+          "EL034": 1,
+          "EL045": 1,
+          "PAT_3965": 1
+        },
+        "7": {
+          "PAT_6854": 89,
+          "PAT_5533": 31,
+          "PAT_3066": 5,
+          "PAT_1327": 2,
+          "EL037": 1
+        },
+        "8": {
+          "EL030": 27,
+          "EL035": 20,
+          "EL043": 16,
+          "PAT_6854": 11,
+          "PAT_5533": 10,
+          "EL042": 9,
+          "PAT_2868": 5,
+          "EL037": 4,
+          "EL052": 4,
+          "EL034": 3,
+          "PAT_3066": 3,
+          "EL036": 2,
+          "EL033": 2,
+          "PAT_3390": 2,
+          "PAT_1327": 2,
+          "EL046": 2,
+          "EL045": 2,
+          "EL038": 1,
+          "EL040": 1,
+          "PAT_3975": 1,
+          "PAT_3965": 1
+        },
+        "9": {
+          "PAT_1327": 72,
+          "PAT_3780": 66,
+          "PAT_6619": 32,
+          "EL038": 27,
+          "PAT_6953": 15,
+          "PAT_3066": 11,
+          "PAT_3390": 7,
+          "PAT_3975": 7,
+          "EL030": 5,
+          "EL045": 5,
+          "PAT_5533": 5,
+          "EL033": 4,
+          "EL037": 3,
+          "EL040": 2,
+          "EL046": 1,
+          "PAT_6704": 1
+        },
+        "10": {
+          "EL051": 32,
+          "PAT_6704": 30,
+          "EL037": 8,
+          "PAT_6854": 7,
+          "EL036": 4,
+          "EL048": 2,
+          "EL040": 1,
+          "EL033": 1,
+          "PAT_3066": 1,
+          "EL046": 1,
+          "PAT_6619": 1,
+          "PAT_5533": 1
+        },
+        "11": {
+          "EL042": 23,
+          "PAT_6953": 19,
+          "PAT_3780": 11,
+          "PAT_6704": 11,
+          "EL035": 10,
+          "PAT_3066": 6,
+          "EL043": 6,
+          "EL038": 6,
+          "EL040": 4,
+          "PAT_6619": 4,
+          "PAT_1327": 4,
+          "EL037": 3,
+          "EL036": 2,
+          "PAT_5533": 2,
+          "PAT_5515": 2,
+          "EL045": 2,
+          "EL052": 2,
+          "PAT_3390": 2,
+          "EL046": 1,
+          "EL051": 1,
+          "PAT_6854": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "hierarchical__concat_bands5s__20261120_232803",
+      "track": "hierarchical/concat_bands5s",
+      "track_label": "Ward \u00b7 5 bands, per-band shape",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232803",
+      "path": "hierarchical/concat_bands5s/runs/20261120_232803",
+      "dir": "runs/hierarchical__concat_bands5s__20261120_232803",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 93,
+        "1": 278,
+        "2": 418,
+        "3": 357,
+        "4": 441
+      },
+      "cluster_patients": {
+        "0": 1,
+        "1": 12,
+        "2": 17,
+        "3": 24,
+        "4": 13
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 93
+        },
+        "1": {
+          "PAT_3455": 71,
+          "PAT_3965": 70,
+          "EL043": 50,
+          "EL030": 26,
+          "EL052": 25,
+          "EL035": 18,
+          "EL037": 6,
+          "EL034": 6,
+          "EL048": 2,
+          "EL046": 2,
+          "PAT_3390": 1,
+          "PAT_3066": 1
+        },
+        "2": {
+          "PAT_1327": 89,
+          "PAT_6854": 82,
+          "PAT_5533": 52,
+          "EL038": 47,
+          "PAT_6619": 39,
+          "PAT_3066": 23,
+          "EL042": 15,
+          "PAT_3975": 14,
+          "PAT_3780": 13,
+          "EL030": 11,
+          "EL045": 9,
+          "EL048": 7,
+          "EL033": 6,
+          "PAT_3390": 5,
+          "EL040": 4,
+          "EL052": 1,
+          "EL035": 1
+        },
+        "3": {
+          "EL042": 45,
+          "EL046": 45,
+          "PAT_6704": 43,
+          "EL051": 33,
+          "PAT_6854": 30,
+          "EL037": 25,
+          "PAT_6953": 22,
+          "PAT_6619": 19,
+          "EL035": 14,
+          "EL036": 13,
+          "PAT_3066": 13,
+          "EL043": 10,
+          "PAT_5515": 9,
+          "EL040": 9,
+          "PAT_3390": 8,
+          "PAT_1327": 5,
+          "PAT_3975": 3,
+          "EL052": 2,
+          "EL038": 2,
+          "EL045": 2,
+          "PAT_3965": 2,
+          "EL030": 1,
+          "EL034": 1,
+          "PAT_3455": 1
+        },
+        "4": {
+          "PAT_6953": 110,
+          "PAT_3780": 79,
+          "EL033": 52,
+          "EL045": 40,
+          "PAT_3390": 39,
+          "EL030": 33,
+          "EL048": 26,
+          "EL040": 22,
+          "PAT_2868": 13,
+          "PAT_6854": 13,
+          "EL036": 12,
+          "EL043": 1,
+          "PAT_1327": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "cnmf__concat_bands5n__20261120_235917",
+      "track": "cnmf/concat_bands5n",
+      "track_label": "Convex NMF \u00b7 5 bands, noise-normalised",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_235917",
+      "path": "cnmf/concat_bands5n/runs/20261120_235917",
+      "dir": "runs/cnmf__concat_bands5n__20261120_235917",
+      "k": 7,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 272,
+        "1": 196,
+        "2": 296,
+        "3": 311,
+        "4": 95,
+        "5": 172,
+        "6": 245
+      },
+      "cluster_patients": {
+        "0": 14,
+        "1": 15,
+        "2": 23,
+        "3": 20,
+        "4": 3,
+        "5": 24,
+        "6": 26
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3780": 75,
+          "PAT_6953": 61,
+          "EL045": 34,
+          "EL048": 25,
+          "EL038": 16,
+          "EL043": 14,
+          "EL046": 14,
+          "EL040": 11,
+          "EL036": 10,
+          "PAT_3965": 4,
+          "PAT_2868": 3,
+          "EL035": 2,
+          "PAT_3390": 2,
+          "PAT_6619": 1
+        },
+        "1": {
+          "PAT_3455": 72,
+          "PAT_3965": 62,
+          "EL052": 22,
+          "EL030": 9,
+          "EL043": 5,
+          "EL046": 5,
+          "EL034": 4,
+          "PAT_6854": 4,
+          "PAT_3066": 4,
+          "EL037": 2,
+          "EL035": 2,
+          "PAT_5533": 2,
+          "EL033": 1,
+          "PAT_3390": 1,
+          "PAT_1327": 1
+        },
+        "2": {
+          "EL033": 42,
+          "PAT_3390": 40,
+          "PAT_6953": 38,
+          "PAT_6704": 35,
+          "PAT_1327": 24,
+          "EL030": 22,
+          "PAT_6619": 12,
+          "EL051": 12,
+          "PAT_5533": 11,
+          "EL040": 10,
+          "EL042": 9,
+          "EL045": 7,
+          "EL043": 6,
+          "EL035": 6,
+          "EL048": 4,
+          "EL046": 4,
+          "EL038": 3,
+          "EL036": 3,
+          "PAT_2868": 3,
+          "PAT_3975": 2,
+          "EL052": 1,
+          "PAT_3780": 1,
+          "PAT_6854": 1
+        },
+        "3": {
+          "PAT_6854": 91,
+          "PAT_1327": 55,
+          "PAT_5533": 34,
+          "PAT_6619": 27,
+          "PAT_3066": 23,
+          "EL038": 17,
+          "PAT_3780": 11,
+          "EL037": 9,
+          "EL042": 9,
+          "PAT_3975": 8,
+          "EL046": 6,
+          "EL030": 5,
+          "PAT_3390": 5,
+          "PAT_6704": 3,
+          "EL043": 2,
+          "PAT_6953": 2,
+          "EL036": 1,
+          "EL033": 1,
+          "EL052": 1,
+          "EL040": 1
+        },
+        "4": {
+          "PAT_3975": 92,
+          "PAT_3965": 2,
+          "EL037": 1
+        },
+        "5": {
+          "PAT_6953": 22,
+          "EL043": 20,
+          "EL030": 16,
+          "PAT_1327": 13,
+          "EL035": 12,
+          "EL038": 11,
+          "EL042": 9,
+          "EL037": 8,
+          "PAT_6619": 8,
+          "EL045": 7,
+          "PAT_5515": 7,
+          "EL048": 6,
+          "PAT_3780": 5,
+          "EL046": 5,
+          "EL040": 5,
+          "EL033": 4,
+          "PAT_3975": 4,
+          "PAT_3066": 3,
+          "PAT_6854": 2,
+          "EL036": 1,
+          "EL051": 1,
+          "EL052": 1,
+          "PAT_3390": 1,
+          "PAT_6704": 1
+        },
+        "6": {
+          "EL042": 33,
+          "PAT_6854": 27,
+          "EL051": 20,
+          "EL030": 19,
+          "EL043": 14,
+          "EL046": 13,
+          "EL037": 11,
+          "EL035": 11,
+          "EL036": 10,
+          "EL033": 10,
+          "PAT_6619": 10,
+          "PAT_6953": 9,
+          "EL040": 8,
+          "PAT_3066": 7,
+          "PAT_2868": 7,
+          "PAT_5533": 5,
+          "PAT_3965": 4,
+          "PAT_3975": 4,
+          "PAT_6704": 4,
+          "PAT_3390": 4,
+          "EL045": 3,
+          "EL034": 3,
+          "EL052": 3,
+          "EL038": 2,
+          "PAT_1327": 2,
+          "PAT_5515": 2
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
+      },
+      "has_loadings": true
+    },
+    {
+      "id": "kmeans__concat_bands5n__20261120_231214",
+      "track": "kmeans/concat_bands5n",
+      "track_label": "K-means \u00b7 5 bands, noise-normalised",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_231214",
+      "path": "kmeans/concat_bands5n/runs/20261120_231214",
+      "dir": "runs/kmeans__concat_bands5n__20261120_231214",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 292,
+        "1": 292,
+        "2": 501,
+        "3": 301,
+        "4": 201
+      },
+      "cluster_patients": {
+        "0": 26,
+        "1": 13,
+        "2": 23,
+        "3": 19,
+        "4": 25
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "EL042": 35,
+          "EL030": 29,
+          "EL043": 27,
+          "PAT_6854": 27,
+          "EL046": 26,
+          "EL035": 23,
+          "EL051": 21,
+          "PAT_3390": 13,
+          "EL037": 10,
+          "EL036": 9,
+          "PAT_2868": 9,
+          "PAT_6953": 8,
+          "PAT_5533": 8,
+          "EL033": 7,
+          "PAT_6704": 7,
+          "PAT_3066": 5,
+          "EL040": 5,
+          "PAT_6619": 5,
+          "EL048": 4,
+          "EL034": 3,
+          "EL038": 2,
+          "EL045": 2,
+          "EL052": 2,
+          "PAT_1327": 2,
+          "PAT_5515": 2,
+          "PAT_3965": 1
+        },
+        "1": {
+          "PAT_3975": 88,
+          "PAT_3965": 71,
+          "PAT_3455": 70,
+          "EL052": 23,
+          "EL043": 12,
+          "EL046": 5,
+          "PAT_3066": 5,
+          "EL048": 4,
+          "EL034": 4,
+          "EL037": 3,
+          "PAT_6854": 3,
+          "EL038": 2,
+          "EL030": 2
+        },
+        "2": {
+          "PAT_6953": 99,
+          "PAT_3780": 68,
+          "EL033": 49,
+          "EL045": 43,
+          "PAT_1327": 32,
+          "PAT_3390": 32,
+          "EL030": 26,
+          "EL040": 25,
+          "PAT_6704": 25,
+          "EL048": 22,
+          "PAT_6619": 21,
+          "EL036": 13,
+          "EL051": 11,
+          "EL038": 11,
+          "PAT_5533": 9,
+          "PAT_2868": 4,
+          "PAT_6854": 3,
+          "EL052": 2,
+          "EL043": 2,
+          "EL035": 1,
+          "EL046": 1,
+          "PAT_3066": 1,
+          "PAT_3975": 1
+        },
+        "3": {
+          "PAT_6854": 89,
+          "PAT_1327": 47,
+          "PAT_5533": 34,
+          "EL038": 22,
+          "PAT_6619": 20,
+          "PAT_3780": 19,
+          "PAT_3066": 18,
+          "PAT_3975": 12,
+          "EL042": 10,
+          "EL037": 9,
+          "EL046": 9,
+          "PAT_3390": 4,
+          "PAT_6704": 2,
+          "EL030": 1,
+          "EL033": 1,
+          "EL036": 1,
+          "EL043": 1,
+          "EL052": 1,
+          "PAT_3455": 1
+        },
+        "4": {
+          "PAT_6953": 25,
+          "EL043": 19,
+          "EL042": 15,
+          "PAT_1327": 14,
+          "EL030": 13,
+          "EL038": 12,
+          "PAT_6619": 12,
+          "EL037": 9,
+          "EL035": 9,
+          "PAT_6704": 9,
+          "PAT_3975": 9,
+          "PAT_3066": 8,
+          "PAT_5515": 7,
+          "EL046": 6,
+          "EL045": 6,
+          "EL040": 5,
+          "PAT_3780": 5,
+          "EL048": 5,
+          "PAT_3390": 4,
+          "PAT_6854": 3,
+          "EL036": 2,
+          "EL033": 1,
+          "EL051": 1,
+          "PAT_3455": 1,
+          "PAT_5533": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "hierarchical__concat_bands5n__20261120_232807",
+      "track": "hierarchical/concat_bands5n",
+      "track_label": "Ward \u00b7 5 bands, noise-normalised",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232807",
+      "path": "hierarchical/concat_bands5n/runs/20261120_232807",
+      "dir": "runs/hierarchical__concat_bands5n__20261120_232807",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 290,
+        "1": 184,
+        "2": 578,
+        "3": 167,
+        "4": 368
+      },
+      "cluster_patients": {
+        "0": 11,
+        "1": 10,
+        "2": 16,
+        "3": 20,
+        "4": 27
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 102,
+          "PAT_3455": 70,
+          "PAT_3965": 68,
+          "EL052": 21,
+          "EL046": 9,
+          "EL043": 6,
+          "EL048": 5,
+          "EL034": 3,
+          "EL037": 3,
+          "PAT_6854": 2,
+          "EL038": 1
+        },
+        "1": {
+          "PAT_6854": 79,
+          "PAT_5533": 30,
+          "EL042": 22,
+          "PAT_3066": 15,
+          "PAT_6619": 11,
+          "PAT_1327": 11,
+          "PAT_3975": 6,
+          "PAT_3780": 5,
+          "PAT_3390": 4,
+          "EL052": 1
+        },
+        "2": {
+          "PAT_6953": 109,
+          "PAT_3780": 83,
+          "PAT_1327": 65,
+          "EL033": 49,
+          "PAT_3390": 44,
+          "EL045": 40,
+          "EL038": 39,
+          "EL030": 39,
+          "PAT_6619": 29,
+          "EL040": 19,
+          "EL048": 19,
+          "EL036": 17,
+          "PAT_6854": 13,
+          "PAT_3066": 8,
+          "PAT_2868": 4,
+          "PAT_3975": 1
+        },
+        "3": {
+          "EL043": 38,
+          "EL042": 34,
+          "EL030": 26,
+          "EL035": 22,
+          "PAT_2868": 9,
+          "EL046": 4,
+          "PAT_3965": 4,
+          "EL052": 4,
+          "PAT_6953": 3,
+          "EL034": 3,
+          "EL040": 3,
+          "EL037": 3,
+          "PAT_3066": 3,
+          "EL033": 2,
+          "PAT_6854": 2,
+          "EL038": 2,
+          "PAT_1327": 2,
+          "EL036": 1,
+          "PAT_3390": 1,
+          "PAT_6619": 1
+        },
+        "4": {
+          "PAT_6704": 43,
+          "EL046": 34,
+          "EL051": 33,
+          "PAT_6854": 29,
+          "EL037": 25,
+          "PAT_5533": 22,
+          "PAT_6953": 20,
+          "PAT_6619": 17,
+          "PAT_1327": 17,
+          "EL043": 17,
+          "EL040": 13,
+          "EL048": 11,
+          "PAT_3066": 11,
+          "EL035": 11,
+          "EL045": 11,
+          "PAT_5515": 9,
+          "EL033": 7,
+          "EL036": 7,
+          "EL038": 7,
+          "EL030": 6,
+          "EL042": 4,
+          "PAT_3780": 4,
+          "PAT_3390": 4,
+          "PAT_3455": 2,
+          "EL052": 2,
+          "EL034": 1,
+          "PAT_3975": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "cnmf__concat_bands5nu__20261121_000319",
+      "track": "cnmf/concat_bands5nu",
+      "track_label": "Convex NMF \u00b7 5 bands, noise-normalised, unit length",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261121_000319",
+      "path": "cnmf/concat_bands5nu/runs/20261121_000319",
+      "dir": "runs/cnmf__concat_bands5nu__20261121_000319",
+      "k": 7,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 272,
+        "1": 196,
+        "2": 296,
+        "3": 311,
+        "4": 95,
+        "5": 172,
+        "6": 245
+      },
+      "cluster_patients": {
+        "0": 14,
+        "1": 15,
+        "2": 23,
+        "3": 20,
+        "4": 3,
+        "5": 24,
+        "6": 26
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3780": 75,
+          "PAT_6953": 61,
+          "EL045": 34,
+          "EL048": 25,
+          "EL038": 16,
+          "EL043": 14,
+          "EL046": 14,
+          "EL040": 11,
+          "EL036": 10,
+          "PAT_3965": 4,
+          "PAT_2868": 3,
+          "EL035": 2,
+          "PAT_3390": 2,
+          "PAT_6619": 1
+        },
+        "1": {
+          "PAT_3455": 72,
+          "PAT_3965": 62,
+          "EL052": 22,
+          "EL030": 9,
+          "EL043": 5,
+          "EL046": 5,
+          "EL034": 4,
+          "PAT_6854": 4,
+          "PAT_3066": 4,
+          "EL037": 2,
+          "EL035": 2,
+          "PAT_5533": 2,
+          "EL033": 1,
+          "PAT_3390": 1,
+          "PAT_1327": 1
+        },
+        "2": {
+          "EL033": 42,
+          "PAT_3390": 40,
+          "PAT_6953": 38,
+          "PAT_6704": 35,
+          "PAT_1327": 24,
+          "EL030": 22,
+          "PAT_6619": 12,
+          "EL051": 12,
+          "PAT_5533": 11,
+          "EL040": 10,
+          "EL042": 9,
+          "EL045": 7,
+          "EL043": 6,
+          "EL035": 6,
+          "EL048": 4,
+          "EL046": 4,
+          "EL038": 3,
+          "EL036": 3,
+          "PAT_2868": 3,
+          "PAT_3975": 2,
+          "EL052": 1,
+          "PAT_3780": 1,
+          "PAT_6854": 1
+        },
+        "3": {
+          "PAT_6854": 91,
+          "PAT_1327": 55,
+          "PAT_5533": 34,
+          "PAT_6619": 27,
+          "PAT_3066": 23,
+          "EL038": 17,
+          "PAT_3780": 11,
+          "EL037": 9,
+          "EL042": 9,
+          "PAT_3975": 8,
+          "EL046": 6,
+          "EL030": 5,
+          "PAT_3390": 5,
+          "PAT_6704": 3,
+          "EL043": 2,
+          "PAT_6953": 2,
+          "EL036": 1,
+          "EL033": 1,
+          "EL052": 1,
+          "EL040": 1
+        },
+        "4": {
+          "PAT_3975": 92,
+          "PAT_3965": 2,
+          "EL037": 1
+        },
+        "5": {
+          "PAT_6953": 22,
+          "EL043": 20,
+          "EL030": 16,
+          "PAT_1327": 13,
+          "EL035": 12,
+          "EL038": 11,
+          "EL042": 9,
+          "EL037": 8,
+          "PAT_6619": 8,
+          "EL045": 7,
+          "PAT_5515": 7,
+          "EL048": 6,
+          "PAT_3780": 5,
+          "EL046": 5,
+          "EL040": 5,
+          "EL033": 4,
+          "PAT_3975": 4,
+          "PAT_3066": 3,
+          "PAT_6854": 2,
+          "EL036": 1,
+          "EL051": 1,
+          "EL052": 1,
+          "PAT_3390": 1,
+          "PAT_6704": 1
+        },
+        "6": {
+          "EL042": 33,
+          "PAT_6854": 27,
+          "EL051": 20,
+          "EL030": 19,
+          "EL043": 14,
+          "EL046": 13,
+          "EL037": 11,
+          "EL035": 11,
+          "EL036": 10,
+          "EL033": 10,
+          "PAT_6619": 10,
+          "PAT_6953": 9,
+          "EL040": 8,
+          "PAT_3066": 7,
+          "PAT_2868": 7,
+          "PAT_5533": 5,
+          "PAT_3965": 4,
+          "PAT_3975": 4,
+          "PAT_6704": 4,
+          "PAT_3390": 4,
+          "EL045": 3,
+          "EL034": 3,
+          "EL052": 3,
+          "EL038": 2,
+          "PAT_1327": 2,
+          "PAT_5515": 2
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
+      },
+      "has_loadings": true
+    },
+    {
+      "id": "kmeans__concat_bands5nu__20261120_231221",
+      "track": "kmeans/concat_bands5nu",
+      "track_label": "K-means \u00b7 5 bands, noise-normalised, unit length",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_231221",
+      "path": "kmeans/concat_bands5nu/runs/20261120_231221",
+      "dir": "runs/kmeans__concat_bands5nu__20261120_231221",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 292,
+        "1": 292,
+        "2": 501,
+        "3": 301,
+        "4": 201
+      },
+      "cluster_patients": {
+        "0": 26,
+        "1": 13,
+        "2": 23,
+        "3": 19,
+        "4": 25
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "EL042": 35,
+          "EL030": 29,
+          "EL043": 27,
+          "PAT_6854": 27,
+          "EL046": 26,
+          "EL035": 23,
+          "EL051": 21,
+          "PAT_3390": 13,
+          "EL037": 10,
+          "EL036": 9,
+          "PAT_2868": 9,
+          "PAT_6953": 8,
+          "PAT_5533": 8,
+          "EL033": 7,
+          "PAT_6704": 7,
+          "PAT_3066": 5,
+          "EL040": 5,
+          "PAT_6619": 5,
+          "EL048": 4,
+          "EL034": 3,
+          "EL038": 2,
+          "EL045": 2,
+          "EL052": 2,
+          "PAT_1327": 2,
+          "PAT_5515": 2,
+          "PAT_3965": 1
+        },
+        "1": {
+          "PAT_3975": 88,
+          "PAT_3965": 71,
+          "PAT_3455": 70,
+          "EL052": 23,
+          "EL043": 12,
+          "EL046": 5,
+          "PAT_3066": 5,
+          "EL048": 4,
+          "EL034": 4,
+          "EL037": 3,
+          "PAT_6854": 3,
+          "EL038": 2,
+          "EL030": 2
+        },
+        "2": {
+          "PAT_6953": 99,
+          "PAT_3780": 68,
+          "EL033": 49,
+          "EL045": 43,
+          "PAT_1327": 32,
+          "PAT_3390": 32,
+          "EL030": 26,
+          "EL040": 25,
+          "PAT_6704": 25,
+          "EL048": 22,
+          "PAT_6619": 21,
+          "EL036": 13,
+          "EL051": 11,
+          "EL038": 11,
+          "PAT_5533": 9,
+          "PAT_2868": 4,
+          "PAT_6854": 3,
+          "EL052": 2,
+          "EL043": 2,
+          "EL035": 1,
+          "EL046": 1,
+          "PAT_3066": 1,
+          "PAT_3975": 1
+        },
+        "3": {
+          "PAT_6854": 89,
+          "PAT_1327": 47,
+          "PAT_5533": 34,
+          "EL038": 22,
+          "PAT_6619": 20,
+          "PAT_3780": 19,
+          "PAT_3066": 18,
+          "PAT_3975": 12,
+          "EL042": 10,
+          "EL037": 9,
+          "EL046": 9,
+          "PAT_3390": 4,
+          "PAT_6704": 2,
+          "EL030": 1,
+          "EL033": 1,
+          "EL036": 1,
+          "EL043": 1,
+          "EL052": 1,
+          "PAT_3455": 1
+        },
+        "4": {
+          "PAT_6953": 25,
+          "EL043": 19,
+          "EL042": 15,
+          "PAT_1327": 14,
+          "EL030": 13,
+          "EL038": 12,
+          "PAT_6619": 12,
+          "EL037": 9,
+          "EL035": 9,
+          "PAT_6704": 9,
+          "PAT_3975": 9,
+          "PAT_3066": 8,
+          "PAT_5515": 7,
+          "EL046": 6,
+          "EL045": 6,
+          "EL040": 5,
+          "PAT_3780": 5,
+          "EL048": 5,
+          "PAT_3390": 4,
+          "PAT_6854": 3,
+          "EL036": 2,
+          "EL033": 1,
+          "EL051": 1,
+          "PAT_3455": 1,
+          "PAT_5533": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "hierarchical__concat_bands5nu__20261120_232811",
+      "track": "hierarchical/concat_bands5nu",
+      "track_label": "Ward \u00b7 5 bands, noise-normalised, unit length",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232811",
+      "path": "hierarchical/concat_bands5nu/runs/20261120_232811",
+      "dir": "runs/hierarchical__concat_bands5nu__20261120_232811",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 290,
+        "1": 184,
+        "2": 578,
+        "3": 167,
+        "4": 368
+      },
+      "cluster_patients": {
+        "0": 11,
+        "1": 10,
+        "2": 16,
+        "3": 20,
+        "4": 27
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 102,
+          "PAT_3455": 70,
+          "PAT_3965": 68,
+          "EL052": 21,
+          "EL046": 9,
+          "EL043": 6,
+          "EL048": 5,
+          "EL034": 3,
+          "EL037": 3,
+          "PAT_6854": 2,
+          "EL038": 1
+        },
+        "1": {
+          "PAT_6854": 79,
+          "PAT_5533": 30,
+          "EL042": 22,
+          "PAT_3066": 15,
+          "PAT_6619": 11,
+          "PAT_1327": 11,
+          "PAT_3975": 6,
+          "PAT_3780": 5,
+          "PAT_3390": 4,
+          "EL052": 1
+        },
+        "2": {
+          "PAT_6953": 109,
+          "PAT_3780": 83,
+          "PAT_1327": 65,
+          "EL033": 49,
+          "PAT_3390": 44,
+          "EL045": 40,
+          "EL038": 39,
+          "EL030": 39,
+          "PAT_6619": 29,
+          "EL040": 19,
+          "EL048": 19,
+          "EL036": 17,
+          "PAT_6854": 13,
+          "PAT_3066": 8,
+          "PAT_2868": 4,
+          "PAT_3975": 1
+        },
+        "3": {
+          "EL043": 38,
+          "EL042": 34,
+          "EL030": 26,
+          "EL035": 22,
+          "PAT_2868": 9,
+          "EL046": 4,
+          "PAT_3965": 4,
+          "EL052": 4,
+          "PAT_6953": 3,
+          "EL034": 3,
+          "EL040": 3,
+          "EL037": 3,
+          "PAT_3066": 3,
+          "EL033": 2,
+          "PAT_6854": 2,
+          "EL038": 2,
+          "PAT_1327": 2,
+          "EL036": 1,
+          "PAT_3390": 1,
+          "PAT_6619": 1
+        },
+        "4": {
+          "PAT_6704": 43,
+          "EL046": 34,
+          "EL051": 33,
+          "PAT_6854": 29,
+          "EL037": 25,
+          "PAT_5533": 22,
+          "PAT_6953": 20,
+          "PAT_6619": 17,
+          "PAT_1327": 17,
+          "EL043": 17,
+          "EL040": 13,
+          "EL048": 11,
+          "PAT_3066": 11,
+          "EL035": 11,
+          "EL045": 11,
+          "PAT_5515": 9,
+          "EL033": 7,
+          "EL036": 7,
+          "EL038": 7,
+          "EL030": 6,
+          "EL042": 4,
+          "PAT_3780": 4,
+          "PAT_3390": 4,
+          "PAT_3455": 2,
+          "EL052": 2,
+          "EL034": 1,
+          "PAT_3975": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "cnmf__concat_hfas__20261121_000638",
+      "track": "cnmf/concat_hfas",
+      "track_label": "Convex NMF \u00b7 HFA only, shape",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261121_000638",
+      "path": "cnmf/concat_hfas/runs/20261121_000638",
+      "dir": "runs/cnmf__concat_hfas__20261121_000638",
+      "k": 7,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 168,
+        "1": 256,
+        "2": 81,
+        "3": 233,
+        "4": 225,
+        "5": 166,
+        "6": 458
+      },
+      "cluster_patients": {
+        "0": 22,
+        "1": 24,
+        "2": 13,
+        "3": 16,
+        "4": 20,
+        "5": 26,
+        "6": 26
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_3975": 47,
+          "PAT_1327": 19,
+          "EL035": 13,
+          "PAT_6854": 11,
+          "EL043": 11,
+          "EL038": 11,
+          "PAT_6953": 10,
+          "EL030": 10,
+          "PAT_3780": 6,
+          "PAT_3965": 4,
+          "PAT_5533": 4,
+          "EL045": 3,
+          "EL040": 3,
+          "EL033": 2,
+          "EL042": 2,
+          "EL048": 2,
+          "EL052": 2,
+          "PAT_3066": 2,
+          "PAT_3455": 2,
+          "PAT_6619": 2,
+          "PAT_2868": 1,
+          "EL046": 1
+        },
+        "1": {
+          "PAT_6953": 53,
+          "PAT_3965": 33,
+          "EL042": 22,
+          "PAT_3390": 16,
+          "PAT_6854": 16,
+          "EL043": 15,
+          "EL046": 15,
+          "EL035": 12,
+          "EL037": 12,
+          "EL038": 9,
+          "EL040": 8,
+          "EL051": 7,
+          "PAT_6704": 7,
+          "EL048": 6,
+          "PAT_3066": 6,
+          "PAT_1327": 4,
+          "EL033": 3,
+          "PAT_6619": 3,
+          "PAT_3975": 2,
+          "EL030": 2,
+          "EL045": 2,
+          "EL036": 1,
+          "EL052": 1,
+          "PAT_3780": 1
+        },
+        "2": {
+          "PAT_3455": 61,
+          "PAT_3975": 3,
+          "EL042": 3,
+          "EL033": 2,
+          "EL035": 2,
+          "PAT_1327": 2,
+          "EL045": 2,
+          "EL034": 1,
+          "EL046": 1,
+          "PAT_3390": 1,
+          "EL052": 1,
+          "PAT_3965": 1,
+          "PAT_6953": 1
+        },
+        "3": {
+          "PAT_3780": 73,
+          "PAT_6854": 31,
+          "PAT_5533": 30,
+          "EL038": 18,
+          "PAT_6953": 17,
+          "PAT_6619": 12,
+          "EL048": 10,
+          "PAT_3390": 8,
+          "PAT_6704": 6,
+          "EL040": 6,
+          "EL033": 5,
+          "PAT_1327": 5,
+          "PAT_3975": 5,
+          "PAT_3066": 4,
+          "EL051": 2,
+          "EL037": 1
+        },
+        "4": {
+          "PAT_6953": 33,
+          "PAT_1327": 31,
+          "EL030": 27,
+          "EL033": 27,
+          "EL045": 26,
+          "PAT_6619": 22,
+          "PAT_2868": 12,
+          "EL036": 9,
+          "EL040": 6,
+          "PAT_3975": 6,
+          "EL046": 5,
+          "PAT_3066": 4,
+          "PAT_6854": 4,
+          "EL042": 3,
+          "PAT_3965": 2,
+          "EL043": 2,
+          "PAT_6704": 2,
+          "PAT_5533": 2,
+          "EL034": 1,
+          "PAT_5515": 1
+        },
+        "5": {
+          "PAT_3965": 28,
+          "EL052": 24,
+          "EL037": 13,
+          "PAT_6854": 13,
+          "EL043": 11,
+          "EL048": 10,
+          "PAT_6704": 9,
+          "PAT_5533": 6,
+          "PAT_3780": 6,
+          "PAT_3975": 6,
+          "EL030": 5,
+          "EL034": 5,
+          "PAT_6619": 4,
+          "EL051": 3,
+          "PAT_3455": 3,
+          "EL033": 3,
+          "EL046": 3,
+          "PAT_3066": 3,
+          "EL036": 2,
+          "PAT_3390": 2,
+          "EL040": 2,
+          "EL035": 1,
+          "EL042": 1,
+          "EL038": 1,
+          "PAT_1327": 1,
+          "EL045": 1
+        },
+        "6": {
+          "PAT_6854": 50,
+          "PAT_3975": 41,
+          "PAT_1327": 33,
+          "EL042": 29,
+          "EL030": 27,
+          "PAT_3390": 26,
+          "EL043": 22,
+          "EL046": 22,
+          "EL051": 21,
+          "PAT_6704": 19,
+          "PAT_6953": 18,
+          "PAT_3066": 18,
+          "EL045": 17,
+          "EL033": 16,
+          "PAT_6619": 15,
+          "EL036": 13,
+          "EL040": 10,
+          "EL038": 10,
+          "PAT_5533": 10,
+          "PAT_5515": 8,
+          "EL048": 7,
+          "PAT_3455": 6,
+          "PAT_3780": 6,
+          "EL037": 5,
+          "EL035": 5,
+          "PAT_3965": 4
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json",
+        "loadings": "loadings_by_k.json"
+      },
+      "has_loadings": true
+    },
+    {
+      "id": "kmeans__concat_hfas__20261120_231229",
+      "track": "kmeans/concat_hfas",
+      "track_label": "K-means \u00b7 HFA only, shape",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_231229",
+      "path": "kmeans/concat_hfas/runs/20261120_231229",
+      "dir": "runs/kmeans__concat_hfas__20261120_231229",
+      "k": 5,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 381,
+        "1": 162,
+        "2": 600,
+        "3": 178,
+        "4": 266
+      },
+      "cluster_patients": {
+        "0": 28,
+        "1": 23,
+        "2": 24,
+        "3": 21,
+        "4": 24
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "PAT_6854": 54,
+          "PAT_3975": 48,
+          "PAT_1327": 26,
+          "EL042": 22,
+          "EL030": 21,
+          "PAT_3780": 20,
+          "EL043": 19,
+          "PAT_6953": 19,
+          "PAT_3066": 18,
+          "EL038": 17,
+          "EL046": 17,
+          "PAT_5533": 12,
+          "PAT_6619": 10,
+          "PAT_5515": 9,
+          "EL045": 9,
+          "EL048": 8,
+          "EL036": 8,
+          "EL040": 8,
+          "PAT_3390": 7,
+          "EL035": 6,
+          "EL033": 5,
+          "EL037": 5,
+          "EL051": 4,
+          "PAT_3965": 3,
+          "PAT_6704": 2,
+          "PAT_3455": 2,
+          "EL034": 1,
+          "EL052": 1
+        },
+        "1": {
+          "PAT_3965": 48,
+          "EL052": 22,
+          "EL037": 14,
+          "PAT_6854": 13,
+          "EL043": 10,
+          "EL030": 10,
+          "PAT_3975": 7,
+          "EL034": 6,
+          "EL046": 6,
+          "PAT_3455": 4,
+          "EL048": 3,
+          "PAT_5533": 3,
+          "EL051": 3,
+          "PAT_6953": 2,
+          "EL036": 2,
+          "PAT_3780": 2,
+          "EL042": 1,
+          "EL038": 1,
+          "EL040": 1,
+          "PAT_3390": 1,
+          "PAT_3066": 1,
+          "PAT_1327": 1,
+          "PAT_6619": 1
+        },
+        "2": {
+          "PAT_6953": 73,
+          "PAT_3780": 67,
+          "PAT_1327": 60,
+          "EL033": 44,
+          "PAT_6854": 41,
+          "PAT_6619": 40,
+          "EL045": 34,
+          "PAT_5533": 31,
+          "PAT_6704": 30,
+          "PAT_3975": 30,
+          "EL030": 23,
+          "EL040": 21,
+          "EL038": 20,
+          "EL048": 18,
+          "PAT_3390": 17,
+          "EL036": 15,
+          "PAT_2868": 10,
+          "PAT_3066": 7,
+          "EL046": 7,
+          "EL051": 7,
+          "EL043": 2,
+          "EL037": 1,
+          "EL042": 1,
+          "PAT_3965": 1
+        },
+        "3": {
+          "PAT_3455": 64,
+          "PAT_3975": 20,
+          "EL030": 15,
+          "EL035": 13,
+          "EL043": 11,
+          "EL033": 7,
+          "PAT_3965": 6,
+          "PAT_5533": 5,
+          "PAT_6854": 5,
+          "PAT_3066": 4,
+          "EL042": 4,
+          "PAT_1327": 4,
+          "EL046": 3,
+          "PAT_2868": 3,
+          "PAT_3780": 3,
+          "EL052": 3,
+          "EL038": 2,
+          "PAT_6619": 2,
+          "EL045": 2,
+          "EL048": 1,
+          "PAT_3390": 1
+        },
+        "4": {
+          "PAT_6953": 38,
+          "EL042": 32,
+          "PAT_3390": 27,
+          "EL043": 19,
+          "EL051": 19,
+          "EL046": 14,
+          "EL035": 14,
+          "PAT_3965": 14,
+          "PAT_6854": 12,
+          "EL037": 11,
+          "PAT_6704": 11,
+          "EL038": 9,
+          "PAT_3066": 7,
+          "EL045": 6,
+          "EL040": 5,
+          "PAT_3975": 5,
+          "EL048": 5,
+          "PAT_6619": 5,
+          "PAT_1327": 4,
+          "EL030": 2,
+          "EL033": 2,
+          "EL052": 2,
+          "PAT_3455": 2,
+          "PAT_5533": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
+        "overview": []
+      },
+      "sweep": {
+        "ks": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "labels": "labels_by_k.json",
+        "stats": "sweep_stats.json"
+      }
+    },
+    {
+      "id": "hierarchical__concat_hfas__20261120_232815",
+      "track": "hierarchical/concat_hfas",
+      "track_label": "Ward \u00b7 HFA only, shape",
+      "cohort": "1587-electrode gated concat cohort",
+      "cohort_id": "cohort1_n29",
+      "run": "20261120_232815",
+      "path": "hierarchical/concat_hfas/runs/20261120_232815",
+      "dir": "runs/hierarchical__concat_hfas__20261120_232815",
+      "k": 8,
+      "clusters": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "n_electrodes": 1587,
+      "n_contacts_with_cluster": 1587,
+      "n_samples_with_cluster": 1587,
+      "unit": "electrode",
+      "n_electrodes_multilabel": 0,
+      "n_patients_run": 29,
+      "cluster_sizes": {
+        "0": 59,
+        "1": 90,
+        "2": 68,
+        "3": 155,
+        "4": 130,
+        "5": 353,
+        "6": 224,
+        "7": 508
+      },
+      "cluster_patients": {
+        "0": 5,
+        "1": 15,
+        "2": 1,
+        "3": 18,
+        "4": 20,
+        "5": 25,
+        "6": 22,
+        "7": 20
+      },
+      "cluster_patient_counts": {
+        "0": {
+          "EL052": 24,
+          "PAT_3965": 23,
+          "EL037": 10,
+          "EL042": 1,
+          "PAT_3390": 1
+        },
+        "1": {
+          "PAT_3965": 26,
+          "PAT_6854": 14,
+          "EL043": 13,
+          "EL046": 7,
+          "PAT_3975": 6,
+          "EL034": 6,
+          "EL048": 5,
+          "PAT_5533": 3,
+          "PAT_6953": 2,
+          "EL030": 2,
+          "EL037": 2,
+          "EL035": 1,
+          "PAT_3780": 1,
+          "PAT_1327": 1,
+          "PAT_6619": 1
+        },
+        "2": {
+          "PAT_3455": 68
+        },
+        "3": {
+          "PAT_3975": 24,
+          "EL030": 22,
+          "EL035": 17,
+          "PAT_3965": 16,
+          "PAT_1327": 14,
+          "EL043": 12,
+          "EL033": 10,
+          "PAT_6619": 8,
+          "PAT_3066": 8,
+          "PAT_2868": 7,
+          "EL038": 4,
+          "PAT_5533": 3,
+          "EL046": 3,
+          "EL042": 2,
+          "PAT_3455": 2,
+          "EL036": 1,
+          "EL045": 1,
+          "PAT_6953": 1
+        },
+        "4": {
+          "PAT_6854": 24,
+          "EL046": 21,
+          "EL051": 13,
+          "PAT_3780": 12,
+          "EL040": 9,
+          "PAT_3066": 8,
+          "EL045": 8,
+          "PAT_3975": 6,
+          "EL030": 5,
+          "PAT_3965": 3,
+          "EL033": 3,
+          "EL036": 3,
+          "EL043": 3,
+          "EL037": 3,
+          "EL035": 2,
+          "EL038": 2,
+          "PAT_6704": 2,
+          "EL042": 1,
+          "PAT_3455": 1,
+          "PAT_5515": 1
+        },
+        "5": {
+          "PAT_3975": 60,
+          "PAT_6854": 39,
+          "PAT_6953": 31,
+          "EL042": 24,
+          "PAT_1327": 23,
+          "EL038": 19,
+          "EL030": 18,
+          "PAT_3780": 16,
+          "PAT_3390": 15,
+          "EL043": 14,
+          "PAT_5533": 14,
+          "EL048": 13,
+          "PAT_3066": 13,
+          "PAT_6619": 10,
+          "EL046": 8,
+          "PAT_5515": 8,
+          "EL045": 7,
+          "EL033": 5,
+          "EL035": 3,
+          "EL036": 3,
+          "EL037": 3,
+          "EL040": 3,
+          "EL052": 2,
+          "EL034": 1,
+          "PAT_3455": 1
+        },
+        "6": {
+          "PAT_3390": 36,
+          "EL042": 31,
+          "EL051": 20,
+          "EL043": 19,
+          "PAT_6953": 18,
+          "PAT_6704": 11,
+          "EL037": 10,
+          "EL035": 10,
+          "PAT_1327": 9,
+          "EL046": 8,
+          "PAT_6854": 8,
+          "EL045": 7,
+          "PAT_3066": 7,
+          "PAT_6619": 6,
+          "EL040": 5,
+          "PAT_3975": 4,
+          "PAT_3965": 4,
+          "EL038": 3,
+          "PAT_3780": 3,
+          "EL033": 2,
+          "EL052": 2,
+          "EL036": 1
+        },
+        "7": {
+          "PAT_6953": 80,
+          "PAT_3780": 60,
+          "PAT_1327": 48,
+          "PAT_6854": 40,
+          "EL033": 38,
+          "PAT_6619": 33,
+          "PAT_5533": 32,
+          "PAT_6704": 30,
+          "EL045": 28,
+          "EL030": 24,
+          "EL038": 21,
+          "EL040": 18,
+          "EL048": 17,
+          "EL036": 17,
+          "PAT_3975": 10,
+          "PAT_2868": 6,
+          "EL037": 3,
+          "EL042": 1,
+          "PAT_3066": 1,
+          "PAT_3390": 1
+        }
+      },
+      "patient_totals": {
+        "PAT_6953": 132,
+        "PAT_6854": 125,
+        "PAT_3975": 110,
+        "PAT_1327": 95,
+        "PAT_3780": 92,
+        "PAT_3965": 72,
+        "PAT_3455": 72,
+        "EL030": 71,
+        "EL043": 61,
+        "EL042": 60,
+        "PAT_6619": 58,
+        "EL033": 58,
+        "PAT_3390": 53,
+        "PAT_5533": 52,
+        "EL045": 51,
+        "EL038": 49,
+        "EL046": 47,
+        "PAT_6704": 43,
+        "PAT_3066": 37,
+        "EL040": 35,
+        "EL048": 35,
+        "EL051": 33,
+        "EL035": 33,
+        "EL037": 31,
+        "EL052": 28,
+        "EL036": 25,
+        "PAT_2868": 13,
+        "PAT_5515": 9,
+        "EL034": 7
+      },
+      "counts": {
+        "6": {
+          "lh": {
+            "file": "clusters_r6_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r6_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "10": {
+          "lh": {
+            "file": "clusters_r10_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r10_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        },
+        "15": {
+          "lh": {
+            "file": "clusters_r15_lh_u8.bin",
+            "dtype": "uint8"
+          },
+          "rh": {
+            "file": "clusters_r15_rh_u8.bin",
+            "dtype": "uint8"
+          }
+        }
+      },
+      "figures": {
+        "per_cluster": {},
         "overview": []
       },
       "sweep": {
